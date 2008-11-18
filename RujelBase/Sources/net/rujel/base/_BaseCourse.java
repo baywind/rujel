@@ -1,0 +1,123 @@
+// _BaseCourse.java
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to BaseCourse.java instead.
+
+/*
+ * Copyright (c) 2008, Gennady & Michael Kushnir
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ * 
+ * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 		list of conditions and the following disclaimer.
+ * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 		this list of conditions and the following disclaimer in the documentation
+ * 		and/or other materials provided with the distribution.
+ * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific 
+ * 		prior written permission.
+ * 		
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+ * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package net.rujel.base;
+
+import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
+import java.math.BigDecimal;
+
+@SuppressWarnings("all")
+public abstract class _BaseCourse extends EOGenericRecord {
+	public static final String ENTITY_NAME = "BaseCourse";
+
+	// Attributes
+	public static final String COMMENT_KEY = "comment";
+	public static final String EDU_YEAR_KEY = "eduYear";
+
+	// Relationships
+	public static final String AUDIENCE_KEY = "audience";
+	public static final String CYCLE_KEY = "cycle";
+	public static final String LESSONS_KEY = "lessons";
+	public static final String LESSON_TABS_KEY = "lessonTabs";
+
+  public String comment() {
+    return (String) storedValueForKey(COMMENT_KEY);
+  }
+
+  public void setComment(String value) {
+    takeStoredValueForKey(value, COMMENT_KEY);
+  }
+
+  public Integer eduYear() {
+    return (Integer) storedValueForKey(EDU_YEAR_KEY);
+  }
+
+  public void setEduYear(Integer value) {
+    takeStoredValueForKey(value, EDU_YEAR_KEY);
+  }
+
+  public net.rujel.base.PrimitiveEduCycle cycle() {
+    return (net.rujel.base.PrimitiveEduCycle)storedValueForKey(CYCLE_KEY);
+  }
+
+  public void setCycle(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, CYCLE_KEY);
+  }
+  
+  public NSArray audience() {
+    return (NSArray)storedValueForKey(AUDIENCE_KEY);
+  }
+ 
+  public void setAudience(NSArray value) {
+    takeStoredValueForKey(value, AUDIENCE_KEY);
+  }
+  
+  public void addToAudience(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, AUDIENCE_KEY);
+  }
+
+  public void removeFromAudience(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, AUDIENCE_KEY);
+  }
+
+  public NSArray lessons() {
+    return (NSArray)storedValueForKey(LESSONS_KEY);
+  }
+ 
+  public void setLessons(NSArray value) {
+    takeStoredValueForKey(value, LESSONS_KEY);
+  }
+  
+  public void addToLessons(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, LESSONS_KEY);
+  }
+
+  public void removeFromLessons(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, LESSONS_KEY);
+  }
+
+  public NSArray lessonTabs() {
+    return (NSArray)storedValueForKey(LESSON_TABS_KEY);
+  }
+ 
+  public void setLessonTabs(NSArray value) {
+    takeStoredValueForKey(value, LESSON_TABS_KEY);
+  }
+  
+  public void addToLessonTabs(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, LESSON_TABS_KEY);
+  }
+
+  public void removeFromLessonTabs(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, LESSON_TABS_KEY);
+  }
+
+}
