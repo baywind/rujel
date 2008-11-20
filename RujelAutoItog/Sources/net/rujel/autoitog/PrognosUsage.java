@@ -59,7 +59,7 @@ public class PrognosUsage extends _PrognosUsage
     
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
-    	setFlags(new Byte((byte)0));
+    	setFlags(new Integer(0));
     	setCalculatorName("");
     	setEduYear(MyUtility.eduYearForDate(new NSTimestamp()));
     }
@@ -101,7 +101,7 @@ public class PrognosUsage extends _PrognosUsage
     
     public void setNamedFlags(NamedFlags flags) {
     	_flags = flags;
-    	setFlags(new Byte(flags.byteValue()));
+    	setFlags(flags.toInteger());
     }
     
     private int _priority = -1;

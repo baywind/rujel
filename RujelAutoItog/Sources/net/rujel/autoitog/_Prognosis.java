@@ -7,15 +7,15 @@
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
  * 
- * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 	o	Redistributions of source code must retain the above copyright notice, this
  * 		list of conditions and the following disclaimer.
- * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 	o	Redistributions in binary form must reproduce the above copyright notice,
  * 		this list of conditions and the following disclaimer in the documentation
  * 		and/or other materials provided with the distribution.
- * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
- * 		to endorse or promote products derived from this software without specific 
+ * 	o	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific
  * 		prior written permission.
- * 		
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
@@ -27,76 +27,93 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Created by eogenerator
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Prognosis.java instead.
+
 package net.rujel.autoitog;
 
-
-import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
+@SuppressWarnings("all")
 public abstract class _Prognosis extends EOGenericRecord {
+	public static final String ENTITY_NAME = "Prognosis";
 
-    public _Prognosis() {
-        super();
-    }
+	// Attributes
+	public static final String BONUS_KEY = "bonus";
+	public static final String COMPLETE_KEY = "complete";
+	public static final String FIRE_DATE_KEY = "fireDate";
+	public static final String FLAGS_KEY = "flags";
+	public static final String MARK_KEY = "mark";
+	public static final String VALUE_KEY = "value";
 
-/*
-    // If you add instance variables to store property values you
-    // should add empty implementions of the Serialization methods
-    // to avoid unnecessary overhead (the properties will be
-    // serialized for you in the superclass).
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-    }
+	// Relationships
+	public static final String BONUS_TEXT_EO_KEY = "bonusTextEO";
+	public static final String EDU_PERIOD_KEY = "eduPeriod";
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
-    }
-*/
+  public BigDecimal bonus() {
+    return (BigDecimal) storedValueForKey(BONUS_KEY);
+  }
 
-    public BigDecimal complete() {
-        return (BigDecimal)storedValueForKey("complete");
-    }
+  public void setBonus(BigDecimal value) {
+    takeStoredValueForKey(value, BONUS_KEY);
+  }
 
-    public void setComplete(BigDecimal aValue) {
-        takeStoredValueForKey(aValue, "complete");
-    }
+  public BigDecimal complete() {
+    return (BigDecimal) storedValueForKey(COMPLETE_KEY);
+  }
 
-    public NSTimestamp fireDate() {
-        return (NSTimestamp)storedValueForKey("fireDate");
-    }
+  public void setComplete(BigDecimal value) {
+    takeStoredValueForKey(value, COMPLETE_KEY);
+  }
 
-    public void setFireDate(NSTimestamp aValue) {
-        takeStoredValueForKey(aValue, "fireDate");
-    }
+  public NSTimestamp fireDate() {
+    return (NSTimestamp) storedValueForKey(FIRE_DATE_KEY);
+  }
 
-    public Number flags() {
-        return (Number)storedValueForKey("flags");
-    }
+  public void setFireDate(NSTimestamp value) {
+    takeStoredValueForKey(value, FIRE_DATE_KEY);
+  }
 
-    public void setFlags(Number aValue) {
-        takeStoredValueForKey(aValue, "flags");
-    }
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
+  }
 
-    public String mark() {
-        return (String)storedValueForKey("mark");
-    }
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
+  }
 
-    public void setMark(String aValue) {
-        takeStoredValueForKey(aValue, "mark");
-    }
+  public String mark() {
+    return (String) storedValueForKey(MARK_KEY);
+  }
 
-    public BigDecimal value() {
-        return (BigDecimal)storedValueForKey("value");
-    }
+  public void setMark(String value) {
+    takeStoredValueForKey(value, MARK_KEY);
+  }
 
-    public void setValue(BigDecimal aValue) {
-        takeStoredValueForKey(aValue, "value");
-    }
+  public BigDecimal value() {
+    return (BigDecimal) storedValueForKey(VALUE_KEY);
+  }
 
-    public net.rujel.eduresults.EduPeriod eduPeriod() {
-        return (net.rujel.eduresults.EduPeriod)storedValueForKey("eduPeriod");
-    }
+  public void setValue(BigDecimal value) {
+    takeStoredValueForKey(value, VALUE_KEY);
+  }
 
-    public void setEduPeriod(net.rujel.eduresults.EduPeriod aValue) {
-        takeStoredValueForKey(aValue, "eduPeriod");
-    }
+  public EOGenericRecord bonusTextEO() {
+    return (EOGenericRecord)storedValueForKey(BONUS_TEXT_EO_KEY);
+  }
+
+  public void setBonusTextEO(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, BONUS_TEXT_EO_KEY);
+  }
+  
+  public net.rujel.eduresults.EduPeriod eduPeriod() {
+    return (net.rujel.eduresults.EduPeriod)storedValueForKey(EDU_PERIOD_KEY);
+  }
+
+  public void setEduPeriod(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, EDU_PERIOD_KEY);
+  }
+  
 }

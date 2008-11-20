@@ -326,10 +326,10 @@
         username = rujel; 
     }; 
     entities = (
-        {className = "ru.edu.ms45.autoitog.CourseTimeout"; name = CourseTimeout; }, 
-        {className = "ru.edu.ms45.autoitog.PrognosUsage"; name = PrognosUsage; }, 
-        {className = "ru.edu.ms45.autoitog.Prognosis"; name = Prognosis; }, 
-        {className = "ru.edu.ms45.autoitog.StudentTimeout"; name = StudentTimeout; }
+        {className = "net.rujel.autoitog.CourseTimeout"; name = CourseTimeout; }, 
+        {className = "net.rujel.autoitog.PrognosUsage"; name = PrognosUsage; }, 
+        {className = "net.rujel.autoitog.Prognosis"; name = Prognosis; }, 
+        {className = "net.rujel.autoitog.StudentTimeout"; name = StudentTimeout; }
     ); 
     userInfo = {
         "_EntityModeler" = {

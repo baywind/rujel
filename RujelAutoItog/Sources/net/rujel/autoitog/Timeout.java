@@ -49,15 +49,11 @@ public interface Timeout extends EOEnterpriseObject {
 
     public EduPeriod eduPeriod();
 	
-    public void setEduPeriod(EduPeriod aValue);
-    
     public NSTimestamp dueDate();
     
     public void setDueDate(NSTimestamp aValue);
 
     public Number flags();
-
-    public void setFlags(Number aValue);
     
     public NamedFlags namedFlags();
 

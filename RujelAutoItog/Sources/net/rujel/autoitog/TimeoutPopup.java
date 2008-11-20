@@ -130,7 +130,7 @@ public class TimeoutPopup extends WOComponent {
 					if(timeout == null || (forCourse && timeout.eduCourse() == null)) {
 						String entity = (prognosis==null)?"CourseTimeout":"StudentTimeout";
 						timeout = (Timeout)EOUtilities.createAndInsertInstance(ec, entity);
-						timeout.setEduPeriod(eduPeriod);
+						timeout.takeValueForKey(eduPeriod, "eduPeriod");
 						timeout.setEduCourse((forCourse)?course:null);
 						if(prognosis != null) {
 							timeout.takeValueForKey(prognosis.student(),"student");

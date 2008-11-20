@@ -60,7 +60,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
-    	setFlags(new Byte((byte)0));
+    	setFlags(new Integer(0));
     }
 
     public Student student() {
@@ -117,7 +117,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
     
     public void setNamedFlags(NamedFlags flags) {
     	_flags = flags;
-    	setFlags(new Byte(flags.byteValue()));
+    	setFlags(flags.toInteger());
     }
 
     public NSArray relatedPrognoses() {

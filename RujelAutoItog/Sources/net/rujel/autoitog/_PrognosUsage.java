@@ -7,15 +7,15 @@
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
  * 
- * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 	o	Redistributions of source code must retain the above copyright notice, this
  * 		list of conditions and the following disclaimer.
- * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 	o	Redistributions in binary form must reproduce the above copyright notice,
  * 		this list of conditions and the following disclaimer in the documentation
  * 		and/or other materials provided with the distribution.
- * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
- * 		to endorse or promote products derived from this software without specific 
+ * 	o	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific
  * 		prior written permission.
- * 		
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
@@ -27,66 +27,66 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Created by eogenerator
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PrognosUsage.java instead.
+
 package net.rujel.autoitog;
 
-
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
+import java.math.BigDecimal;
 
+@SuppressWarnings("all")
 public abstract class _PrognosUsage extends EOGenericRecord {
+	public static final String ENTITY_NAME = "PrognosUsage";
 
-    public _PrognosUsage() {
-        super();
-    }
+	// Attributes
+	public static final String CALCULATOR_NAME_KEY = "calculatorName";
+	public static final String EDU_YEAR_KEY = "eduYear";
+	public static final String FLAGS_KEY = "flags";
 
-/*
-    // If you add instance variables to store property values you
-    // should add empty implementions of the Serialization methods
-    // to avoid unnecessary overhead (the properties will be
-    // serialized for you in the superclass).
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-    }
+	// Relationships
+	public static final String BORDER_SET_KEY = "borderSet";
+	public static final String PERIOD_TYPE_KEY = "periodType";
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
-    }
-*/
+  public String calculatorName() {
+    return (String) storedValueForKey(CALCULATOR_NAME_KEY);
+  }
 
-    public String calculatorName() {
-        return (String)storedValueForKey("calculatorName");
-    }
+  public void setCalculatorName(String value) {
+    takeStoredValueForKey(value, CALCULATOR_NAME_KEY);
+  }
 
-    public void setCalculatorName(String aValue) {
-        takeStoredValueForKey(aValue, "calculatorName");
-    }
+  public Integer eduYear() {
+    return (Integer) storedValueForKey(EDU_YEAR_KEY);
+  }
 
-    public Number eduYear() {
-        return (Number)storedValueForKey("eduYear");
-    }
+  public void setEduYear(Integer value) {
+    takeStoredValueForKey(value, EDU_YEAR_KEY);
+  }
 
-    public void setEduYear(Number aValue) {
-        takeStoredValueForKey(aValue, "eduYear");
-    }
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
+  }
 
-    public Number flags() {
-        return (Number)storedValueForKey("flags");
-    }
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
+  }
 
-    public void setFlags(Number aValue) {
-        takeStoredValueForKey(aValue, "flags");
-    }
+  public net.rujel.criterial.BorderSet borderSet() {
+    return (net.rujel.criterial.BorderSet)storedValueForKey(BORDER_SET_KEY);
+  }
 
-    public net.rujel.criterial.BorderSet borderSet() {
-        return (net.rujel.criterial.BorderSet)storedValueForKey("borderSet");
-    }
+  public void setBorderSet(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, BORDER_SET_KEY);
+  }
+  
+  public net.rujel.eduresults.PeriodType periodType() {
+    return (net.rujel.eduresults.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
+  }
 
-    public void setBorderSet(net.rujel.criterial.BorderSet aValue) {
-        takeStoredValueForKey(aValue, "borderSet");
-    }
-
-    public net.rujel.eduresults.PeriodType periodType() {
-        return (net.rujel.eduresults.PeriodType)storedValueForKey("periodType");
-    }
-
-    public void setPeriodType(net.rujel.eduresults.PeriodType aValue) {
-        takeStoredValueForKey(aValue, "periodType");
-    }
+  public void setPeriodType(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, PERIOD_TYPE_KEY);
+  }
+  
 }

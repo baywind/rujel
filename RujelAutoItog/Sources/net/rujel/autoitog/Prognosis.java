@@ -32,6 +32,7 @@ package net.rujel.autoitog;
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.eduresults.*;
+import net.rujel.base.EntityIndex;
 import net.rujel.criterial.BorderSet;
 
 import com.webobjects.foundation.*;
@@ -44,7 +45,7 @@ import java.util.logging.Logger;
 
 public class Prognosis extends _Prognosis {
     public static final NSArray flagNames = new NSArray(new String[]
-                                                       {"disable","keep","bonus"});
+                                                       {"disable","keep","keepBonus"});
 	protected static Logger logger = Logger.getLogger("rujel.autoitog");
 	//protected static final String presenterKey = SettingsReader.stringForKeyPath("edu.prognosisPresenterKey","/5");
 	//protected static final String calculator = prefs.get("edu.prognosisCalculator","OldFormulaStatsCalculator");
@@ -78,9 +79,15 @@ public class Prognosis extends _Prognosis {
 	
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
-    	setFlags(new Byte((byte)0));
+    	setFlags(new Integer(0));
     	setComplete(BigDecimal.ZERO);
+    	setBonus(BigDecimal.ZERO);
     	super.setValue(BigDecimal.ZERO);
+    }
+    
+    protected void zeroBonus() {
+   		if(!BigDecimal.ZERO.equals(bonus()))
+			setBonus(BigDecimal.ZERO);
     }
 
     public void setStudent(Student aValue) {
@@ -96,8 +103,10 @@ public class Prognosis extends _Prognosis {
     }
     
     public void setValue(BigDecimal aValue) {
+    	/*if(aValue != null && aValue.equals(value()))
+    		return;*/
     	super.setValue(aValue);
-    	_bonus = null;
+    	//_bonus = null;
     	if(aValue == null)
     		return;
     	if(namedFlags().flagForKey("keep"))
@@ -108,35 +117,70 @@ public class Prognosis extends _Prognosis {
     	BorderSet presenter = pu.borderSet();
     	if(presenter == null)
     		return;
-    	if(namedFlags().flagForKey("bonus")) {
-    		EOEnterpriseObject border = presenter.borderForFraction(aValue, true);
+    	if(namedFlags().flagForKey("keepBonus")) {
+    		aValue.add(bonus());
+    		/*EOEnterpriseObject border = presenter.borderForFraction(aValue, true);
     		super.setMark((String)border.valueForKey("title"));
     		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
-    		_bonus = topValue.subtract(aValue);
+    		_bonus = topValue.subtract(aValue);*/
     	} else {
-    		super.setMark(presenter.presentFraction(aValue));
+    		zeroBonus();
     	}
-    }
-    
+		super.setMark(presenter.presentFraction(aValue));
+     }
+    /*
     public void setMark(String mark) {
     	super.setMark(mark);
     	_bonus = null;
     }
     
     protected BigDecimal _bonus;
-    public BigDecimal bonus() {
-    	if(_bonus == null) {
-    		try {
-    			BigDecimal top = prognosUsage().borderSet().borderForKey(mark());
-    			_bonus = top.subtract(value());
-    		} catch (Exception e) {
-				logger.log(WOLogLevel.FINE, "Bonus not applicable for this prognosis", this);
-				_bonus = BigDecimal.ZERO;
-			}
-    	}
-    	return _bonus;
+    */
+    public BigDecimal calculateBonus() {
+    	return calculateBonus(false);
     }
     
+    public BigDecimal calculateBonus(boolean update) {
+    	try {
+    		EOEnterpriseObject border = prognosUsage().borderSet().
+    		borderForFraction(value(), true); 
+    		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
+    		BigDecimal bonus = topValue.subtract(value());
+    		if(update) {
+    			setBonus(bonus);
+    			super.setMark((String)border.valueForKey("title"));
+    		}
+    		return bonus;
+    	} catch (Exception e) {
+    		logger.log(WOLogLevel.FINER, "Bonus not applicable for this prognosis", this);
+    		return null;
+    	}
+    }
+    
+    public void addBonus() {
+    	setBonus(calculateBonus(true));   	
+    }
+    
+	public String bonusText() {
+		return (String)valueForKeyPath("bonusTextEO.storedText");
+	}
+	
+	public void setBonusText(String bonusText) {
+		EOEnterpriseObject bonusTextEO = bonusTextEO();
+		if(bonusText == null) {
+			if(bonusTextEO != null)
+				removeObjectFromBothSidesOfRelationshipWithKey(bonusTextEO, BONUS_TEXT_EO_KEY);
+		} else {
+			if(bonusTextEO == null) {
+				bonusTextEO = EOUtilities.createAndInsertInstance(editingContext(), "TextStore");
+				bonusTextEO.takeValueForKey(EntityIndex.indexForObject(this), "entityIndex");
+				addObjectToBothSidesOfRelationshipWithKey(bonusTextEO, BONUS_TEXT_EO_KEY);
+			}
+			bonusTextEO.takeValueForKey(bonusText, "storedText");
+		}		
+	}
+
+
     public void setEduPeriod(EduPeriod period) {
     	super.setEduPeriod(period);
     	if(fireDate() == null)
@@ -159,7 +203,7 @@ public class Prognosis extends _Prognosis {
     
     public void setNamedFlags(NamedFlags flags) {
     	_flags = flags;
-    	setFlags(new Byte(flags.byteValue()));
+    	setFlags(flags.toInteger());
     }
 
     
@@ -186,7 +230,7 @@ public class Prognosis extends _Prognosis {
 		_timeout = null;
 		_usage = null;
 		_flags = null;
-		_bonus = null;
+		//_bonus = null;
 		//_calc = null;
 	}
 	/*
@@ -333,7 +377,8 @@ public class Prognosis extends _Prognosis {
 		return calculator.calculatePrognoses(course, period);
 	}*/
 	
-	public static Prognosis getPrognosis(Student student, EduCourse course, EduPeriod period, boolean create) {
+	public static Prognosis getPrognosis(
+			Student student, EduCourse course, EduPeriod period, boolean create) {
 		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
 		dict.setObjectForKey(course,"eduCourse");
 		dict.setObjectForKey(student,"student");
@@ -356,7 +401,8 @@ public class Prognosis extends _Prognosis {
 
 	public static PerPersonLink prognosesForCourseAndPeriod(EduCourse course, EduPeriod period) {
 		NSArray args = new NSArray(new Object[] {period,course});
-		NSArray found = EOUtilities.objectsWithQualifierFormat(course.editingContext(),"Prognosis","eduPeriod = %@ AND eduCourse = %@",args);
+		NSArray found = EOUtilities.objectsWithQualifierFormat(
+				course.editingContext(),"Prognosis","eduPeriod = %@ AND eduCourse = %@",args);
 		Enumeration enu = found.objectEnumerator();
 		PrognosUsage usage = PrognosUsage.prognosUsage(course, period.periodType());
 		while (enu.hasMoreElements()) {
@@ -389,7 +435,7 @@ public class Prognosis extends _Prognosis {
 	
 	protected static void report(String report, Object obj, StringBuffer buf) {
 		if(buf == null) {
-			logger.log(WOLogLevel.INFO,"report",obj);
+			logger.log(WOLogLevel.INFO,report,obj);
 		} else {
 			PersonLink student = null;
 			if(obj instanceof PersonLink)
@@ -439,12 +485,14 @@ public class Prognosis extends _Prognosis {
 		return itog;
 	}
 	
-	public static void convertPrognosesForCourseAndPeriod(EduCourse course, EduPeriod period, java.util.Date scheduled) {
+	public static void convertPrognosesForCourseAndPeriod(
+			EduCourse course, EduPeriod period, java.util.Date scheduled) {
 		convertPrognosesForCourseAndPeriod(course, period, scheduled, null);
 	}
 	
 	
-	public static void convertPrognosesForCourseAndPeriod(EduCourse course, EduPeriod period, java.util.Date scheduled, StringBuffer buffer) {
+	public static void convertPrognosesForCourseAndPeriod(
+			EduCourse course, EduPeriod period, java.util.Date scheduled, StringBuffer buffer) {
 		EOEditingContext ec = course.editingContext();
 		NSArray args = new NSArray(new Object[] {period,course,scheduled});
 		StringBuffer buf = (buffer == null)?new StringBuffer():buffer;

@@ -85,7 +85,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 	
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
-    	setFlags(new Byte((byte)0));
+    	setFlags(new Integer(0));
     }
 
     public void setEduCourse(EduCourse aValue) {
@@ -142,7 +142,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     
     public void setNamedFlags(NamedFlags flags) {
     	_flags = flags;
-    	setFlags(new Byte(flags.byteValue()));
+    	setFlags(flags.toInteger());
     }
 
     public static CourseTimeout getTimeoutForCourseAndPeriod(EduCourse course, EduPeriod period) {
