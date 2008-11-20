@@ -72,6 +72,18 @@ public class MarkArchive extends _MarkArchive
 	}
 
 	public void setObjectIdentifier(EOEnterpriseObject eo) {
+		NSDictionary pKey = objectIdentifierDict(eo);
+		if(pKey == null) {
+			editingContext().deleteObject(this);
+			return;
+		}
+		EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(
+				eo.editingContext(),"UsedEntity","usedEntity",eo.entityName());
+		setUsedEntity(usedEntity);
+		setIdentifierFromDictionary(usedEntity, pKey);
+	}
+	
+	public static NSDictionary objectIdentifierDict(EOEnterpriseObject eo) {
 		EOEditingContext ec = eo.editingContext();
 		/*
 		if(ec == null)
@@ -116,18 +128,20 @@ public class MarkArchive extends _MarkArchive
 			if(keys.count() > 0) {
 				Object[] args = new Object[] {eo,keyDict,keys};
 				Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,"Could not resolve required attributes for archiving eo",args);
-				editingContext().deleteObject(this);
-				return;
+				//editingContext().deleteObject(this);
+				return null;
 			}
 			pKey = keyDict;
-		
-			setUsedEntity(usedEntity);
 		}
-		setIdentifierFromDictionary(eo.entityName(), pKey);
+		return pKey;
 	}
 	
 	protected EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict) {
 		EOEditingContext ec = editingContext();
+		return getUsedEntity(entityName, identifierDict, ec);
+	}
+	
+	protected static EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict, EOEditingContext ec) {
 		EOEnterpriseObject usedEntity = null;
 		try {
 			usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",entityName);
@@ -169,10 +183,12 @@ public class MarkArchive extends _MarkArchive
 		EOEnterpriseObject usedEntity = usedEntity();
 		if(usedEntity == null || !entityName.equals(usedEntity.valueForKey("usedEntity"))) {
 			usedEntity = getUsedEntity(entityName, identifierDict);
-			//usedEntity = EOUtilities.objectMatchingKeyAndValue(editingContext(),"UsedEntity","usedEntity",entityName);		
-			setUsedEntity(usedEntity);
+			usedEntity = EOUtilities.objectMatchingKeyAndValue(editingContext(),"UsedEntity","usedEntity",entityName);		
 		}
-		
+		setIdentifierFromDictionary(usedEntity, identifierDict);
+	}
+	
+	public void setIdentifierFromDictionary (EOEnterpriseObject usedEntity, NSDictionary identifierDict) {
 		deleteInsertedDuplicates(usedEntity, identifierDict);
 		
 		Number zero = new Integer(0);
@@ -307,12 +323,12 @@ public class MarkArchive extends _MarkArchive
 	
 	public Object valueForKey(String key) {
 		if(key.charAt(0) == '@')
-			return readArchiveValueForKey(key.substring(1));
+			return getArchiveValueForKey(key.substring(1));
 		else
 			return super.valueForKey(key);
 	}
 	
-	public String readArchiveValueForKey(String key) {
+	public String getArchiveValueForKey(String key) {
 		if(dict==null) {
 			String data = data();
 			if(data == null)

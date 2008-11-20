@@ -53,9 +53,6 @@ public class WorkList extends LessonList {
     /** @TypeInfo Criterion */
     private EOEnterpriseObject critItem;
 	protected EOEnterpriseObject _itemMask;
-	
-    /** @TypeInfo HomeTask */
-    public HomeTask taskItem;
 
 	public void reset() {
 		super.reset();

@@ -7,6 +7,6 @@ RUJEL has russian user interface but it can be easily losalised by rewriting *.p
 located in Resources folder of each framework
 
 A set project folders to be imported into Eclipse + WOLips IDE
-depends on 
+depends on
   - Reusables.framework
   - Authentication.framework

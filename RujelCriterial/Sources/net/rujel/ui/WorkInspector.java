@@ -130,9 +130,6 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     /** @TypeInfo Criterion */
     public EOEnterpriseObject critItem;
 
-    /** @TypeInfo HomeTask */
-    public HomeTask taskItem;
-
    protected EOEnterpriseObject itemMask() {
     	if(work == null)
     		return null;

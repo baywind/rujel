@@ -7,10 +7,10 @@
 		уведомление об авторском праве, этот список условий и последующий отказ от гарантий.
 	•	При повторном распространении двоичного кода должно сохраняться указанная выше
 		информация об авторском праве, этот список условий и последующий отказ от гарантий в
-		документации и/или в других материалах, поставляемых при распространении. 
+		документации и/или в других материалах, поставляемых при распространении.
 	•	Ни название РУЖЭЛЬ, ни имена участников разработки не могут быть использованы в
 		качестве поддержки или продвижения продуктов, основанных на этом ПО без
-		предварительного письменного разрешения. 
+		предварительного письменного разрешения.
 
 ЭТА ПРОГРАММА ПРЕДОСТАВЛЕНА ВЛАДЕЛЬЦАМИ АВТОРСКИХ ПРАВ И/ИЛИ ДРУГИМИ СТОРОНАМИ
 "КАК ОНА ЕСТЬ" БЕЗ КАКОГО-ЛИБО ВИДА ГАРАНТИЙ, ВЫРАЖЕННЫХ ЯВНО ИЛИ ПОДРАЗУМЕВАЕМЫХ,
@@ -39,9 +39,9 @@ permitted provided that the following conditions are met:
 		this list of conditions and the following disclaimer in the documentation
 		and/or other materials provided with the distribution.
 	•	Neither the name of the RUJEL nor the names of its contributors may be used
-		to endorse or promote products derived from this software without specific 
+		to endorse or promote products derived from this software without specific
 		prior written permission.
-		
+
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
