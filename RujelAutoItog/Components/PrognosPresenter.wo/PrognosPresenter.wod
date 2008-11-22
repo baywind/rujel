@@ -71,3 +71,7 @@ FireDate : WOString {
 	value = currAddOn.fireDate;
 	escapeHTML = false;
 }
+
+RequestedBonus : WOConditional {
+  condition = currAddOn.requestedBonus;
+}

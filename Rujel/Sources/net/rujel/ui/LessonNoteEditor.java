@@ -439,7 +439,12 @@ public Object currLesson() {
 }*/
 
 	public void save() {
-		selector = currPerPersonLink;
+		if(currPerPersonLink instanceof EOEnterpriseObject) {
+			String entityName = ((EOEnterpriseObject)currPerPersonLink).entityName();
+			String presentEntity = (String)valueForKeyPath("present.entityName");
+			if(entityName.equals((presentEntity == null)?EduLesson.entityName:presentEntity))
+				selector = currPerPersonLink;
+		}
 		student = null;
 		ec.lock();
 		try {

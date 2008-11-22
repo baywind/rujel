@@ -282,7 +282,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		}*/
 		Mark[] marks = forPersonLink(student);// (Mark[])marksIndex().objectForKey(student);
 		if(marks == null) return null;
-		/*if(weight() == null || weight().equals(BigDecimal.ZERO)) {
+		/*if(weight() == null || weight().compareTo(BigDecimal.ZERO) == 0) {
 			if(SettingsReader.boolForKeyPath("edu.noWeightlessIntegral", false))
 				return BigDecimal.ZERO;
 		}*/
@@ -540,7 +540,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			throw new NSValidation.ValidationException(message);
 		}
 		NSArray criterMask = criterMask();
-		if(!BigDecimal.ZERO.equals(weight())) {
+		if(BigDecimal.ZERO.compareTo(weight()) != 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 			"extStrings.RujelCriterial_Strings.messages.critersRequired");
 			if(criterMask == null || criterMask.count() == 0)
@@ -671,12 +671,12 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			return null;
 		switch (type().intValue()) {
 		case CLASSWORK:
-			if(weight() != null && !weight().equals(BigDecimal.ZERO))
+			if(weight() != null && weight().compareTo(BigDecimal.ZERO) != 0)
 				return "classWeight";
 			else
 				return "classPlain";
 		case HOMEWORK:
-			if(weight() != null && !weight().equals(BigDecimal.ZERO))
+			if(weight() != null && weight().compareTo(BigDecimal.ZERO) != 0)
 				return "homeWeight";
 			else
 				return "homework";

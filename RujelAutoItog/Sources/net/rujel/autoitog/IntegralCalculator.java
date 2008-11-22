@@ -51,7 +51,7 @@ public class IntegralCalculator extends Calculator {
 		Enumeration<Work> enu = works.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			Work work = (Work) enu.nextElement();
-			if(BigDecimal.ZERO.equals(work.weight()))
+			if(BigDecimal.ZERO.compareTo(work.weight()) == 0)
 				continue;
 			BigDecimal integral = work.integralForStudent(student);
 			if(integral == null && work.type().intValue() == Work.OPTIONAL)

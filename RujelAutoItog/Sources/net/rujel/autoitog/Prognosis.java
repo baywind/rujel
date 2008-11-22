@@ -85,9 +85,11 @@ public class Prognosis extends _Prognosis {
     	super.setValue(BigDecimal.ZERO);
     }
     
-    protected void zeroBonus() {
-   		if(!BigDecimal.ZERO.equals(bonus()))
+    public void zeroBonus() {
+    	BigDecimal bonus = bonus();
+   		if(bonus != null && bonus.compareTo(BigDecimal.ZERO) != 0)
 			setBonus(BigDecimal.ZERO);
+   		//namedFlags().setFlagForKey(false, "keepBonus");
     }
 
     public void setStudent(Student aValue) {
@@ -103,31 +105,33 @@ public class Prognosis extends _Prognosis {
     }
     
     public void setValue(BigDecimal aValue) {
-    	/*if(aValue != null && aValue.equals(value()))
-    		return;*/
+    	if(aValue != null && aValue.equals(value()))
+    		return;
     	super.setValue(aValue);
     	//_bonus = null;
     	if(aValue == null)
     		return;
     	if(namedFlags().flagForKey("keep"))
     		return;
+    	if(!namedFlags().flagForKey("keepBonus")) {
+    		zeroBonus();
+    		/*EOEnterpriseObject border = presenter.borderForFraction(aValue, true);
+    		super.setMark((String)border.valueForKey("title"));
+    		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
+    		_bonus = topValue.subtract(aValue);*/
+    	}
+    	updateMarkFromValue();
+     }
+    
+    public void updateMarkFromValue() {
     	PrognosUsage pu = prognosUsage();
     	if(pu == null)
     		return;
     	BorderSet presenter = pu.borderSet();
     	if(presenter == null)
     		return;
-    	if(namedFlags().flagForKey("keepBonus")) {
-    		aValue.add(bonus());
-    		/*EOEnterpriseObject border = presenter.borderForFraction(aValue, true);
-    		super.setMark((String)border.valueForKey("title"));
-    		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
-    		_bonus = topValue.subtract(aValue);*/
-    	} else {
-    		zeroBonus();
-    	}
-		super.setMark(presenter.presentFraction(aValue));
-     }
+		super.setMark(presenter.presentFraction(value().add(bonus())));
+    }
     /*
     public void setMark(String mark) {
     	super.setMark(mark);
@@ -144,7 +148,12 @@ public class Prognosis extends _Prognosis {
     	try {
     		EOEnterpriseObject border = prognosUsage().borderSet().
     		borderForFraction(value(), true); 
+    		if(border == null)
+    			return null;
     		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
+    		topValue = topValue.movePointLeft(2);
+    		if(topValue.compareTo(value()) < 0)
+    			return null;
     		BigDecimal bonus = topValue.subtract(value());
     		if(update) {
     			setBonus(bonus);
@@ -219,7 +228,7 @@ public class Prognosis extends _Prognosis {
     public boolean isComplete() {
     	BigDecimal complete = complete();
     	if(complete == null) return false;
-    	if(complete.equals(BigDecimal.ZERO) && prognosUsage().noCalculator())
+    	if(complete.compareTo(BigDecimal.ZERO) == 0 && prognosUsage().noCalculator())
     		return true;
     	return (complete.compareTo(BigDecimal.ONE) == 0);
     }

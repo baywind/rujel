@@ -80,7 +80,7 @@ public class BachalaureatCalculator extends Calculator {
 			Mark mark = (Mark)en.nextElement();
 			BigDecimal weightValue = mark.work().weight();
 			Integer critWeight = (Integer)mark.valueForKeyPath("criterMask.weight");
-			if(weightValue == null || weightValue.equals(BigDecimal.ZERO))
+			if(weightValue == null || weightValue.compareTo(BigDecimal.ZERO) == 0)
 				continue;
 			if(critWeight != null && critWeight.intValue() == 0)
 				continue;
@@ -125,7 +125,7 @@ public class BachalaureatCalculator extends Calculator {
 			if(filter) {
 				if(work.type().intValue() == Work.OPTIONAL)
 					continue;
-				if(weightValue == null || weightValue.equals(BigDecimal.ZERO))
+				if(weightValue == null || weightValue.compareTo(BigDecimal.ZERO) == 0)
 					continue;
 			}
 			Enumeration masks = work.criterMask().objectEnumerator();
@@ -194,9 +194,9 @@ public class BachalaureatCalculator extends Calculator {
 			EOEnterpriseObject crit = (EOEnterpriseObject)enu.nextElement();
 			BigDecimal[] wagr = (BigDecimal[])agregatedWorks.objectForKey(crit);
 			BigDecimal[] optAgr = (optWorks == null)?null:(BigDecimal[])optWorks.objectForKey(crit);
-			if(wagr == null || BigDecimal.ZERO.equals(wagr[WEIGHT]) || BigDecimal.ZERO.equals(wagr[MAX])) {
-				if(optAgr == null || BigDecimal.ZERO.equals(optAgr[WEIGHT].add(wagr[WEIGHT])) 
-						|| BigDecimal.ZERO.equals(optAgr[MAX].add(wagr[MAX])))
+			if(wagr == null || BigDecimal.ZERO.compareTo(wagr[WEIGHT]) == 0 || BigDecimal.ZERO.compareTo(wagr[MAX]) == 0) {
+				if(optAgr == null || BigDecimal.ZERO.compareTo(optAgr[WEIGHT].add(wagr[WEIGHT])) == 0
+						|| BigDecimal.ZERO.compareTo(optAgr[MAX].add(wagr[MAX])) == 0)
 				continue;
 			}
 			double sumWeight = wagr[WEIGHT].doubleValue();

@@ -10,8 +10,7 @@ CompleteProperty : WOString {
 }
 
 Complete : WOString {
-  value = prognosis.complete;
-  numberformat = "0.00";
+  value = completePercent;
 }
 
 ValueProperty : WOString {
@@ -20,8 +19,7 @@ ValueProperty : WOString {
 }
 
 Value : WOString {
-  value = prognosis.value;
-  numberformat = "0.00";
+  value = valuePercent;
 }
 
 ShowPercents : WOConditional {
@@ -36,7 +34,7 @@ Mark : WOTextField {
   value = mark;
   disabled = addOn.usage.namedFlags._manual;
   maxlength = 5;
-  style = "width:96%;text-align:center;width:5ex;";
+  style = "text-align:center;width:5ex;";
 }
 CanChange: WOConditional {
 	condition = canChange;
@@ -90,14 +88,13 @@ CheckBoxFlag1 : WOCheckBox {
 	checked = flags.disable;
 }
 
-FlagKey2 : WOString {
+KeepString : WOString {
   value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keep;
   valueWhenEmpty = "keep";
 }
 
 CheckBoxFlag2 : WOCheckBox {
 	checked = flags.keep;
-	disabled = addOn.usage.namedFlags._manual;
 }
 
 PrognosTitle : WOString {
@@ -112,4 +109,58 @@ CanCancel : WOConditional {
 
 Student : WOString {
   value = studentName;
+}
+
+CanManual : WOConditional {
+  condition = addOn.usage.namedFlags.manual;
+}
+
+BonusPercent : WOString {
+  value = bonusPercent;
+}
+
+BonusText : WOString {
+  value = prognosis.bonusText;
+}
+
+SetBonus : WOCheckBox {
+	checked = hasBonus;
+}
+
+KeepBonus : WOCheckBox {
+	checked = flags.keepBonus;
+}
+
+BonusTextArea : WOText {
+  value = prognosis.bonusText;
+  style = "width:96%;";
+}
+
+CanEditText : WOConditional {
+  condition = editBonusText;
+}
+
+CanReadBonus : WOConditional {
+  condition = session.readAccess.read.Bonus;
+}
+
+SetBonusString : WOString {
+  value = application.extStrings.RujelAutoItog_AutoItog.ui.setBonus;
+  valueWhenEmpty = "Set Bonus";
+}
+KeepTr : WOGenericContainer {
+  elementName = "tr";
+  title = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keepBonus;
+}
+
+BonusTitle : WOString {
+  value = bonusTitle;
+}
+
+HasText : WOConditional {
+  condition = prognosis.bonusTextEO;
+}
+
+CanBonus : WOConditional {
+  condition = bonusPercent;
 }

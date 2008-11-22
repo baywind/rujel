@@ -29,6 +29,7 @@
 
 package net.rujel.autoitog;
 
+import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -324,6 +325,12 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 				_prognosesMatrix.removeObjectForKey(_forcedPeriod);
 			}
 		}
+	}
+	
+	public boolean requestedBonus() {
+		return( prognosis() != null &&
+				prognosis().bonusTextEO() != null && 
+				prognosis().bonus().compareTo(BigDecimal.ZERO) == 0);
 	}
 
 	public void setStudent(Student student) {

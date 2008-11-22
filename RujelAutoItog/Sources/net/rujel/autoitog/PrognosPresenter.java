@@ -30,6 +30,8 @@
 package net.rujel.autoitog;
 
 //import net.rujel.interfaces.*;
+import java.math.BigDecimal;
+
 import net.rujel.reusables.NamedFlags;
 import net.rujel.ui.AddOnPresenter;
 
@@ -71,10 +73,14 @@ public class PrognosPresenter extends AddOnPresenter {
 		Prognosis prognosis = currAddOn().prognosis();
 		if(prognosis == null)
 			return result;
+		StringBuffer buf = new StringBuffer(result); 
 		if(!prognosis.isComplete())
-			result = result + "text-decoration:underline;";
+			buf.append("text-decoration:underline;");
 		if(prognosis.namedFlags().flagForKey("keep"))
-			result = result + "font-weight:bold;";
+			buf.append("font-weight:bold;");
+		if(prognosis.bonus().compareTo(BigDecimal.ZERO) > 0)
+			buf.append("color:#ff0000;");
+		result = buf.toString();
 		return result;
 	}
 

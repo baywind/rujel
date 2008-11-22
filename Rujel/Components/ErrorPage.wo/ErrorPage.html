@@ -1,6 +1,6 @@
 <webobject name = "Wrapper">
-<h1><webobject name = "Title"/></h1>
-<p align = "center"><webobject name = "Message"/></p>
+<h1 style = "background-color:#fcc;color:#f33;"><webobject name = "Title"/></h1>
+<p align = "center" style = "background-color:#fff;"><webobject name = "Message"/></p>
 <div>
 <webobject name = "Form">
 <table align = "center" width = "60%" class = "backfield1" style = "padding:3em;" border = "0">
@@ -12,9 +12,10 @@
 </table>
 </webobject>
 </div>
-<p align = "center"><webobject name = "Recomendations"/></p>
+<p align = "center" style = "background-color:#fff;"><webobject name = "Recomendations"/></p>
 <div style = "margin:3em;">
-<a href="#" onclick = "d=document.getElementById('details');disp=d.style.display;d.style.display=(disp=='none')?'':'none';">
+<a href="#"  style = "background-color:#fff;"
+onclick = "d=document.getElementById('details');disp=d.style.display;d.style.display=(disp=='none')?'':'none';">
 <webobject name = "ShowDetails"/></a>
 <pre id = "details" style = "display:none;text-align:left;padding:1em;" class = "backfield2">
 <webobject name = "Details"/>

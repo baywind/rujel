@@ -74,12 +74,12 @@
 			<string>дата выставления</string>
 			<key>flags</key>
 			<dict>
-				<key>bonus</key>
-				<string>бонус</string>
 				<key>disable</key>
 				<string>не выставлять</string>
 				<key>keep</key>
-				<string>не изменять</string>
+				<string>зафиксировать</string>
+				<key>keepBonus</key>
+				<string>не обнулять при изменениях</string>
 			</dict>
 			<key>mark</key>
 			<string>отметка</string>
@@ -121,6 +121,16 @@
 		<string>Отсрочка для</string>
 		<key>upTo</key>
 		<string>до</string>
+		<key>addedBonus</key>
+		<string>добавлено</string>
+		<key>requestBonus</key>
+		<string>добавить?</string>
+		<key>requestedBonus</key>
+		<string>предложено добавить</string>
+		<key>setBonus</key>
+		<string>утвердить</string>
+		<key>dontKeep</key>
+		<string>сбросить при изменениях</string>
 	</dict>
 	<key>reportSettings</key>
 	<dict>

@@ -529,3 +529,31 @@ function closePopup() {
 	container = document.getElementById('ajaxMask');
 	container.style.display='none';	
 }
+
+function showObj(obj) {
+	if(typeof obj == 'string') {
+		obj = document.getElementById(obj);
+		if(obj == null) return false;
+	}
+	obj.style.display = '';
+	return obj;
+}
+function hideObj(obj) {
+	if(typeof obj == 'string') {
+		obj = document.getElementById(obj);
+		if(obj == null) return false;
+	}
+	obj.style.display = 'none';
+	return obj;
+}
+function toggleObj(obj) {
+	if(typeof obj == 'string') {
+		obj = document.getElementById(obj);
+		if(obj == null) return false;
+	}
+	if(obj.style.display == 'none')
+		obj.style.display = '';
+	else
+		obj.style.display = 'none';
+	return obj;
+}

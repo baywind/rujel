@@ -29,11 +29,13 @@
 
 package net.rujel.autoitog;
 
+import java.math.BigDecimal;
 import java.util.logging.Logger;
 
 import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -55,6 +57,10 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     
     public String mark;
     public NamedFlags flags;
+    public String bonusPercent;
+    public boolean hasBonus;
+    public boolean editBonusText;
+    
     
     protected boolean calculation;
     public boolean noCancel = false;
@@ -78,7 +84,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     					//addOn.setPrognosis(prognosis);
     					noCancel = true;
     				} catch (Exception e) {
-    					Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,"Error creating single prognosis");
+    					Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
+    							"Error creating single prognosis");
     					ec.revert();
     				}
     			}
@@ -89,10 +96,16 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     		flags.setFlags(prognosis.flags().intValue());
     		mark= prognosis.mark();
     		addOn.setPrognosis(prognosis);
+    		hasBonus = (prognosis.bonus().compareTo(BigDecimal.ZERO) > 0);
+           	BigDecimal bonus = (hasBonus)?prognosis.bonus():prognosis.calculateBonus(false);
+         	bonusPercent = (bonus == null)?null:fractionToPercent(bonus);
+        	String param = (hasBonus)?"Bonus":"BonusText";
+    		editBonusText = Various.boolForObject(session().valueForKeyPath(
+    				"readAccess.edit." + param));
     	}
     	super.appendToResponse(aResponse, aContext);
     }
-
+    
     public boolean showPercent() {
     	if(prognosis == null || !calculation)
     		return false;
@@ -111,6 +124,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public WOActionResults save() {
     	if(prognosis !=null || mark != null) {
     		EOEditingContext ec = course.editingContext();
+	    	Logger logger = Logger.getLogger("rujel.autoitog");
     		ec.lock();
     		if(mark == null && !calculation) {
     			ec.deleteObject(prognosis);
@@ -124,14 +138,29 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
        				prognosis._setPrognosUsage(addOn.usage());
        				prognosis.updateFireDate();
      			}
-    			prognosis.setMark(mark);
-    			prognosis.setNamedFlags(flags);
+    			if(addOn.usage().namedFlags().flagForKey("manual"))
+    				prognosis.setMark(mark);
+    	    	Object[] args = new Object[] {session(),prognosis};
+    	    	if(hasBonus) {
+    	    		if(prognosis.bonus().compareTo(BigDecimal.ZERO) == 0) {
+    	    			prognosis.addBonus();
+    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding bonus to prognosis",args);
+    	    		}
+    	    	} else {
+    	    		if(prognosis.bonus().compareTo(BigDecimal.ZERO) != 0) {
+    	    			prognosis.zeroBonus();
+    	    			prognosis.updateMarkFromValue();
+    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Removing bonus from prognosis",args);
+    	    		}
+	    			flags.setFlagForKey(false, "keepBonus");
+    			}
+   			prognosis.setNamedFlags(flags);
     		}
     		try {
     			ec.saveChanges();
     			addOn.setPrognosis(prognosis);
     		} catch (Exception e) {
-    			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,"Error saving prognosis",e);
+    			logger.log(WOLogLevel.WARNING,"Error saving prognosis",e);
     			session().takeValueForKey(e.getMessage(), "message");
 				ec.revert();
 			} finally {
@@ -149,5 +178,35 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	mark = null;
     	calculation = false;
     	return save();
+    }
+    
+    public static String fractionToPercent(BigDecimal decimal) {
+    	if(decimal == null || decimal.compareTo(BigDecimal.ZERO) == 0)
+    		return "0";
+    	decimal = decimal.movePointRight(2).stripTrailingZeros();
+    	if(decimal.scale() < 0)
+    		decimal = decimal.setScale(0);
+    	return decimal.toString() + " %";
+    }
+    
+    public String completePercent() {
+    	return fractionToPercent(prognosis.complete());
+    }
+    public String valuePercent() {
+    	return fractionToPercent(prognosis.value());
+    }
+        
+    public String bonusTitle() {
+    	String key = "requestBonus";
+    	if(hasBonus) {
+    		key = "addedBonus";
+    	} else if (prognosis.bonusTextEO() != null) {
+			key = "requestedBonus";
+		}
+    	String result = (String)application().valueForKeyPath(
+    			"extStrings.RujelAutoItog_AutoItog.ui." + key);
+    	if(result == null)
+    		result = key;
+    	return result;
     }
 }

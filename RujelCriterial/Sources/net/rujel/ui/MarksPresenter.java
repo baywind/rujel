@@ -226,7 +226,7 @@ public class MarksPresenter extends NotePresenter {
 	
 	protected FractionPresenter presenter() {
 		if(lesson() != null && student() != null) {
-			if(BigDecimal.ZERO.equals(lesson().weight())) {
+			if(BigDecimal.ZERO.compareTo(lesson().weight()) == 0) {
 				String key = SettingsReader.stringForKeyPath("edu.presenters.weightless", null);
 				if(key != null) {
 					NSTimestamp today = (NSTimestamp)session().valueForKey("today");
@@ -249,7 +249,7 @@ public class MarksPresenter extends NotePresenter {
 	}
 	protected FractionPresenter colorPresenter() {
 		if(lesson() != null) {
-			if(BigDecimal.ZERO.equals(lesson().weight())) {
+			if(BigDecimal.ZERO.compareTo(lesson().weight()) == 0) {
 				String key = SettingsReader.stringForKeyPath("edu.presenters.weightlessColor", null);
 				if(key != null) {
 					NSTimestamp today = (NSTimestamp)session().valueForKey("today");
