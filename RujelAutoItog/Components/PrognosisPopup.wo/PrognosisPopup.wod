@@ -89,7 +89,7 @@ CheckBoxFlag1 : WOCheckBox {
 }
 
 KeepString : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keep;
+  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keepBonus;
   valueWhenEmpty = "keep";
 }
 
@@ -120,19 +120,21 @@ BonusPercent : WOString {
 }
 
 BonusText : WOString {
-  value = prognosis.bonusText;
+  value = bonusText;
 }
 
 SetBonus : WOCheckBox {
 	checked = hasBonus;
+	disabled = session.readAccess._edit.Bonus;
 }
 
 KeepBonus : WOCheckBox {
 	checked = flags.keepBonus;
+	disabled = session.readAccess._edit.Bonus;
 }
 
 BonusTextArea : WOText {
-  value = prognosis.bonusText;
+  value = bonusText;
   style = "width:96%;";
 }
 
@@ -150,7 +152,7 @@ SetBonusString : WOString {
 }
 KeepTr : WOGenericContainer {
   elementName = "tr";
-  title = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keepBonus;
+  title = application.extStrings.RujelAutoItog_AutoItog.ui.keepBonusHover;
 }
 
 BonusTitle : WOString {
@@ -158,7 +160,7 @@ BonusTitle : WOString {
 }
 
 HasText : WOConditional {
-  condition = prognosis.bonusTextEO;
+  condition = bonusText;
 }
 
 CanBonus : WOConditional {

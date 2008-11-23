@@ -1,4 +1,4 @@
-// _Prognosis.java
+// _Bonus.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Prognosis.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Bonus.java instead.
 
 package net.rujel.autoitog;
 
@@ -37,43 +37,17 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _Prognosis extends EOGenericRecord {
-	public static final String ENTITY_NAME = "Prognosis";
+public abstract class _Bonus extends EOGenericRecord {
+	public static final String ENTITY_NAME = "Bonus";
 
 	// Attributes
-	public static final String COMPLETE_KEY = "complete";
-	public static final String FIRE_DATE_KEY = "fireDate";
-	public static final String FLAGS_KEY = "flags";
 	public static final String MARK_KEY = "mark";
+	public static final String REASON_KEY = "reason";
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String BONUS_KEY = "bonus";
 	public static final String EDU_PERIOD_KEY = "eduPeriod";
-
-  public BigDecimal complete() {
-    return (BigDecimal) storedValueForKey(COMPLETE_KEY);
-  }
-
-  public void setComplete(BigDecimal value) {
-    takeStoredValueForKey(value, COMPLETE_KEY);
-  }
-
-  public NSTimestamp fireDate() {
-    return (NSTimestamp) storedValueForKey(FIRE_DATE_KEY);
-  }
-
-  public void setFireDate(NSTimestamp value) {
-    takeStoredValueForKey(value, FIRE_DATE_KEY);
-  }
-
-  public Integer flags() {
-    return (Integer) storedValueForKey(FLAGS_KEY);
-  }
-
-  public void setFlags(Integer value) {
-    takeStoredValueForKey(value, FLAGS_KEY);
-  }
+	public static final String PROGNOSES_KEY = "prognoses";
 
   public String mark() {
     return (String) storedValueForKey(MARK_KEY);
@@ -81,6 +55,14 @@ public abstract class _Prognosis extends EOGenericRecord {
 
   public void setMark(String value) {
     takeStoredValueForKey(value, MARK_KEY);
+  }
+
+  public String reason() {
+    return (String) storedValueForKey(REASON_KEY);
+  }
+
+  public void setReason(String value) {
+    takeStoredValueForKey(value, REASON_KEY);
   }
 
   public BigDecimal value() {
@@ -91,14 +73,6 @@ public abstract class _Prognosis extends EOGenericRecord {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public net.rujel.autoitog.Bonus bonus() {
-    return (net.rujel.autoitog.Bonus)storedValueForKey(BONUS_KEY);
-  }
-
-  public void setBonus(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, BONUS_KEY);
-  }
-  
   public net.rujel.eduresults.EduPeriod eduPeriod() {
     return (net.rujel.eduresults.EduPeriod)storedValueForKey(EDU_PERIOD_KEY);
   }
@@ -107,4 +81,20 @@ public abstract class _Prognosis extends EOGenericRecord {
     	takeStoredValueForKey(value, EDU_PERIOD_KEY);
   }
   
+  public NSArray prognoses() {
+    return (NSArray)storedValueForKey(PROGNOSES_KEY);
+  }
+ 
+  public void setPrognoses(NSArray value) {
+    takeStoredValueForKey(value, PROGNOSES_KEY);
+  }
+  
+  public void addToPrognoses(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, PROGNOSES_KEY);
+  }
+
+  public void removeFromPrognoses(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, PROGNOSES_KEY);
+  }
+
 }

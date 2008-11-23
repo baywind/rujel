@@ -33,6 +33,7 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.Various;
 import net.rujel.ui.AddOnPresenter;
 
 import com.webobjects.appserver.*;
@@ -78,8 +79,8 @@ public class PrognosPresenter extends AddOnPresenter {
 			buf.append("text-decoration:underline;");
 		if(prognosis.namedFlags().flagForKey("keep"))
 			buf.append("font-weight:bold;");
-		if(prognosis.bonus().compareTo(BigDecimal.ZERO) > 0)
-			buf.append("color:#ff0000;");
+		/*if(prognosis.bonus() != null)
+			buf.append("color:#ff0000;");*/
 		result = buf.toString();
 		return result;
 	}
@@ -155,5 +156,20 @@ public class PrognosPresenter extends AddOnPresenter {
 		popup.takeValueForKey(context().page(),"returnPage");
 		return popup;
 	}
-
+	
+	public String bonusState() {
+		Bonus bonus = (Bonus)valueForKeyPath("currAddOn.prognosis.bonus");
+		if(bonus == null)
+			return null;
+		StringBuffer result = new StringBuffer("<span style = \"color:#ff0000;\">+");
+		if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
+			if(Various.boolForObject(valueForKeyPath("currAddOn.prognosis.namedFlags.keepBonus")))
+				result.append("<strong>!</strong>");
+			else
+				result.append('!');
+		} else {
+			result.append('?');
+		}
+		return result.toString();
+	}
 }

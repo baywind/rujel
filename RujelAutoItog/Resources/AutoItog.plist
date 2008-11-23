@@ -79,7 +79,7 @@
 				<key>keep</key>
 				<string>зафиксировать</string>
 				<key>keepBonus</key>
-				<string>не обнулять при изменениях</string>
+				<string>сохранять при изменениях</string>
 			</dict>
 			<key>mark</key>
 			<string>отметка</string>
@@ -129,8 +129,10 @@
 		<string>предложено добавить</string>
 		<key>setBonus</key>
 		<string>утвердить</string>
-		<key>dontKeep</key>
-		<string>сбросить при изменениях</string>
+		<key>keepBonusHover</key>
+		<string>при изменении оценок и процента успешности добавка не будет сброшена</string>
+		<key>cantDeleteBonus</key>
+		<string>У Вас недостаточно прав доступа, чтобы снять добавку</string>
 	</dict>
 	<key>reportSettings</key>
 	<dict>

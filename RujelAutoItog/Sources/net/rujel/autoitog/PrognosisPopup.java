@@ -57,7 +57,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     
     public String mark;
     public NamedFlags flags;
+    
     public String bonusPercent;
+    public String bonusText;
     public boolean hasBonus;
     public boolean editBonusText;
     
@@ -96,12 +98,18 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     		flags.setFlags(prognosis.flags().intValue());
     		mark= prognosis.mark();
     		addOn.setPrognosis(prognosis);
-    		hasBonus = (prognosis.bonus().compareTo(BigDecimal.ZERO) > 0);
-           	BigDecimal bonus = (hasBonus)?prognosis.bonus():prognosis.calculateBonus(false);
-         	bonusPercent = (bonus == null)?null:fractionToPercent(bonus);
-        	String param = (hasBonus)?"Bonus":"BonusText";
-    		editBonusText = Various.boolForObject(session().valueForKeyPath(
-    				"readAccess.edit." + param));
+    		Bonus bonus = prognosis.bonus();
+    		if(bonus != null)
+    			bonusText = bonus.reason();
+           	BigDecimal bonusValue = (bonus == null)?Bonus.calculateBonus(prognosis,null,false)
+           			:bonus.calculateValue(prognosis, false);
+    		hasBonus = (bonus != null && 
+    				bonus.value().compareTo(bonusValue) == 0);
+         	bonusPercent = (bonusValue == null)?null:fractionToPercent(bonusValue);
+        	//String param = (hasBonus)?"Bonus":"BonusText";
+         	NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
+    		editBonusText = accessBonus.flagForKey(
+    				(bonus != null && bonus.submitted())?"edit":"create");
     	}
     	super.appendToResponse(aResponse, aContext);
     }
@@ -140,20 +148,43 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
      			}
     			if(addOn.usage().namedFlags().flagForKey("manual"))
     				prognosis.setMark(mark);
-    	    	Object[] args = new Object[] {session(),prognosis};
+	    		Bonus bonus = prognosis.bonus();
+    	    	Object[] args = new Object[] {session(),bonus,prognosis};
     	    	if(hasBonus) {
-    	    		if(prognosis.bonus().compareTo(BigDecimal.ZERO) == 0) {
-    	    			prognosis.addBonus();
+    	    		if(bonus == null) {
+    	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
+    	    			bonus.initBonus(prognosis, true);
     	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding bonus to prognosis",args);
+    	    		} else if(!bonus.submitted()) {
+    	    			bonus.calculateValue(prognosis, true);
+    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Submitting bonus for prognosis",args);
     	    		}
     	    	} else {
-    	    		if(prognosis.bonus().compareTo(BigDecimal.ZERO) != 0) {
-    	    			prognosis.zeroBonus();
+    	    		if(bonus != null) {
+    	    			bonus.zeroBonus();
     	    			prognosis.updateMarkFromValue();
-    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Removing bonus from prognosis",args);
+    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Unsubmitting bonus from prognosis",args);
     	    		}
 	    			flags.setFlagForKey(false, "keepBonus");
     			}
+    	    	if(bonusText != null) {
+    	    		if(bonus == null) {
+    	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
+    	    			bonus.initBonus(prognosis, false);
+    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Requesting bonus for prognosis",args);
+    	    		}
+    	    		bonus.setReason(bonusText);
+    	    	} else if(bonus != null) {
+    	    		if(Various.boolForObject(session().valueForKeyPath("readAccess._delete.Bonus"))) {
+    	    			Object message = application().valueForKeyPath(
+    					"extStrings.RujelAutoItog_AutoItog.ui.cantDeleteBonus");
+    	    			session().takeValueForKey(message, "message");
+    	    		} else {
+    	    			prognosis.removeObjectFromBothSidesOfRelationshipWithKey(bonus, "bonus");
+    	    			ec.deleteObject(bonus);
+    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Removing bonus from prognosis",args);  
+    	    		}
+    	    	}
    			prognosis.setNamedFlags(flags);
     		}
     		try {
@@ -200,7 +231,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	String key = "requestBonus";
     	if(hasBonus) {
     		key = "addedBonus";
-    	} else if (prognosis.bonusTextEO() != null) {
+    	} else if (prognosis.bonus() != null) {
 			key = "requestedBonus";
 		}
     	String result = (String)application().valueForKeyPath(

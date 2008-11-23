@@ -1,18 +1,10 @@
 {
     attributes = (
         {
-            allowsNull = N; 
-            columnName = BONUS; 
-            name = bonus; 
-            prototypeName = decimal; 
-            scale = 4; 
-            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
-        }, 
-        {
             allowsNull = Y; 
-            columnName = "BONUS_TEXT"; 
-            name = bonusTextID; 
-            prototypeName = integer; 
+            columnName = BONUS; 
+            name = bonusID; 
+            prototypeName = "int_3"; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
@@ -49,9 +41,9 @@
             scale = 4; 
         }
     ); 
-    attributesUsedForLocking = (value, complete, mark, fireDate, flags, bonus, bonusTextID); 
+    attributesUsedForLocking = (value, complete, mark, fireDate, flags, bonusID); 
     className = "net.rujel.autoitog.Prognosis"; 
-    classProperties = (value, complete, mark, fireDate, eduPeriod, flags, bonus, bonusTextEO); 
+    classProperties = (value, complete, mark, fireDate, eduPeriod, flags, bonus); 
     externalName = PROGNOSIS; 
     fetchSpecificationDictionary = {}; 
     name = Prognosis; 
@@ -59,11 +51,11 @@
     relationships = (
         {
             deleteRule = EODeleteRuleCascade; 
-            destination = TextStore; 
+            destination = Bonus; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = tID; sourceAttribute = bonusTextID; }); 
-            name = bonusTextEO; 
+            joins = ({destinationAttribute = bID; sourceAttribute = bonusID; }); 
+            name = bonus; 
             ownsDestination = Y; 
         }, 
         {

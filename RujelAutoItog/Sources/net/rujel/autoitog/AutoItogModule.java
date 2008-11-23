@@ -70,6 +70,7 @@ public class AutoItogModule {
 			PrognosUsage.init();
 			StudentTimeout.init();
 			CourseTimeout.init();
+			Bonus.init();
 		} else if("init3".equals(obj)) {
 			return init3(ctx);
 		} else if("notesAddOns".equals(obj)) {

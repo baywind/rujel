@@ -32,7 +32,6 @@ package net.rujel.autoitog;
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.eduresults.*;
-import net.rujel.base.EntityIndex;
 import net.rujel.criterial.BorderSet;
 
 import com.webobjects.foundation.*;
@@ -56,8 +55,10 @@ public class Prognosis extends _Prognosis {
 	
 	public static void init() {
 		//		EOInitialiser.initialiseRelationship("ItogMark","teacher",false,"teacherID","Teacher");
-		EOInitialiser.initialiseRelationship("Prognosis","eduCourse",false,"eduCourseID","EduCourse").anyInverseRelationship().setPropagatesPrimaryKey(true);
-		EOInitialiser.initialiseRelationship("Prognosis","student",false,"studentID","Student").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("Prognosis","eduCourse",false,"eduCourseID","EduCourse")
+			.anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("Prognosis","student",false,"studentID","Student")
+			.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		//EOInitialiser.initialiseRelationship("Prognosis","eduPeriod",false,"periodID","EduPeriod").anyInverseRelationship().setPropagatesPrimaryKey(true);
 		//EOModelGroup.defaultGroup().entityNamed("Prognosis").relationshipNamed("eduPeriod").anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
@@ -81,17 +82,9 @@ public class Prognosis extends _Prognosis {
     	super.awakeFromInsertion(ec);
     	setFlags(new Integer(0));
     	setComplete(BigDecimal.ZERO);
-    	setBonus(BigDecimal.ZERO);
     	super.setValue(BigDecimal.ZERO);
     }
     
-    public void zeroBonus() {
-    	BigDecimal bonus = bonus();
-   		if(bonus != null && bonus.compareTo(BigDecimal.ZERO) != 0)
-			setBonus(BigDecimal.ZERO);
-   		//namedFlags().setFlagForKey(false, "keepBonus");
-    }
-
     public void setStudent(Student aValue) {
         takeStoredValueForKey(aValue, "student");
     }
@@ -113,15 +106,21 @@ public class Prognosis extends _Prognosis {
     		return;
     	if(namedFlags().flagForKey("keep"))
     		return;
-    	if(!namedFlags().flagForKey("keepBonus")) {
-    		zeroBonus();
-    		/*EOEnterpriseObject border = presenter.borderForFraction(aValue, true);
+    	Bonus bonus = bonus();
+    	if(bonus != null) {
+    		if(namedFlags().flagForKey("keepBonus")) {
+    			bonus.calculateValue(this,true);
+    			/*EOEnterpriseObject border = presenter.borderForFraction(aValue, true);
     		super.setMark((String)border.valueForKey("title"));
     		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
     		_bonus = topValue.subtract(aValue);*/
+    		} else if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
+    			bonus.setValue(BigDecimal.ZERO);
+    			logger.log(WOLogLevel.FINE,"Automatically dismissing bonus",bonus);
+    		}
     	}
     	updateMarkFromValue();
-     }
+    }
     
     public void updateMarkFromValue() {
     	PrognosUsage pu = prognosUsage();
@@ -130,7 +129,7 @@ public class Prognosis extends _Prognosis {
     	BorderSet presenter = pu.borderSet();
     	if(presenter == null)
     		return;
-		super.setMark(presenter.presentFraction(value().add(bonus())));
+		super.setMark(presenter.presentFraction(value()));
     }
     /*
     public void setMark(String mark) {
@@ -140,55 +139,6 @@ public class Prognosis extends _Prognosis {
     
     protected BigDecimal _bonus;
     */
-    public BigDecimal calculateBonus() {
-    	return calculateBonus(false);
-    }
-    
-    public BigDecimal calculateBonus(boolean update) {
-    	try {
-    		EOEnterpriseObject border = prognosUsage().borderSet().
-    		borderForFraction(value(), true); 
-    		if(border == null)
-    			return null;
-    		BigDecimal topValue = (BigDecimal)border.valueForKey("least");
-    		topValue = topValue.movePointLeft(2);
-    		if(topValue.compareTo(value()) < 0)
-    			return null;
-    		BigDecimal bonus = topValue.subtract(value());
-    		if(update) {
-    			setBonus(bonus);
-    			super.setMark((String)border.valueForKey("title"));
-    		}
-    		return bonus;
-    	} catch (Exception e) {
-    		logger.log(WOLogLevel.FINER, "Bonus not applicable for this prognosis", this);
-    		return null;
-    	}
-    }
-    
-    public void addBonus() {
-    	setBonus(calculateBonus(true));   	
-    }
-    
-	public String bonusText() {
-		return (String)valueForKeyPath("bonusTextEO.storedText");
-	}
-	
-	public void setBonusText(String bonusText) {
-		EOEnterpriseObject bonusTextEO = bonusTextEO();
-		if(bonusText == null) {
-			if(bonusTextEO != null)
-				removeObjectFromBothSidesOfRelationshipWithKey(bonusTextEO, BONUS_TEXT_EO_KEY);
-		} else {
-			if(bonusTextEO == null) {
-				bonusTextEO = EOUtilities.createAndInsertInstance(editingContext(), "TextStore");
-				bonusTextEO.takeValueForKey(EntityIndex.indexForObject(this), "entityIndex");
-				addObjectToBothSidesOfRelationshipWithKey(bonusTextEO, BONUS_TEXT_EO_KEY);
-			}
-			bonusTextEO.takeValueForKey(bonusText, "storedText");
-		}		
-	}
-
 
     public void setEduPeriod(EduPeriod period) {
     	super.setEduPeriod(period);
@@ -485,7 +435,23 @@ public class Prognosis extends _Prognosis {
 			itog.readFlags().setFlagForKey(true,"changed");
 		}
 		itog.setValue(value());
-		itog.setMark(mark());
+		Bonus bonus = bonus();
+		if(bonus == null) {
+			itog.setMark(mark());
+		} else {
+			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
+				itog.setMark(bonus.mark());
+				report("Bonus is applied",this, buf);
+			} else {
+				report("Bonus not applied",this, buf);
+				/*
+    			removeObjectFromBothSidesOfRelationshipWithKey(bonus, "bonus");
+    			removeObjectFromBothSidesOfRelationshipWithKey(bonus.cycle(), "cycle");
+    			editingContext().deleteObject(bonus);*/
+			}
+			buf.append(bonus.reason()).append('\n');
+		}
+
 		//itog.readFlags().setFlagForKey(true,"calculated");
 		itog.readFlags().setFlagForKey(false,"constituents");
 		if(!isComplete()) {

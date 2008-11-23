@@ -329,7 +329,8 @@
         {className = "net.rujel.autoitog.CourseTimeout"; name = CourseTimeout; }, 
         {className = "net.rujel.autoitog.PrognosUsage"; name = PrognosUsage; }, 
         {className = "net.rujel.autoitog.Prognosis"; name = Prognosis; }, 
-        {className = "net.rujel.autoitog.StudentTimeout"; name = StudentTimeout; }
+        {className = "net.rujel.autoitog.StudentTimeout"; name = StudentTimeout; }, 
+        {className = "net.rujel.autoitog.Bonus"; name = Bonus; }
     ); 
     userInfo = {
         "_EntityModeler" = {

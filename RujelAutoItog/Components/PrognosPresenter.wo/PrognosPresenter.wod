@@ -72,6 +72,7 @@ FireDate : WOString {
 	escapeHTML = false;
 }
 
-RequestedBonus : WOConditional {
-  condition = currAddOn.requestedBonus;
+RequestedBonus : WOString {
+  value = bonusState;
+  escapeHTML = false;
 }
