@@ -407,38 +407,41 @@ public class Prognosis extends _Prognosis {
 	}
 	
 	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite, StringBuffer buf) {
-		if(namedFlags().flagForKey("disable")) {
-			report("This prognosis was disabled",this, buf);
-			return null;
-			// TODO: should reset fireDate?
-		}
-
 		ItogMark itog = null;
 		if(itogs != null) {
 			itog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),itogs);
 		} else {
 			itog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),editingContext());
 		}
+		
+		if(namedFlags().flagForKey("disable")) {
+			report("This prognosis was disabled",this, buf);
+			if(itog != null)
+				setFireDate(null);
+			return null;
+		}
 
+		setFireDate(null);
 		if(itog == null) {
 			itog = (ItogMark)EOUtilities.createAndInsertInstance(editingContext(),"ItogMark");
 			itog.addObjectToBothSidesOfRelationshipWithKey(eduPeriod(),"eduPeriod");
 			itog.addObjectToBothSidesOfRelationshipWithKey(student(),"student");
 			itog.addObjectToBothSidesOfRelationshipWithKey(eduCourse().cycle(),"cycle");
-			setFireDate(null);
 		} else {
-			setFireDate(null);
 			if(!overwrite) {
 				report("Itog already exists",this, buf);
+				BigDecimal value = itog.value();
+				boolean flag = (value != null && value.equals(this.value()));
+				itog.readFlags().setFlagForKey(flag,"constituents");
 				return null;
 			}
-			itog.readFlags().setFlagForKey(true,"changed");
+			if(!this.mark().equals(itog.mark()))
+				itog.readFlags().setFlagForKey(true,"changed");
 		}
 		itog.setValue(value());
+		itog.setMark(mark());
 		Bonus bonus = bonus();
-		if(bonus == null) {
-			itog.setMark(mark());
-		} else {
+		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
 				itog.setMark(bonus.mark());
 				report("Bonus is applied",this, buf);
@@ -449,7 +452,8 @@ public class Prognosis extends _Prognosis {
     			removeObjectFromBothSidesOfRelationshipWithKey(bonus.cycle(), "cycle");
     			editingContext().deleteObject(bonus);*/
 			}
-			buf.append(bonus.reason()).append('\n');
+			buf.append(bonus.reason()).append(" : ").append(mark());
+			buf.append(" -> ").append(bonus.mark()).append('\n');
 		}
 
 		//itog.readFlags().setFlagForKey(true,"calculated");
@@ -519,6 +523,10 @@ cycleStudents:
 							Prognosis crp = (Prognosis) enu.nextElement();
 							if(crp.eduCourse().groupList().contains(crp.student())) {
 								report("Skipping prognosis for student not in group - found another prognosis", prognos, buf);
+								if(prognos.complete().compareTo(BigDecimal.ZERO) == 0)
+									ec.deleteObject(prognos);
+								else
+									prognos.setFireDate(null);
 								continue cycleStudents;
 							}
 						}

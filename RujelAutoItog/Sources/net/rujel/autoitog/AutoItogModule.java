@@ -327,6 +327,15 @@ public class AutoItogModule {
 		fs.setEntityName("Prognosis");
 		fs.setSortOrderings(null);
 		qual = new EOKeyValueQualifier("fireDate",EOQualifier.QualifierOperatorLessThanOrEqualTo,day);
+		int ignoreAfter = SettingsReader.intForKeyPath("edu.ignorePrognosesAfterDays", 0);
+		if(ignoreAfter > 0) {
+			NSMutableArray quals = new NSMutableArray(qual);
+			NSTimestamp since = day.timestampByAddingGregorianUnits(0, 0, - ignoreAfter, 0, 0, 0);
+			qual = new EOKeyValueQualifier("fireDate",
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+			quals.addObject(qual);
+			qual = new EOAndQualifier(quals);
+		}
 		fs.setQualifier(qual);
 		found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0)
@@ -381,6 +390,7 @@ public class AutoItogModule {
 				buf.append('\n');
 				if((i - last) > 12) {
 					try {
+						last = i;
 						ec.saveChanges();
 					}  catch (Exception ex) {
 						logger.log(WOLogLevel.WARNING,
@@ -388,6 +398,7 @@ public class AutoItogModule {
 						buf.append("Failed to save timed out prognoses");
 						ec.revert();
 					}
+					buf.append("--\n");
 				}
 			}
 			ItogMark itog = prognos.convertToItogMark(null, overwrite, buf);
@@ -451,6 +462,11 @@ public class AutoItogModule {
 			}
 			if(invalid.count() > 0)
 				courses.removeObjectsInArray(invalid);
+			EOSortOrdering so = new EOSortOrdering ("eduGroup", EOSortOrdering.CompareAscending);
+			NSMutableArray sorter = new NSMutableArray(so);
+			so = new EOSortOrdering ("cycle", EOSortOrdering.CompareAscending);
+			sorter.addObject(so);
+			EOSortOrdering.sortArrayUsingKeyOrderArray(courses, sorter);
 		}
 		return courses;
 	}
@@ -507,7 +523,7 @@ cycleCourses:
 cycleCourses:
 		while (courseEnum.hasMoreElements()) {
 			EduCourse course = (EduCourse)courseEnum.nextElement();
-			NSArray tmpArray = PeriodType.periodTypesForCourse(course);
+			NSArray tmpArray = null;//PeriodType.periodTypesForCourse(course);
 			/*if(!tmpArray.containsObject(period.periodType()))
 				continue cycleCourses;*/
 			NSDictionary dict = new NSDictionary (new Object[] {course,period},
