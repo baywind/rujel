@@ -32,6 +32,7 @@ package net.rujel.criterial;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 
@@ -58,18 +59,18 @@ public class Mark extends _Mark {
 */
 
 	public double weightedFraction() {
-		if(criterion() == null)
+		if(criterMask() == null)
 			throw new IllegalStateException("This mark was not properly initialised");
-		Number max = (Number)criterion().valueForKey("max");
-		Number weight = (Number)criterion().valueForKey("weight");
+		Number max = (Number)criterMask().valueForKey("max");
+		Number weight = (Number)criterMask().valueForKey("weight");
 		if(max == null || weight == null || value() == null)
 			throw new IllegalStateException("This mark was not properly initialised");
 		
 		return value().doubleValue()*weight.doubleValue()/max.doubleValue();
 	}
 	
-	public EOEnterpriseObject student() {
-        return (EOEnterpriseObject)storedValueForKey("student");
+	public Student student() {
+        return (Student)storedValueForKey("student");
     }
 	
     public void setStudent(EOEnterpriseObject aValue) {
@@ -138,4 +139,56 @@ public class Mark extends _Mark {
 		}
     }
 	
+	public Object handleQueryWithUnboundKey(String key) {
+		if(key.equals(valueForKeyPath("criterion.title")))
+			return value();
+		if(key.equals("text"))
+			return work().noteForStudent(student());
+		if(!work().usedCriteria().contains(key)) {
+			if(key.equals(valueForKeyPath("work.integralPresenter.title")))
+				return work().integralForStudent(student());
+			return super.handleQueryWithUnboundKey(key);
+		}
+		Mark mark = work().markForStudentAndCriterion(student(), key);
+		if(mark != null)
+			return mark.value();
+		else
+			return null;
+	}
+	
+	public void handleTakeValueForUnboundKey(Object value, String key) {
+		if(key.equals(valueForKeyPath("criterion.title"))) {
+			if(value != null) {
+			setValue((Integer)value);
+			} else {
+				work().removeObjectFromBothSidesOfRelationshipWithKey(this,"marks");
+				editingContext().deleteObject(this);
+			}
+			return;
+		}
+		if(key.equals("text")) {
+			work().setNoteForStudent((String)value, student());
+			return;
+		}
+		if(!work().usedCriteria().contains(key)) {
+			super.handleTakeValueForUnboundKey(value, key);
+			return;
+		}
+		Mark mark = work().markForStudentAndCriterion(student(), key);
+		if(value != null) {
+			if(mark == null) {
+				mark = (Mark)EOUtilities.createAndInsertInstance(work().editingContext(),"Mark");
+				work().addObjectToBothSidesOfRelationshipWithKey(mark,"marks");
+				mark.setStudent(student());
+				mark.setCriterionName(key);
+			}
+			if (mark.value() == null || ((Integer)value).intValue() != mark.value().intValue()) {
+				mark.setValue((Integer)value);
+			}
+		} else {
+			work().removeObjectFromBothSidesOfRelationshipWithKey(mark,"marks");
+			editingContext().deleteObject(mark);
+		} 
+	}
+
 }

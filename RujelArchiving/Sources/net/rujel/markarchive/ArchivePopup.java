@@ -41,10 +41,12 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
         super(context);
     }
     
+    protected EOEnterpriseObject obj;
     protected NSMutableArray keys;
     public NSDictionary presentKeys;
-    public NSMutableDictionary newValues;
     public NSArray archives;
+    public NSMutableDictionary newValues;
+    public boolean changeable;
     
     public MarkArchive archItem;
     public String keyItem;
@@ -58,6 +60,7 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void setObject(EOEnterpriseObject eo) {
+		obj = eo;
 		archives = MarkArchive.archivesForObject(eo);
 		if(archives != null && archives.count() > 0) {
 			Enumeration enu = archives.objectEnumerator();
@@ -75,15 +78,39 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 		}
 	}
 	
+	public NSMutableDictionary newValues() {
+		if(newValues == null && changeable) {
+			newValues = new NSMutableDictionary();
+			Enumeration enu = keys.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				newValues.takeValueForKey(obj.valueForKey(key), key);
+			}
+		}
+		return newValues;
+	}
+	
 	public String currKey() {
 		if(presentKeys == null || keyItem == null)
 			return keyItem;
-		return (String)presentKeys.valueForKey(keyItem);
+		String value = (String)presentKeys.valueForKey(keyItem); 
+		return (value == null)?keyItem:value;
 	}
 	
 	public String currValue() {
-		if(archItem == null || keyItem == null)
+		if(keyItem == null)
 			return null;
-		return archItem.getArchiveValueForKey(keyItem);
+		if(archItem != null)
+			return archItem.getArchiveValueForKey(keyItem);
+		if(newValues != null)
+			return (String)newValues.valueForKey(keyItem);
+		return null;
+	}
+	
+	public void setCurrValue(String value) {
+		if(newValues == null)
+			newValues = new NSMutableDictionary(value,keyItem);
+		else
+			newValues.takeValueForKey(value, keyItem);
 	}
 }

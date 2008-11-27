@@ -75,10 +75,11 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = objectIdentifierDict(eo);
 		if(pKey == null) {
 			editingContext().deleteObject(this);
+			Logger.getLogger("rujel.markarchive").log(WOLogLevel.INFO,
+					"Could not register object for archiving");
 			return;
 		}
-		EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(
-				eo.editingContext(),"UsedEntity","usedEntity",eo.entityName());
+		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), pKey,eo.editingContext());
 		setUsedEntity(usedEntity);
 		setIdentifierFromDictionary(usedEntity, pKey);
 	}
@@ -95,16 +96,20 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,eo);
 		if(pKey == null || pKey.count() == 0) {
 			EOEntity ent = EOUtilities.entityForObject(ec, eo);
-			EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
 			NSMutableArray keys = new NSMutableArray();
-			String key = (String)usedEntity.valueForKey("key1");
-			if(key != null) keys.addObject(key);
-			key = (String)usedEntity.valueForKey("key2");
-			if(key != null) keys.addObject(key);
-			key = (String)usedEntity.valueForKey("key3");
-			if(key != null) keys.addObject(key);
+			try {
+				EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
+				String key = (String)usedEntity.valueForKey("key1");
+				if(key != null) keys.addObject(key);
+				key = (String)usedEntity.valueForKey("key2");
+				if(key != null) keys.addObject(key);
+				key = (String)usedEntity.valueForKey("key3");
+				if(key != null) keys.addObject(key);
+			} catch (com.webobjects.eoaccess.EOObjectNotAvailableException e) {
+				return null;
+			}
 			NSMutableDictionary keyDict = new NSMutableDictionary();
-			
+
 			NSArray rels = ent.relationships();
 			Enumeration enu = rels.objectEnumerator();
 			while (enu.hasMoreElements() && keys.count() > 0) {
@@ -135,17 +140,25 @@ public class MarkArchive extends _MarkArchive
 		}
 		return pKey;
 	}
-	
+	/*
 	protected EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict) {
 		EOEditingContext ec = editingContext();
 		return getUsedEntity(entityName, identifierDict, ec);
 	}
+	
+	protected static EOEnterpriseObject getUsedEntity(EOEnterpriseObject eo) {
+		EOEditingContext ec = eo.editingContext();
+		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec, eo);
+		return getUsedEntity(eo.entityName(), pKey, ec);
+	}*/
 	
 	protected static EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict, EOEditingContext ec) {
 		EOEnterpriseObject usedEntity = null;
 		try {
 			usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",entityName);
 		} catch (com.webobjects.eoaccess.EOObjectNotAvailableException ex) {
+			if(identifierDict == null || identifierDict.count() == 0)
+				return null;
 			usedEntity = EOUtilities.createAndInsertInstance(ec, "UsedEntity");
 			usedEntity.takeValueForKey(entityName, "usedEntity");
 			Enumeration keys = identifierDict.keyEnumerator();
@@ -182,7 +195,7 @@ public class MarkArchive extends _MarkArchive
 	public void setIdentifierFromDictionary (String entityName, NSDictionary identifierDict) {
 		EOEnterpriseObject usedEntity = usedEntity();
 		if(usedEntity == null || !entityName.equals(usedEntity.valueForKey("usedEntity"))) {
-			usedEntity = getUsedEntity(entityName, identifierDict);
+			usedEntity = getUsedEntity(entityName, identifierDict, editingContext());
 			usedEntity = EOUtilities.objectMatchingKeyAndValue(editingContext(),"UsedEntity","usedEntity",entityName);		
 		}
 		setIdentifierFromDictionary(usedEntity, identifierDict);
@@ -211,13 +224,24 @@ public class MarkArchive extends _MarkArchive
 	
 	public static NSArray archivesForObject(EOEnterpriseObject eo) {
 		EOEditingContext ec = eo.editingContext();
-		EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
-		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,eo);
+		NSDictionary pKey = objectIdentifierDict(eo);
+		if(pKey == null)
+			return null;
+		//EOUtilities.primaryKeyForObject(ec,eo);
+		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), pKey, ec);
+		//EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
 		EOQualifier qual = archiveQualifier(usedEntity,pKey);
 		EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("timestamp", EOSortOrdering.CompareAscending);
 		EOFetchSpecification fs = new EOFetchSpecification("MarkArchive",qual,new NSArray(so));
 		return ec.objectsWithFetchSpecification(fs);
 	}
+	/*
+	public static EOQualifier archiveQualifier(EOEnterpriseObject eo) {
+		EOEditingContext ec = eo.editingContext();
+		NSDictionary pKey = objectIdentifierDict(eo);//EOUtilities.primaryKeyForObject(ec, eo);
+		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), pKey, ec);
+		return archiveQualifier(usedEntity,pKey);
+	}*/
 	
 	public static EOQualifier archiveQualifier(EOEnterpriseObject usedEntity, NSDictionary pKey) {
 		EOQualifier qual = new EOKeyValueQualifier("usedEntity",EOQualifier.QualifierOperatorEqual, usedEntity);
@@ -266,7 +290,7 @@ public class MarkArchive extends _MarkArchive
 		String key = (String)usedEntity().valueForKey("toArchive");
 		if(key != null) {
 			takeArchiveValueForKey(eo.valueForKey(key).toString(),key);
-		} else { 
+		} else {
 			Enumeration keys = eo.attributeKeys().objectEnumerator();
 			while (keys.hasMoreElements()) {
 				key = (String) keys.nextElement();
