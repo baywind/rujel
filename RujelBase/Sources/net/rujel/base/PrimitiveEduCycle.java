@@ -136,25 +136,34 @@ public class PrimitiveEduCycle extends _PrimitiveEduCycle implements EduCycle,Us
 	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
 				
 		public int compareAscending(Object left, Object right)  {
+			if(left == null || left instanceof NSKeyValueCoding.Null 
+					|| !(right instanceof EduCycle))
+				return NSComparator.OrderedAscending;
+			if(right == null || right instanceof NSKeyValueCoding.Null
+				|| !(left instanceof EduCycle))
+				return NSComparator.OrderedDescending;
 			EduCycle l = (EduCycle)left;
 			EduCycle r = (EduCycle)right;
 			return super.compareAscending(l.subject(), r.subject());
 		}	
 		public int compareCaseInsensitiveAscending(Object left, Object right)  {
+			if(left == null || left instanceof NSKeyValueCoding.Null 
+					|| !(right instanceof EduCycle))
+				return NSComparator.OrderedAscending;
+			if(right == null || right instanceof NSKeyValueCoding.Null
+				|| !(left instanceof EduCycle))
+				return NSComparator.OrderedDescending;
 			EduCycle l = (EduCycle)left;
 			EduCycle r = (EduCycle)right;
 			return super.compareCaseInsensitiveAscending(l.subject(), r.subject());
 		}
 		
 		public int compareDescending(Object left, Object right)  {
-			EduCycle l = (EduCycle)left;
-			EduCycle r = (EduCycle)right;
-			return super.compareDescending(l.subject(), r.subject());
+			return compareAscending(right, left);
 		}
+		
 		public int compareCaseInsensitiveDescending(Object left, Object right)  {
-			EduCycle l = (EduCycle)left;
-			EduCycle r = (EduCycle)right;
-			return super.compareCaseInsensitiveDescending(l.subject(), r.subject());
+			return compareCaseInsensitiveAscending(right, left);
 		}
 	}
 

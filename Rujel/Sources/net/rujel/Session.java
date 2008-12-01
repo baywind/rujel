@@ -48,10 +48,9 @@ public class Session extends WOSession implements WithUser {
 	public NSTimestamp today;// = new NSTimestamp();
 	public Session() {
         super();
+		logger.log(WOLogLevel.SESSION,"Session created",this);
         
-        /* ** Put your per-session initialization code here ** */
 		setDefaultEditingContext(new SessionedEditingContext(this));
-	//	logger.log(WOLogLevel.SESSION,"Session created",this);
 		String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
 		if(defaultDate == null) {
 			today = new NSTimestamp();

@@ -188,7 +188,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	}
 
 	public PrognosUsage usage() {
-		if(_usagesForPerTypes == null)
+		if(_usagesForPerTypes == null || periodItem == null)
 			return null;
 		return (PrognosUsage)_usagesForPerTypes.objectForKey(periodItem.periodType());
 	}

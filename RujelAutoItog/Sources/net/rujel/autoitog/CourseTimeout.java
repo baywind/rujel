@@ -30,12 +30,17 @@
 package net.rujel.autoitog;
 
 import net.rujel.interfaces.*;
+import net.rujel.base.MyUtility;
 import net.rujel.eduresults.EduPeriod;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.Format;
 import java.util.logging.Logger;
 import java.util.Enumeration;
 
@@ -283,5 +288,19 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		}
 		return new EOAndQualifier(allQuals);
 		// and eduPeriod
+	}
+	
+	public NSMutableDictionary extItog() {
+		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
+		StringBuffer buf = new StringBuffer((String)WOApplication.application()
+				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.generalTimeout"));
+		buf.append(' ').append((String)WOApplication.application()
+				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.upTo"));
+		buf.append(' ');
+		Format df = MyUtility.dateFormat();
+		df.format(dueDate(), buf, new FieldPosition(DateFormat.DATE_FIELD));
+		buf.append(" : <em>").append(reason()).append("</em>");
+		result.takeValueForKey(buf.toString(), "text");
+		return result;
 	}
 }

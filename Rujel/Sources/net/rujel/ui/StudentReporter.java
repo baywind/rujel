@@ -103,16 +103,15 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 
 		courses = ((NSArray)valueForBinding("courses")).mutableClone();
 		EOQualifier q;
-		NSMutableArray quals = new NSMutableArray();
+		/*NSMutableArray quals = new NSMutableArray();
 		q = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
-		quals.addObject(q);
+		quals.addObject(q);*/
 		q = new EOKeyValueQualifier("groupList",EOQualifier.QualifierOperatorContains,student);
-		quals.addObject(q);
-		q = new EOAndQualifier(quals);
+		/*quals.addObject(q);
+		q = new EOAndQualifier(quals);*/
 		EOQualifier.filterArrayWithQualifier(courses,q);
-		quals.removeAllObjects();
-		quals.addObject(EOSortOrdering.sortOrderingWithKey("cycle",EOSortOrdering.CompareCaseInsensitiveAscending));
-		EOSortOrdering.sortArrayUsingKeyOrderArray(courses,quals);
+		NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("cycle",EOSortOrdering.CompareCaseInsensitiveAscending));
+		EOSortOrdering.sortArrayUsingKeyOrderArray(courses,sorter);
 
 		
 		NSMutableDictionary reportSettings = new NSMutableDictionary(student, "student");

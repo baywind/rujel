@@ -30,13 +30,18 @@
 package net.rujel.autoitog;
 
 
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.Format;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+import net.rujel.base.MyUtility;
 import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
@@ -182,4 +187,18 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 		return (StudentTimeout)timeouts.objectAtIndex(0);
 	}
 
+	public NSMutableDictionary extItog() {
+		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
+		result.takeValueForKey(valueForKeyPath("eduCourse.cycle"), "cycle");
+		StringBuffer buf = new StringBuffer((String)WOApplication.application()
+				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.generalTimeout"));
+		buf.append(' ').append((String)WOApplication.application()
+				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.upTo"));
+		buf.append(' ');
+		Format df = MyUtility.dateFormat();
+		df.format(dueDate(), buf, new FieldPosition(DateFormat.DATE_FIELD));
+		buf.append(" : <em>").append(reason()).append("</em>");
+		result.takeValueForKey(buf.toString(), "text");
+		return result;
+	}
 }

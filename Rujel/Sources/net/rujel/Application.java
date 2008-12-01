@@ -250,4 +250,11 @@ public class Application extends UTF8Application {
 		logger.info("Application is terminating");
 		super.terminate();
 	}
+	
+	public WOSession createSessionForRequest(WORequest aRequest) {
+		WOSession result = super.createSessionForRequest(aRequest);
+		Object[] args = new Object[] {result, Session.clientIdentity(aRequest)};
+		logger.log(WOLogLevel.SESSION,"Generating session:",args);
+		return result;
+	}
 }

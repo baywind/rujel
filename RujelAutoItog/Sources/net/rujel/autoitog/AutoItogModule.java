@@ -38,6 +38,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
@@ -84,6 +85,8 @@ public class AutoItogModule {
 			return PrognosReport.reportForStudent(settings);
 		} else if("reportSettingsForStudent".equals(obj)) {
 			return PlistReader.cloneDictionary(reportSettings, true);
+		} else if("extItog".equals(obj)) {
+			return extItog(ctx);
 		}
 		return null;
 	}
@@ -588,4 +591,91 @@ cycleStudents:
 		
 		
 	}*/
+	
+	public static Object extItog(WOContext ctx) {
+		NSKeyValueCoding reporter = (NSKeyValueCoding)ctx.session().objectForKey("itogReporter");
+		Student student = (Student)reporter.valueForKey("student");
+		Integer eduYear = (Integer)reporter.valueForKey("eduYear");
+		EOEditingContext ec = student.editingContext();
+		
+		NSArray eduPeriods = (NSArray)reporter.valueForKey("eduPeriods");
+		if(eduPeriods == null) {
+			eduPeriods = EOUtilities.objectsMatchingKeyAndValue(ec,"EduPeriod", "eduYear",eduYear);
+			reporter.takeValueForKey(eduPeriods,"eduPeriods");
+		} else {
+			eduPeriods = EOUtilities.localInstancesOfObjects(ec,eduPeriods);
+		}
+		EOQualifier perQual = Various.getEOInQualifier("eduPeriod", eduPeriods);
+		NSMutableArray quals = new NSMutableArray(perQual);
+		EOQualifier qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
+		quals.addObject(qual);
+		qual = new EOAndQualifier(quals);
+
+		NSMutableArray result = new NSMutableArray();
+		
+		// StudentTimeout
+		EOFetchSpecification fs = new EOFetchSpecification(
+				StudentTimeout.ENTITY_NAME,qual,null);
+		NSArray timeouts = ec.objectsWithFetchSpecification(fs);
+		if(timeouts != null && timeouts.count() > 0) {
+			result.addObjectsFromArray((NSArray)timeouts.valueForKey("extItog"));
+		}
+		
+		// Bonus
+		qual = new EOKeyValueQualifier(
+				"value",EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO);
+		quals.addObject(qual);
+		qual = new EOAndQualifier(quals);
+		fs.setEntityName(Bonus.ENTITY_NAME);
+		fs.setQualifier(qual);
+		NSArray bonuses = ec.objectsWithFetchSpecification(fs);
+		if(bonuses != null && bonuses.count() > 0) {
+			result.addObjectsFromArray((NSArray)bonuses.valueForKey("extItog"));
+		}
+		
+		
+		// CourseTimeout
+		NSArray courses = (NSArray)reporter.valueForKey("courses");
+		if(courses == null || courses.count() == 0)
+			return result;
+		
+		timeouts = (NSArray)reporter.valueForKey("courseTimeouts");
+		if(timeouts == null) {
+			fs.setEntityName(CourseTimeout.ENTITY_NAME);
+			fs.setQualifier(perQual);
+			timeouts = ec.objectsWithFetchSpecification(fs);
+			reporter.takeValueForKey(timeouts,"courseTimeouts");
+		} else {
+			timeouts = EOUtilities.localInstancesOfObjects(ec,timeouts);
+		}
+
+		Enumeration enu = courses.objectEnumerator();
+		NSArray sort = new NSArray(new Object[] {
+				new EOSortOrdering("eduPeriod",EOSortOrdering.CompareAscending),
+				EOSortOrdering.sortOrderingWithKey("dueDate",EOSortOrdering.CompareDescending),
+		});
+		while (enu.hasMoreElements()) {
+			EduCourse course = (EduCourse) enu.nextElement();
+			qual = CourseTimeout.qualifierForCourseAndPeriod(course,null);
+			NSMutableArray tos = timeouts.mutableClone();
+			EOQualifier.filterArrayWithQualifier(tos,qual);
+			if(tos.count() == 0)
+				continue;
+			if(tos.count() > 1)
+				EOSortOrdering.sortArrayUsingKeyOrderArray(tos, sort);
+			// TODO: more accurate CourseTimeout selection 
+			EduPeriod per = null;
+			for (int i = 0; i < tos.count(); i++) {
+				CourseTimeout ct = (CourseTimeout)tos.objectAtIndex(i);
+				if(ct.eduPeriod() == per)
+					continue;
+				per = ct.eduPeriod();
+				NSMutableDictionary dict = ct.extItog();
+				dict.takeValueForKey(course.cycle(), "cycle");
+				result.addObject(dict);
+			}
+		}
+
+		return result;
+	}
 }

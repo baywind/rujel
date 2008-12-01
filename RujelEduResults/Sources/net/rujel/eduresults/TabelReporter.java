@@ -31,8 +31,6 @@ package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
-import net.rujel.autoitog.*;
-// TODO: optional timeouts
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
@@ -55,54 +53,32 @@ public class TabelReporter extends WOComponent {
 	
 	public void reset() {
 		student = null;
-		since = null;
-		to = null;
-		reporter = null;
-		courses = null;
-		period = null;
 		perlist = null;
 		perItem = null;
-		cycleItem = null;
-		timeouts = null;
+		item = null;
 		cyclesForPerlists = null;
 		marksAgregate = null;
-		timeoutsDict = null;
 		perTypeUsage = null;
 		eduPeriods = null;
-		courseTimeouts = null;
 		eduYear = null;
+		comments = null;
 	}
 	public Student student;
-	public NSTimestamp since;
-	public NSTimestamp to;
-	public NSKeyValueCoding reporter;
-	protected NSMutableArray courses;
+	protected Number eduYear;
 	
-	public Period period;
 	public NSArray perlist;
     public EduPeriod perItem;
-    public NSKeyValueCoding cycleItem;
+    public NSKeyValueCoding item;
 	public int perIdx;
 	
-	public NSMutableArray timeouts;
 	public NSMutableDictionary cyclesForPerlists;
 	protected NSMutableDictionary marksAgregate;
-	public NSMutableDictionary timeoutsDict;
+	public NSMutableArray comments;
 		
 	protected NSArray perTypeUsage;
 	protected NSArray eduPeriods;
-	protected NSArray courseTimeouts;
-	protected Number eduYear;
 	
-	public void initialiseReporter(EOEditingContext ec) {
-		reporter = (NSKeyValueCoding)valueForBinding("reporter");
-		if(to == null && period != null)
-			to = new NSTimestamp(period.end());
-		if(period instanceof EduPeriod) {
-			eduYear = ((EduPeriod)period).eduYear();
-		} else {
-			eduYear = net.rujel.base.MyUtility.eduYearForDate(to);
-		}
+	public void initialiseReporter(NSKeyValueCoding reporter, EOEditingContext ec) {
 		
 		perTypeUsage = (NSArray)reporter.valueForKey("perTypeUsage");
 		if(perTypeUsage == null) {
@@ -112,21 +88,6 @@ public class TabelReporter extends WOComponent {
 			reporter.takeValueForKey(perTypeUsage,"perTypeUsage");
 		} else {
 			perTypeUsage = EOUtilities.localInstancesOfObjects(ec,perTypeUsage);
-		}
-		if(to == null || !to.equals(reporter.valueForKey("dueDate")))
-			courseTimeouts = null;
-		else
-			courseTimeouts = (NSArray)reporter.valueForKey("courseTimeouts");
-		if(courseTimeouts == null) {
-			if(period != null && period instanceof EduPeriod) {
-				courseTimeouts = EOUtilities.objectsMatchingKeyAndValue(ec,"CourseTimeout","eduPeriod",period);
-			} else {
-				courseTimeouts = EOUtilities.objectsWithQualifierFormat(ec,"CourseTimeout","dueDate >= %@",new NSArray(to));
-			}
-			reporter.takeValueForKey(courseTimeouts,"courseTimeouts");
-			reporter.takeValueForKey(to,"dueDate");
-		} else {
-			courseTimeouts = EOUtilities.localInstancesOfObjects(ec,courseTimeouts);
 		}
 		
 		eduPeriods = (NSArray)reporter.valueForKey("eduPeriods");
@@ -141,13 +102,27 @@ public class TabelReporter extends WOComponent {
 	
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
 		student = (Student)valueForBinding("student");
-		since = (NSTimestamp)valueForBinding("since");
-		to = (NSTimestamp)valueForBinding("to");
-		period = (Period)valueForBinding("period");
-		courses = ((NSArray)valueForBinding("courses")).mutableClone();
+		Object tmp = valueForBinding("period");
+		if(tmp instanceof EduPeriod) {
+			eduYear = ((EduPeriod)tmp).eduYear();
+		} 
+		if(eduYear == null) {
+			tmp = valueForBinding("to");
+			if(tmp == null)
+				tmp = valueForBinding("since");
+			if(tmp instanceof NSTimestamp)
+				eduYear = net.rujel.base.MyUtility.eduYearForDate((NSTimestamp)tmp);
+		}
+		if(eduYear == null) {
+			eduYear = (Integer)session().valueForKey("eduYear");
+		}
+		NSMutableArray courses = ((NSArray)valueForBinding("courses")).mutableClone();
+
 
 		EOEditingContext ec = student.editingContext();
-		initialiseReporter(ec);
+		NSKeyValueCoding reporter = (NSKeyValueCoding)valueForBinding("reporter");
+		initialiseReporter(reporter, ec);
+		reporter.takeValueForKey(eduYear, "eduYear");
 
 		EOQualifier qual = new EOKeyValueQualifier("groupList",EOQualifier.QualifierOperatorContains,student);
 		EOQualifier.filterArrayWithQualifier(courses,qual);
@@ -159,8 +134,6 @@ public class TabelReporter extends WOComponent {
 		
 		NSArray allMarks = EOUtilities.objectsWithQualifierFormat(ec,"ItogMark","student = %@ AND eduPeriod.eduYear = %@",params);
 
-		timeoutsDict = new NSMutableDictionary();
-		
 		cyclesForPerlists = new NSMutableDictionary();
 		NSMutableDictionary list4type = new NSMutableDictionary();
 		
@@ -183,22 +156,6 @@ public class TabelReporter extends WOComponent {
 			} else {
 				cyclesForPerlist.addObject(currCourse.cycle());
 			}
-			
-			//put course timeout
-			if(courseTimeouts != null && courseTimeouts.count() > 0) {
-				qual = CourseTimeout.qualifierForCourseAndPeriod(currCourse,null);
-				NSArray tos = EOQualifier.filteredArrayWithQualifier(courseTimeouts,qual);
-				if(tos != null && tos.count() > 0) {
-					if(tos.count() > 1) {
-						if(tos instanceof NSMutableArray) {
-							EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)tos,Timeout.sorter);
-						} else {
-							tos = EOSortOrdering.sortedArrayUsingKeyOrderArray(tos,Timeout.sorter);
-						}
-					}
-					timeoutsDict.setObjectForKey(tos.objectAtIndex(0),currCourse.cycle());
-				}
-			}
 		} //agregate courses
 		
 		marksAgregate = new NSMutableDictionary();
@@ -213,49 +170,71 @@ getgroup:	while (pen.hasMoreElements()) {
 					continue getgroup;
 				NSArray cycles = (NSArray)cyclesForPerlists.objectForKey(curPerList);
 				if(cycles.containsObject(currMark.cycle())) {
-					ItogMark[] agregate = (ItogMark[])marksAgregate.objectForKey(currMark.cycle());
+					NSMutableDictionary[] agregate = (NSMutableDictionary[])marksAgregate.objectForKey(currMark.cycle());
 					if(agregate == null) {
-						agregate = new ItogMark[curPerList.count()];
+						agregate = new NSMutableDictionary[curPerList.count()];
 						marksAgregate.setObjectForKey(agregate,currMark.cycle());
 					}
-					agregate[perIdx] = currMark;
+					agregate[perIdx] = new NSMutableDictionary(currMark.mark(),"mark");
 					break getgroup;
 				}
 			}
 		} //agregate Marks
 
-		//agregate Timeouts
-		//NSMutableDictionary dict = new NSMutableDictionary(student,"student");
-		params.removeAllObjects();
-		params.addObject(student);
-		NSArray tos = null;
-		if(period != null && period instanceof EduPeriod) {
-			params.addObject(period);
-			tos = EOUtilities.objectsWithQualifierFormat(ec,"StudentTimeout","student = %@ AND eduPeriod >= %@",params);
-			//objectsMatchingKeyAndValue(ec,"Timeout","eduPeriod",period);
-			//dict.setObjectForKey(period,"eduPeriod");
-		} else {
-			params.addObject(to);
-			tos = EOUtilities.objectsWithQualifierFormat(ec,"StudentTimeout","student = %@ AND dueDate >= %@",params);
-			//dict.setObjectForKey(to,"dueDate");
-		}
-		//NSArray tos = EOUtilities.objectsMatchingValues(ec,"StudentTimeout",dict);
-		enu = tos.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			Timeout curTo = (Timeout)enu.nextElement();
-			if(curTo.eduCourse() != null) {
-				timeoutsDict.setObjectForKey(curTo,curTo.eduCourse().cycle());
-			} else {
-				if(timeouts == null) {
-					timeouts = new NSMutableArray(curTo);
-				} else {
-					timeouts.addObject(curTo);
+		//prepare comments
+		reporter.takeValueForKey(student,"student");
+		reporter.takeValueForKey(courses, "courses");
+		session().setObjectForKey(reporter, "itogReporter");
+		comments = (NSMutableArray)session().valueForKeyPath("modules.extItog");
+		session().removeObjectForKey("itogReporter");
+		if(comments != null && comments.count() > 0) {
+			NSArray sorter = new NSArray(new EOSortOrdering[] {
+					new EOSortOrdering("eduPeriod",EOSortOrdering.CompareAscending),
+					new EOSortOrdering("cycle",EOSortOrdering.CompareAscending)
+			});
+			EOSortOrdering.sortArrayUsingKeyOrderArray(comments, sorter);
+			for (int i = 0; i < comments.count(); i++) {
+				NSDictionary comment = (NSDictionary)comments.objectAtIndex(i);
+				String alias = '*' + Integer.toString(1 + i);
+					//Character.toString((char)('a' + i));
+				Object cycle = comment.valueForKey("cycle");
+				if(cycle == null) {
+					NSMutableDictionary perAlias = (NSMutableDictionary)
+							marksAgregate.valueForKey("none");
+					if(perAlias == null) {
+						perAlias = new NSMutableDictionary();
+						marksAgregate.setObjectForKey(perAlias, "none");
+					}
+					perAlias.setObjectForKey(alias, comment.valueForKey("eduPeriod"));
+					continue;
+				}
+				comment.takeValueForKey(alias, "alias");
+				Enumeration pen = cyclesForPerlists.keyEnumerator();
+				while (pen.hasMoreElements()) {
+					NSArray curPerList = (NSArray)pen.nextElement();
+					perIdx = curPerList.indexOfIdenticalObject(comment.valueForKey("eduPeriod"));
+					if(perIdx == NSArray.NotFound)
+						continue;
+					NSArray cycles = (NSArray)cyclesForPerlists.objectForKey(curPerList);
+					if(cycles.containsObject(cycle)) {
+						NSMutableDictionary[] agregate = (NSMutableDictionary[])
+						marksAgregate.objectForKey(cycle);
+						if(agregate == null) {
+							agregate = new NSMutableDictionary[curPerList.count()];
+							marksAgregate.setObjectForKey(agregate,cycle);
+						}
+						if(agregate[perIdx] == null)
+							agregate[perIdx] = new NSMutableDictionary(alias,"alias");
+						else
+							agregate[perIdx].takeValueForKey(alias,"alias");
+						//break;
+					}
 				}
 			}
 		}
 		super.appendToResponse(aResponse,aContext);
 	}
-	
+
 	protected NSArray list4types(NSArray types) {
 		if(types == null || types.count() == 0) {
 			return types;
@@ -284,20 +263,75 @@ getgroup:	while (pen.hasMoreElements()) {
 		return (NSArray)cyclesForPerlists.objectForKey(perlist);
 	}
 	
-	public ItogMark mark() {
-		ItogMark[] agregate = (ItogMark[])marksAgregate.objectForKey(cycleItem);
-		return (agregate==null)?null:agregate[perIdx];
+	public String mark() {
+		if(item == null || perItem == null)
+			return null;
+		NSMutableDictionary[] agregate = (NSMutableDictionary[])marksAgregate.objectForKey(item);
+		NSDictionary agr = (agregate==null)?null:agregate[perIdx];
+		if(agr == null)
+			return null;
+		String mark = (String)agr.valueForKey("mark");
+		String alias = (String)agr.valueForKey("alias");
+		if(alias == null)
+			return mark;
+		StringBuffer buf = new StringBuffer(15);
+		buf.append("&nbsp;&nbsp;");
+		if(mark != null) {
+			//buf.append("<strong>").append(mark).append("</strong>");
+			buf.append(mark);
+		}
+		buf.append("<span class=\"sup\">").append(alias).append("</span>");
+		return buf.toString();
 	}
 	
-	public NSKeyValueCoding timeout() {
-		return (NSKeyValueCoding)timeoutsDict.objectForKey(cycleItem);
+	public String commentSubj() {
+		Object cycle = valueForKeyPath("item.cycle");
+		if (cycle instanceof EduCycle) {
+			EduCycle c = (EduCycle) cycle;
+			return c.subject();
+		}
+		if (cycle == null || "none".equals(cycle))
+			return (String)application().valueForKeyPath(
+					"extStrings.RujelEduResults_EduResults.allCycles");
+		return cycle.toString();
+	}
+	
+	public boolean commentPeriod() {
+		if(perItem == item.valueForKey("eduPeriod"))
+			return false;
+		perItem = (EduPeriod)item.valueForKey("eduPeriod");
+		return true;
 	}
 	
 	public String periodTitle() {
+		/*NSDictionary perAlias = (NSDictionary)marksAgregate.objectForKey("none");
+		String alias = (perAlias == null)?null:(String)perAlias.objectForKey(perItem); */
+		StringBuffer buf = new StringBuffer();
 		if(perItem.countInYear() > 1) {
-			return Various.makeRoman(perItem.num().intValue()) + "<br/>\n<small>" + perItem.periodType().title() + "<small>";
+			/*if(alias != null)
+				buf.append("<span style=\"white-space:nowrap;\">");*/
+			buf.append(Various.makeRoman(perItem.num().intValue()));
+			/*if(alias != null)
+				buf.append(" <span class=\"sup\">(").append(alias).append("</span>").append("</span>");*/
+			buf.append("<br>\n<small>");
+			buf.append(perItem.periodType().title());
+			buf.append("</small>");
+		} else {
+			buf.append(perItem.periodType().title());
+			/*if(alias != null)
+				buf.append("<sup>").append(alias).append("</sup>");*/
 		}
-		return perItem.periodType().title();
+		return buf.toString();
+	}
+
+	public String liStyle() {
+		Object cycle = valueForKeyPath("item.cycle");
+		if (cycle == null || "none".equals(cycle))
+			return "list-style-type:none;line-height:150%";
+		return null;
 	}
 	
+	public String num() {
+		return Integer.toString(perIdx + 1);
+	}
 }

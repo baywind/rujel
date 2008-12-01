@@ -50,6 +50,10 @@ public class ModuleInit {
 		if(obj == null || obj.equals("init")) {
 			ItogMark.init();
 			PeriodType.init();
+			EOSortOrdering.ComparisonSupport.setSupportForClass(
+					new EduPeriod.ComparisonSupport(), Period.class);
+			EOSortOrdering.ComparisonSupport.setSupportForClass(
+					new EduPeriod.ComparisonSupport(), EduPeriod.class);
 		} else if("init2".equals(obj)) {
 			return init2(ctx);
 		} else if("notesAddOns".equals(obj)) {
@@ -126,13 +130,12 @@ public class ModuleInit {
 	}*/
 	
 	public static NSDictionary studentReporter(WOContext ctx) {
-		NSMutableDictionary result = studentReporter.mutableClone();
 		NamedFlags access = moduleAccess(ctx,"ItogMark");
-		if(access.getFlag(0)) {
-			result.takeValueForKey(access,"access");
-			return result;
-		}
-		return null;
+		if(!access.getFlag(0))
+				return null;
+		NSMutableDictionary result = studentReporter.mutableClone();
+		result.takeValueForKey(access,"access");
+		return result;
 	}
 	
 	public static NSArray periods(WOContext ctx) {

@@ -273,13 +273,22 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
 		SubjectComparator comparator = new SubjectComparator();
 				
-		public int compareAscending(Object left, Object right)  {
-			PlanCycle l = (PlanCycle)left;
-			PlanCycle r = (PlanCycle)right;
+		public int compareAscending(Object left, Object right) {
+			if(left == null || left instanceof NSKeyValueCoding.Null)
+				return NSComparator.OrderedAscending;
+			if(right == null || right instanceof NSKeyValueCoding.Null)
+				return NSComparator.OrderedDescending;
 			try {
+				PlanCycle l = (PlanCycle)left;
+				PlanCycle r = (PlanCycle)right;
 				return comparator.compare(l.subjectEO(), r.subjectEO());
 			} catch  (ComparisonException ex) {
 				throw new NSForwardException(ex,"Error comparing");
+			} catch (ClassCastException ce) {
+				if(left instanceof PlanCycle)
+					return NSComparator.OrderedAscending;
+				else
+					return NSComparator.OrderedDescending;
 			}
 		}	
 		public int compareCaseInsensitiveAscending(Object left, Object right)  {
@@ -287,13 +296,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		
 		public int compareDescending(Object left, Object right)  {
-			PlanCycle l = (PlanCycle)left;
-			PlanCycle r = (PlanCycle)right;
-			try {
-				return comparator.compare(r.subjectEO(),l.subjectEO());
-			} catch  (ComparisonException ex) {
-				throw new NSForwardException(ex,"Error comparing");
-			}
+			return compareAscending(right, left);
 		}
 		public int compareCaseInsensitiveDescending(Object left, Object right)  {
 			return compareDescending(left, right);

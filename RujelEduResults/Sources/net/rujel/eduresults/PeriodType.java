@@ -188,6 +188,10 @@ public class PeriodType extends _PeriodType  {
 		return currentPeriod(null);
 	}
 	
+	public static NSArray usagesForYear(Number eduYear, EOEditingContext ec) {
+		return EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0)",new NSArray(eduYear));
+	}
+	
 	public static NSArray periodTypesForCourse(EduCourse course) {
 		Number eduYear = course.eduYear();
 		EOEditingContext ec = course.editingContext();

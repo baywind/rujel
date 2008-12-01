@@ -20,6 +20,13 @@ img {
 	padding:10pt;
 }
 
+.sup {
+	position: relative;
+	top: -1em;
+	font-size:60%;
+}
+
+
 body {margin:2pt;}
 
 .attention {
