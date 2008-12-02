@@ -280,7 +280,7 @@ getgroup:	while (pen.hasMoreElements()) {
 			//buf.append("<strong>").append(mark).append("</strong>");
 			buf.append(mark);
 		}
-		buf.append("<span class=\"sup\">").append(alias).append("</span>");
+		buf.append("<sup class=\"sup\">").append(alias).append("</sup>");
 		return buf.toString();
 	}
 	
@@ -312,7 +312,7 @@ getgroup:	while (pen.hasMoreElements()) {
 				buf.append("<span style=\"white-space:nowrap;\">");*/
 			buf.append(Various.makeRoman(perItem.num().intValue()));
 			/*if(alias != null)
-				buf.append(" <span class=\"sup\">(").append(alias).append("</span>").append("</span>");*/
+				buf.append(" <sup class=\"sup\">(").append(alias).append("</sup>").append("</span>");*/
 			buf.append("<br>\n<small>");
 			buf.append(perItem.periodType().title());
 			buf.append("</small>");
