@@ -50,6 +50,9 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
     
     public MarkArchive archItem;
     public String keyItem;
+    
+    public String presenter;
+    public Object initData;
 
 	public NSArray keys() {
 		return keys;
@@ -61,6 +64,10 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	
 	public void setObject(EOEnterpriseObject eo) {
 		obj = eo;
+		if(eo == null) {
+			archives = null;
+			return;
+		}
 		archives = MarkArchive.archivesForObject(eo);
 		if(archives != null && archives.count() > 0) {
 			Enumeration enu = archives.objectEnumerator();
@@ -69,6 +76,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 				Enumeration maKeys = ma.getArchiveDictionary().keyEnumerator();
 				while (maKeys.hasMoreElements()) {
 					String key = (String) maKeys.nextElement();
+					if(key.equals(MarkArchive.REASON_KEY))
+						continue;
 					if(!keys.containsObject(key))
 						keys.addObject(key);
 				}
@@ -102,8 +111,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 			return null;
 		if(archItem != null)
 			return archItem.getArchiveValueForKey(keyItem);
-		if(newValues != null)
-			return (String)newValues.valueForKey(keyItem);
+		if(newValues() != null)
+			return (String)newValues().valueForKey(keyItem);
 		return null;
 	}
 	

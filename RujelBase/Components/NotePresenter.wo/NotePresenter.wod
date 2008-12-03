@@ -41,14 +41,12 @@ Regular: WOConditional {
 	condition = isSelected;
 }
 
-StyledTD: WOGenericContainer {
+StyledTD: OnClickContainer {
+	disabled = deactivate;
 	align = "center";
 	class = tdStyle;
 	elementName = td;
 	invokeAction = ^selectAction;
-	onmouseover="dim(this)";
-	onmouseout="unDim(this)";
-	onclick = onClick;
 	valign = "middle";
 	title = fullNoteForStudent;
 	style = "width:2em;padding:1pt;";

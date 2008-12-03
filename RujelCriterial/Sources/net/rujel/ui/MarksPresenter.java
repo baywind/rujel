@@ -43,10 +43,7 @@ import java.text.Format;
 
 public class MarksPresenter extends NotePresenter {
 	public static final NSArray accessKeys = new NSArray (new String[] {"read","create","edit","delete","changeDate"});
-
-	private boolean enableArchive = false;
 	
-	private NamedFlags _access;
 	public NamedFlags access() {
 		if(_access == null)
 			_access = lesson().accessForAttribute("marks",accessKeys);
@@ -76,12 +73,12 @@ public class MarksPresenter extends NotePresenter {
     }
 	
  	public Work lesson() {
-		return (Work)valueForBinding("lesson");
+		return (Work)super.lesson();
 	}
 	
 	private Mark _mark;
 	public Mark mark() {
-		if(student() == null) return null;
+		if(student() == null || lesson() == null) return null;
 		if(_mark == null) {
 			_mark = lesson().markForStudentAndCriterion(student(),critItem());
 		}
@@ -89,12 +86,15 @@ public class MarksPresenter extends NotePresenter {
 	}
 	
 	public boolean single() {
-		return (Various.boolForObject(valueForBinding("full")) || Various.boolForObject(valueForBinding("single")));
+		return (Various.boolForObject(valueForBinding("full"))
+				|| Various.boolForObject(valueForBinding("single"))
+				|| hasBinding("initData"));
 	}
 	
-	private NSArray _allCriteria;
-	public NSArray allCriteria() {
-		if(_allCriteria == null) {
+	//private NSArray _allCriteria;
+	protected NSArray allCriteria() {
+		NSArray _allCriteria = null;
+		//if(_allCriteria == null) {
 			if(lesson() == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
 				if(course != null) {
@@ -104,14 +104,17 @@ public class MarksPresenter extends NotePresenter {
 				_allCriteria = (NSArray)lesson().allCriteria();//.valueForKey("title");
 			}
 			if(_allCriteria == null) _allCriteria = NSArray.EmptyArray;
-		}
+		//}
 		return _allCriteria;
 	}
 	
 	private NSArray _usedCriteria;
 	public NSArray usedCriteria() {
 		if(_usedCriteria == null) {
-			if(Various.boolForObject(valueForBinding("full"))) {
+			if(hasBinding("initData")) {
+				NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
+				_usedCriteria = (NSArray)data.valueForKey("criteria");
+			} else if(Various.boolForObject(valueForBinding("full"))) {
 				_usedCriteria = allCriteria();
 			} else {
 				_usedCriteria = lesson().usedCriteria();
@@ -132,6 +135,11 @@ public class MarksPresenter extends NotePresenter {
 	}
 	 */
 	public String markValue() {
+		if(hasBinding("data")) {
+			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
+			Object result = data.valueForKey(critItem());
+			return (result==null)?null:result.toString();
+		}
 		if(student() == null) {
 			StringBuffer result = new StringBuffer("<big>").append(critItem()).append("</big>");
 			if(lesson() != null) {
@@ -149,6 +157,19 @@ public class MarksPresenter extends NotePresenter {
 			else return null;
 		}
 		return mark().value().toString();
+    }
+	
+    public String noteForStudent() {
+		if(hasBinding("data")) {
+			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
+			return (String)data.valueForKey("text");
+		}
+		return super.noteForStudent();
+    }
+    
+    public void setNoteForStudent(String note) {
+    	archiveMarkValue(note, "text");
+    	super.setNoteForStudent(note);
     }
 	
 	protected EOEnterpriseObject _archive;
@@ -169,6 +190,26 @@ public class MarksPresenter extends NotePresenter {
 			}*/
 		}
 		_archive.takeValueForKey(value, '@' + name);
+	}
+	
+	public WOComponent archivePopup() {
+		WOComponent result = pageWithName("ArchivePopup");
+		result.takeValueForKey("MarksPresenter", "presenter");
+		result.takeValueForKey(usedCriteria(), "keys");
+		Mark obj = mark();
+		if(obj == null) {
+			NSArray marks = lesson().marksForStudentOrCriterion(student(), (String)null);
+			if(marks != null && marks.count() > 0)
+				obj = (Mark)marks.objectAtIndex(0);
+		}
+		result.takeValueForKey(obj, "object");
+		NSMutableDictionary initData = new NSMutableDictionary(lesson(),"lesson");
+		initData.takeValueForKey(student(), "student");
+		NSMutableArray keys = (NSMutableArray)result.valueForKey("keys");
+		keys.removeObject("text");
+		initData.takeValueForKey(keys, "criteria");
+		result.takeValueForKey(initData, "initData");
+		return result;
 	}
 	
 	public void setMarkValue(Integer newMarkValue) {
@@ -293,7 +334,9 @@ public class MarksPresenter extends NotePresenter {
 				return presenter().title();
 			return lessonTitle();
 		}
-		
+		if(hasBinding("data")) {
+			return "?";
+		}
 		if(!access().flagForKey("read")) return "#";
 		if(activeCriterion == null) {
 			BigDecimal integral = lesson().integralForStudent(student());
@@ -313,6 +356,8 @@ public class MarksPresenter extends NotePresenter {
     	if(student() == null)
     		return null;
     	if(activeCriterion() != null) return null;
+    	if(hasBinding("data"))
+    		return null;
     	if(!access().flagForKey("read")) return "#aaaaaa";
     	BigDecimal integral = lesson().integralForStudent(student());
     	if(integral == null) return null;
@@ -334,7 +379,7 @@ public class MarksPresenter extends NotePresenter {
     	super.reset();
     	_mark = null;
     	_usedCriteria = null;
-    	_allCriteria = null;
+    	//_allCriteria = null;
 		_access = null;
 		_archive = null;
 	}
@@ -436,5 +481,11 @@ public class MarksPresenter extends NotePresenter {
 		if(title == null)
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);
+	}
+	
+	public WOActionResults selectAction() {
+		if(enableArchive)
+			return archivePopup();
+		return (WOActionResults)valueForBinding("selectAction");
 	}
 }

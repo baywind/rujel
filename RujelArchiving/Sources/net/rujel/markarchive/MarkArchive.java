@@ -40,6 +40,8 @@ import java.util.logging.Logger;
 
 public class MarkArchive extends _MarkArchive
 {
+	public static final String REASON_KEY = "?";
+	
     public MarkArchive() {
         super();
     }
@@ -319,6 +321,14 @@ public class MarkArchive extends _MarkArchive
 				dict = NSPropertyListSerialization.dictionaryForString(data).mutableClone();
 		}
 		return dict.immutableClone();
+	}
+	
+	public String reason() {
+		return getArchiveValueForKey(REASON_KEY);
+	}
+	
+	public void setReason(String reason) {
+		takeArchiveValueForKey(reason, REASON_KEY);
 	}
 	
 	public void takeValueForKey(Object value, String key) {

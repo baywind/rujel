@@ -9,12 +9,12 @@ CanCreateMark: WOConditional {
 }
 
 Conditional1: WOConditional {
-	condition = ^student;
+	condition = student;
 	negate = true;
 }
 
 Content: WOConditional {
-	condition = ^student;
+	condition = student;
 }
 
 CriterTD: WOGenericContainer {
@@ -39,9 +39,10 @@ Div: WOGenericContainer {
 }
 
 IntegralTD: OnClickContainer {
+	onclick = onClick;
 	bgcolor = integralColor;
 	elementName = td;
-	invokeAction = ^selectAction;
+	invokeAction = selectAction;
 	align = "center";
 	class = tdStyle;
 	style = "width:2em;";
@@ -127,4 +128,9 @@ StyledTD: WOGenericContainer {
 	elementName = td;
 	title = fullNoteForStudent;
 	style = noteWidth;
+}
+
+NotArchive : WOConditional {
+  condition = ^initData;
+  negate = true;
 }

@@ -31,12 +31,16 @@ package net.rujel.ui;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
+
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import java.util.GregorianCalendar;
 
 public class NotePresenter extends WOComponent {
-	private NamedFlags _access;
+	protected NamedFlags _access;
+
+	protected boolean enableArchive = false;
+	
 	public NamedFlags access() {
 		if(_access == null) {
 			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.BaseNote");
@@ -65,7 +69,12 @@ public class NotePresenter extends WOComponent {
     }
 	
 	public EduLesson lesson() {
-		return (EduLesson)valueForBinding("lesson");
+		EduLesson result = (EduLesson)valueForBinding("lesson");
+		if(result == null && hasBinding("initData")) {
+			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
+			result = (EduLesson)data.valueForKey("lesson");
+		}
+		return result;
 	}
 	
 	public boolean isSelected() {
@@ -75,7 +84,13 @@ public class NotePresenter extends WOComponent {
 	}
 	
 	public Student student() {
-		return (Student)valueForBinding("student");
+		Student result = (Student)valueForBinding("student");
+		if(result == null && hasBinding("initData") && 
+				(hasBinding("data") || Various.boolForObject(valueForBinding("isSelected")))) {			
+			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
+			result = (Student)data.valueForKey("student");
+		}
+		return result;
 	}
 	
 	public String tdStyle() {
@@ -88,19 +103,19 @@ public class NotePresenter extends WOComponent {
     public void setNoteForStudent(String newNoteForStudent) {
         lesson().setNoteForStudent(newNoteForStudent,student());
     }
-	
+
     protected String _noteForStudent;
     public String noteForStudent() {
     	if(_noteForStudent == null) {
-		if(student() == null || lesson() == null)
-			return null;
-			_noteForStudent = lesson().noteForStudent(student());
+     		if(student() == null || lesson() == null)
+    			return null;
+    		_noteForStudent = lesson().noteForStudent(student());
     	}
     	return _noteForStudent;
     }
-	
-	protected int len() {
-		Number maxlen = (Number)valueForBinding("maxlen");
+
+    protected int len() {
+    	Number maxlen = (Number)valueForBinding("maxlen");
 		if (maxlen != null)
 			return maxlen.intValue();
 		if(Various.boolForObject(valueForBinding("single")))
@@ -136,13 +151,14 @@ public class NotePresenter extends WOComponent {
 		return theNote;
 	}
 	
+	public boolean deactivate() {
+		return (isSelected() || !hasBinding("selectAction"));
+    }
+	
 	public String onClick() {
-		if(hasBinding("selectAction") && !isSelected()) {
-			String href = context().componentActionURL();
-			return "checkRun('" + href + "');";
-		}
-		else
+		if(deactivate())
 			return null;
+		return (String)session().valueForKey((enableArchive)?"ajaxPopup":"checkRun");
     }
     public boolean cantCreate() {
 		Boolean deny = (Boolean)valueForBinding("denyCreation");
@@ -198,5 +214,10 @@ public class NotePresenter extends WOComponent {
 		super.reset();
 		_access = null;
 		_noteForStudent = null;
+	}
+	
+	public void awake() {
+		super.awake();
+		enableArchive = SettingsReader.boolForKeyPath("markarchive.BaseNote", false);
 	}
 }

@@ -1,0 +1,40 @@
+PopupForm : WOForm {
+}
+CancelButton: WOGenericElement {
+	value = application.strings.uiElements.Cancel;
+	type = "button";
+	elementName = "input";
+	onclick = "closePopup();";
+}
+
+Archives : WORepetition {
+	list = archives;
+	item = archItem;
+}
+
+ArchDate : WOString {
+  value = archItem.timestamp;
+  dateformat = application.prefs.ui.shortDateFormat;
+}
+ArchTime : WOString {
+  value = archItem.timestamp;
+  dateformat = "%H:%M:%S";
+}
+Author : WOString {
+  value = archItem.user;
+}
+
+Reason : WOString {
+  value = archItem.reason;
+}
+
+Presenter : WOSwitchComponent {
+  WOComponentName = presenter;
+  initData = initData;
+  data = archItem.archiveDictionary;
+}
+
+TitlePresenter : WOSwitchComponent {
+  WOComponentName = presenter;
+  initData = initData;
+}

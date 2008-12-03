@@ -358,7 +358,7 @@ public class SrcMark extends WOComponent {
 			session().takeValueForKey(message,"message");
 			return null;
 		}
-		boolean newCycle = false;
+		//boolean newCycle = false;
 		ec.lock();
 		if(subject != null && aCourse.cycle() == null) { //EduCycle from string
 			NSDictionary dict = new NSDictionary(new Object[] {subject,aCourse.eduGroup().grade()},
@@ -382,7 +382,7 @@ public class SrcMark extends WOComponent {
 					else
 						gradeCycles = gradeCycles.arrayByAddingObject(aCycle);
 				}
-				newCycle = true;
+				//newCycle = true;
 			}
 			aCourse.setCycle(aCycle);
 		} else {
