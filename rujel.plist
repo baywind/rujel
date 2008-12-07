@@ -10,7 +10,7 @@
 	<dict>
 		<key>loginPageName</key>
 		<string>Main</string>
-		<key>_loginHandlerClass</key>
+		<key>loginHandlerClass</key>
 		<string>net.rujel.auth.PrefsDrivenUser</string>
 		<key>accessHandlerClass</key>
 		<string>net.rujel.auth.PrefsAccessHandler</string>

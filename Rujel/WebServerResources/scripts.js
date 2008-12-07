@@ -80,12 +80,19 @@ var loading = false;
 		case "SELECT":
 			var opts = elt.options;
 			var curr;
+			//var d = false;
 			for(var i = 0; i < opts.length; i++) {
 				curr = opts[i];
 				var val = curr.text;
 				if(curr.selected != curr.defaultSelected) {
-					return true;
+					if(i > 0 || elt.multiple)
+						return true;
 				}
+				/*  else
+						d = true;
+				}
+				if(d && curr.defaultSelected)
+					return true;*/
 			}
 			return false;
 			break;
@@ -538,8 +545,6 @@ function closePopup(aForm) {
 			if(document.forms[i] == aForm)
 				continue;
 			changed = formHasChanges(document.forms[i]);
-			if(changed)
-				return;			
 		}
 	}
 }

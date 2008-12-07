@@ -32,6 +32,7 @@ package net.rujel.markarchive;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -75,8 +76,6 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 		this.keys = keys.mutableClone();
 	}
 	
-	
-	
 	public void setIdentifierDictionary(NSDictionary identifierDict) {
 		if(identifierDict == null) {
 			archives = null;
@@ -89,6 +88,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 		EOFetchSpecification fs = new EOFetchSpecification("MarkArchive",qual,new NSArray(so));
 		archives = ec.objectsWithFetchSpecification(fs);
 		processArchives();
+		changeable = Various.boolForObject(
+				session().valueForKeyPath("readAccess.edit." + entityName));
 	}
 	
 	public void setObject(EOEnterpriseObject eo) {
@@ -99,6 +100,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 		}
 		archives = MarkArchive.archivesForObject(eo);
 		processArchives();
+		changeable = Various.boolForObject(
+				session().valueForKeyPath("readAccess.edit." + obj.entityName()));
 	}
 	
 	protected void processArchives() {

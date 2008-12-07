@@ -80,7 +80,7 @@ ReasonTitle : WOString {
 }
 
 CanEdit : WOConditional {
-  condition = session.readAccess.edit.obj;
+  condition = changeable;
 }
 
 NewTitle : WOString {
