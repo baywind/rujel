@@ -31,6 +31,7 @@ package net.rujel.ui;
 
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.Person;
 //import net.rujel.markarchive.MarkArchive;
 import net.rujel.reusables.*;
 import net.rujel.base.MyUtility;
@@ -42,23 +43,32 @@ import java.math.BigDecimal;
 import java.text.Format;
 
 public class MarksPresenter extends NotePresenter {
-	public static final NSArray accessKeys = new NSArray (new String[] {"read","create","edit","delete","changeDate"});
+	public static final NSArray accessKeys = new NSArray (
+			new String[] {"read","create","edit","delete","changeDate"});
 	
 	public NamedFlags access() {
-		if(_access == null)
+		if(_access == null && lesson() != null)
 			_access = lesson().accessForAttribute("marks",accessKeys);
 		if(_access == null)
 			_access = DegenerateFlags.ALL_TRUE;
 		return _access;
 	}
 	
-    protected Object _critItem;
+    public String critItem;
 	
 	public void setCritItem(Object item) {
-		_critItem = item;
+		if(item == null) {
+			critItem = null;//"text";
+		} else if(item instanceof String) {
+			critItem = (String)item;
+		} else if(item instanceof EOEnterpriseObject) {
+			critItem =  (String)((EOEnterpriseObject)item).valueForKey("title");
+		} else {
+			critItem =  item.toString();
+		}
 		_mark = null;
 	}
-	
+	/*
 	public String critItem() {
 		if(_critItem == null || _critItem instanceof String) {
 			return (String)_critItem;
@@ -66,7 +76,7 @@ public class MarksPresenter extends NotePresenter {
 			return (String)((EOEnterpriseObject)_critItem).valueForKey("title");
 		} else
 			return _critItem.toString();
-	}
+	}*/
 	
     public MarksPresenter(WOContext context) {
         super(context);
@@ -78,9 +88,10 @@ public class MarksPresenter extends NotePresenter {
 	
 	private Mark _mark;
 	public Mark mark() {
-		if(student() == null || lesson() == null) return null;
+		if(student() == null || lesson() == null || critItem == null || critItem.equals("text")) 
+			return null;
 		if(_mark == null) {
-			_mark = lesson().markForStudentAndCriterion(student(),critItem());
+			_mark = lesson().markForStudentAndCriterion(student(),critItem);
 		}
 		return _mark;
 	}
@@ -98,7 +109,7 @@ public class MarksPresenter extends NotePresenter {
 			if(lesson() == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
 				if(course != null) {
-					_allCriteria = (NSArray)CriteriaSet.criteriaForCycle(course.cycle());//.valueForKey("title");
+					_allCriteria = (NSArray)CriteriaSet.criteriaForCycle(course.cycle());
 				}
 			} else {
 				_allCriteria = (NSArray)lesson().allCriteria();//.valueForKey("title");
@@ -124,11 +135,23 @@ public class MarksPresenter extends NotePresenter {
 		return _usedCriteria;
 	}
 	
-	public boolean isSelected() {
-		if(student() == null) return false;
-		if((mark() != null)? !access().flagForKey("edit") : !access().flagForKey("create")) return false;
-		else return super.isSelected();
+	protected boolean hasValue() {
+		if(lesson() == null ||  student() == null)
+			return false;
+		if(single()) {
+			if(critItem == null)
+				return (noteForStudent() != null);
+			return (mark() != null);
+		}
+		String activeCriterion = activeCriterion();
+		if(activeCriterion == null || single()) {
+			return true;//(anyMark() != null);
+		} else if("text".equals(activeCriterion)) {
+			return (noteForStudent() != null);
+		}
+		return (lesson().markForStudentAndCriterion(student(),activeCriterion) != null);
 	}
+
 	/*
 	public Student student() {
 		return (Student)valueForBinding("student");
@@ -137,13 +160,13 @@ public class MarksPresenter extends NotePresenter {
 	public String markValue() {
 		if(hasBinding("data")) {
 			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
-			Object result = data.valueForKey(critItem());
+			Object result = data.valueForKey(critItem);
 			return (result==null)?null:result.toString();
 		}
 		if(student() == null) {
-			StringBuffer result = new StringBuffer("<big>").append(critItem()).append("</big>");
+			StringBuffer result = new StringBuffer("<big>").append(critItem).append("</big>");
 			if(lesson() != null) {
-				EOEnterpriseObject mask = lesson().criterMaskNamed(critItem());
+				EOEnterpriseObject mask = lesson().criterMaskNamed(critItem);
 				result.append("<br/><small>(");
 				result.append((mask == null)?"?":mask.valueForKey("max"));
 				result.append(")</small>");
@@ -152,7 +175,8 @@ public class MarksPresenter extends NotePresenter {
 		}
 		if(!access().flagForKey("read")) return "#";
         if (mark() == null) {
-			if(Various.boolForObject(valueForBinding("full")) && lesson().usedCriteria().containsObject(critItem()))
+			if(Various.boolForObject(valueForBinding("full")) 
+					&& lesson().usedCriteria().containsObject(critItem))
 				return ".";
 			else return null;
 		}
@@ -172,37 +196,65 @@ public class MarksPresenter extends NotePresenter {
     	super.setNoteForStudent(note);
     }
 	
+    protected NSDictionary identifierDictionary() {
+    	if(student() == null || lesson() == null)
+    		return null;
+		NSMutableDictionary ident = new NSMutableDictionary("Mark","entityName");
+		ident.takeValueForKey(lesson(),"work");
+		ident.takeValueForKey(student(), "student");
+		ident.takeValueForKey(lesson().editingContext(), "editingContext");
+		return ident;
+    }
+    
 	protected EOEnterpriseObject _archive;
 	protected void archiveMarkValue(Object value, String name) {
 		if(!enableArchive) return;
+		if(_archive == null)
+			_archive = (EOEnterpriseObject)valueForBinding("archive");
 		if(_archive == null) {
 			EOEditingContext ec = lesson().editingContext();
 			_archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
-			/*NSDictionary key = EOUtilities.primaryKeyForObject(ec, _mark);
-			if(key != null && key.count() > 0) {*/
-				_archive.takeValueForKey(_mark, "objectIdentifier");//setObjectIdentifier(_mark);
-			/*} else {
-				key = EOUtilities.destinationKeyForSourceObject(ec, _mark, "student");
-				NSMutableDictionary fullKey = key.mutableClone();
-				key = EOUtilities.destinationKeyForSourceObject(ec, _mark, "work");
-				fullKey.addEntriesFromDictionary(key);
-				_archive.setIdentifierFromDictionary(_mark.entityName(), fullKey);
-			}*/
+			if(mark() != null) {
+				_archive.takeValueForKey(mark(), "objectIdentifier");
+			} else {
+				_archive.takeValueForKey(identifierDictionary(), "identifierDictionary");
+			}
+			if(hasBinding("archive"))
+				setValueForBinding(_archive, "archive");
 		}
 		_archive.takeValueForKey(value, '@' + name);
 	}
 	
-	public WOComponent archivePopup() {
-		WOComponent result = pageWithName("ArchivePopup");
-		result.takeValueForKey("MarksPresenter", "presenter");
-		result.takeValueForKey(usedCriteria(), "keys");
+	public boolean archiveOnly() {
+		if(!forceArchives)
+			return false;
+		if(critItem == null)
+			return (noteForStudent() != null);
+		return (mark() != null);
+	}
+	
+	protected Mark anyMark() {
 		Mark obj = mark();
 		if(obj == null) {
 			NSArray marks = lesson().marksForStudentOrCriterion(student(), (String)null);
 			if(marks != null && marks.count() > 0)
 				obj = (Mark)marks.objectAtIndex(0);
 		}
-		result.takeValueForKey(obj, "object");
+		return obj;
+	}
+	
+	public WOComponent archivePopup() {
+		WOComponent result = pageWithName("ArchivePopup");
+		result.takeValueForKey("MarksPresenter", "presenter");
+		result.takeValueForKey(usedCriteria(), "keys");
+		result.takeValueForKey(context().page(), "returnPage");
+		if(mark() != null)
+			result.takeValueForKey(mark(), "object");
+		else
+			result.takeValueForKey(identifierDictionary(),"identifierDictionary");
+		StringBuffer title = new StringBuffer(lesson().theme());
+		title.append(" : ").append(Person.Utility.fullName(student(), true, 2, 2, 0));
+		result.takeValueForKey(title.toString(), "title");
 		NSMutableDictionary initData = new NSMutableDictionary(lesson(),"lesson");
 		initData.takeValueForKey(student(), "student");
 		NSMutableArray keys = (NSMutableArray)result.valueForKey("keys");
@@ -212,28 +264,33 @@ public class MarksPresenter extends NotePresenter {
 		return result;
 	}
 	
-	public void setMarkValue(Integer newMarkValue) {
+	public void setMarkValue(Object newMarkValue) {
         if(mark() == null) {
 			if(newMarkValue == null) return;
 			_mark = (Mark)EOUtilities.createAndInsertInstance(lesson().editingContext(),"Mark");
 			lesson().addObjectToBothSidesOfRelationshipWithKey(_mark,"marks");
 			_mark.setStudent(student());
-			if(_critItem instanceof EOEnterpriseObject) {
+			/*if(_critItem instanceof EOEnterpriseObject) {
 				_mark.setCriterion((EOEnterpriseObject)_critItem);
-				_mark.setCriterMask(lesson().criterMaskNamed(critItem()));
-			} else {
-				_mark.setCriterionName((String)_critItem);
-			}
+				_mark.setCriterMask(lesson().criterMaskNamed(critItem));
+			} else {*/
+				_mark.setCriterionName((String)critItem);
+			//}
 		} else if (newMarkValue == null) {
 			lesson().removeObjectFromBothSidesOfRelationshipWithKey(_mark,"marks");
 			lesson().editingContext().deleteObject(_mark);
-			archiveMarkValue(newMarkValue, critItem());
+			archiveMarkValue(newMarkValue, critItem);
 			_mark = null;
 			return;
 		}
-        if (mark().value() == null || newMarkValue.intValue() != mark().value().intValue()) {
-			mark().setValue(newMarkValue);
-			archiveMarkValue(newMarkValue, critItem());
+        int value = 0;
+        if(newMarkValue instanceof Number)
+        	value = ((Number)newMarkValue).intValue();
+        else
+        	value = Integer.parseInt(newMarkValue.toString());
+        if (mark().value() == null || value != mark().value().intValue()) {
+			mark().setValue(new Integer(value));
+			archiveMarkValue(newMarkValue, critItem);
 		}
 		/*if(mark().value() == null || mark().value().intValue() != newMarkValue.intValue()) {
 			NSTimestamp today = (NSTimestamp)session().valueForKey("today");
@@ -247,12 +304,16 @@ public class MarksPresenter extends NotePresenter {
 		super.takeValuesFromRequest(aRequest, aContext);
 		if(_archive != null) {
 			Mark[] marks = lesson().forPersonLink(student());
-			for (int i = 0; i < marks.length; i++) {
-				Mark mark = marks[i];
-				if(mark == null) continue;
-				String critItem = (String)mark.criterion().valueForKey("title");
-				_archive.takeValueForKey(mark.value(), '@' + critItem);
+			if(marks != null) {
+				for (int i = 0; i < marks.length; i++) {
+					Mark mark = marks[i];
+					if(mark == null) continue;
+					String crit = (String)mark.criterion().valueForKey("title");
+					_archive.takeValueForKey(mark.value(), '@' + crit);
+				}
 			}
+			if(noteForStudent() != null)
+				_archive.takeValueForKey(noteForStudent(), "@text");
 		}
 	}
 	/*
@@ -317,9 +378,11 @@ public class MarksPresenter extends NotePresenter {
 		if(single())//(!hasBinding("single") ||Various.boolForObject(valueForBinding("single")))
 			return null;
 		String activeCriterion = (String)session().objectForKey("activeCriterion");
+		if(activeCriterion == null)
+			return null;
 		FractionPresenter fractionPresenter = (FractionPresenter)session().
 				objectForKey("integralPresenter");
-		if(activeCriterion == null || activeCriterion.equals(fractionPresenter.title()))
+		if(activeCriterion.equals(fractionPresenter.title()))
 			return null;
 		//if(allCriteria() != null &&  allCriteria().containsObject(activeCriterion))
 			return activeCriterion;
@@ -346,8 +409,9 @@ public class MarksPresenter extends NotePresenter {
 				Mark mark = lesson().markForStudentWithoutCriterion(student());
 				return (mark == null)?null:mark.value().toString();
 			}
+		} else if("text".equals(activeCriterion)) {
+			return shortNoteForStudent();
 		}
-		
 		setCritItem(activeCriterion);
 		return (mark() == null)?null:mark().value().toString();
     }
@@ -382,6 +446,7 @@ public class MarksPresenter extends NotePresenter {
     	//_allCriteria = null;
 		_access = null;
 		_archive = null;
+		critItem = null;
 	}
 /*	
 	public boolean cantCreate() {
@@ -399,23 +464,50 @@ public class MarksPresenter extends NotePresenter {
 		return true;
 	}
 	
+	public boolean deactivate() {
+		if(single() && student() == null)
+			return true;
+		return super.deactivate();
+	}
+	
+	public boolean deactivateIntegral() {
+		if (Various.boolForObject(valueForBinding("readOnly")))
+			return true;
+		if(student() == null)
+			return (single() || !hasBinding("selectAction"));
+		if(!enableArchive)
+			return !hasBinding("selectAction");
+		return false;
+	}
+
+	/*
+	public boolean deactivateNote() {
+		critItem = "text";
+		if (Various.boolForObject(valueForBinding("readOnly")))
+			return true;
+		if(forceArchives && noteForStudent() != null)
+			return false;
+		return isSelected();
+	}
+	*/
+	
 	public String tdStyle() {
-		if(single() || integralColor() != null) {//Various.boolForObject(valueForBinding("single")) 
+		if(integralColor() != null) {
 			return null;
 		}
 		if(student() == null) {
-			if(super.isSelected())
-				return "selection";
-			else {
-				return lesson().styleClass();
-			}
+			if(single())
+				return null;
+			return (lesson()==null)?null:lesson().styleClass();
 		}
 		return (String)valueForBinding("defaultStyle");
 	}
 	
 	protected int len() {
-		Number maxlen = (Number)valueForBinding("maxlen");
-		return (maxlen == null)?6:maxlen.intValue();
+		int len = super.len();
+		if(len == 30)
+			return 6;
+		return len;
 	}
 	
 	protected static Format dateFormat = MyUtility.dateFormat();
@@ -426,19 +518,21 @@ public class MarksPresenter extends NotePresenter {
 			dateFormat = MyUtility.dateFormat();
 		}
 		enableArchive = SettingsReader.boolForKeyPath("markarchive.Mark", false);
+		forceArchives = (enableArchive && !hasBinding("initData")
+				&& SettingsReader.boolForKeyPath("markarchive.forceArchives", false));
 	}
 	
 	public String markTitle() {
 		if(student() == null) {
-			if(_critItem instanceof String && lesson() != null) {
-				EOEnterpriseObject mask = lesson().criterMaskNamed((String)_critItem);
+			if(lesson() != null && critItem != null) {
+				EOEnterpriseObject mask = lesson().criterMaskNamed(critItem);
 				if(mask == null)
 					return "?";
 				return (String)mask.valueForKeyPath("criterion.comment");
-			} else {
+			} /*else {
 				if(_critItem instanceof EOEnterpriseObject)
 					return (String)((EOEnterpriseObject)_critItem).valueForKey("comment");
-			}
+			}*/
 			return null;
 		} else {
 			if(mark() == null) return null;
@@ -461,31 +555,59 @@ public class MarksPresenter extends NotePresenter {
 			return (result==null)?"text":result;
 		}
 		return super.shortNoteForStudent();
-	}*/
+	}
 	
 //	public String 
     public boolean display() {
 		return (Various.boolForObject(valueForBinding("full")) || !Various.boolForObject(valueForBinding("single")) || super.isSelected());
-    }
+    }*/
 	
 	public String noteWidth() {
-		if(student() != null) return null;
+		if(student() != null && !isSelected()) return null;
 		int len = (len() * 2) /3;
-		return "width:" + len + "em;";
+		String result = "width:" + len + "em;";
+		return result;
 	}
 
 	public String title() {
 		if(Various.boolForObject(valueForBinding("full")))
 			return null;
-		String title = (String)valueForKeyPath("lesson.theme");
+		String title = null;
+		if("text".equals(activeCriterion()))
+			title = fullNoteForStudent();
+		if(title == null)
+			title = (String)valueForKeyPath("lesson.theme");
 		if(title == null)
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);
 	}
+	/*
+	public String onClick() {
+		String key = "checkRun";
+		if(enableArchive && student() != null && (single() || hasValue()))
+			key = "ajaxPopup";
+		return (String)session().valueForKey(key);
+    }
 	
-	public WOActionResults selectAction() {
-		if(enableArchive)
-			return archivePopup();
-		return (WOActionResults)valueForBinding("selectAction");
+	
+	public String fieldTag() {
+		if(archiveOnly())
+			return "span";
+		else
+			return "input";
 	}
+	
+	public String fieldInit() {
+		StringBuffer buf = new StringBuffer(15);
+		if(archiveOnly()) {
+			buf.append("class = \"backfield2\" onclick=\"");
+			buf.append(session().valueForKey("ajaxPopup"));
+			buf.append("\"");
+		} else {
+			buf.append("type =\"text\" value=\"");
+			buf.append(markValue()).append("\" ");
+			buf.append("onchange = \"checkChanges(this);\" onkeypress = \"return isNumberInput(event);\"");
+		}
+		return buf.toString();
+	}*/
 }

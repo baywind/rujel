@@ -140,6 +140,8 @@ public class Application extends UTF8Application {
     
     public WOResponse handleSessionRestorationErrorInContext(WOContext aContext) {
     	WOComponent page = pageWithName("MessagePage", aContext);
+    	logger.log(WOLogLevel.WARNING, "SessionCreationErrorInContext",
+    			(aContext.hasSession())?aContext.session():aContext.request().sessionID());
     	page.takeValueForKey("sessionTitle", "plistTitle");
     	page.takeValueForKey("SessionRestorationError", "plistMessage");
     	page.takeValueForKey("login", "redirectAction");
@@ -149,6 +151,8 @@ public class Application extends UTF8Application {
     
     public WOResponse handleSessionCreationErrorInContext(WOContext aContext) {
     	WOComponent page = pageWithName("MessagePage", aContext);
+    	logger.log(WOLogLevel.WARNING, "SessionCreationErrorInContext",
+    			(aContext.hasSession())?aContext.session():null);
     	page.takeValueForKey("sessionTitle", "plistTitle");
     	page.takeValueForKey("SessionCreationError", "plistMessage");
     	return page.generateResponse(); 	
@@ -156,6 +160,8 @@ public class Application extends UTF8Application {
     
     public WOResponse handlePageRestorationErrorInContext(WOContext aContext) {
     	WOComponent page = pageWithName("MessagePage", aContext);
+    	logger.log(WOLogLevel.INFO, "Page restoration error",
+    			(aContext.hasSession())?aContext.session():null);
     	page.takeValueForKey("Error", "plistTitle");
     	page.takeValueForKey("PageRestorationError", "plistMessage");
     	page.takeValueForKey("report", "redirectAction");
@@ -254,7 +260,8 @@ public class Application extends UTF8Application {
 	public WOSession createSessionForRequest(WORequest aRequest) {
 		WOSession result = super.createSessionForRequest(aRequest);
 		Object[] args = new Object[] {result, Session.clientIdentity(aRequest)};
-		logger.log(WOLogLevel.SESSION,"Generating session:",args);
+		logger.log(WOLogLevel.SESSION,
+				"Generating session: " + aRequest.method() + ':' + aRequest.uri(), args);
 		return result;
 	}
 }

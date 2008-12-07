@@ -85,7 +85,7 @@ public class MarkArchive extends _MarkArchive
 		setUsedEntity(usedEntity);
 		setIdentifierFromDictionary(usedEntity, pKey);
 	}
-	
+
 	public static NSDictionary objectIdentifierDict(EOEnterpriseObject eo) {
 		EOEditingContext ec = eo.editingContext();
 		/*
@@ -96,51 +96,50 @@ public class MarkArchive extends _MarkArchive
 				eo = EOUtilities.localInstanceOfObject(ec,eo);
 		}*/
 		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,eo);
-		if(pKey == null || pKey.count() == 0) {
-			EOEntity ent = EOUtilities.entityForObject(ec, eo);
-			NSMutableArray keys = new NSMutableArray();
-			try {
-				EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
-				String key = (String)usedEntity.valueForKey("key1");
-				if(key != null) keys.addObject(key);
-				key = (String)usedEntity.valueForKey("key2");
-				if(key != null) keys.addObject(key);
-				key = (String)usedEntity.valueForKey("key3");
-				if(key != null) keys.addObject(key);
-			} catch (com.webobjects.eoaccess.EOObjectNotAvailableException e) {
-				return null;
-			}
-			NSMutableDictionary keyDict = new NSMutableDictionary();
+		if(pKey != null && pKey.count() > 0)
+			return pKey;
+		EOEntity ent = EOUtilities.entityForObject(ec, eo);
+		NSMutableArray keys = new NSMutableArray();
+		try {
+			EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
+			String key = (String)usedEntity.valueForKey("key1");
+			if(key != null) keys.addObject(key);
+			key = (String)usedEntity.valueForKey("key2");
+			if(key != null) keys.addObject(key);
+			key = (String)usedEntity.valueForKey("key3");
+			if(key != null) keys.addObject(key);
+		} catch (com.webobjects.eoaccess.EOObjectNotAvailableException e) {
+			return null;
+		}
+		NSMutableDictionary keyDict = new NSMutableDictionary();
 
-			NSArray rels = ent.relationships();
-			Enumeration enu = rels.objectEnumerator();
-			while (enu.hasMoreElements() && keys.count() > 0) {
-				EORelationship rel = (EORelationship)enu.nextElement();
-				if(rel.isToMany()) continue;
-				Enumeration joins = rel.joins().objectEnumerator();
-				while(joins.hasMoreElements()) {
-					EOJoin join = (EOJoin)joins.nextElement();
-					String sa = join.sourceAttribute().name();
-					if(keys.containsObject(sa)) {
-						EOEnterpriseObject dest = (EOEnterpriseObject)eo.valueForKey(rel.name());
-						NSDictionary dpk = EOUtilities.primaryKeyForObject(ec, dest);
-						if(dpk != null) {
-							String dk = join.destinationAttribute().name();
-							keyDict.takeValueForKey(dpk.valueForKey(dk), sa);
-							keys.removeObject(sa);
-						}
+		NSArray rels = ent.relationships();
+		Enumeration enu = rels.objectEnumerator();
+		while (enu.hasMoreElements() && keys.count() > 0) {
+			EORelationship rel = (EORelationship)enu.nextElement();
+			if(rel.isToMany()) continue;
+			Enumeration joins = rel.joins().objectEnumerator();
+			while(joins.hasMoreElements()) {
+				EOJoin join = (EOJoin)joins.nextElement();
+				String sa = join.sourceAttribute().name();
+				if(keys.containsObject(sa)) {
+					EOEnterpriseObject dest = (EOEnterpriseObject)eo.valueForKey(rel.name());
+					pKey = EOUtilities.primaryKeyForObject(ec, dest);
+					if(pKey != null) {
+						String dk = join.destinationAttribute().name();
+						keyDict.takeValueForKey(pKey.valueForKey(dk), sa);
+						keys.removeObject(sa);
 					}
 				}
 			}
-			if(keys.count() > 0) {
-				Object[] args = new Object[] {eo,keyDict,keys};
-				Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,"Could not resolve required attributes for archiving eo",args);
-				//editingContext().deleteObject(this);
-				return null;
-			}
-			pKey = keyDict;
 		}
-		return pKey;
+		if(keys.count() > 0) {
+			Object[] args = new Object[] {eo,keyDict,keys};
+			Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,"Could not resolve required attributes for archiving eo",args);
+			//editingContext().deleteObject(this);
+			return null;
+		}
+		return keyDict;
 	}
 	/*
 	protected EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict) {
@@ -194,11 +193,50 @@ public class MarkArchive extends _MarkArchive
 		}
 	}
 	
+	public void setUsedEntityName(String entityName) {
+		EOEnterpriseObject ent = getUsedEntity(entityName, null, editingContext());
+		setUsedEntity(ent);
+	}
+	
+	public void setIdentifier(Object key1, Object key2, Object key3) {
+			setKey1(keyForObject(key1));
+			setKey1(keyForObject(key2));
+			setKey1(keyForObject(key3));
+	}
+	
+	protected static Number namedKeyInDict(String key, NSDictionary identifierDict) {
+		Object value = identifierDict.valueForKey(key);
+		if(value == null && key.endsWith("ID")) {
+			key = key.substring(0, key.length() -2);
+			value = identifierDict.valueForKey(key);
+		}
+		return keyForObject(value);
+	}
+	
+	protected static Number keyForObject(Object obj) {
+		if(obj instanceof Number) {
+			return (Number)obj;
+		} else if(obj instanceof EOEnterpriseObject) {
+			EOEditingContext ec = ((EOEnterpriseObject)obj).editingContext();
+			NSDictionary pKey = EOUtilities.primaryKeyForObject(ec, (EOEnterpriseObject)obj);
+			return (Number) pKey.allValues().objectAtIndex(0);
+		}
+		return new Integer(0);
+	}
+	
+	public void setIdentifierDictionary(NSDictionary identifierDict) {
+		if(usedEntity() == null) {
+			String entityName = (String)identifierDict.valueForKey("entityName");
+			setUsedEntityName(entityName);
+		}
+		setIdentifierFromDictionary(usedEntity(),identifierDict);
+	}
+	
 	public void setIdentifierFromDictionary (String entityName, NSDictionary identifierDict) {
 		EOEnterpriseObject usedEntity = usedEntity();
 		if(usedEntity == null || !entityName.equals(usedEntity.valueForKey("usedEntity"))) {
 			usedEntity = getUsedEntity(entityName, identifierDict, editingContext());
-			usedEntity = EOUtilities.objectMatchingKeyAndValue(editingContext(),"UsedEntity","usedEntity",entityName);		
+			//usedEntity = EOUtilities.objectMatchingKeyAndValue(editingContext(),"UsedEntity","usedEntity",entityName);		
 		}
 		setIdentifierFromDictionary(usedEntity, identifierDict);
 	}
@@ -206,21 +244,18 @@ public class MarkArchive extends _MarkArchive
 	public void setIdentifierFromDictionary (EOEnterpriseObject usedEntity, NSDictionary identifierDict) {
 		deleteInsertedDuplicates(usedEntity, identifierDict);
 		
-		Number zero = new Integer(0);
+		//Number zero = new Integer(0);
 		String key = (String)usedEntity.valueForKey("key1");
 		if(key != null) {
-			Number value = (Number)identifierDict.valueForKey(key);
-			setKey1((value == null)?zero:value);
+			setKey1(namedKeyInDict(key, identifierDict));
 		}
 		key = (String)usedEntity.valueForKey("key2");
 		if(key != null) {
-			Number value = (Number)identifierDict.valueForKey(key);
-			setKey2((value == null)?zero:value);
+			setKey2(namedKeyInDict(key, identifierDict));
 		}
 		key = (String)usedEntity.valueForKey("key3");
 		if(key != null) {
-			Number value = (Number)identifierDict.valueForKey(key);
-			setKey3((value == null)?zero:value);
+			setKey3(namedKeyInDict(key, identifierDict));
 		}
 	}
 	
@@ -245,27 +280,32 @@ public class MarkArchive extends _MarkArchive
 		return archiveQualifier(usedEntity,pKey);
 	}*/
 	
+	public static EOQualifier archiveQualifier(String entityName, NSDictionary identifierDict, EOEditingContext ec) {
+		EOEnterpriseObject usedEntity = getUsedEntity(entityName, identifierDict, ec);
+		return archiveQualifier(usedEntity, identifierDict);
+	}
+	
 	public static EOQualifier archiveQualifier(EOEnterpriseObject usedEntity, NSDictionary pKey) {
 		EOQualifier qual = new EOKeyValueQualifier("usedEntity",EOQualifier.QualifierOperatorEqual, usedEntity);
 		NSMutableArray quals = new NSMutableArray(qual);
 
+		Number value = null;
 		String key = (String)usedEntity.valueForKey("key1");
-		Number zero = new Integer(0);
 		if(key != null) {
-			Number value = (Number)pKey.valueForKey(key);
-			qual = new EOKeyValueQualifier("key1",EOQualifier.QualifierOperatorEqual,(value == null)?zero:value);
+			value = namedKeyInDict(key, pKey);
+			qual = new EOKeyValueQualifier("key1",EOQualifier.QualifierOperatorEqual,value);
 			quals.addObject(qual);
 		}
 		key = (String)usedEntity.valueForKey("key2");
 		if(key != null) {
-			Number value = (Number)pKey.valueForKey(key);
-			qual = new EOKeyValueQualifier("key2",EOQualifier.QualifierOperatorEqual,(value == null)?zero:value);
+			value = namedKeyInDict(key, pKey);
+			qual = new EOKeyValueQualifier("key2",EOQualifier.QualifierOperatorEqual,value);
 			quals.addObject(qual);
 		}
 		key = (String)usedEntity.valueForKey("key3");
 		if(key != null) {
-			Number value = (Number)pKey.valueForKey(key);
-			qual = new EOKeyValueQualifier("key3",EOQualifier.QualifierOperatorEqual,(value == null)?zero:value);
+			value = namedKeyInDict(key, pKey);
+			qual = new EOKeyValueQualifier("key3",EOQualifier.QualifierOperatorEqual,value);
 			quals.addObject(qual);
 		}
 		qual = new EOAndQualifier(quals);

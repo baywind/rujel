@@ -29,17 +29,20 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.BaseLesson;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
+
 import java.util.GregorianCalendar;
 
 public class NotePresenter extends WOComponent {
 	protected NamedFlags _access;
 
 	protected boolean enableArchive = false;
+	protected boolean forceArchives = false;
 	
 	public NamedFlags access() {
 		if(_access == null) {
@@ -64,37 +67,58 @@ public class NotePresenter extends WOComponent {
 		return _access;
 	}
 	
+	public boolean noAccess() {
+		return (hasValue())? !access().flagForKey("edit")
+				: !access().flagForKey("create");
+	}
+	
     public NotePresenter(WOContext context) {
         super(context);
     }
 	
+    protected EduLesson _lesson;
 	public EduLesson lesson() {
-		EduLesson result = (EduLesson)valueForBinding("lesson");
-		if(result == null && hasBinding("initData")) {
+		if(_lesson == null)
+			_lesson = (EduLesson)valueForBinding("lesson");
+		if(_lesson == null && hasBinding("initData")) {
 			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
-			result = (EduLesson)data.valueForKey("lesson");
+			_lesson = (EduLesson)data.valueForKey("lesson");
 		}
-		return result;
+		return _lesson;
 	}
 	
+	protected boolean hasValue() {
+		return (noteForStudent() != null);
+	}
+
 	public boolean isSelected() {
-		if((noteForStudent() != null)? !access().flagForKey("edit") : !access().flagForKey("create")) return false;
-		Boolean is = (Boolean)valueForBinding("isSelected");
-		return (is != null && is.booleanValue());
+		if(student() == null)
+			return false;
+		if (Various.boolForObject(valueForBinding("readOnly")))
+			return false;
+		if(hasBinding("archive"))
+			return true;
+		if (!Various.boolForObject(valueForBinding("isSelected")))
+			return false;
+		if(!forceArchives)
+			return true;
+		return !hasValue();
 	}
 	
+	protected Student _student;
 	public Student student() {
-		Student result = (Student)valueForBinding("student");
-		if(result == null && hasBinding("initData") && 
-				(hasBinding("data") || Various.boolForObject(valueForBinding("isSelected")))) {			
+		if(_student == null)
+			_student = (Student)valueForBinding("student");
+		if(_student == null && hasBinding("initData") && 
+				(hasBinding("data") || hasBinding("archive"))) {			
 			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
-			result = (Student)data.valueForKey("student");
+			_student = (Student)data.valueForKey("student");
 		}
-		return result;
+		return _student;
 	}
 	
 	public String tdStyle() {
-		if(isSelected())
+		if(Various.boolForObject(valueForBinding("isSelected")))
 			return "selection";
 		else
 			return (String)valueForBinding("defaultStyle");
@@ -102,6 +126,7 @@ public class NotePresenter extends WOComponent {
 	
     public void setNoteForStudent(String newNoteForStudent) {
         lesson().setNoteForStudent(newNoteForStudent,student());
+        _noteForStudent = newNoteForStudent;
     }
 
     protected String _noteForStudent;
@@ -118,8 +143,13 @@ public class NotePresenter extends WOComponent {
     	Number maxlen = (Number)valueForBinding("maxlen");
 		if (maxlen != null)
 			return maxlen.intValue();
-		if(Various.boolForObject(valueForBinding("single")))
-			return 30;
+		if(hasBinding("initData")) {
+			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
+			maxlen = (Number)data.valueForKey("maxlen");
+		} else {
+			if(Various.boolForObject(valueForBinding("single")))
+				return 30;
+		}
 		return 3;
 	}
 	/*
@@ -129,6 +159,14 @@ public class NotePresenter extends WOComponent {
 	}
 	*/
 	public String shortNoteForStudent() {
+		if(student() == null) {
+			String result = (String)application().valueForKeyPath("strings.dataTypes.text");
+			if(result == null)
+				result = "text";
+			if(len() < 5)
+				result = "<small>" + result + "</small>";
+			return result;
+		}
 		String theNote = noteForStudent();
 		if (theNote == null)
 			return null;
@@ -136,7 +174,7 @@ public class NotePresenter extends WOComponent {
 		if(theNote.length() <= len())
 			return theNote;
 		String url = application().resourceManager().urlForResourceNamed("text.png","RujelBase",null,context().request());
-		return "<img src=\"" + url + "\" alt=\"" + theNote + "\" height=\"16\" width=\"16\">";
+		return "<img src=\"" + url + "\" alt=\"txt\" height=\"16\" width=\"16\">";
 	}
 	
 	public String fullNoteForStudent() {
@@ -148,18 +186,45 @@ public class NotePresenter extends WOComponent {
 		if(!access().flagForKey("read")) return (String)application().valueForKeyPath("strings.messages.noAccess");
 		if(theNote.length() <= len())
 			return null;
-		return theNote;
+		return WOMessage.stringByEscapingHTMLAttributeValue(theNote);
+	}
+	
+	public WOComponent archivePopup() {
+		WOComponent result = pageWithName("ArchivePopup");
+		result.takeValueForKey("NotePresenter", "presenter");
+		result.takeValueForKey(context().page(), "returnPage");
+		result.takeValueForKey(BaseLesson.lessonNoteforStudent(lesson(), student()), "object");
+		NSMutableDictionary initData = new NSMutableDictionary(lesson(),"lesson");
+		initData.takeValueForKey(student(), "student");
+		result.takeValueForKey(initData, "initData");
+		return result;
+	}
+
+	public WOActionResults selectAction() {
+		if(enableArchive && student() != null)
+			return archivePopup();
+		return (WOActionResults)valueForBinding("selectAction");
+	}
+
+	public boolean archiveOnly() {
+		return (forceArchives && noteForStudent() != null);
 	}
 	
 	public boolean deactivate() {
+		if (Various.boolForObject(valueForBinding("readOnly")))
+			return true;
+		if(forceArchives && hasValue())
+			return false;
 		return (isSelected() || !hasBinding("selectAction"));
     }
 	
 	public String onClick() {
-		if(deactivate())
-			return null;
-		return (String)session().valueForKey((enableArchive)?"ajaxPopup":"checkRun");
+		String key = "checkRun";
+		if(enableArchive && student() != null)
+			key = "ajaxPopup";
+		return (String)session().valueForKey(key);
     }
+	
     public boolean cantCreate() {
 		Boolean deny = (Boolean)valueForBinding("denyCreation");
         return (deny != null && deny.booleanValue() && noteForStudent() == null);
@@ -214,10 +279,14 @@ public class NotePresenter extends WOComponent {
 		super.reset();
 		_access = null;
 		_noteForStudent = null;
+		_lesson = null;
+		_student = null;
 	}
 	
 	public void awake() {
 		super.awake();
-		enableArchive = SettingsReader.boolForKeyPath("markarchive.BaseNote", false);
+		enableArchive = (SettingsReader.boolForKeyPath("markarchive.BaseNote", false));
+		forceArchives = (enableArchive && !hasBinding("initData")
+				&& SettingsReader.boolForKeyPath("markarchive.forceArchives", false));
 	}
 }

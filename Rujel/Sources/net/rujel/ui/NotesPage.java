@@ -134,7 +134,7 @@ public class NotesPage extends WOComponent {
 	public String studentStyle() {
 		Object selectStudent = valueForBinding("selectStudent");
 		if(studentItem == null) {
-			if(selectStudent != null && selectStudent == lessonItem)
+			if(selectStudent != null && selectStudent == lessonItem && !single())
 				return "selection";
 			else
 				return "grey";
