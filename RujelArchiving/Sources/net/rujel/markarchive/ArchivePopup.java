@@ -66,7 +66,7 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
     public Object initData;
 
     public String reason;
-	public String title;
+	public String description;
     
 	public NSArray keys() {
 		return keys;

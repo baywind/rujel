@@ -444,6 +444,7 @@ public class Overview extends WOComponent {
 		if(subsReport == null) {
 			subsReport = pageWithName("SubsReport");
 		}
+		subsReport.ensureAwakeInContext(context());
 		subsReport.takeValueForKey(since, "begin");
 		subsReport.takeValueForKey(to, "end");
 		return subsReport;
