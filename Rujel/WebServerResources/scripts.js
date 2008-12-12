@@ -314,6 +314,13 @@ function closePrompt() {
 //	alert(changed);
 }
 
+function recursiveRGBColor(obj) {
+	var result = getBgRGBColor(obj);
+	if(result != null || obj.parentNode == null)
+		return result;
+	return recursiveRGBColor(obj.parentNode);
+}
+
 function getBgRGBColor(obj) {
 	try {
 		var color = null;
@@ -326,8 +333,9 @@ function getBgRGBColor(obj) {
 		if(color == null && obl.bgColor) {
 			color = obj.bgColor;
 		}
-		if(color == null)
+		if(color == null) {
 			return null;
+		}
 		color = new RGBColor(color);
 		if(!color.ok) {
 			return null;
@@ -349,7 +357,7 @@ function dim(obj) {
 	obj.style.textDecoration = "underline";
 	obj.style.cursor = "pointer";
 	
-	var color = getBgRGBColor(obj);
+	var color = recursiveRGBColor(obj);
 	if(color == null) {
 		obj.style.backgroundColor = "grey";
 		return;

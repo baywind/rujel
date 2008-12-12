@@ -446,15 +446,9 @@ public class MarksPresenter extends NotePresenter {
 	*/
 	
 	public String tdStyle() {
-		if(integralColor() != null) {
-			return null;
-		}
-		if(student() == null) {
-			if(single())
-				return null;
-			return (lesson()==null)?null:lesson().styleClass();
-		}
-		return (String)valueForBinding("defaultStyle");
+		if(student() == null && lesson()!= null)
+			return lesson().styleClass();
+		return null;
 	}
 	
 	public int len() {

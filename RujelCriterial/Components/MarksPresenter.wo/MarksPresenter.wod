@@ -25,7 +25,6 @@ CriterTD: OnClickContainer {
 	title = markTitle;
 	align = "center";
 	style = "width:2em;";
-	class = ^defaultStyle;
 }
 
 Criters: WORepetition {
@@ -84,7 +83,7 @@ NoteEdit: WOTextField {
 	size = len;
 	id = ^cellID;
 	onclick = "ext(this,this.size +1,null,'tr');";
-	onkeypress = "return extOnSpace(event,this,this.size,null,'tr');";
+	onkeypress = "return extOnSpace(event,this,this.size -1,null,'tr');";
 	onchange = "checkChanges(this);";
 }
 
@@ -110,7 +109,6 @@ StyledTD: OnClickContainer {
 	elementName = td;
 	title = fullNoteForStudent;
 	style = noteWidth;
-	class = ^defaultStyle;
 }
 
 NotArchive : WOConditional {

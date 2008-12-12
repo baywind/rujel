@@ -132,8 +132,7 @@ public class NotePresenter extends WOComponent {
 	public String tdStyle() {
 		if(Various.boolForObject(valueForBinding("isSelected")))
 			return "selection";
-		else
-			return (String)valueForBinding("defaultStyle");
+		return null;
     }
 	
     public void setNoteForStudent(String note) {

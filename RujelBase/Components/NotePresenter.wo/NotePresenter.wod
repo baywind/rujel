@@ -34,7 +34,7 @@ NoteEdit: WOTextField {
 	style = "text-align:center;";
 	id = ^cellID;
 	onclick = "ext(this,this.size +1,null,'tr');";
-	onkeypress = "return extOnSpace(event,this,this.size,null,'tr');";
+	onkeypress = "return extOnSpace(event,this,this.size -1,null,'tr');";
 }
 
 Regular: WOConditional {

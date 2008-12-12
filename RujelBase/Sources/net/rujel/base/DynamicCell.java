@@ -55,22 +55,13 @@ public class DynamicCell extends WOComponent {
 		return elt;
 	}
 	
-	public String onClick() {
-		String action = (String)currAddOn().valueForKey("selectAction");
-		if(action != null || hasBinding("selectAction"))
-			return (String)session().valueForKey("tryLoad");
-		return null;
-	}
-	
-	public String onMouseOver() {
-		if(hasBinding("selectAction"))
-			return "dim(this);";
-		return null;
-	}
-	public String onMouseOut() {
-		if(hasBinding("selectAction"))
-			return "unDim(this);";
-		return null;
+	protected Boolean _disabled;
+	public Boolean disabled() {
+		if(_disabled == null) {
+			_disabled = new Boolean(hasBinding("selectAction") ||
+					currAddOn().valueForKey("selectAction") != null);				
+		}
+		return _disabled;
 	}
 	
 	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
@@ -89,6 +80,7 @@ public class DynamicCell extends WOComponent {
 	}
 	
 	public void reset() {
+		_disabled = null;
 		_currAddOn = null;
 	}		
 }

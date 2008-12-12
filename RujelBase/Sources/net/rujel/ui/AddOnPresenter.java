@@ -99,7 +99,7 @@ public class AddOnPresenter extends WOComponent {
 		_course = null;
 		//		_period = null;
 		_student = null;
-		_isActive = null;
+		_noAccess = null;
 	}
 	
 	public WOActionResults messagePopup(String message) {
@@ -110,35 +110,15 @@ public class AddOnPresenter extends WOComponent {
 		return response;
 	}
 	
-	protected Boolean _isActive;
-	protected boolean isActive() {
-		if(_isActive == null) {
+	protected Boolean _noAccess;
+	public Boolean noAccess() {
+		if(_noAccess == null) {
 			NamedFlags access = access();
 			if(access == null || access.getFlag(0))
-				_isActive = Boolean.TRUE;
+				_noAccess = Boolean.FALSE;
 			else
-				_isActive = Boolean.FALSE;
+				_noAccess = Boolean.TRUE;
 		}
-		return _isActive.booleanValue();
-	}
-
-	public String onmouseover() {
-		if(isActive())
-			return "dim(this)";
-		else
-			return null;
-	}
-	public String onmouseout() {
-		if(isActive())
-			return "unDim(this)";
-		else
-			return null;
-	}
-	public String onclick() {
-		if(isActive())
-			return (String)session().valueForKey("ajaxPopup");
-		else
-			return null;
-	}
-	
+		return _noAccess;
+	}	
 }

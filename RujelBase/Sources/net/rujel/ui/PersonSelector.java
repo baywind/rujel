@@ -82,28 +82,18 @@ public class PersonSelector extends WOComponent {
 		NSSet selection = (NSSet)valueForBinding("selection");
 		return (selection != null && selection.containsObject(item));
 	}
-	
+
 	public String onClick() {
-		if(hasBinding("selectedItem")) {
-			String result = (String)valueForBinding("onClick");
-			if(result == null)
-				result = (String)session().valueForKey("tryLoad");
-			return result;
-		}
-		return null;
+		String result = (String)valueForBinding("onClick");
+		if(result == null)
+			result = (String)session().valueForKey("tryLoad");
+		return result;
 	}
-	
-	public String onMouseOver() {
-		if(hasBinding("selectedItem"))
-			return "dim(this);";
-		return null;
+
+	public boolean disabled() {
+		return !hasBinding("selectedItem");
 	}
-	public String onMouseOut() {
-		if(hasBinding("selectedItem"))
-			return "unDim(this);";
-		return null;
-	}
-	
+
 	public WOActionResults select() {
 		setValueForBinding(item,"selectedItem");
 		return (WOActionResults)valueForBinding("selectAction");

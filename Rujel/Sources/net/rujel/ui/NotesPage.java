@@ -150,21 +150,9 @@ public class NotesPage extends WOComponent {
 		else
 			return "female";
 	}
-	
-	public String onmouseover() {
-		if(hasBinding("selectStudentAction")) {
-			return "this.className = '" + studentStyle() + "Dim';";
-		} else
-			return null;
-	}
-	
-	public String onclick() {
-		if(hasBinding("selectStudentAction")) {
-			String href = context().componentActionURL();
-			String result = "return checkRun('" + href + "');";
-			return result;
-		} else
-			return null;
+
+	public boolean cantSelectStudent() {
+		return (!hasBinding("selectStudentAction"));
 	}
 	
     

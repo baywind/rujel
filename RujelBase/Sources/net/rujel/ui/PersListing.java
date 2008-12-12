@@ -252,10 +252,7 @@ public class PersListing extends WOComponent {
 	public String onClick() {
 		if(hasBinding("onClick"))
 			return (String)valueForBinding("onClick");
-		String href = context().componentActionURL();
-		String result = "location = '" + href + "';return true;";
-	//	actions.setObjectForKey(item,context().elementID());
-		return result;
+		return (String)session().valueForKey("tryLoad");
 	}
 	/*
 	public WOActionResults invokeAction(WORequest aRequest,WOContext aContext) {

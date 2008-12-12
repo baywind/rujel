@@ -95,13 +95,14 @@ public class PrognosPresenter extends AddOnPresenter {
 			else
 				return "highlight";
 		}
-		if(!isActive()) return null;
+		return null;
+		/*if(!isActive()) return null;
 		Boolean sex = (Boolean)valueForKeyPath("student.person.sex");
 		if(sex == null || (currAddOn().prognosis() == null && currAddOn().inTimeout)) return "grey";
 		if (sex.booleanValue())
 			return "male";
 		else
-			return "female";
+			return "female";*/
 	}
 
 	public NamedFlags access() {
@@ -111,16 +112,16 @@ public class PrognosPresenter extends AddOnPresenter {
 			return currAddOn().access();
 	}
 	
-	protected boolean isActive() {
+	public Boolean noAccess() {
 		if(currAddOn().inTimeout) {
 			String flag = (currAddOn().timeout()==null)?"create":"read";
 			if(student() != null)
-				return (currAddOn().prognosis() != null && currAddOn().accessTimeout().flagForKey(flag));
+				return !(currAddOn().prognosis() != null && currAddOn().accessTimeout().flagForKey(flag));
 			else
-				return currAddOn().accessCourseTimeout().flagForKey(flag);
+				return !currAddOn().accessCourseTimeout().flagForKey(flag);
 		} else {
 			String flag = (currAddOn().prognosis()==null)?"create":"read";
-			return currAddOn().access().flagForKey(flag);
+			return !currAddOn().access().flagForKey(flag);
 		}
 	}
 	
