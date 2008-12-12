@@ -186,7 +186,7 @@ function isNumberInput(event,dot) {
 function extOnSpace(event,fld,maxLen,message,extParent) {
 	if(eventKey(event) == 32) {
 		var cont = fld.value;
-		if(maxLen != null && (cont == null || cont.length <= maxLen))
+		if(maxLen != null && (cont == null || cont.length < maxLen))
 			return true;
 		returnField = fld;
 		myPrompt(message, cont + ' ',fld,extParent);
@@ -213,7 +213,7 @@ function ext(fld,maxLen,message,extParent) {
 		return false;
 	}
 	var cont = fld.value;
-	if(maxLen != null && (cont == null || cont.length <= maxLen)) return true;
+	if(maxLen != null && (cont == null || cont.length < maxLen)) return true;
 	returnField = fld;
 	return myPrompt(message, cont,fld,extParent);
 	//cont = prompt(message,cont);

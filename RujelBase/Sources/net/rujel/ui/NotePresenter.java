@@ -29,10 +29,13 @@
 
 package net.rujel.ui;
 
-import net.rujel.base.BaseLesson;
+//import net.rujel.base.BaseLesson;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -43,6 +46,9 @@ public class NotePresenter extends WOComponent {
 
 	protected boolean enableArchive = false;
 	protected boolean forceArchives = false;
+	protected String entityName() {
+		return "BaseNote";
+	}
 	
 	public NamedFlags access() {
 		if(_access == null) {
@@ -91,6 +97,12 @@ public class NotePresenter extends WOComponent {
 		return (noteForStudent() != null);
 	}
 
+	public boolean single() {
+		return (Various.boolForObject(valueForBinding("full"))
+				|| Various.boolForObject(valueForBinding("single"))
+				|| hasBinding("initData"));
+	}
+	
 	public boolean isSelected() {
 		if(student() == null)
 			return false;
@@ -124,34 +136,37 @@ public class NotePresenter extends WOComponent {
 			return (String)valueForBinding("defaultStyle");
     }
 	
-    public void setNoteForStudent(String newNoteForStudent) {
-        lesson().setNoteForStudent(newNoteForStudent,student());
-        _noteForStudent = newNoteForStudent;
+    public void setNoteForStudent(String note) {
+    	archiveMarkValue(note, "text");
+       lesson().setNoteForStudent(note,student());
+        _noteForStudent = note;
     }
 
     protected String _noteForStudent;
     public String noteForStudent() {
     	if(_noteForStudent == null) {
-     		if(student() == null || lesson() == null)
-    			return null;
-    		_noteForStudent = lesson().noteForStudent(student());
+    		if(hasBinding("data")) {
+    			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
+    			_noteForStudent = (String)data.valueForKey("text");
+    		} else {
+    			if(student() == null || lesson() == null)
+    				return null;
+    			_noteForStudent = lesson().noteForStudent(student());
+    		}
     	}
     	return _noteForStudent;
     }
 
-    protected int len() {
+    public int len() {
     	Number maxlen = (Number)valueForBinding("maxlen");
-		if (maxlen != null)
-			return maxlen.intValue();
-		if(hasBinding("initData")) {
-			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
-			maxlen = (Number)data.valueForKey("maxlen");
-		} else {
-			if(Various.boolForObject(valueForBinding("single")))
-				return 30;
-		}
-		return 3;
-	}
+    	if (maxlen == null && hasBinding("initData")) {
+    		NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
+    		maxlen = (Number)data.valueForKey("maxlen");
+    	}
+    	if (maxlen == null)
+    		maxlen = new Integer((single())?20:3);
+    	return maxlen.intValue();
+    }
 	/*
 	public String align() {
 		if(len() > 10) return "left";
@@ -189,14 +204,42 @@ public class NotePresenter extends WOComponent {
 		return WOMessage.stringByEscapingHTMLAttributeValue(theNote);
 	}
 	
+	protected EOEnterpriseObject _archive;
+	protected void archiveMarkValue(Object value, String name) {
+		if(!enableArchive) return;
+		if(_archive == null)
+			_archive = (EOEnterpriseObject)valueForBinding("archive");
+		if(_archive == null) {
+			EOEditingContext ec = lesson().editingContext();
+			_archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+			_archive.takeValueForKey(identifierDictionary(), "identifierDictionary");
+			if(hasBinding("archive"))
+				setValueForBinding(_archive, "archive");
+		}
+		_archive.takeValueForKey(value, '@' + name);
+	}
+
+	protected NSMutableDictionary identifierDictionary() {
+    	if(student() == null || lesson() == null)
+    		return null;
+		NSMutableDictionary ident = new NSMutableDictionary(entityName(),"entityName");
+		ident.takeValueForKey(lesson(),"lesson");
+		ident.takeValueForKey(student(), "student");
+		ident.takeValueForKey(lesson().editingContext(), "editingContext");
+		return ident;
+    }
+
 	public WOComponent archivePopup() {
 		WOComponent result = pageWithName("ArchivePopup");
 		result.takeValueForKey("NotePresenter", "presenter");
 		result.takeValueForKey(context().page(), "returnPage");
-		result.takeValueForKey(BaseLesson.lessonNoteforStudent(lesson(), student()), "object");
-		NSMutableDictionary initData = new NSMutableDictionary(lesson(),"lesson");
-		initData.takeValueForKey(student(), "student");
-		result.takeValueForKey(initData, "initData");
+		//result.takeValueForKey(BaseLesson.lessonNoteforStudent(lesson(), student()), "object");
+		NSDictionary initData = identifierDictionary();
+		initData.takeValueForKey(new Integer(12), "maxlen");
+		result.takeValueForKey(initData,"identifierDictionary");
+		StringBuffer description = new StringBuffer(lesson().theme());
+		description.append(" : ").append(Person.Utility.fullName(student(), true, 2, 2, 0));
+		result.takeValueForKey(description.toString(), "description");
 		return result;
 	}
 
@@ -204,10 +247,6 @@ public class NotePresenter extends WOComponent {
 		if(enableArchive && student() != null)
 			return archivePopup();
 		return (WOActionResults)valueForBinding("selectAction");
-	}
-
-	public boolean archiveOnly() {
-		return (forceArchives && noteForStudent() != null);
 	}
 	
 	public boolean deactivate() {
@@ -247,12 +286,12 @@ public class NotePresenter extends WOComponent {
 	}
 
 	public String style() {
-		boolean single = Various.boolForObject(valueForBinding("single"));
+		//boolean single = Various.boolForObject(valueForBinding("single"));
 		StringBuffer buf = new StringBuffer(30);
-		int len = (len() * 2) / 3;
-		buf.append("width:").append(len).append("em;text-align:");
+		//int len = (len() * 2) / 3;
+		buf.append("width:").append(len() +1).append("ex;text-align:");
 		if(noteForStudent() != null) {
-			if(single && noteForStudent().length() >= len())
+			if(single() && noteForStudent().length() >= len())
 				buf.append("left;overflow:hidden;");
 			else
 				buf.append("center;");
@@ -278,14 +317,15 @@ public class NotePresenter extends WOComponent {
 	public void reset() {
 		super.reset();
 		_access = null;
-		_noteForStudent = null;
+		_archive = null;
 		_lesson = null;
+		_noteForStudent = null;
 		_student = null;
 	}
 	
 	public void awake() {
 		super.awake();
-		enableArchive = (SettingsReader.boolForKeyPath("markarchive.BaseNote", false));
+		enableArchive = (SettingsReader.boolForKeyPath("markarchive." + entityName(), false));
 		forceArchives = (enableArchive && !hasBinding("initData")
 				&& SettingsReader.boolForKeyPath("markarchive.forceArchives", false));
 	}

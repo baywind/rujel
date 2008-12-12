@@ -81,7 +81,7 @@ public class MarkArchive extends _MarkArchive
 					"Could not register object for archiving");
 			return;
 		}
-		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), pKey,eo.editingContext());
+		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), eo.editingContext());
 		setUsedEntity(usedEntity);
 		setIdentifierFromDictionary(usedEntity, pKey);
 	}
@@ -152,17 +152,22 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec, eo);
 		return getUsedEntity(eo.entityName(), pKey, ec);
 	}*/
-	
-	protected static EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict, EOEditingContext ec) {
+
+	protected static EOEnterpriseObject getUsedEntity (String entityName, EOEditingContext ec) {
 		EOEnterpriseObject usedEntity = null;
 		try {
 			usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",entityName);
 		} catch (com.webobjects.eoaccess.EOObjectNotAvailableException ex) {
-			if(identifierDict == null || identifierDict.count() == 0)
-				return null;
+			EOEntity entity = EOModelGroup.defaultGroup().entityNamed(entityName);
+			NSArray pKeys = entity.primaryKeyAttributeNames();
+			if(pKeys == null || pKeys.count() == 0 || pKeys.count() > 3)
+				throw new IllegalArgumentException(
+						"Could not generate 'usedEntity' for archiving: illegal entityKeys");					
 			usedEntity = EOUtilities.createAndInsertInstance(ec, "UsedEntity");
+			Logger.getLogger("rujel.archiving").log(WOLogLevel.COREDATA_EDITING,
+				"Registering new archivable entity :" + entityName,pKeys);
 			usedEntity.takeValueForKey(entityName, "usedEntity");
-			Enumeration keys = identifierDict.keyEnumerator();
+			Enumeration keys = pKeys.objectEnumerator();
 			if(keys.hasMoreElements())
 				usedEntity.takeValueForKey(keys.nextElement(),"key1");
 			else
@@ -171,12 +176,10 @@ public class MarkArchive extends _MarkArchive
 				usedEntity.takeValueForKey(keys.nextElement(),"key2");
 			if(keys.hasMoreElements())
 				usedEntity.takeValueForKey(keys.nextElement(),"key3");
-			if(keys.hasMoreElements())
-				throw new IllegalArgumentException("Could not generate 'usedEntity' for archiving: more than 3 keys found");
 		}
 		return usedEntity;
 	}
-	
+
 	protected void deleteInsertedDuplicates(EOEnterpriseObject usedEntity, NSDictionary identifierDict) {
 		EOEditingContext ec = editingContext();
 		if(ec instanceof SessionedEditingContext && 
@@ -194,7 +197,7 @@ public class MarkArchive extends _MarkArchive
 	}
 	
 	public void setUsedEntityName(String entityName) {
-		EOEnterpriseObject ent = getUsedEntity(entityName, null, editingContext());
+		EOEnterpriseObject ent = getUsedEntity(entityName, editingContext());
 		setUsedEntity(ent);
 	}
 	
@@ -235,7 +238,7 @@ public class MarkArchive extends _MarkArchive
 	public void setIdentifierFromDictionary (String entityName, NSDictionary identifierDict) {
 		EOEnterpriseObject usedEntity = usedEntity();
 		if(usedEntity == null || !entityName.equals(usedEntity.valueForKey("usedEntity"))) {
-			usedEntity = getUsedEntity(entityName, identifierDict, editingContext());
+			usedEntity = getUsedEntity(entityName, editingContext());
 			//usedEntity = EOUtilities.objectMatchingKeyAndValue(editingContext(),"UsedEntity","usedEntity",entityName);		
 		}
 		setIdentifierFromDictionary(usedEntity, identifierDict);
@@ -265,7 +268,7 @@ public class MarkArchive extends _MarkArchive
 		if(pKey == null)
 			return null;
 		//EOUtilities.primaryKeyForObject(ec,eo);
-		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), pKey, ec);
+		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), ec);
 		//EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
 		EOQualifier qual = archiveQualifier(usedEntity,pKey);
 		EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("timestamp", EOSortOrdering.CompareAscending);
@@ -281,7 +284,7 @@ public class MarkArchive extends _MarkArchive
 	}*/
 	
 	public static EOQualifier archiveQualifier(String entityName, NSDictionary identifierDict, EOEditingContext ec) {
-		EOEnterpriseObject usedEntity = getUsedEntity(entityName, identifierDict, ec);
+		EOEnterpriseObject usedEntity = getUsedEntity(entityName, ec);
 		return archiveQualifier(usedEntity, identifierDict);
 	}
 	

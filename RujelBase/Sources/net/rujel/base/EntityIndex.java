@@ -32,6 +32,8 @@ package net.rujel.base;
 import java.util.logging.Logger;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOEntity;
+import com.webobjects.eoaccess.EOModelGroup;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
@@ -47,6 +49,9 @@ public class EntityIndex extends _EntityIndex {
 		if(found == null || found.count() == 0) {
 			result = (EntityIndex)EOUtilities.createAndInsertInstance(ec, "EntityIndex");
 			result.setEntName(entName);
+			EOEntity entity = EOModelGroup.defaultGroup().entityNamed(entName);
+			String path = entity.model().pathURL().getPath();
+			result.setSqlTable(path + '.' + entity.externalName());
 			Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,"Autocreating EnityIndex for entity " + entName,result);
 		} else {
 			result = (EntityIndex)found.objectAtIndex(0);

@@ -90,6 +90,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 		processArchives();
 		changeable = Various.boolForObject(
 				session().valueForKeyPath("readAccess.edit." + entityName));
+		if(initData == null)
+			initData = identifierDict;
 	}
 	
 	public void setObject(EOEnterpriseObject eo) {
@@ -105,10 +107,11 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	}
 	
 	protected void processArchives() {
+		if(keys == null)
+			return;
+			//keys = new NSMutableArray();
 		if(archives != null && archives.count() > 0) {
 			Enumeration enu = archives.objectEnumerator();
-			if(keys == null)
-				keys = new NSMutableArray();
 			while (enu.hasMoreElements()) {
 				MarkArchive ma = (MarkArchive) enu.nextElement();
 				Enumeration maKeys = ma.getArchiveDictionary().keyEnumerator();

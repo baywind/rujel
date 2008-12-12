@@ -138,13 +138,13 @@ public class SubgroupEditor extends WOComponent {
 					sb.append("Female");
 			}
 		} else {
-			sb.append("gerade");
 			if(!isInSubgroup())
-				sb.append("Dim");
+				sb.append("un");
+			sb.append("gerade");
 		}
 		sb.append("','grey");
-		if(isInSubgroup())
-			sb.append("Dim");
+		/*if(isInSubgroup())
+			sb.append("Dim");*/
 		sb.append("');");
 		return sb.toString();
     }

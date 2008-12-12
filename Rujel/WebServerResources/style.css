@@ -6,6 +6,10 @@ img {
 	border:none;
 }
 
+form {
+	margin:0px;
+}
+
 .titles {
 	text-align:right;
 }

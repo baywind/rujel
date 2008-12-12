@@ -46,6 +46,10 @@ public class MarksPresenter extends NotePresenter {
 	public static final NSArray accessKeys = new NSArray (
 			new String[] {"read","create","edit","delete","changeDate"});
 	
+	protected String entityName() {
+		return "Mark";
+	}
+
 	public NamedFlags access() {
 		if(_access == null && lesson() != null)
 			_access = lesson().accessForAttribute("marks",accessKeys);
@@ -95,13 +99,7 @@ public class MarksPresenter extends NotePresenter {
 		}
 		return _mark;
 	}
-	
-	public boolean single() {
-		return (Various.boolForObject(valueForBinding("full"))
-				|| Various.boolForObject(valueForBinding("single"))
-				|| hasBinding("initData"));
-	}
-	
+		
 	//private NSArray _allCriteria;
 	protected NSArray allCriteria() {
 		NSArray _allCriteria = null;
@@ -183,56 +181,15 @@ public class MarksPresenter extends NotePresenter {
 		return mark().value().toString();
     }
 	
-    public String noteForStudent() {
-		if(hasBinding("data")) {
-			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
-			return (String)data.valueForKey("text");
-		}
-		return super.noteForStudent();
-    }
-    
-    public void setNoteForStudent(String note) {
-    	archiveMarkValue(note, "text");
-    	super.setNoteForStudent(note);
-    }
-	
-    protected NSDictionary identifierDictionary() {
-    	if(student() == null || lesson() == null)
-    		return null;
-		NSMutableDictionary ident = new NSMutableDictionary("Mark","entityName");
+    protected NSMutableDictionary identifierDictionary() {
+		NSMutableDictionary ident = super.identifierDictionary();
+		if(ident == null)
+			return null;
 		ident.takeValueForKey(lesson(),"work");
-		ident.takeValueForKey(student(), "student");
-		ident.takeValueForKey(lesson().editingContext(), "editingContext");
+		//ident.removeObjectForKey("lesson");
 		return ident;
     }
-    
-	protected EOEnterpriseObject _archive;
-	protected void archiveMarkValue(Object value, String name) {
-		if(!enableArchive) return;
-		if(_archive == null)
-			_archive = (EOEnterpriseObject)valueForBinding("archive");
-		if(_archive == null) {
-			EOEditingContext ec = lesson().editingContext();
-			_archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
-			if(mark() != null) {
-				_archive.takeValueForKey(mark(), "objectIdentifier");
-			} else {
-				_archive.takeValueForKey(identifierDictionary(), "identifierDictionary");
-			}
-			if(hasBinding("archive"))
-				setValueForBinding(_archive, "archive");
-		}
-		_archive.takeValueForKey(value, '@' + name);
-	}
-	
-	public boolean archiveOnly() {
-		if(!forceArchives)
-			return false;
-		if(critItem == null)
-			return (noteForStudent() != null);
-		return (mark() != null);
-	}
-	
+    	
 	protected Mark anyMark() {
 		Mark obj = mark();
 		if(obj == null) {
@@ -248,15 +205,14 @@ public class MarksPresenter extends NotePresenter {
 		result.takeValueForKey("MarksPresenter", "presenter");
 		result.takeValueForKey(usedCriteria(), "keys");
 		result.takeValueForKey(context().page(), "returnPage");
-		if(mark() != null)
-			result.takeValueForKey(mark(), "object");
+		NSMutableDictionary initData = identifierDictionary();
+		if(_mark != null)
+			result.takeValueForKey(_mark, "object");
 		else
-			result.takeValueForKey(identifierDictionary(),"identifierDictionary");
+			result.takeValueForKey(initData,"identifierDictionary");
 		StringBuffer description = new StringBuffer(lesson().theme());
 		description.append(" : ").append(Person.Utility.fullName(student(), true, 2, 2, 0));
 		result.takeValueForKey(description.toString(), "description");
-		NSMutableDictionary initData = new NSMutableDictionary(lesson(),"lesson");
-		initData.takeValueForKey(student(), "student");
 		NSMutableArray keys = (NSMutableArray)result.valueForKey("keys");
 		keys.removeObject("text");
 		initData.takeValueForKey(keys, "criteria");
@@ -444,8 +400,6 @@ public class MarksPresenter extends NotePresenter {
     	_mark = null;
     	_usedCriteria = null;
     	//_allCriteria = null;
-		_access = null;
-		_archive = null;
 		critItem = null;
 	}
 /*	
@@ -503,13 +457,12 @@ public class MarksPresenter extends NotePresenter {
 		return (String)valueForBinding("defaultStyle");
 	}
 	
-	protected int len() {
+	public int len() {
 		int len = super.len();
-		if(len == 30)
+		if(len == 20)
 			return 6;
 		return len;
-	}
-	
+	}	
 	protected static Format dateFormat = MyUtility.dateFormat();
 	
 	public void awake() {
@@ -517,9 +470,6 @@ public class MarksPresenter extends NotePresenter {
 		synchronized (dateFormat) {
 			dateFormat = MyUtility.dateFormat();
 		}
-		enableArchive = SettingsReader.boolForKeyPath("markarchive.Mark", false);
-		forceArchives = (enableArchive && !hasBinding("initData")
-				&& SettingsReader.boolForKeyPath("markarchive.forceArchives", false));
 	}
 	
 	public String markTitle() {
@@ -564,8 +514,8 @@ public class MarksPresenter extends NotePresenter {
 	
 	public String noteWidth() {
 		if(student() != null && !isSelected()) return null;
-		int len = (len() * 2) /3;
-		String result = "width:" + len + "em;";
+		int len = (len() + 1);
+		String result = "width:" + len + "ex;";
 		return result;
 	}
 

@@ -597,6 +597,8 @@
 		<string>true</string>
 		<key>ItogMark</key>
 		<string>true</string>
+		<key>BaseNote</key>
+		<string>true</string>
 	</dict>
 	<key>schedule</key>
 	<dict>
