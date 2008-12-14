@@ -369,8 +369,8 @@ public class AutoItogModule {
 		prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, sorter);
 		int last = 0;
 		EduPeriod period = null;
-		EduGroup group = null;
-		EduCycle cycle = null;
+		//EduGroup group = null;
+		//EduCycle cycle = null;
 		EduCourse course = null;
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
 		boolean overwrite = SettingsReader.boolForKeyPath("edu.overwriteItogsScheduled", false);
@@ -382,15 +382,6 @@ public class AutoItogModule {
 			}
 			if(prognos.eduCourse() != course) {
 				course = prognos.eduCourse();
-				if(course.eduGroup() != group) {
-					group = course.eduGroup();
-					buf.append(group.name()).append(':');
-				}
-				if(course.cycle() != cycle) {
-					cycle = course.cycle();
-					buf.append(cycle.subject()).append(':');
-				}
-				buf.append('\n');
 				if((i - last) > 12) {
 					try {
 						last = i;
@@ -403,6 +394,15 @@ public class AutoItogModule {
 					}
 					buf.append("--\n");
 				}
+//				if(course.eduGroup() != group) {
+//					group = course.eduGroup();
+					buf.append(course.eduGroup().name()).append(" : ");
+//				}
+//				if(course.cycle() != cycle) {
+//					cycle = course.cycle();
+					buf.append(course.cycle().subject()).append(':');
+//				}
+				buf.append('\n');
 			}
 			ItogMark itog = prognos.convertToItogMark(null, overwrite, buf);
 			if(enableArchive && itog != null) {
