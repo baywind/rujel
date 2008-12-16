@@ -153,11 +153,19 @@ public class MarkArchive extends _MarkArchive
 		return getUsedEntity(eo.entityName(), pKey, ec);
 	}*/
 
+	protected static NSMutableDictionary<String, EOGlobalID> entities 
+										= new NSMutableDictionary<String, EOGlobalID>();
 	protected static EOEnterpriseObject getUsedEntity (String entityName, EOEditingContext ec) {
+		EOGlobalID entGID = entities.objectForKey(entityName);
 		EOEnterpriseObject usedEntity = null;
-		try {
-			usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",entityName);
-		} catch (com.webobjects.eoaccess.EOObjectNotAvailableException ex) {
+		if(entGID != null)
+			usedEntity = ec.objectForGlobalID(entGID);
+		if(usedEntity != null && !entGID.isTemporary())
+			return usedEntity;
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec,"UsedEntity","usedEntity",entityName);
+		if(found == null || found.count() == 0) {
+			if(usedEntity != null)
+				return usedEntity;
 			EOEntity entity = EOModelGroup.defaultGroup().entityNamed(entityName);
 			NSArray pKeys = entity.primaryKeyAttributeNames();
 			if(pKeys == null || pKeys.count() == 0 || pKeys.count() > 3)
@@ -176,7 +184,13 @@ public class MarkArchive extends _MarkArchive
 				usedEntity.takeValueForKey(keys.nextElement(),"key2");
 			if(keys.hasMoreElements())
 				usedEntity.takeValueForKey(keys.nextElement(),"key3");
+		} else if(found.count() > 1) {
+			Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
+					"Found several descriptions for entity named:" + entityName);
 		}
+		usedEntity = (EOEnterpriseObject)found.objectAtIndex(0);
+		entGID = ec.globalIDForObject(usedEntity);
+		entities.setObjectForKey(entGID, entityName);
 		return usedEntity;
 	}
 

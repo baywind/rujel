@@ -102,6 +102,7 @@ public class LessonNoteEditor extends WOComponent {
 		ec.lock();
 		ec.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
 		ec.unlock();
+		session().savePageInPermanentCache(this);
 	}
 
 	public boolean showTabs() {
