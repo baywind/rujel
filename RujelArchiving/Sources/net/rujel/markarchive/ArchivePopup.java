@@ -172,6 +172,9 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 				ec.lock();
 				archive.setReason(reason);
 				ec.saveChanges();
+				session().setObjectForKey(initData, "objectSaved");
+				session().valueForKeyPath("modules.objectSaved");
+				session().removeObjectForKey("objectSaved");
 				logger.log(WOLogLevel.UNOWNED_EDITING,"Changes are saved and archived",args);
 			} catch (Exception e) {
 				session().takeValueForKey(e.getMessage(), "message");

@@ -159,7 +159,7 @@ public class MarkArchive extends _MarkArchive
 		EOGlobalID entGID = entities.objectForKey(entityName);
 		EOEnterpriseObject usedEntity = null;
 		if(entGID != null)
-			usedEntity = ec.objectForGlobalID(entGID);
+			usedEntity = ec.faultForGlobalID(entGID,ec);
 		if(usedEntity != null && !entGID.isTemporary())
 			return usedEntity;
 		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec,"UsedEntity","usedEntity",entityName);
@@ -184,11 +184,12 @@ public class MarkArchive extends _MarkArchive
 				usedEntity.takeValueForKey(keys.nextElement(),"key2");
 			if(keys.hasMoreElements())
 				usedEntity.takeValueForKey(keys.nextElement(),"key3");
-		} else if(found.count() > 1) {
-			Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
-					"Found several descriptions for entity named:" + entityName);
+		} else {
+			if(found.count() > 1)
+				Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
+						"Found several descriptions for entity named:" + entityName);
+			usedEntity = (EOEnterpriseObject)found.objectAtIndex(0);
 		}
-		usedEntity = (EOEnterpriseObject)found.objectAtIndex(0);
 		entGID = ec.globalIDForObject(usedEntity);
 		entities.setObjectForKey(entGID, entityName);
 		return usedEntity;

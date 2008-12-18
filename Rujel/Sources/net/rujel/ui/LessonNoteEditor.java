@@ -133,6 +133,7 @@ public class LessonNoteEditor extends WOComponent {
 	public void setCurrLesson(EduLesson lesson) {
 		currPerPersonLink = (PerPersonLink)EOUtilities.localInstanceOfObject(ec,lesson);
 		student = null;
+		session().setObjectForKey(lesson.date(), "recentDate");
 	}
 	public void setCurrPerPersonLink(PerPersonLink lesson) {
 		student = null;
@@ -258,8 +259,8 @@ public class LessonNoteEditor extends WOComponent {
 			present = (NSKeyValueCoding)presentTabs.objectAtIndex(0);
 
 		refresh();
-		notesAddOns = null;
-		activeNotesAddOns = null;
+//		notesAddOns = null;
+//		activeNotesAddOns = null;
 	}
 
 	protected void refresh() {
@@ -347,6 +348,12 @@ public class LessonNoteEditor extends WOComponent {
 		}
 
 		lessonsList = lessonListForCourseAndPresent(course, present, qualifiers);
+		if(lessonsList != null && lessonsList.count() > 0) {
+			EduLesson lesson = (EduLesson)lessonsList.lastObject();
+			session().setObjectForKey(lesson.date(), "recentDate");
+		} else {
+			session().setObjectForKey(session().valueForKey("today"), "recentDate");
+		}
 	}
 	/*(NSArray)present.valueForKey("list");
 				if(lessonsList != null) {
@@ -483,11 +490,18 @@ public Object currLesson() {
 							if(changes > 0)//(((notes1==null)^(notes2==null)) || (notes1!=null && !notes1.equals(notes2)))
 								logger.logp(level,"LessonNoteEditor","save","Notes changed in lesson (" + changes + ')',new Object[] {session(),currLesson});*/
 					}
-					if(notesAddOns != null)
+/*					if(notesAddOns != null)
 						notesAddOns.takeValueForKey(currPerPersonLink, "saveLesson");
 					else
-						session().valueForKeyPath("modules.saveLesson");
-					session().removeObjectForKey("lessonProperies");
+*/	
+					if(currPerPersonLink != null) {
+						NSMutableDictionary dict = new NSMutableDictionary(currPerPersonLink,"object");
+						if(currPerPersonLink instanceof EduLesson)
+							dict.takeValueForKey(currPerPersonLink, "lesson");
+						session().setObjectForKey(dict, "objectSaved");
+						session().valueForKeyPath("modules.objectSaved");
+						session().removeObjectForKey("objectSaved");
+					}
 					refresh();
 				} else {
 					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
@@ -1210,13 +1224,11 @@ public Object currLesson() {
 		}
 		updateLessonList();
 	}
-
-	/** @TypeInfo com.webobjects.foundation.NSKeyValueCoding */
+	/*
 	public NSArray notesAddOns;
 
-	/** @TypeInfo java.lang.String */
 	public NSMutableArray activeNotesAddOns; 
-	/*
+	
 			public NSArray notesAddOns () {
 				if(notesAddOns == null) {
 					notesAddOns = (NSArray)session().valueForKeyPath("modules.notesAddOns");

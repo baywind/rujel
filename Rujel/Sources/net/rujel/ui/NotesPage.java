@@ -29,7 +29,6 @@
 
 package net.rujel.ui;
 
-import net.rujel.base.GenericAddOn;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -337,13 +336,15 @@ public class NotesPage extends WOComponent {
 	public NSArray allAddOns() {
 		if((single() && currLesson() != null) || session()==null) return null;
 		if(allAddOns == null) {
-			allAddOns = (NSArray)valueForBinding("allAddOns");
+			//allAddOns = (NSArray)valueForBinding("allAddOns");
+			allAddOns = (NSArray)session().objectForKey("notesAddOns");
 		}
 		if(allAddOns == null) {
 			allAddOns = (NSArray)session().valueForKeyPath("modules.notesAddOns");
 			if(allAddOns == null)
 				allAddOns = NSArray.EmptyArray;
-			setValueForBinding(allAddOns,"allAddOns");
+			session().setObjectForKey(allAddOns,"notesAddOns");
+			//setValueForBinding(allAddOns,"allAddOns");
 		}
 		return allAddOns;
 	}
@@ -351,7 +352,8 @@ public class NotesPage extends WOComponent {
 	public NSMutableArray activeAddOns() {
 		if((single() && currLesson() != null) || session()==null) return null;
 		if(activeAddOns == null) {
-			activeAddOns = (NSMutableArray)valueForBinding("activeAddOns");
+			//activeAddOns = (NSMutableArray)valueForBinding("activeAddOns");
+			activeAddOns = (NSMutableArray)session().objectForKey("activeAddOns");
 		}
 		if(activeAddOns == null) {
 			activeAddOns = new NSMutableArray();
@@ -364,8 +366,10 @@ public class NotesPage extends WOComponent {
 					}
 				}
 			}
-			setValueForBinding(activeAddOns,"activeAddOns");
-		} else {
+			if(activeAddOns != null)
+				session().setObjectForKey(activeAddOns, "activeAddOns");
+			//setValueForBinding(activeAddOns,"activeAddOns");
+/*		} else {
 			if(activeAddOns.count() > 0 && allAddOns().count() > 0) {
 				if(activeAddOns.objectAtIndex(0) instanceof String) {
 					NSMutableArray result = new NSMutableArray();
@@ -381,8 +385,7 @@ public class NotesPage extends WOComponent {
 					activeAddOns.setArray(result);
 				}
 			}
-			
-		}
+*/		}
 		return activeAddOns;
 	}
 	

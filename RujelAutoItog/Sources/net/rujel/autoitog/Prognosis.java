@@ -191,6 +191,20 @@ public class Prognosis extends _Prognosis {
 		_flags = null;
 		//_bonus = null;
 		//_calc = null;
+		_relatedItog = null;
+	}
+	
+	protected Object _relatedItog;
+	public ItogMark relatedItog() {
+		if(_relatedItog == null) {
+			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),editingContext());
+			if(_relatedItog == null)
+				_relatedItog = NullValue;
+		}
+		if(_relatedItog == NullValue) {
+			return null;
+		}
+		return (ItogMark)_relatedItog;
 	}
 	/*
 	protected transient FractionPresenter presenter;
@@ -254,6 +268,9 @@ public class Prognosis extends _Prognosis {
 	}
 
 	public NSTimestamp updateFireDate(CourseTimeout courseTimeout) {
+		if(fireDate() == null && relatedItog() != null) {
+			return null;
+		}
 		NSTimestamp result = null;
 		_timeout = null;
 		StudentTimeout studentTimeout = getStudentTimeout();
@@ -407,43 +424,43 @@ public class Prognosis extends _Prognosis {
 	}
 	
 	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite, StringBuffer buf) {
-		ItogMark itog = null;
+		//ItogMark itog = null;
 		if(itogs != null) {
-			itog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),itogs);
+			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),itogs);
 		} else {
-			itog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),editingContext());
+			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),editingContext());
 		}
 		
 		if(namedFlags().flagForKey("disable")) {
 			report("This prognosis was disabled",this, buf);
-			if(itog != null)
+			if(_relatedItog != null)
 				setFireDate(null);
 			return null;
 		}
 
 		setFireDate(null);
-		if(itog == null) {
-			itog = (ItogMark)EOUtilities.createAndInsertInstance(editingContext(),"ItogMark");
-			itog.addObjectToBothSidesOfRelationshipWithKey(eduPeriod(),"eduPeriod");
-			itog.addObjectToBothSidesOfRelationshipWithKey(student(),"student");
-			itog.addObjectToBothSidesOfRelationshipWithKey(eduCourse().cycle(),"cycle");
+		if(_relatedItog == null) {
+			_relatedItog = (ItogMark)EOUtilities.createAndInsertInstance(editingContext(),"ItogMark");
+			relatedItog().addObjectToBothSidesOfRelationshipWithKey(eduPeriod(),"eduPeriod");
+			relatedItog().addObjectToBothSidesOfRelationshipWithKey(student(),"student");
+			relatedItog().addObjectToBothSidesOfRelationshipWithKey(eduCourse().cycle(),"cycle");
 		} else {
 			if(!overwrite) {
 				report("Itog already exists",this, buf);
-				BigDecimal value = itog.value();
+				BigDecimal value = relatedItog().value();
 				boolean flag = (value != null && value.equals(this.value()));
-				itog.readFlags().setFlagForKey(flag,"constituents");
+				relatedItog().readFlags().setFlagForKey(flag,"constituents");
 				return null;
 			}
-			if(!this.mark().equals(itog.mark()))
-				itog.readFlags().setFlagForKey(true,"changed");
+			if(!this.mark().equals(relatedItog().mark()))
+				relatedItog().readFlags().setFlagForKey(true,"changed");
 		}
-		itog.setValue(value());
-		itog.setMark(mark());
+		relatedItog().setValue(value());
+		relatedItog().setMark(mark());
 		Bonus bonus = bonus();
 		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
-				itog.setMark(bonus.mark());
+				relatedItog().setMark(bonus.mark());
 				report("Bonus is applied",this, buf);
 			} else {
 				report("Bonus not applied",this, buf);
@@ -457,11 +474,11 @@ public class Prognosis extends _Prognosis {
 		}
 
 		//itog.readFlags().setFlagForKey(true,"calculated");
-		itog.readFlags().setFlagForKey(false,"constituents");
+		relatedItog().readFlags().setFlagForKey(false,"constituents");
 		if(!isComplete()) {
-			itog.readFlags().setFlagForKey(true,"incomplete");
+			relatedItog().readFlags().setFlagForKey(true,"incomplete");
 		}
-		return itog;
+		return relatedItog();
 	}
 	
 	public static void convertPrognosesForCourseAndPeriod(
@@ -570,5 +587,22 @@ cycleStudents:
 		if(buffer == null) {		
 			logger.log(WOLogLevel.INFO, buf.toString(),course);
 		}
+	}
+	
+	public boolean valueChanged() {
+		NSDictionary committed = editingContext().committedSnapshotForObject(this);
+		if(committed == null || committed.count() == 0)
+			return true;
+		NSDictionary recent = snapshot();
+		if(committed == recent)
+			return false;
+		String[] keys = new String[] {"commplete","value","mark"};
+		for (int i = 0; i < keys.length; i++) {
+			Object a = committed.valueForKey(keys[i]);
+			Object b = recent.valueForKey(keys[i]);
+			if((a == null)? b != null : !a.equals(b))
+				return true;
+		}
+		return false;
 	}
 }

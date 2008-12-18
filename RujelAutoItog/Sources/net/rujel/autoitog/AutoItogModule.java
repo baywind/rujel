@@ -76,8 +76,8 @@ public class AutoItogModule {
 			return init3(ctx);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
-		} else if("saveLesson".equals(obj)) {
-			return saveLesson(ctx);
+		} else if("objectSaved".equals(obj)) {
+			return objectSaved(ctx);
 		} else if("printStudentResults".equals(obj)) {
 			return printStudentResults(ctx);
 		} else if("reportForStudent".equals(obj)) {
@@ -179,54 +179,66 @@ public class AutoItogModule {
 		*/
 	}
 
-	public static Object saveLesson(WOContext ctx) {
+	public static Object objectSaved(WOContext ctx) {
 		WOSession ses = ctx.session();
-		String key = "AutoItog.PrognosesAddOn";
-		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey(key);
-		if(addOn == null)
+		NSDictionary dict = (NSDictionary)ses.objectForKey("objectSaved");
+		EduCourse course = (EduCourse)dict.valueForKey("eduCourse");
+		if(course == null)
+			course = (EduCourse)dict.valueForKeyPath("lesson.course");
+		if(course == null)
 			return null;
-		EduLesson currLesson = (EduLesson)ctx.page().valueForKey("currLesson");
-		if(currLesson == null) return null;
-		if(currLesson.date().compareTo(new NSTimestamp()) > 0)
+		NSTimestamp date = (NSTimestamp)dict.valueForKey("date");
+		if(date == null)
+			date = (NSTimestamp)dict.valueForKeyPath("lesson.date");
+		if(date == null)
+			date = (NSTimestamp)ses.objectForKey("recentDate");
+		if(date == null)
 			return null;
-		addOn.setSaveLesson(currLesson);
-		return null;
-	/*	EduCourse course = currLesson.course();
-		//(EduCourse)ctx.page().valueForKey("course");
-		NSArray pertypes = PeriodType.periodTypesForCourse(course);
-		if(pertypes == null) return null;
-		PeriodType pertype = (PeriodType)pertypes.objectAtIndex(0);
-		EduPeriod period = pertype.currentPeriod(currLesson.date());
-//		if(period.contains(currLesson.date())) {
-
-		course.editingContext().lock();
-		try {
-			Calculator calc = PrognosUsage.prognosUsage(course, period.periodType()).calculator();
-			PerPersonLink result = calc.calculatePrognoses(course,period);
-			course.editingContext().saveChanges();
-			NSKeyValueCoding prognosAddOn = null;
-			NSArray usedAddOns = (NSArray)ctx.page().valueForKey("activeNotesAddOns");
-			if(usedAddOns != null) {
-				prognosAddOn = GenericAddOn.addonForID(usedAddOns,"prognosis");
-			}
-			if(prognosAddOn == null) {
-				usedAddOns = (NSArray)ctx.page().valueForKey("notesAddOns");
-				if(usedAddOns != null) {
-					prognosAddOn = GenericAddOn.addonForID(usedAddOns,"prognosis");
-				}
-			}
-			if(prognosAddOn != null) {
-				prognosAddOn.takeValueForKey(result,"prognoses");
-				prognosAddOn.takeValueForKey(period,"eduPeriod");
-			}
-		} catch (RuntimeException ex) {
-			course.editingContext().revert();
-			throw ex;
-		} finally {
-			course.editingContext().unlock();				
+		Student student = (Student)dict.valueForKey("student");
+		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey("AutoItog.PrognosesAddOn");;
+		if(student == null && addOn != null) {
+			addOn.setCourse(course, date);
 		}
-//		}
-		return null;*/
+		NSArray pertypes = PeriodType.periodTypesForCourse(course);
+		Enumeration enu = pertypes.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			PeriodType type = (PeriodType) enu.nextElement();
+			PrognosUsage usage = PrognosUsage.prognosUsage(course, type);
+			if(usage == null || usage.calculator() == null || !usage.namedFlags().flagForKey("active"))
+				continue;
+			EduPeriod eduPeriod = type.currentPeriod(date);
+			if(eduPeriod == null)
+				continue;
+			
+			if(student == null) {
+				if(addOn != null) {
+					addOn.setPeriodItem(eduPeriod);
+					addOn.calculate();
+				} else {
+					PerPersonLink prognoses = usage.calculator().calculatePrognoses(course, eduPeriod);
+					CourseTimeout ct = CourseTimeout.getTimeoutForCourseAndPeriod(course, eduPeriod);
+					Enumeration prenu = prognoses.allValues().objectEnumerator();
+					while (prenu.hasMoreElements()) {
+						Prognosis progn = (Prognosis) prenu.nextElement();
+						progn.updateFireDate(ct);
+					}
+				}
+			} else {
+				Prognosis progn = usage.calculator().calculateForStudent(student, course, eduPeriod);
+				progn.updateFireDate();
+				if(addOn != null)
+					addOn.reset();
+			}
+		}
+		if(course.editingContext().hasChanges()) {
+			try {
+				course.editingContext().saveChanges();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Could not save prognoses update",e);
+				ses.takeValueForKey(e.getMessage(), "message");
+			}
+		}
+		return null;
 	}
 	
 	public static NSMutableDictionary printStudentResults(WOContext ctx) {

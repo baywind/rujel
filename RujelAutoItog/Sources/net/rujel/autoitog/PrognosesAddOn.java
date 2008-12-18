@@ -110,7 +110,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	public EduPeriod periodItem;
 	protected Student _student;
 	protected NSDictionary _prognosesForStudent;
-	protected EduPeriod _forcedPeriod;
+	//protected EduPeriod _forcedPeriod;
 	protected NSMutableDictionary _courseTimeouts;
 
 	public void reset() {
@@ -125,26 +125,31 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		_prognosesForStudent = null;
 		_timeout = null;
 		_prognosis = null;
+		currDate = null;
 	}
 
 	public void setCourse(EduCourse newCourse) {
-		NSTimestamp today = (NSTimestamp)session.valueForKey("today");
-		setCourse(newCourse, today);
+		NSTimestamp date = (NSTimestamp)session.objectForKey("recentDate");
+		if(date == null)
+			date = (NSTimestamp)session.valueForKey("today");
+		setCourse(newCourse, date);
 	}
 
 	public void setCourse(EduCourse newCourse, NSTimestamp date) {
-		if(newCourse == _course)
+		if(newCourse == _course) {
+			listPeriodsForDate(date);
 			return;
+		}
 		reset();
 		if(newCourse == null) {
 			return;
 		}
 		_course = newCourse;
-		if(_forcedPeriod != null) {
+/*		if(_forcedPeriod != null) {
 			_forcedPeriod = (EduPeriod)EOUtilities.localInstanceOfObject(
 					_course.editingContext(), _forcedPeriod);
 		}
-		NSArray pertypes = PeriodType.periodTypesForCourse(_course);
+*/		NSArray pertypes = PeriodType.periodTypesForCourse(_course);
 		NSMutableArray result = new NSMutableArray();
 		_usagesForPerTypes = new NSMutableDictionary();
 		_courseTimeouts = new NSMutableDictionary();
@@ -164,9 +169,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		}
 		EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduPeriod.sorter);
 		_periods = result.immutableClone();
+		currDate = date;
 	}
 
-	public void setEduPeriod(Period period) {
+/*	public void setEduPeriod(Period period) {
 		if(period instanceof EduPeriod) {
 			if(_course != null)
 				_forcedPeriod = (EduPeriod)EOUtilities.localInstanceOfObject(_course.editingContext(), (EduPeriod)period);
@@ -179,12 +185,12 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			}
 		}
 	}
-
+*/
 	public NSArray periods() {
-		if(_forcedPeriod == null)
+		//if(_forcedPeriod == null)
 			return _periods;
-		else
-			return new NSArray(_forcedPeriod);
+		//else
+		//	return new NSArray(_forcedPeriod);
 	}
 
 	public PrognosUsage usage() {
@@ -193,7 +199,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		return (PrognosUsage)_usagesForPerTypes.objectForKey(periodItem.periodType());
 	}
 
+	protected NSTimestamp currDate;
 	protected void listPeriodsForDate(NSTimestamp date) {
+		if(date.equals(currDate))
+			return;
 		NSMutableArray result = new NSMutableArray();
 		boolean justUpdate = (_periods != null && 
 				_periods.count() == _usagesForPerTypes.count());
@@ -226,6 +235,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 
 		EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduPeriod.sorter);
 		_periods = result.immutableClone();
+		currDate = date;
 	}
 
 	protected Prognosis _prognosis;
@@ -276,7 +286,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 				return _prognosis;
 		} // _prognosesMatrix == null
 		
-		if(periodItem == _forcedPeriod && !_periods.contains(_forcedPeriod)) {
+/*		if(periodItem == _forcedPeriod && !_periods.contains(_forcedPeriod)) {
 			PerPersonLink forPeriod = (PerPersonLink)_prognosesMatrix.objectForKey(_forcedPeriod);
 			if(forPeriod == null) {
 				forPeriod = Prognosis.prognosesForCourseAndPeriod(_course, _forcedPeriod);
@@ -286,7 +296,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			_prognosis = (forPeriod==null)?null:(Prognosis)forPeriod.forPersonLink(_student);
 			return _prognosis;
 		}
-
+*/
 		_prognosesForStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
 		if(_prognosesForStudent == null)
 			_prognosesForStudent = NSDictionary.EmptyDictionary;
@@ -320,10 +330,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(forStudent != null) {
 				forStudent.removeObjectForKey(periodItem);
 			}
-			if (_forcedPeriod != null) {
+/*			if (_forcedPeriod != null) {
 				_prognosesMatrix.removeObjectForKey(_forcedPeriod);
 			}
-		}
+*/		}
 	}
 	
 	public void setStudent(Student student) {
@@ -375,11 +385,11 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 
 	public CourseTimeout courseTimeout() {
 		Object result = _courseTimeouts.objectForKey(periodItem);
-		if(result==null && _forcedPeriod != null) {
-			result = CourseTimeout.getTimeoutForCourseAndPeriod(_course, _forcedPeriod);
+		if(result==null) { // && _forcedPeriod != null) {
+			result = CourseTimeout.getTimeoutForCourseAndPeriod(_course, periodItem);
 			if(result==null)
 				result = NSKeyValueCoding.NullValue;
-			_courseTimeouts.setObjectForKey(result, _forcedPeriod);
+			_courseTimeouts.setObjectForKey(result, periodItem);
 		}
 		return (result==NSKeyValueCoding.NullValue)?null:(CourseTimeout)result;
 	}
@@ -431,47 +441,27 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		NSKeyValueCoding.DefaultImplementation.unableToSetNullForKey(this, key);
 		//throw new NullPointerException("unableToSetNullForKey : " + key);
 	}
-	public void setSaveLesson(EduLesson lesson) {
+
+	/*	public void setSaveLesson(EduLesson lesson) {
 		NSTimestamp date = lesson.date();
-		if(_forcedPeriod != null && !_forcedPeriod.contains(date))
-			_forcedPeriod = null;
+//		if(_forcedPeriod != null && !_forcedPeriod.contains(date))
+//			_forcedPeriod = null;
 		if(_course == lesson.course() && _periods != null) {
 			listPeriodsForDate(date);
-			/*Enumeration enu = _periods.objectEnumerator();
-			EduCourse course = _course;
-			while (enu.hasMoreElements()) {
-				EduPeriod per = (EduPeriod) enu.nextElement();
-				if(!per.contains(date)) {
-					reset();
-					setCourse(course, date);
-					break;
-				}
-			}*/
 		} else {// _periods != null
 			reset();
 			setCourse(lesson.course(),date);
 		}
 		if(_periods == null)
 			return;
-		//EOEditingContext ec = _course.editingContext();
 		Enumeration enu = _periods.objectEnumerator();
-		//ec.lock();
 		while (enu.hasMoreElements()) {
 			periodItem = (EduPeriod) enu.nextElement();
 			calculate();
-		}/*
-		try {
-			ec.saveChanges();
-		} catch (Exception e) {
-			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,"Error saving calculated prognoses",e);
-			session.takeValueForKey(e.getMessage(), "message");
-			ec.revert();
-		} finally {
-			ec.unlock();
-		}*/
+		}
 		setPeriodItem(null);
 	}
-
+*/
 	public String fireDate() {
 		if(prognosis()==null)
 			return null;
@@ -504,7 +494,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 				NSMutableDictionary forStudent = (um)?(NSMutableDictionary)_prognosesMatrix.objectForKey(student):null;
 				Prognosis prognosis = (prognoses==null)?null:(Prognosis)prognoses.forPersonLink(student);
 				if(prognosis != null) {
-					prognosis.updateFireDate(courseTimeout());
+					//if(prognosis.fireDate() != null && prognosis.valueChanged())
+						prognosis.updateFireDate(courseTimeout());
 					if(um){
 						if(forStudent == null) {
 							forStudent = new NSMutableDictionary(prognosis,periodItem);

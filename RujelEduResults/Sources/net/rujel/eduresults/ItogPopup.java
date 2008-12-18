@@ -47,7 +47,7 @@ public class ItogPopup extends WOComponent {
 	public ItogMark itog;
 
     public EduPeriod eduPeriod;
-	public EduCycle cycle;
+	//public EduCycle cycle;
     public Student student;
     public String mark;
 	public NSKeyValueCoding addOn;
@@ -100,7 +100,8 @@ public class ItogPopup extends WOComponent {
 			session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
 			return returnPage;
 		}
-		EOEditingContext ec = cycle.editingContext();
+		EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
+		EOEditingContext ec = eduCourse.editingContext();
 		ec.lock();
 		try {
 			boolean newItog = (itog == null);
@@ -117,7 +118,7 @@ public class ItogPopup extends WOComponent {
 					itog = (ItogMark)EOUtilities.createAndInsertInstance(ec,"ItogMark");
 					itog.addObjectToBothSidesOfRelationshipWithKey(eduPeriod,"eduPeriod");
 					itog.addObjectToBothSidesOfRelationshipWithKey(student,"student");
-					itog.addObjectToBothSidesOfRelationshipWithKey(cycle,"cycle");
+					itog.addObjectToBothSidesOfRelationshipWithKey(eduCourse.cycle(),"cycle");
 					addOn.takeValueForKey(null,"agregate");
 				} else {
 					itog.readFlags().setFlagForKey(true,"changed");
@@ -148,7 +149,7 @@ public class ItogPopup extends WOComponent {
 			session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
 			return returnPage;
 		}
-		EOEditingContext ec = cycle.editingContext();
+		EOEditingContext ec = student.editingContext();
 		ec.lock();
 		try {
 			NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,itog);

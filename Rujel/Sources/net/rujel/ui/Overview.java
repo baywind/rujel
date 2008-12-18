@@ -179,14 +179,14 @@ public class Overview extends WOComponent {
 		else
 			currSubject.setObjectForKey("eduPlan","style");
 		currSubject = null;
-		if(activeNotesAddOns != null && activeNotesAddOns.count() > 0) {
+/*		if(activeNotesAddOns != null && activeNotesAddOns.count() > 0) {
 			Object obj = activeNotesAddOns.objectAtIndex(0);
 			if(obj instanceof NSKeyValueCoding)
 				activeNotesAddOns = (NSMutableArray)activeNotesAddOns.valueForKey("id");
 			else if(!(obj instanceof String))
 				activeNotesAddOns = null;
 		}
-		notesAddOns = null;
+		notesAddOns = null;*/
 	}
 	
 	public void updateLessonLists() {
@@ -204,6 +204,7 @@ public class Overview extends WOComponent {
 					course, present, qualifiers);
 			courseItem.setObjectForKey(lessons,"lessonsList");
 		}
+		NSArray notesAddOns = (NSArray)session().objectForKey("notesAddOns");
 		if(notesAddOns != null)
 			notesAddOns.takeValueForKey((period instanceof EOEnterpriseObject)?
 					period:null, "eduPeriod");
@@ -379,8 +380,7 @@ public class Overview extends WOComponent {
 		updateLessonLists();
 	}
 	
-	/** @TypeInfo com.webobjects.foundation.NSKeyValueCoding */
-	public NSArray notesAddOns;
+/*	public NSArray notesAddOns;
 	
 	public void setNotesAddOns(NSArray addons) {
 		notesAddOns = addons;
@@ -388,9 +388,8 @@ public class Overview extends WOComponent {
 			notesAddOns.takeValueForKey(period, "eduPeriod");
 	}
 	
-	/** @TypeInfo java.lang.NSKeyValueCoding */
 	public NSMutableArray activeNotesAddOns;
- 
+*/ 
 	protected NSKeyValueCoding _present;
  
 	public NSKeyValueCoding present() {

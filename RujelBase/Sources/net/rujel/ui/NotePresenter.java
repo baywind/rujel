@@ -224,6 +224,7 @@ public class NotePresenter extends WOComponent {
 		NSMutableDictionary ident = new NSMutableDictionary(entityName(),"entityName");
 		ident.takeValueForKey(lesson(),"lesson");
 		ident.takeValueForKey(student(), "student");
+		ident.takeValueForKey(lesson().course(), "eduCourse");
 		ident.takeValueForKey(lesson().editingContext(), "editingContext");
 		return ident;
     }

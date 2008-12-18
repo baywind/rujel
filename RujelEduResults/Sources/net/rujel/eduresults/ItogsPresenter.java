@@ -61,6 +61,7 @@ public class ItogsPresenter extends WOComponent {
 	}
 	
 	public void reset() {
+		super.reset();
 		_currAddOn = null;
 		_itogs = null;
 		_course = null;
@@ -107,7 +108,8 @@ public class ItogsPresenter extends WOComponent {
 	
 	public PerPersonLink itogs() {
 		if(_itogs == null) {
-			_itogs = (PerPersonLink)currAddOn().valueForKey("agregate");
+			if(currAddOn().valueForKey("eduCourse") == course())
+				_itogs = (PerPersonLink)currAddOn().valueForKey("agregate");
 			if(_itogs == null) {
 				EOQualifier qual = Various.getEOInQualifier("eduPeriod",periods());
 				NSMutableArray quals = new NSMutableArray(qual);
@@ -134,7 +136,7 @@ public class ItogsPresenter extends WOComponent {
 					_itogs = new PerPersonLink.Dictionary(NSDictionary.EmptyDictionary);
 				}
 				currAddOn().takeValueForKey(_itogs,"agregate");
-				currAddOn().takeValueForKey(context().page(),"returnPage");
+				currAddOn().takeValueForKey(course(),"eduCourse");
 			}
 		}
 		return _itogs;
@@ -167,7 +169,8 @@ public class ItogsPresenter extends WOComponent {
 		nextPage.takeValueForKey(itog(),"itog");
 		nextPage.takeValueForKey(student(),"student");
 		nextPage.takeValueForKey(periodItem,"eduPeriod");
-		nextPage.takeValueForKey(course().cycle(),"cycle");
+		//nextPage.takeValueForKey(course().cycle(),"cycle");
+		currAddOn().takeValueForKey(context().page(),"returnPage");
 		nextPage.takeValueForKey(currAddOn(),"addOn");
         return nextPage;
     }
