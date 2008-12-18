@@ -100,4 +100,9 @@ public abstract class Calculator {
 		}
 		return new PerPersonLink.Dictionary(result);
 	}
+	
+	protected static final NSArray reliesOn = new NSArray(new String[] {"Work","Mark"});
+	public NSArray reliesOn() {
+		return reliesOn;
+	}
 }

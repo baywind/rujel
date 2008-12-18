@@ -538,7 +538,7 @@
 		<string>11</string>
 		<key>autoItogLagDays</key>
 		<string>1</string>
-		<key>ignorePrognosesAfterDays</key>
+		<key>_ignorePrognosesAfterDays</key>
 		<string>45</string>
 		<key>autogenerateEduPeriods</key>
 		<string>true</string>
@@ -605,7 +605,7 @@
 		<key>DAILY</key>
 		<dict>
 			<key>time</key>
-			<string>13:43</string>
+			<string>22:01</string>
 		</dict>
 		<key>MONTHLY</key>
 		<dict/>

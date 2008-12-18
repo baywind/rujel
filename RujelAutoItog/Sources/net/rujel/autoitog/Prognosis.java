@@ -268,7 +268,7 @@ public class Prognosis extends _Prognosis {
 	}
 
 	public NSTimestamp updateFireDate(CourseTimeout courseTimeout) {
-		if(fireDate() == null && relatedItog() != null) {
+		if(fireDate() == null && !valueChanged()) {
 			return null;
 		}
 		NSTimestamp result = null;

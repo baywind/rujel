@@ -206,6 +206,8 @@ public class AutoItogModule {
 			PrognosUsage usage = PrognosUsage.prognosUsage(course, type);
 			if(usage == null || usage.calculator() == null || !usage.namedFlags().flagForKey("active"))
 				continue;
+			if(!usage.calculator().reliesOn().contains(dict.valueForKey("entityName")))
+				continue;
 			EduPeriod eduPeriod = type.currentPeriod(date);
 			if(eduPeriod == null)
 				continue;

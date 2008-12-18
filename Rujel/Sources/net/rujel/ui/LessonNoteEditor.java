@@ -498,6 +498,8 @@ public Object currLesson() {
 						NSMutableDictionary dict = new NSMutableDictionary(currPerPersonLink,"object");
 						if(currPerPersonLink instanceof EduLesson)
 							dict.takeValueForKey(currPerPersonLink, "lesson");
+						String entityName = currLesson().entityName();
+						dict.takeValueForKey(entityName, "entityName");
 						session().setObjectForKey(dict, "objectSaved");
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
