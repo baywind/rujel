@@ -210,8 +210,10 @@ public class MarksPresenter extends NotePresenter {
 			result.takeValueForKey(_mark, "object");
 		else
 			result.takeValueForKey(initData,"identifierDictionary");
-		StringBuffer description = new StringBuffer(lesson().theme());
-		description.append(" : ").append(Person.Utility.fullName(student(), true, 2, 2, 0));
+		StringBuffer description = new StringBuffer();
+		if(lesson().theme() != null)
+			description.append(lesson().theme()).append(" : ");
+		description.append(Person.Utility.fullName(student(), true, 2, 2, 0));
 		result.takeValueForKey(description.toString(), "description");
 		NSMutableArray keys = (NSMutableArray)result.valueForKey("keys");
 		keys.removeObject("text");

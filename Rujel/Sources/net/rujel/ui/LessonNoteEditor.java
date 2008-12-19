@@ -687,69 +687,7 @@ public Object currLesson() {
 			ec.unlock();
 		}
 	}
-	/*
-		 public String tdStyle() {
-			 if(lessonItem == currLesson)
-				 return "selection";
-			 else
-				 return studentStyle();
-		 }
 
-		 public String onClick() {
-			 if(currLesson == null || lessonItem != currLesson) {
-				 String href = context().componentActionURL();
-				 return "checkRun('" + href + "');";
-			 }
-			 else
-				 return null;
-		 }
-
-		public WOActionResults back() {
-			WOComponent nextPage = (WOComponent)session().objectForKey("SrcCourseComponent");
-			if(nextPage == null)
-				nextPage = pageWithName("SrcMark");
-			else
-				nextPage.ensureAwakeInContext(context());
-			return nextPage;
-		}
-
-		 public String tabStyle() {
-			 if(currTab == item) return "selection";
-			 else return "grey";
-		 }
-
-		 public void selectTab 
-		 public String inTabStyle() {
-			 if (currTab == null || currTab.lessonsInTab().containsObject(lessonItem))
-				 return "selection";
-			 return null;
-		 }
-
-		 public String lessonTitle() {
-			 if(lessonItem == null) return null;
-			 String result = lessonItem.title();
-			 if(result != null)
-				 return result;
-			 return dateFormatter.format(lessonItem.date());
-		 }
-
-		 public void setLessonTitle(String aValue) {
-			 String newTitle = null;
-			 if(aValue != null) {
-				 NSTimestamp aDate = (NSTimestamp)dateFormatter.parseObject(aValue, new java.text.ParsePosition(0));
-				 if(aDate == null) {
-					 if(aValue.length() > 10)
-						 newTitle = aValue.substring(0,10);
-					 else
-						 newTitle = aValue;
-					 makeDateFromNum(currLesson);
-				 } else {
-					 currLesson.setDate(aDate);
-				 }
-			 }
-			 currLesson.setTitle(newTitle);
-		 }
-	 */
 	protected static void makeDateFromNum(EduLesson les) {
 		NSArray args = new NSArray(new Object[] {les.course(),les.number()});
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("course = %@ AND number < %@ AND title = nil",args);
