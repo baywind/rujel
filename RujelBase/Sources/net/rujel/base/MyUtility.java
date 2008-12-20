@@ -35,6 +35,7 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
 
+import java.text.Format;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -48,7 +49,7 @@ public class MyUtility {
 	
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
 
-	public static NSTimestampFormatter dateFormat() {
+	public static Format dateFormat() {
 		return new NSTimestampFormatter(SettingsReader.stringForKeyPath("ui.dateFormat","%Y-%m-%d"));
 	}
 	

@@ -47,8 +47,6 @@ import net.rujel.reusables.WOLogLevel;
 
 public class LessonNoteEditor extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
-//	protected static final SettingsReader prefs = new PrefsReader(LessonNoteEditor.class);
-	//protected static final String listPresenter = java.util.prefs.Preferences.systemNodeForPackage(LessonNoteEditor.class).node("presenter").get("lessonList","LessonList");
 	public EduCourse course;
 	private PerPersonLink currPerPersonLink;
 
@@ -58,30 +56,14 @@ public class LessonNoteEditor extends WOComponent {
 		return null;
 	}
 
-	/*	protected NSDictionary lProps;
-
-	public NSDictionary currLessonProperties() {
-		if(lProps != null && currPerPersonLink instanceof EduLesson)
-			return (NSDictionary)lProps.objectForKey(currPerPersonLink);
-		return null;
-	}*/
-
-	//    public EduLesson lessonItem;
-	//    public Student studentItem;
 
 	/** @TypeInfo PerPersonLink */
 	public NSArray lessonsList;
-	/*() {
-        return EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
-    } */
 
 	public Tabs.GenericTab _currTab;
 
 	public Object selector;
 	public Student student;
-
-	//	public NamedFlags inheritedAccess;
-	//	protected NamedFlags courseAccess;
 
 	private EOEditingContext ec;
 
@@ -231,21 +213,6 @@ public class LessonNoteEditor extends WOComponent {
 			course = (EduCourse)EOUtilities.localInstanceOfObject(ec,aCourse);
 		//refresh();
 		logger.log(WOLogLevel.READING,"Open course",new Object[] {session(),course});
-		/*
-			 Object presKey = prefs.valueForKey("integralPresenterKey");
-			 if(presKey != null) {
-				 try {
-					 NSArray lessons = course.lessons();
-					 lessons.takeValueForKey(presKey,"integralPresenterKey");
-				 } catch (Exception ex) {
-					 logger.logp(WOLogLevel.READING,"LessonNoteEditor","setCourse","Error setting integralPresenterKey to lessons of course",new Object[] {session(),ex});
-				 }
-			 }////////
-			 courseAssistant = new AccessSchemeAssistant(((Session)session()).user());
-			 courseAssistant.addScheme((EOEnterpriseObject)course.cycle(),"courses");
-			 _access = courseAssistant.accessToObject(course);
-			 lessonsAssistant = courseAssistant.prolong("lessons",course);*/
-		//_access = ((UseAccess)course).access();
 
 		if(accessInterface().flagForKey("rightSide") && !accessInterface().flagForKey("leftSide"))
 			regime = LONGLIST;
@@ -263,7 +230,7 @@ public class LessonNoteEditor extends WOComponent {
 //		activeNotesAddOns = null;
 	}
 
-	protected void refresh() {
+	public void refresh() {
 		//		if (ec.hasChanges()) ec.revert();
 		/*if(present != null) {
 			lessonsList = (NSArray)present.valueForKey("list");
@@ -310,7 +277,7 @@ public class LessonNoteEditor extends WOComponent {
 			}
 		}
 		session().removeObjectForKey("courseForlessons");
-
+		session().takeValueForKey(Boolean.FALSE,"prolong");
 		updateLessonList();
 	}
 
@@ -355,98 +322,18 @@ public class LessonNoteEditor extends WOComponent {
 			session().setObjectForKey(session().valueForKey("today"), "recentDate");
 		}
 	}
-	/*(NSArray)present.valueForKey("list");
-				if(lessonsList != null) {
-					//tablist = null;
-					_currTab = null;
-					return;
-				}*/
-	/*if(tablist != null && tablist.count() > 0) {
-				NSMutableArray result = _currTab.lessonsInTab().mutableClone();
-				if(regime != NORMAL) {
-					int tabIdx = tablist.indexOf(_currTab);
-					for (int i = 1; i <= 2 && ((tabIdx + i) < tablist.count()); i++) {
-						result.addObjectsFromArray(((BaseTab)tablist.objectAtIndex(tabIdx + i)).lessonsInTab());
-					}
-				}
-				lessonsList =  result.immutableClone();
-			} else {
-				lessonsList =  course.sortedLessons();
-				//lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
-			}
-		if(student != null) {
-			lessonsListForTable = NSArray.EmptyArray;
-			return;
-			}
-			if(lessonsList != null && lessonsList.count() > 0) {
-				if(regime == LONGLIST) {
-					if(currLesson != null) {
-						lessonsListForTable = new NSArray(currLesson);
-						return;
-					}
-					lessonsListForTable = NSArray.EmptyArray;
-				} else {
-					lessonsListForTable = lessonsList;
-				}
-			}
-	}*/
-
-	/*		studentsList = course.groupList();//eduGroup().list();
-		NSArray subgroup = course.subgroup();
-		if(subgroup != null && subgroup.count() > 0) {
-			NSMutableArray tmp = subgroup.mutableClone();
-			Enumeration enumerator = subgroup.objectEnumerator();
-			while (enumerator.hasMoreElements()) {
-				Object anObject = enumerator.nextElement();
-				if(!studentsList.containsObject(anObject))
-					tmp.removeObject(anObject);
-			}
-			studentsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(tmp,Person.sorter);
-		}
-		tablist = LessonTab.splitArray(lessonsList);
-		currTab = (LessonTab)tablist.lastObject(); 
-}
-
-public String studentStyle() {
-	Boolean sex = (Boolean)valueForKeyPath("studentItem.person.sex");
-	if(sex == null) return "grey";
-	if (sex.booleanValue())
-		return "male";
-	else
-		return "female";
-}
-
-public void setNoteForStudent(String newNoteForStudent) {
-	lessonItem.setNoteForStudent(newNoteForStudent,studentItem);
-}
-
-public String noteForStudent() {
-	if(studentItem == null) return null;
-	return lessonItem.noteForStudent(studentItem);
-}
-
-public String shortNoteForStudent() {
-	String theNote = noteForStudent();
-	if (theNote == null || theNote.length() <= 3)
-		return theNote;
-	String url = application().resourceManager().urlForResourceNamed("text.png",null,null,context().request());
-	return "<img src=\"" + url + "\" alt=\"" + theNote + "\" height=\"16\" width=\"16\">";
-}
-
-public String fullNoteForStudent() {
-	if(studentItem == null)
-		return lessonItem.theme();
-	String theNote = noteForStudent();
-	if (theNote == null || theNote.length() <= 3)
-		return null;
-	return theNote;
-} 
-
-public Object currLesson() {
-	return currLesson;
-}*/
-
+	
+	public void saveNoreset() {
+		save(false);
+		//return this;
+	}
+	
 	public void save() {
+		save(true);
+		//return this;
+	}
+
+	protected void save(boolean reset) {
 		if(currPerPersonLink instanceof EOEnterpriseObject) {
 			String entityName = ((EOEnterpriseObject)currPerPersonLink).entityName();
 			String presentEntity = (String)valueForKeyPath("present.entityName");
@@ -504,15 +391,17 @@ public Object currLesson() {
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
 					}
-					refresh();
+					if(reset)
+						refresh();
 				} else {
 					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
 						level = WOLogLevel.OWNED_EDITING;
 					logger.logp(level,"LessonNoteEditor","save","Course comment modified",new Object[] {session(),course});
 				}
 			}// ec.hasChanges
-			session().takeValueForKey(Boolean.FALSE,"prolong");
-			currPerPersonLink = null;
+			//session().takeValueForKey(Boolean.FALSE,"prolong");
+			if(reset)
+				currPerPersonLink = null;
 			/*if(SettingsReader.boolForKeyPath("ui.LessonNoteEditor.autoSwitchSingle", true))
 				setSingle(false); */
 			//lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
@@ -622,23 +511,9 @@ public Object currLesson() {
 			ec.unlock();
 		}
 	}
-	/*
-		 public void selectLesson() {
-			 currLesson = lessonItem;
-			 selector = currLesson;
-			 _access = accessSchemeAssistant.accessToObject(currLesson);
-			 if (ec.hasChanges()) {
-				 ec.revert();
-				 refresh();
-			 }
-			 logger.log(WOLogLevel.READING,"Open lesson",new Object[] {session(),currLesson});
-			 if(regime == LONGLIST) {
-				 lessonsListForTable = new NSArray(currLesson);
-			 }
-		 } */
 
 	public void addLesson() {
-		save();
+		save(false);
 		if(session().valueForKey("message") != null)
 			return;
 
@@ -668,7 +543,7 @@ public Object currLesson() {
 			//	if(tablist != null)/* _currTab = */((BaseTab)tablist.lastObject()).setLessonsCount(_currTab.length() + 1);
 			//	if(_currTab != null) _currTab.setLessonsCount(_currTab.length() + 1);
 			//			refresh();
-			selector = null;
+			//selector = null;
 			/*	} else {
 					logger.logp(WOLogLevel.OWNED_EDITING,"LessonNoteEditor","delete","Denied to create lesson",session());
 				session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
@@ -850,29 +725,7 @@ public Object currLesson() {
 		refresh();
 	}
 
-	public Tabs.GenericTab currTab() {/*
-			if (tablist == null) {
-				return _currTab;
-			}
-			if ((_currTab == null || _currTab.editingContext() == null) && tablist != null)
-				_currTab = (BaseTab)tablist.lastObject();
-
-			if(currLesson() != null && !_currTab.containsLesson(currLesson())) {
-				//			tablist = ((BaseCourse)course).sortedTabs();
-				int lesNum = currLesson().number().intValue();
-				int currNum = tablist.indexOfObject(_currTab);
-				if(lesNum < _currTab.startIndex()) {
-					while (currNum >= 0 && lesNum < _currTab.startIndex()) {
-						currNum--;
-						_currTab = (BaseTab)tablist.objectAtIndex(currNum);
-					}
-				} else {
-					while (currNum < (tablist.count() - 1) && !_currTab.lessonsInTab().containsObject(currPerPersonLink)) {
-						currNum++;
-						_currTab = (BaseTab)tablist.objectAtIndex(currNum);
-					}
-				}
-			}*/
+	public Tabs.GenericTab currTab() {
 		return _currTab;
 	}
 
@@ -889,47 +742,6 @@ public Object currLesson() {
 		}
 		//lessonsList = _currTab.lessonsInTab();
 	}
-
-	/*
-		 public NSArray unmentionedStudents() {
-			 NSMutableSet unmentionedSet = new NSMutableSet();
-			 Enumeration lessEnum = lessonsList.objectEnumerator();
-			 EduLesson les;
-			 Enumeration noteEnum;
-			 EOEnterpriseObject note;
-			 Object stu;
-			 while (lessEnum.hasMoreElements()) {
-				 les = (EduLesson)lessEnum.nextElement();
-				 noteEnum = les.notes().objectEnumerator();
-				 while (noteEnum.hasMoreElements()) {
-					 note = (EOEnterpriseObject)noteEnum.nextElement();
-					 stu = note.storedValueForKey("student");
-					 if(!studentsList.containsObject(stu))
-						 unmentionedSet.addObject(stu);
-				 }
-			 }
-			 if(unmentionedSet.count() < 1)
-				 return null;
-			 NSArray tmp = unmentionedSet.allObjects();
-			 if(tmp.count() == 1)
-				 return tmp;
-
-			 return EOSortOrdering.sortedArrayUsingKeyOrderArray(tmp,Person.sorter);
-		 } 
-
-		 public String dateFieldID() {
-			 if(selector == null)
-				 return "focus";
-			 else
-				 return null;
-		 }
-
-		 public String themeFieldID() {
-			 if(selector != null && selector.equals(currLesson))
-				 return "focus";
-			 else
-				 return null;
-		 }*/
 
 	public WOComponent editSubgroup() {
 		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
@@ -990,25 +802,7 @@ public Object currLesson() {
 				}
 				else student = null; */
 	}
-	/*
-	public void setSingle(boolean val) {
-		if(present != null && single() != val) {
-			String toggle = (String)present.valueForKey("toggleSingle");
-			if(toggle != null) {
-				Enumeration en = presentTabs().objectEnumerator();
-				while (en.hasMoreElements()) {
-					NSKeyValueCoding cur = (NSKeyValueCoding)en.nextElement();
-					//boolean curSingle = Various.boolForObject(cur.valueForKey("single"));
-					String mode = (String)cur.valueForKey("mode");
-					if(toggle.equals(mode) && 
-							val == Various.boolForObject(cur.valueForKey("single"))) {
-						setPresent(cur);
-						return;
-					}
-				}
-			}
-		}
-	}*/
+
 
 	public boolean single() {
 		if(student != null)
@@ -1021,76 +815,6 @@ public Object currLesson() {
 			return false;
 		return Various.boolForObject(present.valueForKey("single"));
 	}
-	/*
-	public void setSingle(Object v) {
-		;
-	}
-
-			 public String normalButtonStyle() {
-				 if(regime == NORMAL)
-					 return "border-style:inset;outline:black solid 1px;";
-				 else
-					 return null;
-			 }
-			 public String longlistButtonStyle() {
-				 if(regime == LONGLIST)
-					 return "border-style:inset;outline:black solid 1px;";
-				 else
-					 return null;
-			 }
-			 public String bigtableButtonStyle() {
-				 if(regime == BIGTABLE)
-					 return "border-style:inset;outline:black solid 1px;";
-				 else
-					 return null;
-			 }
-			 public void goNormal() {
-				 student = null;
-				 selector = null;
-				 regime = NORMAL;
-				 refresh();
-			 }
-			 public void goLonglist() {
-				 student = null;
-				 //		selector = null;
-				 regime = LONGLIST;
-				 if(tablist != null) {
-					 int idx = tablist.indexOf(_currTab);
-					 while(idx > 0 && idx > tablist.count() - 3) {
-						 idx--;
-					 }
-					 _currTab = (BaseTab)tablist.objectAtIndex(idx);
-				 }
-				 updateLessonList();
-			 }
-			 public void goBigtable() {
-				 student = null;
-				 selector = null;
-				 regime = BIGTABLE;
-				 if(tablist != null) {
-					 int idx = tablist.indexOf(_currTab);
-					 while(idx > 0 && idx > tablist.count() - 3) {
-						 idx--;
-					 }
-					 _currTab = (BaseTab)tablist.objectAtIndex(idx);
-				 }
-				 updateLessonList();
-			 }*/
-	/*
-			 public String rowClass() {
-				 if(lessonItem == currLesson) return "selection";
-				 if(lessonItem.title() != null) return "gerade";
-				 else return "ungerade";
-			 }
-
-			 public boolean canEdit() {
-				 if(lessonItem == currLesson) {
-					 NamedFlags acc = (NamedFlags)currLesson.valueForKey("access");
-					 if(acc == null) acc = DegenerateFlags.ALL_FALSE;
-					 return ((acc.flagForKey("editLessonDescription") || access().flagForKey("editLessonDescription")) ||
-							 (ec.insertedObjects().contains(currLesson) && (access().flagForKey("createLesson") || acc.flagForKey("createLesson"))));
-				 } else return false;
-			 } */
 
 	public String tdWidth() {
 		if(regime != NORMAL) 
@@ -1164,32 +888,4 @@ public Object currLesson() {
 		}
 		updateLessonList();
 	}
-	/*
-	public NSArray notesAddOns;
-
-	public NSMutableArray activeNotesAddOns; 
-	
-			public NSArray notesAddOns () {
-				if(notesAddOns == null) {
-					notesAddOns = (NSArray)session().valueForKeyPath("modules.notesAddOns");
-					if(notesAddOns == null)
-						notesAddOns = NSArray.EmptyArray;
-				}
-				return notesAddOns;
-			}
-			public NSMutableArray activeNotesAddOns() {
-				if(activeNotesAddOns == null) {
-					activeNotesAddOns = new NSMutableArray();
-					if(notesAddOns() != null && notesAddOns().count() > 0) {
-						Enumeration en  = notesAddOns().objectEnumerator();
-						while (en.hasMoreElements()) {
-							NSKeyValueCoding curr = (NSKeyValueCoding)en.nextElement();
-							if(Various.boolForObject(curr.valueForKey("defaultOn"))) {
-								activeNotesAddOns.addObject(curr);
-							}
-						}
-					}
-				}
-				return activeNotesAddOns;
-			}*/
 }

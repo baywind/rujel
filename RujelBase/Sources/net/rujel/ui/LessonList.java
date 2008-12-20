@@ -49,7 +49,7 @@ import com.webobjects.eocontrol.*;
 public class LessonList extends WOComponent {
     public EduLesson lessonItem;
 	public NSKeyValueCoding extItem;
-
+	
     protected String _studentPresenter;
 	public String studentPresenter() {
 		if(_studentPresenter == null)
@@ -110,7 +110,7 @@ public class LessonList extends WOComponent {
 		if(Various.boolForObject(valueForBinding("wide")))
 			return _dateFormat;
 		else
-			return shortDateFormat;			
+			return shortDateFormat;	
  	}
 	
 	public String lessonTitle() {
@@ -289,5 +289,12 @@ public class LessonList extends WOComponent {
 			lProps = NSDictionary.EmptyDictionary;
 		}
 		return lProps;
+	}
+	
+	public WOActionResults newLessonPopup() {
+		valueForBinding("save");
+		WOComponent popup = pageWithName("LessonInspector");
+		popup.takeValueForKey(context().page(), "returnPage");
+		return popup;
 	}
 }
