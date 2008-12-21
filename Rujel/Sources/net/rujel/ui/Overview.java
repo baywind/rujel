@@ -204,10 +204,10 @@ public class Overview extends WOComponent {
 					course, present, qualifiers);
 			courseItem.setObjectForKey(lessons,"lessonsList");
 		}
-		NSArray notesAddOns = (NSArray)session().objectForKey("notesAddOns");
+		/*NSArray notesAddOns = (NSArray)session().objectForKey("notesAddOns");
 		if(notesAddOns != null)
 			notesAddOns.takeValueForKey((period instanceof EOEnterpriseObject)?
-					period:null, "eduPeriod");
+					period:null, "eduPeriod");*/
 		setCurrTab(null);
 	}
 	

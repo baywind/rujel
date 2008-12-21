@@ -431,9 +431,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	}
 
 	public void handleTakeValueForUnboundKey(Object value, String key) {
-		if(userInfo == null)
-			userInfo = new NSMutableDictionary(value,key);
-		else
+		if(userInfo == null) {
+			if(value != null)
+				userInfo = new NSMutableDictionary(value,key);
+		} else
 			userInfo.takeValueForKey(value, key);
 	}
 
