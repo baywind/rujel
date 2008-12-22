@@ -35,6 +35,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduLesson;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSTimestamp;
 
 public class LessonInspector extends com.webobjects.appserver.WOComponent {
@@ -55,15 +56,13 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public WOActionResults save() {
+		returnPage.ensureAwakeInContext(context());
     	if(newDate == null || newTheme == null) {
-    		Object message = application().valueForKeyPath(
-    				"extStrings.RujelBase_Base.dateAndThemeRequired");
-    		session().takeValueForKey(message, "message");
-    		return back();
+    		appendMessage("extStrings.RujelBase_Base.dateAndThemeRequired");
+    		return returnPage;
     	}
     	Date date = (Date)MyUtility.dateFormat().parseObject(
 				newDate, new java.text.ParsePosition(0));
-		returnPage.ensureAwakeInContext(context());
 		returnPage.valueForKey("addLesson");
 		EduLesson lesson = (EduLesson)returnPage.valueForKey("currLesson");
 		lesson.setTheme(newTheme);
@@ -73,12 +72,51 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     		NSTimestamp aDate = (date instanceof NSTimestamp)?
     				(NSTimestamp)date:new NSTimestamp(date);
     		lesson.setDate(aDate);
+    		MyUtility.setNumberToNewLesson(lesson);
+    		EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
+    		if(limits != null && !limits.evaluateWithObject(lesson)) {
+    			session().setObjectForKey(this, "LessonInspector");
+    			lesson.editingContext().revert();
+    			returnPage.takeValueForKey(null, "currPerPersonLink");
+    			returnPage.valueForKey("refresh");
+    			appendMessage("extStrings.RujelBase_Base.notInTab");
+    			return returnPage;
+    		}
     	}
+    	Object oldMessage = session().valueForKey("message");
     	session().setObjectForKey(lesson.date(), "recentDate");
     	returnPage.valueForKey("save");
-    	returnPage.takeValueForKey(lesson,"currLesson");
+    	Object newMessage = session().valueForKey("message");
+    	if(oldMessage != null && !oldMessage.equals(newMessage)) {
+    		if(newMessage != null) {
+    			StringBuilder buf = new StringBuilder();
+    			buf.append("<p>").append(oldMessage).append("</p>\n<p>").
+    			append(newMessage).append("</p>");
+    			session().takeValueForKey(buf.toString(), "message");
+    		} else {
+    			session().takeValueForKey(oldMessage, "message");
+    		}
+    	}
+    	returnPage.takeValueForKey(lesson,"currPerPersonLink");
     	return returnPage;
     }
+    
+    protected void appendMessage(String keyPath) {
+    	Object message = session().valueForKey("message");
+			if(message != null) {
+				StringBuilder buf = new StringBuilder((String)message);
+				buf.insert(0, "<p>");
+				buf.append("</p>\n<p>");
+				buf.append(application().valueForKeyPath(keyPath));
+				buf.append("</p>");
+				message = buf.toString();
+			} else {
+				message = application().valueForKeyPath(keyPath);
+				if(message == null)
+					message = "!!!";
+			}
+			session().takeValueForKey(message, "message");
+   }
     
     public WOActionResults back() {
        	returnPage.ensureAwakeInContext(context());

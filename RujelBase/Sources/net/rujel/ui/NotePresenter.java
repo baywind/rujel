@@ -30,12 +30,14 @@
 package net.rujel.ui;
 
 //import net.rujel.base.BaseLesson;
+import net.rujel.base.BaseLesson;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -94,7 +96,11 @@ public class NotePresenter extends WOComponent {
 	}
 	
 	protected boolean hasValue() {
-		return (noteForStudent() != null);
+		if (noteForStudent() == null)
+			return false;
+		EOEnterpriseObject note = BaseLesson.lessonNoteforStudent(lesson(), student());
+		return (note != null &&
+				!note.editingContext().globalIDForObject(note).isTemporary());
 	}
 
 	public boolean single() {

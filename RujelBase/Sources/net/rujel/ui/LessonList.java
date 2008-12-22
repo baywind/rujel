@@ -293,7 +293,13 @@ public class LessonList extends WOComponent {
 	
 	public WOActionResults newLessonPopup() {
 		valueForBinding("save");
-		WOComponent popup = pageWithName("LessonInspector");
+		WOComponent popup = (WOComponent)session().objectForKey("LessonInspector");
+		if(popup != null) {
+			popup.ensureAwakeInContext(context());
+			session().removeObjectForKey("LessonInspector");
+		} else {
+			popup = pageWithName("LessonInspector");
+		}
 		popup.takeValueForKey(context().page(), "returnPage");
 		return popup;
 	}

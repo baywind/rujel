@@ -113,34 +113,23 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void setCurrLesson(EduLesson lesson) {
-		currPerPersonLink = (PerPersonLink)EOUtilities.localInstanceOfObject(ec,lesson);
 		student = null;
+		currPerPersonLink = (PerPersonLink)EOUtilities.localInstanceOfObject(ec,lesson);
 		session().setObjectForKey(lesson.date(), "recentDate");
 	}
 	public void setCurrPerPersonLink(PerPersonLink lesson) {
 		student = null;
-		currPerPersonLink = lesson;
-		logger.logp(WOLogLevel.READING,"LessonNoteEditor","setCurrLesson","Open lesson",new Object[] {session(),lesson});
+		if(lesson instanceof EduLesson)
+			session().setObjectForKey(((EduLesson)lesson).date(), "recentDate");
 		if (ec.hasChanges()) {
 			ec.revert();
 			updateLessonList();
 		}
-		/*	if(regime == LONGLIST) {
-				lessonsListForTable = new NSArray(currLesson);
-			} */
-		/*try {
-				String presKey = SettingsReader.stringForKeyPath("edu.presenters.workIntegral","SubgroupEditor");
-				Object presKey = prefs.valueForKey("integralPresenterKey");
-				if(presKey != null && lesson instanceof NSKeyValueCoding)
-					((NSKeyValueCoding)lesson).takeValueForKey(presKey,"integralPresenterKey");
-			} catch (Exception ex) {
-				logger.logp(WOLogLevel.READING,"LessonNoteEditor","setCurrLesson","Error setting integralPresenterKey to lesson",new Object[] {session(),lesson,ex});
-			}*/
+		currPerPersonLink = lesson;
+		logger.logp(WOLogLevel.READING,"LessonNoteEditor","setCurrLesson","Open lesson",new Object[] {session(),lesson});
 		if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.currPerPersonLink"))) {
 			session().takeValueForKey(Boolean.TRUE,"prolong");
 		}
-		/*if(SettingsReader.boolForKeyPath("ui.LessonNoteEditor.autoSwitchSingle", true))
-			setSingle(true);*/
 	}
 
 	public void selectStudent() {
@@ -244,15 +233,18 @@ public class LessonNoteEditor extends WOComponent {
 		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
 		baseTabs = BaseTab.tabsForCourse(course, entityName);
 		if(_currTab == null || _currTab instanceof BaseTab.Tab) {
-			_currTab = null;
+			//_currTab = null;
 			if(entityName == null)
 				entityName = EduLesson.entityName;
 			if(baseTabs != null && baseTabs.count() > 0) {
-				for (int i = baseTabs.count() -1; i >= 0; i--) {
-					BaseTab.Tab t = (BaseTab.Tab)baseTabs.objectAtIndex(i);
-					if(currLesson() != null && t.qualifier().evaluateWithObject(currPerPersonLink)) {
-						_currTab = t;
-						break;
+				if(currPerPersonLink != null){
+					for (int i = baseTabs.count() -1; i >= 0; i--) {
+						BaseTab.Tab t = (BaseTab.Tab)baseTabs.objectAtIndex(i);
+						if(currLesson() != null && t.qualifier().
+								evaluateWithObject(currPerPersonLink)) {
+							_currTab = t;
+							break;
+						}
 					}
 				}
 				if(_currTab == null)
@@ -313,6 +305,9 @@ public class LessonNoteEditor extends WOComponent {
 		if(currTab() != null) {
 			qualifiers = new NSMutableArray(currTab().qualifier());
 		}
+		if(currLesson() != null) {
+			ec.refaultObject(currLesson());
+		}
 
 		lessonsList = lessonListForCourseAndPresent(course, present, qualifiers);
 		if(lessonsList != null && lessonsList.count() > 0) {
@@ -349,7 +344,7 @@ public class LessonNoteEditor extends WOComponent {
 				if(currPerPersonLink != null)
 					((EOEnterpriseObject)currPerPersonLink).validateForSave();
 				if(newLesson) {
-					MyUtility.setNumberToNewLesson(currLesson(),course);
+					MyUtility.setNumberToNewLesson(currLesson());
 				}
 				NSMutableSet changes = new NSMutableSet();
 				changes.addObjectsFromArray((NSArray)ec.updatedObjects().valueForKey("entityName"));
@@ -391,8 +386,12 @@ public class LessonNoteEditor extends WOComponent {
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
 					}
-					if(reset)
+					if(reset) {
+						if(_currTab != null && currLesson() != null
+								&& !_currTab.qualifier().evaluateWithObject(currLesson()))
+							_currTab = null;
 						refresh();
+					}
 				} else {
 					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
 						level = WOLogLevel.OWNED_EDITING;
@@ -730,15 +729,15 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void setCurrTab (Tabs.GenericTab tab) {
-		currPerPersonLink = null;
-		if(tab != null) {
-			_currTab = tab;
-		}
 		if (ec.hasChanges()) {
 			ec.revert();
 			refresh();
 		} else {
 			updateLessonList();
+		}
+		currPerPersonLink = null;
+		if(tab != null) {
+			_currTab = tab;
 		}
 		//lessonsList = _currTab.lessonsInTab();
 	}
@@ -785,15 +784,15 @@ public class LessonNoteEditor extends WOComponent {
 		}
 	 */
 	public void setPresent(NSKeyValueCoding pres) {
+		if(ec.hasChanges())
+			ec.revert();
+		refresh();
+
 		if(pres != null)
 			present = pres;
 		student = null;
 		selector = null;
 		currPerPersonLink = null;
-		if(ec.hasChanges())
-			ec.revert();
-
-		refresh();
 		/*if(pres == null) return;
 				single = Various.boolForObject(pres.valueForKey("single"));
 				if(single) {

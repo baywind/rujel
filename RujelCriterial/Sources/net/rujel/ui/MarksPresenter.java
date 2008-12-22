@@ -138,8 +138,14 @@ public class MarksPresenter extends NotePresenter {
 			return false;
 		if(single()) {
 			if(critItem == null)
-				return (noteForStudent() != null);
-			return (mark() != null);
+				return super.hasValue();
+			if (mark() == null)
+				return false;
+			EOEditingContext ec = mark().editingContext();
+			if(ec == null)
+				return false;
+			EOGlobalID gid = mark().editingContext().globalIDForObject(mark());
+			return (gid != null && !gid.isTemporary());
 		}
 		String activeCriterion = activeCriterion();
 		if(activeCriterion == null || single()) {

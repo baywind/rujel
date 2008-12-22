@@ -94,7 +94,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 		result.setAnnounce(date);
 		result.setDate(date.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0));
 		result.setType(new Integer(Work.HOMEWORK));
-		MyUtility.setNumberToNewLesson(result, lesson.course());
+		MyUtility.setNumberToNewLesson(result);
 		//result.setNumber(new Integer(0));
 		return result;
 	}

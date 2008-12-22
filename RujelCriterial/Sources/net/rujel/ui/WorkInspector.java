@@ -84,25 +84,20 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 
     	returnPage.ensureAwakeInContext(context());
     	WOActionResults result = null;
-		EOEditingContext ec = work.editingContext();
     	try {
     		if(tmpEC != null) {
-    			/*if(ec == tmpEC) {
-    				ec = (EOEditingContext)tmpEC.parentObjectStore();
-    				ec.lock();
-    			}*/
     			tmpEC.lock();
     			tmpEC.saveChanges();
-    			work = (Work)EOUtilities.localInstanceOfObject(ec, work);
+        		/*if(shouldNullify)
+        			work.nullify();
+    			EOEditingContext ec = (EOEditingContext)returnPage.valueForKey("ec");
+    			work = (Work)EOUtilities.localInstanceOfObject(ec, work);*/
     			returnPage.takeValueForKey(work, "currLesson");
-    			/*if(shouldNullify)
-    				work = (Work)returnPage.valueForKey("currLesson"); ;;*/
-    		} /*else {
-    			ec.lock();
-    		}*/
+    			returnPage.takeValueForKeyPath("MarksPresenter", "present.tmpPresenter");
+    		}
     		if(shouldNullify)
     			work.nullify();
-    		result = (WOActionResults)returnPage.valueForKey("save");
+    		result = (WOActionResults)returnPage.valueForKey("saveNoreset");
     	} catch (NSKeyValueCoding.UnknownKeyException e) {
     		session().takeValueForKey(application().valueForKeyPath
     				("extStrings.RujelCriterial_Strings.messages.notSaved"), "message");

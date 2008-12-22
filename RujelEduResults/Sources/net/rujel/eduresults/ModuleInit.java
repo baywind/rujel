@@ -195,9 +195,12 @@ public class ModuleInit {
 
 	public static NSArray lessonTabs(WOContext ctx) {
 		EduCourse course = (EduCourse)ctx.session().objectForKey("courseForlessons");
+		NSTimestamp currDate = (NSTimestamp)ctx.session().objectForKey("recentDate");
+		if(currDate == null) {
 		EduLesson currLesson = (EduLesson)ctx.session().objectForKey("selectedLesson");
-		NSTimestamp currDate = (currLesson != null)?currLesson.date():
+		currDate = (currLesson != null)?currLesson.date():
 			(NSTimestamp)ctx.session().valueForKey("today");
+		}
 		NSArray periods = EduPeriod.periodsForCourse(course);
 		if(periods == null || periods.count() == 0)
 			return null;

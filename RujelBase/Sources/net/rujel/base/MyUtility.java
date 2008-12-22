@@ -39,7 +39,6 @@ import java.text.Format;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
 
@@ -130,11 +129,11 @@ public class MyUtility {
 		return value;
 	}
 	
-	public static Integer setNumberToNewLesson(EduLesson currLesson, EduCourse course) {
+	public static Integer setNumberToNewLesson(EduLesson currLesson) {
 		EOEditingContext ec = currLesson.editingContext();
 		NSMutableArray allLessons = EOUtilities.
 			objectsMatchingKeyAndValue(ec, currLesson.entityName(),
-					"course", course).mutableClone();
+					"course", currLesson.course()).mutableClone();
 		if(allLessons != null && allLessons.count() > 0) {
 			allLessons.removeIdenticalObject(currLesson);
 			EOSortOrdering.sortArrayUsingKeyOrderArray(allLessons, EduLesson.sorter);

@@ -85,14 +85,14 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
     	WOComponent nextPage = pageWithName("WorkInspector");
     	nextPage.takeValueForKey(context().page(), "returnPage");
     	EduLesson lesson = (EduLesson)valueForBinding("lesson");
-    	EOEditingContext tmpEc = new SessionedEditingContext(lesson.editingContext(),session());
-    	tmpEc.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
-    	tmpEc.lock();
-    	EOEnterpriseObject currLesson = (EOEnterpriseObject)valueForBinding("currLesson");
+     	EOEnterpriseObject currLesson = (EOEnterpriseObject)valueForBinding("currLesson");
     	if(currLesson instanceof Work) {
-    		currLesson = EOUtilities.localInstanceOfObject(tmpEc, currLesson);
+    		//currLesson = EOUtilities.localInstanceOfObject(tmpEc, currLesson);
     	} else {
-    		currLesson = EOUtilities.createAndInsertInstance(tmpEc, "Work");
+    	   	EOEditingContext tmpEc = new SessionedEditingContext(lesson.editingContext(),session());
+        	tmpEc.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
+        	tmpEc.lock();
+        	currLesson = EOUtilities.createAndInsertInstance(tmpEc, "Work");
         	NSTimestamp date = lesson.date();
         	((Work)currLesson).setDate(date);
         	((Work)currLesson).setAnnounce(date);
@@ -100,9 +100,9 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
         	EOEnterpriseObject course = EOUtilities.localInstanceOfObject(tmpEc, lesson.course());
         	((Work)currLesson).setNumber(new Integer(0));
         	currLesson.addObjectToBothSidesOfRelationshipWithKey(course, "course");
+        	nextPage.takeValueForKey(tmpEc, "tmpEC");
+        	tmpEc.unlock();
     	}
-    	nextPage.takeValueForKey(tmpEc, "tmpEC");
-    	tmpEc.unlock();
     	nextPage.takeValueForKey(currLesson, "work");
     	return nextPage;
     }
