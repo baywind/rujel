@@ -636,7 +636,7 @@
 		<string>25.05.2008</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>
-		<key>logoutScreen</key>
+		<key>_logoutScreen</key>
 		<string>/cgi-bin/WebObjects/Rujel.woa</string>
 		<key>redirectTimeout</key>
 		<string>10</string>

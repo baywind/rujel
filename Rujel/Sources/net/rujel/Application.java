@@ -140,7 +140,7 @@ public class Application extends UTF8Application {
     
     public WOResponse handleSessionRestorationErrorInContext(WOContext aContext) {
     	WOComponent page = pageWithName("MessagePage", aContext);
-    	logger.log(WOLogLevel.WARNING, "SessionCreationErrorInContext",
+    	logger.log(WOLogLevel.FINE, "SessionRestorationErrorInContext",
     			(aContext.hasSession())?aContext.session():aContext.request().sessionID());
     	page.takeValueForKey("sessionTitle", "plistTitle");
     	page.takeValueForKey("SessionRestorationError", "plistMessage");
@@ -151,8 +151,11 @@ public class Application extends UTF8Application {
     
     public WOResponse handleSessionCreationErrorInContext(WOContext aContext) {
     	WOComponent page = pageWithName("MessagePage", aContext);
-    	logger.log(WOLogLevel.WARNING, "SessionCreationErrorInContext",
-    			(aContext.hasSession())?aContext.session():null);
+    	Object[] args = new Object[3];
+    	args[0] = (aContext.hasSession())?aContext.session():aContext.request().sessionID();
+    	args[1] = new Exception("SessionCreationErrorInContext");
+    	logger.log(WOLogLevel.WARNING, "SessionCreationErrorInContext : "
+    			+ aContext.request().uri(),args);			
     	page.takeValueForKey("sessionTitle", "plistTitle");
     	page.takeValueForKey("SessionCreationError", "plistMessage");
     	return page.generateResponse(); 	
@@ -259,7 +262,8 @@ public class Application extends UTF8Application {
 	
 	public WOSession createSessionForRequest(WORequest aRequest) {
 		WOSession result = super.createSessionForRequest(aRequest);
-		if(!aRequest.method().equals("POST") || !aRequest.uri().contains("login")) {
+		if(!aRequest.method().equals("POST") || !(
+				aRequest.uri().contains("login") || aRequest.uri().contains("dummy"))) {
 			Exception ex = new Exception("Dangling session creation");
 			Object[] args = new Object[] {result, Session.clientIdentity(aRequest),ex};
 			logger.log(WOLogLevel.SESSION,

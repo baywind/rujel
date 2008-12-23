@@ -47,6 +47,7 @@ import com.webobjects.foundation.*;
 public class ArchivePopup extends com.webobjects.appserver.WOComponent {
     public ArchivePopup(WOContext context) {
         super(context);
+        reason = (String)session().objectForKey("MarkArchive.reason");
     }
 	protected static Logger logger = Logger.getLogger("rujel.markarchive");
    
@@ -172,12 +173,14 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 				ec.lock();
 				archive.setReason(reason);
 				ec.saveChanges();
+	        	session().removeObjectForKey("MarkArchive.reason");
 				session().setObjectForKey(initData, "objectSaved");
 				session().valueForKeyPath("modules.objectSaved");
 				session().removeObjectForKey("objectSaved");
 				logger.log(WOLogLevel.UNOWNED_EDITING,"Changes are saved and archived",args);
 			} catch (Exception e) {
 				session().takeValueForKey(e.getMessage(), "message");
+				session().setObjectForKey(reason, "MarkArchive.reason");
 				logger.log(WOLogLevel.FINER,"Failed to save and archive changes",args);
 			} finally {
 				ec.unlock();
@@ -188,7 +191,9 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String showReason() {
-		if(archItem == null || archItem.reason() == null)
+		if(archItem == null)
+			return (reason == null)?"true":null;
+		else if (archItem.reason() == null)
 			return null;
 		String reas = archItem.reason();
 		if(reas.length() < 10)

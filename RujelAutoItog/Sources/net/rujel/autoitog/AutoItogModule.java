@@ -182,7 +182,9 @@ public class AutoItogModule {
 	public static Object objectSaved(WOContext ctx) {
 		WOSession ses = ctx.session();
 		NSDictionary dict = (NSDictionary)ses.objectForKey("objectSaved");
-		EduCourse course = (EduCourse)dict.valueForKey("eduCourse");
+		EduCourse course = (EduCourse)dict.valueForKey("course");
+		if(course == null)
+			course = (EduCourse)dict.valueForKey("eduCourse");
 		if(course == null)
 			course = (EduCourse)dict.valueForKeyPath("lesson.course");
 		if(course == null)

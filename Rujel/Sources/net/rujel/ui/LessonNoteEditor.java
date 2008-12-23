@@ -137,6 +137,9 @@ public class LessonNoteEditor extends WOComponent {
 			session().takeValueForKey(application().valueForKeyPath("strings.messages.noAccess"),"message");
 			return;
 		}
+		if(valueForKeyPath("currLesson.editingContext") != null) {
+			ec.refaultObject(currLesson());
+		}
 		currPerPersonLink = null;
 		if (ec.hasChanges()) ec.revert();
 		/*Object tmp = selector;
@@ -305,7 +308,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(currTab() != null) {
 			qualifiers = new NSMutableArray(currTab().qualifier());
 		}
-		if(currLesson() != null) {
+		if(valueForKeyPath("currLesson.editingContext") != null) {
 			ec.refaultObject(currLesson());
 		}
 
@@ -446,6 +449,18 @@ public class LessonNoteEditor extends WOComponent {
 					throw new RuntimeException("Something wrong when deleting lesson");
 				currLesson().validateForDelete();
 				int num = currLesson().number().intValue();
+
+				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
+				if(currLesson() != null) {
+					dict.takeValueForKey(currLesson().entityName(), "entityName");
+					dict.takeValueForKey(currLesson().date(), "date");
+				} else {
+					String entityName = (String)valueForKeyPath("present.entityName");
+					if(entityName == null)
+						entityName = EduLesson.entityName;
+					dict.takeValueForKey(entityName, "entityName");
+				}
+				
 				ec.deleteObject(currLesson());
 				/*
 					BaseTab tmp = _currTab;
@@ -483,6 +498,10 @@ public class LessonNoteEditor extends WOComponent {
 				//		logger.logp(level,"LessonNoteEditor","delete","Deletion failed: ",new Object[] {session(),currLesson(),vex});
 				logger.logp(level,"LessonNoteEditor","delete","Deleting lesson ",new Object[] {session(),currLesson()});
 				ec.saveChanges();
+				session().setObjectForKey(dict, "objectSaved");
+				session().valueForKeyPath("modules.objectSaved");
+				session().removeObjectForKey("objectSaved");
+
 				currPerPersonLink = null;
 				/*if(tablist != null && tablist.count() > 0) {
 						tablist = ((BaseCourse)course).sortedTabs();
@@ -729,6 +748,9 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void setCurrTab (Tabs.GenericTab tab) {
+		if(tab != null) {
+			_currTab = tab;
+		}
 		if (ec.hasChanges()) {
 			ec.revert();
 			refresh();
@@ -736,9 +758,6 @@ public class LessonNoteEditor extends WOComponent {
 			updateLessonList();
 		}
 		currPerPersonLink = null;
-		if(tab != null) {
-			_currTab = tab;
-		}
 		//lessonsList = _currTab.lessonsInTab();
 	}
 
@@ -784,22 +803,15 @@ public class LessonNoteEditor extends WOComponent {
 		}
 	 */
 	public void setPresent(NSKeyValueCoding pres) {
+		if(pres != null)
+			present = pres;
 		if(ec.hasChanges())
 			ec.revert();
 		refresh();
 
-		if(pres != null)
-			present = pres;
 		student = null;
 		selector = null;
 		currPerPersonLink = null;
-		/*if(pres == null) return;
-				single = Various.boolForObject(pres.valueForKey("single"));
-				if(single) {
-					regime = NORMAL;
-					refresh();
-				}
-				else student = null; */
 	}
 
 

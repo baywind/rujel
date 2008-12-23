@@ -100,43 +100,36 @@ public class MarkArchive extends _MarkArchive
 		if(pKey != null && pKey.count() > 0)
 			return pKey;
 		EOEntity ent = EOUtilities.entityForObject(ec, eo);
-		NSMutableArray keys = new NSMutableArray();
-		try {
-			EOEnterpriseObject usedEntity = EOUtilities.objectMatchingKeyAndValue(ec,
-					"UsedEntity","usedEntity",eo.entityName());
-			String key = (String)usedEntity.valueForKey("key1");
-			if(key != null) keys.addObject(key);
-			key = (String)usedEntity.valueForKey("key2");
-			if(key != null) keys.addObject(key);
-			key = (String)usedEntity.valueForKey("key3");
-			if(key != null) keys.addObject(key);
-		} catch (com.webobjects.eoaccess.EOObjectNotAvailableException e) {
-			return null;
+		NSMutableArray pKeys = new NSMutableArray();
+		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), ec);
+		for (int i = 0; i < keys.length; i++) {
+			String key = (String)usedEntity.valueForKey(keys[i]);
+			if(key != null) pKeys.addObject(key);
 		}
-		NSMutableDictionary keyDict = new NSMutableDictionary();
 
+		NSMutableDictionary keyDict = new NSMutableDictionary();
 		NSArray rels = ent.relationships();
 		Enumeration enu = rels.objectEnumerator();
-		while (enu.hasMoreElements() && keys.count() > 0) {
+		while (enu.hasMoreElements() && pKeys.count() > 0) {
 			EORelationship rel = (EORelationship)enu.nextElement();
 			if(rel.isToMany()) continue;
 			Enumeration joins = rel.joins().objectEnumerator();
 			while(joins.hasMoreElements()) {
 				EOJoin join = (EOJoin)joins.nextElement();
 				String sa = join.sourceAttribute().name();
-				if(keys.containsObject(sa)) {
+				if(pKeys.containsObject(sa)) {
 					EOEnterpriseObject dest = (EOEnterpriseObject)eo.valueForKey(rel.name());
 					pKey = EOUtilities.primaryKeyForObject(ec, dest);
 					if(pKey != null) {
 						String dk = join.destinationAttribute().name();
 						keyDict.takeValueForKey(pKey.valueForKey(dk), sa);
-						keys.removeObject(sa);
+						pKeys.removeObject(sa);
 					}
 				}
 			}
 		}
-		if(keys.count() > 0) {
-			Object[] args = new Object[] {eo,keyDict,keys};
+		if(pKeys.count() > 0) {
+			Object[] args = new Object[] {eo,keyDict,pKeys};
 			Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
 					"Could not resolve required attributes for archiving eo",args);
 			//editingContext().deleteObject(this);
@@ -220,8 +213,8 @@ public class MarkArchive extends _MarkArchive
 	public void setUsedEntityName(String entityName) {
 		EOEnterpriseObject ent = getUsedEntity(entityName, editingContext());
 		setUsedEntity(ent);
-	}
-	
+	}	
+/*
 	public void setIdentifier(Object key1, Object key2, Object key3) {
 			setKey1(keyForObject(key1));
 			setKey1(keyForObject(key2));
@@ -247,7 +240,8 @@ public class MarkArchive extends _MarkArchive
 		}
 		return new Integer(0);
 	}
-	
+	*/
+
 	public void setIdentifierDictionary(NSDictionary identifierDict) {
 		if(usedEntity() == null) {
 			String entityName = (String)identifierDict.valueForKey("entityName");
@@ -285,9 +279,10 @@ public class MarkArchive extends _MarkArchive
 				takeValueForKey(value, keys[i]);
 			} else if(value instanceof EOEnterpriseObject) {
 				EOEditingContext ec = ((EOEnterpriseObject)value).editingContext();
-				NSDictionary pKey = EOUtilities.primaryKeyForObject(ec, (EOEnterpriseObject)value);
-				if(pKey != null) {
-					takeValueForKey(pKey.allValues().objectAtIndex(0), keys[i]);
+				EOGlobalID gid = ec.globalIDForObject((EOEnterpriseObject)value);
+				//NSDictionary pKey = EOUtilities.primaryKeyForObject(ec, (EOEnterpriseObject)value);
+				if(gid instanceof EOKeyGlobalID) {
+					takeValueForKey(((EOKeyGlobalID)gid).keyValues()[0], keys[i]);
 				} else {
 					NSSelector selector = new NSSelector("notifyOnPKinit",
 							new Class[] {NSNotification.class});
@@ -295,11 +290,9 @@ public class MarkArchive extends _MarkArchive
 							this, selector, EOGlobalID.GlobalIDChangedNotification, null);
 					takeValueForKey(zero, keys[i]);
 					if(awaitedKeys == null)
-						awaitedKeys = new NSMutableDictionary(keys[i],
-								ec.globalIDForObject((EOEnterpriseObject)value));
+						awaitedKeys = new NSMutableDictionary(keys[i],gid);
 					else
-						awaitedKeys.setObjectForKey(keys[i],
-								ec.globalIDForObject((EOEnterpriseObject)value));
+						awaitedKeys.setObjectForKey(keys[i],gid);
 				}
 			} else {
 				takeValueForKey(zero, keys[i]);
@@ -359,23 +352,29 @@ public class MarkArchive extends _MarkArchive
 				EOQualifier.QualifierOperatorEqual, usedEntity);
 		NSMutableArray quals = new NSMutableArray(qual);
 
-		Number value = null;
-		String key = (String)usedEntity.valueForKey("key1");
-		if(key != null) {
-			value = namedKeyInDict(key, pKey);
-			qual = new EOKeyValueQualifier("key1",EOQualifier.QualifierOperatorEqual,value);
-			quals.addObject(qual);
-		}
-		key = (String)usedEntity.valueForKey("key2");
-		if(key != null) {
-			value = namedKeyInDict(key, pKey);
-			qual = new EOKeyValueQualifier("key2",EOQualifier.QualifierOperatorEqual,value);
-			quals.addObject(qual);
-		}
-		key = (String)usedEntity.valueForKey("key3");
-		if(key != null) {
-			value = namedKeyInDict(key, pKey);
-			qual = new EOKeyValueQualifier("key3",EOQualifier.QualifierOperatorEqual,value);
+		for (int i = 0; i < keys.length; i++) {
+			String key = (String)usedEntity.valueForKey(keys[i]);
+			if(key == null)
+				continue;
+			Object value = pKey.valueForKey(key);
+			if(value == null && key.endsWith("ID")) {
+				key = key.substring(0, key.length() -2);
+				value = pKey.valueForKey(key);
+			}
+			if(value == null)
+				continue;
+			if(value instanceof EOEnterpriseObject) {
+				EOEditingContext ec = ((EOEnterpriseObject)value).editingContext();
+				EOGlobalID gid = ec.globalIDForObject((EOEnterpriseObject)value);
+				//NSDictionary pKey = EOUtilities.primaryKeyForObject(ec, (EOEnterpriseObject)value);
+				if(gid instanceof EOKeyGlobalID) {
+					value = ((EOKeyGlobalID)gid).keyValues()[0];
+				} else {
+					//throw new IllegalArgumentException("Uninitialised values in dict");
+					return null;
+				}
+			}
+			qual = new EOKeyValueQualifier(keys[i],EOQualifier.QualifierOperatorEqual,value);
 			quals.addObject(qual);
 		}
 		qual = new EOAndQualifier(quals);
