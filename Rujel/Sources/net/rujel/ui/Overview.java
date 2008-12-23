@@ -193,6 +193,7 @@ public class Overview extends WOComponent {
 		if(courses == null || courses.count() == 0) return;
 		Enumeration enu = courses.objectEnumerator();
 		NSArray args = new NSArray(new Object[] { since,to });
+		session().setObjectForKey(to, "recentDate");
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
 		NSKeyValueCoding present = present();
 		while(enu.hasMoreElements()) {
