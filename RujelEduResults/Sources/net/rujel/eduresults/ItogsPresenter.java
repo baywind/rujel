@@ -111,14 +111,17 @@ public class ItogsPresenter extends WOComponent {
 			if(currAddOn().valueForKey("eduCourse") == course())
 				_itogs = (PerPersonLink)currAddOn().valueForKey("agregate");
 			if(_itogs == null) {
-				EOQualifier qual = Various.getEOInQualifier("eduPeriod",periods());
+				NSArray periods = periods();
+				if(periods == null || periods.count() == 0)
+					return new PerPersonLink.Dictionary(NSDictionary.EmptyDictionary);
+				EOQualifier qual = Various.getEOInQualifier("eduPeriod",periods);
 				NSMutableArray quals = new NSMutableArray(qual);
 				qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,course().cycle());
 				quals.addObject(qual);
 				qual = new EOAndQualifier(quals);
 				EOFetchSpecification fspec = new EOFetchSpecification("ItogMark",qual,null);
 				NSArray allItogs = course().editingContext().objectsWithFetchSpecification(fspec);
-				
+
 				if(allItogs != null && allItogs.count() > 0) {
 					NSMutableDictionary agregate = new NSMutableDictionary();
 					Enumeration enu = allItogs.objectEnumerator();
@@ -126,10 +129,10 @@ public class ItogsPresenter extends WOComponent {
 						ItogMark curr = (ItogMark)enu.nextElement();
 						ItogMark[] arr = (ItogMark[])agregate.objectForKey(curr.student());
 						if(arr == null) {
-							arr = new ItogMark[periods().count()];
+							arr = new ItogMark[periods.count()];
 							agregate.setObjectForKey(arr,curr.student());
 						}
-						arr[periods().indexOfIdenticalObject(curr.eduPeriod())] = curr;
+						arr[periods.indexOfIdenticalObject(curr.eduPeriod())] = curr;
 					}
 					_itogs = new PerPersonLink.Dictionary(agregate);
 				} else {
