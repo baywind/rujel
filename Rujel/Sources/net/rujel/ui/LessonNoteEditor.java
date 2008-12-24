@@ -117,6 +117,7 @@ public class LessonNoteEditor extends WOComponent {
 		currPerPersonLink = (PerPersonLink)EOUtilities.localInstanceOfObject(ec,lesson);
 		session().setObjectForKey(lesson.date(), "recentDate");
 	}
+	
 	public void setCurrPerPersonLink(PerPersonLink lesson) {
 		student = null;
 		if(lesson instanceof EduLesson)
@@ -126,8 +127,11 @@ public class LessonNoteEditor extends WOComponent {
 			updateLessonList();
 		}
 		currPerPersonLink = lesson;
+		if(currLesson() == null)
+			return;
 		logger.logp(WOLogLevel.READING,"LessonNoteEditor","setCurrLesson","Open lesson",new Object[] {session(),lesson});
-		if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.currPerPersonLink"))) {
+		String accKey = (context().page() == this)?"currPerPersonLink":currLesson().entityName();
+		if(Various.boolForObject(session().valueForKeyPath("readAccess.edit." + accKey))) {
 			session().takeValueForKey(Boolean.TRUE,"prolong");
 		}
 	}
