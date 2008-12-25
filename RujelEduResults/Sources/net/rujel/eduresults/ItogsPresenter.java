@@ -36,6 +36,7 @@ import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 public class ItogsPresenter extends WOComponent {
 
@@ -132,7 +133,14 @@ public class ItogsPresenter extends WOComponent {
 							arr = new ItogMark[periods.count()];
 							agregate.setObjectForKey(arr,curr.student());
 						}
-						arr[periods.indexOfIdenticalObject(curr.eduPeriod())] = curr;
+						int idx = periods.indexOfIdenticalObject(curr.eduPeriod());
+						if(idx < 0) {
+							Object[] args = new Object[] {session(),curr,course(),curr.eduPeriod()};
+							Logger.getLogger("rujel.eduresults").log(WOLogLevel.WARNING,
+									"Found ItogMark for wrong period",args);
+							continue;
+						}
+						arr[idx] = curr;
 					}
 					_itogs = new PerPersonLink.Dictionary(agregate);
 				} else {
