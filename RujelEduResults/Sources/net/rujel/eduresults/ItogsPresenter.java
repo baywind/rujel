@@ -135,7 +135,11 @@ public class ItogsPresenter extends WOComponent {
 						}
 						int idx = periods.indexOfIdenticalObject(curr.eduPeriod());
 						if(idx < 0) {
-							Object[] args = new Object[] {session(),curr,course(),curr.eduPeriod()};
+							NSMutableDictionary args = new NSMutableDictionary(session(),"session");
+							args.takeValueForKey(curr, "mark");
+							args.takeValueForKey(course(), "course");
+							args.takeValueForKey(curr.eduPeriod(), "period");
+							//Object[] args = new Object[] {session(),curr,course(),curr.eduPeriod()};
 							Logger.getLogger("rujel.eduresults").log(WOLogLevel.WARNING,
 									"Found ItogMark for wrong period",args);
 							continue;
