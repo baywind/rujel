@@ -34,7 +34,6 @@ import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -97,14 +96,17 @@ public class ItogsPresenter extends WOComponent {
 	
 	public NSArray periods() {
 		if(_periods == null) {
-			_periods = (NSArray)currAddOn().valueForKey("periods");
+			if(currAddOn().valueForKey("eduCourse") == course()) {
+				_periods = (NSArray)currAddOn().valueForKey("periods");
+			}
 			if(_periods == null) {
 				_periods = EduPeriod.periodsForCourse(course());
 				if(_periods == null)
 					_periods = NSArray.EmptyArray;
 				currAddOn().takeValueForKey(_periods,"periods");
-			} else {
-				_periods = EOUtilities.localInstancesOfObjects(course().editingContext(), _periods);
+				currAddOn().takeValueForKey(course(),"eduCourse");
+				_itogs = null;
+				currAddOn().takeValueForKey(_itogs,"agregate");
 			}
 		}
 		return _periods;
@@ -112,8 +114,9 @@ public class ItogsPresenter extends WOComponent {
 	
 	public PerPersonLink itogs() {
 		if(_itogs == null) {
-			if(currAddOn().valueForKey("eduCourse") == course())
+			if(currAddOn().valueForKey("eduCourse") == course()) {
 				_itogs = (PerPersonLink)currAddOn().valueForKey("agregate");
+			}
 			if(_itogs == null) {
 				NSArray periods = periods();
 				if(periods == null || periods.count() == 0)
