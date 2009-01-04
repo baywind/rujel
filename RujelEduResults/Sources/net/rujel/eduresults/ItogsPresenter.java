@@ -34,6 +34,7 @@ import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -102,6 +103,8 @@ public class ItogsPresenter extends WOComponent {
 				if(_periods == null)
 					_periods = NSArray.EmptyArray;
 				currAddOn().takeValueForKey(_periods,"periods");
+			} else {
+				_periods = EOUtilities.localInstancesOfObjects(course().editingContext(), _periods);
 			}
 		}
 		return _periods;
@@ -185,7 +188,7 @@ public class ItogsPresenter extends WOComponent {
 		nextPage.takeValueForKey(student(),"student");
 		nextPage.takeValueForKey(periodItem,"eduPeriod");
 		//nextPage.takeValueForKey(course().cycle(),"cycle");
-		currAddOn().takeValueForKey(context().page(),"returnPage");
+		nextPage.takeValueForKey(context().page(),"returnPage");
 		nextPage.takeValueForKey(currAddOn(),"addOn");
         return nextPage;
     }

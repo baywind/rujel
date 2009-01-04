@@ -51,6 +51,7 @@ public class ItogPopup extends WOComponent {
     public Student student;
     public String mark;
 	public NSKeyValueCoding addOn;
+	public WOComponent returnPage;
 
     public ItogPopup(WOContext context) {
         super(context);
@@ -89,7 +90,7 @@ public class ItogPopup extends WOComponent {
 	}
 	
 	public WOComponent save() {
-		WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
+		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
 		if(itog == null && mark == null)
 				return returnPage;
@@ -143,7 +144,7 @@ public class ItogPopup extends WOComponent {
 	}
 	
 	public WOComponent delete() {
-		WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
+		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
 		if(!access().flagForKey("delete")) {
 			session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
