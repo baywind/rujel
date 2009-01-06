@@ -8,7 +8,7 @@ SaveButton: WOSubmitButton {
 	value = application.strings.uiElements.Save;
 	id = "saveArchive";
 	name = "saveArchive";
-	disabled = showReason;
+	disabled = disableSave;
 	title = application.extStrings.RujelArchiving_Archive.requiredReason;
 }
 
@@ -19,7 +19,9 @@ CancelButton: WOGenericElement {
 	onclick = "closePopup(this.form);";
 }
 
-Archives : WORepetition {
+Archives : ArchiveRow {
+	style = "height:2em;";
+	class = "ungerade";
 	list = archives;
 	item = archItem;
 }
@@ -122,4 +124,8 @@ TitleString : WOString {
 DescriptionString : WOString {
   value = description;
   escapeHTML = false;
+}
+
+TitleRow : ArchiveRow {
+	class = "grey";
 }

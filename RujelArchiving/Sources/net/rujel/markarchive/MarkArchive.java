@@ -481,7 +481,8 @@ public class MarkArchive extends _MarkArchive
 			else
 				dict = NSPropertyListSerialization.dictionaryForString(data).mutableClone();
 		}
-		return (String)dict.valueForKey(key);
+		Object value = dict.valueForKey(key);
+		return (value==null)?null:value.toString();
 	}
 	
 	public void validateForSave() {

@@ -172,7 +172,7 @@ public class ItogsPresenter extends WOComponent {
 	
 	public String periodTitle() {
 		if(periodItem.countInYear() > 1) {
-			return Various.makeRoman(periodItem.num().intValue()) + "<br/>\n<small>" + periodItem.periodType().title() + "<small>";
+			return Various.makeRoman(periodItem.num().intValue()) + "<br/>\n<small>" + periodItem.periodType().title() + "</small>";
 		}
 		return periodItem.periodType().title();
 	}

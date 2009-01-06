@@ -192,7 +192,7 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	
 	public String showReason() {
 		if(archItem == null)
-			return (reason == null)?"true":null;
+			return null;
 		else if (archItem.reason() == null)
 			return null;
 		String reas = archItem.reason();
@@ -203,5 +203,9 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 		result.append("\" onclick=\"alert(this.title);\">");
 		result.append(reas.substring(0, 8)).append("...</div>");
 		return result.toString();
+	}
+	
+	public boolean disableSave() {
+		return (reason == null || reason.length() == 0);
 	}
 }

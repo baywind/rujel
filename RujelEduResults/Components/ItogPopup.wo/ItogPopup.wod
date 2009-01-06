@@ -36,7 +36,7 @@ FlagCheckBox: WOCheckBox {
 }
 
 FlagList: WORepetition {
-	item = flagItem;
+	item = item;
 	list = flaglist;
 }
 
@@ -61,6 +61,7 @@ MarkField: WOTextField {
 	value = mark;
 	style = "text-align:center;";
 	disabled = readOnly;
+	onkeypress = onkeypress;
 }
 
 PopupTitle: WOString {
@@ -70,6 +71,7 @@ PopupTitle: WOString {
 Save: WOSubmitButton {
 	action = save;
 	value = application.strings.uiElements.Save;
+	name = "save";
 }
 
 StudentFirstName: WOString {
@@ -78,4 +80,42 @@ StudentFirstName: WOString {
 
 StudentLastName: WOString {
 	value = student.person.lastName;
+}
+
+ShowHistory : WOConditional {
+  condition = ifArchive;
+}
+
+ArchiveTitle : ArchiveRow {
+	class = "grey";
+}
+
+ArchiveList : ArchiveRow {
+	class = "ungerade";
+	object = itog;
+	item = item;
+	identifierDict = identifierDictionary;
+}
+
+MarkInArchive : WOString {
+  value = item.@mark;
+}
+
+ArchiveContainer : WOGenericContainer {
+  elementName = "td";
+  title = item.@value;
+}
+
+ReasonTitle : WOString {
+  value = application.extStrings.RujelArchiving_Archive.reason;
+  valueWhenEmpty = "Reason";
+  escapeHTML = false;
+}
+
+ChangeReason : WOText {
+  value = changeReason;
+  rows = "2";
+  style = "width:96%;";
+  name = "changeReason";
+  onkeypress = "form.save.disabled = (value == null || value.length < 2);";
 }

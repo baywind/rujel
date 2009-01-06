@@ -52,11 +52,13 @@ public class ItogPopup extends WOComponent {
     public String mark;
 	public NSKeyValueCoding addOn;
 	public WOComponent returnPage;
+	public String changeReason;
+	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
 
-    public ItogPopup(WOContext context) {
-        super(context);
-    }
-	
+	public ItogPopup(WOContext context) {
+		super(context);       
+	}
+
 	public String mark() {
 		if(itog != null) {
 			mark = itog.mark();
@@ -70,43 +72,44 @@ public class ItogPopup extends WOComponent {
 		if(mark == null) return null;
 		return ItogMark.flagKeys;
 	}
-	
+
 	public static final NSDictionary flagNames = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.properties.ItogMark.flags");
-	public String flagItem;
-	
+	public Object item;
+
 	public boolean flagStatus () {
-		return itog.readFlags().flagForKey(flagItem);
+		return itog.readFlags().flagForKey(item);
 	}
 	public void setFlagStatus(boolean status) {
-		itog.readFlags().setFlagForKey(status,flagItem);
+		itog.readFlags().setFlagForKey(status,item);
 	}
-	
+
 	public String flagName() {
-		return (String)flagNames.valueForKey(flagItem);
+		return (String)flagNames.valueForKey(item.toString());
 	}
-	
+
 	public NamedFlags access() {
 		return (NamedFlags)addOn.valueForKey("access");
 	}
-	
+
 	public WOComponent save() {
 		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
 		if(itog == null && mark == null)
-				return returnPage;
+			return returnPage;
 		if(mark == null)
 			return delete();
-		
+
 		if(!access().flagForKey("edit")) {
 			session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
 			return returnPage;
 		}
-		EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
-		EOEditingContext ec = eduCourse.editingContext();
-		ec.lock();
-		try {
-			boolean newItog = (itog == null);
-			/*boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.enable", false);
+		if(itog == null || !mark.equals(itog.mark())) {
+			EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
+			EOEditingContext ec = eduCourse.editingContext();
+			ec.lock();
+			try {
+				boolean newItog = (itog == null);
+				/*boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.enable", false);
 			if(mark == null) {
 				if(enableArchive) {
 					EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
@@ -123,22 +126,25 @@ public class ItogPopup extends WOComponent {
 					addOn.takeValueForKey(null,"agregate");
 				} else {
 					itog.readFlags().setFlagForKey(true,"changed");
+					//itog.setValue(null);
 				}
 				itog.setMark(mark);
-				if(SettingsReader.boolForKeyPath("markarchive.ItogMark", false)) {
+				if(ifArchive) {
 					EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 					archive.takeValueForKey(itog, "object");
+					archive.takeValueForKey(changeReason, "reason");
 				}
-			//}
-			
-			ec.saveChanges();
-			String message = (newItog)?"New Itog created":"Itog is changed";
-			logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
-		} catch (Exception ex) {
-			logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save itog",new Object[] {session(),itog,ex});
-			session().takeValueForKey(ex.getMessage(),"message");
-		} finally {
-			ec.unlock();
+				//}
+
+				ec.saveChanges();
+				String message = (newItog)?"New Itog created":"Itog is changed";
+				logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
+			} catch (Exception ex) {
+				logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save itog",new Object[] {session(),itog,ex});
+				session().takeValueForKey(ex.getMessage(),"message");
+			} finally {
+				ec.unlock();
+			}
 		}
 		return returnPage;
 	}
@@ -154,10 +160,11 @@ public class ItogPopup extends WOComponent {
 		ec.lock();
 		try {
 			NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,itog);
-			if(SettingsReader.boolForKeyPath("markarchive.ItogMark", false)) {
+			if(ifArchive) {
 				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 				archive.takeValueForKey(itog, "objectIdentifier");
 				archive.takeValueForKey(".", '@' + "mark");
+				archive.takeValueForKey(changeReason, "reason");
 			}
 			ec.deleteObject(itog);
 			ec.saveChanges();
@@ -189,4 +196,21 @@ public class ItogPopup extends WOComponent {
 		return true;
 	}
 	
+	public NSMutableDictionary identifierDictionary() {
+		EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
+		if(student == null || eduPeriod == null || eduCourse == null)
+    		return null;
+		NSMutableDictionary ident = new NSMutableDictionary("ItogMark","entityName");
+		ident.takeValueForKey(eduPeriod,"period");
+		ident.takeValueForKey(student, "student");
+		ident.takeValueForKey(eduCourse.cycle(),"eduCycle");
+		ident.takeValueForKey(eduCourse.editingContext(), "editingContext");
+		return ident;
+    }
+
+	public String onkeypress() {
+		if(!ifArchive)
+			return null;
+		return "showObj('itogChangeReason');form.changeReason.onkeypress();";
+	}
 }

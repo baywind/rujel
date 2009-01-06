@@ -37,7 +37,6 @@ import net.rujel.reusables.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
