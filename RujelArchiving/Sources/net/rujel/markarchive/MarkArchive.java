@@ -99,7 +99,8 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,eo);
 		if(pKey != null && pKey.count() > 0)
 			return pKey;
-		EOEntity ent = EOUtilities.entityForObject(ec, eo);
+		return CompoundPKeyGenerator.compoundKey(eo);
+		/*EOEntity ent = EOUtilities.entityForObject(ec, eo);
 		NSMutableArray pKeys = new NSMutableArray();
 		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), ec);
 		for (int i = 0; i < keys.length; i++) {
@@ -135,7 +136,7 @@ public class MarkArchive extends _MarkArchive
 			//editingContext().deleteObject(this);
 			return null;
 		}
-		return keyDict;
+		return keyDict;*/
 	}
 	/*
 	protected EOEnterpriseObject getUsedEntity (String entityName, NSDictionary identifierDict) {

@@ -115,7 +115,7 @@ public class PeriodTemplate extends _PeriodTemplate
 		}
 	}
 ///
-	public void setBeginMonth(Number aValue) {
+	public void setBeginMonth(Integer aValue) {
 		beginMonthInYear = 1;
 		beginSecondYear = (aValue != null && (beginMonthInYear =  aValue.intValue()) > 12);
 		if(beginSecondYear) {
@@ -124,7 +124,7 @@ public class PeriodTemplate extends _PeriodTemplate
         super.setBeginMonth(aValue);
     }
 	
-    public void setEndMonth(Number aValue) {
+    public void setEndMonth(Integer aValue) {
 		endMonthInYear = 1;
 		endSecondYear = (aValue != null && (endMonthInYear =  aValue.intValue()) > 12);
 		if(endSecondYear) {

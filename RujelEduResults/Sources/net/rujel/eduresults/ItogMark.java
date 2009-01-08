@@ -117,7 +117,7 @@ public class ItogMark extends _ItogMark
 	}
 	
 	public void _syncFlags(Flags toSync) {
-		setFlags(new Byte(toSync.byteValue()));
+		setFlags(new Integer(toSync.intValue()));
 	}
 
 	public static EOQualifier qualifyItogMark(EduCycle cycle, EduPeriod period, Student student) {

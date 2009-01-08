@@ -31,6 +31,7 @@ package net.rujel;
 
 import net.rujel.reusables.*;
 
+import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -91,6 +92,7 @@ public class Application extends UTF8Application {
 
 		logger.logp(Level.INFO,"Application","<init>","Rujel started " + webserverConnectURL());
 		
+		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		DataBaseConnector.makeConnections();
 
 		net.rujel.interfaces.EOInitialiser.initAll();

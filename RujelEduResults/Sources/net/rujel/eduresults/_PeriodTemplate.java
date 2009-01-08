@@ -7,15 +7,15 @@
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
  * 
- * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 	o	Redistributions of source code must retain the above copyright notice, this
  * 		list of conditions and the following disclaimer.
- * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 	o	Redistributions in binary form must reproduce the above copyright notice,
  * 		this list of conditions and the following disclaimer in the documentation
  * 		and/or other materials provided with the distribution.
- * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
- * 		to endorse or promote products derived from this software without specific 
+ * 	o	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific
  * 		prior written permission.
- * 		
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
@@ -27,74 +27,75 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Created by eogenerator
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PeriodTemplate.java instead.
+
 package net.rujel.eduresults;
 
-
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
+import java.math.BigDecimal;
 
+@SuppressWarnings("all")
 public abstract class _PeriodTemplate extends EOGenericRecord {
+	public static final String ENTITY_NAME = "PeriodTemplate";
 
-    public _PeriodTemplate() {
-        super();
-    }
+	// Attributes
+	public static final String BEGIN_DAY_KEY = "beginDay";
+	public static final String BEGIN_MONTH_KEY = "beginMonth";
+	public static final String END_DAY_KEY = "endDay";
+	public static final String END_MONTH_KEY = "endMonth";
+	public static final String PER_NUM_KEY = "perNum";
 
-/*
-    // If you add instance variables to store property values you
-    // should add empty implementions of the Serialization methods
-    // to avoid unnecessary overhead (the properties will be
-    // serialized for you in the superclass).
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-    }
+	// Relationships
+	public static final String PERIOD_TYPE_KEY = "periodType";
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
-    }
-*/
+  public Integer beginDay() {
+    return (Integer) storedValueForKey(BEGIN_DAY_KEY);
+  }
 
-    public Number beginDay() {
-        return (Number)storedValueForKey("beginDay");
-    }
+  public void setBeginDay(Integer value) {
+    takeStoredValueForKey(value, BEGIN_DAY_KEY);
+  }
 
-    public void setBeginDay(Number aValue) {
-        takeStoredValueForKey(aValue, "beginDay");
-    }
+  public Integer beginMonth() {
+    return (Integer) storedValueForKey(BEGIN_MONTH_KEY);
+  }
 
-    public Number beginMonth() {
-        return (Number)storedValueForKey("beginMonth");
-    }
+  public void setBeginMonth(Integer value) {
+    takeStoredValueForKey(value, BEGIN_MONTH_KEY);
+  }
 
-    public void setBeginMonth(Number aValue) {
-        takeStoredValueForKey(aValue, "beginMonth");
-    }
+  public Integer endDay() {
+    return (Integer) storedValueForKey(END_DAY_KEY);
+  }
 
-    public Number endDay() {
-        return (Number)storedValueForKey("endDay");
-    }
+  public void setEndDay(Integer value) {
+    takeStoredValueForKey(value, END_DAY_KEY);
+  }
 
-    public void setEndDay(Number aValue) {
-        takeStoredValueForKey(aValue, "endDay");
-    }
+  public Integer endMonth() {
+    return (Integer) storedValueForKey(END_MONTH_KEY);
+  }
 
-    public Number endMonth() {
-        return (Number)storedValueForKey("endMonth");
-    }
+  public void setEndMonth(Integer value) {
+    takeStoredValueForKey(value, END_MONTH_KEY);
+  }
 
-    public void setEndMonth(Number aValue) {
-        takeStoredValueForKey(aValue, "endMonth");
-    }
+  public Integer perNum() {
+    return (Integer) storedValueForKey(PER_NUM_KEY);
+  }
 
-    public Number perNum() {
-        return (Number)storedValueForKey("perNum");
-    }
+  public void setPerNum(Integer value) {
+    takeStoredValueForKey(value, PER_NUM_KEY);
+  }
 
-    public void setPerNum(Number aValue) {
-        takeStoredValueForKey(aValue, "perNum");
-    }
+  public net.rujel.eduresults.PeriodType periodType() {
+    return (net.rujel.eduresults.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
+  }
 
-    public net.rujel.eduresults.PeriodType periodType() {
-        return (net.rujel.eduresults.PeriodType)storedValueForKey("periodType");
-    }
-
-    public void setPeriodType(net.rujel.eduresults.PeriodType aValue) {
-        takeStoredValueForKey(aValue, "periodType");
-    }
+  public void setPeriodType(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, PERIOD_TYPE_KEY);
+  }
+  
 }
