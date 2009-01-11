@@ -55,10 +55,10 @@ public class Prognosis extends _Prognosis {
 	
 	public static void init() {
 		//		EOInitialiser.initialiseRelationship("ItogMark","teacher",false,"teacherID","Teacher");
-		EOInitialiser.initialiseRelationship("Prognosis","eduCourse",false,"eduCourseID","EduCourse")
-			.anyInverseRelationship().setPropagatesPrimaryKey(true);
-		EOInitialiser.initialiseRelationship("Prognosis","student",false,"studentID","Student")
-			.anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("Prognosis","eduCourse",false,"eduCourseID","EduCourse");
+			//.anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("Prognosis","student",false,"studentID","Student");
+			//.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		//EOInitialiser.initialiseRelationship("Prognosis","eduPeriod",false,"periodID","EduPeriod").anyInverseRelationship().setPropagatesPrimaryKey(true);
 		//EOModelGroup.defaultGroup().entityNamed("Prognosis").relationshipNamed("eduPeriod").anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
@@ -142,7 +142,7 @@ public class Prognosis extends _Prognosis {
 
     public void setEduPeriod(EduPeriod period) {
     	super.setEduPeriod(period);
-    	if(fireDate() == null)
+    	if(period != null && fireDate() == null)
     		setFireDate(period.end());
     }
     
@@ -162,7 +162,8 @@ public class Prognosis extends _Prognosis {
     
     public void setNamedFlags(NamedFlags flags) {
     	_flags = flags;
-    	setFlags(flags.toInteger());
+    	if(flags() != null && flags.intValue() != flags().intValue())
+    		setFlags(flags.toInteger());
     }
 
     
@@ -355,24 +356,46 @@ public class Prognosis extends _Prognosis {
 	
 	public static Prognosis getPrognosis(
 			Student student, EduCourse course, EduPeriod period, boolean create) {
-		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
-		dict.setObjectForKey(course,"eduCourse");
-		dict.setObjectForKey(student,"student");
-		Prognosis progn = null;
 		EOEditingContext ec = course.editingContext();
-		try {
-			progn = (Prognosis)EOUtilities.objectMatchingValues(ec,"Prognosis",dict);
-		} catch (EOObjectNotAvailableException onaex) {
-			if(!create)
+
+		EOQualifier qual = new EOKeyValueQualifier("eduCourse",
+				EOQualifier.QualifierOperatorEqual, course);
+		NSMutableArray quals = new NSMutableArray(qual);
+		qual = new EOKeyValueQualifier(Prognosis.EDU_PERIOD_KEY,
+				EOQualifier.QualifierOperatorEqual, period);
+		quals.addObject(qual);
+		qual = new EOKeyValueQualifier("student",
+				EOQualifier.QualifierOperatorEqual, student);
+		quals.addObject(qual);
+		qual = new EOAndQualifier(quals);
+		EOFetchSpecification fs = new EOFetchSpecification(Prognosis.ENTITY_NAME,qual,null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0) {
+			if (!create)
 				return null;
-			progn = (Prognosis)EOUtilities.createAndInsertInstance(ec,"Prognosis");
-			progn.takeValuesFromDictionary(dict);
-		} catch (EOUtilities.MoreThanOneException mtoex) {
-			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
-					"Multiple prognoses found for dictionary",dict);
-			return null;
+			Prognosis progn = (Prognosis)EOUtilities.createAndInsertInstance(ec,"Prognosis");
+			progn.addObjectToBothSidesOfRelationshipWithKey(course, "eduCourse");
+			progn.addObjectToBothSidesOfRelationshipWithKey(period, Prognosis.EDU_PERIOD_KEY);
+			progn.addObjectToBothSidesOfRelationshipWithKey(student, "student");
+		/*	if(progn.prognosUsage().namedFlags().flagForKey("manual") &&
+    			SettingsReader.boolForKeyPath("markarchive.Prognosis", false)) {
+				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+				archive.takeValueForKey(progn, "object");
+				archive.takeValueForKey(creator, "user");
+			}*/
+			return progn;
+		} else {
+			if(found.count() > 1) {
+				Object args = new Object[] {found};
+				if (ec instanceof SessionedEditingContext) {
+					SessionedEditingContext s_ec = (SessionedEditingContext) ec;
+					args = new Object[] {s_ec.session(),found};
+				}
+				Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
+						"Multiple prognoses found",args);
+			}
+			return (Prognosis)found.objectAtIndex(0);
 		}
-		return progn;
 	}
 
 	public static PerPersonLink prognosesForCourseAndPeriod(EduCourse course, EduPeriod period) {

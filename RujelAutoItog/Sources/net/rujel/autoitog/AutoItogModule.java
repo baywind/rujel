@@ -201,6 +201,7 @@ public class AutoItogModule {
 		if(student == null && addOn != null) {
 			addOn.setCourse(course, date);
 		}
+		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", false);
 		NSArray pertypes = PeriodType.periodTypesForCourse(course);
 		Enumeration enu = pertypes.objectEnumerator();
 		while (enu.hasMoreElements()) {
@@ -213,7 +214,7 @@ public class AutoItogModule {
 			EduPeriod eduPeriod = type.currentPeriod(date);
 			if(eduPeriod == null)
 				continue;
-			
+			boolean ifArchive = (canArchive && usage.namedFlags().flagForKey("manual"));
 			if(student == null) {
 				if(addOn != null) {
 					addOn.setPeriodItem(eduPeriod);
@@ -225,15 +226,21 @@ public class AutoItogModule {
 					while (prenu.hasMoreElements()) {
 						Prognosis progn = (Prognosis) prenu.nextElement();
 						progn.updateFireDate(ct);
+						if(ifArchive) {
+							archivePrognosisChange(progn, usage);
+						}
 					}
 				}
 			} else {
 				Prognosis progn = usage.calculator().calculateForStudent(student, course, eduPeriod);
 				progn.updateFireDate();
+				if(ifArchive) {
+					archivePrognosisChange(progn, usage);
+				}
 				if(addOn != null)
 					addOn.reset();
 			}
-		}
+		} // pertypes.objectEnumerator();
 		if(course.editingContext().hasChanges()) {
 			try {
 				course.editingContext().saveChanges();
@@ -243,6 +250,20 @@ public class AutoItogModule {
 			}
 		}
 		return null;
+	}
+	
+	public static void archivePrognosisChange(Prognosis prognosis,PrognosUsage usage) {
+		EOEditingContext ec = prognosis.editingContext();
+		NSDictionary snapshot = ec.committedSnapshotForObject(prognosis);
+		if(snapshot != null && snapshot
+				.valueForKey("mark").equals(prognosis.mark()))
+			return;
+		EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+					ec,"MarkArchive");
+		archive.takeValueForKey(prognosis, "object");
+		String calcName = usage.calculatorName();
+		//calcName = calcName.substring(calcName.lastIndexOf('.') +1);
+		archive.takeValueForKey(calcName, "reason");
 	}
 	
 	public static NSMutableDictionary printStudentResults(WOContext ctx) {

@@ -35,17 +35,13 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Various;
-import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
-import com.webobjects.eoaccess.EOObjectNotAvailableException;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 //import com.webobjects.eoaccess.EOUtilities;
 
 import java.math.*;
 import java.util.Enumeration;
-import java.util.logging.Logger;
 
 public class BachalaureatCalculator extends Calculator {
 	public static final BachalaureatCalculator sharedInstance = new BachalaureatCalculator();
@@ -270,8 +266,8 @@ public class BachalaureatCalculator extends Calculator {
 	
 	public PerPersonLink calculatePrognoses(EduCourse course, EduPeriod period) {
 			//return prognosesForCourseAndPeriod(course,period);
-		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
-		dict.setObjectForKey(course,"eduCourse");
+		//NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
+		//dict.setObjectForKey(course,"eduCourse");
 		EOEditingContext ec = course.editingContext();
 		
 		NSArray works = works(course, period);
@@ -279,6 +275,7 @@ public class BachalaureatCalculator extends Calculator {
 			return null;
 		}
 		NSDictionary agregatedWorks = agregateWorks(works);
+		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
 		
 		NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("work",works));//allWorks));
 		quals.addObject(NSKeyValueCoding.NullValue);
@@ -295,8 +292,16 @@ public class BachalaureatCalculator extends Calculator {
 			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
 			NSDictionary agregatedMarks = agregateMarks(allMarks);
 			
-			dict.setObjectForKey(student,"student");
-			Prognosis progn = prognosisForStudent(dict, ec, agregatedMarks, agregatedWorks);
+			//dict.setObjectForKey(student,"student");
+			Prognosis progn = Prognosis.getPrognosis(student, course, period, !noWorks);
+			if(noWorks) {
+				if(progn != null) {
+					ec.deleteObject(progn);
+					progn = null;
+				}
+			} else {
+				initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
+			}
 			/*try {
 				progn = (Prognosis)EOUtilities.objectMatchingValues(ec,"Prognosis",dict);
 			} catch (EOObjectNotAvailableException onaex) {
@@ -324,9 +329,9 @@ public class BachalaureatCalculator extends Calculator {
 		return new PerPersonLink.Dictionary(result);
 	}
 	
-	protected Prognosis prognosisForStudent(NSDictionary matchingValues,EOEditingContext ec,
+	protected void initPrognosis(Prognosis progn,EOEditingContext ec,
 			NSDictionary agregatedMarks, NSDictionary agregatedWorks) {
-		Prognosis progn = null;
+		/*Prognosis progn = null;
 		try {
 			progn = (Prognosis)EOUtilities.objectMatchingValues(ec,"Prognosis",matchingValues);
 		} catch (EOObjectNotAvailableException onaex) {
@@ -336,7 +341,7 @@ public class BachalaureatCalculator extends Calculator {
 			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
 					"Multiple prognoses found for dictionary",matchingValues);
 			return null;
-		}
+		}*/
 		//calculator.updatePrognosis(progn,agregatedMarks,agregatedWorks);
 		double integral = getIntegral(agregatedMarks,agregatedWorks);
 		long rounded = (long)(integral*10000);
@@ -348,13 +353,13 @@ public class BachalaureatCalculator extends Calculator {
 		if(progn.complete() == null || progn.complete().compareTo(value) != 0) {
 			progn.setComplete(value);
 		}
-		return progn;
+		//return progn;
 	}
 
 	public Prognosis calculateForStudent(Student student, EduCourse course, EduPeriod period) {
-		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
+/*		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
 		dict.setObjectForKey(course,"eduCourse");
-		dict.setObjectForKey(student,"student");
+		dict.setObjectForKey(student,"student");*/
 		EOEditingContext ec = course.editingContext();
 		
 		NSArray works = works(course, period);
@@ -371,6 +376,14 @@ public class BachalaureatCalculator extends Calculator {
 		NSArray allMarks = ec.objectsWithFetchSpecification(fs);
 		NSDictionary agregatedMarks = agregateMarks(allMarks);
 		
-		return prognosisForStudent(dict, ec, agregatedMarks, agregatedWorks);
+		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
+		Prognosis progn = Prognosis.getPrognosis(student, course, period, !noWorks);
+		if(noWorks) {
+			if(progn != null)
+				ec.deleteObject(progn);
+			return null;
+		}
+		initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
+		return progn;
 	}
 }

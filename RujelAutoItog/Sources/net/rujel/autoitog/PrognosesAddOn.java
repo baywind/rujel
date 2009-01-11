@@ -490,6 +490,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			PerPersonLink prognoses = calc.calculatePrognoses(_course,periodItem);
 			boolean um = (_prognosesMatrix!=null && _periods.containsObject(periodItem));
 			Enumeration enu = _course.groupList().objectEnumerator();
+			boolean ifArchive = (SettingsReader.boolForKeyPath("markarchive.Prognosis", false)
+					&& usage.namedFlags().flagForKey("manual"));
 			while (enu.hasMoreElements()) {
 				Student student = (Student) enu.nextElement();
 				NSMutableDictionary forStudent = (um)?(NSMutableDictionary)_prognosesMatrix.objectForKey(student):null;
@@ -497,6 +499,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 				if(prognosis != null) {
 					//if(prognosis.fireDate() != null && prognosis.valueChanged())
 						prognosis.updateFireDate(courseTimeout());
+					if(ifArchive)
+						AutoItogModule.archivePrognosisChange(prognosis, usage);
 					if(um){
 						if(forStudent == null) {
 							forStudent = new NSMutableDictionary(prognosis,periodItem);

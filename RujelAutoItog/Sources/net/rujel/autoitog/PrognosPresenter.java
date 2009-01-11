@@ -32,8 +32,8 @@ package net.rujel.autoitog;
 //import net.rujel.interfaces.*;
 import java.math.BigDecimal;
 
+import net.rujel.reusables.Flags;
 import net.rujel.reusables.NamedFlags;
-import net.rujel.reusables.Various;
 import net.rujel.ui.AddOnPresenter;
 
 import com.webobjects.appserver.*;
@@ -136,7 +136,7 @@ public class PrognosPresenter extends AddOnPresenter {
 		popup.takeValueForKey(currAddOn(),"addOn");
 		popup.takeValueForKey(course(),"course");
 		popup.takeValueForKey(student(),"student");
-		popup.takeValueForKey(currAddOn().periodItem,"eduPerod");
+		popup.takeValueForKey(currAddOn().periodItem,"eduPeriod");
 		popup.takeValueForKey(context().page(),"returnPage");
 		return popup;
 	}
@@ -159,18 +159,27 @@ public class PrognosPresenter extends AddOnPresenter {
 	}
 	
 	public String bonusState() {
-		Bonus bonus = (Bonus)valueForKeyPath("currAddOn.prognosis.bonus");
+		Prognosis progn = (Prognosis)valueForKeyPath("currAddOn.prognosis");
+		//Bonus bonus = (Bonus)valueForKeyPath("currAddOn.prognosis.bonus");
+		if(progn == null)
+			return null;
+		return bonusState(progn.bonus(),progn.flags());
+	}
+	
+	public static String bonusState(Bonus bonus, Integer flags) {
 		if(bonus == null)
 			return null;
 		StringBuffer result = new StringBuffer("<span style = \"color:#ff0000;\">+");
 		if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
-			if(Various.boolForObject(valueForKeyPath("currAddOn.prognosis.namedFlags.keepBonus")))
+			if(flags != null && 
+					Flags.getFlag(Prognosis.flagNames.indexOfObject("keepBonus"), flags.intValue()))
 				result.append("<strong>!</strong>");
 			else
 				result.append('!');
 		} else {
 			result.append('?');
 		}
+		result.append("</span>");
 		return result.toString();
 	}
 }
