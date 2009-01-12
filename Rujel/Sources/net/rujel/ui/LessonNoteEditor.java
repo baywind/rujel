@@ -238,11 +238,12 @@ public class LessonNoteEditor extends WOComponent {
 		}*/
 		//tablist = ((BaseCourse)course).sortedTabs();
 		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
+		if(entityName == null)
+			entityName = EduLesson.entityName;
 		baseTabs = BaseTab.tabsForCourse(course, entityName);
 		if(_currTab == null || _currTab instanceof BaseTab.Tab) {
-			//_currTab = null;
-			if(entityName == null)
-				entityName = EduLesson.entityName;
+			if(_currTab != null && (baseTabs == null || !baseTabs.containsObject(_currTab)))
+				_currTab = null;
 			if(baseTabs != null && baseTabs.count() > 0) {
 				if(currPerPersonLink != null){
 					for (int i = baseTabs.count() -1; i >= 0; i--) {

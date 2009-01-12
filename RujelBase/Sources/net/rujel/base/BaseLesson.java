@@ -240,5 +240,8 @@ public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme
 		//_homeTask = newTask;
 		taskDelegate.setHomeTaskForLesson(newTask, this);
 	}
-
+	
+	public NSTimestamp validateDate(Object aDate) throws NSValidation.ValidationException {
+		return MyUtility.validateDateInEduYear(aDate,course().eduYear(),DATE_KEY);
+	}
 }

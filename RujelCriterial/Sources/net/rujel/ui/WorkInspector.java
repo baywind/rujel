@@ -111,7 +111,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(result == null)
     		result = returnPage;
 		session().removeObjectForKey("lessonProperies");
-    	return returnPage;
+    	return result;
     }
 
 	private NSArray _criteria;

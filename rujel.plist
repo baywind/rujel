@@ -635,7 +635,7 @@
 		<key>shortDateFormat</key>
 		<string>dd.MM</string>
 		<key>defaultDate</key>
-		<string>25.05.2008</string>
+		<string>12.01.2008</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>
 		<key>_logoutScreen</key>

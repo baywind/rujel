@@ -1,4 +1,4 @@
-// MyUtility.java
+//MyUtility.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -45,13 +45,13 @@ import net.rujel.reusables.SettingsReader;
 public class MyUtility {
 	private static final int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
 	private static final int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
-	
+
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
 
 	public static Format dateFormat() {
 		return new NSTimestampFormatter(SettingsReader.stringForKeyPath("ui.dateFormat","%Y-%m-%d"));
 	}
-	
+
 	public static Integer eduYearForSession(com.webobjects.appserver.WOSession session,String dateKey) {
 		NSTimestamp today = null;
 		if(dateKey != null)
@@ -67,12 +67,12 @@ public class MyUtility {
 		int year = gcal.get(GregorianCalendar.YEAR);
 		int month = gcal.get(GregorianCalendar.MONTH);
 		if(month < newYearMonth || 
-		   (month == newYearMonth && gcal.get(GregorianCalendar.DAY_OF_MONTH) < newYearDay)) {
+				(month == newYearMonth && gcal.get(GregorianCalendar.DAY_OF_MONTH) < newYearDay)) {
 			year--;
 		}
 		return new Integer(year);
 	}
-	
+
 	public static Date dateToEduYear(Date date, Integer eduYear) {
 		if(!eduYear.equals(eduYearForDate(date))) {
 			GregorianCalendar cal = new GregorianCalendar();
@@ -88,7 +88,7 @@ public class MyUtility {
 		}
 		return date;
 	}
-	
+
 	public static String presentEduYear(int year) {
 		StringBuffer buf = new StringBuffer(Integer.toString(year));
 		buf.append('/');
@@ -98,20 +98,49 @@ public class MyUtility {
 		buf.append(year);
 		return buf.toString();
 	}
-	
+
 	public static java.util.Date yearStart(int eduYear) {
 		GregorianCalendar cal = new GregorianCalendar(eduYear,newYearMonth,newYearDay);
 		return cal.getTime();
+	}
+
+	public static NSTimestamp validateDateInEduYear(Object aDate, Integer eduYear, String key) 
+	throws NSValidation.ValidationException {
+		NSTimestamp date = null;
+		if(aDate instanceof NSTimestamp) {
+			date = (NSTimestamp)aDate;
+		} else if(aDate instanceof Date) {
+			date = new NSTimestamp((Date)aDate);
+		} else if(aDate instanceof String) {
+			try {
+				date = (NSTimestamp)MyUtility.dateFormat().parseObject(
+						(String)aDate, new java.text.ParsePosition(0));
+			} catch (Exception e) {
+				throw new NSValidation.ValidationException(
+						"Could not parse string to date",aDate,key);
+			}
+		}
+		if(date == null)
+			throw new NSValidation.ValidationException(
+					"Null value or could not coerce",aDate,key);
+		if(eduYear != null && !eduYear.equals(MyUtility.eduYearForDate(date))) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+			"extStrings.RujelBase_Base.notInEduYear");
+			if(message == null)
+				message = "Date is not in a eduYear";
+			throw new NSValidation.ValidationException(message,aDate,key);
+		}
+		return date;
 	}
 
 	public static String stringForPath(String path) {
 		NSDictionary strings = (NSDictionary)WOApplication.application().valueForKey("strings");
 		return (String)strings.valueForKeyPath(path);
 	}
-	
+
 	public static Object validateAttributeValue(String attr,Object value,
-										   Class valueType,boolean notNull,int maxLenth) 
-														throws NSValidation.ValidationException {
+			Class valueType,boolean notNull,int maxLenth) 
+	throws NSValidation.ValidationException {
 		// TODO: review validation localisation
 		//String attributeName = attr.substring(attr.lastIndexOf('.') + 1);
 		if(value == null) {
@@ -122,18 +151,18 @@ public class MyUtility {
 		}
 		if(valueType != null && !(valueType.isInstance(value)))
 			throw new NSValidation.ValidationException(String.format(stringForPath("messages.invalidValue"),stringForPath("properties." + attr)),value,attr);
-		
+
 		if(maxLenth > 0 && ((String)value).length() > maxLenth)
 			throw new NSValidation.ValidationException(String.format(stringForPath("messages.longString"),stringForPath("properties." + attr),maxLenth),value,attr);
-		
+
 		return value;
 	}
-	
+
 	public static Integer setNumberToNewLesson(EduLesson currLesson) {
 		EOEditingContext ec = currLesson.editingContext();
 		NSMutableArray allLessons = EOUtilities.
-			objectsMatchingKeyAndValue(ec, currLesson.entityName(),
-					"course", currLesson.course()).mutableClone();
+		objectsMatchingKeyAndValue(ec, currLesson.entityName(),
+				"course", currLesson.course()).mutableClone();
 		if(allLessons != null && allLessons.count() > 0) {
 			allLessons.removeIdenticalObject(currLesson);
 			EOSortOrdering.sortArrayUsingKeyOrderArray(allLessons, EduLesson.sorter);

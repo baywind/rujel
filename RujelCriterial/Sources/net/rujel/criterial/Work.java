@@ -32,6 +32,7 @@ package net.rujel.criterial;
 import net.rujel.reusables.*;
 import net.rujel.auth.*;
 import net.rujel.base.BaseLesson;
+import net.rujel.base.MyUtility;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.*;
 
@@ -521,6 +522,14 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		taskDelegate.setHomeTaskForLesson(newTask, this);
 	}
 	
+/*	public NSTimestamp validateDate(Object aDate) throws NSValidation.ValidationException {
+		return MyUtility.validateDateInEduYear(aDate,course().eduYear(),DATE_KEY);
+	}
+	
+	public NSTimestamp validateAnnounce(Object aDate) {
+		return MyUtility.validateDateInEduYear(aDate, course().eduYear(), ANNOUNCE_KEY);
+	}*/
+	
 	public void validateForSave() throws NSValidation.ValidationException {
 		super.validateForSave();
 		if(announce() == null || date() == null) {
@@ -534,6 +543,8 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			message = String.format(message,new Integer(theme().length()));
 			throw new NSValidation.ValidationException(message);
 		}
+		MyUtility.validateDateInEduYear(date(),course().eduYear(),DATE_KEY);
+		MyUtility.validateDateInEduYear(announce(), course().eduYear(), ANNOUNCE_KEY);
 		if(announce().compare(date()) > 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 			"extStrings.RujelCriterial_Strings.messages.lateAnnounce");
