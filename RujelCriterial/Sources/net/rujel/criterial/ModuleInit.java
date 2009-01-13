@@ -61,8 +61,8 @@ public class ModuleInit {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			init();
-		} else if("init2".equals(obj)) {
-			Work.init2();
+//		} else if("init2".equals(obj)) {
+			Work.initTypes();
 		} else if("presentTabs".equals(obj)) {
 			return worksTab.mutableClone();
 		} else if ("extendLesson".equals(obj)) {

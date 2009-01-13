@@ -35,15 +35,13 @@ import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.logging.*;
+import java.util.logging.Logger;
 
 public class Application extends UTF8Application {
 	private NSMutableDictionary _strings = new NSMutableDictionary();
 	protected static Logger logger = Logger.getLogger("rujel");
 	
-	protected KeyValueCache keyValueCache;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -54,43 +52,12 @@ public class Application extends UTF8Application {
         System.out.println("Welcome to " + this.name() + "!");
 		WORequestHandler directActionRequestHandler = requestHandlerForKey("wa");
 		setDefaultRequestHandler(directActionRequestHandler);
-		
-		//String tmp = lm.getProperty("java.util.logging.FileHandler.formatter");
-		//if(!tmp.startsWith("java")) {
-		try {
-			LogManager lm = LogManager.getLogManager();
-			String propertiesPath = SettingsReader.stringForKeyPath("loggingProperties", null);
-			InputStream propsIn = null;
-			if(propertiesPath == null) {
-				propsIn = resourceManager().inputStreamForResourceNamed(
-						"logging.properties", "app", null);
-			} else {
-				propsIn = new FileInputStream(propertiesPath);
-				System.out.println("Using logging.properties from: " + propertiesPath);
-			}
-			lm.reset();
-			lm.readConfiguration(propsIn);
-		
-				//Formatter f = (Formatter)Class.forName(tmp).getConstructor((Class[])null).newInstance((Object[])null);
-				Logger tmpLog = logger;
-				while (tmpLog != null){
-					Handler[] hs = tmpLog.getHandlers();
-					for (int i = 0; i < hs.length; i++) {
-						String formatterName = hs[i].getClass().getName();
-						formatterName = lm.getProperty(formatterName + ".formatter");
-						if(formatterName != null) {
-							Class formatterClass = Class.forName(formatterName); 
-							hs[i].setFormatter((Formatter)formatterClass.newInstance());
-						}
-						
-					}
-					tmpLog = tmpLog.getParent();
-				}
-		} catch (Exception ex) {
-			System.err.println("Could not read logging properties, using system default. "+ ex);
-		}
 
-		logger.logp(Level.INFO,"Application","<init>","Rujel started " + webserverConnectURL());
+		String propertiesPath = SettingsReader.stringForKeyPath("loggingProperties", null);
+		InputStream propsIn = (propertiesPath!=null)?null:
+			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
+		LogInitialiser.initLogging(propsIn, propertiesPath, logger);
+
 		
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		DataBaseConnector.makeConnections();
@@ -99,9 +66,9 @@ public class Application extends UTF8Application {
 		SettingsReader node = SettingsReader.settingsForPath("modules",true);
 		ModulesInitialiser.initModules(node,"init");
 		net.rujel.reusables.Scheduler.sharedInstance();
-		ModulesInitialiser.initModules(node,"init2");
-		ModulesInitialiser.initModules(node,"init3");
-				
+		ModulesInitialiser.initModules(node,"schedulePeriod");
+		ModulesInitialiser.initModules(node,"scheduleTask");
+		
 		byte[] bytes = resourceManager().bytesForResourceNamed("Strings.plist",null,null);
 		NSDictionary strings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(new NSData(bytes),"UTF8");
 		_strings.setObjectForKey(strings,"Strings");
@@ -114,8 +81,10 @@ public class Application extends UTF8Application {
 		/*
 		String sesTimeout = System.getProperty("WOSessionTimeOut");
 		setSessionTimeOut(Integer.valueOf(sesTimeout));*/
+		logger.logp(WOLogLevel.INFO,"Application","<init>","Rujel started " + webserverConnectURL());
 	}
 	
+	protected KeyValueCache keyValueCache;
 	public Object valueForKeyPath(String keyPath) {
 		if(keyValueCache == null || (keyPath.indexOf('.') < 0))
 			return super.valueForKeyPath(keyPath);
@@ -131,7 +100,7 @@ public class Application extends UTF8Application {
 
     public static void main(String argv[]) {
         WOApplication.main(argv, Application.class);
-		logger.logp(Level.INFO,"Application","main","Rujel ended");
+		logger.logp(WOLogLevel.INFO,"Application","main","Rujel ended");
     }
 	/*
 	public WOSession createSessionForRequest(WORequest aRequest) {

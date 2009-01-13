@@ -1,4 +1,4 @@
-// Main.java
+// Main.java : Class file for WO Component 'Main'
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir

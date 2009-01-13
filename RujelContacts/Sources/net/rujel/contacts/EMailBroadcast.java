@@ -54,7 +54,7 @@ public class EMailBroadcast implements Runnable{
 	public static Object init(Object obj, WOContext ctx) {
 		if (obj == null) {
 			return null;
-		} else if(obj.equals("init3")) {
+		} else if(obj.equals("scheduleTask")) {
 			boolean dontBcast = Boolean.getBoolean("EMailBroadcast.disableWeekly");
 			if(dontBcast)
 				return null;

@@ -54,8 +54,8 @@ public class ModuleInit {
 					new EduPeriod.ComparisonSupport(), Period.class);
 			EOSortOrdering.ComparisonSupport.setSupportForClass(
 					new EduPeriod.ComparisonSupport(), EduPeriod.class);
-		} else if("init2".equals(obj)) {
-			return init2(ctx);
+		} else if("schedulePeriod".equals(obj)) {
+			return schedulePeriod(ctx);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
 		} else if("studentReporter".equals(obj)) {
@@ -68,7 +68,7 @@ public class ModuleInit {
 		return null;
 	}
 	
-	public static Object init2(WOContext ctx) {
+	public static Object schedulePeriod(WOContext ctx) {
 		EOEditingContext ec = new EOEditingContext();
 		Integer year = net.rujel.base.MyUtility.eduYearForDate(new NSTimestamp());
 		NSArray starterPeriods = EOUtilities.objectsWithQualifierFormat(ec,"EduPeriod","num = 1 AND eduYear = %@",new NSArray(year));

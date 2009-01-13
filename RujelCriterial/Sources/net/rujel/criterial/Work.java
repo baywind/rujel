@@ -634,7 +634,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		return workTypes;
 	}
 	
-	public static void init2() {
+	public static void initTypes() {
 		NSDictionary types = (NSDictionary)WOApplication.application().valueForKeyPath(
 				"extStrings.RujelCriterial_Strings.workTypes");
 		if(types == null || types.count() == 0)

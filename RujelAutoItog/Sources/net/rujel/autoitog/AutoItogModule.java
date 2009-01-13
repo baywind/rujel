@@ -72,8 +72,8 @@ public class AutoItogModule {
 			StudentTimeout.init();
 			CourseTimeout.init();
 			Bonus.init();
-		} else if("init3".equals(obj)) {
-			return init3(ctx);
+		} else if("scheduleTask".equals(obj)) {
+			return scheduleTask(ctx);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
 		} else if("objectSaved".equals(obj)) {
@@ -91,7 +91,7 @@ public class AutoItogModule {
 		return null;
 	}
 	
-	public static Object init3(WOContext ctx) {
+	public static Object scheduleTask(WOContext ctx) {
 		boolean disable = Boolean.getBoolean("AutoItog.disable");
 		if(disable)
 			return null;
