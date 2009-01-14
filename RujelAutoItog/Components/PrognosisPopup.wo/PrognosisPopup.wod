@@ -46,12 +46,12 @@ CanDelete: WOConditional {
 }
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 	name = "save";
 }
 
 CancelButton: WOGenericElement {
-	value = application.strings.uiElements.Cancel;
+	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
 	type = "button";
 	elementName = "input";
 	invokeAction = cancel;
@@ -59,7 +59,7 @@ CancelButton: WOGenericElement {
 }
 
 DeleteButton: WOGenericElement {
-	value = application.strings.uiElements.Delete;
+	value = application.extStrings.Reusables_Strings.uiElements.Delete;
 	invokeAction = delete;
 	onclick = session.tryLoad;
 	elementName = "input";

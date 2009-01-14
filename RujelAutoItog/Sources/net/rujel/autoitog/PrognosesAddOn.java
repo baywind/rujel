@@ -101,7 +101,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	}
 
 	protected static NSDictionary addOn = (NSDictionary)WOApplication.application().
-	valueForKeyPath("extStrings.RujelAutoItog-AutoItog.PrognosesAddOn");
+	valueForKeyPath("extStrings.RujelAutoItog_AutoItog.PrognosesAddOn");
 
 	protected EduCourse _course;
 	protected NSArray _periods;

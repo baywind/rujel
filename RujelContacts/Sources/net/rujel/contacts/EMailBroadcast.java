@@ -194,7 +194,7 @@ public class EMailBroadcast implements Runnable{
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
 		if(reporter == null)
-				reporter = (NSDictionary)app.valueForKeyPath("extStrings.Overview.defaultReporter");
+				reporter = (NSDictionary)app.valueForKeyPath("extStrings.Strings.Overview.defaultReporter");
 		ec.unlock();
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();

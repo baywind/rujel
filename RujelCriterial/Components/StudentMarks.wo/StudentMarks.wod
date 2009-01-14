@@ -1,10 +1,10 @@
 DeadLineTitle: WOString {
 	value = application.extStrings.RujelCriterial_Strings.shortDeadline;
-	valueWhenEmpty = application.strings.dataTypes.date;
+	valueWhenEmpty = application.extStrings.Reusables_Strings.dataTypes.date;
 }
 AnnounceTitle: WOString {
 	value = application.extStrings.RujelCriterial_Strings.shortAnnounce;
-	valueWhenEmpty = application.strings.dataTypes.date;
+	valueWhenEmpty = application.extStrings.Reusables_Strings.dataTypes.date;
 }
 
 ThemeTitle: WOString {
@@ -38,7 +38,7 @@ TextHeader: WOGenericContainer {
 }
 
 TextTitle: WOString {
-	value = application.strings.dataTypes.text;
+	value = application.extStrings.Reusables_Strings.dataTypes.text;
 }
 
 Repetition1: WORepetition {

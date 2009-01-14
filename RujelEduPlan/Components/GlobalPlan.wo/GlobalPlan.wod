@@ -72,11 +72,11 @@ CycleHours : WOTextField {
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 }
 
 Cancel: WOResetButton {
-	value = application.strings.uiElements.Cancel;
+	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
 }
 CanEdit : WOConditional {
   condition = editable;

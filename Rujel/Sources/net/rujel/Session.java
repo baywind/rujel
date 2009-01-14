@@ -247,8 +247,8 @@ public class Session extends WOSession implements WithUser {
 	
     public String confirmMessage() {
 		WOApplication app = WOApplication.application();
-		String formatter = (String)app.valueForKeyPath("strings.messages.areYouShure");
-		Object action = app.valueForKeyPath("strings.uiElements.Delete");
+		String formatter = (String)app.valueForKeyPath("extStrings.Strings.messages.areYouShure");
+		Object action = app.valueForKeyPath("extStrings.Reusables_Strings.uiElements.Delete");
 		String msg = "Are you shure?";
 		if(formatter != null && action != null) {
 			try {

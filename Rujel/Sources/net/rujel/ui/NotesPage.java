@@ -278,7 +278,7 @@ public class NotesPage extends WOComponent {
 		cal.setTime(lessonItem.date());
 		int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
 		int month = cal.get(GregorianCalendar.MONTH);
-		NSArray months = (NSArray)application().valueForKeyPath("strings.presets.monthShort");
+		NSArray months = (NSArray)application().valueForKeyPath("extStrings.Reusables_Strings.presets.monthShort");
 		return String.format("<small>%1$s</small><br/><b>%2$d</b>",months.objectAtIndex(month),day);
 	}
 	

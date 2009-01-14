@@ -5,7 +5,7 @@ PopupForm : WOForm {
 
 SaveButton: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 	id = "saveArchive";
 	name = "saveArchive";
 	disabled = disableSave;
@@ -13,7 +13,7 @@ SaveButton: WOSubmitButton {
 }
 
 CancelButton: WOGenericElement {
-	value = application.strings.uiElements.Cancel;
+	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
 	type = "button";
 	elementName = "input";
 	onclick = "closePopup(this.form);";
@@ -58,13 +58,13 @@ TitlePresenter : WOSwitchComponent {
 }
 
 DateTitle : WOString {
-  value = application.strings.dataTypes.Date;
+  value = application.extStrings.Reusables_Strings.dataTypes.Date;
   valueWhenEmpty = "Date";
   escapeHTML = false;
 }
 
 TimeTitle : WOString {
-  value = application.strings.dataTypes.Time;
+  value = application.extStrings.Reusables_Strings.dataTypes.Time;
   valueWhenEmpty = "Time";
   escapeHTML = false;
 }

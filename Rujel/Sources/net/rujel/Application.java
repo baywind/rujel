@@ -39,7 +39,7 @@ import java.io.InputStream;
 import java.util.logging.Logger;
 
 public class Application extends UTF8Application {
-	private NSMutableDictionary _strings = new NSMutableDictionary();
+	private StringStorage _strings = new StringStorage(application().resourceManager());
 	protected static Logger logger = Logger.getLogger("rujel");
 	
 	
@@ -69,9 +69,9 @@ public class Application extends UTF8Application {
 		ModulesInitialiser.initModules(node,"schedulePeriod");
 		ModulesInitialiser.initModules(node,"scheduleTask");
 		
-		byte[] bytes = resourceManager().bytesForResourceNamed("Strings.plist",null,null);
-		NSDictionary strings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(new NSData(bytes),"UTF8");
-		_strings.setObjectForKey(strings,"Strings");
+//		byte[] bytes = resourceManager().bytesForResourceNamed("Strings.plist",null,null);
+//		NSDictionary strings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(new NSData(bytes),"UTF8");
+//		_strings.setObjectForKey(strings,"Strings");
 		
 		int cacheSize = SettingsReader.intForKeyPath("ui.keyValueCacheSize", 0);
 		if(cacheSize > 0) {
@@ -175,7 +175,11 @@ public class Application extends UTF8Application {
 		//return super.handleException(anException,aContext);
 	}
 	
-	public NSDictionary strings() {
+	public NSKeyValueCoding extStrings() {
+		return _strings;
+	}
+	
+/*	public NSDictionary strings() {
 		return (NSDictionary)_strings.objectForKey("Strings");
 	}
 	
@@ -207,16 +211,8 @@ public class Application extends UTF8Application {
 			public void takeValueForKey(Object value, String key) {
 				;
 			}
-/*
-			public Object valueForKeyPath(String keyPath) {
-				return _strings.valueForKeyPath(keyPath);
-			}
-			
-			public void takeValueForKeyPath(Object value, String keyPath) {
-				;
-			}*/
 		};
-	}
+	}*/
 	
 	public void refuseNewSessions(boolean aVal) {
 		super.refuseNewSessions(aVal);

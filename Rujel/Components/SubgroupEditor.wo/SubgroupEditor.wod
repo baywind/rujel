@@ -40,7 +40,7 @@ Form1: WOForm {
 }
 
 StudentTitle: WOString {
-	value = application.strings.properties.Student.this;
+	value = application.extStrings.RujelInterfaces_Names.Student.this;
 	valueWhenEmpty = "Student";
 }
 
@@ -80,11 +80,11 @@ CheckBox1: WOCheckBox {
 
 SaveButton: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 }
 
 ResetButton: WOResetButton {
-	value = application.strings.uiElements.Reset;
+	value = application.extStrings.Reusables_Strings.uiElements.Reset;
 	onclick = "setAll('default');";
 }
 

@@ -33,7 +33,7 @@ Comment : WOString {
 }
 
 DateTitle : WOString {
-  value = application.strings.dataTypes.Date;
+  value = application.extStrings.Reusables_Strings.dataTypes.Date;
 }
 
 TeacherTitle : WOString {
@@ -41,11 +41,11 @@ TeacherTitle : WOString {
 }
 
 SubjectTitle : WOString {
-  value = application.strings.properties.EduCycle.subject;
+  value = application.extStrings.RujelInterfaces_Names.EduCycle.subject;
 }
 
 ClassTitle : WOString {
-  value = application.strings.properties.EduGroup.this;
+  value = application.extStrings.RujelInterfaces_Names.EduGroup.this;
 }
 
 ReasonTitle : WOString {
@@ -57,5 +57,5 @@ SubstitutorTitle : WOString {
 }
 
 CommentTitle : WOString {
-  value = application.strings.dataTypes.comment;
+  value = application.extStrings.Reusables_Strings.dataTypes.comment;
 }

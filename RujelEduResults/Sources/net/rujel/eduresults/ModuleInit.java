@@ -42,9 +42,9 @@ import com.webobjects.appserver.WOContext;
 import java.util.Enumeration;
 
 public class ModuleInit {
-	protected static final NSDictionary tab = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.itogTab");
-	protected static final NSDictionary addOn = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.itogAddOn");
-	protected static final NSDictionary studentReporter = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.studentReporter");
+	protected static final NSDictionary tab = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.itogTab");
+	protected static final NSDictionary addOn = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.itogAddOn");
+	protected static final NSDictionary studentReporter = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.studentReporter");
 	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {

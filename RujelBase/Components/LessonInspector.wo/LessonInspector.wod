@@ -1,14 +1,14 @@
 AddButton: WOSubmitButton {
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 	action = save;
 }
 
 DateTitle: WOString {
-	value = application.strings.dataTypes.date;
+	value = application.extStrings.Reusables_Strings.dataTypes.date;
 }
 
 ThemeTitle: WOString {
-	value = application.strings.properties.EduLesson.theme;
+	value = application.extStrings.RujelInterfaces_Names.EduLesson.theme;
 }
 
 DateField : WOTextField {
@@ -29,7 +29,7 @@ Form : WOForm {
 UndoButton : WOGenericElement {
   elementName = "input";
   type = "button";
-  value = application.strings.uiElements.Cancel;
+  value = application.extStrings.Reusables_Strings.uiElements.Cancel;
   invokeAction = back;
   onclick = session.tryLoad;
 }

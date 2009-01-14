@@ -138,7 +138,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	public void selectStudent() {
 		if(!accessInterface().flagForKey("oneLesson")) {
-			session().takeValueForKey(application().valueForKeyPath("strings.messages.noAccess"),"message");
+			session().takeValueForKey(application().valueForKeyPath("extStrings.Strings.messages.noAccess"),"message");
 			return;
 		}
 		if(valueForKeyPath("currLesson.editingContext") != null) {
@@ -519,7 +519,7 @@ public class LessonNoteEditor extends WOComponent {
 				//refresh();
 				//lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
 				/*		} else {
-						session().takeValueForKey(application().valueForKeyPath("strings.messages.noAccess"),"message");
+						session().takeValueForKey(application().valueForKeyPath("extStrings.Strings.messages.noAccess"),"message");
 					logger.logp(WOLogLevel.OWNED_EDITING,"LessonNoteEditor","delete","Denied to delete lesson",new Object[] {session(),currLesson()});
 					} */
 			}
@@ -528,7 +528,7 @@ public class LessonNoteEditor extends WOComponent {
 			session().takeValueForKey(vex.toString(),"message");
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,"LessonNoteEditor","delete","Deletion failed: ",new Object[] {session(),currLesson(),ex});
-			String message = (String)application().valueForKeyPath("strings.messages.error") + " : " + application().valueForKeyPath("strings.messages.cantDelete") + " : " + ex;
+			String message = (String)application().valueForKeyPath("extStrings.Strings.messages.error") + " : " + application().valueForKeyPath("extStrings.Strings.messages.cantDelete") + " : " + ex;
 			session().takeValueForKey(message,"message");
 		} finally {
 			ec.unlock();
@@ -569,7 +569,7 @@ public class LessonNoteEditor extends WOComponent {
 			//selector = null;
 			/*	} else {
 					logger.logp(WOLogLevel.OWNED_EDITING,"LessonNoteEditor","delete","Denied to create lesson",session());
-				session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
+				session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
 				} */
 			//		lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
 			//updateLessonList();
@@ -859,7 +859,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	public void moveLeft() {
 		if(!accessInterface().flagForKey("rightSide")) {
-			session().takeValueForKey(application().valueForKeyPath("strings.messages.noAccess"),"message");
+			session().takeValueForKey(application().valueForKeyPath("extStrings.Strings.messages.noAccess"),"message");
 			return;
 		}
 		student = null;
@@ -883,7 +883,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	public void moveRight() {
 		if(!accessInterface().flagForKey("leftSide")) {
-			session().takeValueForKey(application().valueForKeyPath("strings.messages.noAccess"),"message");
+			session().takeValueForKey(application().valueForKeyPath("extStrings.Strings.messages.noAccess"),"message");
 			return;
 		}
 		student = null;

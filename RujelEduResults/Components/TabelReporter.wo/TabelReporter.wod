@@ -4,7 +4,7 @@ CycleGroup: WORepetition {
 }
 
 SubjectTitle: WOString {
-	value = application.strings.properties.EduCycle.subject;
+	value = application.extStrings.RujelInterfaces_Names.EduCycle.subject;
 	valueWhenEmpty = "Subject";
 	escapeHTML = false;
 }

@@ -1,5 +1,5 @@
 AddButton: WOSubmitButton {
-	value = application.strings.uiElements.Add;
+	value = application.extStrings.Reusables_Strings.uiElements.Add;
 	onclick = "changed=false;";
 	disabled = access._create;
 	action = ^addLesson;
@@ -73,17 +73,17 @@ CurrLessonThemeField: WOText {
 
 DeadLineTitle: WOString {
 	value = application.extStrings.RujelCriterial_Strings.shortDeadline;
-	valueWhenEmpty = application.strings.dataTypes.date;
+	valueWhenEmpty = application.extStrings.Reusables_Strings.dataTypes.date;
 }
 AnnounceTitle: WOString {
 	value = application.extStrings.RujelCriterial_Strings.shortAnnounce;
-	valueWhenEmpty = application.strings.dataTypes.date;
+	valueWhenEmpty = application.extStrings.Reusables_Strings.dataTypes.date;
 }
 
 
 DeleteButton: WOSubmitButton {
 	action = ^delete;
-	value = application.strings.uiElements.Delete;
+	value = application.extStrings.Reusables_Strings.uiElements.Delete;
 	onclick = session.confirmMessage;
 }
 DispalayPopup: WOString {
@@ -193,7 +193,7 @@ Regular: WOConditional {
 
 SaveButton: WOSubmitButton {
 	action = ^save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 }
 
 SplitTab: WOImageButton {

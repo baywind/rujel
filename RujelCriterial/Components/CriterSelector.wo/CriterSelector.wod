@@ -41,6 +41,6 @@ TextContainer: OnClickContainer {
 }
 
 TextTitle: WOString {
-	value = application.strings.dataTypes.text;
+	value = application.extStrings.Reusables_Strings.dataTypes.text;
 	valueWhenEmpty = "text";
 }

@@ -298,7 +298,7 @@ public class AutoItogModule {
 		
 		results = ec.objectsWithFetchSpecification(fs);
 		NSMutableDictionary result =  new NSMutableDictionary((NSArray)results.valueForKey("mark"),(NSArray)results.valueForKey("eduCourse"));
-		String title = (String)WOApplication.application().valueForKeyPath("extStrings.RujelAutoItog-AutoItog.prognosis");
+		String title = (String)WOApplication.application().valueForKeyPath("extStrings.RujelAutoItog_AutoItog.prognosis");
 		//title.append(' ').append('(').append(')');
 		result.setObjectForKey(title,"title");
 		result.setObjectForKey("30","sort");

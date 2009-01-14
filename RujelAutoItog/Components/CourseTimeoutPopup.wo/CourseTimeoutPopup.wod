@@ -24,7 +24,7 @@ CycleCheckBox: WOCheckBox {
 }
 
 DeleteButton: WOGenericElement {
-	value = application.strings.uiElements.Delete;
+	value = application.extStrings.Reusables_Strings.uiElements.Delete;
 	invokeAction = delete;
 	onclick = session.tryLoad;
 	elementName = "input";
@@ -94,13 +94,13 @@ ReasonTitle: WOString {
 }
 
 ResetButton1: WOResetButton {
-	value = application.strings.uiElements.Cancel;
+	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
 	onclick = "closePopup();";
 }
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 }
 
 SetTimeoutFor: WOString {

@@ -110,7 +110,7 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     	if(teacher == null)
     		return null;
     	StringBuffer result = new StringBuffer();
-    	result.append(application().valueForKeyPath("strings.properties.EduLesson.substitute"));
+    	result.append(application().valueForKeyPath("extStrings.RujelInterfaces_Names.EduLesson.substitute"));
     	result.append(": ");
     	result.append(Person.Utility.fullName(teacher.person(), false, 2, 1, 1));
     	return result.toString();

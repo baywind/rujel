@@ -34,6 +34,7 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOSession;
 
 import java.text.Format;
 import java.util.Date;
@@ -43,7 +44,8 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
 
 public class MyUtility {
-	private static final int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+	private static final int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",
+			GregorianCalendar.JULY);
 	private static final int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
 
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
@@ -52,7 +54,7 @@ public class MyUtility {
 		return new NSTimestampFormatter(SettingsReader.stringForKeyPath("ui.dateFormat","%Y-%m-%d"));
 	}
 
-	public static Integer eduYearForSession(com.webobjects.appserver.WOSession session,String dateKey) {
+	public static Integer eduYearForSession(WOSession session,String dateKey) {
 		NSTimestamp today = null;
 		if(dateKey != null)
 			today = (NSTimestamp)session.valueForKey(dateKey);
@@ -134,8 +136,7 @@ public class MyUtility {
 	}
 
 	public static String stringForPath(String path) {
-		NSDictionary strings = (NSDictionary)WOApplication.application().valueForKey("strings");
-		return (String)strings.valueForKeyPath(path);
+		return (String)WOApplication.application().valueForKeyPath("extStrings." + path);
 	}
 
 	public static Object validateAttributeValue(String attr,Object value,
@@ -145,15 +146,21 @@ public class MyUtility {
 		//String attributeName = attr.substring(attr.lastIndexOf('.') + 1);
 		if(value == null) {
 			if(notNull)
-				throw new NSValidation.ValidationException(String.format(stringForPath("messages.nullProhibit"),stringForPath("properties." + attr)),value,attr);
+				throw new NSValidation.ValidationException(String.format(
+						stringForPath("Strings.messages.nullProhibit"),
+						stringForPath("RujelInterfaces_Names.properties." + attr)),value,attr);
 			else
 				return value;
 		}
 		if(valueType != null && !(valueType.isInstance(value)))
-			throw new NSValidation.ValidationException(String.format(stringForPath("messages.invalidValue"),stringForPath("properties." + attr)),value,attr);
+			throw new NSValidation.ValidationException(String.format(
+					stringForPath("Strings.messages.invalidValue"),
+					stringForPath("RujelInterfaces_Names.properties." + attr)),value,attr);
 
 		if(maxLenth > 0 && ((String)value).length() > maxLenth)
-			throw new NSValidation.ValidationException(String.format(stringForPath("messages.longString"),stringForPath("properties." + attr),maxLenth),value,attr);
+			throw new NSValidation.ValidationException(String.format(
+					stringForPath("Strings.messages.longString"),
+					stringForPath("RujelInterfaces_Names.properties." + attr),maxLenth),value,attr);
 
 		return value;
 	}

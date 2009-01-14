@@ -141,7 +141,7 @@ public class EMailUtiliser implements Contact.Utiliser {
 			javax.mail.Address mailAdress = new javax.mail.internet.InternetAddress((String)aValue,true);
 			return mailAdress.toString();
 		} catch (javax.mail.internet.AddressException aex) {
-			String message = MyUtility.stringForPath("messages.illegalFormat");
+			String message = MyUtility.stringForPath("Strings.messages.illegalFormat");
 			if(message == null) message = "Illegal format of";
 			message = message + " e-mail : '" + aValue + "' - " + aex.getMessage();
 			logger.log(WOLogLevel.FINER,"Failed to format address " + aValue,aex);

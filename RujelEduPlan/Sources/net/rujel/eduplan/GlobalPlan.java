@@ -299,7 +299,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),ex};
 			logger.log(WOLogLevel.WARNING,"Failed to save changes",args);
 			String message = (String)application().
-					valueForKeyPath("strings.messages.error") + "<br/>" + ex.toString();
+					valueForKeyPath("extStrings.Strings.messages.error") + "<br/>" + ex.toString();
 			session().takeValueForKey(message, "message");
 		}
 	}

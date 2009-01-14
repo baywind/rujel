@@ -81,11 +81,11 @@ SubjectNumField : WOTextField {
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
 	onclick = "try{return enumAll();}catch(e){alert(e);}";
 }
 ResetButton1: WOResetButton {
-	value = application.strings.uiElements.Cancel;
+	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
 	onclick = "closePopup();";
 }
 

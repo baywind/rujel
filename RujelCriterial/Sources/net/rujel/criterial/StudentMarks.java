@@ -397,7 +397,7 @@ public class StudentMarks extends WOComponent {
 		NSArray criteria = CriteriaSet.criteriaForCycle(course.cycle());
 		/*WOApplication app  = WOApplication.application();
 		String title = workIntegral;
-		String comment = app.valueForKeyPath("extStrings.RujelCriterial-Strings.integral");
+		String comment = app.valueForKeyPath("extStrings.RujelCriterial_Strings.integral");
 		
 		NSDictionary specCrit = new NSDictionary(new Object[] {title,comment},keys.objects());*/
 		NSMutableArray critDicts = new NSMutableArray();
@@ -412,8 +412,8 @@ public class StudentMarks extends WOComponent {
 			}
 		}
 		/*
-		title = app.valueForKeyPath("extStrings.RujelCriterial-Strings.text");
-		comment = app.valueForKeyPath("extStrings.RujelCriterial-Strings.comments");
+		title = app.valueForKeyPath("extStrings.RujelCriterial_Strings.text");
+		comment = app.valueForKeyPath("extStrings.RujelCriterial_Strings.comments");
 		specCrit = new NSDictionary(new Object[] {title,comment},keys.objects());
 		critDicts.addObject(specCrit);*/
 		result.setObjectForKey(critDicts,"criteria");

@@ -114,7 +114,7 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,Per
 		
 		int num = numberValue.intValue();
 		if (num <= 0 || num > countInYear()) {
-			String message = String.format((String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.invalidPeriodNum"),periodType().inYearCount());
+			String message = String.format((String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.invalidPeriodNum"),periodType().inYearCount());
 			throw new NSValidation.ValidationException(message, this, "num");
 		}
 		return numberValue;
@@ -123,7 +123,7 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,Per
 	public void validateForSave() throws NSValidation.ValidationException {
 		super.validateForSave();
 		if(begin().compare(end()) >= 0) {
-			String message = (String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.beginEndPeriod");
+			String message = (String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.beginEndPeriod");
 			throw new NSValidation.ValidationException(message);
 		}
 	}

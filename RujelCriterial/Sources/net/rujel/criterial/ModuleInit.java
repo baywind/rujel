@@ -47,9 +47,9 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 
 public class ModuleInit {
-	protected static NSArray tabs = (NSArray)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial-Strings.tabs");
-	protected static NSDictionary worksTab = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial-Strings.worksTab");
-	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial-Strings.reportSettings");
+	protected static NSArray tabs = (NSArray)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial_Strings.tabs");
+	protected static NSDictionary worksTab = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial_Strings.worksTab");
+	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial_Strings.reportSettings");
 
 	public static Object init(Object obj) {
 		if("presentTabs".equals(obj)) {

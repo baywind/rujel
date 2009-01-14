@@ -106,7 +106,7 @@ public class ChooseRegime extends WOComponent {
 	}
 	
     public String title() {
-        String result = (String)application().valueForKeyPath("extStrings.Components.ChooseRegime.title");
+        String result = (String)application().valueForKeyPath("extStrings.Strings.ChooseRegime.title");
         	if(result == null)
         		result = "Choose Regime";
         return result;

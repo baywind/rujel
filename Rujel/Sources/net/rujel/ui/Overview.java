@@ -331,7 +331,7 @@ public class Overview extends WOComponent {
 			if(reporter != null && reporters != null && reporters.count() > 0) {
 				title = reporter.valueForKey("title");
 			}
-			reporter = (NSDictionary)application().valueForKeyPath("extStrings.Overview.defaultReporter");
+			reporter = (NSDictionary)application().valueForKeyPath("extStrings.Strings.Overview.defaultReporter");
 			reporters.insertObjectAtIndex(reporter,0);				
 			if(title != null) {
 				if(!title.equals(reporter.valueForKey("title"))) {

@@ -126,7 +126,7 @@ public class PrimitiveEduCycle extends _PrimitiveEduCycle implements EduCycle,Us
 		try {
 			super.validateForDelete();
 		} catch (NSValidation.ValidationException vex) {
-			String message = MyUtility.stringForPath("messages.cantDelete");
+			String message = MyUtility.stringForPath("Strings.messages.cantDelete");
 			NSValidation.ValidationException myex = new NSValidation.ValidationException(message);
 			NSArray aggregate = new NSArray(new Object[] {myex , vex});
 			throw NSValidation.ValidationException.aggregateExceptionWithExceptions(aggregate);

@@ -4,15 +4,15 @@ LessonsTitle : WOString {
 }
 
 DateTitle: WOString {
-	value = application.strings.dataTypes.date;
+	value = application.extStrings.Reusables_Strings.dataTypes.date;
 }
 
 ThemeTitle: WOString {
-	value = application.strings.properties.EduLesson.theme;
+	value = application.extStrings.RujelInterfaces_Names.EduLesson.theme;
 }
 
 NoteTitle : WOString {
-  value = application.strings.properties.EduLesson.note;
+  value = application.extStrings.RujelInterfaces_Names.EduLesson.note;
 }
 
 LessonsRepetition : WORepetition {

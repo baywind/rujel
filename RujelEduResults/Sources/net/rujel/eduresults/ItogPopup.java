@@ -73,7 +73,7 @@ public class ItogPopup extends WOComponent {
 		return ItogMark.flagKeys;
 	}
 
-	public static final NSDictionary flagNames = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults-EduResults.properties.ItogMark.flags");
+	public static final NSDictionary flagNames = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.properties.ItogMark.flags");
 	public Object item;
 
 	public boolean flagStatus () {
@@ -100,7 +100,7 @@ public class ItogPopup extends WOComponent {
 			return delete();
 
 		if(!access().flagForKey("edit")) {
-			session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
+			session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
 			return returnPage;
 		}
 		if(itog == null || !mark.equals(itog.mark())) {
@@ -153,7 +153,7 @@ public class ItogPopup extends WOComponent {
 		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
 		if(!access().flagForKey("delete")) {
-			session().takeValueForKey(valueForKeyPath("application.strings.messages.noAccess"),"message");
+			session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
 			return returnPage;
 		}
 		EOEditingContext ec = student.editingContext();

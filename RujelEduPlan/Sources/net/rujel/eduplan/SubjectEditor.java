@@ -93,7 +93,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     			Object[] args = new Object[] {session(),subject,ex};
     			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to save changes",args);
     			String message = (String)application().
-    			valueForKeyPath("strings.messages.error") + "<br/>" + ex.toString();
+    			valueForKeyPath("extStrings.Strings.messages.error") + "<br/>" + ex.toString();
     			session().takeValueForKey(message, "message");
 			}
     	}

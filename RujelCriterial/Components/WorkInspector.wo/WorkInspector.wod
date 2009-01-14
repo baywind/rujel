@@ -163,11 +163,11 @@ WeightField : WOTextField {
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.uiElements.Save;
+	value = application.extStrings.Reusables_Strings.uiElements.Save;
     disabled = session.readAccess._edit.work;
 }
 
 ResetButton1: WOResetButton {
-	value = application.strings.uiElements.Cancel;
+	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
 	onclick = "closePopup();";
 }

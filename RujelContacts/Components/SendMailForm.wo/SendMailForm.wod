@@ -81,7 +81,7 @@ LName : WOString {
 }
 
 PersonTitle : WOString {
-  value = application.strings.properties.Person.this;
+  value = application.extStrings.RujelInterfaces_Names.Person.this;
   valueWhenEmpty = "Person";
 }
 
@@ -113,7 +113,7 @@ Attachment : WOString {
 }
 
 SinceTitle : WOString {
-	value = application.strings.dataTypes.since;
+	value = application.extStrings.Reusables_Strings.dataTypes.since;
 	valueWhenEmpty = "since";
 }
 
@@ -126,7 +126,7 @@ SinceField : WOTextField {
 }
 
 ToTitile : WOString {
-	value = application.strings.dataTypes.to;
+	value = application.extStrings.Reusables_Strings.dataTypes.to;
 	valueWhenEmpty = "to";
 }
 
@@ -142,7 +142,7 @@ PeriodsPopUp: WOPopUpButton {
 	displayString = perItem.title;
 	item = perItem;
 	list = periods;
-	noSelectionString = application.strings.dataTypes.period;
+	noSelectionString = application.extStrings.Reusables_Strings.dataTypes.period;
 	selection = period;
 	name = "periods";
 }
