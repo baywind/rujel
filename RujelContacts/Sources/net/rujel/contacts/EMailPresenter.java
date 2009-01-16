@@ -90,6 +90,8 @@ public class EMailPresenter extends WOComponent {
 				logger.logp(WOLogLevel.FINER,"SubgroupEditor","save","Failed to save email address",new Object[] {session(),item,ex});
 				session().takeValueForKey(ex.toString(),"message");
 			}
+		} else {
+			setValueForBinding(null,"selection");
 		}
 	}
 	
