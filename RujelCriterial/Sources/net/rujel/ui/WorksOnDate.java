@@ -134,9 +134,9 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
     public String inspectorTitle() {
     	Object currLesson = valueForBinding("currLesson");
     	if(currLesson instanceof Work)
-    		return (String)application().valueForKeyPath("extStrings.RujelCriterial_Strings.inspector");
+    		return (String)application().valueForKeyPath("strings.RujelCriterial_Strings.inspector");
     	else
-    		return (String)application().valueForKeyPath("extStrings.Reusables_Strings.uiElements.Add");
+    		return (String)application().valueForKeyPath("strings.Reusables_Strings.uiElements.Add");
     }
     
 	public boolean isStateless() {

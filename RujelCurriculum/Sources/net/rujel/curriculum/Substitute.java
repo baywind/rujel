@@ -112,7 +112,7 @@ public class Substitute extends _Substitute {
 	public void validateForSave() throws ValidationException { 
 		if(teacher() == null || teacher() == lesson().course().teacher()) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-					"extStrings.RujelCurriculum_Curriculum.wrongTeacherMessage");
+					"strings.RujelCurriculum_Curriculum.wrongTeacherMessage");
 			throw new ValidationException(message,teacher(),"teacher");
 		}
 		super.validateForSave();
@@ -144,8 +144,8 @@ public class Substitute extends _Substitute {
 	
 	public String title() {
 		if(sFlags().flagForKey("join"))
-			return (String)WOApplication.application().valueForKeyPath("extStrings.RujelCurriculum_Curriculum.Join");
-		return (String)WOApplication.application().valueForKeyPath("extStrings.RujelCurriculum_Curriculum.Substitute");
+			return (String)WOApplication.application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Join");
+		return (String)WOApplication.application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute");
 	}
 
 	public static int checkSubstitutes(NSArray subs) {

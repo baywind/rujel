@@ -292,7 +292,7 @@ getgroup:	while (pen.hasMoreElements()) {
 		}
 		if (cycle == null || "none".equals(cycle))
 			return (String)application().valueForKeyPath(
-					"extStrings.RujelEduResults_EduResults.allCycles");
+					"strings.RujelEduResults_EduResults.allCycles");
 		return cycle.toString();
 	}
 	

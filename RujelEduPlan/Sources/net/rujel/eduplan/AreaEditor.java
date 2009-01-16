@@ -83,7 +83,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
 //    						"Deleting SubjetArea: " + oldName,session());    	    				
     			} else {
     				session().takeValueForKey(
-    						valueForKeyPath("extStrings.RujelEduPlan_EduPlan.cantDeleteArea"),
+    						valueForKeyPath("strings.RujelEduPlan_EduPlan.cantDeleteArea"),
     				"message");
     				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,
     						"Denied attempt to delete Area containing Subjects",args);
@@ -128,7 +128,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     			Object[] args = new Object[] {session(),currArea,ex};
     			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to save changes",args);
     			String message = (String)application().
-    			valueForKeyPath("extStrings.Strings.messages.error") + "<br/>" + ex.toString();
+    			valueForKeyPath("strings.Strings.messages.error") + "<br/>" + ex.toString();
     			session().takeValueForKey(message, "message");
 			}
     	}

@@ -199,7 +199,7 @@ public class Mailer {
 		if(_defaultMessage == null) {
 			_defaultMessage = "";
 			/*(String)WOApplication.application().valueForKeyPath(
-			"extStrings.RujelContacts_Contacts.defaultMessage");*/
+			"strings.RujelContacts_Contacts.defaultMessage");*/
 			String filePath = settings.get("messageFilePath", null);
 			if(filePath != null) {
 				try {

@@ -87,7 +87,7 @@ public class EMailBroadcast implements Runnable{
 		NSMutableArray result = new NSMutableArray();
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.SendMailForm");
 		if(access.getFlag(0)) {
-			result.addObject(WOApplication.application().valueForKeyPath("extStrings.RujelContacts_Contacts.sendmailAction"));
+			result.addObject(WOApplication.application().valueForKeyPath("strings.RujelContacts_Contacts.sendmailAction"));
 		}
 		if(result.count() > 0)
 			return result;
@@ -194,7 +194,7 @@ public class EMailBroadcast implements Runnable{
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
 		if(reporter == null)
-				reporter = (NSDictionary)app.valueForKeyPath("extStrings.Strings.Overview.defaultReporter");
+				reporter = (NSDictionary)app.valueForKeyPath("strings.Strings.Overview.defaultReporter");
 		ec.unlock();
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
@@ -441,7 +441,7 @@ st:			while (stEnu.hasMoreElements()) {
 			textBuf = new StringBuffer(text);
 			textBuf.append(' ');
 			text = (String)WOApplication.application().valueForKeyPath(
-			"extStrings.RujelContacts_Contacts.isInAttachment");
+			"strings.RujelContacts_Contacts.isInAttachment");
 			textBuf.append(text);
 			textBuf.append("\n    ---------------\n\n");
 			//subject.append(" - ").append(title);

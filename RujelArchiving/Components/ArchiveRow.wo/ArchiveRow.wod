@@ -40,25 +40,25 @@ IsTitle : WOConditional {
 }
 
 DateTitle : WOString {
-  value = application.extStrings.Reusables_Strings.dataTypes.Date;
+  value = application.strings.Reusables_Strings.dataTypes.Date;
   valueWhenEmpty = "Date";
   escapeHTML = false;
 }
 
 TimeTitle : WOString {
-  value = application.extStrings.Reusables_Strings.dataTypes.Time;
+  value = application.strings.Reusables_Strings.dataTypes.Time;
   valueWhenEmpty = "Time";
   escapeHTML = false;
 }
 
 AuthorTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.author;
+  value = application.strings.RujelArchiving_Archive.author;
   valueWhenEmpty = "Author";
   escapeHTML = false;
 }
 
 ReasonTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.reason;
+  value = application.strings.RujelArchiving_Archive.reason;
   valueWhenEmpty = "Reason";
   escapeHTML = false;
 }

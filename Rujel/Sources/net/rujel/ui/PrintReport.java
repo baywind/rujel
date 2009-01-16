@@ -79,10 +79,10 @@ public class PrintReport extends WOComponent {
 		} else {
 			value = (String)reporter.valueForKey("title");
 			if(value == null)
-				result.append(application().valueForKeyPath("extStrings.Strings.PrintReport.title"));
+				result.append(application().valueForKeyPath("strings.Strings.PrintReport.title"));
 			else {
 				result.append(value).append(' ');
-				result.append(application().valueForKeyPath("extStrings.Strings.PrintReport.marks"));
+				result.append(application().valueForKeyPath("strings.Strings.PrintReport.marks"));
 			}
 		}
 		if(period != null && period instanceof NSKeyValueCoding) {

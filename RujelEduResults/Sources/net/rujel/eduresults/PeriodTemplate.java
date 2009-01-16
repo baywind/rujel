@@ -151,7 +151,7 @@ public class PeriodTemplate extends _PeriodTemplate
 		int num = numberValue.intValue();
 		Number count = periodType().inYearCount();
 		if (num <= 0 || num > count.intValue()) {
-			String message = String.format((String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.invalidPeriodNum"),count);
+			String message = String.format((String)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.invalidPeriodNum"),count);
 			throw new NSValidation.ValidationException(message, this, "num");
 		}
 		return numberValue;
@@ -179,19 +179,19 @@ public class PeriodTemplate extends _PeriodTemplate
 		int dif = endMonth().intValue() - beginMonth().intValue();
 		if(dif == 0) dif = endDay().intValue() - beginDay().intValue();
 		if(dif <= 0) {
-			String message = (String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.beginEndPeriod");
+			String message = (String)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.beginEndPeriod");
 			throw new NSValidation.ValidationException(message);
 		}
 		int day = beginDay().intValue();
 		GregorianCalendar cal = new GregorianCalendar(2004,beginMonthInYear,1);
 		if(day > cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH)) {
-			String message = (String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.invalidDateInMonth");
+			String message = (String)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.invalidDateInMonth");
 			throw new NSValidation.ValidationException(message);
 		}
 		day = endDay().intValue();
 		cal.set(GregorianCalendar.MONTH,endMonthInYear);
 		if(day > cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH)) {
-			String message = (String)WOApplication.application().valueForKeyPath("extStrings.RujelEduResults_EduResults.invalidDateInMonth");
+			String message = (String)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.invalidDateInMonth");
 			throw new NSValidation.ValidationException(message);
 		}
 	}

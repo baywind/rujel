@@ -58,7 +58,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     public WOActionResults save() {
 		returnPage.ensureAwakeInContext(context());
     	if(newDate == null || newTheme == null) {
-    		appendMessage("extStrings.RujelBase_Base.dateAndThemeRequired");
+    		appendMessage("strings.RujelBase_Base.dateAndThemeRequired");
     		return returnPage;
     	}
     	Date date = (Date)MyUtility.dateFormat().parseObject(
@@ -79,7 +79,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     			lesson.editingContext().revert();
     			returnPage.takeValueForKey(null, "currPerPersonLink");
     			returnPage.valueForKey("refresh");
-    			appendMessage("extStrings.RujelBase_Base.notInTab");
+    			appendMessage("strings.RujelBase_Base.notInTab");
     			return returnPage;
     		}
     	}

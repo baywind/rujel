@@ -73,10 +73,10 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     	if(sub == null || sub.eduCourse() == eduCourse())
     		return null;
 		StringBuffer buf = new StringBuffer((String)
-				application().valueForKeyPath("extStrings.RujelCurriculum_Curriculum.Instead"));
+				application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Instead"));
 		buf.append(':').append(' ');
 		if(sub.eduCourse() == null)
-			buf.append(application().valueForKeyPath("extStrings.RujelCurriculum_Curriculum.noSubject"));
+			buf.append(application().valueForKeyPath("strings.RujelCurriculum_Curriculum.noSubject"));
 		else
 			buf.append(sub.eduCourse().cycle().subject());
 		return buf.toString();
@@ -120,7 +120,7 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 /*
 	public String subsTitle() {
 		if(Various.boolForObject(valueForKeyPath("substitute.sFlags.join")))
-			return (String)application().valueForKeyPath("extStrings.RujelCurriculum_Curriculum.Join");
-		return (String)application().valueForKeyPath("extStrings.RujelCurriculum_Curriculum.Substitute");
+			return (String)application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Join");
+		return (String)application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute");
 	}*/
 }

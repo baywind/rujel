@@ -150,9 +150,9 @@ public class Bonus extends _Bonus {
 		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
 		result.takeValueForKey(cycle(), "cycle");
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.markHasBonus"));
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.markHasBonus"));
 		buf.append('.').append(' ').append((String)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.properties.Timeout.reason"));
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.properties.Timeout.reason"));
 		buf.append(": <em>").append(reason()).append("</em>");
 		result.takeValueForKey(buf.toString(), "text");
 		return result;

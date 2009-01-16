@@ -128,7 +128,7 @@ public class PrognosPresenter extends AddOnPresenter {
 	public WOActionResults editPrognosis() {
 		Prognosis prognosis = currAddOn().prognosis();
 		if(prognosis == null && !access().flagForKey("create")) {
-			String message = (String)valueForKeyPath("application.extStrings.Strings.messages.noAccess");
+			String message = (String)valueForKeyPath("application.strings.Strings.messages.noAccess");
 			return messagePopup(message);
 		}
 		WOComponent popup = pageWithName("PrognosisPopup");
@@ -143,7 +143,7 @@ public class PrognosPresenter extends AddOnPresenter {
 
 	public WOActionResults editTimeout() {
 		if(currAddOn().timeout() == null && !access().flagForKey("create")) {
-			String message = (String)valueForKeyPath("application.extStrings.Strings.messages.noAccess");
+			String message = (String)valueForKeyPath("application.strings.Strings.messages.noAccess");
 			return messagePopup(message);
 		}
 		WOComponent popup = pageWithName("TimeoutPopup");

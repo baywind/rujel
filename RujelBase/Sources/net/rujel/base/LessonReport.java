@@ -55,7 +55,7 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = student.editingContext();
 		
 		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelBase_Base.lessonReport")).mutableClone();
+				.valueForKeyPath("strings.RujelBase_Base.lessonReport")).mutableClone();
 		int count = 0;
 		NSTimestamp since = (NSTimestamp)settings.valueForKey("since");
 		NSTimestamp to = (NSTimestamp)settings.valueForKey("to");		

@@ -98,7 +98,7 @@ public class EduPlanEditor extends WOComponent {
     }
 	
     public String title() {
-        return (String)valueForKeyPath("application.extStrings.RujelInterfaces_Names.EduCycle.this");
+        return (String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduCycle.this");
     }	
 	
 	public void selectGrade() {
@@ -138,7 +138,7 @@ public class EduPlanEditor extends WOComponent {
 		if(access().flagForKey("edit"))
 			currCycle = cycleItem;
 		else
-			session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 	}
 	
 	public String subject;
@@ -158,14 +158,14 @@ public class EduPlanEditor extends WOComponent {
 			boolean newCycle = ec.insertedObjects().containsObject(currCycle);
 			if(newCycle) {
 				if(!access().flagForKey("create")) {
-					session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 					logger.logp(WOLogLevel.OWNED_EDITING,"EduPlanEditor","save","Denied to create new cycle",session());
 					return;
 				}
 			} else {
 				Boolean allowEdit = (Boolean)currCycle.valueForKeyPath("access.edit");
 				if(!((allowEdit == null && access().flagForKey("edit")) || (allowEdit != null && allowEdit.booleanValue()))) {
-					session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 					logger.logp(WOLogLevel.OWNED_EDITING,"EduPlanEditor","save","Denied cycle editing",new Object[] {session(),currCycle});
 					return;
 				}

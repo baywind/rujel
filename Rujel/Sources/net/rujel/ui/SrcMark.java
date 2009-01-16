@@ -333,7 +333,7 @@ public class SrcMark extends WOComponent {
 		
 		Boolean canRead = (Boolean)session().valueForKeyPath("readAccess.read.item");
 		if((canRead == null || !canRead.booleanValue()) && !access().flagForKey("openCourses")) {
-			session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 			logger.logp(WOLogLevel.READING,"SrcMark","openCourse","Denied access to course",
 						new Object[] {session(),item});
 			return null;
@@ -349,12 +349,12 @@ public class SrcMark extends WOComponent {
 	
     public WOComponent saveCourse() {
 		if(aCourse.eduGroup() == null) {
-			String message = String.format((String)valueForKeyPath("application.extStrings.Strings.messages.parameterRequired"),(String)valueForKeyPath("application.extStrings.RujelInterfaces_Names.EduGroup.this"));
+			String message = String.format((String)valueForKeyPath("application.strings.Strings.messages.parameterRequired"),(String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduGroup.this"));
 			session().takeValueForKey(message,"message");
 			return null;
 		}
 		if(subject == null && aCourse.cycle() == null) {
-			String message = String.format((String)valueForKeyPath("application.extStrings.Strings.messages.parameterRequired"),(String)valueForKeyPath("application.extStrings.RujelInterfaces_Names.EduCycle.subject"));
+			String message = String.format((String)valueForKeyPath("application.strings.Strings.messages.parameterRequired"),(String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduCycle.subject"));
 			session().takeValueForKey(message,"message");
 			return null;
 		}
@@ -368,7 +368,7 @@ public class SrcMark extends WOComponent {
 				aCycle = (EduCycle)EOUtilities.objectMatchingValues(ec,EduCycle.entityName,dict);
 			} catch (com.webobjects.eoaccess.EOObjectNotAvailableException ex) {
 				if(!access().flagForKey("createNewEduPlanCourses")) {
-					session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 					logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","saveCourse","Denied to create new cycle for new course",session());
 					return null;
 				}
@@ -413,14 +413,14 @@ public class SrcMark extends WOComponent {
 		if(ec.hasChanges()) {
 			if(newCourse) {
 				if(!access().flagForKey("create")) {
-					session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 					logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied to create new course",session());
 					return;
 				}
 			} else {
 				Boolean allowEdit = (Boolean)aCourse.valueForKeyPath("access.edit");
 				if(!((allowEdit == null && access().flagForKey("edit")) || (allowEdit != null && allowEdit.booleanValue()))) {
-					session().takeValueForKey(valueForKeyPath("application.extStrings.Strings.messages.noAccess"),"message");
+					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 					logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied course editing",session());
 					return;
 				}
@@ -574,7 +574,7 @@ public class SrcMark extends WOComponent {
 	
 	public boolean byClass = true;
 	
-	public NSArray tablist = (NSArray)valueForKeyPath("application.extStrings.Strings.SrcMark.tabs");
+	public NSArray tablist = (NSArray)valueForKeyPath("application.strings.Strings.SrcMark.tabs");
 	public int tabindex = 0;
     public String teacherName;
 	
@@ -593,7 +593,7 @@ public class SrcMark extends WOComponent {
 	}
 	
 	public String title() {
-		return (String)valueForKeyPath("application.extStrings.Strings.SrcMark.title");
+		return (String)valueForKeyPath("application.strings.Strings.SrcMark.title");
 		// return "Выбор Курса";
     }
 

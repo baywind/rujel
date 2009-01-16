@@ -5,15 +5,15 @@ PopupForm : WOForm {
 
 SaveButton: WOSubmitButton {
 	action = save;
-	value = application.extStrings.Reusables_Strings.uiElements.Save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
 	id = "saveArchive";
 	name = "saveArchive";
 	disabled = disableSave;
-	title = application.extStrings.RujelArchiving_Archive.requiredReason;
+	title = application.strings.RujelArchiving_Archive.requiredReason;
 }
 
 CancelButton: WOGenericElement {
-	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
+	value = application.strings.Reusables_Strings.uiElements.Cancel;
 	type = "button";
 	elementName = "input";
 	onclick = "closePopup(this.form);";
@@ -58,25 +58,25 @@ TitlePresenter : WOSwitchComponent {
 }
 
 DateTitle : WOString {
-  value = application.extStrings.Reusables_Strings.dataTypes.Date;
+  value = application.strings.Reusables_Strings.dataTypes.Date;
   valueWhenEmpty = "Date";
   escapeHTML = false;
 }
 
 TimeTitle : WOString {
-  value = application.extStrings.Reusables_Strings.dataTypes.Time;
+  value = application.strings.Reusables_Strings.dataTypes.Time;
   valueWhenEmpty = "Time";
   escapeHTML = false;
 }
 
 AuthorTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.author;
+  value = application.strings.RujelArchiving_Archive.author;
   valueWhenEmpty = "Author";
   escapeHTML = false;
 }
 
 ReasonTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.reason;
+  value = application.strings.RujelArchiving_Archive.reason;
   valueWhenEmpty = "Reason";
   escapeHTML = false;
 }
@@ -86,7 +86,7 @@ CanEdit : WOConditional {
 }
 
 NewTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.newValues;
+  value = application.strings.RujelArchiving_Archive.newValues;
   valueWhenEmpty = "Change";
   escapeHTML = false;
 }
@@ -116,7 +116,7 @@ HasDescription : WOConditional {
 }
 
 TitleString : WOString {
-  value = application.extStrings.RujelArchiving_Archive.archiveTitle;
+  value = application.strings.RujelArchiving_Archive.archiveTitle;
   valueWhenEmpty = "Changes Archive";
   escapeHTML = false;
 }

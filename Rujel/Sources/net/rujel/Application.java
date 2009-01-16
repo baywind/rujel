@@ -175,7 +175,7 @@ public class Application extends UTF8Application {
 		//return super.handleException(anException,aContext);
 	}
 	
-	public NSKeyValueCoding extStrings() {
+	public NSKeyValueCoding strings() {
 		return _strings;
 	}
 	

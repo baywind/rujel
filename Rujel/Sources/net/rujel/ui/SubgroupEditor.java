@@ -163,7 +163,7 @@ public class SubgroupEditor extends WOComponent {
 	 } */
 	
     public String title() {
-        return (String)valueForKeyPath("application.extStrings.RujelInterfaces_Names.EduCourse.subgroup");
+        return (String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduCourse.subgroup");
     }
     public Number total() {
         return subgroup.count();

@@ -299,7 +299,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),ex};
 			logger.log(WOLogLevel.WARNING,"Failed to save changes",args);
 			String message = (String)application().
-					valueForKeyPath("extStrings.Strings.messages.error") + "<br/>" + ex.toString();
+					valueForKeyPath("strings.Strings.messages.error") + "<br/>" + ex.toString();
 			session().takeValueForKey(message, "message");
 		}
 	}
@@ -395,11 +395,11 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public String toggleAllTitle() {
 		String result = null;
 		if(showAll) {
-			result = (String)application().valueForKeyPath("extStrings.RujelEduPlan_EduPlan.hideUnused");
+			result = (String)application().valueForKeyPath("strings.RujelEduPlan_EduPlan.hideUnused");
 			if(result == null)
 				result = "Hide unused";
 		} else {
-			result = (String)application().valueForKeyPath("extStrings.RujelEduPlan_EduPlan.showAll");
+			result = (String)application().valueForKeyPath("strings.RujelEduPlan_EduPlan.showAll");
 			if(result == null)
 				result = "Show all";
 		}

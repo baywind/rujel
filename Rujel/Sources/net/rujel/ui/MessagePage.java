@@ -51,13 +51,13 @@ public class MessagePage extends com.webobjects.appserver.WOComponent {
     
     public void setPlistMessage(String key) {
     	if(key.indexOf('.') < 0)
-    		key = "extStrings.Strings.ErrorPages." + key;
+    		key = "strings.Strings.ErrorPages." + key;
     	message = (String)application().valueForKeyPath(key);
     }
     
     public void setPlistTitle(String key) {
     	if(key.indexOf('.') < 0)
-    		key = "extStrings.Strings.ErrorPages." + key;
+    		key = "strings.Strings.ErrorPages." + key;
     	title = (String)application().valueForKeyPath(key);
     }
  }

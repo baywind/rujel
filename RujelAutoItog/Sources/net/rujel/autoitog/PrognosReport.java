@@ -58,7 +58,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		NSArray courses = (NSArray)settings.valueForKey("courses");
 		Period period = (Period)settings.valueForKey("period");
 		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.prognosReport")).mutableClone();
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.prognosReport")).mutableClone();
 		EduPeriod eduper = null;
 		NSTimestamp to = (NSTimestamp)settings.valueForKey("to");
 		Enumeration enu = courses.objectEnumerator();
@@ -132,9 +132,9 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 	public String timeoutUpTo() {
 		if(timeoutUpTo == null) {
 			timeoutUpTo = (String)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.generalTimeout") + 
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout") + 
 				' ' + (String)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.upTo");
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.upTo");
 		}
 		//NSDictionary dict = (NSDictionary)valueForBinding("value");
 		return timeoutUpTo;

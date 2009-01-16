@@ -50,9 +50,9 @@ import java.util.GregorianCalendar;
 public class AutoItogModule {
 	protected static Logger logger = Logger.getLogger("rujel.autoitog");
 	protected static NSArray addOns = (NSArray)WOApplication.application().
-			valueForKeyPath("extStrings.RujelAutoItog_AutoItog.addOns");
+			valueForKeyPath("strings.RujelAutoItog_AutoItog.addOns");
 	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().
-			valueForKeyPath("extStrings.RujelAutoItog_AutoItog.reportSettings");
+			valueForKeyPath("strings.RujelAutoItog_AutoItog.reportSettings");
 	/*
 	public static Object init(Object obj) {
 		if("notesAddOns".equals(obj)) {
@@ -298,7 +298,7 @@ public class AutoItogModule {
 		
 		results = ec.objectsWithFetchSpecification(fs);
 		NSMutableDictionary result =  new NSMutableDictionary((NSArray)results.valueForKey("mark"),(NSArray)results.valueForKey("eduCourse"));
-		String title = (String)WOApplication.application().valueForKeyPath("extStrings.RujelAutoItog_AutoItog.prognosis");
+		String title = (String)WOApplication.application().valueForKeyPath("strings.RujelAutoItog_AutoItog.prognosis");
 		//title.append(' ').append('(').append(')');
 		result.setObjectForKey(title,"title");
 		result.setObjectForKey("30","sort");

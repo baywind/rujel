@@ -127,7 +127,7 @@ public class MyUtility {
 					"Null value or could not coerce",aDate,key);
 		if(eduYear != null && !eduYear.equals(MyUtility.eduYearForDate(date))) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-			"extStrings.RujelBase_Base.notInEduYear");
+			"strings.RujelBase_Base.notInEduYear");
 			if(message == null)
 				message = "Date is not in a eduYear";
 			throw new NSValidation.ValidationException(message,aDate,key);
@@ -136,7 +136,7 @@ public class MyUtility {
 	}
 
 	public static String stringForPath(String path) {
-		return (String)WOApplication.application().valueForKeyPath("extStrings." + path);
+		return (String)WOApplication.application().valueForKeyPath("strings." + path);
 	}
 
 	public static Object validateAttributeValue(String attr,Object value,

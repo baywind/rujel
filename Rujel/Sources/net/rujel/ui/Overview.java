@@ -331,7 +331,7 @@ public class Overview extends WOComponent {
 			if(reporter != null && reporters != null && reporters.count() > 0) {
 				title = reporter.valueForKey("title");
 			}
-			reporter = (NSDictionary)application().valueForKeyPath("extStrings.Strings.Overview.defaultReporter");
+			reporter = (NSDictionary)application().valueForKeyPath("strings.Strings.Overview.defaultReporter");
 			reporters.insertObjectAtIndex(reporter,0);				
 			if(title != null) {
 				if(!title.equals(reporter.valueForKey("title"))) {
@@ -454,7 +454,7 @@ public class Overview extends WOComponent {
 		if(!Various.boolForObject(session().valueForKeyPath("readAccess.read.SubsReport")))
 			return null;
 		String result = (String)application().valueForKeyPath(
-				"extStrings.RujelCurriculum_Curriculum.subsReport");
+				"strings.RujelCurriculum_Curriculum.subsReport");
 		return String.format(result, subsReport().valueForKeyPath("substitutes.count"));
 	}
 }

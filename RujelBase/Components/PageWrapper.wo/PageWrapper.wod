@@ -22,7 +22,7 @@ ComponentContent: WOComponentContent {
 }
 
 Exit: WOString {
-	value = application.extStrings.Reusables_Strings.uiElements.Exit;
+	value = application.strings.Reusables_Strings.uiElements.Exit;
 	valueWhenEmpty = "Exit";
 }
 
@@ -68,7 +68,7 @@ PathTitle: WOString {
 }
 
 PleaseWait: WOString {
-	value = application.extStrings.Strings.messages.pleaseWait;
+	value = application.strings.Strings.messages.pleaseWait;
 	valueWhenEmpty = "Please Wait";
 }
 
@@ -88,7 +88,7 @@ Styles: WOString {
 }
 
 TerminatingMessage: WOString {
-	value = application.extStrings.Strings.messages.refusingSessions;
+	value = application.strings.Strings.messages.refusingSessions;
 	escapeHTML = false;
 }
 
@@ -108,7 +108,7 @@ Title: WOString {
 }
 
 UnsavedAlert: WOString {
-	value = application.extStrings.Strings.messages.unsavedChanges;
+	value = application.strings.Strings.messages.unsavedChanges;
 	valueWhenEmpty = "Unsaved Changes will be lost";
 }
 
@@ -140,7 +140,7 @@ OuterResources : ResourceLink {
 }
 
 Rujel : WOString {
-  value = application.extStrings.Strings.title;
+  value = application.strings.Strings.title;
   escapeHTML = false;
 }
 

@@ -100,7 +100,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		result = (WOActionResults)returnPage.valueForKey("saveNoreset");
     	} catch (NSKeyValueCoding.UnknownKeyException e) {
     		session().takeValueForKey(application().valueForKeyPath
-    				("extStrings.RujelCriterial_Strings.messages.notSaved"), "message");
+    				("strings.RujelCriterial_Strings.messages.notSaved"), "message");
     	} catch (Exception e) {
     		session().takeValueForKey(e.getMessage(), "message");
     	} finally {

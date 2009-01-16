@@ -8,14 +8,14 @@ CanDelete: WOConditional {
 }
 
 CancelButton: WOGenericElement {
-	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
+	value = application.strings.Reusables_Strings.uiElements.Cancel;
 	type = "button";
 	elementName = "input";
 	onclick = "closePopup();";
 }
 
 DeleteButton: WOGenericElement {
-	value = application.extStrings.Reusables_Strings.uiElements.Delete;
+	value = application.strings.Reusables_Strings.uiElements.Delete;
 	invokeAction = delete;
 	onclick = session.tryLoad;
 	elementName = "input";
@@ -23,7 +23,7 @@ DeleteButton: WOGenericElement {
 }
 
 MarkTitle: WOString {
-	value = application.extStrings.RujelEduResults_EduResults.properties.ItogMark.mark;
+	value = application.strings.RujelEduResults_EduResults.properties.ItogMark.mark;
 }
 
 EduPeriodTitle: WOString {
@@ -45,7 +45,7 @@ FlagName: WOString {
 }
 
 FlagsTitle: WOString {
-	value = application.extStrings.RujelEduResults_EduResults.properties.ItogMark.flags.this;
+	value = application.strings.RujelEduResults_EduResults.properties.ItogMark.flags.this;
 }
 
 ItogDefined: WOConditional {
@@ -65,12 +65,12 @@ MarkField: WOTextField {
 }
 
 PopupTitle: WOString {
-	value = application.extStrings.RujelEduResults_EduResults.properties.ItogMark.this;
+	value = application.strings.RujelEduResults_EduResults.properties.ItogMark.this;
 }
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.extStrings.Reusables_Strings.uiElements.Save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
 	name = "save";
 }
 
@@ -107,7 +107,7 @@ ArchiveContainer : WOGenericContainer {
 }
 
 ReasonTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.reason;
+  value = application.strings.RujelArchiving_Archive.reason;
   valueWhenEmpty = "Reason";
   escapeHTML = false;
 }

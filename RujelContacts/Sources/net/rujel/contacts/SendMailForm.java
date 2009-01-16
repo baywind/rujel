@@ -118,30 +118,30 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	public String button() {
 		if(showList) {
 			return (String)application().
-			valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.hideList");
+			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.hideList");
 		} else {
 			return (String)application().
-			valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.showList");
+			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.showList");
 		}
 	}
 	
 	public void send() {
 		if(adrSet.count() <= 0) {
 			session().takeValueForKey(application().
-		valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.noRecipients"),"message");
+		valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.noRecipients"),"message");
 			return;
 		}
 		
 		//InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(adrSet, true);
 		if(adrSet == null || adrSet.count() == 0) {
 			session().takeValueForKey(application().
-				valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.noRecipients"),
+				valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.noRecipients"),
 					"message");
 			return;
 		}
 		if((text == null || text.length() == 0) && !attach) {
 			session().takeValueForKey(application().
-			valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.noText"),"message");
+			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.noText"),"message");
 			return;
 		}
 		NSMutableDictionary param = new NSMutableDictionary();
@@ -168,16 +168,16 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		
 		EMailBroadcast.broadcastMarks(param);
 		session().takeValueForKey(application().
-				valueForKeyPath("extStrings.RujelContacts_Contacts.broadcastInitiated"),"message");
+				valueForKeyPath("strings.RujelContacts_Contacts.broadcastInitiated"),"message");
 		/*
 		try {
 			Mailer mailer = new Mailer();
 			mailer.sendTextMessage(subjStart + subject, text, to);
 				session().takeValueForKey(application().
-			valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.success"),"message");
+			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.success"),"message");
 		} catch (Exception ex) {
 			session().takeValueForKey(application().
-			valueForKeyPath("extStrings.RujelContacts_Contacts.SendMailForm.failed"),"message");
+			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.failed"),"message");
 			logger.log(WOLogLevel.WARNING,"Failed to sent mail",ex);
 		}*/
 	}

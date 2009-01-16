@@ -110,14 +110,14 @@ public class Mark extends _Mark {
 			criterMask = work().criterMaskNamed(crit);
 			if(criterMask == null) {
 				String message = (String)WOApplication.application().valueForKeyPath
-						("extStrings.RujelCriterial_Strings.messages.unavailbleCriterion");
+						("strings.RujelCriterial_Strings.messages.unavailbleCriterion");
 				throw new NSValidation.ValidationException(message);
 			}
 		}
 		Number max = (Number)criterMask.valueForKey("max");
 		if(aValue.intValue() > max.intValue()) {
 			String message = (String)WOApplication.application().valueForKeyPath
-						("extStrings.RujelCriterial_Strings.messages.markValueOverMax");
+						("strings.RujelCriterial_Strings.messages.markValueOverMax");
 			message = String.format(message,criterMask().valueForKeyPath("criterion.title"));
 			throw new NSValidation.ValidationException(message);
 		}

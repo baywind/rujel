@@ -1,13 +1,13 @@
 Wrapper : PageWrapper {
-  title = application.extStrings.Strings.ErrorPages.Error; 
+  title = application.strings.Strings.ErrorPages.Error; 
 }
 
 Title : WOString {
-  value = application.extStrings.Strings.ErrorPages.Error;
+  value = application.strings.Strings.ErrorPages.Error;
 }
 
 Message : WOString {
-  value = application.extStrings.Strings.ErrorPages.exceptionMessage;
+  value = application.strings.Strings.ErrorPages.exceptionMessage;
   escapeHTML = false;
 }
 
@@ -18,18 +18,18 @@ Form : WOForm {
 Submit : WOGenericElement {
   elementName = "input";
   type = "submit";
-  value = application.extStrings.Reusables_Strings.uiElements.Submit;
+  value = application.strings.Reusables_Strings.uiElements.Submit;
 }
 
 
 Recomendations : WOString {
-  value = application.extStrings.Strings.ErrorPages.recomendations;
+  value = application.strings.Strings.ErrorPages.recomendations;
   escapeHTML = false;
 }
 
 
 ShowDetails : WOString {
-  value = application.extStrings.Strings.ErrorPages.showDetails;
+  value = application.strings.Strings.ErrorPages.showDetails;
   escapeHTML = false;
 }
 

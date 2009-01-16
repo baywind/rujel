@@ -13,11 +13,11 @@ TitlePresenter: WOSwitchComponent {
 }
 
 DateTitle: WOString {
-	value = application.extStrings.Reusables_Strings.dataTypes.date;
+	value = application.strings.Reusables_Strings.dataTypes.date;
 }
 
 ThemeTitle: WOString {
-	value = application.extStrings.RujelInterfaces_Names.EduLesson.theme;
+	value = application.strings.RujelInterfaces_Names.EduLesson.theme;
 }
 
 IfAbbreviated: WOConditional {
@@ -26,7 +26,7 @@ IfAbbreviated: WOConditional {
 }
 
 HTtitle: WOString {
-	value = application.extStrings.RujelInterfaces_Names.EduLesson.ht;
+	value = application.strings.RujelInterfaces_Names.EduLesson.ht;
 	valueWhenEmpty = "HT";
 }
 
@@ -35,7 +35,7 @@ IfFull: WOConditional {
 }
 
 HomeTaskTitle: WOString {
-	value = application.extStrings.RujelInterfaces_Names.EduLesson.homeTask;
+	value = application.strings.RujelInterfaces_Names.EduLesson.homeTask;
 	valueWhenEmpty = "Home Task";
 }
 
@@ -182,12 +182,12 @@ Conditional1: WOConditional {
 
 SaveButton: WOSubmitButton {
 	action = ^save;
-	value = application.extStrings.Reusables_Strings.uiElements.Save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
 }
 
 DeleteButton: WOSubmitButton {
 	action = ^delete;
-	value = application.extStrings.Reusables_Strings.uiElements.Delete;
+	value = application.strings.Reusables_Strings.uiElements.Delete;
 	onclick = session.confirmMessage;
 	disabled = session.readAccess._delete.currLesson;
 }
@@ -228,7 +228,7 @@ CanCreate : WOConditional {
 }
 
 ShowAdd : WOSubmitButton {
-  value = application.extStrings.Reusables_Strings.uiElements.Add;
+  value = application.strings.Reusables_Strings.uiElements.Add;
   action = newLessonPopup;
   onclick = "ajaxPost(this);return false;";
 }

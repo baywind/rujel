@@ -37,7 +37,7 @@ import com.webobjects.foundation.NSDictionary;
 
 public class BaseModule {
 	protected static NSDictionary lessonsTab = (NSDictionary)WOApplication.application().
-					valueForKeyPath("extStrings.RujelBase_Base.lessonsTab");
+					valueForKeyPath("strings.RujelBase_Base.lessonsTab");
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -49,7 +49,7 @@ public class BaseModule {
 			return LessonReport.reportForStudent(settings);
 		} else if("reportSettingsForStudent".equals(obj)) {
 			NSDictionary reportSettings = (NSDictionary)WOApplication.application().
-					valueForKeyPath("extStrings.RujelBase_Base.reportSettings");
+					valueForKeyPath("strings.RujelBase_Base.reportSettings");
 			return PlistReader.cloneDictionary(reportSettings, true);
 		}
 		return null;

@@ -107,9 +107,9 @@ public class TimeoutPopup extends WOComponent {
 
     public String title() {
     	if(prognosis == null)
-    		return (String)valueForKeyPath("application.extStrings.RujelAutoItog_AutoItog.properties.CourseTimeout.this");
+    		return (String)valueForKeyPath("application.strings.RujelAutoItog_AutoItog.properties.CourseTimeout.this");
     	Person student = prognosis.student().person();
-    	StringBuffer buf = new StringBuffer((String)valueForKeyPath("application.extStrings.RujelAutoItog_AutoItog.properties.Timeout.this"));
+    	StringBuffer buf = new StringBuffer((String)valueForKeyPath("application.strings.RujelAutoItog_AutoItog.properties.Timeout.this"));
     	buf.append(" - ");
     	buf.append(course.cycle().subject());
        	buf.append(" - ");

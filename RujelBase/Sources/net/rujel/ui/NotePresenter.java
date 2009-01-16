@@ -179,7 +179,7 @@ public class NotePresenter extends WOComponent {
 	*/
 	public String shortNoteForStudent() {
 		if(student() == null) {
-			String result = (String)application().valueForKeyPath("extStrings.Reusables_Strings.dataTypes.text");
+			String result = (String)application().valueForKeyPath("strings.Reusables_Strings.dataTypes.text");
 			if(result == null)
 				result = "text";
 			if(len() < 5)
@@ -202,7 +202,7 @@ public class NotePresenter extends WOComponent {
 		String theNote = noteForStudent();
 		if (theNote == null)
 			return null;
-		if(!access().flagForKey("read")) return (String)application().valueForKeyPath("extStrings.Strings.messages.noAccess");
+		if(!access().flagForKey("read")) return (String)application().valueForKeyPath("strings.Strings.messages.noAccess");
 		if(theNote.length() <= len())
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(theNote);
@@ -288,7 +288,7 @@ public class NotePresenter extends WOComponent {
 		cal.setTime(lesson.date());
 		int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
 		int month = cal.get(GregorianCalendar.MONTH);
-		NSArray months = (NSArray)WOApplication.application().valueForKeyPath("extStrings.Reusables_Strings.presets.monthShort");
+		NSArray months = (NSArray)WOApplication.application().valueForKeyPath("strings.Reusables_Strings.presets.monthShort");
 		return String.format("<small>%1$s</small><br/><b>%2$d</b>",months.objectAtIndex(month),day);
 	}
 

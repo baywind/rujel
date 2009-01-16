@@ -488,7 +488,7 @@ public class MarksPresenter extends NotePresenter {
 			return null;
 		} else {
 			if(mark() == null) return null;
-			if(!access().flagForKey("read")) return (String)application().valueForKeyPath("extStrings.Strings.messages.noAccess");
+			if(!access().flagForKey("read")) return (String)application().valueForKeyPath("strings.Strings.messages.noAccess");
 			synchronized (dateFormat) {
 				return dateFormat.format(mark().dateSet());
 			}
@@ -503,7 +503,7 @@ public class MarksPresenter extends NotePresenter {
 	/*
 	public String shortNoteForStudent() {
 		if(student() == null) {
-			String result = (String)application().valueForKeyPath("extStrings.RujelCriterial_Strings.text");
+			String result = (String)application().valueForKeyPath("strings.RujelCriterial_Strings.text");
 			return (result==null)?"text":result;
 		}
 		return super.shortNoteForStudent();

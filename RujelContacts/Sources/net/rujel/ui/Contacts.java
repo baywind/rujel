@@ -88,7 +88,7 @@ public class Contacts extends WOComponent {
     }
 	
 	public String title() {
-		return (String)valueForKeyPath("application.extStrings.RujelContacts_Contacts.title");
+		return (String)valueForKeyPath("application.strings.RujelContacts_Contacts.title");
 	}
 
     public WOComponent selectClass() {

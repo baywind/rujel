@@ -42,54 +42,54 @@ HelpImage : WOImage {
 }
 
 Title : WOString {
-  value = application.extStrings.Strings.title;
+  value = application.strings.Strings.title;
   escapeHTML = false;
 }
 
 Descript : WOString {
-  value = application.extStrings.Strings.login.descript;
+  value = application.strings.Strings.login.descript;
   escapeHTML = false;
 }
 
 Username : WOString {
-  value = application.extStrings.Strings.login.username;
+  value = application.strings.Strings.login.username;
   escapeHTML = false;
 }
 
 Password : WOString {
-  value = application.extStrings.Strings.login.password;
+  value = application.strings.Strings.login.password;
   escapeHTML = false;
 }
 
 Wait : WOString {
-  value = application.extStrings.Strings.login.wait;
+  value = application.strings.Strings.login.wait;
   escapeHTML = false;
 }
 
 Seconds : WOString {
-  value = application.extStrings.Strings.login.seconds;
+  value = application.strings.Strings.login.seconds;
   escapeHTML = false;
 }
 
 PhotoBy : WOString {
-  value = application.extStrings.Strings.login.photo;
+  value = application.strings.Strings.login.photo;
   escapeHTML = false;
 }
 
 Copyright : WOString {
-  value = application.extStrings.Strings.login.copy;
+  value = application.strings.Strings.login.copy;
   escapeHTML = false;
 }
 
 Enter : WOGenericElement {
   elementName = "input";
   type = "submit";
-  value = application.extStrings.Strings.login.Enter;
+  value = application.strings.Strings.login.Enter;
 }
 
 Guest : WOGenericElement {
   elementName = "input";
   type = "submit";
-  value = application.extStrings.Strings.login.Guest;
+  value = application.strings.Strings.login.Guest;
   onclick="guest();";
 }

@@ -5,7 +5,7 @@ Heading : WOString {
 }
 
 CompleteProperty : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.complete;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.complete;
   valueWhenEmpty = "complete";
 }
 
@@ -14,7 +14,7 @@ Complete : WOString {
 }
 
 ValueProperty : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.value;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.value;
   valueWhenEmpty = "value";
 }
 
@@ -27,7 +27,7 @@ ShowPercents : WOConditional {
 }
 
 MarkProperty : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.mark;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.mark;
 }
 
 Mark : WOTextField {
@@ -46,12 +46,12 @@ CanDelete: WOConditional {
 }
 Save: WOSubmitButton {
 	action = save;
-	value = application.extStrings.Reusables_Strings.uiElements.Save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
 	name = "save";
 }
 
 CancelButton: WOGenericElement {
-	value = application.extStrings.Reusables_Strings.uiElements.Cancel;
+	value = application.strings.Reusables_Strings.uiElements.Cancel;
 	type = "button";
 	elementName = "input";
 	invokeAction = cancel;
@@ -59,7 +59,7 @@ CancelButton: WOGenericElement {
 }
 
 DeleteButton: WOGenericElement {
-	value = application.extStrings.Reusables_Strings.uiElements.Delete;
+	value = application.strings.Reusables_Strings.uiElements.Delete;
 	invokeAction = delete;
 	onclick = session.tryLoad;
 	elementName = "input";
@@ -68,7 +68,7 @@ DeleteButton: WOGenericElement {
 
 
 FireDateProperty : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.fireDate;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.fireDate;
   valueWhenEmpty = "fire date";
 }
 
@@ -82,7 +82,7 @@ PrognosExist : WOConditional {
 }
 
 FlagKey1 : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.disable;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.flags.disable;
   valueWhenEmpty = "disable";
 }
 
@@ -91,7 +91,7 @@ CheckBoxFlag1 : WOCheckBox {
 }
 
 KeepString : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keepBonus;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.flags.keepBonus;
   valueWhenEmpty = "keep";
 }
 
@@ -100,7 +100,7 @@ CheckBoxFlag2 : WOCheckBox {
 }
 
 PrognosTitle : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.properties.Prognosis.this;
+  value = application.strings.RujelAutoItog_AutoItog.properties.Prognosis.this;
   valueWhenEmpty = "Prognosis";
 }
 
@@ -149,12 +149,12 @@ CanReadBonus : WOConditional {
 }
 
 SetBonusString : WOString {
-  value = application.extStrings.RujelAutoItog_AutoItog.ui.setBonus;
+  value = application.strings.RujelAutoItog_AutoItog.ui.setBonus;
   valueWhenEmpty = "Set Bonus";
 }
 KeepTr : WOGenericContainer {
   elementName = "tr";
-  title = application.extStrings.RujelAutoItog_AutoItog.ui.keepBonusHover;
+  title = application.strings.RujelAutoItog_AutoItog.ui.keepBonusHover;
 }
 
 BonusTitle : WOString {
@@ -201,7 +201,7 @@ BonusString : WOString {
 }
 
 ReasonTitle : WOString {
-  value = application.extStrings.RujelArchiving_Archive.reason;
+  value = application.strings.RujelArchiving_Archive.reason;
   valueWhenEmpty = "Reason";
   escapeHTML = false;
 }

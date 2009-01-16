@@ -183,7 +183,7 @@ public class PersListing extends WOComponent {
 		EOQualifier qual = Person.Utility.fullNameQualifier(searchString);
 		if(qual == null) {
 			String noMore = (String)application().valueForKeyPath(
-					"extStrings.RujelBase_Base.notMoreXwords"); 
+					"strings.RujelBase_Base.notMoreXwords"); 
 			searchMessage = (String)strings.valueForKeyPath("messages.illegalFormat")
 				+ (String)strings.valueForKeyPath("dataTypes.ofRequest") + ". "
 				+ String.format(noMore,3) + ".";

@@ -534,12 +534,12 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		super.validateForSave();
 		if(announce() == null || date() == null) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-			"extStrings.RujelCriterial_Strings.messages.nullDate");
+			"strings.RujelCriterial_Strings.messages.nullDate");
 			throw new NSValidation.ValidationException(message);
 		}
 		if(theme() != null && theme().length() > 255) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-					"extStrings.RujelCriterial_Strings.messages.longText");
+					"strings.RujelCriterial_Strings.messages.longText");
 			message = String.format(message,new Integer(theme().length()));
 			throw new NSValidation.ValidationException(message);
 		}
@@ -547,13 +547,13 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		MyUtility.validateDateInEduYear(announce(), course().eduYear(), ANNOUNCE_KEY);
 		if(announce().compare(date()) > 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-			"extStrings.RujelCriterial_Strings.messages.lateAnnounce");
+			"strings.RujelCriterial_Strings.messages.lateAnnounce");
 			throw new NSValidation.ValidationException(message);
 		}
 		NSArray criterMask = criterMask();
 		if(BigDecimal.ZERO.compareTo(weight()) != 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-			"extStrings.RujelCriterial_Strings.messages.critersRequired");
+			"strings.RujelCriterial_Strings.messages.critersRequired");
 			if(criterMask == null || criterMask.count() == 0)
 				throw new NSValidation.ValidationException(message);
 			Integer maxWeight = (Integer)criterMask.valueForKeyPath("@max.weight");
@@ -569,13 +569,13 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			Number markMax = (Number)mask.valueForKeyPath("marks.@max.value");
 			if(critMax == null || critMax.intValue() <= 0) {
 				String message = (String)WOApplication.application().valueForKeyPath(
-						"extStrings.RujelCriterial_Strings.messages.maxShouldBeOverZero");
+						"strings.RujelCriterial_Strings.messages.maxShouldBeOverZero");
 				message = String.format(message,mask.valueForKeyPath("criterion.title"));
 				throw new NSValidation.ValidationException(message);
 			}
 			if(markMax != null && markMax.intValue() > critMax.intValue()) {
 				String message = (String)WOApplication.application().valueForKeyPath(
-						"extStrings.RujelCriterial_Strings.messages.markValueOverMax");
+						"strings.RujelCriterial_Strings.messages.markValueOverMax");
 				message = String.format(message,mask.valueForKeyPath("criterion.title"));
 				throw new NSValidation.ValidationException(message);
 			}
@@ -636,7 +636,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	
 	public static void initTypes() {
 		NSDictionary types = (NSDictionary)WOApplication.application().valueForKeyPath(
-				"extStrings.RujelCriterial_Strings.workTypes");
+				"strings.RujelCriterial_Strings.workTypes");
 		if(types == null || types.count() == 0)
 			return;
 		NSMutableArray result = new NSMutableArray();

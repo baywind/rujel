@@ -293,9 +293,9 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 	public NSMutableDictionary extItog() {
 		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.generalTimeout"));
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout"));
 		buf.append(' ').append((String)WOApplication.application()
-				.valueForKeyPath("extStrings.RujelAutoItog_AutoItog.ui.upTo"));
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.upTo"));
 		buf.append(' ');
 		Format df = MyUtility.dateFormat();
 		df.format(dueDate(), buf, new FieldPosition(DateFormat.DATE_FIELD));

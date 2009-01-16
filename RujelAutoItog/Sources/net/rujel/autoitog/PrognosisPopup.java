@@ -187,7 +187,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    	} else if(bonus != null) {
     	    		if(Various.boolForObject(session().valueForKeyPath("readAccess._delete.Bonus"))) {
     	    			Object message = application().valueForKeyPath(
-    					"extStrings.RujelAutoItog_AutoItog.ui.cantDeleteBonus");
+    					"strings.RujelAutoItog_AutoItog.ui.cantDeleteBonus");
     	    			session().takeValueForKey(message, "message");
     	    		} else {
     	    			prognosis.removeObjectFromBothSidesOfRelationshipWithKey(bonus, "bonus");
@@ -261,7 +261,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 			key = "requestedBonus";
 		}
     	String result = (String)application().valueForKeyPath(
-    			"extStrings.RujelAutoItog_AutoItog.ui." + key);
+    			"strings.RujelAutoItog_AutoItog.ui." + key);
     	if(result == null)
     		result = key;
     	return result;
