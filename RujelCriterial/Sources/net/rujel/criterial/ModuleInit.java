@@ -31,25 +31,35 @@ package net.rujel.criterial;
 
 import java.math.BigDecimal;
 import java.util.Enumeration;
+import java.util.Calendar;
 import java.util.logging.Logger;
 
 import net.rujel.base.BaseLesson;
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EOInitialiser;
+import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.eoaccess.EOJoin;
 import com.webobjects.eoaccess.EORelationship;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WORequest;
 
 public class ModuleInit {
-	protected static NSArray tabs = (NSArray)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial_Strings.tabs");
-	protected static NSDictionary worksTab = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial_Strings.worksTab");
-	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().valueForKeyPath("extStrings.RujelCriterial_Strings.reportSettings");
+	protected static NSArray tabs = (NSArray)WOApplication.application().
+							valueForKeyPath("extStrings.RujelCriterial_Strings.tabs");
+	protected static NSDictionary worksTab = (NSDictionary)WOApplication.application().
+							valueForKeyPath("extStrings.RujelCriterial_Strings.worksTab");
+	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().
+							valueForKeyPath("extStrings.RujelCriterial_Strings.reportSettings");
 
 	public static Object init(Object obj) {
 		if("presentTabs".equals(obj)) {
@@ -97,13 +107,15 @@ public class ModuleInit {
 		backrel.setOwnsDestination(true);
 		backrel.setDeleteRule(EOClassDescription.DeleteRuleCascade);
 
-		relationship = EOInitialiser.initialiseRelationship("Work","taskText",false,"workID","TaskText");
+		relationship = EOInitialiser.initialiseRelationship(
+				"Work","taskText",false,"workID","TaskText");
 		relationship.setOwnsDestination(true);
 		relationship.setPropagatesPrimaryKey(true);
 		relationship.setDeleteRule(EOClassDescription.DeleteRuleCascade);
 		relationship.setIsMandatory(false);
 		*/
-		relationship = EOInitialiser.initialiseRelationship("Work","course",false,"courseID","EduCourse");
+		relationship = EOInitialiser.initialiseRelationship("Work","course",false,
+				"courseID","EduCourse");
 		if(EduLesson.entityName.equals("Work")) {
 			EORelationship backrel = relationship.destinationEntity().relationshipNamed("lessons");
 			EOJoin join = (EOJoin)backrel.joins().objectAtIndex(0);
@@ -181,6 +193,106 @@ public class ModuleInit {
 			return null;
 		return result;
 	}
+	
+	public NSDictionary diaryOnPeriod(WOContext ctx) {
+		WORequest req = ctx.request();
+		String tmp = req.stringFormValueForKey("to");
+		NSTimestamp to = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+				tmp, new java.text.ParsePosition(0));
+		if(to==null) {
+			tmp = req.stringFormValueForKey("date");
+			to = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+					tmp, new java.text.ParsePosition(0));
+		}
+		if(to == null) {
+			to = new NSTimestamp();
+		}
+		tmp = req.stringFormValueForKey("since");
+		NSTimestamp since = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+				tmp, new java.text.ParsePosition(0));
+		if(since == null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(to);
+			cal.set(Calendar.HOUR,0);
+			cal.add(Calendar.WEEK_OF_YEAR, -1);
+			since = new NSTimestamp(cal.getTimeInMillis());
+		}
+		
+		EOSortOrdering so = new EOSortOrdering("course.cycle",EOSortOrdering.CompareAscending);
+		NSMutableArray sorter = new NSMutableArray(so); 
+		so = new EOSortOrdering(Work.DATE_KEY,EOSortOrdering.CompareAscending);
+		sorter.addObject(so);
+		
+		NSArray found = diary(req, since, to, sorter);
+		NSMutableDictionary result = new NSMutableDictionary(new Integer(50),"sort");
+		result.takeValueForKey(found, "results");
+		return result;
+	}
 
+	public NSDictionary diaryOnDay(WOContext ctx) {
+		WORequest req = ctx.request();
+		String tmp = req.stringFormValueForKey("date");
+		NSTimestamp date = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+				tmp, new java.text.ParsePosition(0));
+		if(date == null)
+			date = new NSTimestamp(); 
+		EOSortOrdering so = new EOSortOrdering(Work.DATE_KEY,EOSortOrdering.CompareAscending);
+		NSArray sorter = new NSArray(so);
+		NSArray found = diary(req,date,date,sorter);
+		NSMutableDictionary result = new NSMutableDictionary(new Integer(50),"sort");
+		result.takeValueForKey(found, "results");
+		return result;
+		
+	}
+	
+	public NSArray diary (WORequest req,NSTimestamp since, NSTimestamp to,NSArray sorter) {
+		EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
+		NSArray courses = null;
+		String tmp = req.stringFormValueForKey("courses");
+		if(tmp != null) {
+			String[] cids = tmp.split(";");
+			EduCourse[] crs = new EduCourse[cids.length];
+			for (int i = 0; i < cids.length; i++) {
+				try {
+					Integer cid = new Integer(cids[i]);
+					crs[i] = (EduCourse) EOUtilities.objectWithPrimaryKeyValue(
+							ec, EduCourse.entityName, cid);
+				} catch (Exception e) {
+					//TODO: log failure;
+				}
+			}
+			courses = new NSArray(crs);
+		}
+		if(courses == null) {
+			try {
+				Number classID = req.numericFormValueForKey("eduGroup",
+						new NSNumberFormatter("#"));
+				EduGroup eduGroup = (EduGroup) EOUtilities
+						.objectWithPrimaryKeyValue(ec, EduGroup.entityName,
+								classID);
+				courses = EOUtilities.objectsMatchingKeyAndValue(ec,
+						EduCourse.entityName, "eduGroup", eduGroup);
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}
+		if(courses == null)
+			return null;
+		EOQualifier qual = Various.getEOInQualifier("course", courses);
+		NSMutableArray quals = new NSMutableArray(qual);
+		qual = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+		quals.addObject(qual);
+		qual = new EOKeyValueQualifier(Work.DATE_KEY,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+		quals.addObject(qual);
+		qual = new EOKeyComparisonQualifier(Work.ANNOUNCE_KEY,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,Work.DATE_KEY);
+		quals.addObject(qual);
+		qual = new EOAndQualifier(quals);
+		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,qual,sorter);
+		fs.setRefreshesRefetchedObjects(true);
+		return ec.objectsWithFetchSpecification(fs);
+	}
 }
 

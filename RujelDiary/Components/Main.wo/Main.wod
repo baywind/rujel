@@ -1,0 +1,38 @@
+Title : WOString {
+  value = application.strings.title;
+  valueWhenEmpty = "RUJEL Diary";
+}
+
+Form : WOForm {
+	name = "request";
+	method = "GET";
+	directActionName = "default";
+}
+
+DateField : WOTextField {
+  value = "";
+  name = "date";
+}
+
+Reusables : ResourceLink {
+	framework = "Reusables";
+	jsLink = "scripts.js";
+	cssLink = "style.css";
+}
+
+LocalLinks : ResourceLink {
+	framework = "app";
+	jsLink = "scripts.js"
+}
+
+GroupRow : DynamicTableRow {
+  item = item;
+  list = groupList;
+  onClick = item.onclick;
+  useStyles = true;
+  switchParam = item.grade;
+}
+
+GroupName : WOString {
+  value = item.name;
+}
