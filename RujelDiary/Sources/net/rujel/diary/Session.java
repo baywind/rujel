@@ -35,5 +35,6 @@ public class Session extends WOSession {
 	private static final long serialVersionUID = 1L;
 
 	public Session() {
+		throw new IllegalStateException("Session created");
 	}
 }

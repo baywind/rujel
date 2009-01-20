@@ -1,17 +1,21 @@
 Title : WOString {
-  value = application.strings.title;
+  value = application.strings.Strings.title;
   valueWhenEmpty = "RUJEL Diary";
 }
 
 Form : WOForm {
+	directActionName = "";
 	name = "request";
 	method = "GET";
-	directActionName = "default";
+	?grID = currGr;
+	?regime = currTab.id;
 }
 
 DateField : WOTextField {
-  value = "";
+  value = dateString;
+  size = 10;
   name = "date";
+  style = dateStyle;
 }
 
 Reusables : ResourceLink {
@@ -22,7 +26,14 @@ Reusables : ResourceLink {
 
 LocalLinks : ResourceLink {
 	framework = "app";
-	jsLink = "scripts.js"
+	jsLink = "scripts.js";
+	cssLink = "styles.css";
+}
+
+TabLinks : ResourceLink {
+	framework = currTab.framework;
+	jsLink = currTab.jsLink;
+	cssLink = currTab.cssLink;
 }
 
 GroupRow : DynamicTableRow {
@@ -31,8 +42,27 @@ GroupRow : DynamicTableRow {
   onClick = item.onclick;
   useStyles = true;
   switchParam = item.grade;
+  isSelected = isSelected;
 }
 
 GroupName : WOString {
-  value = item.name;
+  value = item.title;
+}
+
+RGBColor : ResourceLink {
+	framework = "Reusables";
+	jsLink = "rgbcolor.js";
+}
+
+GoupGrade : WOString {
+  value = item.grade;
+}
+
+Component : WOSwitchComponent {
+  WOComponentName = currTab.component;
+  tab = currTab;
+  group = currGr;
+  courses = courses;
+  date = date;
+  since = since;
 }

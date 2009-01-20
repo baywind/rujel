@@ -29,13 +29,20 @@
 
 package net.rujel.vseobuch;
 
+import com.webobjects.eocontrol.EOSortOrdering;
+
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.auth.UseAccess;
 
 public class VOTeacher extends _VOTeacher implements Teacher, Person, UseAccess
 {
-    public VOTeacher() {
+	public static void init() {
+		EOSortOrdering.ComparisonSupport.setSupportForClass(
+				new Person.ComparisonSupport(), VOTeacher.class);
+	}
+	
+   public VOTeacher() {
         super();
     }
 

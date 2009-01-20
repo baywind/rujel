@@ -54,12 +54,14 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequest;
 
 public class ModuleInit {
-	protected static NSArray tabs = (NSArray)WOApplication.application().
-							valueForKeyPath("strings.RujelCriterial_Strings.tabs");
+//	protected static NSArray tabs = (NSArray)WOApplication.application().
+//							valueForKeyPath("strings.RujelCriterial_Strings.tabs");
 	protected static NSDictionary worksTab = (NSDictionary)WOApplication.application().
 							valueForKeyPath("strings.RujelCriterial_Strings.worksTab");
 	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().
 							valueForKeyPath("strings.RujelCriterial_Strings.reportSettings");
+	protected static NSArray diaryTabs = (NSArray)WOApplication.application().
+							valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
 
 	public static Object init(Object obj) {
 		if("presentTabs".equals(obj)) {
@@ -84,6 +86,8 @@ public class ModuleInit {
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if ("lessonProperies".equals(obj)) {
 			return lessonProperies(ctx);
+		} else if ("diary".equals(obj)) {
+			return PlistReader.cloneArray(diaryTabs, true);
 		}
 		return null;
 	}
@@ -194,7 +198,7 @@ public class ModuleInit {
 		return result;
 	}
 	
-	public NSDictionary diaryOnPeriod(WOContext ctx) {
+/*	public NSDictionary diaryOnPeriod(WOContext ctx) {
 		WORequest req = ctx.request();
 		String tmp = req.stringFormValueForKey("to");
 		NSTimestamp to = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
@@ -243,9 +247,10 @@ public class ModuleInit {
 		result.takeValueForKey(found, "results");
 		return result;
 		
-	}
+	}*/
 	
-	public NSArray diary (WORequest req,NSTimestamp since, NSTimestamp to,NSArray sorter) {
+	public NSArray diary (WOContext ctx) {
+		WORequest req = ctx.request();
 		EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
 		NSArray courses = null;
 		String tmp = req.stringFormValueForKey("courses");
@@ -276,23 +281,71 @@ public class ModuleInit {
 				// TODO: handle exception
 			}
 		}
-		if(courses == null)
-			return null;
+		NSArray result = PlistReader.cloneArray(diaryTabs, true);
+		String regime = req.stringFormValueForKey("regime");
+		if(courses == null && regime == null)
+			return result;
+		Enumeration enu = result.objectEnumerator();
+		NSMutableDictionary tab = null;
+		while (enu.hasMoreElements()) {
+			tab = (NSMutableDictionary) enu.nextElement();
+			if(regime.equals(tab.valueForKey("id")))
+				break;
+			else
+				tab = null;
+		}
+		if(tab == null)
+			return result;
+
+		tab.takeValueForKey("true", "selected");
+		NSTimestamp since = null;
+		NSTimestamp to = null;
+		NSArray sorter = null;
+		
+		tmp = req.stringFormValueForKey("date");
+		NSTimestamp date = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+				tmp, new java.text.ParsePosition(0));
+		if(date == null)
+			date = new NSTimestamp();
+		else
+			to = date;
+		if(Various.boolForObject(tab.valueForKey("period"))) {
+			tmp = req.stringFormValueForKey("since");
+			since = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+					tmp, new java.text.ParsePosition(0));
+			if(since == null) {
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(date);
+				cal.set(Calendar.HOUR,0);
+				cal.add(Calendar.WEEK_OF_YEAR, -1);
+				since = new NSTimestamp(cal.getTimeInMillis());
+			}
+		} else { // if tab is for period
+			since = date;
+			EOSortOrdering so = new EOSortOrdering(Work.DATE_KEY,EOSortOrdering.CompareAscending);
+			sorter = new NSArray(so);
+		} // if tab is for day
+
 		EOQualifier qual = Various.getEOInQualifier("course", courses);
 		NSMutableArray quals = new NSMutableArray(qual);
-		qual = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
-				EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
-		quals.addObject(qual);
+		if(to != null) {
+			qual = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
+					EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+			quals.addObject(qual);
+		}
 		qual = new EOKeyValueQualifier(Work.DATE_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
 		quals.addObject(qual);
 		qual = new EOKeyComparisonQualifier(Work.ANNOUNCE_KEY,
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,Work.DATE_KEY);
+				EOQualifier.QualifierOperatorNotEqual,Work.DATE_KEY);
 		quals.addObject(qual);
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,qual,sorter);
 		fs.setRefreshesRefetchedObjects(true);
-		return ec.objectsWithFetchSpecification(fs);
+		NSArray found =  ec.objectsWithFetchSpecification(fs);
+		//return found;
+		tab.takeValueForKey(found, "list");
+		return result;
 	}
 }
 

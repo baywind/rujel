@@ -189,5 +189,29 @@
 		<key>sort</key>
 		<string>20</string>
 	</dict>
+	<key>diaryTabs</key>
+	<array>
+		<dict>
+			<key>id</key>
+			<string>dayTasks</string>
+			<key>title</key>
+			<string>Задания</string>
+			<key>sort</key>
+			<string>10</string>
+			<key>component</key>
+			<string>WorksDiary</string>
+			<key>period</key>
+			<string>false</string>
+			<key>order</key>
+			<array>
+				<string>date</string>
+				<string>course</string>
+			</array>
+			<key>framework</key>
+			<string>RujelCriterial</string>
+			<key>cssLink</key>
+			<string>styles.css</string>
+		</dict>
+	</array>
 </dict>
 </plist>

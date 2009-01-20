@@ -1,0 +1,12 @@
+.section {
+	margin:1ex 2pt 0px;
+	background-color:#ffcc33;
+	padding:3pt;
+	font-weight:bold;
+	text-align:left;
+}
+
+.label {
+	background-color:#ccff99;
+	width:10em;
+}

@@ -30,6 +30,7 @@
 package net.rujel.interfaces;
 
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 
@@ -224,6 +225,65 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 
 			EOFetchSpecification fspec = new EOFetchSpecification(entity,qual,sorter);
 			return ec.objectsWithFetchSpecification(fspec);		
+		}
+	}
+	
+	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
+
+		public int compareAscending(Object left, Object right) {
+			try {
+				Person leftPerson = (Person)left;
+				Person rightPerson = (Person)right;
+				int result = compareValues(leftPerson.lastName(), rightPerson.lastName(),
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftPerson.firstName(), rightPerson.firstName(),
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftPerson.secondName(), rightPerson.secondName(),
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftPerson.birthDate(), rightPerson.birthDate(),
+						EOSortOrdering.CompareAscending);
+				return result;
+			} catch (Exception e) {
+				return super.compareAscending(left, right);
+			}
+		}
+
+		public int compareCaseInsensitiveAscending(Object left, Object right) {
+			try {
+				Person leftPerson = (Person)left;
+				Person rightPerson = (Person)right;
+				int result = compareValues(leftPerson.lastName(), rightPerson.lastName(),
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftPerson.firstName(), rightPerson.firstName(),
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftPerson.secondName(), rightPerson.secondName(),
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftPerson.birthDate(), rightPerson.birthDate(),
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				return result;
+			} catch (Exception e) {
+				return super.compareCaseInsensitiveAscending(left, right);
+			}
+		}
+
+		public int compareDescending(Object left, Object right) {
+			return compareAscending(right, left);
+		}
+
+		public int compareCaseInsensitiveDescending(Object left, Object right) {
+			return compareCaseInsensitiveAscending(right, left);
 		}
 	}
 }

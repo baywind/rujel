@@ -25,12 +25,13 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
  
- function setValueForKey(value,key,submit) {
+ function takeValueForKey(value,key,submit) {
  	var form = document.forms[0];
  	var field = form[key];
  	if(field == null) {
  		field = document.createElement('input');
-		prmt.setAttribute('type','hidden');
+		field.setAttribute('type','hidden');
+		field.setAttribute('name',key);
 		form.appendChild(field);	
  	}
  	field.value = value;

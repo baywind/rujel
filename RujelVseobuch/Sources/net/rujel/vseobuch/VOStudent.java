@@ -35,7 +35,12 @@ import com.webobjects.eocontrol.*;
 
 public class VOStudent extends _VOStudent implements Student, Person
 {
-    public VOStudent() {
+	public static void init() {
+		EOSortOrdering.ComparisonSupport.setSupportForClass(
+				new Person.ComparisonSupport(), VOStudent.class);
+	}
+
+	public VOStudent() {
         super();
     }
 

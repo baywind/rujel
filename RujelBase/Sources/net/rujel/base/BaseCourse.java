@@ -58,6 +58,8 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		subgroupRelationship.setDefinition("audience.student");
 		subgroupRelationship.setIsMandatory(false);
 		courseEntity.addRelationship(subgroupRelationship); */
+		EOSortOrdering.ComparisonSupport.setSupportForClass(
+				new BaseCourse.ComparisonSupport(), BaseCourse.class);
 	}
 
 	public static final NSArray accessKeys = new NSArray (new String[] {
@@ -359,5 +361,61 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		NSArray tabs = (NSArray)storedValueForKey("lessonTabs");
 		if(tabs == null || tabs.count() == 0) return null;
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(tabs,sorter);
+	}
+	
+	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
+
+		public int compareAscending(Object left, Object right) {
+			try{
+				EduCourse leftCourse = (EduCourse)left;
+				EduCourse rightCourse = (EduCourse)right;
+				int result = compareValues(leftCourse.cycle(), rightCourse.cycle(), 
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftCourse.comment(), rightCourse.comment(), 
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftCourse.valueForKeyPath("teacher.person"), 
+						rightCourse.valueForKeyPath("teacher.person")
+						, EOSortOrdering.CompareAscending);
+				return result;
+				
+			} catch (Exception e) {
+				return super.compareAscending(left, right);
+			}
+			//return NSComparator.OrderedSame;
+		}
+
+		public int compareCaseInsensitiveAscending(Object left, Object right) {
+			try{
+				EduCourse leftCourse = (EduCourse)left;
+				EduCourse rightCourse = (EduCourse)right;
+				int result = compareValues(leftCourse.cycle(), rightCourse.cycle(), 
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftCourse.comment(), rightCourse.comment(), 
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftCourse.valueForKeyPath("teacher.person"), 
+						rightCourse.valueForKeyPath("teacher.person")
+						, EOSortOrdering.CompareCaseInsensitiveAscending);
+				return result;
+				
+			} catch (Exception e) {
+				return super.compareCaseInsensitiveAscending(left, right);
+			}
+		}
+
+		public int compareDescending(Object left, Object right) {
+			return compareAscending(right, left);
+		}
+
+		public int compareCaseInsensitiveDescending(Object left, Object right) {
+			return compareCaseInsensitiveAscending(right, left);
+		}
 	}
 }

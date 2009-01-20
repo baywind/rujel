@@ -35,7 +35,11 @@ import java.util.logging.Logger;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequestHandler;
+import com.webobjects.appserver.WOResponse;
+import com.webobjects.eocontrol.EOSharedEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -81,5 +85,47 @@ public class Application extends UTF8Application {
 	
 	public NSKeyValueCoding strings() {
 		return _strings;
+	}
+	
+	public WOResponse handleException(Exception anException,  WOContext aContext) {
+		if(aContext == null) {
+			logger.log(WOLogLevel.UNCOUGHT_EXCEPTION,"Exception occured with no WOContext",anException);
+			return super.handleException(anException,aContext);
+		}
+		StringBuffer msg = new StringBuffer("Exception occured executing ");
+		msg.append(aContext.request().uri());
+		WOComponent page = aContext.page();
+		if(page != null) {
+			msg.append(" when in component ").append(page.name());
+		}
+		WOComponent component = aContext.component();
+		if(component != null && component != page) {
+			msg.append('(').append(component.name()).append(')');
+		}
+		String elem = aContext.elementID();
+		if(elem != null && elem.length() > 0) {
+			msg.append(", elementID: ").append(elem);
+		}
+		logger.log(WOLogLevel.UNCOUGHT_EXCEPTION,msg.toString(),anException);
+
+/*		WOComponent errorPage = pageWithName("ErrorPage", aContext);
+		errorPage.takeValueForKey(anException, "throwable");
+		return errorPage.generateResponse();
+*/		
+		return super.handleException(anException,aContext);
+	}
+
+	public void setFlush(String what) {
+		if(what == null)
+			return;
+		if(what.equals("cache")) {
+			groupsForYear.removeAllObjects();
+			coursesForGroup.removeAllObjects();
+		} else if(what.equals("strings")) {
+			_strings.flush();
+		} else if(what.equals("ec")) {
+			EOSharedEditingContext.defaultSharedEditingContext().invalidateAllObjects();
+		}
+			
 	}
 }

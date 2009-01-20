@@ -30,10 +30,10 @@
 package net.rujel.diary;
 
 import com.webobjects.appserver.WOActionResults;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WODirectAction;
 
-import net.rujel.diary.ui.Main;
 
 public class DirectAction extends WODirectAction {
 	public DirectAction(WORequest request) {
@@ -41,6 +41,9 @@ public class DirectAction extends WODirectAction {
 	}
 
 	public WOActionResults defaultAction() {
+		String command = request().stringFormValueForKey("flush");
+		if(command != null)
+			WOApplication.application().takeValueForKey(command, "flush");
 		return pageWithName(Main.class.getName());
 	}
 }
