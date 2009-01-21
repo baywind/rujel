@@ -35,7 +35,27 @@
 		form.appendChild(field);	
  	}
  	field.value = value;
- 	if(submit)
+ 	if(submit) {
+ 		removeDefault(form);
  		form.submit();
+ 	}
  }
  
+function removeDefault(aForm) {
+	var toRemove = [];
+	var j = 0;
+	for(var i=0;i<aForm.elements.length;i++) {
+		var elt = aForm.elements[i];
+		//alert(elt.name + " (" + elt.className + "):\nvalue = " + elt.value + "\ndefault = " + elt.defaultValue);
+		if(elt.value == null || (elt.value == elt.defaultValue && elt.className == "default")) {
+			//alert(elt.name + ":\nvalue = " + elt.value + "\ndefault = " + elt.defaultValue);
+			//elt.parentNode.removeChild(elt);
+			toRemove[j++] = elt;
+		}
+	}
+	if(j > 0) {
+		for(j--;j >=0;j--)
+			toRemove[j].parentNode.removeChild(toRemove[j]);
+	}
+	return true;
+}

@@ -195,7 +195,7 @@
 			<key>id</key>
 			<string>dayTasks</string>
 			<key>title</key>
-			<string>Задания</string>
+			<string>Задания на день</string>
 			<key>sort</key>
 			<string>10</string>
 			<key>component</key>
@@ -206,6 +206,27 @@
 			<array>
 				<string>date</string>
 				<string>course</string>
+			</array>
+			<key>framework</key>
+			<string>RujelCriterial</string>
+			<key>cssLink</key>
+			<string>styles.css</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>periodTasks</string>
+			<key>title</key>
+			<string>Задания за период</string>
+			<key>sort</key>
+			<string>20</string>
+			<key>component</key>
+			<string>WorksDiary</string>
+			<key>period</key>
+			<string>true</string>
+			<key>order</key>
+			<array>
+				<string>course</string>
+				<string>date</string>
 			</array>
 			<key>framework</key>
 			<string>RujelCriterial</string>

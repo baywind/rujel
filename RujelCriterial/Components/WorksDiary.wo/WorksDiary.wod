@@ -60,3 +60,12 @@ SplitSections : WOConditional {
 RegularRow : WOConditional {
   condition = item;
 }
+
+SplitRow : WOConditional {
+  condition = item;
+  negate = true;
+}
+
+Title : WOString {
+  value = title;
+}

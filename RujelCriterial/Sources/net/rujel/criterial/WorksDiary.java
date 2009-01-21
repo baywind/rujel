@@ -1,6 +1,5 @@
 package net.rujel.criterial;
 
-import java.text.FieldPosition;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
@@ -31,6 +30,7 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
     public NSArray courses;
     public NSTimestamp to;
     public NSTimestamp since;
+    public String title;
     public boolean period;
     
     protected NSMutableDictionary subjects = new NSMutableDictionary();
@@ -53,9 +53,13 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		since = (NSTimestamp)valueForBinding("since");
 		NSDictionary tab = (NSDictionary)valueForBinding("tab");
 		period = Various.boolForObject(tab.valueForKey("period"));
-		if(since == null && !period) {
-			since = to;
+		if(since == null) {
+			since = (period)?to.timestampByAddingGregorianUnits(0, 0, -7, 0, 0, 0):to;
 		}
+		
+		title = MyUtility.dateFormat().format(since);
+		if(period)
+			title = title + " - " + MyUtility.dateFormat().format(to);
 		
 		Enumeration enu = courses.objectEnumerator();
 		while (enu.hasMoreElements()) {
@@ -187,13 +191,14 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		}
 		else if (section instanceof EduCourse) {
 			EduCourse course = (EduCourse) section;
-			result.append("<b>").append(course.cycle().subject()).append("</b> ");
+			result.append(course.cycle().subject());
 			if(course.comment() != null) {
-				result.append("<i>(").append(course.comment()).append(")</i>");
+				result.append(" <i>(").append(course.comment()).append(")</i>");
 			}
 			if(course.teacher() != null) {
-				result.append(" - ");
+				result.append(" <span style=\"font-weight:normal;\">- ");
 				result.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+				result.append("</span>");
 			}
 		} else { // unknown section type
 			return section.toString();
@@ -206,7 +211,13 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		Work item = (Work)this.item;
 		StringBuffer result = new StringBuffer(16);
 		if(!(section instanceof Date)) {
-			MyUtility.dateFormat().format(item.date(), result, new FieldPosition(0));
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(item.date());
+			result.append(cal.get(Calendar.DATE)).append(' ');
+			result.append(monthDate.objectAtIndex(cal.get(Calendar.MONTH)));
+			result.append(" (");
+			result.append(weekdayShort.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1)).append(')');
+			//MyUtility.dateFormat().format(item.date(), result, new FieldPosition(0));
 			result.append(' ');
 		}
 		if(!(section instanceof EduCourse)) {
@@ -239,5 +250,6 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		item = null;
 		index = null;
 		subjects.removeAllObjects();
+		super.reset();
 	}
 }

@@ -9,15 +9,26 @@ Form : WOForm {
 	method = "GET";
 	?grID = currGr;
 	?regime = currTab.id;
+	onsubmit = "removeDefault(this);";
 }
 
-DateField : WOTextField {
-  value = dateString;
+DateField : DateField {
   size = 10;
   name = "date";
-  style = dateStyle;
+  date = date;
 }
 
+ShowSince : WOConditional {
+  condition = currTab.period;
+}
+
+Since : DateField {
+  size = 10;
+  name = "since";
+  date = since;
+  baseName = "date";
+  shift = -7;
+}
 Reusables : ResourceLink {
 	framework = "Reusables";
 	jsLink = "scripts.js";
@@ -65,4 +76,12 @@ Component : WOSwitchComponent {
   courses = courses;
   date = date;
   since = since;
+}
+
+Tabs : Tabs {
+  currTab = currTab.id;
+  tablist = tabs;
+  titleAttribute = "title";
+  idAttribute = "id";
+  onClick = "takeValueForKey(this.id,'regime',true);";
 }

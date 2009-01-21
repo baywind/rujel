@@ -108,11 +108,11 @@ public class Application extends UTF8Application {
 		}
 		logger.log(WOLogLevel.UNCOUGHT_EXCEPTION,msg.toString(),anException);
 
-/*		WOComponent errorPage = pageWithName("ErrorPage", aContext);
+		WOComponent errorPage = pageWithName("ErrorPage", aContext);
 		errorPage.takeValueForKey(anException, "throwable");
 		return errorPage.generateResponse();
-*/		
-		return super.handleException(anException,aContext);
+		
+		//return super.handleException(anException,aContext);
 	}
 
 	public void setFlush(String what) {

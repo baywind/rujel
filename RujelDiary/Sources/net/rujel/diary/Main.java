@@ -37,7 +37,6 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.ModulesInitialiser;
-import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -54,13 +53,16 @@ public class Main extends WOComponent {
 	}
 
 	public NSTimestamp date;
-	public String dateString;
 	public NSTimestamp since;
+/*	public String dateString;
 	public String sinceString;
-	
-	public NSArray groupList;
+	public String dateClass;
+	public String sinceClass;
+*/	
+	protected NSArray groupList;
 	public NSArray tabs;
 	public NSKeyValueCoding currTab;
+	public Integer tabIndex;
 	public Number currGr;
 
 	public NSKeyValueCoding item;
@@ -70,16 +72,11 @@ public class Main extends WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		WORequest req = context().request();
 		// date and groupList
-		dateString = req.stringFormValueForKey("date");
+		/*
+		String dateString = req.stringFormValueForKey("date");
 		date = (NSTimestamp)MyUtility.dateFormat().parseObject(
 				dateString, new java.text.ParsePosition(0));
 		groupList = groupListForDate(date);
-		if(date == null) {
-			//date = new NSTimestamp();
-			dateString = MyUtility.dateFormat().format(new NSTimestamp());
-		}
-		currGr = context().request().numericFormValueForKey("grID",
-				new NSNumberFormatter("#"));
 		
 		sinceString = req.stringFormValueForKey("since");
 		since = (NSTimestamp)MyUtility.dateFormat().parseObject(
@@ -89,8 +86,12 @@ public class Main extends WOComponent {
 			since = (date ==null)?new NSTimestamp():date;
 			since = date.timestampByAddingGregorianUnits(0, 0, -7, 0, 0, 0);
 			sinceString = MyUtility.dateFormat().format(since);
+			sinceClass = "default";
 		}
-		
+	*/	
+		currGr = context().request().numericFormValueForKey("grID",
+				new NSNumberFormatter("#"));
+
 		// display tabs
 		tabs = ModulesInitialiser.useModules(context(), "diary");
 		if(tabs != null) {
@@ -98,8 +99,10 @@ public class Main extends WOComponent {
 			if(txt != null) {
 				for(int i = tabs.count() -1;i>=0;i--) {
 					currTab = (NSKeyValueCoding)tabs.objectAtIndex(i);
-					if(txt.equals(currTab.valueForKey("id")))
+					if(txt.equals(currTab.valueForKey("id"))) {
+						tabIndex = new Integer(i);
 						break;
+					}
 				}
 			} else {
 				currTab = (NSKeyValueCoding)tabs.objectAtIndex(0);
@@ -141,6 +144,11 @@ public class Main extends WOComponent {
 		super.appendToResponse(aResponse, aContext);
 	}
 	
+	public NSArray groupList() {
+		if(groupList == null)
+			groupList = groupListForDate(date);
+		return groupList;
+	}
 	
 	protected NSArray groupListForDate(NSTimestamp aDate) {
 		Integer year = (aDate == null)?new Integer(0):MyUtility.eduYearForDate(aDate);
@@ -187,9 +195,4 @@ public class Main extends WOComponent {
 		return (curr != null && curr.intValue() == currGr.intValue());
 	}
 
-	public String dateStyle() {
-		if(date == null)
-			return "color:#999999;";
-		return null;
-	}
 }
