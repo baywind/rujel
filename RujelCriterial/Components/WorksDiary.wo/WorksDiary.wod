@@ -69,3 +69,20 @@ SplitRow : WOConditional {
 Title : WOString {
   value = title;
 }
+
+Announce : WOString {
+  value = announce;
+}
+
+LabelTitle : WOString {
+  value = ^tab.labelTitle;
+  escapeHTML = false;
+}
+
+ContentTitle : WOString {
+  value = application.strings.RujelCriterial_Strings.theme;
+}
+
+AnnounceTitle : WOString {
+  value = application.strings.RujelCriterial_Strings.shortAnnounce;
+}

@@ -252,4 +252,9 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		subjects.removeAllObjects();
 		super.reset();
 	}
+
+	public String announce() {
+		NSTimestamp announceDate = ((Work)item).announce();
+		return MyUtility.dateFormat().format(announceDate);
+	}
 }

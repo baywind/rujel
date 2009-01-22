@@ -211,6 +211,8 @@
 			<string>RujelCriterial</string>
 			<key>cssLink</key>
 			<string>styles.css</string>
+			<key>labelTitle</key>
+			<string>Предмет</string>
 		</dict>
 		<dict>
 			<key>id</key>
@@ -232,6 +234,8 @@
 			<string>RujelCriterial</string>
 			<key>cssLink</key>
 			<string>styles.css</string>
+			<key>labelTitle</key>
+			<string>Срок сдачи</string>
 		</dict>
 	</array>
 </dict>
