@@ -64,6 +64,7 @@ public class Main extends WOComponent {
 	public NSKeyValueCoding currTab;
 	//public Integer tabIndex;
 	public Number currGr;
+	public String grName;
 
 	public NSKeyValueCoding item;
 	
@@ -72,12 +73,12 @@ public class Main extends WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		WORequest req = context().request();
 		// date and groupList
-		/*
+		
 		String dateString = req.stringFormValueForKey("date");
 		date = (NSTimestamp)MyUtility.dateFormat().parseObject(
 				dateString, new java.text.ParsePosition(0));
 		groupList = groupListForDate(date);
-		
+		/*	
 		sinceString = req.stringFormValueForKey("since");
 		since = (NSTimestamp)MyUtility.dateFormat().parseObject(
 				sinceString, new java.text.ParsePosition(0));
@@ -91,7 +92,19 @@ public class Main extends WOComponent {
 	*/	
 		currGr = context().request().numericFormValueForKey("grID",
 				new NSNumberFormatter("#"));
-
+		
+		if(currGr != null) {
+			Enumeration enu = groupList.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSDictionary gr = (NSDictionary) enu.nextElement();
+				Number id = (Number)gr.valueForKey("grID");
+				if(currGr.intValue() == id.intValue())
+					grName = (String)gr.valueForKey("name");
+			}
+			if(grName == null)
+				currGr = null;
+		}
+		
 		// display tabs
 		tabs = ModulesInitialiser.useModules(context(), "diary");
 		if(tabs != null) {
@@ -121,6 +134,8 @@ public class Main extends WOComponent {
 						Integer cid = new Integer(cids[i]);
 						crs[i] = (EduCourse) EOUtilities.objectWithPrimaryKeyValue(
 								ec, EduCourse.entityName, cid);
+//						if(grName == null)
+//							grName = crs[i].eduGroup().name();
 					} catch (Exception e) {
 						logger.log(Level.INFO,"Failed to get course for id: " + cids[i],e);
 					}
@@ -132,6 +147,8 @@ public class Main extends WOComponent {
 					EduGroup eduGroup = (EduGroup) EOUtilities
 					.objectWithPrimaryKeyValue(ec, EduGroup.entityName,
 							currGr);
+//					if(grName == null)
+//						grName = eduGroup.name();
 					courses = EOUtilities.objectsMatchingKeyAndValue(ec,
 							EduCourse.entityName, "eduGroup", eduGroup);
 					//TODO: respect eduYear

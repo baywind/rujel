@@ -1,3 +1,32 @@
+// WorksDiary.java : Class file for WO Component 'WorksDiary'
+
+/*
+ * Copyright (c) 2008, Gennady & Michael Kushnir
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ * 
+ * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 		list of conditions and the following disclaimer.
+ * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 		this list of conditions and the following disclaimer in the documentation
+ * 		and/or other materials provided with the distribution.
+ * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific 
+ * 		prior written permission.
+ * 		
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+ * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package net.rujel.criterial;
 
 import java.util.Calendar;
@@ -30,7 +59,7 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
     public NSArray courses;
     public NSTimestamp to;
     public NSTimestamp since;
-    public String title;
+    //public String title;
     public boolean period;
     
     protected NSMutableDictionary subjects = new NSMutableDictionary();
@@ -57,10 +86,10 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 			since = (period)?to.timestampByAddingGregorianUnits(0, 0, -7, 0, 0, 0):to;
 		}
 		
-		title = MyUtility.dateFormat().format(since);
+/*		title = MyUtility.dateFormat().format(since);
 		if(period)
 			title = title + " - " + MyUtility.dateFormat().format(to);
-		
+*/		
 		Enumeration enu = courses.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
@@ -126,10 +155,15 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 					boolean finWeek = (week >= 0 && week < cal.get(Calendar.WEEK_OF_YEAR));
 					Object nextValue = work.valueForKeyPath(sectionKey);
 					if(!nextValue.equals(section)) {
-						if(finWeek) {
+						if(finWeek && section instanceof Date) {
 							agregate.addObject(NSArray.EmptyArray);
 							((NSMutableArray)sections).addObject(Boolean.FALSE);
 							week = -1;
+						}
+						if(week < 0 && !(section instanceof Date)) {
+							cal.setTime(work.date());
+							if(-week >= cal.get(Calendar.WEEK_OF_YEAR))
+								week = -week;
 						}
 						section = nextValue;
 						((NSMutableArray)sections).addObject(section);
@@ -139,7 +173,7 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 					} else {
 						if(finWeek) {
 							sectionList.addObject(Boolean.FALSE);
-							week = -1;
+							week = -week;
 						}
 						sectionList.addObject(work);
 					}

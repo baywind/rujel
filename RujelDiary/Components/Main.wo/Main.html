@@ -1,34 +1,47 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 	<head>
-		<title><webobject name = "Title"/></title>
+		<title><webobject name = "Title"/> (<webobject name = "RecentGroupName"/>)</title>
 		<webobject name = "RGBColor"/>
 		<webobject name = "Reusables"/>
 		<webobject name = "LocalLinks"/>
 		<webobject name = "TabLinks"/>		
 	</head>
-	<body>
-	<table width = "100%">
-		<tr><td width = "10%" align = "center">
+	
+	<webobject name = "Body">
+	<table width = "100%" cellpadding = "0" cellspacing = "0" border = "0" style = "border-style:none none solid;height:2em;background-color:#ffffff;" class = "selectionBorder">
+		<tr><td align = "center" valign = "bottom" style = "width:5em;font-size:larger;">
+		<a href = "javaScript:toggleObj('groupList');"><webobject name = "RecentGroupName"/></a>
+		</td><td valign = "bottom" align = "left">
+		<webobject name = "Tabs"/>
+		</td><td align = "right" valign = "bottom" style = "padding:3pt;">
 		<webobject name = "Form">
-		<webobject name = "ShowSince"><webobject name = "Since"/></webobject>
+		<webobject name = "ShowSince">
+		<webobject name = "PeriodTitle"/> <webobject name = "SinceTitle"/>:
+		<webobject name = "Since"/> <webobject name = "ToTitle"/>:</webobject>
+		<webobject name = "JustDate"><webobject name = "DateTitle"/>:</webobject>
 		<webobject name = "DateField"/>
 		</webobject>
-		</td>
-		<td style = "vertical-align:bottom;border-style:none none solid;" class = "selectionBorder">
-		<webobject name = "Tabs"/></td>
-		</tr>
-		<tr><td class = "backfield2">
+	</td></tr></table>
+		<div id = "groupList" class = "backfield2 selectionBorder"  style = "position:absolute;display:none;width:5em;padding:4pt;border-width:1px;">
 		<table width = "100%">
 		<webobject name = "GroupRow">
 		<td align = "right"><webobject name = "GoupGrade"/></td>
 		<td align = "left"><webobject name = "GroupName"/></td>
 		</webobject>
 		</table>
-		</td>
-		<td class = "backfield1 selectionBorder" style = "border-style:none;border-left-style:solid;">
+		</div>
+		<webobject name = "FrontPage">
+		<script language = "JavaScript">
+			showObj("groupList");
+		</script>
+		
+		</webobject>
+		<webobject name = "GroupSelected">
+		<div class = "backfield1">
+		<br/>
 		<webobject name = "Component"/>
-		</td></tr>
-	</table>
-	</body>
+		</div>
+		</webobject>
+	</webobject>
 </html>

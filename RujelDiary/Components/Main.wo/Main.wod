@@ -16,6 +16,7 @@ DateField : DateField {
   size = 10;
   name = "date";
   date = date;
+  style = "text-align:center;";
 }
 
 ShowSince : WOConditional {
@@ -28,6 +29,7 @@ Since : DateField {
   date = since;
   baseName = "date";
   shift = -7;
+  style = "text-align:center;";
 }
 Reusables : ResourceLink {
 	framework = "Reusables";
@@ -84,4 +86,46 @@ Tabs : Tabs {
   titleAttribute = "title";
   idAttribute = "id";
   onClick = "takeValueForKey(this.id,'regime',true);";
+}
+
+PeriodTitle: WOString {
+	value = application.strings.Reusables_Strings.dataTypes.period;
+}
+
+SinceTitle : WOString {
+  value = application.strings.Reusables_Strings.dataTypes.since;
+}
+
+ToTitle : WOString {
+  value = application.strings.Reusables_Strings.dataTypes.to;
+}
+
+DateTitle : WOString {
+  value = application.strings.Reusables_Strings.dataTypes.date;
+}
+
+JustDate : WOConditional {
+  condition = currTab.period;
+  negate = true;
+}
+
+RecentGroupName : WOString {
+  value = grName;
+}
+
+GroupSelected : WOConditional {
+  condition = courses.count;
+}
+
+FrontPage : WOConditional {
+  condition = currGr;
+  negate = true;
+}
+
+Image : WOImage {
+	filename = "Dairy.jpg";
+}
+
+Body : WOBody {
+	filename = "Dairy.jpg";
 }
