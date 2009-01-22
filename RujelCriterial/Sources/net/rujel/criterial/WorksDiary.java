@@ -291,4 +291,8 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		NSTimestamp announceDate = ((Work)item).announce();
 		return MyUtility.dateFormat().format(announceDate);
 	}
+	
+	public String sectionID() {
+		return "s" + index.toString();
+	}
 }

@@ -11,7 +11,7 @@ Sections : WORepetition {
 
 Table : WOGenericContainer {
   elementName = "table";
-  id = index;
+  id = sectionID;
   border = 0;
   width = "100%";
 }
@@ -46,6 +46,7 @@ LinkImage : WOImage {
 	align = "right";
 	title = item.taskUrl;
 	onclick = "window.open(this.title);";
+	alt = item.taskUrl; 
 }
 
 RegularSection : WOConditional {

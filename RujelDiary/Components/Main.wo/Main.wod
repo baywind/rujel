@@ -6,10 +6,20 @@ Title : WOString {
 Form : WOForm {
 	directActionName = "";
 	name = "request";
-	method = "GET";
+	method = "get";
 	?grID = currGr;
 	?regime = currTab.id;
 	onsubmit = "removeDefault(this);";
+}
+
+RegimeField : WOHiddenField {
+  name = "regime";
+  value = currTab.id;
+}
+
+GrField : WOHiddenField {
+  name = "grID";
+  value = currGr;
 }
 
 DateField : DateField {
@@ -128,4 +138,10 @@ Image : WOImage {
 
 Body : WOBody {
 	filename = "Dairy.jpg";
+}
+
+ImageButton : WOImageButton {
+	framework = "JavaWOExtensions";
+	filename = "TransparentPixel.gif";
+	directActionName = "";
 }
