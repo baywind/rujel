@@ -2,7 +2,7 @@ Exception : WOString {
   value = throwable.class.name;
 }
 
-
-Message : WOString {
-  value = throwable.message;
+Details : WOString {
+  value = details;
+  escapeHTML = false;
 }

@@ -62,7 +62,7 @@ public class Main extends WOComponent {
 	protected NSArray groupList;
 	public NSArray tabs;
 	public NSKeyValueCoding currTab;
-	public Integer tabIndex;
+	//public Integer tabIndex;
 	public Number currGr;
 
 	public NSKeyValueCoding item;
@@ -100,7 +100,7 @@ public class Main extends WOComponent {
 				for(int i = tabs.count() -1;i>=0;i--) {
 					currTab = (NSKeyValueCoding)tabs.objectAtIndex(i);
 					if(txt.equals(currTab.valueForKey("id"))) {
-						tabIndex = new Integer(i);
+						//tabIndex = new Integer(i);
 						break;
 					}
 				}

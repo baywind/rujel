@@ -7,5 +7,12 @@
 	</head>
 <body>
 <h1>Произошла ошибка</h1>
-<p><b><webobject name = "Exception"/>:</b> <webobject name = "Message"/></p>
+<div style = "margin:3em;">
+<a href="#"  style = "background-color:#fff;"
+onclick = "d=document.getElementById('details');disp=d.style.display;d.style.display=(disp=='none')?'':'none';">
+Детальная информация</a>
+<div id = "details" style = "display:none;text-align:left;padding:1em;background-color:#ccc;">
+<webobject name = "Details"/>
+</div>
+</div>
 </body>

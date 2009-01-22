@@ -43,6 +43,23 @@ public class ErrorPage extends com.webobjects.appserver.WOComponent {
     public String details() {
     	if(throwable == null)
     		return null;
-    	return WOLogFormatter.formatTrowable(throwable);
+    	return WOLogFormatter.formatTrowableHTML(throwable);
+/*    	StringBuffer result = new StringBuffer();
+    	WOLogFormatter.formatTrowable(throwable,result);
+    	int idx =  result.indexOf("<") + result.indexOf(">") + result.indexOf("&");
+    	if(idx == -3) {
+    		idx = result.indexOf("\n");
+    		String br = "<br/>";
+    		while (idx > 0) {
+    			result.insert(idx, br);
+    			idx = result.indexOf("\n",idx + 6);
+    		}
+    		return result.toString();
+    	} else {
+    		String resultString = result.toString();
+    		resultString = WOMessage.stringByEscapingHTMLString(resultString);
+    		resultString = resultString.replace("\n", "\n<br/>");
+    		return resultString;
+    	}*/
     }
 }

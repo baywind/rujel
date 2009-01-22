@@ -4,6 +4,7 @@ Wrapper : PageWrapper {
 
 Title : WOString {
   value = application.strings.Strings.ErrorPages.Error;
+  valueWhenEmpty = "Error";
 }
 
 Message : WOString {
@@ -35,5 +36,5 @@ ShowDetails : WOString {
 
 Details : WOString {
   value = details;
-  escapeHTML = true;
+  escapeHTML = false;
 }

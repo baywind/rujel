@@ -79,7 +79,7 @@ public class Session extends WOSession implements WithUser {
 		Object value = null;
 		for (int i = 0; i < CLIENT_IDENTITY_KEYS.length; i++) {
 			value = request.headerForKey((String)CLIENT_IDENTITY_KEYS[i]);
-			if(value != null && !result.containsValue(value))
+			if(value != null && (result.count() == 0 || !result.containsValue(value)))
 				result.setObjectForKey(value,CLIENT_IDENTITY_KEYS[i]);
 		}
 		return result;
