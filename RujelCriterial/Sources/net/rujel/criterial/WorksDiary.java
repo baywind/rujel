@@ -230,8 +230,8 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 				result.append(" <i>(").append(course.comment()).append(")</i>");
 			}
 			if(course.teacher() != null) {
-				result.append(" <span style=\"font-weight:normal;\">- ");
-				result.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+				result.append(" <span style=\"font-weight:normal;font-size:medium;\">- ");
+				result.append(Person.Utility.fullName(course.teacher(), true, 2, 2, 2));
 				result.append("</span>");
 			}
 		} else { // unknown section type
