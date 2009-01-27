@@ -41,6 +41,8 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import java.math.BigDecimal;
 import java.text.Format;
+import java.util.Enumeration;
+import java.util.logging.Logger;
 
 public class MarksPresenter extends NotePresenter {
 	public static final NSArray accessKeys = new NSArray (
@@ -126,7 +128,21 @@ public class MarksPresenter extends NotePresenter {
 			} else if(Various.boolForObject(valueForBinding("full"))) {
 				_usedCriteria = allCriteria();
 			} else {
-				_usedCriteria = lesson().usedCriteria();
+				if(lesson() != null) {
+					_usedCriteria = lesson().usedCriteria();
+				} else {
+					// TODO: remove this debug
+					NSMutableDictionary args = new NSMutableDictionary(parent().name(),"parent");
+					Enumeration enu = bindingKeys().objectEnumerator();
+					while (enu.hasMoreElements()) {
+						String key = (String) enu.nextElement();
+						Object value = valueForBinding(key);
+						if(value == null)
+							value = "NULL";
+						args.takeValueForKey(value, key);
+					}
+					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",args);
+				}
 			}
 			if(_usedCriteria == null) _usedCriteria = NSArray.EmptyArray;
 		}

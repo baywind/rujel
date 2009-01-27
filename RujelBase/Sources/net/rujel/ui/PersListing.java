@@ -47,7 +47,7 @@ public class PersListing extends WOComponent {
 	private int secondNameDisplay = 2;
 //	protected String entity;
 	protected NamedFlags access;
-	protected NSDictionary strings = (NSDictionary)application().valueForKey("strings");
+	protected NSDictionary strings = (NSDictionary)application().valueForKeyPath("strings.Strings");
 	public static final NSArray accessKeys = new NSArray(new Object[] {
 		"search", "create", "edit","delete"});
 	private NSArray found;
