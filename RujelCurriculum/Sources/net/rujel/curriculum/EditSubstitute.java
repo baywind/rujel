@@ -29,6 +29,7 @@
 
 package net.rujel.curriculum;
 
+import java.math.BigDecimal;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
@@ -55,7 +56,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     public EduLesson lesson;
     public NSArray forcedList;
 	public Teacher teacher;
-	public boolean join = false;
+	//public boolean join = false;
+	public BigDecimal factor = BigDecimal.ONE;
 	public String comment;
 	public Boolean cantSelect;
 	public Boolean cantEdit = Boolean.TRUE;
@@ -85,7 +87,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     				forcedList = forcedList.arrayByAddingObject(teacher);
     		}
     		comment = (String)substitute.valueForKeyPath("reason.reason");
-    		join = sub.sFlags().flagForKey("join");
+    		//join = sub.sFlags().flagForKey("join");
+    		factor = sub.factor();
     		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
     		cantSelect = cantEdit;
     		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.substitute");
@@ -121,7 +124,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			action = "created";
 		}
 		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
-		substitute.sFlags().setFlagForKey(join, "join");
+		//substitute.sFlags().setFlagForKey(join, "join");
+		substitute.setFactor(factor);
 		if(comment == null) {
 			EOEnterpriseObject reason = substitute.reason();
 			if(reason != null) {

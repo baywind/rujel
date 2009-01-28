@@ -24,7 +24,7 @@ SubstitutorSelect : PersListing {
 }
 
 JoinTitle : WOString {
-	value = application.strings.RujelCurriculum_Curriculum.Join;
+	value = application.strings.RujelCurriculum_Curriculum.Factor;
 }
 
 CommentTitle : WOString {
@@ -81,7 +81,11 @@ ResetButton1: WOResetButton {
 	onclick = "closePopup();";
 }
 
-JoinCheckBox : WOCheckBox {
-	checked = join;
+FactorField : WOTextField {
+	value = factor;
+	numberformat = "0.##";
+	onkeypress = "return isNumberInput(event,true);";
+	size = 3;
+	style = "text-align:center;";
 	disabled = cantEdit;
 }

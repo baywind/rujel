@@ -9,6 +9,13 @@
         }, 
         {
             allowsNull = Y; 
+            columnName = "EDU_GROUP"; 
+            name = eduGroupID; 
+            prototypeName = "int_3"; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = Y; 
             columnName = END; 
             name = end; 
             prototypeName = date; 
@@ -27,11 +34,31 @@
             name = rID; 
             prototypeName = "int_3"; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = SCHOOL; 
+            name = school; 
+            prototypeName = short; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = TEACHER; 
+            name = teacherID; 
+            prototypeName = "int_3"; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            columnName = VERIFICATION; 
+            name = verification; 
+            prototypeName = string; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (begin, end, reason); 
-    className = EOGenericRecord; 
-    classProperties = (begin, end, reason, substitutes); 
+    attributesUsedForLocking = (begin, eduGroupID, end, reason, school, teacherID, verification); 
+    className = "net.rujel.curriculum.Reason"; 
+    classProperties = (begin, end, reason, school, substitutes, variations, verification); 
     externalName = REASON; 
     fetchSpecificationDictionary = {}; 
     name = Reason; 
@@ -44,6 +71,13 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = reasonID; sourceAttribute = rID; }); 
             name = substitutes; 
+        }, 
+        {
+            destination = Variation; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = reasonID; sourceAttribute = rID; }); 
+            name = variations; 
         }
     ); 
 }

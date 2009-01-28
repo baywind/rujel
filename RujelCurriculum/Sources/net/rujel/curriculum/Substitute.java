@@ -29,6 +29,7 @@
 
 package net.rujel.curriculum;
 
+import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -50,11 +51,11 @@ import net.rujel.reusables.*;
 
 public class Substitute extends _Substitute {
 	protected static Logger logger = Logger.getLogger("rujel.curriculum");
-	public static NSArray flagKeys = new NSArray("join");
+	//public static NSArray flagKeys = new NSArray("join");
 		
 	public static void init() {
 		EORelationship rel = EOInitialiser.initialiseRelationship(
-				"Substitute","lesson",false,"lessonID","EduLesson").anyInverseRelationship();
+				ENTITY_NAME,"lesson",false,"lessonID","EduLesson").anyInverseRelationship();
 		EOEntity ent = rel.entity();
 		//EOEntity dest = rel.destinationEntity();
 		//NSArray joins = rel.joins();
@@ -118,7 +119,7 @@ public class Substitute extends _Substitute {
 		super.validateForSave();
 	}
 	
-	protected NamedFlags _flags;
+/*	protected NamedFlags _flags;
 	public NamedFlags sFlags() {
 		if(_flags == null) {
 			_flags = new NamedFlags(flags().intValue(),flagKeys);
@@ -129,21 +130,21 @@ public class Substitute extends _Substitute {
 	
 	public void setFlags(Number newFlags) {
 		super.setFlags(new Integer(newFlags.intValue()));
-	}
+	}*/
 	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
-		super.setFlags(new Integer(0));
-		Integer school = null;
+		super.setFactor(BigDecimal.ONE);
+/*		Integer school = null;
 		if(editingContext() instanceof SessionedEditingContext)
 			school = (Integer)valueForKeyPath("editingContext.session.school");
 		if(school == null)
 			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
 		setSchool(school);
-	}
+*/	}
 	
 	public String title() {
-		if(sFlags().flagForKey("join"))
+		if(factor().compareTo(BigDecimal.ONE) < 0)//(sFlags().flagForKey("join"))
 			return (String)WOApplication.application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Join");
 		return (String)WOApplication.application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute");
 	}
@@ -183,7 +184,7 @@ public class Substitute extends _Substitute {
     public static NSArray substitutesForPeriod(EOEditingContext ec, NSTimestamp begin,
     		NSTimestamp end, Integer school) {
        	NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(
-       			Substitute.SCHOOL_KEY, EOQualifier.QualifierOperatorEqual,school));
+       			"reason.school", EOQualifier.QualifierOperatorEqual,school));
     	quals.addObject(new EOKeyValueQualifier(Substitute.DATE_KEY,
     			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin));
     	quals.addObject(new EOKeyValueQualifier(Substitute.DATE_KEY,

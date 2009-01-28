@@ -1,4 +1,4 @@
-// _Substitute.java
+//  Reason.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -27,48 +27,50 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Substitute.java instead.
-
 package net.rujel.curriculum;
 
-import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
-import java.math.BigDecimal;
+import com.webobjects.eocontrol.*;
+import com.webobjects.eoaccess.EOUtilities;
 
-@SuppressWarnings("all")
-public abstract class _Substitute extends EOGenericRecord {
-	public static final String ENTITY_NAME = "Substitute";
+import net.rujel.interfaces.*;
+import net.rujel.reusables.*;
 
-	// Attributes
-	public static final String DATE_KEY = "date";
-	public static final String FACTOR_KEY = "factor";
+public class Reason extends _Reason {
 
-	// Relationships
-	public static final String REASON_KEY = "reason";
+	public static void init() {
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"eduGroup",false,"eduGroupID","EduGroup");
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"teacher",false,"teacherID","Teacher");
+	}
 
-  public NSTimestamp date() {
-    return (NSTimestamp) storedValueForKey(DATE_KEY);
-  }
+	public void awakeFromInsertion(EOEditingContext ec) {
+		super.awakeFromInsertion(ec);
+		Integer school = null;
+		if(editingContext() instanceof SessionedEditingContext)
+			school = (Integer)valueForKeyPath("editingContext.session.school");
+		if(school == null)
+			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
+		setSchool(school);
+	}
 
-  public void setDate(NSTimestamp value) {
-    takeStoredValueForKey(value, DATE_KEY);
-  }
-
-  public BigDecimal factor() {
-    return (BigDecimal) storedValueForKey(FACTOR_KEY);
-  }
-
-  public void setFactor(BigDecimal value) {
-    takeStoredValueForKey(value, FACTOR_KEY);
-  }
-
-  public net.rujel.curriculum.Reason reason() {
-    return (net.rujel.curriculum.Reason)storedValueForKey(REASON_KEY);
-  }
-
-  public void setReason(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, REASON_KEY);
-  }
-  
+	public EduGroup eduGroup() {
+		return (EduGroup)storedValueForKey("eduGroup");
+	}
+	
+	public void setEduGroup(EduGroup gr) {
+		takeStoredValueForKey(gr, "eduGroup");
+	}
+	
+	public Teacher teacher() {
+		return (Teacher)storedValueForKey("teacher");
+	}
+	
+	public void setTeacher(Teacher newTeacher) {
+		takeStoredValueForKey(newTeacher, "teacher");
+	}
+	
+	public static NSArray reasons (NSTimestamp date, EduCourse course) {
+		//EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("", arg1)
+		return null;
+	}
 }

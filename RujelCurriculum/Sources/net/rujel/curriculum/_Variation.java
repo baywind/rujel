@@ -1,4 +1,4 @@
-// _Substitute.java
+// _Variation.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Substitute.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Variation.java instead.
 
 package net.rujel.curriculum;
 
@@ -37,12 +37,12 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _Substitute extends EOGenericRecord {
-	public static final String ENTITY_NAME = "Substitute";
+public abstract class _Variation extends EOGenericRecord {
+	public static final String ENTITY_NAME = "Variation";
 
 	// Attributes
 	public static final String DATE_KEY = "date";
-	public static final String FACTOR_KEY = "factor";
+	public static final String VALUE_KEY = "value";
 
 	// Relationships
 	public static final String REASON_KEY = "reason";
@@ -55,12 +55,12 @@ public abstract class _Substitute extends EOGenericRecord {
     takeStoredValueForKey(value, DATE_KEY);
   }
 
-  public BigDecimal factor() {
-    return (BigDecimal) storedValueForKey(FACTOR_KEY);
+  public Integer value() {
+    return (Integer) storedValueForKey(VALUE_KEY);
   }
 
-  public void setFactor(BigDecimal value) {
-    takeStoredValueForKey(value, FACTOR_KEY);
+  public void setValue(Integer value) {
+    takeStoredValueForKey(value, VALUE_KEY);
   }
 
   public net.rujel.curriculum.Reason reason() {

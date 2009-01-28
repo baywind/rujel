@@ -2,24 +2,16 @@
     attributes = (
         {
             allowsNull = N; 
-            columnName = "LESSON_DATE"; 
+            columnName = COURSE; 
+            name = courseID; 
+            prototypeName = "int_3"; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = "V_DATE"; 
             name = date; 
             prototypeName = date; 
-            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
-        }, 
-        {
-            allowsNull = N; 
-            columnName = FACTOR; 
-            name = factor; 
-            prototypeName = decimal; 
-            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
-            valueType = i; 
-        }, 
-        {
-            allowsNull = N; 
-            columnName = LESSON; 
-            name = lessonID; 
-            prototypeName = integer; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
@@ -31,19 +23,26 @@
         }, 
         {
             allowsNull = N; 
-            columnName = TEACHER; 
-            name = teacherID; 
-            prototypeName = "int_3"; 
+            columnName = VALUE; 
+            name = value; 
+            prototypeName = byte; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = "V_ID"; 
+            name = vID; 
+            prototypeName = integer; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (date, factor, teacherID); 
-    className = "net.rujel.curriculum.Substitute"; 
-    classProperties = (date, factor, reason); 
-    externalName = SUBSTITUTE; 
+    attributesUsedForLocking = (courseID, date, value); 
+    className = "net.rujel.curriculum.Variation"; 
+    classProperties = (date, reason, value); 
+    externalName = VARIATION; 
     fetchSpecificationDictionary = {}; 
-    name = Substitute; 
-    primaryKeyAttributes = (lessonID, teacherID); 
+    name = Variation; 
+    primaryKeyAttributes = (vID); 
     relationships = (
         {
             destination = Reason; 

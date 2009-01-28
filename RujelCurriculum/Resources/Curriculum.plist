@@ -8,6 +8,8 @@
 	<string>Совмещение</string>
 	<key>Reason</key>
 	<string>Причина</string>
+	<key>Factor</key>
+	<string>Кэффициент</string>
 	<key>wrongTeacherMessage</key>
 	<string>В замене должен быть указан учитель отличный от ведущего курс.</string>
 	<key>subsReport</key>
