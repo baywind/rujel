@@ -31,7 +31,6 @@ package net.rujel.curriculum;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
-import com.webobjects.eoaccess.EOUtilities;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
@@ -69,8 +68,63 @@ public class Reason extends _Reason {
 		takeStoredValueForKey(newTeacher, "teacher");
 	}
 	
+	public String title() {
+		if(teacher() == null && eduGroup() == null)
+			return reason();
+		StringBuilder result = new StringBuilder(reason());
+		result.append(' ').append('(');
+		if(teacher() != null) {
+			Person t = teacher().person();
+			result.append(t.lastName()).append(' ');
+			if(t.firstName() != null) {
+				result.append(t.firstName().charAt(0)).append('.');
+				if(t.secondName() != null)
+				result.append(' ').append(t.secondName().charAt(0)).append('.');
+			}
+		}
+		if(eduGroup() != null) {
+			if(teacher() != null)
+				result.append(',').append(' ');
+			result.append(eduGroup().name());
+		}
+		result.append(')');
+		return result.toString();
+	}
+	
+	public boolean unverified() {
+		return (verification() == null || verification().length() == 0);
+	}
+	
 	public static NSArray reasons (NSTimestamp date, EduCourse course) {
-		//EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("", arg1)
-		return null;
+		EOQualifier qual = new EOKeyValueQualifier(SCHOOL_KEY,
+				EOQualifier.QualifierOperatorEqual,course.cycle().school());
+		NSMutableArray quals = new NSMutableArray(qual);
+		qual = new EOKeyValueQualifier(BEGIN_KEY,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
+		quals.addObject(qual);
+		qual = new EOKeyValueQualifier(END_KEY,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
+		quals.addObject(qual);
+		qual = new EOKeyValueQualifier(BEGIN_KEY,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
+		quals.addObject(qual);
+		// specs
+		EOQualifier[] ors = new EOQualifier[2];
+		ors[0] = new EOKeyValueQualifier("teacher",
+				EOQualifier.QualifierOperatorEqual,course.teacher());
+		ors[1] = new EOKeyValueQualifier("teacher",
+				EOQualifier.QualifierOperatorEqual,NullValue);
+		qual = new EOOrQualifier(new NSArray(ors));
+		quals.addObject(qual);
+		ors[0] = new EOKeyValueQualifier("eduGroup",
+				EOQualifier.QualifierOperatorEqual,course.eduGroup());
+		ors[1] = new EOKeyValueQualifier("eduGroup",
+				EOQualifier.QualifierOperatorEqual,NullValue);
+		qual = new EOOrQualifier(new NSArray(ors));
+		quals.addObject(qual);
+		qual = new EOAndQualifier(quals);
+		EOFetchSpecification fs = new EOFetchSpecification(
+				ENTITY_NAME,qual,EOPeriod.sorter);
+		return course.editingContext().objectsWithFetchSpecification(fs);
 	}
 }

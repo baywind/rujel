@@ -15,5 +15,5 @@ SubstituteTD : OnClickContainer {
   onclick = session.ajaxPopup;
   colspan = "2";
   style = "border-bottom:solid 1px lime;";
-  title = substitute.reason.reason;
+  title = substitute.reason.title;
 }

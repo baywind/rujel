@@ -42,11 +42,9 @@ public abstract class _Reason extends EOGenericRecord {
 
 	// Attributes
 	public static final String BEGIN_KEY = "begin";
-	public static final String EDU_GROUP_ID_KEY = "eduGroupID";
 	public static final String END_KEY = "end";
 	public static final String REASON_KEY = "reason";
 	public static final String SCHOOL_KEY = "school";
-	public static final String TEACHER_ID_KEY = "teacherID";
 	public static final String VERIFICATION_KEY = "verification";
 
 	// Relationships
@@ -59,14 +57,6 @@ public abstract class _Reason extends EOGenericRecord {
 
   public void setBegin(NSTimestamp value) {
     takeStoredValueForKey(value, BEGIN_KEY);
-  }
-
-  public Integer eduGroupID() {
-    return (Integer) storedValueForKey(EDU_GROUP_ID_KEY);
-  }
-
-  public void setEduGroupID(Integer value) {
-    takeStoredValueForKey(value, EDU_GROUP_ID_KEY);
   }
 
   public NSTimestamp end() {
@@ -91,14 +81,6 @@ public abstract class _Reason extends EOGenericRecord {
 
   public void setSchool(Integer value) {
     takeStoredValueForKey(value, SCHOOL_KEY);
-  }
-
-  public Integer teacherID() {
-    return (Integer) storedValueForKey(TEACHER_ID_KEY);
-  }
-
-  public void setTeacherID(Integer value) {
-    takeStoredValueForKey(value, TEACHER_ID_KEY);
   }
 
   public String verification() {
