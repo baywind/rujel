@@ -41,11 +41,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
 
-public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,Period
+public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,EOPeriod
 {
- 	public static final NSArray sorter = new NSArray(new Object[] {
-		EOSortOrdering.sortOrderingWithKey("end",EOSortOrdering.CompareAscending),
-		EOSortOrdering.sortOrderingWithKey("begin",EOSortOrdering.CompareDescending)});
 
 	public EduPeriod() {
         super();
@@ -318,27 +315,5 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,Per
 			return null;
 		int year = eduYear().intValue();
 		return MyUtility.presentEduYear(year);
-	}
-	
-	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
-				
-		public int compareAscending(Object left, Object right)  {
-			Period l = (Period)left;
-			Period r = (Period)right;
-			int result = l.end().compareTo(r.end());
-			if(result == 0)
-				result = r.begin().compareTo(l.begin());
-			return result;
-		}
-		public int compareCaseInsensitiveAscending(Object left, Object right)  {
-			return compareAscending(left, right) ;
-		}
-		
-		public int compareDescending(Object left, Object right)  {
-			return compareAscending(right, left) ;
-		}
-		public int compareCaseInsensitiveDescending(Object left, Object right)  {
-			return compareAscending(right, left) ;
-		}
 	}
 }
