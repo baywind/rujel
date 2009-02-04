@@ -13,7 +13,6 @@
             name = factor; 
             prototypeName = decimal; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
-            valueType = i; 
         }, 
         {
             allowsNull = N; 

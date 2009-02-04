@@ -1,0 +1,40 @@
+<table id = "reasonList" width = "100%">
+	<thead><tr>
+	<td style = "width:1em;"></td>
+	<th><webobject name = "ReasonTitle"/></th>
+	<th style = "width:1ex;">@</th>
+	<th style = "width:1ex;">@</th>
+	</tr></thead>
+	<tfoot class = "backfield2" style = "display:none;" id = "reasonEdit">
+	<tr>
+	<td colspan = "4" style = "padding:3pt;"><webobject name = "ReasonTextField"/><webobject name = "DefaultDate"/></td></tr>
+	<tr><td colspan = "4"><webobject name = "ActiveTitle"/> 
+	<span style = "white-space:nowrap;"><webobject name = "BeginTitle"/>:
+		<webobject name = "BeginDate"/></span>
+	<span style = "white-space:nowrap;"><webobject name = "EndTitle"/>:
+		<webobject name = "EndDate"/></span>
+	</td></tr>
+	<tr><td align = "left" colspan = "4"><webobject name = "RelatedTitle"/>:</td>
+	<tr><td><webobject name = "HasTeacher"/></td>
+		<td align = "left" colspan = "3"><webobject name = "WithTeacher"/>:
+		<webobject name = "CourseTeacher"/></td></tr>
+	<tr><td><webobject name = "HasEduGroup"/></td>
+		<td align = "left" colspan = "3"><webobject name = "WithEduGroup"/>: 
+		<webobject name = "CourseEduGroup"/></td></tr>
+	</tfoot>
+	
+	<tbody><webobject name = "ReasonsRepetition"><webobject name = "ReasonRow">
+		<td><webobject name = "ReasonRB"/></td>
+		<webobject name = "TextCell"><webobject name = "ReasonText"/>
+		<webobject name = "CanEdit"><webobject name = "EditIcon"/></webobject></webobject>
+		<webobject name = "HasSpecs">
+		<td><webobject name = "ItemHasTeacher">&bull;</webobject></td>
+		<td><webobject name = "ItemHasEduGroup">&diams;</webobject></td></webobject>
+		</webobject></webobject>
+		<webobject name = "CanCreate">
+			<tr class = "grey"><td><webobject name = "OtherRB"/></td>
+			<td colspan = "3"><webobject name = "OtherTitle"/></td></tr>
+		</webobject>
+	</tbody>
+</table>
+	

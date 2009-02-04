@@ -89,3 +89,10 @@ FactorField : WOTextField {
 	style = "text-align:center;";
 	disabled = cantEdit;
 }
+
+ReasonSelector : ReasonSelector {
+  course = lesson.course;
+  date = lesson.date;
+  reason = reason;
+  readOnly = cantEdit;
+}

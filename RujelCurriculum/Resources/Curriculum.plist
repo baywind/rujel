@@ -9,7 +9,7 @@
 	<key>Reason</key>
 	<string>Причина</string>
 	<key>Factor</key>
-	<string>Кэффициент</string>
+	<string>Коэффициент</string>
 	<key>wrongTeacherMessage</key>
 	<string>В замене должен быть указан учитель отличный от ведущего курс.</string>
 	<key>subsReport</key>
@@ -18,6 +18,20 @@
 	<string>Замененный</string>
 	<key>Substitutor</key>
 	<string>Заменяющий</string>
+	<key>other</key>
+	<string>Другая причина</string>
+	<key>relatedTo</key>
+	<string>связано с </string>
+	<key>withTeacher</key>
+	<string>преподавателем</string>
+	<key>withEduGroup</key>
+	<string>классом</string>
+	<key>isActive</key>
+	<string>Актуально</string>
+	<key>begin</key>
+	<string>с</string>
+	<key>end</key>
+	<string>по</string>
 	<key>titles</key>
 	<dict>
 		<key>OrigTeacher</key>

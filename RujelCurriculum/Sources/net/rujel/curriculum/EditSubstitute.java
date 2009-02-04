@@ -58,7 +58,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 	public Teacher teacher;
 	//public boolean join = false;
 	public BigDecimal factor = BigDecimal.ONE;
-	public String comment;
+	//public String comment;
+	public Reason reason;
 	public Boolean cantSelect;
 	public Boolean cantEdit = Boolean.TRUE;
 	public Boolean canDelete = Boolean.FALSE;
@@ -86,7 +87,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     			else
     				forcedList = forcedList.arrayByAddingObject(teacher);
     		}
-    		comment = (String)substitute.valueForKeyPath("reason.reason");
+    		reason = substitute.reason();
+    		//comment = (String)substitute.valueForKeyPath("reason.reason");
     		//join = sub.sFlags().flagForKey("join");
     		factor = sub.factor();
     		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
@@ -106,7 +108,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		String path = "readAccess._edit." + ((substitute==null)?'S':'s') +"ubstitute";
     		cantEdit = (Boolean)session().valueForKeyPath(path);
     	} else {
-    		cantEdit = Boolean.FALSE;
+    		cantEdit = Boolean.TRUE;
     	}
     }
     
@@ -115,6 +117,11 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 	}
     
 	public WOActionResults save() {
+		if(reason == null) {
+			if (returnPage instanceof WOComponent) 
+				((WOComponent)returnPage).ensureAwakeInContext(context());
+			return returnPage;
+		}
 		String action = "saved";
 		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
@@ -126,7 +133,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
 		//substitute.sFlags().setFlagForKey(join, "join");
 		substitute.setFactor(factor);
-		if(comment == null) {
+		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
+/*		if(comment == null) {
 			EOEnterpriseObject reason = substitute.reason();
 			if(reason != null) {
 				NSArray subs = (NSArray)reason.valueForKey("substitutes");
@@ -139,7 +147,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			EOEnterpriseObject reason = EOUtilities.createAndInsertInstance(ec, "Reason");
 			reason.takeValueForKey(comment, "reason");
 			substitute.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
-		}
+		}*/
 		return done(action);
 	}
 	
@@ -147,7 +155,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
 		if(substitute != null && substitute.editingContext() != null) {
-			EOEnterpriseObject reason = substitute.reason();
+			reason = substitute.reason();
 			if(reason != null) {
 				NSArray subs = (NSArray)reason.valueForKey("substitutes");
 				if(subs == null || subs.count() < 2) {

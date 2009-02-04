@@ -14,5 +14,6 @@
         <validation message="'reason' must be bound to a settable value">
             <unsettable name="reason"/>
         </validation>
+    <binding defaults="Boolean" name="readOnly"/>
     </wo>
 </wodefinitions>

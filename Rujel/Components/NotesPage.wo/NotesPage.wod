@@ -3,7 +3,7 @@ StudentTitle: WOString {
 }
 
 IfSave: WOConditional {
-	condition = currLesson.access.edit;
+	condition = session.readAccess.edit.currLesson;
 }
 
 Save: WOSubmitButton {

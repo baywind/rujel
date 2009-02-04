@@ -71,13 +71,16 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = reasonID; sourceAttribute = rID; }); 
             name = substitutes; 
+            ownsDestination = Y; 
         }, 
         {
+            deleteRule = EODeleteRuleDeny; 
             destination = Variation; 
             isToMany = Y; 
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = reasonID; sourceAttribute = rID; }); 
             name = variations; 
+            ownsDestination = Y; 
         }
     ); 
 }

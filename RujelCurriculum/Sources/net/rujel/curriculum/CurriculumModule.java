@@ -7,12 +7,12 @@
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
  * 
- * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 	ï¿½	Redistributions of source code must retain the above copyright notice, this
  * 		list of conditions and the following disclaimer.
- * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 	ï¿½	Redistributions in binary form must reproduce the above copyright notice,
  * 		this list of conditions and the following disclaimer in the documentation
  * 		and/or other materials provided with the distribution.
- * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 	ï¿½	Neither the name of the RUJEL nor the names of its contributors may be used
  * 		to endorse or promote products derived from this software without specific 
  * 		prior written permission.
  * 		
@@ -45,6 +45,8 @@ public class CurriculumModule {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			Substitute.init();
+			Reason.init();
+			Variation.init();
 		} else if ("extendLesson".equals(obj)) {
 			return extendLesson(ctx);
 		} else if ("lessonProperies".equals(obj)) {

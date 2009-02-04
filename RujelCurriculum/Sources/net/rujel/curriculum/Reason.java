@@ -73,6 +73,12 @@ public class Reason extends _Reason {
 			return reason();
 		StringBuilder result = new StringBuilder(reason());
 		result.append(' ').append('(');
+		exts(result);
+		result.append(')');
+		return result.toString();
+	}
+	
+	protected void exts(StringBuilder result) {
 		if(teacher() != null) {
 			Person t = teacher().person();
 			result.append(t.lastName()).append(' ');
@@ -86,9 +92,15 @@ public class Reason extends _Reason {
 			if(teacher() != null)
 				result.append(',').append(' ');
 			result.append(eduGroup().name());
-		}
-		result.append(')');
-		return result.toString();
+		}		
+	}
+	
+	public String extToString() {
+		if(teacher() == null && eduGroup() == null)
+			return null;
+		StringBuilder sb = new StringBuilder(12);
+		exts(sb);
+		return sb.toString();
 	}
 	
 	public boolean unverified() {

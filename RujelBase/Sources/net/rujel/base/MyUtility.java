@@ -37,6 +37,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOSession;
 
 import java.text.Format;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -52,6 +53,21 @@ public class MyUtility {
 
 	public static Format dateFormat() {
 		return new NSTimestampFormatter(SettingsReader.stringForKeyPath("ui.dateFormat","%Y-%m-%d"));
+	}
+	
+	public static NSTimestamp parseDate(String dateString) {
+		if(dateString == null)
+			return null;
+		try {
+			Object result = dateFormat().parseObject(dateString);
+			if(result instanceof NSTimestamp)
+				return (NSTimestamp)result;
+			if(result instanceof Date)
+				return new NSTimestamp((Date)result);
+		} catch (ParseException e) {
+			return null;
+		}
+		return null;
 	}
 
 	public static Integer eduYearForSession(WOSession session,String dateKey) {

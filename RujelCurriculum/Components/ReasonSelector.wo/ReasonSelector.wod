@@ -1,0 +1,147 @@
+ReasonsRepetition : WORepetition {
+  list = reasonList;
+  item = rItem;
+}
+
+ReasonRow : WOGenericContainer {
+  elementName = "tr";
+  class = styleClass;
+}
+
+ReasonRB : WORadioButton {
+  name = "selectReason";
+  value = rItem;
+  selection = reason;
+  onchange = "if(checked){hideObj('reasonEdit');form.begin.value=form.begin.defaultValue;form.end.value=form.end.defaultValue;form.defaultDate.value=form.defaultDate.defaultValue;}";
+}
+
+ReasonText : WOString {
+  value = rItem.reason;
+}
+
+TextCell : WOGenericContainer {
+  elementName = "td";
+  colspan = colspan;
+}
+
+HasSpecs : WOConditional {
+  condition = colspan;
+  negate = true;
+}
+
+ExtsString : WOString {
+  value = rItem.extToString;
+}
+
+OtherRB : WORadioButton {
+  name = "selectReason";
+  selection = reason;
+  value = null;
+  onchange = "if(checked){showObj('reasonEdit');form.begin.value=form.defaultDate.defaultValue;form.end.value=form.defaultDate.defaultValue;form.defaultDate.value='';}";
+}
+
+OtherTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.other;
+  valueWhenEmpty = "Other reason";
+}
+
+ReasonTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Reason;
+  valueWhenEmpty = "Reason";
+}
+
+ReasonTextField : WOText {
+  value = reasonText;
+  style = "width:96%";
+  rows = 2;
+}
+
+HasTeacher : WOCheckBox {
+  checked = withTeacher;
+}
+
+WithTeacher : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.withTeacher;
+}
+
+CourseTeacher : PersonDisplay {
+  person = course.teacher;
+  last = 2;
+  first = 1;
+  second = 1;
+}
+
+HasEduGroup : WOCheckBox {
+  checked = withEduGroup;
+}
+
+WithEduGroup : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.withEduGroup;
+}
+
+CourseEduGroup : WOString {
+  value = course.eduGroup.name;
+}
+
+DefaultDate : WOTextField {
+  value = aDate;
+  name = "defaultDate";
+  style = "display:none;";
+}
+
+BeginDate : WOTextField {
+  value = begin;
+  size = 10;
+  style = "text-align:center;";
+  onkeypress = "return isNumberInput(event,true);";
+  name = "begin";
+}
+
+EndDate : WOTextField {
+  value = end;
+  size = 10;
+  style = "text-align:center;";
+  onkeypress = "return isNumberInput(event,true);";
+  name = "end";
+}
+ActiveTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.isActive;
+}
+
+BeginTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.begin;
+  valueWhenEmpty = "since";
+}
+
+EndTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.end;
+  valueWhenEmpty = "since";
+}
+CanCreate : WOConditional {
+  condition = session.readAccess.create.Reason;
+}
+
+EditIcon : WOImage {
+	framework = "app";
+	filename = "files_edit.png";
+	onclick = "get(this,'form').defaultDate.value='';";
+	alt = "edit";
+	align = "right";
+	style = "cursor:pointer;";
+}
+
+CanEdit : WOConditional {
+  condition = canEditReason;
+}
+
+RelatedTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.relatedTo;
+}
+
+ItemHasTeacher : WOConditional {
+  condition = rItem.teacher;
+}
+
+ItemHasEduGroup : WOConditional {
+  condition = rItem.eduGroup;
+}
