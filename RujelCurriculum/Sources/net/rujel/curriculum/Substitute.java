@@ -75,21 +75,22 @@ public class Substitute extends _Substitute {
 		//		anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
 	
-	public static Substitute substituteForLesson(EduLesson lesson) {
-		/*EOEditingContext ec = lesson.editingContext();
+/*	public static Substitute substituteForLesson(EduLesson lesson) {
+		EOEditingContext ec = lesson.editingContext();
 		NSArray substitutes = EOUtilities.objectsMatchingKeyAndValue(ec, Substitute.ENTITY_NAME, 
-				"lesson", lesson);*/
+				"lesson", lesson);
 		NSArray substitutes = (NSArray)lesson.valueForKey("substitutes");
 		if(substitutes == null || substitutes.count() == 0)
 			return null;
 		if(substitutes.count() > 1)
 			logger.log(WOLogLevel.WARNING,"Multiple substitutes found for lesson",lesson);
 		return (Substitute)substitutes.objectAtIndex(0);
-	}
+	}*/
 
 	public EduLesson lesson() {
 		return (EduLesson)storedValueForKey("lesson");
 	}
+	
 	public void setLesson(EduLesson aValue) {
 		takeStoredValueForKey(aValue, "lesson");
 		if(aValue != null)

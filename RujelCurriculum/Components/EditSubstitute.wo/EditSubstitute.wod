@@ -47,8 +47,11 @@ CantSelect : WOConditional {
   condition = cantSelect;
 }
 
-Teacher : WOString {
-  value = teacherName;
+Teacher : PersonDisplay {
+  person = teacher;
+  last = 2;
+  first = 2;
+  second = 2;
 }
 
 Form : WOForm {
@@ -85,7 +88,7 @@ FactorField : WOTextField {
 	value = factor;
 	numberformat = "0.##";
 	onkeypress = "return isNumberInput(event,true);";
-	size = 3;
+	size = 4;
 	style = "text-align:center;";
 	disabled = cantEdit;
 }

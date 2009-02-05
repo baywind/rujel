@@ -30,7 +30,7 @@ InspectorCaller : WOGenericContainer {
 }
 
 InspectorImage : WOImage {
-	filename = inspectorIcon;
+	filename = "plus.png";
 	framework = "RujelBase";
 	style = "cursor:pointer;";
 	width = 24;

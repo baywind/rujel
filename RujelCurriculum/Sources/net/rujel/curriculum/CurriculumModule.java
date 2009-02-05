@@ -56,14 +56,12 @@ public class CurriculumModule {
 	}
 
 	public static NSKeyValueCoding extendLesson(WOContext ctx) {
-		EduLesson lesson = (EduLesson)ctx.session().objectForKey("currentLesson");
-		Substitute sub = Substitute.substituteForLesson(lesson);
-		//Substitute sub = (Substitute)lesson.valueForKey("substitute");
-		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.Substitute");
-		if(!((sub == null)?access.flagForKey("create"):access.flagForKey("read")))
+		//EduLesson lesson = (EduLesson)ctx.session().objectForKey("currentLesson");
+		//Substitute sub = Substitute.substituteForLesson(lesson);
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Substitute")))
 			return null;
 		NSMutableDictionary result = new NSMutableDictionary("ShowSubstitute","component");
-		result.takeValueForKey(sub,"substitute");
+		//result.takeValueForKey(sub,"substitute");
 		result.takeValueForKey("20","sort");
 		return result;
 	}
@@ -79,21 +77,35 @@ public class CurriculumModule {
 		Enumeration enu = lessonsList.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduLesson lesson = (EduLesson) enu.nextElement();
-			Substitute sub = Substitute.substituteForLesson(lesson);
-			if(sub == null)
+			NSArray subs = (NSArray)lesson.valueForKey("substitutes");
+			if(subs == null || subs.count() == 0)
 				continue;
 			NSMutableDictionary props = new NSMutableDictionary("highlight2","class");
-			String title = sub.title() + " : " + Person.Utility.fullName(sub.teacher(), true, 2, 1, 1);
-			props.setObjectForKey(title,"title");
+			Enumeration senu = subs.objectEnumerator();
+			StringBuffer title = new StringBuffer();
+			String sTitle = null;
+			while(senu.hasMoreElements()) {
+				Substitute sub = (Substitute)senu.nextElement();
+				if(!sub.title().equals(sTitle)) {
+					if(sTitle != null)
+						title.append(';').append(' ');
+					sTitle = sub.title();
+						title.append(sTitle).append(" : ");
+				} else {
+					title.append(',').append(' ');
+				}
+				title.append(Person.Utility.fullName(sub.teacher(), true, 2, 1, 1));
+				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
+					if(ec == null)
+						ec = new EOEditingContext();
+					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
+					sub.setDate(lesson.date());
+					Logger.getLogger("rujel.curriculum").log(WOLogLevel.OWNED_EDITING,
+							"Correcting substitute date", new Object[] {ctx.session(),sub});
+				}
+			} // Enumeration senu = subs.objectEnumerator();
+			props.setObjectForKey(title.toString(),"title");
 			result.setObjectForKey(props, lesson);
-			if(lesson.date() != null && !lesson.date().equals(sub.date())) {
-				if(ec == null)
-					ec = new EOEditingContext();
-				sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
-				sub.setDate(lesson.date());
-				Logger.getLogger("rujel.curriculum").log(WOLogLevel.OWNED_EDITING,
-						"Correcting substitute date", new Object[] {ctx.session(),sub});
-			}
 		}
 		if(result.count() == 0)
 			return null;

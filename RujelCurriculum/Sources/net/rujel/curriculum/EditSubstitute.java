@@ -37,7 +37,6 @@ import net.rujel.interfaces.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.foundation.*;
 import net.rujel.interfaces.Teacher;
@@ -90,7 +89,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		reason = substitute.reason();
     		//comment = (String)substitute.valueForKeyPath("reason.reason");
     		//join = sub.sFlags().flagForKey("join");
-    		factor = sub.factor();
+    		factor = sub.factor().stripTrailingZeros();
     		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
     		cantSelect = cantEdit;
     		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.substitute");
@@ -111,10 +110,6 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		cantEdit = Boolean.TRUE;
     	}
     }
-    
-	public String teacherName() {
-		return Person.Utility.fullName(teacher, true, 2, 2, 2);
-	}
     
 	public WOActionResults save() {
 		if(reason == null) {

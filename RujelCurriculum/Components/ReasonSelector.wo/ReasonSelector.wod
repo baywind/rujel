@@ -12,7 +12,8 @@ ReasonRB : WORadioButton {
   name = "selectReason";
   value = rItem;
   selection = reason;
-  onchange = "if(checked){hideObj('reasonEdit');form.begin.value=form.begin.defaultValue;form.end.value=form.end.defaultValue;form.defaultDate.value=form.defaultDate.defaultValue;}";
+  onchange = "if(checked){hideObj('reasonEdit');form.defaultDate.value=form.defaultDate.defaultValue;}";
+  disabled = ^readOnly;
 }
 
 ReasonText : WOString {
@@ -36,8 +37,9 @@ ExtsString : WOString {
 OtherRB : WORadioButton {
   name = "selectReason";
   selection = reason;
-  value = null;
-  onchange = "if(checked){showObj('reasonEdit');form.begin.value=form.defaultDate.defaultValue;form.end.value=form.defaultDate.defaultValue;form.defaultDate.value='';}";
+  value = rItem;
+  onchange = "if(checked){showObj('reasonEdit');form.begin.value=form.defaultDate.defaultValue;form.end.value=form.defaultDate.defaultValue;form.defaultDate.value='';form.reasonText.value='';form.withTeacher.checked=false;form.withEduGroup.checked=false;}";
+  disabled = ^readOnly;
 }
 
 OtherTitle : WOString {
@@ -54,10 +56,12 @@ ReasonTextField : WOText {
   value = reasonText;
   style = "width:96%";
   rows = 2;
+  name = "reasonText";
 }
 
 HasTeacher : WOCheckBox {
   checked = withTeacher;
+  name = "withTeacher";
 }
 
 WithTeacher : WOString {
@@ -73,6 +77,7 @@ CourseTeacher : PersonDisplay {
 
 HasEduGroup : WOCheckBox {
   checked = withEduGroup;
+  name = "withEduGroup";
 }
 
 WithEduGroup : WOString {
@@ -124,7 +129,7 @@ CanCreate : WOConditional {
 EditIcon : WOImage {
 	framework = "app";
 	filename = "files_edit.png";
-	onclick = "get(this,'form').defaultDate.value='';";
+	onclick = "get(this,'tr').getElementsByTagName('input')[0].checked=true;var f=get(this,'form');f.defaultDate.value='';f.reasonText.value=f.reasonText.defaultValue;f.begin.value=f.begin.defaultValue;f.end.value=f.end.defaultValue;f.withTeacher.checked=f.withTeacher.defaultChecked;f.withEduGroup.checked=f.withEduGroup.defaultChecked;showObj('reasonEdit');";
 	alt = "edit";
 	align = "right";
 	style = "cursor:pointer;";
