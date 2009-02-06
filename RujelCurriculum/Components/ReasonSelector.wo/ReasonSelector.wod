@@ -12,7 +12,7 @@ ReasonRB : WORadioButton {
   name = "selectReason";
   value = rItem;
   selection = reason;
-  onchange = "if(checked){hideObj('reasonEdit');form.defaultDate.value=form.defaultDate.defaultValue;}";
+  onclick = "if(checked){hideObj('reasonEdit');form.defaultDate.value=form.defaultDate.defaultValue;}";
   disabled = ^readOnly;
 }
 
@@ -38,7 +38,7 @@ OtherRB : WORadioButton {
   name = "selectReason";
   selection = reason;
   value = rItem;
-  onchange = "if(checked){showObj('reasonEdit');form.begin.value=form.defaultDate.defaultValue;form.end.value=form.defaultDate.defaultValue;form.defaultDate.value='';form.reasonText.value='';form.withTeacher.checked=false;form.withEduGroup.checked=false;}";
+  onclick = "if(checked){showObj('reasonEdit');form.begin.value=form.defaultDate.defaultValue;form.end.value='';form.defaultDate.value='';form.reasonText.value='';form.withTeacher.checked=false;form.withEduGroup.checked=false;}";
   disabled = ^readOnly;
 }
 
@@ -108,6 +108,7 @@ EndDate : WOTextField {
   style = "text-align:center;";
   onkeypress = "return isNumberInput(event,true);";
   name = "end";
+  onfocus = "if(value==null||value.length==0)value=form.begin.value;";
 }
 ActiveTitle : WOString {
   value = application.strings.RujelCurriculum_Curriculum.isActive;

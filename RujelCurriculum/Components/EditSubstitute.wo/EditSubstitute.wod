@@ -89,7 +89,7 @@ FactorField : WOTextField {
 	numberformat = "0.##";
 	onkeypress = "return isNumberInput(event,true);";
 	size = 4;
-	style = "text-align:center;";
+	style = "text-align:center;font-weight:bold";
 	disabled = cantEdit;
 }
 

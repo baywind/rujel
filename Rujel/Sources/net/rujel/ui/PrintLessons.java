@@ -31,6 +31,7 @@ package net.rujel.ui;
 
 import java.text.FieldPosition;
 import java.text.Format;
+import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.EduPeriod;
@@ -117,28 +118,47 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     }
     */
     
-	public EOEnterpriseObject substitute() {
+    public boolean hasSubstitute() {
+	   	try {
+    		NSArray subs = (NSArray)lessonItem.valueForKey("substitutes");
+    		return (subs != null && subs.count() > 0);
+    	} catch (Exception e) {
+    		return false;
+    	}
+    }
+    
+	public String substitute() {
     	if(lessonItem == null)
     		return null;
 	   	try {
     		NSArray subs = (NSArray)lessonItem.valueForKey("substitutes");
         	if(subs == null || subs.count() == 0)
         		return null;
-        	return (EOEnterpriseObject)subs.objectAtIndex(0);
+        	StringBuffer result = new StringBuffer("<strong>");
+        	Enumeration enu = subs.objectEnumerator();
+        	String title = null;
+        	while (enu.hasMoreElements()) {
+				EOEnterpriseObject sub = (EOEnterpriseObject) enu.nextElement();
+				if(title != null && !title.equals(sub.valueForKey("title"))) {
+					result.append("</em><br/>\n<strong>");
+					title = null;
+				}
+				if(title == null) {
+					title = (String)sub.valueForKey("title");
+					result.append(title).append(":</strong> <em>");
+				} else {
+					result.append(',').append(' ');
+				}
+				Teacher teacher = (Teacher)sub.valueForKey("teacher");
+				result.append(teacher.person().lastName()).append(' ');
+				result.append(Person.Utility.composeName(teacher.person(), 1, 1));
+			}
+        	result.append("</em>");
+        	return result.toString();
     	} catch (Exception e) {
     		;
     	}
 		return null;
-	}
-
-	public String substitutor() {
-		EOEnterpriseObject substitute = substitute();
-		if(substitute == null)
-			return null;
-		Teacher teacher = (Teacher)substitute.valueForKey("teacher");
-		if(teacher == null)
-			return null;
-		return Person.Utility.fullName(teacher, false, 2, 1, 1);
 	}
 
     public boolean hasWeight() {

@@ -71,7 +71,6 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = reasonID; sourceAttribute = rID; }); 
             name = substitutes; 
-            ownsDestination = Y; 
         }, 
         {
             deleteRule = EODeleteRuleDeny; 
@@ -80,7 +79,6 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = reasonID; sourceAttribute = rID; }); 
             name = variations; 
-            ownsDestination = Y; 
         }
     ); 
 }

@@ -30,8 +30,18 @@ InspectorCaller : WOGenericContainer {
 }
 
 InspectorImage : WOImage {
-	filename = "plus.png";
+	filename = inspectorIcon;
 	framework = "RujelBase";
 	style = "cursor:pointer;";
 	width = 24;
+}
+
+NoWorks : WOConditional {
+  condition = workList.count;
+  negate = true;
+}
+
+WorksTitle : WOString {
+  value = application.strings.RujelCriterial_Strings.works;
+  valueWhenEmpty = "Works";
 }

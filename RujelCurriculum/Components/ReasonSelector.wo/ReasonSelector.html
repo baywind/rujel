@@ -2,8 +2,8 @@
 	<thead><tr>
 	<td style = "width:1em;"></td>
 	<th><webobject name = "ReasonTitle"/></th>
-	<th style = "width:1ex;">@</th>
-	<th style = "width:1ex;">@</th>
+	<th style = "width:1.8ex;" title = "<webobject name = "RelatedTitle"/><webobject name = "WithTeacher"/>">@</th>
+	<th style = "width:1.8ex;" title = "<webobject name = "RelatedTitle"/><webobject name = "WithEduGroup"/>">#</th>
 	</tr></thead>
 	<tfoot class = "backfield2" style = "display:none;" id = "reasonEdit">
 	<tr>
@@ -25,12 +25,11 @@
 	
 	<tbody><webobject name = "ReasonsRepetition"><webobject name = "ReasonRow">
 		<td><webobject name = "ReasonRB"/></td>
-		<webobject name = "TextCell"><webobject name = "ReasonText"/>
-		<webobject name = "CanEdit"><webobject name = "EditIcon"/></webobject></webobject>
-		<webobject name = "HasSpecs">
+		<td><webobject name = "CanEdit"><webobject name = "EditIcon"/></webobject>
+		<webobject name = "ReasonText"/></td>
 		<td><webobject name = "ItemHasTeacher">&bull;</webobject></td>
 		<td><webobject name = "ItemHasEduGroup">&diams;</webobject></td></webobject>
-		</webobject></webobject>
+		</webobject>
 		<webobject name = "CanCreate">
 			<tr class = "grey"><td><webobject name = "OtherRB"/></td>
 			<td colspan = "3"><webobject name = "OtherTitle"/></td></tr>
