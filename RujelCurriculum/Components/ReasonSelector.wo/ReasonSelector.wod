@@ -6,12 +6,13 @@ ReasonsRepetition : WORepetition {
 ReasonRow : WOGenericContainer {
   elementName = "tr";
   class = styleClass;
+  title = title;
 }
 
 ReasonRB : WORadioButton {
   name = "selectReason";
-  value = rItem;
-  selection = reason;
+  value = itemID;
+  selection = reasonID;
   onclick = "if(checked){hideObj('reasonEdit');form.defaultDate.value=form.defaultDate.defaultValue;}";
   disabled = ^readOnly;
 }
@@ -36,8 +37,8 @@ ExtsString : WOString {
 
 OtherRB : WORadioButton {
   name = "selectReason";
-  selection = reason;
-  value = rItem;
+  selection = reasonID;
+  value = 0;
   onclick = "if(checked){showObj('reasonEdit');form.begin.value=form.defaultDate.defaultValue;form.end.value='';form.defaultDate.value='';form.reasonText.value='';form.withTeacher.checked=false;form.withEduGroup.checked=false;}";
   disabled = ^readOnly;
 }

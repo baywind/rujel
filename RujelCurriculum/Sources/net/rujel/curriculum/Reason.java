@@ -114,14 +114,14 @@ public class Reason extends _Reason {
 		qual = new EOKeyValueQualifier(BEGIN_KEY,
 				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
 		quals.addObject(qual);
-		qual = new EOKeyValueQualifier(END_KEY,
+		EOQualifier[] ors = new EOQualifier[2];
+		ors[0] = new EOKeyValueQualifier(END_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
-		quals.addObject(qual);
-		qual = new EOKeyValueQualifier(BEGIN_KEY,
-				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
+		ors[1] = new EOKeyValueQualifier(END_KEY,
+				EOQualifier.QualifierOperatorEqual,NullValue);
+		qual = new EOOrQualifier(new NSArray(ors));
 		quals.addObject(qual);
 		// specs
-		EOQualifier[] ors = new EOQualifier[2];
 		ors[0] = new EOKeyValueQualifier("teacher",
 				EOQualifier.QualifierOperatorEqual,course.teacher());
 		ors[1] = new EOKeyValueQualifier("teacher",

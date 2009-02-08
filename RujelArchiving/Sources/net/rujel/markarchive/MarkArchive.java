@@ -35,6 +35,8 @@ import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import com.webobjects.appserver.WOSession;
+
+import java.lang.ref.WeakReference;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -80,6 +82,9 @@ public class MarkArchive extends _MarkArchive
 			editingContext().deleteObject(this);
 			Logger.getLogger("rujel.archiving").log(WOLogLevel.INFO,
 					"Could not register object for archiving");
+			if(dict == null)
+				dict = new NSMutableDictionary();
+			waiterForEc(eo.editingContext()).registerArchive(dict, eo);
 			return;
 		}
 		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), eo.editingContext());
@@ -99,7 +104,10 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,eo);
 		if(pKey != null && pKey.count() > 0)
 			return pKey;
-		return CompoundPKeyGenerator.compoundKey(eo);
+		pKey = CompoundPKeyGenerator.compoundKey(eo);
+		if(pKey != null && pKey.count() > 0)
+			return pKey;
+		return null;
 		/*EOEntity ent = EOUtilities.entityForObject(ec, eo);
 		NSMutableArray pKeys = new NSMutableArray();
 		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), ec);
@@ -497,4 +505,119 @@ public class MarkArchive extends _MarkArchive
 		dict = null;
 		super.turnIntoFault(handler);
 	}
-}
+	
+	protected static NSMutableSet waiters = new NSMutableSet();
+	
+	protected static Waiter waiterForEc(EOEditingContext ec) {
+		Enumeration enu = waiters.objectEnumerator();
+		Waiter result = null;
+		NSMutableSet empty = null;
+		while (enu.hasMoreElements()) {
+			Waiter w = (Waiter) enu.nextElement();
+			EOEditingContext wec = w.editingContext();
+			if(wec == ec) {
+				result = w;
+				continue;
+			}
+			if(wec == null) {
+				if(empty == null)
+					empty = new NSMutableSet(w);
+				else
+					empty.addObject(w);
+			}
+		}
+		if(empty != null)
+			waiters.subtractSet(empty);
+		if(result == null)
+			result = new Waiter(ec);
+		return result;
+	}
+	
+	public static class Waiter {
+		public static NSSelector selector = new NSSelector("fire",
+				new Class[] {NSNotification.class});
+		
+		protected WeakReference<EOEditingContext> ecRef;
+		protected NSMutableSet<NSMutableDictionary> dicts = new NSMutableSet<NSMutableDictionary>();
+		
+		public Waiter(EOEditingContext editingContext) {
+			ecRef = new WeakReference(editingContext);
+			NSNotificationCenter.defaultCenter().addObserver(this, selector,
+					EOEditingContext.EditingContextDidSaveChangesNotification, editingContext);
+			waiters.addObject(this);
+		}
+		
+		public EOEditingContext editingContext() {
+			return ecRef.get();
+		}
+		
+		public void registerArchive(NSMutableDictionary dict, EOEnterpriseObject eo) {
+			WeakReference<EOEnterpriseObject> eoRef = new WeakReference(eo);
+			dict.setObjectForKey(eoRef, "eoRef");
+			dicts.addObject(dict);
+		}
+		
+		public void fire(NSNotification notification) {
+			EOEditingContext ec = editingContext();
+			if(ec == null) {
+				WOSession ses = null;
+				if(ec instanceof SessionedEditingContext)
+					ses = ((SessionedEditingContext)ec).session();
+				Logger.getLogger("rujel.markarchive").log(WOLogLevel.WARNING,
+						"Failed to save archives: editingContext garbage collected",ses);
+				return;
+			}
+			NSMutableSet left = null;
+			Enumeration<NSMutableDictionary> enu = dicts.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+				WeakReference<EOEnterpriseObject> eoRef = (WeakReference<EOEnterpriseObject>)
+									dict.removeObjectForKey("eoRef");
+				if(eoRef == null) continue;
+				EOEnterpriseObject eo = eoRef.get();
+				if(eo == null) continue;
+				NSDictionary pKey = objectIdentifierDict(eo);
+				if(pKey != null) {				
+					MarkArchive arch = (MarkArchive)EOUtilities.createAndInsertInstance(
+							ec, "MarkArchive");
+					EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), eo.editingContext());
+					arch.setUsedEntity(usedEntity);
+					arch.setIdentifierFromDictionary(usedEntity, pKey);
+					arch.setArchiveDict(dict);
+				} else {
+					if(left == null)
+						left = new NSMutableSet(dict);
+					else
+						left.addObject(dict);					
+				}
+			} // dicts.objectEnumerator()
+			try {
+				NSNotificationCenter.defaultCenter().removeObserver(this);
+				ec.saveChanges();
+				dicts = left;
+			} catch (RuntimeException e) {
+				Object args[] = new Object[] {e};
+				if(ec instanceof SessionedEditingContext)
+					args = new Object[] {e,((SessionedEditingContext)ec).session()};
+				Logger.getLogger("rujel.markarchive").log(WOLogLevel.WARNING,
+						"Failed to save archives",args);
+				if(ec.hasChanges())
+					ec.revert();
+			}
+			//NSMutableSet waiters = MarkArchive.waiters;
+			if(dicts == null || dicts.count() == 0)
+				waiters.removeObject(this);
+			else
+				NSNotificationCenter.defaultCenter().addObserver(this, selector,
+						EOEditingContext.EditingContextDidSaveChangesNotification, ec);
+		}
+		
+		public boolean equals(Object obj) {
+			if (obj instanceof Waiter) {
+				Waiter w = (Waiter) obj;
+				return (ecRef == w.ecRef);
+			}
+			return false;
+		}
+	}
+ }

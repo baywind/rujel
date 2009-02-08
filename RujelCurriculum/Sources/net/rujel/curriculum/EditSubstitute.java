@@ -150,13 +150,14 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
 		if(substitute != null && substitute.editingContext() != null) {
-			reason = substitute.reason();
-			if(reason != null) {
-				NSArray subs = (NSArray)reason.valueForKey("substitutes");
-				if(subs == null || subs.count() < 2) {
-					ec.deleteObject(reason);
-				}
-			}
+/*			reason = substitute.reason();
+			if(reason != null && 
+					(reason.substitutes() == null || reason.substitutes().count() == 0) &&
+					(reason.variations() == null || reason.variations().count() == 0)) {			
+				logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting reason left unused",reason);
+				ec.deleteObject(reason);
+			}*/
+			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting substitute",substitute);
 			ec.deleteObject(substitute);
 		}
 		return done("deleted");
