@@ -98,4 +98,5 @@ ReasonSelector : ReasonSelector {
   date = lesson.date;
   reason = reason;
   readOnly = cantEdit;
+  hideExternal = true;
 }

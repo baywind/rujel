@@ -50,6 +50,7 @@ public class Reason extends _Reason {
 		if(school == null)
 			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
 		setSchool(school);
+		setExternal(Boolean.FALSE);
 	}
 
 	public EduGroup eduGroup() {
@@ -107,7 +108,7 @@ public class Reason extends _Reason {
 		return (verification() == null || verification().length() == 0);
 	}
 	
-	public static NSArray reasons (NSTimestamp date, EduCourse course) {
+	public static NSArray reasons (NSTimestamp date, EduCourse course, boolean hideExternal) {
 		EOQualifier qual = new EOKeyValueQualifier(SCHOOL_KEY,
 				EOQualifier.QualifierOperatorEqual,course.cycle().school());
 		NSMutableArray quals = new NSMutableArray(qual);
@@ -134,6 +135,11 @@ public class Reason extends _Reason {
 				EOQualifier.QualifierOperatorEqual,NullValue);
 		qual = new EOOrQualifier(new NSArray(ors));
 		quals.addObject(qual);
+		if(hideExternal) {
+			qual = new EOKeyValueQualifier(EXTERNAL_KEY,
+					EOQualifier.QualifierOperatorEqual,Boolean.FALSE);
+			quals.add(qual);
+		}
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(
 				ENTITY_NAME,qual,EOPeriod.sorter);

@@ -80,8 +80,8 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = objectIdentifierDict(eo);
 		if(pKey == null) {
 			editingContext().deleteObject(this);
-			Logger.getLogger("rujel.archiving").log(WOLogLevel.INFO,
-					"Could not register object for archiving");
+			Logger.getLogger("rujel.archiving").log(WOLogLevel.FINER,
+					"Archiving delayed for new object",eo);
 			if(dict == null)
 				dict = new NSMutableDictionary();
 			waiterForEc(eo.editingContext()).registerArchive(dict, eo);

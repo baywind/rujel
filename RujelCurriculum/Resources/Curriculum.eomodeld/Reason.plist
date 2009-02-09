@@ -23,6 +23,13 @@
         }, 
         {
             allowsNull = N; 
+            columnName = EXTERNAL; 
+            name = external; 
+            prototypeName = boolean; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
             columnName = REASON; 
             name = reason; 
             prototypeName = string; 
@@ -56,9 +63,9 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (begin, eduGroupID, end, reason, school, teacherID, verification); 
+    attributesUsedForLocking = (begin, eduGroupID, end, external, reason, school, teacherID, verification); 
     className = "net.rujel.curriculum.Reason"; 
-    classProperties = (begin, end, reason, school, substitutes, variations, verification); 
+    classProperties = (begin, end, external, reason, school, substitutes, variations, verification); 
     externalName = REASON; 
     fetchSpecificationDictionary = {}; 
     name = Reason; 

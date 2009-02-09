@@ -15,5 +15,6 @@
             <unsettable name="reason"/>
         </validation>
     <binding defaults="Boolean" name="readOnly"/>
+    <binding defaults="Boolean" name="hideExternal"/>
     </wo>
 </wodefinitions>
