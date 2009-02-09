@@ -49,7 +49,7 @@ OtherTitle : WOString {
 }
 
 ReasonTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.Reason;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.Reason;
   valueWhenEmpty = "Reason";
 }
 
@@ -66,7 +66,7 @@ HasTeacher : WOCheckBox {
 }
 
 WithTeacher : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.withTeacher;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.withTeacher;
 }
 
 CourseTeacher : PersonDisplay {
@@ -82,7 +82,7 @@ HasEduGroup : WOCheckBox {
 }
 
 WithEduGroup : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.withEduGroup;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.withEduGroup;
 }
 
 CourseEduGroup : WOString {
@@ -112,16 +112,16 @@ EndDate : WOTextField {
   onfocus = "if(value==null||value.length==0)value=form.begin.value;";
 }
 ActiveTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.isActive;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.isActive;
 }
 
 BeginTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.begin;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.begin;
   valueWhenEmpty = "since";
 }
 
 EndTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.end;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.end;
   valueWhenEmpty = "since";
 }
 CanCreate : WOConditional {
@@ -142,7 +142,7 @@ CanEdit : WOConditional {
 }
 
 RelatedTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.relatedTo;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.relatedTo;
 }
 
 ItemHasTeacher : WOConditional {

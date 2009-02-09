@@ -1,5 +1,5 @@
 SubstituteTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.Substitute;
+  value = application.strings.RujelCurriculum_Curriculum.Substitute.Substitute;
 }
 
 LessonDate : WOString {
@@ -24,11 +24,11 @@ SubstitutorSelect : PersListing {
 }
 
 JoinTitle : WOString {
-	value = application.strings.RujelCurriculum_Curriculum.Factor;
+	value = application.strings.RujelCurriculum_Curriculum.Substitute.Factor;
 }
 
 CommentTitle : WOString {
-	value = application.strings.RujelCurriculum_Curriculum.Reason;
+	value = application.strings.RujelCurriculum_Curriculum.Reason.Reason;
 }
 
 Comment : WOText {

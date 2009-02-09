@@ -2,36 +2,49 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Substitute</key>
-	<string>Замена</string>
-	<key>Join</key>
-	<string>Совмещение</string>
-	<key>Reason</key>
-	<string>Причина</string>
-	<key>Factor</key>
-	<string>Коэффициент</string>
-	<key>wrongTeacherMessage</key>
-	<string>В замене должен быть указан учитель отличный от ведущего курс.</string>
 	<key>subsReport</key>
 	<string>Замен: %d (загрузить сводку)</string>
 	<key>OrigTeacher</key>
 	<string>Замененный</string>
-	<key>Substitutor</key>
-	<string>Заменяющий</string>
+	<key>Substitute</key>
+	<dict>
+		<key>Substitute</key>
+		<string>Замена</string>
+		<key>Join</key>
+		<string>Совмещение</string>
+		<key>Factor</key>
+		<string>Коэффициент</string>
+		<key>Substitutor</key>
+		<string>Заменяющий</string>
+	</dict>
+	<key>Reason</key>
+	<dict>
+		<key>Reason</key>
+		<string>Причина</string>
+		<key>relatedTo</key>
+		<string>связано с </string>
+		<key>withTeacher</key>
+		<string>преподавателем</string>
+		<key>withEduGroup</key>
+		<string>классом</string>
+		<key>isActive</key>
+		<string>Актуально</string>
+		<key>begin</key>
+		<string>с</string>
+		<key>end</key>
+		<string>по</string>
+	</dict>
 	<key>other</key>
 	<string>Другая причина</string>
-	<key>relatedTo</key>
-	<string>связано с </string>
-	<key>withTeacher</key>
-	<string>преподавателем</string>
-	<key>withEduGroup</key>
-	<string>классом</string>
-	<key>isActive</key>
-	<string>Актуально</string>
-	<key>begin</key>
-	<string>с</string>
-	<key>end</key>
-	<string>по</string>
+	<key>messages</key>
+	<dict>
+		<key>wrongTeacher</key>
+		<string>В замене должен быть указан учитель отличный от ведущего курс.</string>
+		<key>duplicateTeacher</key>
+		<string>Для этого урока уже описана замена/совмещение с выбранным учителем</string>
+		<key>wrongDates</key>
+		<string>Предлагаемый период актуальности причины не заключает в себе заданную дату.&lt;br/&gt;/nГраница периода была автоматически изменена.</string>
+	</dict>
 	<key>titles</key>
 	<dict>
 		<key>OrigTeacher</key>

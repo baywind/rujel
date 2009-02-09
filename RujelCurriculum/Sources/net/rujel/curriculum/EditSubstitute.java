@@ -30,6 +30,7 @@
 package net.rujel.curriculum;
 
 import java.math.BigDecimal;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
@@ -112,13 +113,29 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     }
     
 	public WOActionResults save() {
+		EOEditingContext ec = lesson.editingContext(); 
+		NSArray others = (NSArray)lesson.valueForKey("substitutes");
+		if(others != null && others.count() > 0) {
+			Enumeration enu = others.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Substitute sub = (Substitute) enu.nextElement();
+				if(sub != substitute && sub.teacher() == teacher) {
+					reason = null;
+					session().takeValueForKey(application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.duplicateTeacher"), "message");
+					session().removeObjectForKey("lessonProperies");
+					break;
+				}
+			}
+		}
 		if(reason == null) {
 			if (returnPage instanceof WOComponent) 
 				((WOComponent)returnPage).ensureAwakeInContext(context());
+			if(ec.hasChanges())
+				ec.revert();
 			return returnPage;
 		}
 		String action = "saved";
-		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
 		if(substitute == null) {
 			substitute = (Substitute)EOUtilities.createAndInsertInstance(ec, Substitute.ENTITY_NAME);

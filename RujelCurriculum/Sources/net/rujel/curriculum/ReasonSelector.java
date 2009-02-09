@@ -127,8 +127,8 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		if(tmpDate == null) {
     			tmpDate = date();
     		} else if (tmpDate.compareTo(date()) > 0) {
-    			String message = "";
-    			session().takeValueForKey(message, "message");
+    			session().takeValueForKey(application().valueForKeyPath(
+    				"strings.RujelCurriculum_Curriculum.messages.wrongDates"), "message");
     			tmpDate = date();
     		}
     		hasChanges = (hasChanges || (!reason.begin().equals(tmpDate)));
@@ -139,8 +139,8 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     			if(tmpDate == null) {
     				tmpDate = date();
         		} else if (tmpDate.compareTo(date()) < 0) {
-        			String message = "";
-        			session().takeValueForKey(message, "message");
+        			session().takeValueForKey(application().valueForKeyPath(
+        				"strings.RujelCurriculum_Curriculum.messages.wrongDates"), "message");
         			tmpDate = date();
         		}
     			hasChanges = (hasChanges || (!reason.end().equals(tmpDate)));
