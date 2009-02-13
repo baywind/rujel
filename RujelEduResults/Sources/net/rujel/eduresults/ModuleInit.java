@@ -30,7 +30,6 @@
 package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 
@@ -85,7 +84,7 @@ public class ModuleInit {
 		return null;
 	}		
 	
-	public static NamedFlags moduleAccess(WOContext ctx,Object key) {
+/*	public static NamedFlags moduleAccess(WOContext ctx,Object key) {
 		UserPresentation user = (UserPresentation)ctx.session().valueForKey("user");
 		NamedFlags access = null;
 		if(user != null) {
@@ -99,12 +98,13 @@ public class ModuleInit {
 		if(access == null)
 			access = DegenerateFlags.ALL_TRUE;
 		return access;
-	}
+	}*/
 	
 	public static NSMutableDictionary notesAddOns(WOContext ctx) {
 		NSMutableDictionary itogAddOn = addOn.mutableClone();
 		
-		NamedFlags access = moduleAccess(ctx,"ItogMark");//itogAddOn.valueForKey("id"));
+		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
+			//moduleAccess(ctx,"ItogMark");//itogAddOn.valueForKey("id"));
 			/*null;
 		UserPresentation user = (UserPresentation)ctx.session().valueForKey("user");
 		if(user != null) {
@@ -130,7 +130,8 @@ public class ModuleInit {
 	}*/
 	
 	public static NSDictionary studentReporter(WOContext ctx) {
-		NamedFlags access = moduleAccess(ctx,"ItogMark");
+		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
+		//NamedFlags access = moduleAccess(ctx,"ItogMark");
 		if(!access.getFlag(0))
 				return null;
 		NSMutableDictionary result = studentReporter.mutableClone();

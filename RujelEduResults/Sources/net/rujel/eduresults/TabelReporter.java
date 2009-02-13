@@ -30,6 +30,7 @@
 package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -239,7 +240,6 @@ getgroup:	while (pen.hasMoreElements()) {
 		if(types == null || types.count() == 0) {
 			return types;
 		}
-		NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("num",EOSortOrdering.CompareAscending));
 		NSMutableArray list = new NSMutableArray();
 		Enumeration enu = types.objectEnumerator();
 		while (enu.hasMoreElements()) {
@@ -250,9 +250,9 @@ getgroup:	while (pen.hasMoreElements()) {
 			//NSArray pers = EOUtilities.objectsMatchingValues(type.editingContext(),"EduPeriod",dict);
 			NSArray pers = EOQualifier.filteredArrayWithQualifier(eduPeriods,qual);
 			if(pers instanceof NSMutableArray) {
-				EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)pers,sorter);
+				EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)pers,MyUtility.numSorter);
 			} else {
-				pers = EOSortOrdering.sortedArrayUsingKeyOrderArray(pers,sorter);
+				pers = EOSortOrdering.sortedArrayUsingKeyOrderArray(pers,MyUtility.numSorter);
 			}
 			list.addObjectsFromArray(pers);
 		}

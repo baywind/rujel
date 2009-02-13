@@ -7,6 +7,7 @@ ReasonRow : WOGenericContainer {
   elementName = "tr";
   class = styleClass;
   title = title;
+  onclick = "var r = this.getElementsByTagName('input')[0]; if(!r.checked)r.click();";
 }
 
 ReasonRB : WORadioButton {
@@ -44,13 +45,14 @@ OtherRB : WORadioButton {
 }
 
 OtherTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.other;
+  value = application.strings.RujelCurriculum_Curriculum.Reason.other;
   valueWhenEmpty = "Other reason";
 }
 
 ReasonTitle : WOString {
   value = application.strings.RujelCurriculum_Curriculum.Reason.Reason;
   valueWhenEmpty = "Reason";
+  escapeHTML = false;
 }
 
 ReasonTextField : WOText {
@@ -131,7 +133,7 @@ CanCreate : WOConditional {
 EditIcon : WOImage {
 	framework = "app";
 	filename = "files_edit.png";
-	onclick = "get(this,'tr').getElementsByTagName('input')[0].checked=true;var f=get(this,'form');f.defaultDate.value='';f.reasonText.value=f.reasonText.defaultValue;f.begin.value=f.begin.defaultValue;f.end.value=f.end.defaultValue;f.withTeacher.checked=f.withTeacher.defaultChecked;f.withEduGroup.checked=f.withEduGroup.defaultChecked;showObj('reasonEdit');";
+	onclick = "var f=get(this,'form');f.defaultDate.value='';f.reasonText.value=f.reasonText.defaultValue;f.begin.value=f.begin.defaultValue;f.end.value=f.end.defaultValue;f.withTeacher.checked=f.withTeacher.defaultChecked;f.withEduGroup.checked=f.withEduGroup.defaultChecked;showObj('reasonEdit');";
 	alt = "edit";
 	align = "right";
 	style = "cursor:pointer;";

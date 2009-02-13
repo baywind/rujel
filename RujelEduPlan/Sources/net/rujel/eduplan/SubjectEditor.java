@@ -29,6 +29,7 @@
 
 package net.rujel.eduplan;
 
+import net.rujel.base.MyUtility;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
@@ -58,7 +59,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     	subject = subj;
     	oldName = subj.subject();
     	ec = subj.editingContext();
-    	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,Subject.numSorter);
+    	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
     	areas = ec.objectsWithFetchSpecification(fs);
     	
     	NamedFlags access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Subject");

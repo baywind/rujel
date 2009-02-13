@@ -31,7 +31,6 @@ package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
-import net.rujel.auth.*;
 import net.rujel.base.MyUtility;
 
 import com.webobjects.foundation.*;
@@ -41,7 +40,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
 
-public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,EOPeriod
+public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 {
 
 	public EduPeriod() {
@@ -294,14 +293,6 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,UseAccess,EOP
 		return ItogMark.getItogMark(course.cycle(),this,(Student)student,allValues());
 	}
 	
-	public NamedFlags access() {
-		return DegenerateFlags.ALL_TRUE;
-	}
-	
-	public boolean isOwned() {
-		return (course() != null);
-	}
-
 	public Number sort() {
 		return new Integer (100*(100 - countInYear()) + (num().intValue()));
 	}

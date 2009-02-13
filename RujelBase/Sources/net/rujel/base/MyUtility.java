@@ -45,12 +45,17 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
 
 public class MyUtility {
-	private static final int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",
-			GregorianCalendar.JULY);
-	private static final int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
+	public static final long dayMillis = 1000*60*60*24;
+	public static final long weekMillis = dayMillis*7;
+	
+	public static NSArray numSorter = new NSArray(
+			new EOSortOrdering("num",EOSortOrdering.CompareAscending));
+	public static NSArray dateSorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
+			"date", EOSortOrdering.CompareAscending));
 
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
 
+	@SuppressWarnings("deprecation")
 	public static Format dateFormat() {
 		return new NSTimestampFormatter(SettingsReader.stringForKeyPath("ui.dateFormat","%Y-%m-%d"));
 	}
@@ -84,9 +89,13 @@ public class MyUtility {
 		gcal.setTime(date);
 		int year = gcal.get(GregorianCalendar.YEAR);
 		int month = gcal.get(GregorianCalendar.MONTH);
-		if(month < newYearMonth || 
-				(month == newYearMonth && gcal.get(GregorianCalendar.DAY_OF_MONTH) < newYearDay)) {
-			year--;
+		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+		if(month < newYearMonth) {
+			 year--;
+		} else if (month == newYearMonth){
+			int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
+			if (gcal.get(GregorianCalendar.DAY_OF_MONTH) < newYearDay)
+				year--;
 		}
 		return new Integer(year);
 	}
@@ -97,9 +106,14 @@ public class MyUtility {
 			cal.setTime(date);
 			int year = eduYear.intValue();
 			int month = cal.get(GregorianCalendar.MONTH);
-			int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
-			if(month < newYearMonth || (month == newYearMonth && day < newYearDay)) {
+			int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+			if(month < newYearMonth) {
 				year++;
+			} else if (month == newYearMonth) {
+				int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
+				int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
+				if(day < newYearDay)
+					year++;
 			}
 			cal.set(GregorianCalendar.YEAR, year);
 			return cal.getTime();
@@ -118,6 +132,8 @@ public class MyUtility {
 	}
 
 	public static java.util.Date yearStart(int eduYear) {
+		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+		int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
 		GregorianCalendar cal = new GregorianCalendar(eduYear,newYearMonth,newYearDay);
 		return cal.getTime();
 	}

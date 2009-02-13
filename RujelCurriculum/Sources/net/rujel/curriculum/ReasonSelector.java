@@ -200,12 +200,13 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		return "grey";
     	if(rItem == reason)
     		return "selection";
-    	if(rItem.external().booleanValue())
+    	return rItem.styleClass();
+/*   	if(rItem.external().booleanValue())
     		return "backfield2";
     	if(rItem.unverified())
     		return "ungerade";
     	return "gerade";
-    }
+*/    }
     
 /*    public Integer colspan() {
     	if(rItem == null)

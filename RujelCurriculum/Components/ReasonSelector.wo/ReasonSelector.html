@@ -25,14 +25,15 @@
 	
 	<tbody><webobject name = "ReasonsRepetition"><webobject name = "ReasonRow">
 		<td><webobject name = "ReasonRB"/></td>
-		<td><webobject name = "CanEdit"><webobject name = "EditIcon"/></webobject>
+		<td style = "cursor:default;"><webobject name = "CanEdit"><webobject name = "EditIcon"/></webobject>
 		<webobject name = "ReasonText"/></td>
 		<td><webobject name = "ItemHasTeacher">&bull;</webobject></td>
 		<td><webobject name = "ItemHasEduGroup">&diams;</webobject></td></webobject>
 		</webobject>
 		<webobject name = "CanCreate">
-			<tr class = "grey"><td><webobject name = "OtherRB"/></td>
-			<td colspan = "3"><webobject name = "OtherTitle"/></td></tr>
+			<tr class = "grey" onclick = "getElementsByTagName('input')[0].click();">
+				<td><webobject name = "OtherRB"/></td>
+			<td colspan = "3"  style = "cursor:default;"><webobject name = "OtherTitle"/></td></tr>
 		</webobject>
 	</tbody>
 </table>

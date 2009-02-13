@@ -29,6 +29,7 @@
 
 package net.rujel.eduresults;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
@@ -124,8 +125,7 @@ public class PeriodType extends _PeriodType  {
 			result.addObject(per);*/
 			result.addObject(curr.makeEduPeriod(eduYear));
 		}
-		EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("num",EOSortOrdering.CompareAscending);
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result,new NSArray(so));
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result,MyUtility.numSorter);
 		logger.logp(Level.INFO,getClass().getName(),"generatePeriodsFromTemplates","Generated periods from templates in year " + eduYear,this);
 		return result;
 	}

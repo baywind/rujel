@@ -29,6 +29,7 @@
 
 package net.rujel.eduplan;
 
+import net.rujel.base.MyUtility;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -57,7 +58,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     
     public void setEditingContext(EOEditingContext ctx) {
     	ec = ctx;
-    	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,Subject.numSorter);
+    	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
     	areaList = ec.objectsWithFetchSpecification(fs);
     }
     

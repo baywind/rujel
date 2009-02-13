@@ -38,14 +38,9 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOEntity;
 import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOAndQualifier;
-import com.webobjects.eocontrol.EOClassDescription;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOKeyValueQualifier;
-import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.eocontrol.*;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -192,10 +187,10 @@ public class Substitute extends _Substitute {
     			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin));
     	quals.addObject(new EOKeyValueQualifier(Substitute.DATE_KEY,
     			EOQualifier.QualifierOperatorLessThanOrEqualTo,end));
-    	NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
-    			"date", EOSortOrdering.CompareAscending));
+//    	NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
+//    			"date", EOSortOrdering.CompareAscending));
     	EOFetchSpecification fs = new EOFetchSpecification(
-    			Substitute.ENTITY_NAME,new EOAndQualifier(quals),sorter);
+    			Substitute.ENTITY_NAME,new EOAndQualifier(quals),MyUtility.dateSorter);
     	fs.setRefreshesRefetchedObjects(true);
     	return ec.objectsWithFetchSpecification(fs);
     }

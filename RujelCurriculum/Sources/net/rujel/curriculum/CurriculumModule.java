@@ -36,12 +36,18 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
 
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.*;
 
 public class CurriculumModule {
+	
+	public static NSArray journalPlugins = (NSArray)WOApplication.application().valueForKeyPath(
+			"strings.RujelCurriculum_Curriculum.plugins");
+
+	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			Substitute.init();
@@ -51,6 +57,8 @@ public class CurriculumModule {
 			return extendLesson(ctx);
 		} else if ("lessonProperies".equals(obj)) {
 			return lessonProperies(ctx);
+		} else if ("journalPlugins".equals(obj)) {
+			return journalPlugins(ctx);
 		}
 		return null;
 	}
@@ -118,5 +126,11 @@ public class CurriculumModule {
 			}
 		}
 		return result;
+	}
+	
+	public static NSArray journalPlugins(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Variation")))
+			return null;
+		return journalPlugins;
 	}
 }

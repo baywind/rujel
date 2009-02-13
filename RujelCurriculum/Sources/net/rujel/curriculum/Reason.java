@@ -108,6 +108,14 @@ public class Reason extends _Reason {
 		return (verification() == null || verification().length() == 0);
 	}
 	
+    public String styleClass() {
+    	if(external().booleanValue())
+    		return "grey";
+    	if(unverified())
+    		return "ungerade";
+    	return "gerade";
+    }
+	
 	public static NSArray reasons (NSTimestamp date, EduCourse course, boolean hideExternal) {
 		EOQualifier qual = new EOKeyValueQualifier(SCHOOL_KEY,
 				EOQualifier.QualifierOperatorEqual,course.cycle().school());

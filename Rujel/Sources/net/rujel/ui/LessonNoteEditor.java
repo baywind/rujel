@@ -67,11 +67,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	private EOEditingContext ec;
 
-	/** @TypeInfo Student */
-	//    public NSArray studentsList;
-
-	/** @TypeInfo BaseTab */
-	public NSArray tablist;
+	public Object item;
 
 	public NSArray baseTabs;
 	public NSArray allTabs;
@@ -262,7 +258,7 @@ public class LessonNoteEditor extends WOComponent {
 		session().setObjectForKey(course, "courseForlessons");
 		allTabs = (NSArray)session().valueForKeyPath("modules.lessonTabs");
 		if(_currTab == null && allTabs != null) {
-			tablist = (NSArray)allTabs.objectAtIndex(0);
+			NSArray tablist = (NSArray)allTabs.objectAtIndex(0);
 			Enumeration enu = tablist.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Tabs.GenericTab tab = (Tabs.GenericTab) enu.nextElement();

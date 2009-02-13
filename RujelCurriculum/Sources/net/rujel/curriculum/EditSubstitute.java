@@ -1,4 +1,4 @@
-// EditSubstitute.java
+// EditSubstitute.java: Class file for WO Component 'EditSubstitute'
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir

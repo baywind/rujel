@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.eduresults.EduPeriod;
+import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -40,6 +42,7 @@ import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class PlanCycle extends _PlanCycle implements EduCycle
@@ -56,8 +59,10 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	}
 	
 	public static void init() {
-		EOInitialiser.initialiseRelationship("PlanCycle",SPEC_CLASS_KEY,false,"classID","EduGroup").anyInverseRelationship().setPropagatesPrimaryKey(true);
-		EOInitialiser.initialiseRelationship("PlanDetail","course",false,"courseID","EduCourse").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("PlanCycle",SPEC_CLASS_KEY,false,"classID","EduGroup")
+				.anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("PlanDetail","course",false,"courseID","EduCourse")
+				.anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
 	public static String SPEC_CLASS_KEY = "specClass";
 	
@@ -153,11 +158,13 @@ public class PlanCycle extends _PlanCycle implements EduCycle
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream in) 
+    		throws java.io.IOException, java.lang.ClassNotFoundException {
     }
 */
 
-	public static NSArray cyclesForSubjectAndYear(EOEditingContext ec, EOEnterpriseObject subject, int eduYear) {
+	public static NSArray cyclesForSubjectAndYear(EOEditingContext ec, 
+			EOEnterpriseObject subject, int eduYear) {
 		if (eduYear > 100)
 			eduYear = eduYear%100;
 		Integer year = new Integer (eduYear);
@@ -302,5 +309,74 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			return compareDescending(left, right);
 		}
 
+	}
+	
+	public static int planHoursForCourseAndPeriod(EduCourse course, EduPeriod period) {
+		EOEditingContext ec = course.editingContext();
+		NSArray planDetails = (period == null)?null:EOUtilities.objectsMatchingKeyAndValue(
+				ec,"PlanDetail","course", course);
+		if(planDetails != null && planDetails.count() > 0) {
+			EOQualifier qual = new EOKeyValueQualifier("eduPeriod",
+					EOQualifier.QualifierOperatorEqual,period);
+			planDetails = EOQualifier.filteredArrayWithQualifier(planDetails, qual);
+			if(planDetails == null || planDetails.count() == 0)
+				return 0;
+			EOEnterpriseObject result = (EOEnterpriseObject)planDetails.objectAtIndex(0);
+			Number hours = (Number)result.valueForKey("hours");
+			return hours.intValue();
+		}
+		if (course.cycle() instanceof PlanCycle) {
+			PlanCycle cycle = (PlanCycle) course.cycle();
+			return cycle.hours();
+		}
+		return 0;
+	}
+	
+	
+	public static int planLessonsInPeriod(EduPeriod period, int planHours, NSTimestamp toDate) {
+		long millis = period.end().getTime();
+		if(toDate != null && toDate.getTime() < millis)
+			millis = toDate.getTime();
+		else 
+			toDate = null;
+		millis = millis - period.begin().getTime();
+		if(millis < 0)
+			return 0;
+		int weeks = (int) (millis/MyUtility.weekMillis);
+		millis = millis%MyUtility.weekMillis;
+		if(toDate == null && millis > MyUtility.dayMillis)
+			weeks++;
+		return weeks*planHours;
+	}
+	
+	public static int wholeYearPlanLessons(EduCourse course, PeriodType perType, NSTimestamp toDate) {
+		if(perType == null) {
+			NSArray types = PeriodType.periodTypesForCourse(course);
+			if(types == null || types.count() == 0)
+				return 0;
+			perType = (PeriodType)types.objectAtIndex(0);
+		}
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
+				EOQualifier.QualifierOperatorEqual, course.eduYear());
+		quals[1] = new EOKeyValueQualifier(EduPeriod.PERIOD_TYPE_KEY,
+				EOQualifier.QualifierOperatorEqual,perType);
+		EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,
+				new EOAndQualifier(new NSArray(quals)),MyUtility.numSorter);
+		NSArray periods = course.editingContext().objectsWithFetchSpecification(fs);
+		if(periods == null || periods.count() == 0)
+			return 0;
+		int result = 0;
+		Enumeration<EduPeriod> enu = periods.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduPeriod period = (EduPeriod) enu.nextElement();
+			if(toDate != null && toDate.compare(period.begin()) < 0)
+				break;
+			int hours = planHoursForCourseAndPeriod(course, period);
+			if(hours == 0)
+				continue;
+			result += planLessonsInPeriod(period, hours, toDate);
+		}
+		return result;
 	}
 }

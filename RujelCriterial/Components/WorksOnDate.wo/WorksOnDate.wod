@@ -20,7 +20,7 @@ Works : WORepetition {
 WorkName : WOString {
   value = workItem.theme;
 }
-InspectorCaller : WOGenericContainer {
+InspectorCaller : OnClickContainer {
   elementName = "td";
   align = "center";
   valign = "middle";

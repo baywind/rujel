@@ -29,6 +29,8 @@
 
 package net.rujel.eduplan;
 
+import net.rujel.base.MyUtility;
+
 import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
 //import com.webobjects.eoaccess.EOUtilities;
@@ -41,8 +43,6 @@ import com.webobjects.eocontrol.EOSortOrdering;
 
 public class Subject extends _Subject implements EOSortOrdering.Comparison {
 
-	public static final NSArray<EOSortOrdering> numSorter = new NSArray<EOSortOrdering>
-		(new EOSortOrdering ("num",EOSortOrdering.CompareAscending));
 	public static final NSArray<EOSortOrdering> sorter = new NSArray<EOSortOrdering> (new EOSortOrdering[] {
 			new EOSortOrdering ("area.num",EOSortOrdering.CompareAscending),
 			new EOSortOrdering ("num",EOSortOrdering.CompareAscending)});
@@ -61,7 +61,7 @@ public class Subject extends _Subject implements EOSortOrdering.Comparison {
 		if(area == null)
 			return null;
     	EOQualifier qual = new EOKeyValueQualifier("area",EOQualifier.QualifierOperatorEqual,area);
-    	EOFetchSpecification fs = new EOFetchSpecification("Subject",qual,Subject.numSorter);
+    	EOFetchSpecification fs = new EOFetchSpecification("Subject",qual,MyUtility.numSorter);
     	return area.editingContext().objectsWithFetchSpecification(fs);
 	}
 	
