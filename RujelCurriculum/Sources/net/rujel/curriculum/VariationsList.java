@@ -50,6 +50,7 @@ public class VariationsList extends WOComponent {
 	public Integer value;
 	public boolean hasChanges;
 	public String message;
+	protected NSTimestamp today;
 	
 	public NSArray list;
 	public Integer totalPlus;
@@ -58,11 +59,13 @@ public class VariationsList extends WOComponent {
 	
     public VariationsList(WOContext context) {
         super(context);
+        today = (NSTimestamp)session().valueForKey("today");
+       	if(today == null)
+       		today = new NSTimestamp();
+       	
     	NSTimestamp recentDate = (NSTimestamp)session().objectForKey("recentDate");
     	if(recentDate == null)
-    		recentDate = (NSTimestamp)session().valueForKey("today");
-    	if(recentDate == null)
-    		recentDate = new NSTimestamp();
+    		recentDate = today;
     	date = MyUtility.dateFormat().format(recentDate);
     }
     
@@ -89,6 +92,12 @@ public class VariationsList extends WOComponent {
     		totalMinus = new Integer(minus);
     		totalNet = new Integer(plus - minus);
     	}
+
+    	if(today == null) {
+            today = (NSTimestamp)session().valueForKey("today");
+           	if(today == null)
+           		today = new NSTimestamp();
+    	}
     	super.appendToResponse(aResponse, aContext);
     }
     
@@ -103,6 +112,16 @@ public class VariationsList extends WOComponent {
        		return "font-weight:bold;text-align:right;color:#cc3333;padding-right:1ex;";
     	}
     	return null;
+    }
+    
+    public Boolean showSeparator() {
+    	if(item == null || today == null)
+    		return Boolean.FALSE;
+    	if(item.date().compareTo(today) > 0) {
+    		today = null;
+    		return Boolean.TRUE;
+    	}
+    	return Boolean.FALSE;
     }
     
     public WOActionResults editVariation() {

@@ -65,6 +65,7 @@ ReasonTextField : WOText {
 HasTeacher : WOCheckBox {
   checked = withTeacher;
   name = "withTeacher";
+  onclick = "if(checked)form.withEduGroup.checked = false;";
 }
 
 WithTeacher : WOString {
@@ -81,6 +82,7 @@ CourseTeacher : PersonDisplay {
 HasEduGroup : WOCheckBox {
   checked = withEduGroup;
   name = "withEduGroup";
+  onclick = "if(checked)form.withTeacher.checked = false;";
 }
 
 WithEduGroup : WOString {
@@ -135,8 +137,9 @@ EditIcon : WOImage {
 	filename = "files_edit.png";
 	onclick = "var f=get(this,'form');f.defaultDate.value='';f.reasonText.value=f.reasonText.defaultValue;f.begin.value=f.begin.defaultValue;f.end.value=f.end.defaultValue;f.withTeacher.checked=f.withTeacher.defaultChecked;f.withEduGroup.checked=f.withEduGroup.defaultChecked;showObj('reasonEdit');";
 	alt = "edit";
-	align = "right";
+	align = "left";
 	style = "cursor:pointer;";
+	title = application.strings.Reusables_Strings.uiElements.Edit;
 }
 
 CanEdit : WOConditional {
@@ -153,4 +156,20 @@ ItemHasTeacher : WOConditional {
 
 ItemHasEduGroup : WOConditional {
   condition = rItem.eduGroup;
+}
+
+TeacherIcon : WOImage {
+  framework = "RujelCurriculum";
+  filename = "teacher.png";
+  align = "right";
+  alt = "teacher";
+  title = teacherRelated;
+}
+
+GroupIcon : WOImage {
+  framework = "RujelCurriculum";
+  filename = "group.png";
+  align = "right";
+  alt = "group";
+  title = groupRelated;
 }

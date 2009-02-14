@@ -28,7 +28,7 @@ PlanCount : WOString {
 }
 
 RealCount : WOString {
-  value = course.lessons.count;
+  value = lessonsCount;
   escapeHTML = false;
   valueWhenEmpty = "?";
 }

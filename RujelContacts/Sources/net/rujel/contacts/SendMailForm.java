@@ -77,9 +77,11 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		if(ec == null)
 			ec = ((EOEnterpriseObject)students.objectAtIndex(0)).editingContext();
 		contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
+		if(contacts == null)
+			return;
 		students = contacts.allValues();
 		if(students == null || students.count() == 0)
-			return;		
+			return;
 		Enumeration enu = students.objectEnumerator();
 		NSMutableArray allContacts = new NSMutableArray();
 		while (enu.hasMoreElements()) {

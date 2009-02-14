@@ -127,3 +127,7 @@ TotalTotal : WOString {
   valueWhenEmpty = "?";
   escapeHTML = false;
 }
+
+ShowSeparator : WOConditional {
+  condition = showSeparator;
+}

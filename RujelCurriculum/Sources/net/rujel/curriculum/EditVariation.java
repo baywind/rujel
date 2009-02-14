@@ -120,10 +120,10 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     		return done();
     	}
     	Integer value = (negative)?new Integer(-abs.intValue()):abs;
-    	if(variation != null && variation.reason() == reason && 
-    			variation.date().equals(date) && variation.value().equals(value))
-    		return done();
     	EOEditingContext ec = course.editingContext();
+    	if(variation != null && variation.date().equals(date) && variation.value().equals(value)
+    			 && variation.reason() == reason && !ec.updatedObjects().contains(reason))
+    		return done();
     	ec.lock();
     	if(variation == null) {
     		variation = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
