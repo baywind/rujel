@@ -38,8 +38,8 @@ import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 
 public class NotesPage extends WOComponent {
-	protected static final String presenter = SettingsReader.stringForKeyPath("ui.presenter.note","NotePresenter");
-// 	protected static final String selectorPresenter = SettingsReader.stringForKeyPath("ui.presenter.selector",null);
+	protected static final String presenter = SettingsReader.stringForKeyPath(
+			"ui.presenter.note","NotePresenter");
     public PerPersonLink lessonItem;
     public Student studentItem;
 	//public String selectStudentAction;
@@ -159,7 +159,9 @@ public class NotesPage extends WOComponent {
 		NSArray lessonsList = (NSArray)valueForBinding("lessonsList");
 		NSArray studentsList = (NSArray)valueForBinding("studentsList");
 
-		if(lessonsList == null || lessonsList.count() == 0 || !(lessonsList.objectAtIndex(0) instanceof EduLesson)) return null;
+		if(lessonsList == null || lessonsList.count() == 0 || 
+				!(lessonsList.objectAtIndex(0) instanceof EduLesson))
+			return null;
 		NSMutableSet unmentionedSet = new NSMutableSet();
 		NSSet mentioned = new NSSet(studentsList);
 		Enumeration lessEnum = lessonsList.objectEnumerator();
@@ -256,6 +258,12 @@ public class NotesPage extends WOComponent {
 	public boolean synchronizesVariablesWithBindings() {
 		return false;
 	}
+	
+	public boolean canSave() {
+		return (currLesson() != null && 
+				Various.boolForObject(session().valueForKeyPath("readAccess.edit.currLesson")));
+	}
+	
     public WOActionResults save() {
         WOActionResults result = (WOActionResults)parent().valueForKey("save");
 		_currLesson = (EduLesson)valueForBinding("currLesson");
@@ -302,7 +310,8 @@ public class NotesPage extends WOComponent {
 		String theNote = noteForStudent();
 		if (theNote == null || theNote.length() <= 3)
 			return theNote;
-		String url = application().resourceManager().urlForResourceNamed("text.png",null,null,context().request());
+		String url = application().resourceManager().urlForResourceNamed("text.png"
+				,null,null,context().request());
 		return "<img src=\"" + url + "\" alt=\"" + theNote + "\" height=\"16\" width=\"16\">";
 	}
 	

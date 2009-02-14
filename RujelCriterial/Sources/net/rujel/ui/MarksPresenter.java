@@ -133,6 +133,7 @@ public class MarksPresenter extends NotePresenter {
 				} else {
 					// TODO: remove this debug
 					NSMutableDictionary args = new NSMutableDictionary(parent().name(),"parent");
+					args.takeValueForKey(session(), "session");
 					Enumeration enu = bindingKeys().objectEnumerator();
 					while (enu.hasMoreElements()) {
 						String key = (String) enu.nextElement();

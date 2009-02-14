@@ -67,8 +67,10 @@ public class LessonList extends WOComponent {
 			setValueForBinding(lessonItem,"currLesson");
 		if(hasBinding("selector"))
 			setValueForBinding(lessonItem,"selector");
-		EOEditingContext ec = lessonItem.editingContext();
-		if (ec.hasChanges()) ec.revert();
+		if(lessonItem != null) {
+			EOEditingContext ec = lessonItem.editingContext();
+			if (ec.hasChanges()) ec.revert();
+		}
     }	
 	
 	public String rowClass() {
