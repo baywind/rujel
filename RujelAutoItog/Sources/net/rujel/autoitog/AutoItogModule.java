@@ -233,9 +233,11 @@ public class AutoItogModule {
 				}
 			} else {
 				Prognosis progn = usage.calculator().calculateForStudent(student, course, eduPeriod);
-				progn.updateFireDate();
-				if(ifArchive) {
-					archivePrognosisChange(progn, usage);
+				if(progn != null) {
+					progn.updateFireDate();
+					if(ifArchive) {
+						archivePrognosisChange(progn, usage);
+					}
 				}
 				if(addOn != null)
 					addOn.reset();
