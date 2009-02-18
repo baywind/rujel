@@ -94,14 +94,12 @@
 	background-color:#ff9999;
 }
 
-.button, .buttonDim {
+.button {
 	display:inline-block;
-	margin:1pt 2pt 3pt;
+	margin:2pt;
 	border:2pt grey;
 	padding:2pt;
-}
-
-.button {
+	vertical-align:middle;
 	background-color:#ffcc66;
 	border-style:outset;
 }

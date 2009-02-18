@@ -55,7 +55,8 @@ public class LessonList extends WOComponent {
 		if(_studentPresenter == null)
 			_studentPresenter = (String)parent().valueForKeyPath("present.presenter");
 		if (_studentPresenter == null)
-			_studentPresenter = SettingsReader.stringForKeyPath("ui.presenter.note","NotePresenter");
+			_studentPresenter = "NotePresenter";
+		//SettingsReader.stringForKeyPath("ui.presenter.note","NotePresenter");
 		return _studentPresenter;
 	}
     public LessonList(WOContext context) {

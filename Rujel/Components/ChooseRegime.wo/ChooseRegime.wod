@@ -1,57 +1,86 @@
-CanAccess: WOConditional {
-	condition = allowedRegimes.count;
-}
-CanNotAccess: WOConditional {
-	condition = allowedRegimes.count;
-	negate = true;
+TimeMachineWindow1: TimeMachineWindow {
+	style = "background-color:#ffffff;position:absolute;bottom:1em;right:2em;z-index:2;";
 }
 
-GenericContainer1: OnClickContainer {
-	elementName = "tr";
-	invokeAction = choose;
-	onclick = session.tryLoad;
-	class="orange";
+Wrapper: PageWrapper {
+	styles = "a {color:#ffff00;text-decoration:none;} a:hover {text-decoration:underline;}";
+	title = title;
+	bodyStyle="background-position:top center;";
+	backgroundFilename = "welcome.jpg";
+	backgroundFramework = "app";	
 }
 
-Repetition1: WORepetition {
-	item = regime;
-	list = allowedRegimes;
+JournalesTitle : WOString {
+  value = application.strings.Strings.ChooseRegime.SrcMark;
+  valueWhenEmpty = "Journales";
+  escapeHTML = false;
 }
 
-String1: WOString {
-	value = regime;
+GroupsRepetition : WORepetition {
+  list = regimeGroups;
+  item = grpItem;
+}
+
+GroupTitleCell : WOGenericContainer {
+  elementName = "th";
+  title = grpItem.hover;
+  style = "padding-left:4pt;";
+}
+
+JournalesCell : OnClickContainer {
+  elementName = "span";
+  invokeAction = chooseClass;
+  class = "button";
+}
+
+GroupTitle : WOString {
+  value = grpItem.title;
+}
+
+ClassListing : ClassListing {
+  editingContext = ec;
+  selection = eduGroup;
+  selectAction = chooseClass;
+  width = "100%";
+  style = "margin-right:4pt;border-width:1pt;border-top-style:none;";
+  class = "backfield2 selectionBorder";
+}
+
+Regimes : WORepetition {
+  list = grpItem.regimes;
+  item = regItem;
+}
+
+RegimeCell : OnClickContainer {
+  elementName = "div";
+  invokeAction = choose;
+  onclick = session.tryLoad;
+  class = "orange";
+  style = "margin:3pt;padding:2pt 4pt;";
+  title = regItem.hover;
+}
+
+Regime : WOString {
+  value = regItem.title;
+  escapeHTML = false;
+}
+
+RujelTitle : WOString {
+  value = application.strings.Strings.title;
+  escapeHTML = false;
+}
+
+PhotoBy : WOString {
+  value = application.strings.Strings.login.photo;
+  escapeHTML = false;
+}
+
+Copyright : WOString {
+  value = application.strings.Strings.login.copy;
+  escapeHTML = false;
 }
 
 Notice: WOString {
 	escapeHTML = false;
 	value = application.strings.Strings.ChooseRegime.notice;
-}
-
-TimeMachineWindow1: TimeMachineWindow {
-}
-
-Wrapper: PageWrapper {
-	styles = "td, th {text-align:center;}";
-	title = title;
-}
-
-Welcome : WOString {
-  value = application.strings.Strings.ChooseRegime.welcome;
-  escapeHTML = false;
-  valueWhenEmpty = "Welcome to RUJEL !";
-}
-
-Introduce : WOString {
-  value = application.strings.Strings.ChooseRegime.introduce;
-  escapeHTML = false;
-}
-
-SelectRegime : WOString {
-  value = application.strings.Strings.ChooseRegime.selectRegime;
-  escapeHTML = false;
-}
-
-NoAccess : WOString {
-  value = application.strings.Strings.ChooseRegime.noAccess;
-  escapeHTML = false;
 }

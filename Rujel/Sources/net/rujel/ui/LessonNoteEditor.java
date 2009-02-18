@@ -98,10 +98,12 @@ public class LessonNoteEditor extends WOComponent {
 
 	public String listPresenter() {
 		if(present == null)
-			return SettingsReader.stringForKeyPath("ui.presenter.lessonList","LessonList");
+			return "LessonList";
+			//return SettingsReader.stringForKeyPath("ui.presenter.lessonList","LessonList");
 		String result = (String)present.valueForKey("listPresenter");
 		if(result == null)
-			return SettingsReader.stringForKeyPath("ui.presenter.lessonList","LessonList");
+			return "LessonList";
+			//return SettingsReader.stringForKeyPath("ui.presenter.lessonList","LessonList");
 		return result;
 	}
 	public PerPersonLink currPerPersonLink() {
@@ -763,8 +765,8 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public WOComponent editSubgroup() {
-		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
-		WOComponent nextPage = pageWithName(pageName);
+//		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
+		WOComponent nextPage = pageWithName("SubgroupEditor");
 		nextPage.takeValueForKey(course,"course");
 		session().takeValueForKey(this,"pushComponent");
 		session().takeValueForKey(Boolean.TRUE,"prolong");
@@ -899,5 +901,23 @@ public class LessonNoteEditor extends WOComponent {
 					}*/
 		}
 		updateLessonList();
+	}
+	
+	public WOActionResults chooseEduGroup() {
+		WOComponent resultPage = (WOComponent)session().valueForKey("pullComponent");
+		resultPage.takeValueForKey(course.eduGroup(), "currClass");
+    	WOActionResults  result = (WOActionResults)resultPage.valueForKey("selectClass");
+		if(result == null)
+			result = resultPage;
+		return result;
+	}
+	
+	public WOActionResults chooseTeacher() {
+		WOComponent resultPage = (WOComponent)session().valueForKey("pullComponent");
+		resultPage.takeValueForKey(course.teacher(), "currTeacher");
+    	WOActionResults  result = (WOActionResults)resultPage.valueForKey("selectTeacher");
+		if(result == null)
+			result = resultPage;
+		return result;
 	}
 }

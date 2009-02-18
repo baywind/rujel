@@ -40,6 +40,7 @@ import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
@@ -54,6 +55,11 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 					new SubjectComparator.ComparisonSupport(), Subject.class);
 			EOSortOrdering.ComparisonSupport.setSupportForClass(
 					new PlanCycle.ComparisonSupport(), PlanCycle.class);
+		} else if(obj.equals("regimes")) {
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.GlobalPlan")))
+				return null;
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.planRegime");
 		}
 		return null;
 	}

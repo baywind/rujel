@@ -30,17 +30,30 @@
 package net.rujel.ui;
 
 import net.rujel.auth.*;
+import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
+
+import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 //import java.util.prefs.Preferences;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 
 public class ChooseRegime extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel");
-	//protected static final Preferences prefs = Preferences.systemNodeForPackage(ChooseRegime.class).node("regime");
-    public String regime;
+//    public String regime;
+    
+    public NSDictionary grpItem;
+    public NSKeyValueCoding regItem;
+    public EOEditingContext ec = new SessionedEditingContext(session());
+    public Object eduGroup;
+    public WOComponent srcMark;
 
     public ChooseRegime(WOContext context) {
         super(context);
@@ -62,16 +75,36 @@ public class ChooseRegime extends WOComponent {
 	
     public WOComponent choose() {
 		session().takeValueForKey(this,"pushComponent");
-		logger.log(WOLogLevel.FINER,"Opening regime "+ regime,session());
-		WOComponent resultPage = pageWithName((String)_allowedRegimes.valueForKey(regime));
+		String regTitle = (String)regItem.valueForKey("title");
+		logger.log(WOLogLevel.FINER,"Opening regime "+ regTitle,session());
+		WOComponent resultPage = pageWithName((String)regItem.valueForKey("component"));
 		try {
-			resultPage.takeValueForKey(regime, "title");
+			resultPage.takeValueForKey(regTitle, "title");
 		} finally {
 			return resultPage;
 		}
 		//return pageWithName(prefs.get(regime,regime));
     }
 	
+    public WOActionResults chooseClass() {
+		if(srcMark == null)
+    		srcMark = pageWithName("SrcMark");
+    	else
+    		srcMark.ensureAwakeInContext(context());
+		
+		session().takeValueForKey(this,"pushComponent");
+		logger.log(WOLogLevel.FINER,"Opening regime "+ srcMark.valueForKey("title"),session());
+
+		if(eduGroup != null) {
+    		srcMark.takeValueForKey(eduGroup, "currClass");
+        	eduGroup = null;  	
+        	WOActionResults  result = (WOActionResults)srcMark.valueForKey("selectClass");
+    		if(result != null)
+    			return result;
+    	}
+    	return srcMark;
+    }
+    
 	/*
 	public static NSArray allRegimes() {
 		try {
@@ -100,7 +133,8 @@ public class ChooseRegime extends WOComponent {
 			}
 			return result.immutableClone();
 		} catch (Exception ex) {
-			logger.logp(WOLogLevel.SEVERE,"ChooseRegime","allowedRegimes","Can't get list of regimes preferences",ex);
+			logger.logp(WOLogLevel.SEVERE,"ChooseRegime","allowedRegimes",
+					"Can't get list of regimes preferences",ex);
 			return null;
 		}
 	}
@@ -110,5 +144,64 @@ public class ChooseRegime extends WOComponent {
         	if(result == null)
         		result = "Choose Regime";
         return result;
+    }
+    
+    protected NSArray _regimeGroups;
+    public NSArray regimeGroups() {
+    	if(_regimeGroups != null)
+    		return _regimeGroups;
+    	_regimeGroups = (NSArray)application().valueForKeyPath(
+    			"strings.Strings.ChooseRegime.regimeGroups");
+    	NSMutableArray result = PlistReader.cloneArray(_regimeGroups, true);
+    	if(Various.boolForObject(session().valueForKeyPath("readAccess._read.Overview"))) {
+    		NSMutableDictionary edu = (NSMutableDictionary)result.objectAtIndex(0);
+    		if(!"edu".equals(edu.valueForKey("id"))) {
+    			for (int i = 1; i < result.count(); i++) {
+    				edu = (NSMutableDictionary)result.objectAtIndex(i);
+    				if("edu".equals(edu.valueForKey("id")))
+    					break;
+    				else
+    					edu = null;
+    			}
+    		}
+    		if(edu != null) {
+    			edu.removeObjectForKey("regimes");
+    		}
+    	}
+    	_regimeGroups = (NSArray)session().valueForKeyPath("modules.regimeGroups");
+    	if(_regimeGroups != null && _regimeGroups.count() > 0)
+    		result.addObjectsFromArray(PlistReader.cloneArray(_regimeGroups, true));
+    	NSDictionary grpsByID = new NSDictionary(result,(NSArray)result.valueForKey("id"));
+    	_regimeGroups = (NSArray)session().valueForKeyPath("modules.regimes");
+    	if(_regimeGroups != null && _regimeGroups.count() > 0) {
+    		Enumeration enu = _regimeGroups.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+    			NSKeyValueCoding reg = (NSKeyValueCoding) enu.nextElement();
+    			NSMutableDictionary grp = (NSMutableDictionary)grpsByID.valueForKey(
+    					(String)reg.valueForKey("group"));
+    			if(grp == null)
+    				grp = (NSMutableDictionary)grpsByID.valueForKey("other");
+    			NSMutableArray regimes = (NSMutableArray)grp.valueForKey("regimes");
+    			if(regimes == null) {
+    				regimes = new NSMutableArray(reg);
+    				grp.takeValueForKey(regimes, "regimes");
+    			} else {
+    				regimes.addObject(reg);
+    				EOSortOrdering.sortArrayUsingKeyOrderArray(regimes, ModulesInitialiser.sorter);
+    			}
+    		}
+    	} // place regimes to groups
+    	Enumeration enu = result.objectEnumerator();
+    	result = new NSMutableArray(result.count());
+    	while (enu.hasMoreElements()) {
+    		NSMutableDictionary rGrp = (NSMutableDictionary) enu.nextElement();
+    		if(Various.boolForObject(rGrp.valueForKeyPath("regimes.count")))
+    			result.addObject(rGrp);
+    	}
+    	if(result.count() > 0)
+    		EOSortOrdering.sortArrayUsingKeyOrderArray(result, ModulesInitialiser.sorter);
+    	_regimeGroups = result;
+
+    	return _regimeGroups;
     }
 }

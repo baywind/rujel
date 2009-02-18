@@ -31,7 +31,12 @@ package net.rujel.ui;
 
 //import net.rujel.auth.*;
 
+import java.text.FieldPosition;
+
+import net.rujel.base.MyUtility;
+
 import com.webobjects.appserver.*;
+import com.webobjects.foundation.NSTimestamp;
 
 public class TimeMachineWindow extends WOComponent {
 	
@@ -47,4 +52,19 @@ public class TimeMachineWindow extends WOComponent {
         return false;
 	}
 	
+	public String eduYear() {
+		Integer year = (Integer)session().valueForKey("eduYear");
+		StringBuilder result = new StringBuilder(year.toString());
+		result.append(" / ");
+		year = new Integer(year.intValue() + 1);
+		result.append(year.toString().substring(2));
+		return result.toString();
+	}
+	
+	public String onClick() {
+		StringBuffer buf = new StringBuffer("get(this,'form').dateField.value='");
+		MyUtility.dateFormat().format(new NSTimestamp(), buf, new FieldPosition(0));
+		buf.append("';");
+		return buf.toString();
+	}
 }

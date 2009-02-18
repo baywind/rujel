@@ -10,6 +10,9 @@ BackUrl: WOResourceURL {
 Body: WOBody {
 	onunload = ^onUnload;
 	onload = onLoad;
+	framework = ^backgroundFramework;
+	filename = ^backgroundFilename;
+	style = ^bodyStyle;
 }
 
 
@@ -84,6 +87,7 @@ Span: OnClickContainer {
 
 Styles: WOString {
 	value = ^styles;
+	escapeHTML = false;
 }
 
 TerminatingMessage: WOString {

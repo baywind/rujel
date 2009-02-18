@@ -109,7 +109,10 @@ public class SrcMark extends WOComponent {
     }
 	
 	public void setCurrClass(EduGroup newClass) {
-		currClass = newClass;
+		if(newClass != null && newClass.editingContext() != ec)
+			currClass = (EduGroup)EOUtilities.localInstanceOfObject(ec, newClass);
+		else
+			currClass = newClass;
 		currGrade = currClass.grade();
 //		courses = coursesForClass(currClass);
 	}
@@ -229,6 +232,8 @@ public class SrcMark extends WOComponent {
     }
 
     public WOComponent selectTeacher() {
+    	if(currTeacher != null && currTeacher.editingContext() != ec)
+    		currTeacher = (Teacher)EOUtilities.localInstanceOfObject(ec, currTeacher);
 		if(teacherName != null) {
 			teacherName = Person.Utility.fullName(currTeacher.person(),true,2,2,2);
 			return null;
@@ -334,12 +339,11 @@ public class SrcMark extends WOComponent {
 		Boolean canRead = (Boolean)session().valueForKeyPath("readAccess.read.item");
 		if((canRead == null || !canRead.booleanValue()) && !access().flagForKey("openCourses")) {
 			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-			logger.logp(WOLogLevel.READING,"SrcMark","openCourse","Denied access to course",
-						new Object[] {session(),item});
+			logger.log(WOLogLevel.READING,"Denied access to course",new Object[] {session(),item});
 			return null;
 		}
-		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.openCourse","LessonNoteEditor");
-		WOComponent nextPage = pageWithName(pageName);//("LessonNoteEditor");
+//		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.openCourse","LessonNoteEditor");
+		WOComponent nextPage = pageWithName("LessonNoteEditor");
 		nextPage.takeValueForKey(item,"course");
 //		nextPage.takeValueForKeyPath(item,"accessSchemeAssistant.lessons");
 //		session().setObjectForKey(this,"SrcCourseComponent");
@@ -562,8 +566,8 @@ public class SrcMark extends WOComponent {
         WOComponent nextPage = saveCourse();
 		if(session().valueForKey("message") != null)
 			return nextPage;
-		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
-		nextPage = pageWithName(pageName);//("SubgroupEditor");
+//		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
+		nextPage = pageWithName("SubgroupEditor");
 
 		nextPage.takeValueForKey(aCourse,"course");
 //		session().setObjectForKey(this,"SrcCourseComponent");

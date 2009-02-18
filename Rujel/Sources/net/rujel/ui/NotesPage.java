@@ -38,8 +38,8 @@ import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 
 public class NotesPage extends WOComponent {
-	protected static final String presenter = SettingsReader.stringForKeyPath(
-			"ui.presenter.note","NotePresenter");
+//	protected static final String presenter = SettingsReader.stringForKeyPath(
+//			"ui.presenter.note","NotePresenter");
     public PerPersonLink lessonItem;
     public Student studentItem;
 	//public String selectStudentAction;
@@ -103,8 +103,8 @@ public class NotesPage extends WOComponent {
 		if(_currPresenter == null) {
 			NSKeyValueCoding present = (NSKeyValueCoding)valueForBinding("present");
 			if(present == null) {
-				_currPresenter = presenter;
-				return presenter;
+				_currPresenter = "NotePresenter";
+				return "NotePresenter";
 			}
 			_currPresenter = (String)present.valueForKey("presenter");
 			if(currLesson() != null) {
@@ -125,7 +125,7 @@ public class NotesPage extends WOComponent {
 				}
 			}
 			if(_currPresenter == null)
-				_currPresenter = presenter;
+				_currPresenter = "NotePresenter";
 		}
 		return _currPresenter;
 	}

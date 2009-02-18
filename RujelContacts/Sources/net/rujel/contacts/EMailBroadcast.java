@@ -60,11 +60,12 @@ public class EMailBroadcast implements Runnable{
 				return null;
 			try {
 				Method method = EMailBroadcast.class.getMethod("broadcastMarks",(Class[])null);
-				Scheduler.sharedInstance().registerTask(Scheduler.WEEKLY,method,null,null,"EMailBroadcast.weekly");
+				Scheduler.sharedInstance().registerTask(Scheduler.WEEKLY,method,
+						null,null,"EMailBroadcast.weekly");
 			} catch (Exception ex) {
 				logger.log(WOLogLevel.WARNING,"Failed to schedule mail broadcast",ex);
 			}
-		}/* else if (obj instanceof Period.Week) {
+/*		} else if (obj instanceof Period.Week) {
 			EOEditingContext ec = new EOEditingContext();
 			NSArray pertypes = PeriodType.allPeriodTypes(ec,new Integer(2007));
 			PeriodType prt = null;
@@ -77,8 +78,13 @@ public class EMailBroadcast implements Runnable{
 			}
 			EduPeriod per = prt.currentPeriod(new NSTimestamp(((Period)obj).begin()));
 			broadcastMarksForPeriod(per,null);
-		}*/ else if(obj.equals("overviewAction")) {
-				return overviewAction(ctx);
+*/		} else if(obj.equals("overviewAction")) {
+			return overviewAction(ctx);
+		} else if(obj.equals("regimes")) {
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Contacts")))
+				return null;
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelContacts_Contacts.contactsRegime");
 		}
 		return null;
 	}
@@ -87,7 +93,8 @@ public class EMailBroadcast implements Runnable{
 		NSMutableArray result = new NSMutableArray();
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.SendMailForm");
 		if(access.getFlag(0)) {
-			result.addObject(WOApplication.application().valueForKeyPath("strings.RujelContacts_Contacts.sendmailAction"));
+			result.addObject(WOApplication.application().valueForKeyPath(
+					"strings.RujelContacts_Contacts.sendmailAction"));
 		}
 		if(result.count() > 0)
 			return result;
@@ -98,7 +105,8 @@ public class EMailBroadcast implements Runnable{
 		broadcastMarksForPeriod(null,null,(EOEditingContext)null);
 	}
 	
-	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter, EOEditingContext ec) {
+	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter,
+			EOEditingContext ec) {
 		//EOEditingContext ec = period.editingContext();//new EOEditingContext();
 		logger.log(WOLogLevel.INFO,"Starting mailing for period",period);
 	/*	

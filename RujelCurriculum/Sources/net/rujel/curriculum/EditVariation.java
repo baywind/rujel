@@ -107,6 +107,13 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     }
 
     public WOActionResults done() {
+    	Object message = returnPage.valueForKey("message");
+    	if(message == null) {
+    		message = session().valueForKey("message");
+    		if(message != null)
+    			returnPage.takeValueForKey(message, "message");
+    	}
+    	returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }
@@ -134,7 +141,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	variation.setReason(reason);
     	try {
 			ec.saveChanges();
-			returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
 		} catch (Exception e) {
 			ec.revert();
 			Object[] args = new Object[] {session(),e,variation}; 
