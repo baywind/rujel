@@ -1,5 +1,6 @@
 TimeMachineWindow1: TimeMachineWindow {
-	style = "background-color:#ffffff;position:absolute;bottom:1em;right:2em;z-index:2;";
+	style = "position:absolute;bottom:1em;right:2em;z-index:2;";
+	class = "backfield2";
 }
 
 Wrapper: PageWrapper {
@@ -24,13 +25,14 @@ GroupsRepetition : WORepetition {
 GroupTitleCell : WOGenericContainer {
   elementName = "th";
   title = grpItem.hover;
-  style = "padding-left:4pt;";
+  style = "padding-right:4pt;";
 }
 
 JournalesCell : OnClickContainer {
   elementName = "span";
   invokeAction = chooseClass;
   class = "button";
+  style = "margin-right:0px;";
 }
 
 GroupTitle : WOString {

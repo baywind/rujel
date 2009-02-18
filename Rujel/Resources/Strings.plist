@@ -54,7 +54,7 @@
 			</dict>
 			<dict>
 				<key>title</key>
-				<string>Прочее</string>
+				<string>Разное</string>
 				<key>hover</key>
 				<string>Режимы, не вошедшие в другие группы</string>
 				<key>id</key>
@@ -66,7 +66,7 @@
 		<key>title</key>
 		<string>Выбор Режима</string>
 		<key>notice</key>
-		<string>Не оставляйте открытый журнал без присмотра &lt;br /&gt;Таймер автоматического закрытия сессии выведен слева от кнопки &quot;Выход&quot;</string>
+		<string>Простой пароль &amp;mdash; подарок хакеру</string>
 		<key>today</key>
 		<string>Сегодня</string>
 	</dict>
@@ -88,6 +88,10 @@
 		<string>Больше работ</string>
 		<key>normal</key>
 		<string>Ровно</string>
+		<key>byTeacher</key>
+		<string>Журналы этого учителя</string>
+		<key>byEduGroup</key>
+		<string>Журналы этого класса</string>
 	</dict>
 	<key>Overview</key>
 	<dict>

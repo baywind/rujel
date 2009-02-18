@@ -2,6 +2,10 @@
 	text-align:right;
 }
 
+body {
+	margin: 2px;
+}
+
 .popup {
 	text-align:center;
 	background-color:#ffff99;
@@ -95,10 +99,9 @@
 }
 
 .button {
-	display:inline-block;
-	margin:2pt;
-	border:2pt grey;
-	padding:2pt;
+	margin:0px 2pt;
+	border:3px grey;
+	padding:3px;
 	vertical-align:middle;
 	background-color:#ffcc66;
 	border-style:outset;
