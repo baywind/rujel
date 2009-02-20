@@ -79,11 +79,11 @@ public class Overview extends WOComponent {
     public NSMutableDictionary currSubject;
     public NSDictionary subjItem;
 	
+	public Period period;
     public NSTimestamp since;
     public NSTimestamp to;
-	
+    /*	
 	public NSArray periods = (NSArray)session().valueForKeyPath("modules.periods");;
-	public Period period;
     public Period perItem;
 
 	public void setPeriod(Period newPeriod) {
@@ -103,7 +103,7 @@ public class Overview extends WOComponent {
 			to = new NSTimestamp(date);
 		}
 	}
-	
+*/	
     /** @TypeInfo com.webobjects.foundation.NSMutableDictionary */
     public NSArray courses;
     public NSMutableDictionary courseItem;

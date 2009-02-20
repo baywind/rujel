@@ -88,5 +88,16 @@
 			<string>30</string>
 		</dict>
 	</array>
+	<key>reasonsRegime</key>
+	<dict>
+		<key>title</key>
+		<string>Корректировки</string>
+		<key>component</key>
+		<string>Corrections</string>
+		<key>group</key>
+		<string>edu</string>
+		<key>sort</key>
+		<string>30</string>
+	</dict>
 </dict>
 </plist>
