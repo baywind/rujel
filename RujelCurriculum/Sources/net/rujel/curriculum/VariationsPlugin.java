@@ -79,7 +79,13 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
     		}
     		totalPlan -= lessonsCount;
     		// TODO: more smart validation;
-    		styleClass = (Math.abs(totalPlan) > 2)?"warning":"gerade";
+    		if(totalPlan > 2)
+    			styleClass = "warning";
+    		else if(totalPlan < -1)
+    			styleClass = "highlight2";
+    		else
+    			styleClass = "gerade";
+    		//styleClass = (Math.abs(totalPlan) > 2)?"warning":"gerade";
     	}
     	super.appendToResponse(aResponse, aContext);
     }

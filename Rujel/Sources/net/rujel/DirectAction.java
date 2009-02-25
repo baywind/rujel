@@ -56,10 +56,10 @@ public class DirectAction extends WODirectAction {
 		WOComponent result;
 		WOSession ses = WOApplication.application().restoreSessionWithID(request().sessionID(),context());
 		if (ses != null && ses.valueForKey("user") != null)//(context().hasSession() || ses != null)
-			result = pageWithName("ChooseRegime");
+			result = pageWithName("SrcMark");
 		else
 			result = LoginProcessor.secureRedirect("login",context(),false);
-		return result; 
+		return result;
     }
 	
 	public WOActionResults successAction() {

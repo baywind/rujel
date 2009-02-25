@@ -109,11 +109,13 @@ public class SrcMark extends WOComponent {
     }
 	
 	public void setCurrClass(EduGroup newClass) {
-		if(newClass != null && newClass.editingContext() != ec)
+		if(newClass != null && newClass.editingContext() != ec) {
 			currClass = (EduGroup)EOUtilities.localInstanceOfObject(ec, newClass);
-		else
+			currGrade = currClass.grade();
+		} else {
 			currClass = newClass;
-		currGrade = currClass.grade();
+			currGrade = null;
+		}
 //		courses = coursesForClass(currClass);
 	}
 
@@ -128,7 +130,9 @@ public class SrcMark extends WOComponent {
 	}
 	
 	public NSArray coursesForClass(EduGroup aClass) {
-		NSMutableArray cycles = cyclesForGrade(aClass.grade()).mutableClone();
+		if(aClass == null)
+			return null;
+		NSMutableArray cycles = EduCycle.Lister.cyclesForEduGroup(aClass).mutableClone();
 
 		NSArray args = new NSArray(new Object[] { session().valueForKey("eduYear") , aClass });
 		NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
@@ -193,11 +197,6 @@ public class SrcMark extends WOComponent {
 		return cycles.immutableClone();//existingCourses.arrayByAddingObjectsFromArray(cycles);
 			*/
 	}
-
-	public NSArray cyclesForGrade(Integer grade) {
-		return EduCycle.Lister.cyclesForEduGroup(currClass); 
-		//EOUtilities.objectsMatchingKeyAndValue(ec,EduCycle.entityName,"grade",grade);
-	}
 	
     public boolean isEduPlan() {
         return (item instanceof EduCycle);
@@ -206,8 +205,11 @@ public class SrcMark extends WOComponent {
     public WOComponent selectClass() {
 		courses = coursesForClass(currClass);
 		currIndex = -1;
-		gradeCycles = cyclesForGrade(currGrade);
-		if(newCourse) {
+		if(currClass != null)
+			gradeCycles = EduCycle.Lister.cyclesForEduGroup(currClass);
+		else
+			gradeCycles = null;
+		if(newCourse && currClass != null) {
 			EduCycle cle = aCourse.cycle();
 			if(cle != null) {
 				subject = cle.subject();
@@ -293,7 +295,7 @@ public class SrcMark extends WOComponent {
 		currIndex = cursIndex;
         aCourse = (EduCourse)item;
 		currGrade = aCourse.eduGroup().grade();
-		gradeCycles = cyclesForGrade(currGrade);
+		gradeCycles = EduCycle.Lister.cyclesForEduGroup(aCourse.eduGroup());
 //		aCycle = aCourse.cycle();
 		return null;
     }

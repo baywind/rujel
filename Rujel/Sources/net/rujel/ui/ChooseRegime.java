@@ -29,14 +29,8 @@
 
 package net.rujel.ui;
 
-import net.rujel.auth.*;
-import net.rujel.reusables.ModulesInitialiser;
-import net.rujel.reusables.PlistReader;
-import net.rujel.reusables.SessionedEditingContext;
-import net.rujel.reusables.SettingsReader;
-import net.rujel.reusables.Various;
+import net.rujel.reusables.*;
 
-import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -49,35 +43,65 @@ public class ChooseRegime extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel");
 //    public String regime;
     
+	public WOComponent returnPage;
     public NSDictionary grpItem;
     public NSKeyValueCoding regItem;
-    public EOEditingContext ec = new SessionedEditingContext(session());
-    public Object eduGroup;
+//    public EOEditingContext ec = new SessionedEditingContext(session());
+//    public Object eduGroup;
     public WOComponent srcMark;
+    protected Number eduYear;
 
     public ChooseRegime(WOContext context) {
         super(context);
     }
-
-    /** @TypeInfo java.lang.String */
-    private NSDictionary _allowedRegimes;
-    /** @TypeInfo java.lang.String */
-    public NSArray allowedRegimes() {
-		if(_allowedRegimes == null) {
-			UserPresentation user = (UserPresentation)session().valueForKey("user");
-			if(user == null)
-				_allowedRegimes = null;
-			else
-				_allowedRegimes = allowedRegimes(user);			
-		}
-		return _allowedRegimes.allKeys();
-    }
 	
+    public void awake() {
+    	super.awake();
+    	eduYear = (Number)session().valueForKey("eduYear");
+    }
+    
+    public boolean hideJournales() {
+    	if(returnPage == null)
+    		return false;
+    	if(returnPage == srcMark)
+    		return true;
+    	if (returnPage.name().endsWith("SrcMark")) {
+    		srcMark = returnPage;
+    		return true;
+    	}
+    	return false;
+    }
+    
+    public String onClick() {
+    	if(returnPage != null && returnPage.name().endsWith((String)regItem.valueForKey("component")))
+    		return "closePopup();";
+    	return (String)session().valueForKey("tryLoad");
+    }
+    
+    protected WOComponent cleanPathStack(String componentName) {
+    	NSMutableArray pathStack = (NSMutableArray)session().valueForKey("pathStack");
+    	WOComponent component = null;
+    	if(pathStack != null && pathStack.count() > 0) {
+    		if (componentName != null) {
+				component = (WOComponent) pathStack.objectAtIndex(0);
+				if (component.name().endsWith(componentName))
+					component.ensureAwakeInContext(context());
+				else
+					component = null;
+			}
+			pathStack.removeAllObjects();
+    	}
+    	return component;
+    }
+    
     public WOComponent choose() {
-		session().takeValueForKey(this,"pushComponent");
+		//session().takeValueForKey(this,"pushComponent");
+    	String componentName = (String)regItem.valueForKey("component");
 		String regTitle = (String)regItem.valueForKey("title");
 		logger.log(WOLogLevel.FINER,"Opening regime "+ regTitle,session());
-		WOComponent resultPage = pageWithName((String)regItem.valueForKey("component"));
+		WOComponent resultPage = cleanPathStack(componentName);
+		if(resultPage == null)
+			resultPage = pageWithName(componentName);
 		try {
 			resultPage.takeValueForKey(regTitle, "title");
 		} finally {
@@ -86,15 +110,18 @@ public class ChooseRegime extends WOComponent {
 		//return pageWithName(prefs.get(regime,regime));
     }
 	
-    public WOActionResults chooseClass() {
-		if(srcMark == null)
-    		srcMark = pageWithName("SrcMark");
-    	else
+    public WOComponent chooseJournal() {
+		if(srcMark == null) {
+			srcMark = cleanPathStack("SrcMark");
+			if(srcMark == null)
+				srcMark = pageWithName("SrcMark");
+		} else {
+			cleanPathStack(null);
     		srcMark.ensureAwakeInContext(context());
-		
+		}
+		/*		
 		session().takeValueForKey(this,"pushComponent");
 		logger.log(WOLogLevel.FINER,"Opening regime "+ srcMark.valueForKey("title"),session());
-
 		if(eduGroup != null) {
     		srcMark.takeValueForKey(eduGroup, "currClass");
         	eduGroup = null;  	
@@ -102,7 +129,21 @@ public class ChooseRegime extends WOComponent {
     		if(result != null)
     			return result;
     	}
-    	return srcMark;
+*/    	return srcMark;
+    }
+    
+    public WOActionResults changeDate() {
+    	Number currYear = (Number)session().valueForKey("eduYear");
+    	if(returnPage == null || currYear.intValue() != eduYear.intValue()) {
+    		returnPage = chooseJournal();
+    		returnPage.takeValueForKey(null, "currClass");
+    		WOActionResults result = (WOActionResults)returnPage.valueForKey("selectClass");
+    		if(result != null && result instanceof WOComponent)
+    			returnPage = (WOComponent)result;
+    	} else {
+    		returnPage.ensureAwakeInContext(context());
+    	}
+    	return returnPage;
     }
     
 	/*
@@ -112,13 +153,11 @@ public class ChooseRegime extends WOComponent {
 		} catch (java.util.prefs.BackingStoreException bex) {
 			return null;
 		}
-	}*/
+	}
 	
 	public static NSDictionary allowedRegimes(UserPresentation user) {
 		try {
 			NSMutableDictionary result = new NSMutableDictionary();
-			/*String[] regs = prefs.keys();
-			for (int i = 0; i < regs.length; i++) */
 			SettingsReader prefs = SettingsReader.settingsForPath("ui.regime",true);
 			java.util.Enumeration enu = prefs.keyEnumerator();
 			while(enu.hasMoreElements()) {
@@ -144,7 +183,7 @@ public class ChooseRegime extends WOComponent {
         	if(result == null)
         		result = "Choose Regime";
         return result;
-    }
+    }*/
     
     protected NSArray _regimeGroups;
     public NSArray regimeGroups() {

@@ -98,18 +98,19 @@ body {
 	background-color:#ff9999;
 }
 
-.button {
+.button, .pathButton {
 	margin:0px 2pt;
-	border:3px grey;
+	border:2px grey;
 	padding:3px;
 	vertical-align:middle;
 	background-color:#ffcc66;
 	border-style:outset;
 }
 
-.buttonDim {
-	background-color:#cc9933;
-	border-style:inset;
+.pathButton {
+	padding:0px;
+	border-left-style:none;
+	border-right-style:none;
 }
 
 .highlight {background-color:#ffff66;}

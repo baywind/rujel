@@ -38,13 +38,29 @@ public class PageWrapper extends WOComponent {
     public PageWrapper(WOContext context) {
         super(context);
     }
+    
+    public WOComponent chooseRegime() {
+    	WOComponent nextPage = (WOComponent)session().objectForKey("ChooseRegime");
+    	if (nextPage == null) {
+    		nextPage = pageWithName("ChooseRegime");
+    		session().setObjectForKey(nextPage, "ChooseRegime");
+    	} else {
+    		nextPage.ensureAwakeInContext(context());
+    	}
+    	nextPage.takeValueForKey(context().page(), "returnPage");
+    	return nextPage;
+    }
 	
     public WOComponent goTo() {
         NSMutableArray list = (NSMutableArray)session().valueForKey("pathStack");
-		int idx = list.indexOfObject(pathItem);
+		int idx = list.indexOfIdenticalObject(pathItem);
 		pathItem.ensureAwakeInContext(context());
-		NSRange pastComponents = new NSRange(idx,list.count() - idx);
-		list.removeObjectsInRange(pastComponents);
+		if(idx > 0) {
+			NSRange pastComponents = new NSRange(idx,list.count() - idx);
+			list.removeObjectsInRange(pastComponents);
+		} else {
+			list.removeAllObjects();
+		}
 		session().takeValueForKey(Boolean.FALSE,"prolong");
 		return pathItem;
     }

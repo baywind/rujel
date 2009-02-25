@@ -4,6 +4,7 @@ Conditional1: WOConditional {
 
 Form1: WOForm {
 	onsubmit = "return tryLoad();";
+	action = ^action;
 }
 
 GenericContainer1: WOGenericContainer {
@@ -41,8 +42,17 @@ TodayString : WOString {
 }
 
 SetToday : OnClickContainer {
-  elementName = "td";
+  elementName = "span";
   invokeAction = null;
-  align = "center";
   onclick = onClick;
+  style = "font-weight:bold;";
+}
+
+InTable : WOConditional {
+  condition = ^inTable;
+}
+
+NoTable : WOConditional {
+  condition = ^inTable;
+  negate = true;
 }

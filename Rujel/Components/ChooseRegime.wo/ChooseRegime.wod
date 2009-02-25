@@ -1,18 +1,22 @@
-TimeMachineWindow1: TimeMachineWindow {
-	style = "position:absolute;bottom:1em;right:2em;z-index:2;";
-	class = "backfield2";
+TimeMachineWindow: TimeMachineWindow {
+	inTable = false;
+	action = changeDate;
 }
 
-Wrapper: PageWrapper {
-	styles = "a {color:#ffff00;text-decoration:none;} a:hover {text-decoration:underline;}";
-	title = title;
-	bodyStyle="background-position:top center;";
-	backgroundFilename = "welcome.jpg";
-	backgroundFramework = "app";	
+RegimesTitle : WOString {
+  value = application.strings.Strings.ChooseRegime.title;
+  valueWhenEmpty = "Choose regime";
+  escapeHTML = false;
 }
 
 JournalesTitle : WOString {
   value = application.strings.Strings.ChooseRegime.SrcMark;
+  valueWhenEmpty = "Journales";
+  escapeHTML = false;
+}
+
+JournalesRegime : WOString {
+  value = application.strings.Strings.SrcMark.title;
   valueWhenEmpty = "Journales";
   escapeHTML = false;
 }
@@ -24,28 +28,21 @@ GroupsRepetition : WORepetition {
 
 GroupTitleCell : WOGenericContainer {
   elementName = "th";
+  align = "right";
+  valign = "top";
   title = grpItem.hover;
-  style = "padding-right:4pt;";
+  style = "padding:4pt 2pt;";
 }
 
 JournalesCell : OnClickContainer {
-  elementName = "span";
-  invokeAction = chooseClass;
-  class = "button";
-  style = "margin-right:0px;";
+  elementName = "div";
+  invokeAction = chooseJournal;
+  class = "orange";
+  style = "margin:3pt;padding:2pt;";
 }
 
 GroupTitle : WOString {
   value = grpItem.title;
-}
-
-ClassListing : ClassListing {
-  editingContext = ec;
-  selection = eduGroup;
-  selectAction = chooseClass;
-  width = "100%";
-  style = "margin-right:4pt;border-width:1pt;border-top-style:none;";
-  class = "backfield2 selectionBorder";
 }
 
 Regimes : WORepetition {
@@ -56,7 +53,7 @@ Regimes : WORepetition {
 RegimeCell : OnClickContainer {
   elementName = "div";
   invokeAction = choose;
-  onclick = session.tryLoad;
+  onclick = onClick;
   class = "orange";
   style = "margin:3pt;padding:2pt 4pt;";
   title = regItem.hover;
@@ -67,22 +64,28 @@ Regime : WOString {
   escapeHTML = false;
 }
 
-RujelTitle : WOString {
-  value = application.strings.Strings.title;
-  escapeHTML = false;
+CancelButton: WOGenericElement {
+	value = application.strings.Reusables_Strings.uiElements.Cancel;
+	type = "button";
+	elementName = "input";
+	onclick = "closePopup();";
 }
 
-PhotoBy : WOString {
-  value = application.strings.Strings.login.photo;
-  escapeHTML = false;
+ShowJournales : WOConditional {
+  condition = hideJournales;
+  negate = true;
 }
 
-Copyright : WOString {
-  value = application.strings.Strings.login.copy;
-  escapeHTML = false;
-}
+AllowTimeMachine : WOConditional {
+  condition = application.prefs.ui.allowTimeMachine;
+ }
 
-Notice: WOString {
-	escapeHTML = false;
-	value = application.strings.Strings.ChooseRegime.notice;
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  align = "right";
+  height = 16;
+  width = 16;
+  onclick = "closePopup();";
+  style = "cursor:pointer;";
 }
