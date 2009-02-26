@@ -56,8 +56,9 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
 	protected EduCourse _course;
 	public Reason rItem;
 	public String reasonText;
-	public boolean withTeacher = false;
-	public boolean withEduGroup = false;
+	//public boolean withTeacher = false;
+	//public boolean withEduGroup = false;
+	public int relation = 1; 
 	public String aDate;
 	public String begin;
 	public String end;
@@ -85,11 +86,19 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		EOKeyGlobalID rgid = (EOKeyGlobalID)ec.globalIDForObject(reason);
     		reasonID = (Number)rgid.keyValues()[0];
     		reasonText = reason.reason();
-    		withTeacher = (reason.teacher() != null);
-    		withEduGroup = (reason.eduGroup() != null);
+    		if(reason.namedFlags().flagForKey("forTeacher"))
+    			relation = 1;
+    		else if (reason.namedFlags().flagForKey("forEduGroup"))
+    			relation = 2;
+    		else
+    			relation = 0;
+    		//withTeacher = (reason.teacher() != null);
+    		//withEduGroup = (reason.eduGroup() != null);
     		begin = MyUtility.dateFormat().format(reason.begin());
     		if(reason.end() != null)
     			end = MyUtility.dateFormat().format(reason.end());
+    	} else {
+    		relation = 1;
     	}
     	super.appendToResponse(aResponse, aContext);
     }
@@ -126,12 +135,16 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		hasChanges = (!reasonText.equals(reason.reason()));
     		if(hasChanges)
     			reason.setReason(reasonText);
-    		hasChanges = (hasChanges || (withTeacher ^ (reason.teacher() != null)));
-    		if(hasChanges)
-    			reason.setTeacher((withTeacher)?course().teacher():null);
-    		hasChanges = (hasChanges || (withEduGroup ^ (reason.eduGroup() != null)));
-    		if(hasChanges)
-    			reason.setEduGroup((withEduGroup)?course().eduGroup():null);
+    		hasChanges = (hasChanges || (reason.namedFlags().flagForKey("forTeacher")^(relation==1)));
+    		if(hasChanges) {
+    			reason.setTeacher((relation==1)?course().teacher():null);
+    			reason.namedFlags().setFlagForKey((relation==1), "forTeacher");
+    		}
+    		hasChanges = (hasChanges || (reason.namedFlags().flagForKey("forEduGroup")^(relation==2)));
+    		if(hasChanges) {
+    			reason.setEduGroup((relation==2)?course().eduGroup():null);
+    			reason.namedFlags().setFlagForKey((relation==2), "forEduGroup");
+    		}
     		NSTimestamp tmpDate = MyUtility.parseDate(begin);
     		if(tmpDate == null) {
     			tmpDate = date();
@@ -166,10 +179,10 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     			archive.takeValueForKey(reasonText,"@reason");
     			archive.takeValueForKey(begin,"@begin");
     			archive.takeValueForKey(end,"@end");
-    			if(withTeacher)
+    			if(reason.namedFlags().flagForKey("forTeacher"))
     				archive.takeValueForKey(Person.Utility.fullName(
     						reason.teacher(), true, 2, 1, 1),"@teacher");
-    			if(withEduGroup)
+    			if(reason.namedFlags().flagForKey("forEduGroup"))
     				archive.takeValueForKey(reason.eduGroup().name(),"@eduGroup");
     		}
     	}

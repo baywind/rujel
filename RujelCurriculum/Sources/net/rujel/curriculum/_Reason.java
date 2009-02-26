@@ -43,7 +43,7 @@ public abstract class _Reason extends EOGenericRecord {
 	// Attributes
 	public static final String BEGIN_KEY = "begin";
 	public static final String END_KEY = "end";
-	public static final String EXTERNAL_KEY = "external";
+	public static final String FLAGS_KEY = "flags";
 	public static final String REASON_KEY = "reason";
 	public static final String SCHOOL_KEY = "school";
 	public static final String VERIFICATION_KEY = "verification";
@@ -68,12 +68,12 @@ public abstract class _Reason extends EOGenericRecord {
     takeStoredValueForKey(value, END_KEY);
   }
 
-  public Boolean external() {
-    return (Boolean) storedValueForKey(EXTERNAL_KEY);
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
   }
 
-  public void setExternal(Boolean value) {
-    takeStoredValueForKey(value, EXTERNAL_KEY);
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
   }
 
   public String reason() {

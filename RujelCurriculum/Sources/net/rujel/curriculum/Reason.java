@@ -29,6 +29,9 @@
 
 package net.rujel.curriculum;
 
+import java.util.Enumeration;
+import java.util.logging.Logger;
+
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 
@@ -36,6 +39,8 @@ import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 public class Reason extends _Reason {
+	public static NSArray flagNames = new NSArray(new String[] {
+			"external","-2-","-4","-8-","forEduGroup","forTeacher"});
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship(ENTITY_NAME,"eduGroup",false,"eduGroupID","EduGroup");
@@ -50,22 +55,30 @@ public class Reason extends _Reason {
 		if(school == null)
 			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
 		setSchool(school);
-		setExternal(Boolean.FALSE);
+		setFlags(new Integer(0));
 	}
 
 	public EduGroup eduGroup() {
-		return (EduGroup)storedValueForKey("eduGroup");
+		if(namedFlags().flagForKey("forEduGroup"))
+			return (EduGroup)storedValueForKey("eduGroup");
+		else
+			return null;
 	}
 	
 	public void setEduGroup(EduGroup gr) {
+		namedFlags().setFlagForKey((gr != null), "forEduGroup");
 		takeStoredValueForKey(gr, "eduGroup");
 	}
 	
 	public Teacher teacher() {
-		return (Teacher)storedValueForKey("teacher");
+		if(namedFlags().flagForKey("forTeacher"))
+			return (Teacher)storedValueForKey("teacher");
+		else
+			return null;
 	}
 	
 	public void setTeacher(Teacher newTeacher) {
+		namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
 		takeStoredValueForKey(newTeacher, "teacher");
 	}
 	
@@ -77,6 +90,29 @@ public class Reason extends _Reason {
 		exts(result);
 		result.append(')');
 		return result.toString();
+	}
+	
+    private NamedFlags _flags;
+    public NamedFlags namedFlags() {
+    	if(_flags==null) {
+    		_flags = new NamedFlags(flags().intValue(),flagNames);
+    		try{
+    		_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
+    		} catch (Exception e) {
+    			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
+						"Could not get syncMethod for Reason flags",e);
+			}
+    	}
+    	return _flags;
+    }
+    
+    public void setNamedFlags(NamedFlags flags) {
+    	_flags = flags;
+    	setFlags(flags.toInteger());
+    }
+
+	public boolean external() {
+		return namedFlags().getFlag(0);//flagForKey("external");
 	}
 	
 	protected void exts(StringBuilder result) {
@@ -109,7 +145,7 @@ public class Reason extends _Reason {
 	}
 	
     public String styleClass() {
-    	if(external().booleanValue())
+    	if(external())
     		return "grey";
     	if(unverified())
     		return "ungerade";
@@ -117,9 +153,35 @@ public class Reason extends _Reason {
     }
 	
 	public static NSArray reasons (NSTimestamp date, EduCourse course, boolean hideExternal) {
-		EOQualifier qual = new EOKeyValueQualifier(SCHOOL_KEY,
+		EOQualifier qual = null;
+		NSMutableArray quals = new NSMutableArray();
+		if(course.teacher() == null) {
+			qual = new EOKeyValueQualifier(FLAGS_KEY,
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,new Integer(32));
+			quals.addObject(qual);
+			qual = new EOKeyValueQualifier("teacher",
+					EOQualifier.QualifierOperatorEqual,NullValue);
+			quals.addObject(qual);
+			qual = new EOAndQualifier(quals);
+			quals.removeAllObjects();
+		} else {
+			qual = new EOKeyValueQualifier("teacher",
+					EOQualifier.QualifierOperatorEqual,course.teacher());
+		}
+		quals.addObject(qual);
+		qual = new EOKeyValueQualifier("eduGroup",
+				EOQualifier.QualifierOperatorEqual,course.eduGroup());
+		quals.addObject(qual);
+		qual = new EOKeyValueQualifier(FLAGS_KEY,
+				EOQualifier.QualifierOperatorLessThan,new Integer(16));
+		quals.addObject(qual);
+		qual = new EOOrQualifier(quals);
+		quals.removeAllObjects();
+		quals.addObject(qual);
+		
+		qual = new EOKeyValueQualifier(SCHOOL_KEY,
 				EOQualifier.QualifierOperatorEqual,course.cycle().school());
-		NSMutableArray quals = new NSMutableArray(qual);
+		quals.addObject(qual);
 		qual = new EOKeyValueQualifier(BEGIN_KEY,
 				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
 		quals.addObject(qual);
@@ -130,27 +192,27 @@ public class Reason extends _Reason {
 				EOQualifier.QualifierOperatorEqual,NullValue);
 		qual = new EOOrQualifier(new NSArray(ors));
 		quals.addObject(qual);
-		// specs
-		ors[0] = new EOKeyValueQualifier("teacher",
-				EOQualifier.QualifierOperatorEqual,course.teacher());
-		ors[1] = new EOKeyValueQualifier("teacher",
-				EOQualifier.QualifierOperatorEqual,NullValue);
-		qual = new EOOrQualifier(new NSArray(ors));
-		quals.addObject(qual);
-		ors[0] = new EOKeyValueQualifier("eduGroup",
-				EOQualifier.QualifierOperatorEqual,course.eduGroup());
-		ors[1] = new EOKeyValueQualifier("eduGroup",
-				EOQualifier.QualifierOperatorEqual,NullValue);
-		qual = new EOOrQualifier(new NSArray(ors));
-		quals.addObject(qual);
-		if(hideExternal) {
-			qual = new EOKeyValueQualifier(EXTERNAL_KEY,
-					EOQualifier.QualifierOperatorEqual,Boolean.FALSE);
-			quals.add(qual);
-		}
+
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(
 				ENTITY_NAME,qual,EOPeriod.sorter);
-		return course.editingContext().objectsWithFetchSpecification(fs);
+		NSArray found = course.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			Enumeration enu = found.objectEnumerator();
+			NSMutableArray result = new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				Reason r = (Reason) enu.nextElement();
+				if(hideExternal && r.external())
+					continue;
+				if(r.namedFlags().flagForKey("forEduGroup") && r.eduGroup() != course.eduGroup())
+					continue;
+				else if(r.namedFlags().flagForKey("forTeacher") && r.teacher() != course.teacher())
+					continue;
+				else
+					result.addObject(r);
+			}
+			return result;
+		}
+		return found;
 	}
 }

@@ -67,11 +67,6 @@ public class Variation extends _Variation {
 		EOQualifier qual = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual, course);
 		NSMutableArray quals = new NSMutableArray(qual);
-		if(ext != null) {
-			qual = new EOKeyValueQualifier("reason.external",
-					EOQualifier.QualifierOperatorEqual,ext);
-			quals.addObject(qual);
-		}
 		if(begin != null) {
 			qual = new EOKeyValueQualifier(DATE_KEY,
 					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin);
@@ -86,6 +81,11 @@ public class Variation extends _Variation {
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,MyUtility.dateSorter);
 		fs.setRefreshesRefetchedObjects(true);
 		NSArray vars = course.editingContext().objectsWithFetchSpecification(fs);
+		if(ext != null) {
+			qual = new EOKeyValueQualifier("isExternal",
+					EOQualifier.QualifierOperatorEqual,ext);
+			vars = EOQualifier.filteredArrayWithQualifier(vars, qual);
+		}
 //		if(vars == null)
 //			vars = NSArray.EmptyArray;
 		return vars;
