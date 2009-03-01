@@ -270,24 +270,21 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		allQuals.addObject(new EOOrQualifier(quals));
 		quals.removeAllObjects();
 		
-		//allQuals.addObject(new EOKeyValueQualifier("eduCourse", EOQualifier.QualifierOperatorEqual , null));
-		/*
-		qual = new EOAndQualifier(allQuals);
-		//cycle(or null) and teacher(or null) and eduGroup(or null) and course = null
-		allQuals.removeAllObjects();
-		
-		quals.addObject(qual);
-		quals.addObject(new EOKeyValueQualifier("eduCourse", EOQualifier.QualifierOperatorEqual , course));
-		qual = new EOOrQualifier(quals);*/
 		// or course
-		if(period != null) {
-			//return qual;
-		//allQuals.addObject(qual);
-		qual = new EOKeyValueQualifier("eduPeriod", EOQualifier.QualifierOperatorEqual , period);
-		allQuals.addObject(qual);
-		}
-		return new EOAndQualifier(allQuals);
+		qual = new EOKeyValueQualifier("eduCourse", EOQualifier.QualifierOperatorEqual , course);
+		quals.addObject(qual);
+		quals.addObject(new EOAndQualifier(allQuals));
+		qual = new EOOrQualifier(quals);
+		
 		// and eduPeriod
+		if(period != null) {
+			allQuals.removeAllObjects();
+			allQuals.addObject(qual);
+			qual = new EOKeyValueQualifier("eduPeriod", EOQualifier.QualifierOperatorEqual , period);
+			allQuals.addObject(qual);
+			qual = new EOAndQualifier(allQuals);
+		}
+		return qual;
 	}
 	
 	public NSMutableDictionary extItog() {
