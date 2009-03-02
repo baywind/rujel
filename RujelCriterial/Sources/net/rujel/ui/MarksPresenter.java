@@ -32,7 +32,6 @@ package net.rujel.ui;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
-//import net.rujel.markarchive.MarkArchive;
 import net.rujel.reusables.*;
 import net.rujel.base.MyUtility;
 import com.webobjects.foundation.*;
@@ -41,7 +40,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import java.math.BigDecimal;
 import java.text.Format;
-import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class MarksPresenter extends NotePresenter {
@@ -134,14 +132,11 @@ public class MarksPresenter extends NotePresenter {
 					// TODO: remove this debug
 					NSMutableDictionary args = new NSMutableDictionary(parent().name(),"parent");
 					args.takeValueForKey(session(), "session");
-					Enumeration enu = bindingKeys().objectEnumerator();
-					while (enu.hasMoreElements()) {
-						String key = (String) enu.nextElement();
-						Object value = valueForBinding(key);
-						if(value == null)
-							value = "NULL";
-						args.takeValueForKey(value, key);
-					}
+					args.takeValueForKey(context().elementID(), "elementID");
+					args.takeValueForKey(parent().valueForKey("currLesson"), "currLesson");
+					args.takeValueForKey(parent().valueForBinding("present"), "present");
+					args.takeValueForKey(parent().valueForKey("lessonsListing"), "lessonsListing");
+					args.takeValueForKey(Thread.currentThread().getStackTrace(), "stackTrace");
 					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",args);
 				}
 			}

@@ -48,6 +48,19 @@ import net.rujel.reusables.*;
 
 public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandling {
 
+	protected static NSDictionary addOn = (NSDictionary)WOApplication.application().
+						valueForKeyPath("strings.RujelAutoItog_AutoItog.PrognosesAddOn");
+
+	protected EduCourse _course;
+	protected NSArray _periods;
+	protected NSMutableDictionary _usagesForPerTypes;
+	protected NSMutableDictionary _prognosesMatrix;
+	public EduPeriod periodItem;
+	protected Student _student;
+	protected NSDictionary _prognosesForStudent;
+	//protected EduPeriod _forcedPeriod;
+	protected NSMutableDictionary _courseTimeouts;
+
 	public PrognosesAddOn(WOSession ses) {
 		super();
 		session = ses;
@@ -99,19 +112,6 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		}
 		return _accessCourseTimeout;
 	}
-
-	protected static NSDictionary addOn = (NSDictionary)WOApplication.application().
-	valueForKeyPath("strings.RujelAutoItog_AutoItog.PrognosesAddOn");
-
-	protected EduCourse _course;
-	protected NSArray _periods;
-	protected NSMutableDictionary _usagesForPerTypes;
-	protected NSMutableDictionary _prognosesMatrix;
-	public EduPeriod periodItem;
-	protected Student _student;
-	protected NSDictionary _prognosesForStudent;
-	//protected EduPeriod _forcedPeriod;
-	protected NSMutableDictionary _courseTimeouts;
 
 	public void reset() {
 		periodItem = null;
