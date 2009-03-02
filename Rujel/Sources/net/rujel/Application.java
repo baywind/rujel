@@ -35,13 +35,11 @@ import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
-import java.io.InputStream;
 import java.util.logging.Logger;
 
 public class Application extends UTF8Application {
 	private StringStorage _strings = new StringStorage(application().resourceManager());
 	protected static Logger logger = Logger.getLogger("rujel");
-	
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -54,10 +52,15 @@ public class Application extends UTF8Application {
 		setDefaultRequestHandler(directActionRequestHandler);
 
 		String propertiesPath = SettingsReader.stringForKeyPath("loggingProperties", null);
-		InputStream propsIn = (propertiesPath!=null)?null:
-			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
-		LogInitialiser.initLogging(propsIn, propertiesPath, logger);
-
+//		InputStream propsIn = (propertiesPath!=null)?null:
+//			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
+		if(propertiesPath != null) {
+			propertiesPath = propertiesPath.replaceFirst("LOCALROOT",
+					System.getProperty("WOLocalRootDirectory",""));
+			propertiesPath = propertiesPath.replaceFirst("WOROOT",
+					System.getProperty("WORootDirectory","/System"));
+			LogInitialiser.initLogging(null, propertiesPath, logger);
+		}
 		
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		DataBaseConnector.makeConnections();

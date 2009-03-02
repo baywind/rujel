@@ -29,7 +29,6 @@
 
 package net.rujel.diary;
 
-import java.io.InputStream;
 import java.util.logging.Logger;
 
 import net.rujel.reusables.*;
@@ -64,9 +63,15 @@ public class Application extends UTF8Application {
 		setDefaultRequestHandler(directActionRequestHandler);
 
 		String propertiesPath = SettingsReader.stringForKeyPath("loggingProperties", null);
-		InputStream propsIn = (propertiesPath!=null)?null:
-			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
-		LogInitialiser.initLogging(propsIn, propertiesPath, logger);
+//		InputStream propsIn = (propertiesPath!=null)?null:
+//			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
+		if(propertiesPath != null) {
+			propertiesPath = propertiesPath.replaceFirst("LOCALROOT",
+					System.getProperty("WOLocalRootDirectory",""));
+			propertiesPath = propertiesPath.replaceFirst("WOROOT",
+					System.getProperty("WORootDirectory","/System"));
+			LogInitialiser.initLogging(null, propertiesPath, logger);
+		}
 		
 		//EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		DataBaseConnector.makeConnections();
