@@ -30,6 +30,7 @@
 package net.rujel.contacts;
 
 
+import java.lang.ref.WeakReference;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -168,6 +169,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		param.takeValueForKey(logParam,"logParam");
 		param.takeValueForKey("Done manual mailing","logMessage");
 		
+		param.takeValueForKey(new WeakReference(session()), "callerSession");
 		EMailBroadcast.broadcastMarks(param);
 		session().takeValueForKey(application().
 				valueForKeyPath("strings.RujelContacts_Contacts.broadcastInitiated"),"message");

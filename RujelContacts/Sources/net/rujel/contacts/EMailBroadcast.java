@@ -41,6 +41,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.*;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 import java.util.Enumeration;
@@ -500,6 +501,15 @@ st:		while (stEnu.hasMoreElements()) {
 					logger.finer("Mail sent \"" + subject + '"');
 				} catch (Exception ex) {
 					logger.log(WOLogLevel.WARNING,"Failed to send email for student",new Object[] {student,ex});
+					WeakReference sesRef = (WeakReference)params.valueForKey("callerSession");
+					WOSession callerSession = (sesRef == null)?null:(WOSession)sesRef.get();
+					if(callerSession != null) {
+						StringBuffer message = new StringBuffer((String)WOApplication.application().
+								valueForKeyPath("strings.RujelContacts_Contacts.failedMailing"));
+						message.append(student.person().firstName());
+						message.append(' ').append(student.person().lastName());
+						callerSession.takeValueForKey(message, "message");
+					}
 				}
 
 				if(timeout > 0) {
