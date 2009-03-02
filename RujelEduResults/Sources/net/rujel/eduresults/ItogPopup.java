@@ -211,6 +211,6 @@ public class ItogPopup extends WOComponent {
 	public String onkeypress() {
 		if(!ifArchive)
 			return null;
-		return "showObj('itogChangeReason');form.changeReason.onkeypress();";
+		return "showObj('itogChangeReason');form.changeReason.onkeypress();fitWindow();";
 	}
 }

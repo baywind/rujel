@@ -129,14 +129,16 @@ public class TimeoutPopup extends WOComponent {
 				} else {
 					if(timeout == null || (forCourse && timeout.eduCourse() == null)) {
 						String entity = (prognosis==null)?"CourseTimeout":"StudentTimeout";
-						timeout = (Timeout)EOUtilities.createAndInsertInstance(ec, entity);
-						timeout.takeValueForKey(eduPeriod, "eduPeriod");
+						if(timeout == null || !timeout.dueDate().equals(dueDate)) {
+							timeout = (Timeout)EOUtilities.createAndInsertInstance(ec, entity);
+							timeout.takeValueForKey(eduPeriod, "eduPeriod");
+							related = null;
+						}
 						timeout.setEduCourse((forCourse)?course:null);
 						if(prognosis != null) {
 							timeout.takeValueForKey(prognosis.student(),"student");
 							//prognosis.addObjectToPropertyWithKey(timeout,(forCourse)?"timeout":"generalTimeout");
 						}
-						related = null;
 					} else	if(!forCourse) {
 						timeout.setEduCourse(null);
 						/*
@@ -163,8 +165,8 @@ public class TimeoutPopup extends WOComponent {
 				}
 				if(prognosis == null)
 					addOn.setCourseTimeout((dueDate==null)?null:(CourseTimeout)timeout);
-				NSArray newRelated = (dueDate==null || timeout == null || 
-						prognosis!=null)? null : timeout.relatedPrognoses();
+				NSArray newRelated = (dueDate==null || timeout == null)? null 
+						: timeout.relatedPrognoses();
 				if(related == null && prognosis != null)
 					related = timeout.relatedPrognoses();
 				if(newRelated==null || newRelated.count() == 0) {
@@ -172,7 +174,10 @@ public class TimeoutPopup extends WOComponent {
 						related.takeValueForKey(null,"updateWithCourseTimeout");
 					}
 				} else {
-					newRelated.takeValueForKey(timeout,"updateWithCourseTimeout");
+					if(timeout instanceof CourseTimeout)
+						newRelated.takeValueForKey(timeout,"updateWithCourseTimeout");
+					else 
+						newRelated.takeValueForKey(null,"updateWithCourseTimeout");
 					if(related != null && related.count() > 0) {
 						NSMutableArray tmp = related.mutableClone();
 						tmp.removeObjectsInArray(newRelated);

@@ -269,11 +269,11 @@ public class Prognosis extends _Prognosis {
 	}
 
 	public NSTimestamp updateFireDate(CourseTimeout courseTimeout) {
-		if(fireDate() == null && !valueChanged()) {
+		_timeout = null;
+		if(fireDate() == null && !valueChanged() && relatedItog() != null) {
 			return null;
 		}
 		NSTimestamp result = null;
-		_timeout = null;
 		StudentTimeout studentTimeout = getStudentTimeout();
 		if(courseTimeout != null) {
 			if(studentTimeout != null)
@@ -282,7 +282,7 @@ public class Prognosis extends _Prognosis {
 				result = courseTimeout.dueDate();
 		} else {
 			if(studentTimeout != null)
-				 result = studentTimeout.dueDate();
+				result = studentTimeout.dueDate();
 			else
 				result = eduPeriod().end();
 		}
@@ -619,7 +619,7 @@ cycleStudents:
 		NSDictionary recent = snapshot();
 		if(committed == recent)
 			return false;
-		String[] keys = new String[] {"commplete","value","mark"};
+		String[] keys = new String[] {COMPLETE_KEY,VALUE_KEY,MARK_KEY};
 		for (int i = 0; i < keys.length; i++) {
 			Object a = committed.valueForKey(keys[i]);
 			Object b = recent.valueForKey(keys[i]);
