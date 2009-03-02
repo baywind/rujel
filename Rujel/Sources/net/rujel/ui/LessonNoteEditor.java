@@ -713,7 +713,16 @@ public class LessonNoteEditor extends WOComponent {
 		lessonsList = tmp.immutableClone();
 		if(currLesson().title()!=null)
 			makeDateFromNum(currLesson());
-	} 
+	}
+	
+	public boolean canAddTab() {
+		if(currLesson() == null)
+			return false;
+		if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.course")))
+			return false;
+		int idx = lessonsList.indexOf(currPerPersonLink);
+		return (idx > 0);
+	}
 
 	public void splitTab() {
 		if(baseTabs != null && !(_currTab instanceof BaseTab.Tab)) {
@@ -901,6 +910,28 @@ public class LessonNoteEditor extends WOComponent {
 					}*/
 		}
 		updateLessonList();
+	}
+	
+	public String goRightTitle() {
+		String key = "strings.Strings.LessonNoteEditor.";
+		if(regime == LONGLIST)
+			return (String)application().valueForKeyPath(key + "normal");
+		else
+			return (String)application().valueForKeyPath(key + "right");
+	}
+
+	public String goLeftTitle() {
+		String key = "strings.Strings.LessonNoteEditor.";
+		if(regime == BIGTABLE) {
+			return (String)application().valueForKeyPath(key + "normal");
+		} else {
+			String result = (String)application().valueForKeyPath(key + "left");
+			if(present != null) {
+				result = result.substring(0,result.indexOf(' ') + 1);
+				result = result + present.valueForKey("title");
+			}
+			return result;
+		}
 	}
 	
 	public WOActionResults chooseEduGroup() {
