@@ -5,7 +5,7 @@
 	<key>schoolNumber</key>
 	<string>0</string>
 	<key>loggingProperties</key>
-	<string>LOCALROOT/Library/WebObjects/Configuration/rujelLogging.properties</string>
+	<string>LOCALROOT/Library/WebObjects/Configuration/logging.properties</string>
 	<key>auth</key>
 	<dict>
 		<key>loginPageName</key>
