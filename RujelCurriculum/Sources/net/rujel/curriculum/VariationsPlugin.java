@@ -79,9 +79,9 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
     		}
     		totalPlan -= lessonsCount;
     		// TODO: more smart validation;
-    		if(totalPlan > 2)
+    		if(totalPlan > 0)
     			styleClass = "warning";
-    		else if(totalPlan < -1)
+    		else if(totalPlan < -0)
     			styleClass = "highlight2";
     		else
     			styleClass = "gerade";

@@ -39,7 +39,11 @@ public class PageWrapper extends WOComponent {
         super(context);
     }
     
-    public WOComponent chooseRegime() {
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		super.appendToResponse(aResponse, aContext);
+		session().takeValueForKey(null, "message");
+	}
+		public WOComponent chooseRegime() {
     	WOComponent nextPage = (WOComponent)session().objectForKey("ChooseRegime");
     	if (nextPage == null) {
     		nextPage = pageWithName("ChooseRegime");

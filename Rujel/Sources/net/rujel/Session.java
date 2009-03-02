@@ -136,7 +136,7 @@ public class Session extends WOSession implements WithUser {
 	
 //	public boolean isStudent = false;
 	private EOGlobalID personGID;
-    protected String message;
+    protected StringBuffer message = new StringBuffer();
 	public EOGlobalID userPersonGID() {
 		if (personGID != null) return personGID;
 		//UserPresentation user = (UserPresentation)session().valueForKey("user");
@@ -177,10 +177,25 @@ public class Session extends WOSession implements WithUser {
 	}
 	
     public String message() {
-        return message;
+    	if(message == null || message.length() == 0)
+    		return null;
+        return message.toString();
     }
-    public void setMessage(String newMessage) {
-        message = newMessage;
+    
+    public synchronized void setMessage(String newMessage) {
+    	if(newMessage == null) {
+    		if(message != null)
+    			message.delete(0,message.length());
+    	} else {
+    		if(message == null) {
+    			message = new StringBuffer(newMessage);
+    		} else {
+    			if(message.length() > 0)
+    				message.append("<p>").append(newMessage).append("</p>\n");
+    			else
+    				message.append(newMessage);
+    		}
+    	}
     }
 
 	public boolean prolong;
@@ -197,7 +212,6 @@ public class Session extends WOSession implements WithUser {
 		}
 		setTimeOut(to);
 		super.appendToResponse(aResponse,aContext);
-		message = null;
 	}
 	
 	private NSMutableArray persList = new NSMutableArray();

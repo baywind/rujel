@@ -107,12 +107,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     }
 
     public WOActionResults done() {
-    	Object message = returnPage.valueForKey("message");
-    	if(message == null) {
-    		message = session().valueForKey("message");
-    		if(message != null)
-    			returnPage.takeValueForKey(message, "message");
-    	}
     	returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
@@ -122,7 +116,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(date == null || !date.equals(oldDate))
     		return updateDate();
     	if(abs == null || reason == null) {
-    		returnPage.takeValueForKey(application().valueForKeyPath(
+    		session().takeValueForKey(application().valueForKeyPath(
     				"strings.RujelCurriculum_Curriculum.messages.wrongVariation"), "message");
     		return done();
     	}
@@ -146,7 +140,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),e,variation}; 
 			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
 					"Error saving Variation",args);
-			returnPage.takeValueForKey(e.getMessage(), "message");
+			session().takeValueForKey(e.getMessage(), "message");
 		} finally {
 			ec.unlock();
 		}
@@ -173,7 +167,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),e,variation}; 
 			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
 					"Error deleting Variation",args);
-			returnPage.takeValueForKey(e.getMessage(), "message");
+			session().takeValueForKey(e.getMessage(), "message");
 		} finally {
 			ec.unlock();
     	}

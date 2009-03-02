@@ -49,7 +49,7 @@ public class VariationsList extends WOComponent {
 	public String date;
 	public Integer value;
 	public boolean hasChanges;
-	public String message;
+	//public String message;
 	protected NSTimestamp today;
 	
 	public NSArray list;
@@ -99,6 +99,7 @@ public class VariationsList extends WOComponent {
            		today = new NSTimestamp();
     	}
     	super.appendToResponse(aResponse, aContext);
+    	session().takeValueForKey(null, "message");
     }
     
     public String valueStyle() {
@@ -125,7 +126,7 @@ public class VariationsList extends WOComponent {
     }
     
     public WOActionResults editVariation() {
-    	message = null;
+    	//message = null;
     	NSTimestamp aDate = null;
     	if(item == null) {
     		aDate = MyUtility.parseDate(date);
@@ -157,7 +158,7 @@ public class VariationsList extends WOComponent {
     }
     
     public WOActionResults done() {
-    	message = null;
+    	//message = null;
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }

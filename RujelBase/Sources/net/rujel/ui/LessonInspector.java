@@ -83,10 +83,10 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     			return returnPage;
     		}
     	}
-    	Object oldMessage = session().valueForKey("message");
-    	session().setObjectForKey(lesson.date(), "recentDate");
+//    	Object oldMessage = session().valueForKey("message");
+//    	session().setObjectForKey(lesson.date(), "recentDate");
     	returnPage.valueForKey("save");
-    	Object newMessage = session().valueForKey("message");
+/*    	Object newMessage = session().valueForKey("message");
     	if(oldMessage != null && !oldMessage.equals(newMessage)) {
     		if(newMessage != null) {
     			StringBuilder buf = new StringBuilder();
@@ -96,13 +96,13 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     		} else {
     			session().takeValueForKey(oldMessage, "message");
     		}
-    	}
+    	} */
     	returnPage.takeValueForKey(lesson,"currPerPersonLink");
     	return returnPage;
     }
     
     protected void appendMessage(String keyPath) {
-    	Object message = session().valueForKey("message");
+/*    	Object message = session().valueForKey("message");
 			if(message != null) {
 				StringBuilder buf = new StringBuilder((String)message);
 				buf.insert(0, "<p>");
@@ -111,10 +111,10 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 				buf.append("</p>");
 				message = buf.toString();
 			} else {
-				message = application().valueForKeyPath(keyPath);
+*/				Object message = application().valueForKeyPath(keyPath);
 				if(message == null)
 					message = "!!!";
-			}
+//			}
 			session().takeValueForKey(message, "message");
    }
     
