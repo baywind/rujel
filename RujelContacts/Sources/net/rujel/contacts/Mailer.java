@@ -220,6 +220,12 @@ public class Mailer {
 	protected static boolean writeToFile(String filename, NSData message) {
 		String mailDir = SettingsReader.stringForKeyPath("mail.writeFileDir", null);
 		if(mailDir != null) {
+			mailDir = mailDir.replaceFirst("LOCALROOT",
+					System.getProperty("WOLocalRootDirectory",""));
+			mailDir = mailDir.replaceFirst("WOROOT",
+					System.getProperty("WORootDirectory","/System"));
+			mailDir = mailDir.replaceFirst("~",
+					System.getProperty("WOUserDirectory","/root"));
 			try {
 				File messageFile = new File(mailDir,filename);
 				FileOutputStream fos = new FileOutputStream(messageFile);

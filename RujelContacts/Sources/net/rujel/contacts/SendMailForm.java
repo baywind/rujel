@@ -60,6 +60,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	public Contact contItem;
 	public boolean showList = false;
 	
+	public String message;
 	public String subjStart;
 	public String subject;
 	public String text;
@@ -96,6 +97,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		subjStart = "RUJEL: " + dict.valueForKeyPath("eduGroup.name") + " : ";
+		message = null;
 	}
 		
 	public NSArray persContacts() {
@@ -130,21 +132,20 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	
 	public void send() {
 		if(adrSet.count() <= 0) {
-			session().takeValueForKey(application().
-		valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.noRecipients"),"message");
+			message = (String)application().valueForKeyPath(
+					"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
 			return;
 		}
 		
 		//InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(adrSet, true);
 		if(adrSet == null || adrSet.count() == 0) {
-			session().takeValueForKey(application().
-				valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.noRecipients"),
-					"message");
+			message = (String)application().valueForKeyPath(
+						"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
 			return;
 		}
 		if((text == null || text.length() == 0) && !attach) {
-			session().takeValueForKey(application().
-			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.noText"),"message");
+			message = (String)application().valueForKeyPath(
+					"strings.RujelContacts_Contacts.SendMailForm.noText");
 			return;
 		}
 		NSMutableDictionary param = new NSMutableDictionary();
@@ -171,19 +172,8 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		
 		param.takeValueForKey(new WeakReference(session()), "callerSession");
 		EMailBroadcast.broadcastMarks(param);
-		session().takeValueForKey(application().
-				valueForKeyPath("strings.RujelContacts_Contacts.broadcastInitiated"),"message");
-		/*
-		try {
-			Mailer mailer = new Mailer();
-			mailer.sendTextMessage(subjStart + subject, text, to);
-				session().takeValueForKey(application().
-			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.success"),"message");
-		} catch (Exception ex) {
-			session().takeValueForKey(application().
-			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.failed"),"message");
-			logger.log(WOLogLevel.WARNING,"Failed to sent mail",ex);
-		}*/
+		message = (String)application().valueForKeyPath(
+				"strings.RujelContacts_Contacts.broadcastInitiated");
 	}
 	
 	public NSArray periods = (NSArray)session().valueForKeyPath("modules.periods");;

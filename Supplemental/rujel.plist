@@ -562,6 +562,8 @@
 		<string>1</string>
 		<key>maxGrade</key>
 		<string>11</string>
+		<key>disableAutoItog</key>
+		<string>true</string>
 		<key>autoItogLagDays</key>
 		<string>1</string>
 		<key>_ignorePrognosesAfterDays</key>
@@ -609,7 +611,7 @@
 		<key>writeToFile</key>
 		<string>true</string>
 		<key>writeFileDir</key>
-		<string>/Users/Shared/test</string>
+		<string>~/test</string>
 	</dict>
 	<key>markarchive</key>
 	<dict>
