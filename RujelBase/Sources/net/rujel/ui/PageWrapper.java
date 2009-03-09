@@ -29,6 +29,8 @@
 
 package net.rujel.ui;
 
+import net.rujel.reusables.Various;
+
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -68,7 +70,7 @@ public class PageWrapper extends WOComponent {
 		session().takeValueForKey(Boolean.FALSE,"prolong");
 		return pathItem;
     }
-	
+	/*
     public WOActionResults exit() {
 		session().terminate();
 		WORedirect result = new WORedirect(context());
@@ -76,7 +78,7 @@ public class PageWrapper extends WOComponent {
 		result.setUrl(url);
 		return result; 
     }
-	
+	*/
 	public boolean isStateless() {
 		return true;
 	}
@@ -105,7 +107,9 @@ public class PageWrapper extends WOComponent {
 	}
 	
 	public String logout() {
-		return "return checkRun('" + 
-		context().directActionURLForActionNamed("logout", null) + "');";
+		String result = context().directActionURLForActionNamed("logout", null);
+		result = Various.cleanURL(result);
+		result = "return checkRun('" + result + "');";
+		return result;
 	}
 }

@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 
@@ -47,6 +48,7 @@ public class MessagePage extends com.webobjects.appserver.WOComponent {
     
     public void setRedirectAction(String action) {
     	redirect = context().directActionURLForActionNamed(action, null);
+    	redirect = Various.cleanURL(redirect);
     }
     
     public void setPlistMessage(String key) {
