@@ -34,6 +34,8 @@ import net.rujel.auth.*;
 import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
@@ -219,11 +221,23 @@ public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme
 				taskText.takeValueForKey(newTask, "storedText");
 			}		
 		}
+		
+		public boolean hasPopup() {
+			return true;
+		}
+		
+		public WOComponent homeWorkPopupForLesson(WOContext context, EduLesson lesson) {
+			return null;
+		}
 	}
 
 	protected static TaskDelegate taskDelegate = new TaskDelegate();
 	public static void setTaskDelegate(TaskDelegate delegate) {
 		taskDelegate = delegate;
+	}
+	
+	public static TaskDelegate getTaskDelegate() {
+		return taskDelegate;
 	}
 	
 	//protected String _homeTask;

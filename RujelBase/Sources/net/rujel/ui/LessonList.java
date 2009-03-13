@@ -36,6 +36,7 @@ import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 
+import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SettingsReader;
@@ -305,5 +306,21 @@ public class LessonList extends WOComponent {
 		}
 		popup.takeValueForKey(context().page(), "returnPage");
 		return popup;
+	}
+	
+	public String showHomeTaskOnClick() {
+		if(lessonItem == null || lessonItem != valueForBinding("currLesson"))
+			return null;
+		if(BaseLesson.getTaskDelegate().hasPopup() && lessonItem.homeTask() == null)
+			return (String)session().valueForKey("ajaxPopup");
+		if(Various.boolForObject(valueForBinding("wide")))
+			return null;
+		return "returnField=document.getElementById('homeTask');myPrompt(htTitle,null,this);";
+	}
+	
+	public WOActionResults popupHomeTask() {
+		if(!BaseLesson.getTaskDelegate().hasPopup())
+			return null;
+		return BaseLesson.getTaskDelegate().homeWorkPopupForLesson(context(), lessonItem);
 	}
 }

@@ -31,6 +31,9 @@ package net.rujel.criterial;
 
 import java.util.logging.Logger;
 
+import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WOContext;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
@@ -38,6 +41,7 @@ import com.webobjects.foundation.*;
 import net.rujel.base.MyUtility;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.WOLogLevel;
 
 public class HomeWorkDelegate extends TaskDelegate {
@@ -59,6 +63,24 @@ public class HomeWorkDelegate extends TaskDelegate {
 			 Work work = homeWorkForLesson(lesson, true);
 			 work.setTheme(newTask);
 		 }
+	}
+	
+	public WOComponent homeWorkPopupForLesson(WOContext context, EduLesson lesson) {
+    	WOComponent nextPage = WOApplication.application().pageWithName("WorkInspector", context);
+    	nextPage.takeValueForKey(context.page(), "returnPage");
+	   	EOEditingContext tmpEc = new SessionedEditingContext(
+	   			lesson.editingContext(),context.session());
+    	tmpEc.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
+    	tmpEc.lock();
+    	lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
+    	nextPage.takeValueForKey(tmpEc, "tmpEC");
+    	nextPage.takeValueForKey(homeWorkForLesson(lesson,true), "work");
+    	tmpEc.unlock();
+    	return nextPage;
+	}
+	
+	public boolean hasPopup() {
+		return true;
 	}
 	
 	protected Work homeWorkForLesson(EduLesson lesson,boolean create) {
