@@ -165,7 +165,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
         				"strings.RujelCurriculum_Curriculum.messages.wrongDates"), "message");
         			tmpDate = date();
         		}
-    			hasChanges = (hasChanges || (!reason.end().equals(tmpDate)));
+    			hasChanges = (hasChanges || reason.end() == null || (!reason.end().equals(tmpDate)));
     			if(hasChanges)
     				reason.setEnd(tmpDate);
     		} else {
