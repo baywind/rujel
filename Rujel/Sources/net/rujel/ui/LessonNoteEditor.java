@@ -303,6 +303,9 @@ public class LessonNoteEditor extends WOComponent {
 			qual = new EOAndQualifier(qualifiers);
 		}
 		EOFetchSpecification fs = new EOFetchSpecification(entityName,qual,EduLesson.sorter);
+		NSArray prefetchPaths = (NSArray)present.valueForKey("prefetchPaths");
+		if(prefetchPaths != null)
+			fs.setPrefetchingRelationshipKeyPaths(prefetchPaths);
 		return course.editingContext().objectsWithFetchSpecification(fs);
 	}
 

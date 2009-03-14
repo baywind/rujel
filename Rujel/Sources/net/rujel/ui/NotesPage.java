@@ -52,13 +52,14 @@ public class NotesPage extends WOComponent {
     //public NSArray studentsList;
 	
 	//public NSKeyValueCoding present;
+    public NSMutableDictionary presenterCache = new NSMutableDictionary();
 	
     public NotesPage(WOContext context) {
         super(context);
     }
 	
 	protected Boolean _single;
-	public boolean single() {
+	public Boolean single() {
 		if(_single == null) {
 			Object tmp = valueForBinding("single");
 			if(tmp != null && tmp instanceof Boolean) {
@@ -67,7 +68,7 @@ public class NotesPage extends WOComponent {
 				_single = new Boolean(Various.boolForObject(tmp));
 			}
 		}
-		return _single.booleanValue();
+		return _single;
 	}
 	/*
 	public void setSingle(Object val) {
@@ -249,6 +250,11 @@ public class NotesPage extends WOComponent {
 		addOnItem = null;
 		allAddOns = null;
 		activeAddOns = null;
+		if(presenterCache == null)
+			presenterCache = new NSMutableDictionary();
+		else
+			presenterCache.removeAllObjects();
+		
 	}
 	
 	public boolean isStateless() {

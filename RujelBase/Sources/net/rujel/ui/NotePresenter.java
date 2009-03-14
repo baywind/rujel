@@ -53,7 +53,12 @@ public class NotePresenter extends WOComponent {
 	
 	public NamedFlags access() {
 		if(_access == null) {
-			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.BaseNote");
+			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding("presenterCache");
+			_access = (NamedFlags)presenterCache.valueForKey("noteAccess");
+			if(_access == null) {
+				_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.BaseNote");
+				presenterCache.takeValueForKey(_access, "noteAccess");
+			}
 			/*
 			if(lesson() instanceof UseAccessScheme) {
 				_access = ((UseAccessScheme)lesson()).accessForAttribute("notes",null);
@@ -242,7 +247,7 @@ public class NotePresenter extends WOComponent {
 		NSDictionary initData = identifierDictionary();
 		initData.takeValueForKey(new Integer(12), "maxlen");
 		result.takeValueForKey(initData,"identifierDictionary");
-		StringBuffer description = new StringBuffer();
+		StringBuilder description = new StringBuilder();
 		if(lesson().theme() != null)
 			description.append(lesson().theme()).append(" : ");
 		description.append(Person.Utility.fullName(student(), true, 2, 2, 0));
@@ -294,7 +299,7 @@ public class NotePresenter extends WOComponent {
 
 	public String style() {
 		//boolean single = Various.boolForObject(valueForBinding("single"));
-		StringBuffer buf = new StringBuffer(30);
+		StringBuilder buf = new StringBuilder(30);
 		//int len = (len() * 2) / 3;
 		buf.append("width:").append(len() +1).append("ex;text-align:");
 		if(noteForStudent() != null) {
