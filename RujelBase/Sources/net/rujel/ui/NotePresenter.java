@@ -54,10 +54,12 @@ public class NotePresenter extends WOComponent {
 	public NamedFlags access() {
 		if(_access == null) {
 			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding("presenterCache");
-			_access = (NamedFlags)presenterCache.valueForKey("noteAccess");
+			if(presenterCache != null)
+				_access = (NamedFlags)presenterCache.valueForKey("noteAccess");
 			if(_access == null) {
 				_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.BaseNote");
-				presenterCache.takeValueForKey(_access, "noteAccess");
+				if(presenterCache != null)
+					presenterCache.takeValueForKey(_access, "noteAccess");
 			}
 			/*
 			if(lesson() instanceof UseAccessScheme) {

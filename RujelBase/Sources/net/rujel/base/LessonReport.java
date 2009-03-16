@@ -45,7 +45,9 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
     public LessonReport(WOContext context) {
         super(context);
     }
-    
+
+	public NSDictionary lessonItem;
+
 	public static NSDictionary reportForStudent(NSDictionary settings) {
 		NamedFlags options = (NamedFlags)settings.valueForKey("lessons");	
 		if(options == null)
@@ -140,5 +142,4 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 	public void reset() {
 	}
 	 */
-	public NSDictionary lessonItem;
 }

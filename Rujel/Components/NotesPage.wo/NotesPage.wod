@@ -65,12 +65,12 @@ StudentTD: OnClickContainer {
 	colspan = 2;
 }
 
-StudentLastName: WOString {
-	value = studentItem.person.lastName;
-}
-
-StudentInitials: WOString {
-	value = studentItem.person.firstName;
+StudentName: PersonDisplay {
+	person = studentItem;
+	last = 2;
+	first = 2;
+	second = 0;
+	startWithLast = true;
 }
 
 NotePresenter1: WOSwitchComponent {

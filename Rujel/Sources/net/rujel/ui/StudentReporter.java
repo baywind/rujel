@@ -57,6 +57,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 	public Period period;
 	
 	public NSArray reports;
+    public NSMutableDictionary presenterCache;
     
 	protected static NSTimestamp date2timestamp(java.util.Date date) {
 		if(date instanceof NSTimestamp)
@@ -64,7 +65,6 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		else
 			return new NSTimestamp(date);
 	}
-
 
 	public boolean isStateless() {
 		return true;
@@ -85,6 +85,10 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		report = null;
 		courseItem = null;
 		_reportItem = null;
+		if(presenterCache == null)
+			presenterCache = new NSMutableDictionary();
+		else
+			presenterCache.removeAllObjects();
 	}
 
 	
