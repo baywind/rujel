@@ -27,7 +27,7 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.rujel.ui;
+package net.rujel.curriculum;
 
 import com.webobjects.appserver.*;
 import com.webobjects.foundation.*;
