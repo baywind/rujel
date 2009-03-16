@@ -96,7 +96,8 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(!MyUtility.eduYearForDate(date).equals(course.eduYear()))
     		date = null;
     	if(reason != null) {
-    		if(date == null || date.compareTo(reason.begin()) < 0 ||date.compareTo(reason.end()) > 0)
+    		if(date == null || date.compareTo(reason.begin()) < 0 || 
+    				(reason.end() != null && date.compareTo(reason.end()) > 0))
     			reason = null;
     	}
     	return this;
