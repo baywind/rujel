@@ -175,6 +175,8 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String isVarStyle() {
+		if(Various.boolForObject(session().valueForKeyPath("readAccess._read.Variation")))
+			return "background-color:#cccccc;color:#cccccc;";
 		if(variation() == null)
 			return "background-color:#999999;color:#cccccc;";
 		return "font-weight:bold;color:#339966;background-color:#99ff99;";
