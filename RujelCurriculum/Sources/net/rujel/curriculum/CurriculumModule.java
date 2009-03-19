@@ -59,6 +59,11 @@ public class CurriculumModule {
 			return lessonProperies(ctx);
 		} else if ("journalPlugins".equals(obj)) {
 			return journalPlugins(ctx);
+		} else if(obj.equals("regimes")) {
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Curriculum")))
+				return null;
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.curriculumRegime");
 		}
 		return null;
 	}

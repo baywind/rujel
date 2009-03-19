@@ -38,7 +38,7 @@ VarDate : WOString {
 
 ValueCell : WOGenericContainer {
 	elementName = "td";
-	style = valueStyle;
+	style = item.valueStyle;
 }
 
 VarValue : WOString {

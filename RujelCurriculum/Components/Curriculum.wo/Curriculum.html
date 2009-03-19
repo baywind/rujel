@@ -1,9 +1,18 @@
 <webobject name="PageWrapper1">
-<table width = "100%">
-	<tr><td width = "10%" class = "selectionBorder" style = "border-style:none none none solid">
-	<webobject name = "RegimeTabs"/>
-	</td><td class = "backfield1">
-	<webobject name = "RegimeComponent"/>
+<webobject name = "Params"><div><webobject name = "ParamSelector"></webobject>
+</div></webobject>
+
+<webobject name = "RegimeTabs"/>
+<table width = "100%" class = "selectionBorder" style = "border-style:solid none none;">
+	<tr><td width = "70%" class = "backfield1">
+	<webobject name = "TabTitle"/>
+	<table width = "100%"><thead><tr>
+	<webobject name = "Columns"><th><webobject name = "ColTitle"/></th></webobject>
+	</tr></thead>
+	</table>
+	</td><td class = "backfield2">
+	<webobject name = "Since"/><br>
+	<webobject name = "To"/>
 	</td></tr>
 </table>
 </webobject>

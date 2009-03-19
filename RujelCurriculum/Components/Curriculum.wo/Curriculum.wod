@@ -1,23 +1,47 @@
 PageWrapper1: PageWrapper {
 	hasChanges = false;
-	title = application.strings.Strings.Curriculum.title;
-	cssURL = regime.cssURL;
-	cssResource = regime.cssResource;
-	scriptURL = regime.scriptURL;
-	scriptResource = regime.scriptResource;
-	resourcesFramework = regime.framework;
+	title = plist.title;
 }
 
 RegimeTabs : Tabs {
-  currTab = regime;
-  tablist = availableRegimes;
-  idAttribute = "id";
+  currTab = currTab;
+  tablist = plist.tabs;
+  idAttribute = "entity";
   titleAttribute = "title";
   hoverAttribute = "hover";
   onClick = session.checkRun;
 }
 
-RegimeComponent : WOSwitchComponent {
-  WOComponentName = regime.component;
-  dict = regime;
+Params : WORepetition {
+  list = currTab.params;
+  item = itemDict;
+}
+
+Since : WOString {
+  value = params.since;
+  valueWhenEmpty = "no Since";
+}
+
+To : WOString {
+  value = params.to;
+  valueWhenEmpty = "no To";
+}
+
+ParamSelector : DisplayAny {
+  value = params;
+  dict = itemDict;
+}
+
+TabTitle : WOString {
+  value = currTab.title;
+  escapeHTML = false;
+}
+
+ColTitle : WOString {
+  value = itemDict.title;
+}
+
+Columns : WORepetition {
+  list = currTab.properties;
+  item = itemDict;
 }

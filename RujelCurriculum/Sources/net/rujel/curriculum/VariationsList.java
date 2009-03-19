@@ -102,7 +102,7 @@ public class VariationsList extends WOComponent {
     	session().takeValueForKey(null, "message");
     }
     
-    public String valueStyle() {
+/*    public String valueStyle() {
     	if(item.isExternal()) {
     		return "font-weight:bold;text-align:center;color:#666666;";    		
     	}
@@ -114,7 +114,7 @@ public class VariationsList extends WOComponent {
     	}
     	return null;
     }
-    
+*/    
     public Boolean showSeparator() {
     	if(item == null || today == null)
     		return Boolean.FALSE;

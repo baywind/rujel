@@ -128,4 +128,17 @@ public class Variation extends _Variation {
 			planOnly += shift.intValue();
 		return planOnly;
 	}
+	
+    public String valueStyle() {
+    	if(isExternal()) {
+    		return "font-weight:bold;text-align:center;color:#666666;";    		
+    	}
+    	if(value().intValue() > 0) {
+    		return "font-weight:bold;text-align:left;color:#009933;padding-left:1ex;";
+    	}
+    	if(value().intValue() < 0) {
+       		return "font-weight:bold;text-align:right;color:#cc3333;padding-right:1ex;";
+    	}
+    	return null;
+    }
 }
