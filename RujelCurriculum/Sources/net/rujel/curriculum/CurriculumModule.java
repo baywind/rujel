@@ -40,6 +40,8 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.*;
 
 public class CurriculumModule {
@@ -75,20 +77,47 @@ public class CurriculumModule {
 	}
 	
 	public static NSDictionary lessonProperies(WOContext ctx) {
-		if(!Various.boolForObject("readAccess.read.Substitute"))
+		boolean showSubs = Various.boolForObject("readAccess.read.Substitute");
+		boolean showVars = Various.boolForObject("readAccess.read.Variation");
+		if(!showSubs && !showVars)
 			return null;
 		NSArray lessonsList = (NSArray)ctx.session().objectForKey("lessonsList");
 		if(lessonsList == null || lessonsList.count() == 0)
 			return null;
 		EOEditingContext ec = null;
 		NSMutableDictionary result = new NSMutableDictionary();
+		NSArray vars = null;
+		if(showVars) {
+			EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(0);
+			NSArray args = new NSArray(lesson.course());
+			vars = EOUtilities.objectsWithQualifierFormat(lesson.editingContext(),
+					Variation.ENTITY_NAME, "course = %@ AND value >= 1", args);
+			showVars = (vars != null && vars.count() > 0);
+		}
 		Enumeration enu = lessonsList.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduLesson lesson = (EduLesson) enu.nextElement();
+			NSMutableDictionary props = null;
+			if(showVars) {
+				EOQualifier qual = new EOKeyValueQualifier(Variation.DATE_KEY,
+						EOQualifier.QualifierOperatorEqual,lesson.date());
+				NSArray filtered = EOQualifier.filteredArrayWithQualifier(vars, qual);
+				if(filtered != null && filtered.count() > 0) {
+					props = new NSMutableDictionary("color:#006600;","style");
+					props.setObjectForKey(WOApplication.application().valueForKeyPath(
+							"strings.RujelCurriculum_Curriculum.Variation.plus"),"title");
+					result.setObjectForKey(props, lesson);
+				}
+			}
+			if(!showSubs)
+				continue;
 			NSArray subs = (NSArray)lesson.valueForKey("substitutes");
 			if(subs == null || subs.count() == 0)
 				continue;
-			NSMutableDictionary props = new NSMutableDictionary("highlight2","class");
+			if(props == null)
+				props = new NSMutableDictionary("highlight2","class");
+			else
+				props.takeValueForKey("highlight2","class");
 			Enumeration senu = subs.objectEnumerator();
 			StringBuffer title = new StringBuffer();
 			String sTitle = null;
@@ -112,6 +141,10 @@ public class CurriculumModule {
 							"Correcting substitute date", new Object[] {ctx.session(),sub});
 				}
 			} // Enumeration senu = subs.objectEnumerator();
+			sTitle = (String)props.valueForKey("title");
+			if(sTitle != null) {
+				title.append(" -+- ").append(sTitle);
+			}
 			props.setObjectForKey(title.toString(),"title");
 			result.setObjectForKey(props, lesson);
 		}

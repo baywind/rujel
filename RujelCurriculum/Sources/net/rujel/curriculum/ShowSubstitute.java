@@ -30,8 +30,11 @@
 package net.rujel.curriculum;
 
 import net.rujel.interfaces.*;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.appserver.WOActionResults;
 
@@ -78,7 +81,8 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     }
     
     public boolean show() {
-    	return (!cantCreate().booleanValue() || subsList().count() > 0);
+    	return (!cantCreate().booleanValue() || subsList().count() > 0 || variation() != null ||
+    			Various.boolForObject(session().valueForKeyPath("readAccess.create.Variation")));
     }
     
    /*
@@ -118,6 +122,8 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		substitute = null;
 		subsList = null;
 		cantCreate = null;
+		_variation = null;
+		
 	}
 	
 	public Boolean cantEdit() {
@@ -147,4 +153,46 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 			return (String)application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Join");
 		return (String)application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute");
 	}*/
+	
+	protected Object _variation;
+	public Variation variation() {
+		if(_variation == null) {
+   		EduLesson lesson = (EduLesson)valueForBinding("lesson");
+		NSArray args = new NSArray(new Object[] {lesson.course(),lesson.date()});
+		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+				"course = %@ AND date = %@ AND value >= 1", args);
+		EOFetchSpecification fs = new EOFetchSpecification(Variation.ENTITY_NAME,qual,null);
+		NSArray found = lesson.editingContext().objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			_variation = NullValue;
+		else
+			_variation = found.objectAtIndex(0);
+		}
+		if(_variation == NullValue)
+			return null;
+		else
+			return (Variation)_variation;
+	}
+	
+	public String isVarStyle() {
+		if(variation() == null)
+			return "background-color:#999999;color:#cccccc;";
+		return "font-weight:bold;color:#339966;background-color:#99ff99;";
+	}
+	
+	public WOComponent addedLesson() {
+		WOComponent nextPage = pageWithName("EditVariation");
+		nextPage.takeValueForKey(Boolean.TRUE, "returnNormaly");
+		nextPage.takeValueForKey(Boolean.TRUE, "onlyChooseReason");
+   		EduLesson lesson = (EduLesson)valueForBinding("lesson");
+   		nextPage.takeValueForKey(context().page(), "returnPage");
+    	nextPage.takeValueForKey(lesson.course(), "course");
+		if(variation() != null) {
+			nextPage.takeValueForKey(variation(), "variation");
+		} else {
+	   		nextPage.takeValueForKey(lesson.date(),"date");
+	   		nextPage.takeValueForKey(new Integer(1),"value");
+		}
+		return nextPage;
+	}
 }
