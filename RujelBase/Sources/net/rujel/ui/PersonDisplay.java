@@ -47,14 +47,14 @@ public class PersonDisplay extends ExtDynamicElement {
 			WOElement template) {
 		super(name, associations, template);
 		
-		checkRequired(associations, "person");
+		//checkRequired(associations, "person");
 	}
 
 	@SuppressWarnings("deprecation")
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object tmp = valueForBinding("person",aContext);
     	if(tmp == null) {
-    		aResponse.appendContentString("?");
+    		//aResponse.appendContentString("?");
     		return;
     	}
        	Person person = null;
@@ -116,7 +116,11 @@ public class PersonDisplay extends ExtDynamicElement {
     	if (type instanceof Number) {
 			mode = ((Number)type).intValue();
 		} else if(type instanceof CharSequence) {
-			mode = ((CharSequence)type).length();
+			try {
+				mode = Integer.valueOf(type.toString());
+			} catch (Exception e) {
+				mode = ((CharSequence)type).length();
+			}
 		} else {
 			mode = 1;
 		}

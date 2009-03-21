@@ -131,8 +131,8 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
 			}
     	}
     	if(aDate == null && reasonText != null && reason.verification() == null) {
-    		boolean hasChanges = !ifArchive;
-    		hasChanges = (!reasonText.equals(reason.reason()));
+    		//boolean hasChanges = !ifArchive;
+    		boolean hasChanges = (!reasonText.equals(reason.reason()));
     		if(hasChanges)
     			reason.setReason(reasonText);
     		hasChanges = (hasChanges || (reason.namedFlags().flagForKey("forTeacher")^(relation==1)));

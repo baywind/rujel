@@ -39,8 +39,6 @@ import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 public class Reason extends _Reason {
-	public static NSArray flagNames = new NSArray(new String[] {
-			"external","-2-","-4","-8-","forEduGroup","forTeacher"});
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship(ENTITY_NAME,"eduGroup",false,"eduGroupID","EduGroup");
@@ -92,7 +90,10 @@ public class Reason extends _Reason {
 		return result.toString();
 	}
 	
-    private NamedFlags _flags;
+	public static NSArray flagNames = new NSArray(new String[] {
+			"external","-2-","-4","-8-","forEduGroup","forTeacher"});
+
+	private NamedFlags _flags;
     public NamedFlags namedFlags() {
     	if(_flags==null) {
     		_flags = new NamedFlags(flags().intValue(),flagNames);

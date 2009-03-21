@@ -86,6 +86,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
     		else
     			styleClass = "gerade";
     		//styleClass = (Math.abs(totalPlan) > 2)?"warning":"gerade";
+    	} else {
+    		styleClass = null;
     	}
     	super.appendToResponse(aResponse, aContext);
     }

@@ -4,6 +4,8 @@
 <dict>
 	<key>title</key>
 	<string>Изменения в учебном процессе</string>
+	<key>verification</key>
+	<string>Обоснование</string>
 	<key>tabs</key>
 	<array>
 		<dict>
@@ -13,6 +15,8 @@
 			<string>список всех причин для всех событий</string>
 			<key>entity</key>
 			<string>Reason</string>
+			<key>rowClass</key>
+			<string>.styleClass</string>
 			<key>params</key>
 			<array>
 				<dict>
@@ -22,12 +26,16 @@
 					<string>PeriodSelector</string>
 					<key>takeValuesFromRequest</key>
 					<string>true</string>
+					<key>invokeAction</key>
+					<string>true</string>
 					<key>presenterBindings</key>
 					<dict>
 						<key>begin</key>
 						<string>.since</string>
 						<key>end</key>
 						<string>.to</string>
+						<key>selectAction</key>
+						<string>$search</string>
 					</dict>
 				</dict>
 			</array>
@@ -41,6 +49,11 @@
 				<key>formatString</key>
 				<string>begin &lt;= %@ AND ( end = nil OR end &gt;= %@ )</string>
 			</dict>
+			<key>prefetch</key>
+			<array>
+				<string>teacher</string>
+				<string>eduGroup</string>
+			</array>
 			<key>properties</key>
 			<array>
 				<dict>
@@ -85,28 +98,9 @@
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Учитель</string>
+					<string>Привязка</string>
 					<key>keyPath</key>
-					<string>teacher</string>
-					<key>presenter</key>
-					<string>PersonDisplay</string>
-					<key>presenterBindings</key>
-					<dict>
-						<key>last</key>
-						<string>2</string>
-						<key>first</key>
-						<string>1</string>
-						<key>second</key>
-						<string>1</string>
-					</dict>
-				</dict>
-				<dict>
-					<key>title</key>
-					<string>Класс</string>
-					<key>keyPath</key>
-					<string>eduGroup</string>
-					<key>titlePath</key>
-					<string>name</string>
+					<string>extToString</string>
 				</dict>
 			</array>
 		</dict>
@@ -115,6 +109,8 @@
 			<string>Замены</string>
 			<key>entity</key>
 			<string>Substitute</string>
+			<key>rowClass</key>
+			<string>.reason.styleClass</string>
 			<key>params</key>
 			<array>
 				<dict>
@@ -124,12 +120,16 @@
 					<string>PeriodSelector</string>
 					<key>takeValuesFromRequest</key>
 					<string>true</string>
+					<key>invokeAction</key>
+					<string>true</string>
 					<key>presenterBindings</key>
 					<dict>
 						<key>begin</key>
 						<string>.since</string>
 						<key>end</key>
 						<string>.to</string>
+						<key>selectAction</key>
+						<string>$search</string>
 					</dict>
 				</dict>
 			</array>
@@ -143,6 +143,13 @@
 				<key>formatString</key>
 				<string>date &lt;= %@ AND date &gt;= %@</string>
 			</dict>
+			<key>prefetch</key>
+			<array>
+				<string>teacher</string>
+				<string>reason</string>
+				<string>lesson.course.teacher</string>
+				<string>lesson.course.eduGroup</string>
+			</array>
 			<key>properties</key>
 			<array>
 				<dict>
@@ -163,6 +170,8 @@
 					<string>lesson.course.eduGroup</string>
 					<key>titlePath</key>
 					<string>name</string>
+					<key>course</key>
+					<string>lesson.course</string>
 				</dict>
 				<dict>
 					<key>title</key>
@@ -174,13 +183,17 @@
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Учитель (замененный)</string>
+					<string>Замененный</string>
+					<key>hover</key>
+					<string>Учитель, который ведет курс</string>
 					<key>keyPath</key>
 					<string>lesson.course.teacher</string>
 					<key>presenter</key>
 					<string>PersonDisplay</string>
 					<key>presenterBindings</key>
 					<dict>
+						<key>person</key>
+						<string>.</string>
 						<key>last</key>
 						<string>2</string>
 						<key>first</key>
@@ -188,24 +201,41 @@
 						<key>second</key>
 						<string>1</string>
 					</dict>
+					<key>course</key>
+					<string>lesson.course</string>
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Коэффициент</string>
-					<key>keyPath</key>
-					<string>factor</string>
+					<string>Коэф</string>
+					<key>hover</key>
+					<string>Коэффициент рассчета (1 - замена, &amp;lt;1 - совмещение)</string>
+					<key>titlePath</key>
+					<string>factor.stripTrailingZeros</string>
 					<key>style</key>
 					<string>text-align:center;font-weight:bold</string>
+					<key>popup</key>
+					<string>EditSubstitute</string>
+					<key>popupParams</key>
+					<dict>
+						<key>lesson</key>
+						<string>.lesson</string>
+						<key>substitute</key>
+						<string>.</string>
+					</dict>
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Учитель (заменяющий)</string>
+					<string>Заменяющий</string>
+					<key>hover</key>
+					<string>Учитель, который реально проводил урок</string>
 					<key>keyPath</key>
 					<string>teacher</string>
 					<key>presenter</key>
 					<string>PersonDisplay</string>
 					<key>presenterBindings</key>
 					<dict>
+						<key>person</key>
+						<string>.</string>
 						<key>last</key>
 						<string>2</string>
 						<key>first</key>
@@ -219,6 +249,13 @@
 					<string>Причина</string>
 					<key>keyPath</key>
 					<string>reason</string>
+					<key>presenter</key>
+					<string>ReasonPresenter</string>
+					<key>presenterBindings</key>
+					<dict>
+						<key>reason</key>
+						<string>.</string>
+					</dict>
 				</dict>
 			</array>
 		</dict>
@@ -227,6 +264,8 @@
 			<string>Поправки</string>
 			<key>entity</key>
 			<string>Variation</string>
+			<key>rowClass</key>
+			<string>.reason.styleClass</string>
 			<key>params</key>
 			<array>
 				<dict>
@@ -236,12 +275,16 @@
 					<string>PeriodSelector</string>
 					<key>takeValuesFromRequest</key>
 					<string>true</string>
+					<key>invokeAction</key>
+					<string>true</string>
 					<key>presenterBindings</key>
 					<dict>
 						<key>begin</key>
 						<string>.since</string>
 						<key>end</key>
 						<string>.to</string>
+						<key>selectAction</key>
+						<string>$search</string>
 					</dict>
 				</dict>
 			</array>
@@ -255,6 +298,12 @@
 				<key>formatString</key>
 				<string>date &lt;= %@ AND date &gt;= %@</string>
 			</dict>
+			<key>prefetch</key>
+			<array>
+				<string>reason</string>
+				<string>course.teacher</string>
+				<string>course.eduGroup</string>
+			</array>
 			<key>properties</key>
 			<array>
 				<dict>
@@ -275,6 +324,8 @@
 					<string>course.eduGroup</string>
 					<key>titlePath</key>
 					<string>name</string>
+					<key>course</key>
+					<string>course</string>
 				</dict>
 				<dict>
 					<key>title</key>
@@ -286,13 +337,15 @@
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Учитель (замененный)</string>
+					<string>Учитель</string>
 					<key>keyPath</key>
 					<string>course.teacher</string>
 					<key>presenter</key>
 					<string>PersonDisplay</string>
 					<key>presenterBindings</key>
 					<dict>
+						<key>person</key>
+						<string>.</string>
 						<key>last</key>
 						<string>2</string>
 						<key>first</key>
@@ -300,14 +353,25 @@
 						<key>second</key>
 						<string>1</string>
 					</dict>
+					<key>course</key>
+					<string>course</string>
 				</dict>
 				<dict>
 					<key>title</key>
 					<string>Величина</string>
-					<key>keyPath</key>
+					<key>titlePath</key>
 					<string>value</string>
 					<key>style</key>
-					<string>$valueStyle</string>
+					<string>.valueStyle</string>
+					<key>popup</key>
+					<string>EditVariation</string>
+					<key>popupParams</key>
+					<dict>
+						<key>course</key>
+						<string>.course</string>
+						<key>variation</key>
+						<string>.</string>
+					</dict>
 					<key>presenterBindings</key>
 					<dict>
 						<key>numberformat</key>
@@ -319,6 +383,13 @@
 					<string>Причина</string>
 					<key>keyPath</key>
 					<string>reason</string>
+					<key>presenter</key>
+					<string>ReasonPresenter</string>
+					<key>presenterBindings</key>
+					<dict>
+						<key>reason</key>
+						<string>.</string>
+					</dict>
 				</dict>
 			</array>
 		</dict>
