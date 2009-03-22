@@ -369,6 +369,8 @@
 					<dict>
 						<key>course</key>
 						<string>.course</string>
+						<key>returnNormaly</key>
+						<true/>
 						<key>variation</key>
 						<string>.</string>
 					</dict>
