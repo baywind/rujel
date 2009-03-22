@@ -127,7 +127,7 @@ public class LessonNoteEditor extends WOComponent {
 		currPerPersonLink = lesson;
 		if(currLesson() == null)
 			return;
-		logger.logp(WOLogLevel.READING,"LessonNoteEditor","setCurrLesson","Open lesson",new Object[] {session(),lesson});
+		logger.log(WOLogLevel.READING,"Open lesson",new Object[] {session(),lesson});
 		String accKey = (context().page() == this)?"currPerPersonLink":currLesson().entityName();
 		if(Various.boolForObject(session().valueForKeyPath("readAccess.edit." + accKey))) {
 			session().takeValueForKey(Boolean.TRUE,"prolong");
@@ -136,7 +136,8 @@ public class LessonNoteEditor extends WOComponent {
 
 	public void selectStudent() {
 		if(!accessInterface().flagForKey("oneLesson")) {
-			session().takeValueForKey(application().valueForKeyPath("strings.Strings.messages.noAccess"),"message");
+			session().takeValueForKey(application().valueForKeyPath(
+					"strings.Strings.messages.noAccess"),"message");
 			return;
 		}
 		if(valueForKeyPath("currLesson.editingContext") != null) {
@@ -166,7 +167,8 @@ public class LessonNoteEditor extends WOComponent {
 		return _access;
 	}
 
-	public static final NSArray accessKeys = new NSArray(new Object[] {"open","rightSide","leftSide","byDate","oneLesson"});
+	public static final NSArray accessKeys = new NSArray(
+			new Object[] {"open","rightSide","leftSide","byDate","oneLesson"});
 
 	protected NamedFlags _accessInterface;
 	public NamedFlags accessInterface() {
@@ -359,32 +361,23 @@ public class LessonNoteEditor extends WOComponent {
 				changes.addObjectsFromArray((NSArray)ec.updatedObjects().valueForKey("entityName"));
 				changes.addObjectsFromArray((NSArray)ec.insertedObjects().valueForKey("entityName"));
 				changes.addObjectsFromArray((NSArray)ec.deletedObjects().valueForKey("entityName"));
-				//int changes = ec.updatedObjects().count() + ec.insertedObjects().count() + ec.deletedObjects().count();
 				ec.saveChanges();
 				WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 				if(currPerPersonLink != null) {
 					if(newLesson) {
-						logger.logp(level,"LessonNoteEditor","save","Created new lesson. " + changes,new Object[] {session(),currPerPersonLink});
-						NSNotificationCenter.defaultCenter().postNotification(net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey("user"),new NSDictionary(currPerPersonLink,"EO"));
+						logger.log(level,"Created new lesson. " + changes,
+								new Object[] {session(),currPerPersonLink});
+						NSNotificationCenter.defaultCenter().postNotification(
+								net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey(
+										"user"),new NSDictionary(currPerPersonLink,"EO"));
 					} else {
-						if(currPerPersonLink instanceof UseAccess && ((UseAccess)currPerPersonLink).isOwned())
+						if(currPerPersonLink instanceof UseAccess && 
+								((UseAccess)currPerPersonLink).isOwned())
 							level = WOLogLevel.OWNED_EDITING;
-						/*
-							 NSMutableDictionary checksum2 = currLesson.snapshot().mutableClone();
-							 Object notes1 = checksum1.removeObjectForKey("notes");
-							 Object notes2 = checksum2.removeObjectForKey("notes");
-							 if(!checksum1.equals(checksum2)) { */
 						if(changes.count() > 0)
-							logger.logp(level,"LessonNoteEditor","save","Lesson changed: " + changes,new Object[] {session(),currPerPersonLink});
-						/*	changes--;
-							 }
-							if(changes > 0)//(((notes1==null)^(notes2==null)) || (notes1!=null && !notes1.equals(notes2)))
-								logger.logp(level,"LessonNoteEditor","save","Notes changed in lesson (" + changes + ')',new Object[] {session(),currLesson});*/
+							logger.log(level,"Lesson changed: " + changes,
+									new Object[] {session(),currPerPersonLink});
 					}
-/*					if(notesAddOns != null)
-						notesAddOns.takeValueForKey(currPerPersonLink, "saveLesson");
-					else
-*/	
 					if(currPerPersonLink != null) {
 						NSMutableDictionary dict = new NSMutableDictionary(currPerPersonLink,"object");
 						if(currPerPersonLink instanceof EduLesson)
@@ -404,20 +397,19 @@ public class LessonNoteEditor extends WOComponent {
 				} else {
 					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
 						level = WOLogLevel.OWNED_EDITING;
-					logger.logp(level,"LessonNoteEditor","save","Course comment modified",new Object[] {session(),course});
+					logger.log(level,"Course comment modified",new Object[] {session(),course});
 				}
 			}// ec.hasChanges
 			//session().takeValueForKey(Boolean.FALSE,"prolong");
 			if(reset)
 				currPerPersonLink = null;
-			/*if(SettingsReader.boolForKeyPath("ui.LessonNoteEditor.autoSwitchSingle", true))
-				setSingle(false); */
-			//lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
 		} catch (NSValidation.ValidationException vex) {
-			logger.logp(WOLogLevel.FINER,"LessonNoteEditor","save","Failed to save lesson",new Object[] {session(),currPerPersonLink,vex});
+			logger.log(WOLogLevel.FINER,"Failed to save lesson",
+					new Object[] {session(),currPerPersonLink,vex});
 			session().takeValueForKey(vex.getMessage(),"message");
 		} catch (Exception ex) {
-			logger.logp(WOLogLevel.WARNING,"LessonNoteEditor","save","Failed to save lesson",new Object[] {session(),currPerPersonLink,ex});
+			logger.log(WOLogLevel.WARNING,"Failed to save lesson",
+					new Object[] {session(),currPerPersonLink,ex});
 			session().takeValueForKey(ex.getMessage(),"message");
 		} finally {
 			ec.unlock();
@@ -441,7 +433,7 @@ public class LessonNoteEditor extends WOComponent {
 		try {
 			if(ec.insertedObjects().contains(currLesson())) { //just inserted
 				level = WOLogLevel.OWNED_EDITING;
-				logger.logp(level,"LessonNoteEditor","delete","Undo lesson creation: ",new Object[] {session(),currLesson()});
+				logger.log(level,"Undo lesson creation: ",new Object[] {session(),currLesson()});
 				ec.revert();
 				NSMutableArray tmp = lessonsList.mutableClone();
 				/*				if(tmp.removeObjectAtIndex(idx) != currLesson())
@@ -501,35 +493,23 @@ public class LessonNoteEditor extends WOComponent {
 						num++;
 					}
 				} // end number lowering
-				//		logger.logp(level,"LessonNoteEditor","delete","Deletion failed: ",new Object[] {session(),currLesson(),vex});
-				logger.logp(level,"LessonNoteEditor","delete","Deleting lesson ",new Object[] {session(),currLesson()});
+				logger.log(level,"Deleting lesson ",new Object[] {session(),currLesson()});
 				ec.saveChanges();
 				session().setObjectForKey(dict, "objectSaved");
 				session().valueForKeyPath("modules.objectSaved");
 				session().removeObjectForKey("objectSaved");
 
 				currPerPersonLink = null;
-				/*if(tablist != null && tablist.count() > 0) {
-						tablist = ((BaseCourse)course).sortedTabs();
-						if(tmp.editingContext() != null)
-							_currTab = tmp;
-						else
-							currTab();
-					}*/
 				updateLessonList();
-				//refresh();
-				//lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
-				/*		} else {
-						session().takeValueForKey(application().valueForKeyPath("strings.Strings.messages.noAccess"),"message");
-					logger.logp(WOLogLevel.OWNED_EDITING,"LessonNoteEditor","delete","Denied to delete lesson",new Object[] {session(),currLesson()});
-					} */
 			}
 		} catch (NSValidation.ValidationException vex) {
-			logger.logp(level,"LessonNoteEditor","delete","Deletion failed: ",new Object[] {session(),currLesson(),vex});
+			logger.log(level,"Deletion failed: ",new Object[] {session(),currLesson(),vex});
 			session().takeValueForKey(vex.toString(),"message");
 		} catch (Exception ex) {
-			logger.logp(WOLogLevel.WARNING,"LessonNoteEditor","delete","Deletion failed: ",new Object[] {session(),currLesson(),ex});
-			String message = (String)application().valueForKeyPath("strings.Strings.messages.error") + " : " + application().valueForKeyPath("strings.Strings.messages.cantDelete") + " : " + ex;
+			logger.log(WOLogLevel.WARNING,"Deletion failed: ",new Object[] {session(),currLesson(),ex});
+			String message = (String)application().valueForKeyPath(
+					"strings.Strings.messages.error") + " : " + application().valueForKeyPath(
+							"strings.Strings.messages.cantDelete") + " : " + ex;
 			session().takeValueForKey(message,"message");
 		} finally {
 			ec.unlock();
@@ -543,12 +523,6 @@ public class LessonNoteEditor extends WOComponent {
 
 		ec.lock();
 		try {
-			//	if(lessonsAssistant.accessToObject(null).flagForKey("create")) {
-			/*NSArray tabs = ((BaseCourse)course).sortedTabs();
-				if (tabs != null && tabs.count() > 0) {
-					_currTab = (BaseTab)tabs.lastObject();				
-				}*/
-			//			currTab();
 			String entityName = EduLesson.entityName;
 			//String courseAttribute = "course";
 			if(present != null) {
@@ -564,16 +538,6 @@ public class LessonNoteEditor extends WOComponent {
 			currLesson().setNumber(new Integer((max==null)?1:max.intValue() + 1));
 			currLesson().setDate((NSTimestamp)session().valueForKey("today"));
 			currLesson().addObjectToBothSidesOfRelationshipWithKey(course,"course");
-			//	if(tablist != null)/* _currTab = */((BaseTab)tablist.lastObject()).setLessonsCount(_currTab.length() + 1);
-			//	if(_currTab != null) _currTab.setLessonsCount(_currTab.length() + 1);
-			//			refresh();
-			//selector = null;
-			/*	} else {
-					logger.logp(WOLogLevel.OWNED_EDITING,"LessonNoteEditor","delete","Denied to create lesson",session());
-				session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-				} */
-			//		lessonsList = EOSortOrdering.sortedArrayUsingKeyOrderArray(course.lessons(),EduLesson.sorter);
-			//updateLessonList();
 			selector = currPerPersonLink;
 			NSMutableArray list = lessonsList.mutableClone();
 			list.addObject(currPerPersonLink);
@@ -589,13 +553,15 @@ public class LessonNoteEditor extends WOComponent {
 
 	protected static void makeDateFromNum(EduLesson les) {
 		NSArray args = new NSArray(new Object[] {les.course(),les.number()});
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("course = %@ AND number < %@ AND title = nil",args);
+		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+				"course = %@ AND number < %@ AND title = nil",args);
 		NSArray sort = new NSArray(new EOSortOrdering ("number",EOSortOrdering.CompareDescending));
 		EOFetchSpecification fs = new EOFetchSpecification(les.entityName(),qual,sort);
 		fs.setFetchLimit(1);
 		NSArray found = les.editingContext().objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0) {
-			qual = EOQualifier.qualifierWithQualifierFormat("course = %@ AND number > %@ AND title = nil",args);
+			qual = EOQualifier.qualifierWithQualifierFormat(
+					"course = %@ AND number > %@ AND title = nil",args);
 			fs.setQualifier(qual);
 			sort = new NSArray(new EOSortOrdering ("number",EOSortOrdering.CompareAscending));
 			fs.setSortOrderings(sort);
@@ -721,10 +687,21 @@ public class LessonNoteEditor extends WOComponent {
 	public boolean canAddTab() {
 		if(currLesson() == null)
 			return false;
-		if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.course")))
+		if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.currLesson")))
 			return false;
 		int idx = lessonsList.indexOf(currPerPersonLink);
 		return (idx > 0);
+	}
+	
+	public String splitTitle() {
+		if(lessonsList == null || currPerPersonLink == null)
+			return null;
+		int idx = lessonsList.indexOf(currPerPersonLink);
+		if(idx > 0)
+			return (String)application().valueForKeyPath("strings.Strings.LessonNoteEditor.addTab");
+		if(idx == 0)
+			return (String)application().valueForKeyPath("strings.Strings.LessonNoteEditor.removeTab");
+		return null;
 	}
 
 	public void splitTab() {
@@ -777,12 +754,14 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public WOComponent editSubgroup() {
-//		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
+//		String pageName = SettingsReader.stringForKeyPath(
+				//"ui.subRegime.editCourseSubgroup","SubgroupEditor");
 		WOComponent nextPage = pageWithName("SubgroupEditor");
 		nextPage.takeValueForKey(course,"course");
 		session().takeValueForKey(this,"pushComponent");
 		session().takeValueForKey(Boolean.TRUE,"prolong");
-		logger.logp(WOLogLevel.FINER,"LessonNoteEditor","editSubgroup","Going to edit subgroup for course",new Object[] {session(),course});
+		logger.logp(WOLogLevel.FINER,"LessonNoteEditor",
+				"editSubgroup","Going to edit subgroup for course",new Object[] {session(),course});
 		return nextPage;
 	}
 
@@ -795,7 +774,8 @@ public class LessonNoteEditor extends WOComponent {
 	//   public NSDictionary present;
 
 	public NSArray presentTabs() {
-		//		if(!(accessInterface().flagForKey("byDate") && accessInterface().flagForKey("oneLesson")))
+		//		if(!(accessInterface().flagForKey("byDate") 
+		//				&& accessInterface().flagForKey("oneLesson")))
 		//			return null;
 		/*if(presentTabs == null) {
 			presentTabs = (NSArray)session().valueForKeyPath("modules.presentTabs");
@@ -863,13 +843,15 @@ public class LessonNoteEditor extends WOComponent {
 
 	public boolean showSeparator() {
 		if(hideLeft() && currPerPersonLink != null) return false;
-		if(!(accessInterface().flagForKey("rightSide") && accessInterface().flagForKey("leftSide"))) return false;
+		if(!(accessInterface().flagForKey("rightSide") && accessInterface().flagForKey("leftSide")))
+			return false;
 		return true;
 	}
 
 	public void moveLeft() {
 		if(!accessInterface().flagForKey("rightSide")) {
-			session().takeValueForKey(application().valueForKeyPath("strings.Strings.messages.noAccess"),"message");
+			session().takeValueForKey(application().valueForKeyPath(
+					"strings.Strings.messages.noAccess"),"message");
 			return;
 		}
 		student = null;
@@ -893,7 +875,8 @@ public class LessonNoteEditor extends WOComponent {
 
 	public void moveRight() {
 		if(!accessInterface().flagForKey("leftSide")) {
-			session().takeValueForKey(application().valueForKeyPath("strings.Strings.messages.noAccess"),"message");
+			session().takeValueForKey(application().valueForKeyPath(
+					"strings.Strings.messages.noAccess"),"message");
 			return;
 		}
 		student = null;
