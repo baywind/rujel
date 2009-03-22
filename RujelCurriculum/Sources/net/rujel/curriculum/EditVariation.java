@@ -53,6 +53,9 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 	public Integer abs;
 	public boolean negative;
 	
+	public boolean onlyChooseReason = false;
+	public boolean returnNormaly = false;
+	
     public EditVariation(WOContext context) {
         super(context);
     }
@@ -106,11 +109,18 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     public boolean nullDate() {
     	return (date == null);
     }
-
+    
     public WOActionResults done() {
-    	returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
+    	return done(false);
+    }
+
+    public WOActionResults done(boolean hasChanges) {
     	returnPage.ensureAwakeInContext(context());
-    	return returnPage;
+    	if(hasChanges && (returnPage instanceof VariationsList))
+    		returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
+    	if(hasChanges)
+			session().removeObjectForKey("lessonProperies");
+       	return returnPage;
     }
     
     public WOActionResults save() {
@@ -119,13 +129,13 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(abs == null || reason == null) {
     		session().takeValueForKey(application().valueForKeyPath(
     				"strings.RujelCurriculum_Curriculum.messages.wrongVariation"), "message");
-    		return done();
+    		return done(false);
     	}
     	Integer value = (negative)?new Integer(-abs.intValue()):abs;
     	EOEditingContext ec = course.editingContext();
     	if(variation != null && variation.date().equals(date) && variation.value().equals(value)
     			 && variation.reason() == reason && !ec.updatedObjects().contains(reason))
-    		return done();
+    		return done(false);
     	ec.lock();
     	if(variation == null) {
     		variation = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
@@ -145,7 +155,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 		} finally {
 			ec.unlock();
 		}
-    	return done();
+    	return done(true);
     }
     
     public Object canDelete() {
@@ -156,14 +166,13 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     
     public WOActionResults delete() {
     	if(variation == null)
-    		return done();
+    		return done(false);
     	EOEditingContext ec = variation.editingContext();
     	ec.lock();
     	ec.deleteObject(variation);
     	try {
     		ec.saveChanges();
-    		returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
-		} catch (Exception e) {
+ 		} catch (Exception e) {
 			ec.revert();
 			Object[] args = new Object[] {session(),e,variation}; 
 			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
@@ -172,6 +181,24 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 		} finally {
 			ec.unlock();
     	}
-    	return done();
+    	return done(true);
+    }
+    
+    public String onsubmit() {
+    	if(returnNormaly)
+    		return null;
+    	else
+    		return "ajaxPost(this);return false;";
+    }
+    
+    public String onDelete() {
+    	return (String)session().valueForKey((returnNormaly)?"tryLoad":"ajaxPopup");
+    }
+    
+    public String onCancel() {
+       	if(returnNormaly)
+    		return "closePopup();";
+    	else
+    		return (String)session().valueForKey("ajaxPopup");    	
     }
 }
