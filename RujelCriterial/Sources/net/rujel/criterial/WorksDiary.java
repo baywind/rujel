@@ -260,7 +260,10 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 			Counter count = (Counter)subjects.valueForKey(subject);
 			if(count.value() > 1) {
 				result.append(" <i style=\"white-space:nowrap;\">");
-				result.append(Person.Utility.fullName(item.course().teacher(), true, 2, 1, 1));
+				if(item.course().comment() != null)
+					result.append('(').append(item.course().comment()).append(')');
+				else
+					result.append(Person.Utility.fullName(item.course().teacher(), true, 2, 1, 1));
 				result.append("</i>");
 			}
 		}		
