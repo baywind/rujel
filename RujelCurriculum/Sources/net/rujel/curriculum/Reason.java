@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 
 import net.rujel.interfaces.*;
@@ -98,7 +99,7 @@ public class Reason extends _Reason {
     	if(_flags==null) {
     		_flags = new NamedFlags(flags().intValue(),flagNames);
     		try{
-    		_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
+    			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
     		} catch (Exception e) {
     			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
 						"Could not get syncMethod for Reason flags",e);
@@ -215,5 +216,66 @@ public class Reason extends _Reason {
 			return result;
 		}
 		return found;
+	}
+	
+	public void validateForSave() {
+		super.validateForSave();
+		if(end() != null && end().compare(begin()) < 0) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.messages.invalidPeriod");
+			throw new NSValidation.ValidationException(message);
+		}
+		boolean checkTeacher = namedFlags().flagForKey("forTeacher");
+		boolean checkGroup = namedFlags().flagForKey("forEduGroup");
+		EduGroup eduGroup = eduGroup();
+		Teacher teacher = teacher();
+		NSArray list = substitutes();
+		if(list != null && list.count() > 0) {
+			Enumeration enu =  list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Substitute sub = (Substitute) enu.nextElement();
+				EduCourse course = sub.lesson().course();
+				if(checkTeacher && (teacher != course.teacher())) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
+					throw new NSValidation.ValidationException(message,teacher,"teacher");
+				}
+				if(checkGroup && (eduGroup != course.eduGroup())) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup");
+					throw new NSValidation.ValidationException(message,eduGroup,"eduGroup");
+				}
+				if(begin().compareTo(sub.date()) > 0 || 
+						(end() != null && end().compareTo(sub.date()) < 0)) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetDates");
+					throw new NSValidation.ValidationException(message,sub.date(),"date");
+				}
+			} // enu substitutes
+		}
+		list = variations();
+		if(list != null && list.count() > 0) {
+			Enumeration enu =  list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Variation var = (Variation) enu.nextElement();
+				EduCourse course = var.course();
+				if(checkTeacher && (teacher != course.teacher())) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+							"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
+					throw new NSValidation.ValidationException(message,teacher,"teacher");
+				}
+				if(checkGroup && (eduGroup != course.eduGroup())) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup");
+					throw new NSValidation.ValidationException(message,eduGroup,"eduGroup");
+				}
+				if(begin().compareTo(var.date()) > 0 || 
+						(end() != null && end().compareTo(var.date()) < 0)) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetDates");
+					throw new NSValidation.ValidationException(message,var.date(),"date");
+				}
+			} // enu variations
+		}
 	}
 }

@@ -242,13 +242,13 @@ public class PersListing extends WOComponent {
 				return null;
 			onEdit = null;
 		}
-		selection = (PersonLink)((NSArray)session().valueForKey("personList")).objectAtIndex(index);
+		selection = (PersonLink)personList().objectAtIndex(index);
 		canCreate = false;
 		searchString = null;
         setValueForBinding(selection,"selection");
 		return (WOActionResults)valueForBinding("selectAction");
     }
-	
+		
 	public String onClick() {
 		if(hasBinding("onClick"))
 			return (String)valueForBinding("onClick");
@@ -363,6 +363,15 @@ public class PersListing extends WOComponent {
 		onEdit = null;
 	}
 	
+	public String act() {
+		if(Various.boolForObject(valueForBinding("useAjaxPost"))) {
+			String href = context().componentActionURL();
+			String result = "ajaxPopupAction('" + href + "');";
+			return result;
+		}
+		return (String)session().valueForKey("tryLoad");
+	}
+
 	public String onSubmit() {
 		if(Various.boolForObject(valueForBinding("useAjaxPost")))
 			return "return ajaxPost(this);";
@@ -446,5 +455,10 @@ public class PersListing extends WOComponent {
 		}
 		setValueForBinding(selection, "selection");
 		return (WOActionResults)valueForBinding("selectAction");
+	}
+	
+	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
+		WOActionResults result = super.invokeAction(aRequest, aContext);
+		return result;
 	}
 }
