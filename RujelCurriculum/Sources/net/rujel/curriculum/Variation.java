@@ -139,6 +139,6 @@ public class Variation extends _Variation {
     	if(value().intValue() < 0) {
        		return "font-weight:bold;text-align:right;color:#cc3333;padding-right:1ex;";
     	}
-    	return null;
+    	return "text-align:center;";
     }
 }

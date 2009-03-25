@@ -2,6 +2,7 @@ PageWrapper1: PageWrapper {
 	hasChanges = false;
 	title = plist.title;
 	hasChanges = ec.hasChanges;
+	onLoad = "scrollToObj('curr');";
 	styles = "td.pad{padding:3px;}";
 }
 
@@ -42,6 +43,7 @@ ColHead : WOGenericContainer {
 ItemRow : WOGenericContainer {
   elementName = "tr";
   class = rowClass;
+  id = rowID;
 }
 
 List : WORepetition {
@@ -116,7 +118,17 @@ Save: WOSubmitButton {
 	action = save;
 	value = application.strings.Reusables_Strings.uiElements.Save;
 }
+CanDelete: WOConditional {
+	condition = canDelete;
+}
 
+DeleteButton: WOGenericElement {
+	value = application.strings.Reusables_Strings.uiElements.Delete;
+	invokeAction = delete;
+	onclick = session.tryLoad;
+	elementName = "input";
+	type = "button";
+}
 VerificationTitle : WOString {
   value = plist.verification;
   valueWhenEmpty = "Verification";

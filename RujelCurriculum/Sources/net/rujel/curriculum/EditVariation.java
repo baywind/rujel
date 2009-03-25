@@ -143,7 +143,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	}
     	variation.setValue(value);
     	variation.setDate(date);
-    	variation.setReason(reason);
+    	variation.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
     	try {
 			ec.saveChanges();
 		} catch (Exception e) {

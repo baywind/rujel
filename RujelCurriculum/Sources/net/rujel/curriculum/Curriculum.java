@@ -40,6 +40,7 @@ import net.rujel.interfaces.Person;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -64,11 +65,11 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCodingAdditions currTab;
 	public NSDictionary plist;
 	public NSKeyValueCodingAdditions itemDict;
-	public NSMutableDictionary params = new NSMutableDictionary();
+	public NSMutableDictionary params;
 	public NSArray list;
 	public Object itemRow;
 	public Reason currReason;
-	//public Object currObject;
+	public Object currObject;
 	public Object highlight;
 	public NSKeyValueCodingAdditions valueOf;
 	public Object item;
@@ -99,18 +100,27 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		ec = new SessionedEditingContext(session());
 		
-		NSTimestamp day = (NSTimestamp)session().valueForKey("today");
-		params.takeValueForKey(day, "to");
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(day);
-		cal.add(Calendar.MONTH,-1);
-		day = new NSTimestamp(cal.getTimeInMillis());
-		params.takeValueForKey(day,"since");
+		params = (NSMutableDictionary)session().objectForKey("curriculumParams");
+		if(params == null) {
+			params = new NSMutableDictionary();
+			NSTimestamp day = (NSTimestamp)session().valueForKey("today");
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(day);
+			cal.set(Calendar.DAY_OF_MONTH, 1);
+			day = new NSTimestamp(cal.getTimeInMillis());
+			params.takeValueForKey(day,"since");
+			cal.add(Calendar.MONTH,1);
+			cal.add(Calendar.DATE,-1);
+			day = new NSTimestamp(cal.getTimeInMillis());
+			params.takeValueForKey(day, "to");
+			session().setObjectForKey(params, "curriculumParams");
+		}
 		NSArray tabs = (NSArray)plist.valueForKey("tabs");
 		currTab = (NSKeyValueCodingAdditions)tabs.objectAtIndex(0);
 		tabsDict = new NSMutableDictionary(tabs,(NSArray)tabs.valueForKey("entity"));
 		
 		valueOf = new DisplayAny.ValueReader(this);
+		search();
     }
     
     public void search() {
@@ -157,13 +167,19 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
     }
     
-    public void setCurrTab(NSKeyValueCodingAdditions tab) {
+    protected void revert() {
     	if(ec.hasChanges()) {
     		ec.lock();
     		ec.revert();
     		ec.unlock();
+    		if(currReason != null && currReason.editingContext() == null)
+    			currReason = null;
     	}
-    	currTab = tab;
+    }
+    
+    public void setCurrTab(NSKeyValueCodingAdditions tab) {
+    	revert();
+     	currTab = tab;
     	if(currTab == null)
     		return;
     	//if(Reason.ENTITY_NAME.equals(currTab.valueForKey("entity")))
@@ -178,7 +194,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 				sort();
 			}
     	} else {
-    		if(list != null)
+//    		if(list != null)
     			search();
     	}
     }
@@ -222,21 +238,23 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     }
     
     public WOActionResults select() {
-    	if(ec.hasChanges()) {
-    		ec.lock();
-    		ec.revert();
-    		ec.unlock();
-    	}
+    	revert();
+    	currObject = itemRow;
     	if(itemDict.valueForKey("popup") != null) {
     		highlight = itemRow;
     		return popup();
     	}
-    	//currObject = itemRow;
     	highlight = item;
     	if(itemRow instanceof Reason)
     		currReason = (Reason)itemRow;
     	else
     		currReason = (Reason)NSKeyValueCoding.Utility.valueForKey(itemRow, "reason");
+    	return null;
+    }
+    
+    public String rowID() {
+    	if(currObject == itemRow)
+    		return "curr";
     	return null;
     }
     
@@ -397,6 +415,9 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void showSubstitutes() {
+		revert();
+		if(currReason == null)
+			return;
 		currTab = (NSKeyValueCodingAdditions) tabsDict.valueForKey("Substitute");
 		tabsDict.takeValueForKey("Substitute", "inReason");
 		list = currReason.substitutes();
@@ -404,6 +425,9 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void showVariations() {
+		revert();
+		if(currReason == null)
+			return;
 		currTab = (NSKeyValueCodingAdditions) tabsDict.valueForKey("Variation");
 		tabsDict.takeValueForKey("Variation", "inReason");
 		list = currReason.variations();
@@ -418,5 +442,35 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		currReason = (Reason)EOUtilities.createAndInsertInstance(ec, Reason.ENTITY_NAME);
 		currReason.takeValueForKey(session().valueForKey("today"), Reason.BEGIN_KEY);
 		ec.unlock();
+		currObject = null;
+	}
+	
+	public boolean canDelete() {
+		if(currReason == null)
+			return false;
+		if(Various.boolForObject(session().valueForKeyPath("readAccess._delete.currReason")))
+			return false;
+		return (currReason.substitutes().count() + currReason.variations().count() == 0);
+	}
+	
+	public void delete() {
+		ec.lock();
+		try {
+			if (ec.hasChanges()) {
+				ec.revert();
+			}
+			ec.deleteObject(currReason);
+			ec.saveChanges();
+			Object[] args = new Object[] {session(),currObject};
+			logger.log(WOLogLevel.UNOWNED_EDITING,"Reason deleted",args);
+		} catch (Exception e) {
+			Object[] args = new Object[] {session(),currObject,e};
+			logger.log(WOLogLevel.WARNING,"Error deleting Reason",args);
+			session().takeValueForKey(e.getMessage(), "message");
+		} finally {
+			ec.unlock();
+		}
+		currReason = null;
+		search();
 	}
 }

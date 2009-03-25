@@ -34,6 +34,33 @@ function clickCell(cell,button) {
 			i.checked = true;
 	return false;
 }
+
+function scrollToObj(obj) {
+	if(document.getElementById(obj)) {
+		obj = document.getElementById(obj);
+	}
+	var height = window.innerHeight;
+	if( !height) {
+		height = document.documentElement.clientHeight;
+	}
+	var pos = getPosition(obj);
+	if(height < pos.y + obj.offsetHeight/2) {
+		window.scrollTo(0,pos.y - height/2);
+	}
+	pos = obj.className;
+	obj.className = "highlight2";
+	timer = setTimeout("blink('" + obj.id + "','" + pos + "',2)",400);
+}
+var timer;
+function blink(objID,nextClass,count) {
+	clearTimeout(timer);
+	var obj = document.getElementById(objID);
+	var tmpClass = obj.className;
+	obj.className = nextClass;
+	if(count > 0)
+		timer = setTimeout("blink('" + objID + "','" + tmpClass + "'," + (count - 1) + ")",200);
+}
+
 </script>
 	<webobject name = "Params"><div style = "text-align:right;">
 	<webobject name = "ParamSelector"/></div></webobject>
@@ -76,6 +103,7 @@ function clickCell(cell,button) {
 		</td></tr>
 		</table>
 		<webobject name="CanChange"><webobject name="Save"/></webobject> 
+		<webobject name="CanDelete"><webobject name="DeleteButton"></webobject></webobject> 
 		</webobject>
 	<table cellspacing = "8" cellpadding = "3" align = "center">
 	<tr><webobject name = "ShowSubs"><webobject name = "SubsTitle"/>

@@ -105,6 +105,8 @@
 			<array>
 				<string>teacher</string>
 				<string>eduGroup</string>
+				<string>substitutes</string>
+				<string>variations</string>
 			</array>
 			<key>properties</key>
 			<array>

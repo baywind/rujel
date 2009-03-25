@@ -105,7 +105,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     public void setTeacher(Teacher aTeacher) {
     	teacher = (Teacher)EOUtilities.localInstanceOfObject(lesson.editingContext(), aTeacher);
     	if(aTeacher != null) {
-    		String path = "readAccess._edit." + ((substitute==null)?'S':'s') +"ubstitute";
+    		String path = "readAccess." + ((substitute==null)?"_create.S":"_edit.s") +"ubstitute";
     		cantEdit = (Boolean)session().valueForKeyPath(path);
     	} else {
     		cantEdit = Boolean.TRUE;
