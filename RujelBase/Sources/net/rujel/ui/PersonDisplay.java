@@ -35,6 +35,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.reusables.ExtDynamicElement;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.foundation.NSDictionary;
@@ -54,6 +55,9 @@ public class PersonDisplay extends ExtDynamicElement {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object tmp = valueForBinding("person",aContext);
     	if(tmp == null) {
+    		tmp = valueForBinding("valueWhenEmpty", aContext);
+    		if(tmp != null)
+    			aResponse.appendContentString(tmp.toString());
     		//aResponse.appendContentString("?");
     		return;
     	}
@@ -65,7 +69,21 @@ public class PersonDisplay extends ExtDynamicElement {
     	} else {
     		aResponse.appendContentString("!???!");
     	}
+    	
+    	boolean span = Various.boolForObject(valueForBinding("nowrap", aContext));
+    	tmp = valueForBinding("style", aContext);
+    	if(span || tmp != null) {
+    		aResponse.appendContentString("<span style=\"");
+    		if(span)
+    			aResponse.appendContentString("white-space:nowrap;");
+    		if(tmp != null)
+    			aResponse.appendContentString(tmp.toString());
+     		span = true;
+     		aResponse.appendContentString("\">");
+    	}
+    	
     	boolean startWithLast = true;
+    	
     	tmp = valueForBinding("startWithLast",aContext);
     	if(tmp != null) {
     		if(tmp instanceof Boolean) {
@@ -81,7 +99,7 @@ public class PersonDisplay extends ExtDynamicElement {
         		tmp = new Integer(3);
         	appendName(aResponse, person.lastName(), tmp, true);
     	}
-    	tmp = valueForBinding("first",aContext);
+     	tmp = valueForBinding("first",aContext);
     	appendName(aResponse, person.firstName(), tmp, true);
     	tmp = valueForBinding("second",aContext);
     	appendName(aResponse, person.secondName(), tmp, !startWithLast);
@@ -104,7 +122,9 @@ public class PersonDisplay extends ExtDynamicElement {
     		if(format == null)
     			format = MyUtility.dateFormat();
     		aResponse.appendContentString(format.format(person.birthDate()));
-    	}      	
+    	}
+    	if(span)
+     		aResponse.appendContentString("</span>");
      }
     
     protected void appendName(WOResponse aResponse, String name, Object type, boolean addSpace) {

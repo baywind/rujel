@@ -192,7 +192,10 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     }
     
     public String onDelete() {
-    	return (String)session().valueForKey((returnNormaly)?"tryLoad":"ajaxPopup");
+    	if(returnNormaly)
+    		return (String)session().valueForKey("confirmMessage");
+		String href = context().componentActionURL();
+   	return "if(confirmAction(this.value,event))ajaxPopupAction('" + href + "');";
     }
     
     public String onCancel() {

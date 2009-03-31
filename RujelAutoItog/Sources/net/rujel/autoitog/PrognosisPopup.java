@@ -228,9 +228,6 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	return returnPage;
     }
     
-    public String studentName() {
-    	return Person.Utility.fullName(student.person(),true,2,1,1);
-    }
     public WOActionResults delete() {
     	mark = null;
     	calculation = false;

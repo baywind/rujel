@@ -260,7 +260,7 @@ public class Session extends WOSession implements WithUser {
 	}
 	
     public String confirmMessage() {
-		WOApplication app = WOApplication.application();
+/*		WOApplication app = WOApplication.application();
 		String formatter = (String)app.valueForKeyPath("strings.Strings.messages.areYouShure");
 		Object action = app.valueForKeyPath("strings.Reusables_Strings.uiElements.Delete");
 		String msg = "Are you shure?";
@@ -272,7 +272,10 @@ public class Session extends WOSession implements WithUser {
 			}
 		}
 		return "return (tryLoad(false) && confirm('" + msg + "'));";
-	}
+*/	
+		String href = context().componentActionURL();
+		return "if(confirmAction(this.value,event) && tryLoad())window.location = '" + href +"';";
+    }
 	public static final NSArray defaultAccessKeys = new NSArray(new Object[] {
 		"read","create","edit","delete"});
 /*

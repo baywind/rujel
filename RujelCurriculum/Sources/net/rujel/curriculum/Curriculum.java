@@ -218,8 +218,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     			return "selection";
     		//return "highlight2";
     	}
-    	if (highlight == itemRow)
-    		return "highlight2";
+//    	if (highlight == itemRow)
+//    		return "highlight2";
     	return (String)valueOf.valueForKeyPath("itemRow.currTab.rowClass");
     }
     
@@ -234,7 +234,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     				highlight == NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, coursePath))
     			return "selectionBorder";
     	}
-    	return "pad";    	
+    	return "pad";
     }
     
     public WOActionResults select() {
