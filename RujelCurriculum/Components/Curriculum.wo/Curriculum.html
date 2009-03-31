@@ -24,9 +24,9 @@ function highlight(point) {
 function clickCell(cell,button) {
 	var i = cell.getElementsByTagName('input')[0];
 	if(button) {
-		var f = get(cell,'form');
+		//var f = get(cell,'form');
 		if(i.disabled) {
-			ajaxPost(f.elements[button],cell);
+			ajaxPost(button,cell);
 			return false;
 		}
 	}
@@ -49,7 +49,7 @@ function scrollToObj(obj) {
 	}
 	pos = obj.className;
 	obj.className = "highlight2";
-	timer = setTimeout("blink('" + obj.id + "','" + pos + "',2)",400);
+	timer = setTimeout("blink('" + obj.id + "','" + pos + "',2)",300);
 }
 var timer;
 function blink(objID,nextClass,count) {
@@ -58,7 +58,7 @@ function blink(objID,nextClass,count) {
 	var tmpClass = obj.className;
 	obj.className = nextClass;
 	if(count > 0)
-		timer = setTimeout("blink('" + objID + "','" + tmpClass + "'," + (count - 1) + ")",200);
+		timer = setTimeout("blink('" + objID + "','" + tmpClass + "'," + (count - 1) + ")",150);
 }
 
 </script>
@@ -90,12 +90,12 @@ function blink(objID,nextClass,count) {
 		<td><webobject name = "EndTitle"/>:
 			<webobject name = "EndDate"/></td></tr>
 		<tr><th colspan = "2"><webobject name = "RelatedTitle"/>:</th></tr>
-		<tr><td align = "left"  onclick = "clickCell(this,'selectTeacher');">
+		<tr><td align = "left"  onclick = "clickCell(this,'chooseTeacher');">
 			<webobject name = "HasTeacher"/> <webobject name = "WithTeacher"/></td>
-			<td><webobject name = "ReasonTeacher"/> <webobject name = "SelectTeacher"/></td></tr>
-		<tr><td align = "left"  onclick = "clickCell(this,'selectEduGroup');">
+			<webobject name = "TeacherCell"><webobject name = "ReasonTeacher"/></webobject></tr>
+		<tr><td align = "left"  onclick = "clickCell(this,'chooseGroup');">
 			<webobject name = "HasEduGroup"/> <webobject name = "WithEduGroup"/></td>
-			<td><webobject name = "ReasonGroup"/> <webobject name = "SelectGroup"/></td></tr>
+			<webobject name = "GroupCell"><webobject name = "ReasonGroup"/></webobject></tr>
 		<tr><td align = "left"  onclick = "clickCell(this);">
 			<webobject name = "ForWholeSchool"/> <webobject name = "WithWholeSchool"/></td><td></td></tr>
 		<tr><td colspan = "2" align = "center"><webobject name = "VerificationTitle"/>:<br/>
@@ -103,7 +103,8 @@ function blink(objID,nextClass,count) {
 		</td></tr>
 		</table>
 		<webobject name="CanChange"><webobject name="Save"/></webobject> 
-		<webobject name="CanDelete"><webobject name="DeleteButton"></webobject></webobject> 
+		<webobject name="CanDelete"><webobject name="DeleteButton"></webobject></webobject>
+		<webobject name = "SelectTeacher"/><webobject name = "SelectGroup"/> 
 		</webobject>
 	<table cellspacing = "8" cellpadding = "3" align = "center">
 	<tr><webobject name = "ShowSubs"><webobject name = "SubsTitle"/>

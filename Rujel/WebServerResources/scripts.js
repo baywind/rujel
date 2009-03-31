@@ -503,12 +503,12 @@ function ajaxPopupAction (action,aevent) {
 function ajaxPost(ini,aevent) {
 	if(!tryLoad(false))
 		return false;
-	if(typeof ini == "String")
+	if(document.getElementById(ini))
 		ini = document.getElementById(ini);
 	var aForm = ini;
-	if(ini.form && ini.type == "submit")
+	if(ini.form)
 		aForm = ini.form;
-	else
+	if(ini.type != "submit")
 		ini = null;
 	var params = "";
 	for(var i=0;i<aForm.elements.length;i++) {

@@ -3,7 +3,7 @@ PageWrapper1: PageWrapper {
 	title = plist.title;
 	hasChanges = ec.hasChanges;
 	onLoad = "scrollToObj('curr');";
-	styles = "td.pad{padding:3px;}";
+	styles = "td.pad{padding:3px;} td.canPop{border:solid 2px #cccccc;}";
 }
 
 RegimeTabs : Tabs {
@@ -191,24 +191,26 @@ ReasonTeacher : PersonDisplay {
   last = 2;
   first = 1;
   second = 1;
+  valueWhenEmpty = plist.Select;
 }
 
 ReasonGroup : WOString {
   value = reasonGroup.name;
-}
+  valueWhenEmpty = plist.Select;
+ }
 
 SelectTeacher : WOSubmitButton {
 	action = selectTeacher;
 	name = "selectTeacher";
-	value = plist.Select;
-	onclick="ajaxPost(this,event);return false;";
+	id = "chooseTeacher";
+	style = "display:none;";
 }
 
 SelectGroup : WOSubmitButton {
 	action = selectEduGroup;
 	name = "selectEduGroup";
-	value = plist.Select;
-	onclick="ajaxPost(this,event);return false;";
+	id = "chooseGroup";
+	style = "display:none;";
 }
 
 ForWholeSchool : WORadioButton {
@@ -256,4 +258,18 @@ Create : WOGenericElement {
   value = plist.new;
   onclick = session.checkRun;
   style = "float:right;";
+}
+
+GroupCell : OnClickContainer {
+  elementName = "td";
+  onclick = "ajaxPost('chooseGroup',event);";
+  style = "font-style:italic;font-weight:bold;";
+  title = plist.Select;
+}
+
+TeacherCell : OnClickContainer {
+  elementName = "td";
+  onclick = "ajaxPost('chooseTeacher',event);";
+  style = "font-style:italic;font-weight:bold;";
+  title = plist.Select;
 }

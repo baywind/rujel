@@ -178,7 +178,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     }
     
     public void setCurrTab(NSKeyValueCodingAdditions tab) {
-    	revert();
+		currObject = null;
+		revert();
      	currTab = tab;
     	if(currTab == null)
     		return;
@@ -234,6 +235,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     				highlight == NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, coursePath))
     			return "selectionBorder";
     	}
+    	if((itemDict.valueForKey("popup") != null))
+    		return "canPop";
     	return "pad";
     }
     
@@ -284,7 +287,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
     
     public void save() {
-    	ec.lock();
+		currObject = null;
+		ec.lock();
 		try {
     		if(ifArchive && ec.hasChanges()) {
     			EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
@@ -364,6 +368,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setReasonTeacher(Object newTeacher) {
+		currObject = null;
 		currReason.namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
 		if(newTeacher != null) {
 			currReason.namedFlags().setFlagForKey(false, "forEduGroup");
@@ -381,6 +386,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void setReasonGroup(Object newGroup) {
+		currObject = null;
 		currReason.namedFlags().setFlagForKey((newGroup != null), "forEduGroup");
 		if(newGroup != null) {
 			currReason.namedFlags().setFlagForKey(false, "forTeacher");
@@ -415,6 +421,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void showSubstitutes() {
+		currObject = null;
 		revert();
 		if(currReason == null)
 			return;
@@ -425,6 +432,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void showVariations() {
+		currObject = null;
 		revert();
 		if(currReason == null)
 			return;
@@ -442,7 +450,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		currReason = (Reason)EOUtilities.createAndInsertInstance(ec, Reason.ENTITY_NAME);
 		currReason.takeValueForKey(session().valueForKey("today"), Reason.BEGIN_KEY);
 		ec.unlock();
-		currObject = null;
+		currObject = currReason;
 	}
 	
 	public boolean canDelete() {
@@ -454,6 +462,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void delete() {
+		currObject = null;
 		ec.lock();
 		try {
 			if (ec.hasChanges()) {
