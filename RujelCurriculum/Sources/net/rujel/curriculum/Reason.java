@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 import net.rujel.interfaces.*;
@@ -76,9 +77,9 @@ public class Reason extends _Reason {
 			return null;
 	}
 	
-	public void setTeacher(Teacher newTeacher) {
+	public void setTeacher(Object newTeacher) {
 		namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
-		takeStoredValueForKey(newTeacher, "teacher");
+		takeStoredValueForKey((newTeacher==NullValue)?null:newTeacher, "teacher");
 	}
 	
 	public String title() {
@@ -110,7 +111,13 @@ public class Reason extends _Reason {
     
     public void setNamedFlags(NamedFlags flags) {
     	_flags = flags;
-    	setFlags(flags.toInteger());
+    	if(flags != null)
+    		setFlags(flags.toInteger());
+    }
+    
+    public void setFlags(Integer value) {
+    	_flags = null;
+    	super.setFlags(value);
     }
 
 	public boolean external() {
@@ -155,41 +162,81 @@ public class Reason extends _Reason {
     }
 	
 	public static NSArray reasons (NSTimestamp date, EduCourse course, boolean hideExternal) {
+		Props props = new Props(course);
+		props.begin = date;
+		props.end = date;
+		return reasons(props, hideExternal);
+	}
+	
+	public static Props propsFromEvents(NSArray events) {
+		if(events == null || events.count() == 0)
+			return null;
+		Props props = null;;
+		Enumeration enu = events.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Event event = (Event) enu.nextElement();
+			EduCourse course = event.course();
+			if(props == null) {
+				props = new Props(course);
+			} else {
+				if(props.ec != event.editingContext())
+					throw new IllegalArgumentException("Given events belong to different editing contexts");
+				if(!props.school.equals(event.reason().school()))
+					throw new IllegalArgumentException("Given events belong to different schools");
+				if(props.eduGroup != null && props.eduGroup != course.eduGroup())
+					props.eduGroup = null;
+				if(props.teacher != null && course.teacher() != props.teacher())
+					props.teacher = null;
+			}
+			NSTimestamp date = event.date();
+			if(props.begin == null || props.end.compare(date) > 0)
+				props.begin = date;
+			if(props.end == null || props.end.compare(date) < 0)
+				props.end = date;
+		}
+		return props;
+	}
+	
+	public static NSArray reasons (Props props, boolean hideExternal) {
 		EOQualifier qual = null;
 		NSMutableArray quals = new NSMutableArray();
-		if(course.teacher() == null) {
-			qual = new EOKeyValueQualifier(FLAGS_KEY,
-					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,new Integer(32));
-			quals.addObject(qual);
+		if (props.teacher != null) {
 			qual = new EOKeyValueQualifier("teacher",
-					EOQualifier.QualifierOperatorEqual,NullValue);
+					EOQualifier.QualifierOperatorEqual, props.teacher);
+			if (props.teacher == NullValue) {
+				quals.addObject(qual);
+				qual = new EOKeyValueQualifier(FLAGS_KEY,
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,
+						new Integer(32));
+				quals.addObject(qual);
+				qual = new EOAndQualifier(quals);
+				quals.removeAllObjects();
+			}
 			quals.addObject(qual);
-			qual = new EOAndQualifier(quals);
-			quals.removeAllObjects();
-		} else {
-			qual = new EOKeyValueQualifier("teacher",
-					EOQualifier.QualifierOperatorEqual,course.teacher());
-		}
-		quals.addObject(qual);
-		qual = new EOKeyValueQualifier("eduGroup",
-				EOQualifier.QualifierOperatorEqual,course.eduGroup());
-		quals.addObject(qual);
+		} // teacher is set
+		if (props.eduGroup != null) {
+			qual = new EOKeyValueQualifier("eduGroup",
+					EOQualifier.QualifierOperatorEqual, props.eduGroup);
+			quals.addObject(qual);
+		} // group is set
 		qual = new EOKeyValueQualifier(FLAGS_KEY,
 				EOQualifier.QualifierOperatorLessThan,new Integer(16));
-		quals.addObject(qual);
-		qual = new EOOrQualifier(quals);
-		quals.removeAllObjects();
+		if (quals.count() > 0) {
+			quals.addObject(qual);
+			qual = new EOOrQualifier(quals);
+			quals.removeAllObjects();
+		}
 		quals.addObject(qual);
 		
 		qual = new EOKeyValueQualifier(SCHOOL_KEY,
-				EOQualifier.QualifierOperatorEqual,course.cycle().school());
+				EOQualifier.QualifierOperatorEqual,props.school);
 		quals.addObject(qual);
 		qual = new EOKeyValueQualifier(BEGIN_KEY,
-				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,props.begin);
 		quals.addObject(qual);
 		EOQualifier[] ors = new EOQualifier[2];
 		ors[0] = new EOKeyValueQualifier(END_KEY,
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,props.end);
 		ors[1] = new EOKeyValueQualifier(END_KEY,
 				EOQualifier.QualifierOperatorEqual,NullValue);
 		qual = new EOOrQualifier(new NSArray(ors));
@@ -198,7 +245,7 @@ public class Reason extends _Reason {
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(
 				ENTITY_NAME,qual,EOPeriod.sorter);
-		NSArray found = course.editingContext().objectsWithFetchSpecification(fs);
+		NSArray found = props.ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
 			Enumeration enu = found.objectEnumerator();
 			NSMutableArray result = new NSMutableArray();
@@ -206,13 +253,13 @@ public class Reason extends _Reason {
 				Reason r = (Reason) enu.nextElement();
 				if(hideExternal && r.external())
 					continue;
-				if(r.namedFlags().flagForKey("forEduGroup") && r.eduGroup() != course.eduGroup())
+				if(r.namedFlags().flagForKey("forEduGroup") && r.eduGroup() != props.eduGroup)
 					continue;
-				else if(r.namedFlags().flagForKey("forTeacher") && r.teacher() != course.teacher())
+				else if(r.namedFlags().flagForKey("forTeacher") && r.teacher() != props.teacher())
 					continue;
 				else
 					result.addObject(r);
-			}
+			} // results verification
 			return result;
 		}
 		return found;
@@ -276,6 +323,61 @@ public class Reason extends _Reason {
 					throw new NSValidation.ValidationException(message,var.date(),"date");
 				}
 			} // enu variations
+		}
+	}
+	
+	public void turnIntoFault(EOFaultHandler handler) {
+		super.turnIntoFault(handler);
+		_flags = null;
+	}
+	
+	public static interface Event extends EOEnterpriseObject {
+		public NSTimestamp date();
+		public EduCourse course();
+		public Reason reason();
+	}
+	
+	public static class Props {
+		public EOEditingContext ec;
+		public Integer school;
+		
+		public NSTimestamp begin;
+		public NSTimestamp end;
+		public Object teacher;
+		public EduGroup eduGroup;
+		
+		public Props() {
+			super();
+		}
+		
+		public Props(EduCourse course) {
+			super();
+			ec = course.editingContext();
+			school = course.cycle().school();
+			eduGroup = course.eduGroup();
+			teacher = course.teacher();
+			if(teacher == null)
+				teacher = NullValue;
+		}
+		
+		public Teacher teacher() {
+			if(teacher instanceof Teacher)
+				return (Teacher)teacher;
+			return null;
+		}
+		
+		public Reason newReason() {
+			Reason reason = (Reason)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+			if(school != null)
+				reason.setSchool(school);
+			if(begin != null)
+				reason.setBegin(begin);
+			reason.setEnd(end);
+			if(teacher != null)
+				reason.setTeacher(teacher);
+			else if(eduGroup != null)
+				reason.setEduGroup(eduGroup);
+			return reason;
 		}
 	}
 }

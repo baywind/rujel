@@ -58,10 +58,9 @@ import net.rujel.interfaces.Teacher;
 public class Curriculum extends com.webobjects.appserver.WOComponent {
 	
 	public static Logger logger = Logger.getLogger("rujel.curriculum"); 
-	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.Reason", false);
+	public boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.Reason", false);
 	
 	public EOEditingContext ec;
-	public NSArray availableRegimes;
 	public NSKeyValueCodingAdditions currTab;
 	public NSDictionary plist;
 	public NSKeyValueCodingAdditions itemDict;
@@ -74,7 +73,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCodingAdditions valueOf;
 	public Object item;
 	
-	public NSMutableDictionary tabsDict;
+	public NSMutableDictionary tmpDict = new NSMutableDictionary();
 	
 	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
 		item = null;
@@ -92,7 +91,6 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			NSData pdata = new NSData(pstream, pstream.available());
 			plist = (NSDictionary)NSPropertyListSerialization.propertyListFromData(
 								pdata, "utf8");
-			//availableRegimes = (NSArray)session().valueForKeyPath("modules.curriculumRegime");
 		} catch (Exception e) {
 			Object[] args = new Object[] {session(),e};
 			logger.log(WOLogLevel.WARNING,
@@ -117,7 +115,14 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		NSArray tabs = (NSArray)plist.valueForKey("tabs");
 		currTab = (NSKeyValueCodingAdditions)tabs.objectAtIndex(0);
-		tabsDict = new NSMutableDictionary(tabs,(NSArray)tabs.valueForKey("entity"));
+		//tmpDict = new NSMutableDictionary(tabs,(NSArray)tabs.valueForKey("entity"));
+		Enumeration enu = tabs.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSKeyValueCodingAdditions tab = (NSKeyValueCodingAdditions) enu.nextElement();
+			String key = (String)tab.valueForKey("reasonKey");
+			if(key != null)
+				tmpDict.takeValueForKey(tab, key);
+		}
 		
 		valueOf = new DisplayAny.ValueReader(this);
 		search();
@@ -125,15 +130,17 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     
     public void search() {
     	NSArray args = (NSArray)currTab.valueForKeyPath("qualifier.args");
-    	Enumeration enu = args.objectEnumerator();
-    	args = new NSMutableArray();
-    	while (enu.hasMoreElements()) {
-			String arg = (String) enu.nextElement();
-			Object param = params.valueForKey(arg);
-			if(param == null)
-				param = NullValue;
-			((NSMutableArray)args).addObject(param);
-		}
+    	if(args != null && args.count() > 0) {
+    		Enumeration enu = args.objectEnumerator();
+    		args = new NSMutableArray();
+    		while (enu.hasMoreElements()) {
+    			String arg = (String) enu.nextElement();
+    			Object param = params.valueForKey(arg);
+    			if(param == null)
+    				param = NullValue;
+    			((NSMutableArray)args).addObject(param);
+    		}
+    	}
     	String qualifierFormat = (String)currTab.valueForKeyPath("qualifier.formatString");
     	EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat, args);
     	String entityName = (String)currTab.valueForKey("entity");
@@ -183,12 +190,16 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
      	currTab = tab;
     	if(currTab == null)
     		return;
-    	//if(Reason.ENTITY_NAME.equals(currTab.valueForKey("entity")))
-    		//currObject = currReason;
-    	if(tabsDict.valueForKey("inReason") != null) {
+    	cancelMove();
+    	tmpDict.removeObjectForKey("selectedObjects");
+    	if(Reason.ENTITY_NAME.equals(currTab.valueForKey("entity"))) {
+    		currObject = currReason;
+    		tmpDict.takeValueForKey(Boolean.FALSE,"allowSelection");
+    	}
+    	if(tmpDict.valueForKey("inReason") != null) {
 			String reasonKey = (String)tab.valueForKey("reasonKey");
     		if(reasonKey == null) {
-    			tabsDict.takeValueForKey(null, "inReason");
+    			tmpDict.takeValueForKey(null, "inReason");
     			search();
     		} else {
 				list = (NSArray)currReason.valueForKey(reasonKey);
@@ -214,13 +225,12 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     }
        
     public String rowClass() {
-    	if(currReason == itemRow) {
-    		//if(Reason.ENTITY_NAME.equals(currTab.valueForKey("entity")))
+    	if(currReason == itemRow)
     			return "selection";
-    		//return "highlight2";
-    	}
-//    	if (highlight == itemRow)
-//    		return "highlight2";
+    	if(itemRow instanceof Reason)
+    		return ((Reason)itemRow).styleClass();
+    	if(itemRow instanceof Reason.Event)
+    		return ((Reason.Event)itemRow).reason().styleClass();
     	return (String)valueOf.valueForKeyPath("itemRow.currTab.rowClass");
     }
     
@@ -252,6 +262,29 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     		currReason = (Reason)itemRow;
     	else
     		currReason = (Reason)NSKeyValueCoding.Utility.valueForKey(itemRow, "reason");
+    	
+    	if(list != null && list.count() > 0 && manipulateSelection()) {
+    		Enumeration enu = list.objectEnumerator();
+    		NSMutableSet set = (NSMutableSet)tmpDict.valueForKey("selectedObjects");
+    		if(set == null) {
+    			set = new NSMutableSet();
+    			tmpDict.takeValueForKey(set, "selectedObjects");
+    		} else {
+    			set.removeAllObjects();
+    		}
+    		String keyPath = (String)itemDict.valueForKeyPath("keyPath");
+			Object compare = null;
+    		while (enu.hasMoreElements()) {
+				Object row = enu.nextElement();
+	    		if(keyPath == null || keyPath.equals("."))
+	    			compare = row;
+	    		else
+	    			compare = NSKeyValueCodingAdditions.Utility.valueForKeyPath(row, keyPath);
+	    		if((item==null)?compare==null:item.equals(compare))
+	    			set.addObject(row);
+			}
+    	}
+    	
     	return null;
     }
     
@@ -306,11 +339,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),currReason};
 			logger.log(WOLogLevel.UNOWNED_EDITING,"Reason is saved",args);
 		} catch (Exception ex) {
-			//ec.revert();
+			if(!ec.globalIDForObject(currReason).isTemporary())
+				ec.revert();
 			session().takeValueForKey(ex.getMessage(), "message");
 			Object[] args = new Object[] {session(),currReason,ex};
 			logger.log(WOLogLevel.FINE,"Failed to save reason",args);
 		} finally {
+			currReason.setNamedFlags(null);
 			ec.unlock();
 		}
     }
@@ -334,10 +369,10 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 	public boolean noTeacher() {
-		return (reasonTeacher() == null);
+		return (reasonTeacher() == null ||  tmpDict.valueForKey("reasonsToMoveIn") != null);
 	}
 	public boolean noEduGroup() {
-		return (reasonGroup() == null);
+		return (reasonGroup() == null || tmpDict.valueForKey("reasonsToMoveIn") != null);
 	}
 	
 	public WOActionResults selectTeacher() {
@@ -425,10 +460,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		revert();
 		if(currReason == null)
 			return;
-		currTab = (NSKeyValueCodingAdditions) tabsDict.valueForKey("Substitute");
-		tabsDict.takeValueForKey("Substitute", "inReason");
+		currTab = (NSKeyValueCodingAdditions) tmpDict.valueForKey(Reason.SUBSTITUTES_KEY);
+		tmpDict.takeValueForKey(Boolean.TRUE, "inReason");
 		list = currReason.substitutes();
 		sort();
+		tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
+		tmpDict.removeObjectForKey("selectedObjects");
+		tmpDict.removeObjectForKey("reasonsToMoveIn");
 	}
 	
 	public void showVariations() {
@@ -436,10 +474,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		revert();
 		if(currReason == null)
 			return;
-		currTab = (NSKeyValueCodingAdditions) tabsDict.valueForKey("Variation");
-		tabsDict.takeValueForKey("Variation", "inReason");
+		currTab = (NSKeyValueCodingAdditions) tmpDict.valueForKey(Reason.VARIATIONS_KEY);
+		tmpDict.takeValueForKey(Boolean.TRUE, "inReason");
 		list = currReason.variations();
 		sort();
+		tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
+		tmpDict.removeObjectForKey("selectedObjects");
+		tmpDict.removeObjectForKey("reasonsToMoveIn");
 	}
 	
 	public void createReason() {
@@ -449,6 +490,12 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		currReason = (Reason)EOUtilities.createAndInsertInstance(ec, Reason.ENTITY_NAME);
 		currReason.takeValueForKey(session().valueForKey("today"), Reason.BEGIN_KEY);
+		if(Various.boolForObject(currTab.valueForKey("external"))) {
+			currReason.setFlags(new Integer(1));
+			currReason.setReason((String)currTab.valueForKey("title"));
+		} else {
+			currReason.setReason((String)plist.valueForKey("newReason"));
+		}
 		ec.unlock();
 		currObject = currReason;
 	}
@@ -468,10 +515,12 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			if (ec.hasChanges()) {
 				ec.revert();
 			}
-			ec.deleteObject(currReason);
-			ec.saveChanges();
-			Object[] args = new Object[] {session(),currObject};
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Reason deleted",args);
+			if(currReason.editingContext() != null) {
+				ec.deleteObject(currReason);
+				ec.saveChanges();
+				Object[] args = new Object[] {session(),currObject};
+				logger.log(WOLogLevel.UNOWNED_EDITING,"Reason deleted",args);
+			}
 		} catch (Exception e) {
 			Object[] args = new Object[] {session(),currObject,e};
 			logger.log(WOLogLevel.WARNING,"Error deleting Reason",args);
@@ -481,5 +530,102 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		currReason = null;
 		search();
+	}
+	
+	public boolean ticked() {
+		if(itemRow == null)
+			return false;
+		NSMutableSet set = (NSMutableSet)tmpDict.valueForKey("selectedObjects");
+		if(set == null)
+			return false;
+		return set.containsObject(itemRow);
+	}
+	
+	public void setTicked(boolean value) {
+		NSMutableSet set = (NSMutableSet)tmpDict.valueForKey("selectedObjects");
+		if(value) {
+			if(set == null) {
+				set = new NSMutableSet(itemRow);
+				tmpDict.takeValueForKey(set, "selectedObjects");
+			} else {
+				set.addObject(itemRow);
+			}
+		} else {
+			if(set != null)
+				set.removeObject(itemRow);
+		}
+	}
+	
+	public void reasonsToMoveIn() {
+		currObject = null;
+		NSMutableSet set = (NSMutableSet)tmpDict.valueForKey("selectedObjects");
+		if(set == null || set.count() == 0) {
+			tmpDict.takeValueForKey(null, "reasonsToMoveIn");
+			return;
+		}
+		Reason.Props props = Reason.propsFromEvents(set.allObjects());
+		NSArray reasons = Reason.reasons(props, false);
+		if(reasons == null)
+			reasons = NSArray.EmptyArray;
+		tmpDict.takeValueForKey(reasons, "reasonsToMoveIn");
+		tmpDict.takeValueForKey(props, "reasonProps");
+		int idx = reasons.indexOfIdenticalObject(currReason);
+		tmpDict.takeValueForKey((idx >=0)?new Integer(idx):null, "selectedReason");
+	}
+	
+	public void cancelMove() {
+		tmpDict.removeObjectForKey("reasonsToMoveIn");
+		tmpDict.removeObjectForKey("reasonProps");
+		tmpDict.removeObjectForKey("selectedReason");
+	}
+	
+	public boolean manipulateSelection() {
+		Object tmp = tmpDict.valueForKey("allowSelection");
+		if(!Various.boolForObject(tmp))
+			return false;
+		tmp = tmpDict.valueForKey("reasonProps");
+		return (tmp == null);
+	}
+	
+	public void moveToReason() {
+		NSArray reasonsToMoveIn = (NSArray)tmpDict.removeObjectForKey("reasonsToMoveIn");
+		NSMutableSet set = (NSMutableSet)tmpDict.valueForKey("selectedObjects");
+		if(set == null || set.count() == 0) {
+			return;
+		}
+		ec.lock();
+		Number idx = (Number)tmpDict.removeObjectForKey("selectedReason");
+		Reason.Props props = (Reason.Props)tmpDict.removeObjectForKey("reasonProps");
+		boolean newReason = (idx == null || idx.intValue() < 0);
+		Reason moveIn = null;
+		if(newReason) {
+			moveIn = props.newReason();
+			moveIn.setReason((String)plist.valueForKey("newReason"));
+		} else {
+			moveIn = (Reason)reasonsToMoveIn.objectAtIndex(idx.intValue());
+		}
+		Enumeration enu = set.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Reason.Event event = (Reason.Event) enu.nextElement();
+			event.addObjectToBothSidesOfRelationshipWithKey(moveIn, "reason");
+		}
+		if(newReason) {
+			currReason = moveIn;
+		} else {
+			newReason = ifArchive;
+			ifArchive = false;
+			save();
+			ifArchive = newReason;
+		}
+		ec.unlock();
+		set.removeAllObjects();
+	}
+	
+	public Object canCreate() {
+		if(!Reason.ENTITY_NAME.equals(currTab.valueForKey("entity")))
+			return Boolean.FALSE;
+		if(tmpDict.valueForKey("reasonsToMoveIn") != null)
+			return Boolean.FALSE;
+		return session().valueForKeyPath("readAccess.create.Reason");
 	}
 }

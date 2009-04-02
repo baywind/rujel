@@ -39,7 +39,7 @@ import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Various;
 
-public class Variation extends _Variation {
+public class Variation extends _Variation implements Reason.Event {
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship(ENTITY_NAME,"course",false,"courseID","EduCourse");

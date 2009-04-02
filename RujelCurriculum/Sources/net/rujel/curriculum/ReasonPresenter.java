@@ -37,6 +37,29 @@ public class ReasonPresenter extends com.webobjects.appserver.WOComponent {
         super(context);
     }
     
+    Reason _reason;
+    public Reason reason() {
+    	if(_reason == null)
+    		_reason = (Reason)valueForBinding("reason");
+    	return _reason;
+    }
+    
+    public String iconName() {
+    	if(reason().teacher() != null)
+    		return "teacher.png";
+    	if(reason().eduGroup() != null)
+    		return "group.png";
+    	return "school.png";
+    }
+    
+	public String iconTile() {
+		String result = reason().extToString();
+		if(result == null)
+			result = (String)application().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.Reason.wholeSchool");
+		return result;
+	}
+    
 	public boolean isStateless() {
 		return true;
 	}
@@ -46,6 +69,8 @@ public class ReasonPresenter extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void reset() {
+		_reason = null;
 		super.reset();
 	}
+
 }

@@ -44,7 +44,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
-public class Substitute extends _Substitute {
+public class Substitute extends _Substitute implements Reason.Event {
 	protected static Logger logger = Logger.getLogger("rujel.curriculum");
 	//public static NSArray flagKeys = new NSArray("join");
 		
@@ -193,5 +193,9 @@ public class Substitute extends _Substitute {
     			Substitute.ENTITY_NAME,new EOAndQualifier(quals),MyUtility.dateSorter);
     	fs.setRefreshesRefetchedObjects(true);
     	return ec.objectsWithFetchSpecification(fs);
+    }
+    
+    public EduCourse course() {
+    	return lesson().course();
     }
 }
