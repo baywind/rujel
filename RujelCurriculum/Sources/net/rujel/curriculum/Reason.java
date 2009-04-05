@@ -189,7 +189,7 @@ public class Reason extends _Reason {
 					props.teacher = null;
 			}
 			NSTimestamp date = event.date();
-			if(props.begin == null || props.end.compare(date) > 0)
+			if(props.begin == null || props.begin.compare(date) > 0)
 				props.begin = date;
 			if(props.end == null || props.end.compare(date) < 0)
 				props.end = date;
