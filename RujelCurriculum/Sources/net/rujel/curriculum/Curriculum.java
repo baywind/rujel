@@ -284,16 +284,35 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	    			set.addObject(row);
 			}
     	}
-    	
-    	return null;
+    	if(ifArchive) {
+    		WOComponent archivePopup = archivePopup();
+     		tmpDict.takeValueForKey(archivePopup.valueForKeyPath("archives.count")
+    				, "archivesCount");
+    	}
+    	return this;
     }
     
+    public WOComponent archivePopup() {
+    	WOComponent archivePopup = (WOComponent)tmpDict.valueForKey("archivePopup");
+    	if(archivePopup == null) {
+    		archivePopup = pageWithName("ArchivePopup");
+    		archivePopup.takeValueForKey("ReasonArchivePresenter", "presenter");
+    		archivePopup.takeValueForKey(this, "returnPage");
+    		archivePopup.takeValueForKey(Boolean.TRUE, "noEdit");
+    		tmpDict.takeValueForKey(archivePopup, "archivePopup");
+    	} else {
+    		archivePopup.ensureAwakeInContext(context());
+    	}
+		archivePopup.takeValueForKey(currReason, "object");
+    	return archivePopup;
+    }
+
     public String rowID() {
     	if(currObject == itemRow)
     		return "curr";
     	return null;
     }
-    
+
     public String onSelect() {
     	if(itemDict.valueForKey("popup") != null) {
     		StringBuilder result = new StringBuilder("highlight(this);");
@@ -329,6 +348,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     			archive.takeValueForKey(currReason.reason(),"@reason");
     			archive.takeValueForKey(currReason.begin(),"@begin");
     			archive.takeValueForKey(currReason.end(),"@end");
+    			if(currReason.verification() != null)
+    				archive.takeValueForKey(currReason.verification(),"@verification");
     			if(currReason.namedFlags().flagForKey("forTeacher"))
     				archive.takeValueForKey(Person.Utility.fullName(
     						currReason.teacher(), true, 2, 1, 1),"@teacher");
@@ -348,6 +369,11 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			currReason.setNamedFlags(null);
 			ec.unlock();
 		}
+    	if(ifArchive) {
+    		WOComponent archivePopup = archivePopup();
+     		tmpDict.takeValueForKey(archivePopup.valueForKeyPath("archives.count")
+    				, "archivesCount");
+    	}
     }
 
 	public Teacher reasonTeacher() {
@@ -498,6 +524,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		ec.unlock();
 		currObject = currReason;
+		tmpDict.takeValueForKey(null, "archivesCount");
 	}
 	
 	public boolean canDelete() {
@@ -611,6 +638,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		if(newReason) {
 			currReason = moveIn;
+			tmpDict.takeValueForKey(null, "archivesCount");
 		} else {
 			newReason = ifArchive;
 			ifArchive = false;
