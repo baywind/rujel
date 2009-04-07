@@ -317,6 +317,6 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		millis = millis - begin().getTime();
 		if(millis < 0)
 			return 0;
-		return (int) (millis/MyUtility.dayMillis);
+		return 1 + (int) (millis/MyUtility.dayMillis);
 	}
 }
