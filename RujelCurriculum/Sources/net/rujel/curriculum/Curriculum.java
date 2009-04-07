@@ -366,7 +366,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),currReason,ex};
 			logger.log(WOLogLevel.FINE,"Failed to save reason",args);
 		} finally {
-			currReason.setNamedFlags(null);
+			if(currReason != null)
+				currReason.setNamedFlags(null);
 			ec.unlock();
 		}
     	if(ifArchive) {
