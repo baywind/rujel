@@ -22,13 +22,15 @@ RealTitle : WOString {
 }
 
 PlanCount : WOString {
-  value = plan;
+  value = planFact.plan;
   escapeHTML = false;
+  numberformat = "0";
   valueWhenEmpty = "?";
 }
 
 RealCount : WOString {
-  value = lessonsCount;
+  value = planFact.fact;
   escapeHTML = false;
+  numberformat = "0";
   valueWhenEmpty = "?";
 }

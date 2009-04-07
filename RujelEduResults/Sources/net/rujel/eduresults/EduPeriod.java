@@ -307,4 +307,16 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		int year = eduYear().intValue();
 		return MyUtility.presentEduYear(year);
 	}
+	
+	public int daysInPeriod(NSTimestamp toDate) {
+		long millis = end().getTime();
+		if(toDate != null && toDate.getTime() < millis)
+			millis = toDate.getTime();
+		else 
+			toDate = null;
+		millis = millis - begin().getTime();
+		if(millis < 0)
+			return 0;
+		return (int) (millis/MyUtility.dayMillis);
+	}
 }

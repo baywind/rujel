@@ -116,7 +116,7 @@ public class DirectAction extends WODirectAction {
 		WOComponent last = null;
 		NSMutableArray pathStack = (NSMutableArray)session().valueForKey("pathStack");
 		if(pathStack == null || pathStack.count() == 0)
-			last = pageWithName("ChooseRegime");
+			last = pageWithName("SrcMark");
 		else
 			last = (WOComponent)pathStack.removeLastObject();
 		last.ensureAwakeInContext(context());

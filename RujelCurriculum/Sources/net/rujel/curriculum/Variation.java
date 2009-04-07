@@ -33,9 +33,9 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
 import net.rujel.base.MyUtility;
-import net.rujel.eduplan.PlanCycle;
-import net.rujel.eduresults.EduPeriod;
-import net.rujel.eduresults.PeriodType;
+//import net.rujel.eduplan.PlanCycle;
+//import net.rujel.eduresults.EduPeriod;
+//import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Various;
 
@@ -99,7 +99,7 @@ public class Variation extends _Variation implements Reason.Event {
 		return (result == null)?0:result.intValue();
 	}
 	
-	public static int planWithVariations(EduCourse course, EduPeriod period, NSTimestamp toDate) {
+/*	public static int planWithVariations(EduCourse course, EduPeriod period, NSTimestamp toDate) {
 		int planOnly =  PlanCycle.planHoursForCourseAndPeriod(course, period);
 		if(planOnly == 0)
 			return 0;
@@ -127,7 +127,7 @@ public class Variation extends _Variation implements Reason.Event {
 		if(shift != null)
 			planOnly += shift.intValue();
 		return planOnly;
-	}
+	}*/
 	
     public String valueStyle() {
     	if(isExternal()) {

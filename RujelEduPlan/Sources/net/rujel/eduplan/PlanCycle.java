@@ -34,7 +34,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.EduPeriod;
-import net.rujel.eduresults.PeriodType;
+//import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -337,8 +337,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		return 0;
 	}
-	
-	
+
+/*	
 	public static int planLessonsInPeriod(EduPeriod period, int planHours, NSTimestamp toDate) {
 		long millis = period.end().getTime();
 		if(toDate != null && toDate.getTime() < millis)
@@ -374,6 +374,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			return 0;
 		int result = 0;
 		Enumeration<EduPeriod> enu = periods.objectEnumerator();
+		int days = 0;
 		while (enu.hasMoreElements()) {
 			EduPeriod period = (EduPeriod) enu.nextElement();
 			if(toDate != null && toDate.compare(period.begin()) < 0)
@@ -381,8 +382,12 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			int hours = planHoursForCourseAndPeriod(course, period);
 			if(hours == 0)
 				continue;
-			result += planLessonsInPeriod(period, hours, toDate);
+			days += period.daysInPeriod(toDate);
+			int weeks = days / 7;
+			days = days%7;			
+			result += weeks*hours;
 		}
 		return result;
 	}
+	*/
 }
