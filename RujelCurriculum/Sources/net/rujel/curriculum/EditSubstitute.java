@@ -91,9 +91,11 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		//comment = (String)substitute.valueForKeyPath("reason.reason");
     		//join = sub.sFlags().flagForKey("join");
     		factor = sub.factor().stripTrailingZeros();
-    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
+    		// TODO: think on more specific access reading
+    		String obj = (context().page() == this)?"substitute":"Substitute";
+    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit." + obj);
     		cantSelect = cantEdit;
-    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.substitute");
+    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete." + obj);
     	} else {
     		cantSelect = (Boolean)session().valueForKeyPath("readAccess._edit.Substitute");
     	}

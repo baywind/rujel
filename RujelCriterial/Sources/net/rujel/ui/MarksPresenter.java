@@ -230,13 +230,13 @@ public class MarksPresenter extends NotePresenter {
 	public WOComponent archivePopup() {
 		WOComponent result = pageWithName("ArchivePopup");
 		result.takeValueForKey("MarksPresenter", "presenter");
-		result.takeValueForKey(usedCriteria(), "keys");
 		result.takeValueForKey(context().page(), "returnPage");
 		NSMutableDictionary initData = identifierDictionary();
 		if(_mark != null)
 			result.takeValueForKey(_mark, "object");
 		else
 			result.takeValueForKey(initData,"identifierDictionary");
+		result.takeValueForKey(usedCriteria(), "keys");
 		StringBuffer description = new StringBuffer();
 		if(lesson().theme() != null)
 			description.append(lesson().theme()).append(" : ");
