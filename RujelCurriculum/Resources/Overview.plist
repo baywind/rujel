@@ -25,7 +25,7 @@
 		<key>style</key>
 		<string>min-width:20em</string>
 		<key>presenter</key>
-		<string>PersListing</string>
+		<string>TeacherSelector</string>
 		<key>takeValuesFromRequest</key>
 		<true/>
 		<key>invokeAction</key>

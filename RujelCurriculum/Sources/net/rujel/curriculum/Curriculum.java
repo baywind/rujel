@@ -406,14 +406,15 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		WOComponent selector = pageWithName("SelectorPopup");
 		selector.takeValueForKey(this, "returnPage");
 		selector.takeValueForKey("reasonTeacher", "resultPath");
-		selector.takeValueForKey(reasonTeacher(), "value");
-		NSMutableDictionary dict = (NSMutableDictionary)plist.valueForKey("selectTeacher");
 		Teacher teacher = reasonTeacher();
+		selector.takeValueForKey(teacher, "value");
+		NSMutableDictionary dict = (NSMutableDictionary)plist.valueForKey("selectTeacher");
 		if(teacher != null) {
 			dict.takeValueForKeyPath(new NSArray(teacher), "presenterBindings.forcedList");
 		} else {
 			dict.takeValueForKeyPath(null, "presenterBindings.forcedList");
 		}
+		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
 		selector.takeValueForKey(dict, "dict");
 		return selector;
 	}
