@@ -211,7 +211,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     	}
     }
     
-    public void setItemDict(NSKeyValueCodingAdditions newDict) {
+/*    public void setItemDict(NSKeyValueCodingAdditions newDict) {
     	itemDict = newDict;
     	if(itemRow == null || itemDict == null) {
     		item = null;
@@ -222,7 +222,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     		else
     			item = NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, keyPath);
     	}
-    }
+    }*/
        
     public String rowClass() {
     	if(currReason == itemRow)
@@ -307,13 +307,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     	return archivePopup;
     }
 
-    public String rowID() {
+/*    public String rowID() {
     	if(currObject == itemRow)
     		return "curr";
     	return null;
-    }
+    }*/
 
-    public String onSelect() {
+    public String onClick() {
     	if(itemDict.valueForKey("popup") != null) {
     		StringBuilder result = new StringBuilder("highlight(this);");
     		result.append(session().valueForKey("ajaxPopup"));

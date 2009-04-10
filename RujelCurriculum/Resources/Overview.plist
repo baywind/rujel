@@ -269,6 +269,8 @@
 					<string>Учитель, который ведет курс</string>
 					<key>keyPath</key>
 					<string>lesson.course.teacher</string>
+					<key>style</key>
+					<string>white-space:nowrap;</string>
 					<key>presenter</key>
 					<string>PersonDisplay</string>
 					<key>presenterBindings</key>
@@ -311,6 +313,8 @@
 					<string>Учитель, который реально проводил урок</string>
 					<key>keyPath</key>
 					<string>teacher</string>
+					<key>style</key>
+					<string>white-space:nowrap;</string>
 					<key>presenter</key>
 					<string>PersonDisplay</string>
 					<key>presenterBindings</key>
@@ -423,6 +427,8 @@
 					<string>Учитель</string>
 					<key>keyPath</key>
 					<string>course.teacher</string>
+					<key>style</key>
+					<string>white-space:nowrap;</string>
 					<key>presenter</key>
 					<string>PersonDisplay</string>
 					<key>presenterBindings</key>

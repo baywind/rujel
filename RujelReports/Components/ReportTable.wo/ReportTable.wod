@@ -1,0 +1,45 @@
+Content : WOComponentContent {
+}
+
+ColTitle : WOString {
+  value = itemDict.title;
+}
+
+Columns : WORepetition {
+  list = ^properties;
+  item = itemDict;
+}
+
+ColHead : WOGenericContainer {
+  elementName = "th";
+  title = valueOf.item.itemDict.hover;
+  style = valueOf.item.itemDict.titleStyle;
+}
+
+List : WORepetition {
+  list = ^list;
+  item = itemRow;
+}
+
+RowExists : WOConditional {
+  condition = itemRow.editingContext;
+}
+
+ItemRow : WOGenericContainer {
+  elementName = "tr";
+  class = ^rowClass;
+  id = rowID;
+}
+
+Cell : OnClickContainer {
+  elementName = "td";
+  class = ^cellClass;
+  style = valueOf.item.itemDict.style;
+  onclick = onClick;
+  invokeAction = select;
+}
+
+Display : DisplayAny {
+  value = item;
+  dict = itemDict;
+}
