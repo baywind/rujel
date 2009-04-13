@@ -212,7 +212,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 					result.addObject(EOUtilities.localInstanceOfObject(editingContext, pers));
 			}
 		}
-		if(!result.contains(selection))
+		if(selection != null && !result.contains(selection))
 			result.insertObjectAtIndex(selection, 0);
 		return result;
 	}

@@ -68,6 +68,7 @@ public class PersonDisplay extends ExtDynamicElement {
     		person = ((PersonLink)tmp).person();
     	} else {
     		aResponse.appendContentString("!???!");
+    		return;
     	}
     	
     	boolean span = Various.boolForObject(valueForBinding("nowrap", aContext));

@@ -1,0 +1,39 @@
+PageWrapper : PageWrapper {
+	title = title;
+}
+Title : WOString {
+  value = title;
+  escapeHTML = false;
+}
+
+Tabs : Tabs {
+	currTab = tabSelected;
+	tablist = tablist;
+	onClick = session.tryLoad;
+}
+ClassSelector : WOConditional {
+	condition = tabindex;
+	negate = true;
+}
+
+ClassListing1 : ClassListing {
+	selection = curSource;
+	width = "100%";
+	editingContext = ec;
+	onClick = session.tryLoad;
+}
+
+TeacherSelector : WOConditional {
+	condition = tabindex;
+	negate = false;
+}
+
+TeacherSelector2 : TeacherSelector {
+	editingContext = ec;
+	useAjaxPost = false;
+	selection = curSource;
+}
+ReportTable : ReportTable {
+  list = courses;
+  properties = display;
+}

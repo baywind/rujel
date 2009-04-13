@@ -290,7 +290,7 @@ TicksForm : WOForm {
   id = "ticks"; 
 }
 
-Not External : WOConditional {
+NotExternal : WOConditional {
   condition = currReason.external;
   negate = true;
 }

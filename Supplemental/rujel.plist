@@ -392,6 +392,15 @@
 				<key>zav_kaf</key>
 				<string>15</string>
 			</dict>
+			<key>CoursesReport</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>zav_kaf</key>
+				<string>1</string>
+			</dict>
 			<key>login</key>
 			<dict>
 				<key>any</key>
@@ -565,6 +574,8 @@
 		<key>net.rujel.eduresults.ModuleInit</key>
 		<string>true</string>
 		<key>net.rujel.curriculum.CurriculumModule</key>
+		<string>true</string>
+		<key>net.rujel.reports.ReportsModule</key>
 		<string>true</string>
 	</dict>
 	<key>edu</key>

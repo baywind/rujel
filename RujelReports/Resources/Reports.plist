@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CoursesReport</key>
+	<dict>
+		<key>regime</key>
+		<dict>
+			<key>title</key>
+			<string>Обзор курсов</string>
+			<key>component</key>
+			<string>CoursesReport</string>
+			<key>group</key>
+			<string>edu</string>
+			<key>sort</key>
+			<string>20</string>
+		</dict>
+		<key>defaultDisplay</key>
+		<array>
+			<dict>
+				<key>title</key>
+				<string>Предмет</string>
+				<key>keyPath</key>
+				<string>cycle.subject</string>
+			</dict>
+		</array>
+	</dict>
+</dict>
+</plist>

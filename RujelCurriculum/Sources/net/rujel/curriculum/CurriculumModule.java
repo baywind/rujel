@@ -66,6 +66,9 @@ public class CurriculumModule {
 				return null;
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.curriculumRegime");
+		} else if(obj.equals("CoursesReport")) {
+			return WOApplication.application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.planFactReport");
 		}
 		return null;
 	}

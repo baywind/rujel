@@ -70,6 +70,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     	itemDict = newDict;
     	if(itemRow == null || itemDict == null) {
     		item = null;
+    	} else if(itemDict.valueForKey("value") != null) {
+    		item = valueOf.valueForKeyPath("itemRow.itemDict.value");
     	} else {
     		String keyPath = (String)itemDict.valueForKey("keyPath");
     		if(keyPath == null || keyPath.equals("."))
