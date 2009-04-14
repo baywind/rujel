@@ -29,7 +29,10 @@
 
 package net.rujel.reports;
 
+import java.util.Enumeration;
+
 import net.rujel.reusables.DisplayAny;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.foundation.*;
@@ -40,6 +43,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCodingAdditions itemDict;
 	public Object itemRow;
 	public Object item;
+	public NSKeyValueCodingAdditions subDict;
 
 	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);;
 	
@@ -100,12 +104,64 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public String onClick() {
 		if(hasBinding("onClick"))
 			return (String)valueForBinding("onClick");
+		if(subDict != null)
+			return (String)valueOf.valueForKeyPath("item.subDict.onclick");
 		return (String)valueOf.valueForKeyPath("item.itemDict.onclick");
 	}
 
 	public WOActionResults select() {
 		if(hasBinding("selectAction"))
 			return (WOActionResults) valueForBinding("selectAction");
-		return null;
+		String nextPage = (String)valueForKeyPath("subDict.nextPage");
+		NSKeyValueCodingAdditions pageDict = (nextPage==null)?itemDict:subDict;
+		if(nextPage == null)
+			nextPage = (String)valueForKeyPath("itemDict.nextPage");
+		if(nextPage != null) {
+			WOComponent result = pageWithName(nextPage);
+			boolean popup = Various.boolForObject(pageDict.valueForKey("popup"));
+			if(popup) {
+				result.takeValueForKey(context().page(), "returnPage");
+			} else {
+				session().takeValueForKey(context().page(),"pushComponent");
+			}
+			pageDict = (NSDictionary)pageDict.valueForKey("pageParams");
+			Enumeration enu = ((NSDictionary)pageDict).keyEnumerator();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				Object value = DisplayAny.ValueReader.evaluateValue(
+						pageDict.valueForKey(key), "item", this);
+				result.takeValueForKey(value, key);
+			}
+
+			return result;
+		}
+		if(valueForKeyPath("subDict.invokeAction") != null)
+			return (WOActionResults)valueOf.valueForKeyPath("item.subDict.invokeAction");
+		return (WOActionResults)valueOf.valueForKeyPath("item.itemDict.invokeAction");
+	}
+	
+	public Boolean disabledClick() {
+		if(Various.boolForObject(valueForBinding("disabled")))
+			return Boolean.TRUE;
+		if(subDict != null) {
+			if(Various.boolForObject(valueOf.valueForKeyPath("item.subDict.disabled")))
+				return Boolean.TRUE;
+		}
+		if(Various.boolForObject(valueOf.valueForKeyPath("item.itemDict.disabled")))
+			return Boolean.TRUE;
+		if(onClick() != null)
+			return Boolean.FALSE;
+		return Boolean.TRUE;
+	}
+	
+	public String cellClass() {
+		if(hasBinding("cellClass"))
+			return (String)valueForBinding("cellClass");
+		if(subDict != null) {
+			String result = (String)valueOf.valueForKeyPath("item.subDict.class");
+			if(result != null)
+				return result;
+		}
+		return (String)valueOf.valueForKeyPath("item.itemDict.class");
 	}
 }

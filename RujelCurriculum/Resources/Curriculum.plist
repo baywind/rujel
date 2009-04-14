@@ -59,7 +59,7 @@
 		<key>external</key>
 		<string>внешние поправки калькуляции</string>
 		<key>value</key>
-		<string>Величина</string>
+		<string>Часы</string>
 		<key>isAdded</key>
 		<string>Доп</string>
 	</dict>
@@ -135,7 +135,7 @@
 				<key>title</key>
 				<string>План</string>
 				<key>short</key>
-				<string>п</string>
+				<string>план</string>
 				<key>value</key>
 				<string>.plan</string>
 			</dict>
@@ -145,7 +145,7 @@
 				<key>title</key>
 				<string>Дано</string>
 				<key>short</key>
-				<string>Д</string>
+				<string>дано</string>
 				<key>value</key>
 				<string>.fact</string>
 			</dict>
@@ -154,6 +154,8 @@
 				<string>plus</string>
 				<key>title</key>
 				<string>Добавлено</string>
+				<key>titleStyle</key>
+				<string>width:3ex;</string>
 				<key>short</key>
 				<string>+</string>
 				<key>value</key>
@@ -164,6 +166,8 @@
 				<string>minus</string>
 				<key>title</key>
 				<string>Пропущено</string>
+				<key>titleStyle</key>
+				<string>width:3ex;</string>
 				<key>short</key>
 				<string>-</string>
 				<key>value</key>
@@ -178,6 +182,8 @@
 				<string>&amp;lt;&amp;gt;</string>
 				<key>value</key>
 				<string>.deviation</string>
+				<key>class</key>
+				<string>.styleClass</string>
 			</dict>
 		</array>
 		<key>value</key>

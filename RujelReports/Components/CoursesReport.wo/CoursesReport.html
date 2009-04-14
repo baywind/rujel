@@ -1,5 +1,47 @@
 <webobject name = "PageWrapper">
 <h1><webobject name = "Title"/></h1>
+<webobject name = "Form">
+<script language="JavaScript">
+function toggleReport(id,val) {
+	var boxes = document.getElementsByName(id);
+	for (var i = 0; i < boxes.length; i++) {
+		boxes[i].checked = val;
+	}
+	setDisplay(id,(val)?'':'none');
+}
+function toggleSub(id,val) {
+	var boxes = document.getElementsByName(id);
+	if(val) {
+		boxes[0].checked = true;
+	} else if (boxes[0].checked) {
+		for (var i = 1; i < boxes.length; i++) {
+			if(boxes[i].checked)
+				return;
+		}
+		boxes[0].checked = false;
+	}
+}
+</script>
+<div onclick = "toggleObj('reportsAvailable');" style = "cursor:pointer;font-size:larger;margin:3px;"><webobject name = "AvailableTitle"/>:</div>
+<table id = "reportsAvailable" width = "100%">
+<tfoot>
+	<tr><td colspan = "3" style = "padding:1ex;"><webobject name = "SubmitButton"/></td>
+</tfoot>
+<tbody>
+	<webobject name = "ReportsRepetition">
+		<tr class = "grey"><td><webobject name = "ItemSorting"/><webobject name = "ItemCheckBox"/>
+		</td><webobject name = "ReportCell"><webobject name = "HasShort"><b><webobject name = "ShortTitle"/></b> : 
+		</webobject><webobject name = "ItemTitle"/>
+		</webobject></tr>
+		<webobject name = "SubsRow">
+			<td></td><td align = "left"><webobject name = "SubsRepetition">
+			<div><webobject name = "SubCheckBox"/> <webobject name = "SubTitle"/></div></webobject></td>
+			</webobject>
+		
+	</webobject>
+</tbody>
+</table>
+</webobject>
 <table><tr>
 	<td><webobject name = "Tabs"/></td>
 	<td></td>

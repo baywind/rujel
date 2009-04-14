@@ -34,10 +34,7 @@ import java.util.Enumeration;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Teacher;
-import net.rujel.reusables.ModulesInitialiser;
-import net.rujel.reusables.PlistReader;
-import net.rujel.reusables.SessionedEditingContext;
-import net.rujel.reusables.Various;
+import net.rujel.reusables.*;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -50,7 +47,7 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	public EOEditingContext ec;
 	public NSMutableArray reports;
 	public NSMutableArray display;
-	protected  NSArray defaultDisplay = (NSArray)application().valueForKeyPath(
+	protected  NSDictionary defaultDisplay = (NSDictionary)application().valueForKeyPath(
 		"strings.RujelReports_Reports.CoursesReport.defaultDisplay");
 
 	public NSArray courses;
@@ -60,11 +57,19 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	public int tabindex = 0;
 	
 	public NSKeyValueCoding item;
-	public NSKeyValueCoding subIitem;
+	public NSKeyValueCoding subItem;
 	
     public CoursesReport(WOContext context) {
         super(context);
-        display = PlistReader.cloneArray(defaultDisplay, true);
+        prepareDisplay();
+    }
+    
+    protected void prepareDisplay() {
+        display = new NSMutableArray(defaultDisplay.valueForKey("subject"));
+        if(tabindex == 0)
+        	display.addObject(defaultDisplay.valueForKey("teacher"));
+        else
+        	display.addObject(defaultDisplay.valueForKey("eduGroup"));
     }
     
     public String title() {
@@ -92,6 +97,10 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	public void setTabSelected(String tabName) {
 		tabindex = tablist.indexOfObject(tabName);
 		curSource = null;
+        if(tabindex == 0)
+        	display.replaceObjectAtIndex(defaultDisplay.valueForKey("teacher"),1);
+        else
+        	display.replaceObjectAtIndex(defaultDisplay.valueForKey("eduGroup"),1);
 	}
 
 	public void setCurSource(Object newSource) {
@@ -107,8 +116,8 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void modifyList() {
-		display = PlistReader.cloneArray(defaultDisplay, true);
-		if(item != null && context().request().formValues() == null) {
+		prepareDisplay();
+		if(item != null) {
 			reports.takeValueForKey(Boolean.FALSE, "active");
 			item.takeValueForKey(Boolean.TRUE, "active");
 			NSArray subs = (NSArray)item.valueForKey("subParams");
@@ -138,4 +147,9 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 		}
 	}
 
+	public String subRowStyle() {
+		if(item == null || Various.boolForObject(item.valueForKey("active")))
+			return null;
+		return "display:none;";
+	}
 }
