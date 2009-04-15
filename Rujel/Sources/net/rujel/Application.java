@@ -55,10 +55,6 @@ public class Application extends UTF8Application {
 //		InputStream propsIn = (propertiesPath!=null)?null:
 //			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
 		if(propertiesPath != null) {
-			propertiesPath = propertiesPath.replaceFirst("LOCALROOT",
-					System.getProperty("WOLocalRootDirectory",""));
-			propertiesPath = propertiesPath.replaceFirst("WOROOT",
-					System.getProperty("WORootDirectory","/System"));
 			LogInitialiser.initLogging(null, propertiesPath, logger);
 		}
 		

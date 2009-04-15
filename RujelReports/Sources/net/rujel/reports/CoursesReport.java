@@ -29,7 +29,11 @@
 
 package net.rujel.reports;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
@@ -53,7 +57,8 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	public NSArray courses;
 	public Object curSource;
 
-	public NSArray tablist = (NSArray)valueForKeyPath("application.strings.Strings.SrcMark.tabs");
+	public NSArray tablist = (NSArray)valueForKeyPath(
+			"application.strings.Strings.SrcMark.tabs");
 	public int tabindex = 0;
 	
 	public NSKeyValueCoding item;
@@ -61,6 +66,53 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	
     public CoursesReport(WOContext context) {
         super(context);
+
+		ec = new SessionedEditingContext(session());
+		NSArray availableReports = (NSArray)session().valueForKeyPath("modules.CoursesReport");
+		reports = PlistReader.cloneArray(availableReports, true);
+        
+        String reportsDirPath = SettingsReader.stringForKeyPath("reportsDir",
+				"LOCALROOT/Library/WebObjects/Configuration/RujelReports");
+        reportsDirPath = Various.convertFilePath(reportsDirPath);
+        File reportsDir = new File(reportsDirPath, "CoursesReport");
+        if (reportsDir.isDirectory()) {
+        	File[] files = reportsDir.listFiles(new FileFilter() {
+        		public boolean accept(File file) {
+        			return (file.isFile() && file.getName().endsWith(
+        			".plist"));
+        		}
+        	});
+        	plists:
+        	for (int i = 0; i < files.length; i++) {
+        		try {
+        			FileInputStream fis = new FileInputStream(files[i]);
+        			NSData data = new NSData(fis, fis.available());
+        			fis.close();
+        			String encoding = System.getProperty(
+        					"PlistReader.encoding", "utf8");
+        			NSDictionary plist = (NSDictionary)NSPropertyListSerialization
+        			.propertyListFromData(data, encoding);
+        			NSArray checkAccess = (NSArray)plist.valueForKey("checkAccess");
+        			if(checkAccess != null && checkAccess.count() > 0) {
+        				NSKeyValueCodingAdditions readAccess = 
+        					(NSKeyValueCodingAdditions)session().valueForKey("readAccess");
+        				Enumeration enu = checkAccess.objectEnumerator();
+        				while (enu.hasMoreElements()) {
+							String acc = (String) enu.nextElement();
+							if(Various.boolForObject(
+									readAccess.valueForKeyPath("_read." + acc)))
+								continue plists;
+						}
+        			}
+        			reports.addObject(plist);
+        		} catch (Exception e) {
+        			Object [] args = new Object[] {session(),e,files[i].getAbsolutePath()};
+        			Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
+        					"Error reading CoursesReport plist",args);
+        		}
+        	}
+        	EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
+        }
         prepareDisplay();
     }
     
@@ -73,15 +125,11 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
     }
     
     public String title() {
-		return (String)application().valueForKeyPath("strings.RujelReports_Reports.CoursesReport.title");
+		return (String)application().valueForKeyPath(
+				"strings.RujelReports_Reports.CoursesReport.title");
 	}
     
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		if(ec == null) {
-			ec = new SessionedEditingContext(session());
-			NSArray availableReports = (NSArray)session().valueForKeyPath("modules.CoursesReport");
-			reports = PlistReader.cloneArray(availableReports, true);
-		}
 		super.appendToResponse(aResponse, aContext);
 	}
 

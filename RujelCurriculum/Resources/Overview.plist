@@ -447,7 +447,7 @@
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Величина</string>
+					<string>Часы</string>
 					<key>titlePath</key>
 					<string>value</string>
 					<key>style</key>

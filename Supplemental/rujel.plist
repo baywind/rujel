@@ -6,6 +6,8 @@
 	<string>0</string>
 	<key>loggingProperties</key>
 	<string>LOCALROOT/Library/WebObjects/Configuration/logging.properties</string>
+	<key>reportsDir</key>
+	<string>LOCALROOT/Library/WebObjects/Configuration/RujelReports</string>
 	<key>auth</key>
 	<dict>
 		<key>loginPageName</key>
