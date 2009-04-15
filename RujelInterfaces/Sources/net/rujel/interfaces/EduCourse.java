@@ -55,4 +55,6 @@ public interface EduCourse extends com.webobjects.eocontrol.EOEnterpriseObject {
 	
 	public String comment();
 	public void setComment(String newComment);
+	
+	public String subjectWithComment();
 }

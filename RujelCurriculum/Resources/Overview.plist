@@ -420,7 +420,7 @@
 					<key>keyPath</key>
 					<string>course</string>
 					<key>titlePath</key>
-					<string>cycle.subject</string>
+					<string>subjectWithComment</string>
 				</dict>
 				<dict>
 					<key>title</key>

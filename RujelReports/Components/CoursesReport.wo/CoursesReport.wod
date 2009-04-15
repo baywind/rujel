@@ -42,7 +42,7 @@ ReportTable : ReportTable {
 }
 
 Form : WOForm {
-  class = "backfield2";
+  class = "backfield2 selectionBorder";
   style = "position:absolute;right:10px;width:12em;";
 }
 
@@ -66,6 +66,11 @@ ShortTitle : WOString {
   escapeHTML = false;
 }
 
+ShortSubTitle : WOString {
+  value = subItem.short;
+  escapeHTML = false;
+}
+
 ItemTitle : WOString {
   value = item.title;
   escapeHTML = false;
@@ -75,14 +80,20 @@ HasShort : WOConditional {
   condition = item.short;
 }
 
+SubHasShort : WOConditional {
+  condition = subItem.short;
+}
 SubmitButton : WOSubmitButton {
-  action = modifyList; 
+  action = modifyList;
+  value = application.strings.Reusables_Strings.uiElements.Submit;
 }
 
 ReportCell : OnClickContainer {
   elementName = "td";
   invokeAction = modifyList;
   onclick = session.tryLoad;
+  align = "left";
+  style = "padding-left:4px;";
 }
 
 SubCheckBox : WOCheckBox {
@@ -110,4 +121,11 @@ SubsRow : WOGenericContainer {
 AvailableTitle : WOString {
   value = application.strings.RujelReports_Reports.CoursesReport.availableReports;
   escapeHTML = false;
+}
+
+ReportsTable : WOGenericContainer {
+  elementName = "table";
+  id = "reportsAvailable";
+  width = "100%";
+  style = tableStyle;
 }

@@ -131,9 +131,10 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				}
 				result.takeValueForKey(new Integer(plan), "planPre");
 				result.takeValueForKey(new Integer(hours), "maxDeviation");
-				if(days >= 4) {
-					result.takeValueForKey(Boolean.TRUE, "weekend");
-				}
+				result.takeValueForKey(new Integer(days), "extraDays");
+//				if(days >= 4) {
+//					result.takeValueForKey(Boolean.TRUE, "weekend");
+//				}
 			}
 		}
 		EOQualifier dateQual = new EOKeyValueQualifier("date",
@@ -185,8 +186,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey(new Integer(0), "result");
 			result.takeValueForKey("gerade", "styleClass");
 		}
-		if(result.valueForKey("weekend") == Boolean.TRUE)
-			result.takeValueForKey(new Integer(plan + hours), "nextPlan");
+//		if(result.valueForKey("weekend") == Boolean.TRUE)
+//			result.takeValueForKey(new Integer(plan + hours), "nextPlan");
 		return result;
 	}
 }

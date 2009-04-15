@@ -33,6 +33,7 @@ import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import net.rujel.auth.*;
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOMessage;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
@@ -417,5 +418,15 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		public int compareCaseInsensitiveDescending(Object left, Object right) {
 			return compareCaseInsensitiveAscending(right, left);
 		}
+	}
+
+	public String subjectWithComment() {
+		if(comment() == null)
+			return cycle().subject();
+		StringBuilder result = new StringBuilder(WOMessage.stringByEscapingHTMLString(
+				cycle().subject()));
+		result.append(" <span style = \"font-style:italic;\">(");
+		result.append(WOMessage.stringByEscapingHTMLString(comment())).append(")</span>");
+		return result.toString();
 	}
 }

@@ -22,6 +22,22 @@
 		</dict>
 		<dict>
 			<key>id</key>
+			<string>days</string>
+			<key>title</key>
+			<string>Дней недели</string>
+			<key>hover</key>
+			<string>Прошло дней от начала вычисляемой недели</string>
+			<key>titleStyle</key>
+			<string>color:999999;</string>
+			<key>style</key>
+			<string>color:999999;</string>
+			<key>short</key>
+			<string>/7</string>
+			<key>value</key>
+			<string>.extraDays</string>
+		</dict>
+		<dict>
+			<key>id</key>
 			<string>fact</string>
 			<key>title</key>
 			<string>Дано</string>
