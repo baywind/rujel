@@ -516,6 +516,13 @@
 				<key>password</key>
 				<string>123</string>
 			</dict>
+			<key>zav_kaf</key>
+			<dict>
+				<key>groups</key>
+				<string>teacher;any</string>
+				<key>password</key>
+				<string>123</string>
+			</dict>
 		</dict>
 	</dict>
 	<key>dbConnection</key>

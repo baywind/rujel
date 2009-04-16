@@ -357,12 +357,12 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(tmp,Person.sorter);
 	}
 
-	public NSArray sortedTabs() {
-		NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("firstLessonNumber",EOSortOrdering.CompareAscending));
+/*	public NSArray sortedTabs() {
+		NSArray tabSorter = new NSArray(EOSortOrdering.sortOrderingWithKey("firstLessonNumber",EOSortOrdering.CompareAscending));
 		NSArray tabs = (NSArray)storedValueForKey("lessonTabs");
 		if(tabs == null || tabs.count() == 0) return null;
-		return EOSortOrdering.sortedArrayUsingKeyOrderArray(tabs,sorter);
-	}
+		return EOSortOrdering.sortedArrayUsingKeyOrderArray(tabs,tabSorter);
+	}*/
 	
 	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
 

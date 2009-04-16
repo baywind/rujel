@@ -82,3 +82,10 @@ SubDisplay : DisplayAny {
   value = valueOf.item.subDict.value;
   dict = subDict;
 }
+TableContainer : WOGenericContainer {
+  elementName = "table";
+  width = ^width;
+  cellpadding = ^cellpadding;
+  cellspacing = ^cellspacing;
+  align = ^align; 
+}

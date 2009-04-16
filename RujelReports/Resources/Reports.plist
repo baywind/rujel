@@ -11,11 +11,11 @@
 		<key>regime</key>
 		<dict>
 			<key>title</key>
-			<string>Обзор курсов</string>
+			<string>По курсам</string>
 			<key>component</key>
 			<string>CoursesReport</string>
 			<key>group</key>
-			<string>edu</string>
+			<string>report</string>
 			<key>sort</key>
 			<string>20</string>
 		</dict>
@@ -27,6 +27,8 @@
 				<string>Предмет</string>
 				<key>titlePath</key>
 				<string>subjectWithComment</string>
+				<key>escapeHTML</key>
+				<false/>
 				<key>onclick</key>
 				<string>$session.tryLoad</string>
 				<key>disabled</key>
@@ -67,6 +69,17 @@
 				<string>eduGroup.name</string>
 			</dict>
 		</dict>
+	</dict>
+	<key>regimeGroup</key>
+	<dict>
+		<key>title</key>
+		<string>Статистика</string>
+		<key>hover</key>
+		<string>Агрегирующие данные отчеты</string>
+		<key>id</key>
+		<string>report</string>
+		<key>sort</key>
+		<string>30</string>
 	</dict>
 </dict>
 </plist>

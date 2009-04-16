@@ -22,7 +22,8 @@ function toggleSub(id,val) {
 	}
 }
 </script>
-<div onclick = "toggleObj('reportsAvailable');" style = "cursor:pointer;font-size:larger;margin:3px;"><webobject name = "AvailableTitle"/>:</div>
+<div onclick = "toggleObj('reportsAvailable');" style = "font-size:larger;margin:3px;" onmouseover = "dim(this);" onmouseout = "unDim(this);">
+<webobject name = "AvailableTitle"/>:</div>
 <webobject name = "ReportsTable">
 	<tfoot>
 		<tr><td colspan = "3" style = "padding:1ex;"><webobject name = "SubmitButton"/></td>
@@ -45,14 +46,14 @@ function toggleSub(id,val) {
 	</webobject>
 
 </webobject>
-<table><tr>
+<table width = "100%" cellspacing = "0" cellpadding = "0"><tr>
 	<td><webobject name = "Tabs"/></td>
-	<td></td>
+	<td width = "90%"></td>
 </tr><tr>
 	<td class="backfield2 selectionBorder" style = "border-style:solid solid none none;"><webobject name="ClassSelector">
 		<webobject name="ClassListing1"></webobject></webobject><webobject name="TeacherSelector">
 		<webobject name="TeacherSelector2"></webobject></webobject></td>
-	<td class="backfield1">
+	<td class="backfield1 selectionBorder" style = "border-style:solid none none;">
 		<webobject name = "ReportTable"></webobject></td>
 </tr></table>
 </webobject>

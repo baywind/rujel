@@ -114,6 +114,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			if(periods != null && periods.count() > 0) {
 				Enumeration<EduPeriod> enu = periods.objectEnumerator();
 				int days = 0;
+				int totalWeeks = 0;
 				while (enu.hasMoreElements()) {
 					EduPeriod period = (EduPeriod) enu.nextElement();
 					if(date.compare(period.begin()) < 0)
@@ -123,6 +124,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						continue;
 					days += period.daysInPeriod(date);
 					int weeks = days / 7;
+					totalWeeks += weeks;
 					days = days%7;
 					plan += weeks*hours;
 					if(date.compare(period.end()) > 0) {
@@ -132,6 +134,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				result.takeValueForKey(new Integer(plan), "planPre");
 				result.takeValueForKey(new Integer(hours), "maxDeviation");
 				result.takeValueForKey(new Integer(days), "extraDays");
+				result.takeValueForKey(new Integer(totalWeeks), "weeks");
 //				if(days >= 4) {
 //					result.takeValueForKey(Boolean.TRUE, "weekend");
 //				}

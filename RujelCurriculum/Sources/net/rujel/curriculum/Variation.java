@@ -134,10 +134,10 @@ public class Variation extends _Variation implements Reason.Event {
     		return "font-weight:bold;text-align:center;color:#666666;";    		
     	}
     	if(value().intValue() > 0) {
-    		return "font-weight:bold;text-align:left;color:#009933;padding-left:1ex;";
+    		return "font-weight:bold;text-align:left;color:#009933;";
     	}
     	if(value().intValue() < 0) {
-       		return "font-weight:bold;text-align:right;color:#cc3333;padding-right:1ex;";
+       		return "font-weight:bold;text-align:right;color:#cc3333;";
     	}
     	return "text-align:center;";
     }

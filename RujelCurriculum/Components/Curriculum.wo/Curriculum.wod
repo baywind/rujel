@@ -464,6 +464,8 @@ ReportTable : ReportTable {
   rowClass = rowClass;
   cellClass = cellClass;
   currObject = currObject;
+  width = "100%";
+  cellpadding = "1";
 }
 
 IsHead : WOConditional {
@@ -473,4 +475,8 @@ IsHead : WOConditional {
 
 IsRow : WOConditional {
   condition = itemRow;
+}
+
+CanSubmit : WOConditional {
+  condition = session.readAccess.edit.Curriculum;
 }

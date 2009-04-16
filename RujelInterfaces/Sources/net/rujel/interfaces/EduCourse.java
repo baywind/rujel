@@ -29,11 +29,19 @@
 
 package net.rujel.interfaces;
 
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 
 public interface EduCourse extends com.webobjects.eocontrol.EOEnterpriseObject {
 	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath("interfaces.EduCourse",null);
 	public static final String entityName = className.substring(1 + className.lastIndexOf('.'));
+	
+	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
+			new EOSortOrdering("eduGroup",EOSortOrdering.CompareCaseInsensitiveAscending),
+			new EOSortOrdering("cycle",EOSortOrdering.CompareCaseInsensitiveAscending),
+			new EOSortOrdering("comment",EOSortOrdering.CompareCaseInsensitiveAscending),
+			new EOSortOrdering("teacher.person",EOSortOrdering.CompareAscending),
+	});
 
 	public EduCycle cycle();
 	public void setCycle(EduCycle newCycle);

@@ -52,8 +52,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     }
 
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-//		setItemRow(null);
-//		setItemDict(null);
+		setItemRow(null);
+		setItemDict(null);
 		super.appendToResponse(aResponse, aContext);
 	}
 
@@ -108,10 +108,13 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			return (String)valueOf.valueForKeyPath("item.subDict.onclick");
 		return (String)valueOf.valueForKeyPath("item.itemDict.onclick");
 	}
-
+	
 	public WOActionResults select() {
 		if(hasBinding("selectAction"))
 			return (WOActionResults) valueForBinding("selectAction");
+		if(itemDict instanceof NSMutableDictionary)
+			DisplayAny.ValueReader.clearResultCache(
+					(NSMutableDictionary)itemDict, itemRow, true);
 		String nextPage = (String)valueForKeyPath("subDict.nextPage");
 		NSKeyValueCodingAdditions pageDict = (nextPage==null)?itemDict:subDict;
 		if(nextPage == null)

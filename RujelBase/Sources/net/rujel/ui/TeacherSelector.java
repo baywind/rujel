@@ -63,15 +63,20 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		selection = valueForBinding("selection");
-		if(editingContext == null) {
-			editingContext = (EOEditingContext)valueForBinding("editingContext");
-			populate();
-		}
 		item = null;
 		super.appendToResponse(aResponse, aContext);
 		searchMessage = null;
 	}
 
+	public void awake() {
+		super.awake();
+		selection = valueForBinding("selection");
+		if(editingContext == null) {
+			editingContext = (EOEditingContext)valueForBinding("editingContext");
+			populate();
+		}
+	}
+	
 	public boolean synchronizesVariablesWithBindings() {
         return false;
 	}
@@ -212,7 +217,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 					result.addObject(EOUtilities.localInstanceOfObject(editingContext, pers));
 			}
 		}
-		if(selection != null && !result.contains(selection))
+		if(selection instanceof Teacher && !result.contains(selection))
 			result.insertObjectAtIndex(selection, 0);
 		return result;
 	}

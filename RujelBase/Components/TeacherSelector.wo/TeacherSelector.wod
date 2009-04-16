@@ -27,7 +27,7 @@ ChooseSubject : OnClickContainer {
   invokeAction = select;
   onclick = act;
   class = subjectClass;
-  style = "margin:2px;";
+  style = "margin:2px;min-width:12em;";
 }
 
 Subject : WOString {

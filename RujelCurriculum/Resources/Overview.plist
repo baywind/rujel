@@ -166,7 +166,7 @@
 				</dict>
 				<dict>
 					<key>title</key>
-					<string></string>
+					<string>&apos;&amp;nbsp;</string>
 					<key>titleStyle</key>
 					<string>width:20px</string>
 					<key>keyPath</key>
@@ -260,7 +260,9 @@
 					<key>keyPath</key>
 					<string>lesson.course</string>
 					<key>titlePath</key>
-					<string>cycle.subject</string>
+					<string>subjectWithComment</string>
+					<key>escapeHTML</key>
+					<false/>
 				</dict>
 				<dict>
 					<key>title</key>
@@ -419,6 +421,8 @@
 					<string>Предмет</string>
 					<key>keyPath</key>
 					<string>course</string>
+					<key>escapeHTML</key>
+					<false/>
 					<key>titlePath</key>
 					<string>subjectWithComment</string>
 				</dict>

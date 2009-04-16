@@ -491,9 +491,11 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		tmpDict.takeValueForKey(Boolean.TRUE, "inReason");
 		list = currReason.substitutes();
 		sort();
-		tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
-		tmpDict.removeObjectForKey("selectedObjects");
-		tmpDict.removeObjectForKey("reasonsToMoveIn");
+		if(Various.boolForObject(session().valueForKeyPath("readAccess.create.Curriculum"))) {
+			tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
+			tmpDict.removeObjectForKey("selectedObjects");
+			tmpDict.removeObjectForKey("reasonsToMoveIn");
+		}
 	}
 	
 	public void showVariations() {
@@ -505,9 +507,11 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		tmpDict.takeValueForKey(Boolean.TRUE, "inReason");
 		list = currReason.variations();
 		sort();
-		tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
-		tmpDict.removeObjectForKey("selectedObjects");
-		tmpDict.removeObjectForKey("reasonsToMoveIn");
+		if(Various.boolForObject(session().valueForKeyPath("readAccess.create.Curriculum"))) {
+			tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
+			tmpDict.removeObjectForKey("selectedObjects");
+			tmpDict.removeObjectForKey("reasonsToMoveIn");
+		}
 	}
 	
 	public void createReason() {

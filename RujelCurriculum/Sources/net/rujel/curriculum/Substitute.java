@@ -98,13 +98,10 @@ public class Substitute extends _Substitute implements Reason.Event {
 	public void setTeacher(Teacher aValue) {
 		takeStoredValueForKey(aValue, "teacher");
 	}
-/*
-	public EduCourse eduCourse() {
-		return (EduCourse)storedValueForKey("eduCourse");
-	}
-	public void setEduCourse(EduCourse aValue) {
-		takeStoredValueForKey(aValue, "eduCourse");
-	}*/
+
+   public EduCourse course() {
+    	return lesson().course();
+    }
 
 	public void validateForSave() throws ValidationException { 
 		if(teacher() == null || teacher() == lesson().course().teacher()) {
@@ -114,30 +111,12 @@ public class Substitute extends _Substitute implements Reason.Event {
 		}
 		super.validateForSave();
 	}
-	
-/*	protected NamedFlags _flags;
-	public NamedFlags sFlags() {
-		if(_flags == null) {
-			_flags = new NamedFlags(flags().intValue(),flagKeys);
-			_flags.setSyncParams(this, "setFlags");
-		}
-		return _flags;
-	}
-	
-	public void setFlags(Number newFlags) {
-		super.setFlags(new Integer(newFlags.intValue()));
-	}*/
+
 	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 		super.setFactor(BigDecimal.ONE);
-/*		Integer school = null;
-		if(editingContext() instanceof SessionedEditingContext)
-			school = (Integer)valueForKeyPath("editingContext.session.school");
-		if(school == null)
-			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
-		setSchool(school);
-*/	}
+	}
 	
 	public String title() {
 		if(factor().compareTo(BigDecimal.ONE) < 0)//(sFlags().flagForKey("join"))
@@ -195,7 +174,17 @@ public class Substitute extends _Substitute implements Reason.Event {
     	return ec.objectsWithFetchSpecification(fs);
     }
     
-    public EduCourse course() {
-    	return lesson().course();
+    public static Integer countSubstituted(NSArray lessons) {
+    	int result = 0;
+    	if(lessons == null || lessons.count() == 0)
+    		return new Integer(result);
+    	Enumeration enu = lessons.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+			EduLesson les = (EduLesson) enu.nextElement();
+			NSArray subs = (NSArray)les.valueForKey("substitutes");
+			if(subs != null && subs.count() > 0)
+				result++;
+		}
+		return new Integer(result);    	
     }
 }

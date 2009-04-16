@@ -41,6 +41,9 @@ public class ReportsModule {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			;
+		} else if(obj.equals("regimeGroups")) {
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelReports_Reports.regimeGroup");
 		} else if(obj.equals("regimes")) {
 			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.CoursesReport")))
 				return null;

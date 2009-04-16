@@ -108,7 +108,8 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
         	}
         	EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
         }
-        prepareDisplay();
+        //prepareDisplay();
+        modifyList();
     }
     
     protected void checkInDict(NSDictionary dict) {
@@ -129,7 +130,7 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
     
     protected void prepareDisplay() {
         display = new NSMutableArray(defaultDisplay.valueForKey("subject"));
-        if(tabindex == 0)
+        if((curSource==null)?tabindex == 0:curSource instanceof EduGroup)
         	display.addObject(defaultDisplay.valueForKey("teacher"));
         else
         	display.addObject(defaultDisplay.valueForKey("eduGroup"));
@@ -155,11 +156,10 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 		
 	public void setTabSelected(String tabName) {
 		tabindex = tablist.indexOfObject(tabName);
-		curSource = null;
-        if(tabindex == 0)
-        	display.replaceObjectAtIndex(defaultDisplay.valueForKey("teacher"),1);
-        else
-        	display.replaceObjectAtIndex(defaultDisplay.valueForKey("eduGroup"),1);
+		if(curSource == null) {
+        	display.replaceObjectAtIndex(defaultDisplay.valueForKey(
+        			(tabindex == 0)?"teacher":"eduGroup"),1);
+ 		}
 	}
 
 	public void setCurSource(Object newSource) {
@@ -172,6 +172,11 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 			values.takeValueForKey(curSource, "eduGroup");
 		}
 		courses = EOUtilities.objectsMatchingValues(ec, EduCourse.entityName, values);
+		if(courses != null && courses.count() > 1) {
+			courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);  
+		}
+		display.replaceObjectAtIndex(defaultDisplay.valueForKey(
+				(curSource instanceof EduGroup)?"teacher":"eduGroup"),1);
 	}
 	
 	public void modifyList() {
@@ -190,19 +195,23 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 		while (enu.hasMoreElements()) {
 			NSMutableDictionary rDict = (NSMutableDictionary) enu.nextElement();
 			NSMutableArray sub = (NSMutableArray) rDict.valueForKey("subParams");
-			EOSortOrdering.sortArrayUsingKeyOrderArray(sub, ModulesInitialiser.sorter);
+			if(sub != null)
+				EOSortOrdering.sortArrayUsingKeyOrderArray(sub, ModulesInitialiser.sorter);
 			if(!Various.boolForObject(rDict.valueForKey("active")))
 				continue;
+			DisplayAny.ValueReader.clearResultCache(rDict, null, true);
 			rDict = rDict.mutableClone();
 			display.addObject(rDict);
-			Enumeration subEnu = sub.objectEnumerator();
-			sub = new NSMutableArray();
-			while (subEnu.hasMoreElements()) {
-				NSMutableDictionary sDict = (NSMutableDictionary) subEnu.nextElement();
-				if(Various.boolForObject(sDict.valueForKey("active")))
-					sub.addObject(sDict);
+			if(sub != null) {
+				Enumeration subEnu = sub.objectEnumerator();
+				sub = new NSMutableArray();
+				while (subEnu.hasMoreElements()) {
+					NSMutableDictionary sDict = (NSMutableDictionary) subEnu.nextElement();
+					if(Various.boolForObject(sDict.valueForKey("active")))
+						sub.addObject(sDict);
+				}
+				rDict.takeValueForKey(sub, "subParams");
 			}
-			rDict.takeValueForKey(sub, "subParams");
 		}
 	}
 
