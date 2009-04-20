@@ -210,6 +210,8 @@ public class MarkArchive extends _MarkArchive
 			return;
 		}
 		EOQualifier qual = archiveQualifier(usedEntity, identifierDict);
+		if(qual == null)
+			return;
 		Object[] inserted = ec.insertedObjects().objects();
 		for (int i = 0; i < inserted.length; i++) {
 			if(inserted[i] != this && inserted[i] instanceof MarkArchive
@@ -379,6 +381,11 @@ public class MarkArchive extends _MarkArchive
 				if(gid instanceof EOKeyGlobalID) {
 					value = ((EOKeyGlobalID)gid).keyValues()[0];
 				} else {
+					Object[] args = new Object[] {"?",gid,pKey};
+					if(ec instanceof SessionedEditingContext)
+						args[0] = ((SessionedEditingContext)ec).session();
+					Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
+							"Uninitialised values in dict",args);
 					//throw new IllegalArgumentException("Uninitialised values in dict");
 					return null;
 				}

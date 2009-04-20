@@ -508,7 +508,7 @@ st:		while (stEnu.hasMoreElements()) {
 								valueForKeyPath("strings.RujelContacts_Contacts.failedMailing"));
 						message.append(student.person().firstName());
 						message.append(' ').append(student.person().lastName());
-						callerSession.takeValueForKey(message, "message");
+						callerSession.takeValueForKey(message.toString(), "message");
 					}
 				}
 

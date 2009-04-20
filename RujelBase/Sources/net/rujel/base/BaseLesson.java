@@ -120,6 +120,10 @@ public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme
 	public NSArray allValues() {
 		return notes();
 	}
+	public int count() {
+		return notes().count();
+	}
+	
 	public EOEnterpriseObject forPersonLink(PersonLink student) {
 		return lessonNoteforStudent(this,student);
 	}

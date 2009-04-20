@@ -38,6 +38,8 @@ public interface PerPersonLink {
 	
 	public Object forPersonLink(PersonLink pers);
 	
+	public int count();
+	
 	public static class Dictionary implements PerPersonLink {
 		private NSDictionary storage;
 		
@@ -51,6 +53,10 @@ public interface PerPersonLink {
 		
 		public Object forPersonLink(PersonLink pers) {
 			return storage.objectForKey(pers);
+		}
+		
+		public int count() {
+			return storage.count();
 		}
 	}
 }

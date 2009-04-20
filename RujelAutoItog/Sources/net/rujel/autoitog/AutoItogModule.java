@@ -639,13 +639,15 @@ cycleStudents:
 		EOEditingContext ec = student.editingContext();
 		
 		NSArray eduPeriods = (NSArray)reporter.valueForKey("eduPeriods");
-		if(eduPeriods == null) {
+		if(eduPeriods == null || eduPeriods.count() == 0) {
 			eduPeriods = EOUtilities.objectsMatchingKeyAndValue(ec,"EduPeriod", "eduYear",eduYear);
 			reporter.takeValueForKey(eduPeriods,"eduPeriods");
 		} else {
 			eduPeriods = EOUtilities.localInstancesOfObjects(ec,eduPeriods);
 		}
 		EOQualifier perQual = Various.getEOInQualifier("eduPeriod", eduPeriods);
+		if(perQual == null)
+			return null;
 		NSMutableArray quals = new NSMutableArray(perQual);
 		EOQualifier qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
 		quals.addObject(qual);

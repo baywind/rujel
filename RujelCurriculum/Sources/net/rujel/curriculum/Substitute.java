@@ -119,7 +119,9 @@ public class Substitute extends _Substitute implements Reason.Event {
 	}
 	
 	public String title() {
-		if(factor().compareTo(BigDecimal.ONE) < 0)//(sFlags().flagForKey("join"))
+		if(factor() == null)
+			return "?";
+		if(factor().compareTo(BigDecimal.ONE) < 0)
 			return (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.Substitute.Join");
 		return (String)WOApplication.application().valueForKeyPath(

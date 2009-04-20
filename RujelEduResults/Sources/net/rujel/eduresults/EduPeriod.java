@@ -288,6 +288,9 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		}
 		return itogs;
 	}
+	public int count() {
+		return allValues().count();
+	}
 	
 	public ItogMark forPersonLink(PersonLink student) {
 		return ItogMark.getItogMark(course.cycle(),this,(Student)student,allValues());

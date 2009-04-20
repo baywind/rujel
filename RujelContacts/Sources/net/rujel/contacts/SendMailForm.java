@@ -74,21 +74,35 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		}
 		ec = (EOEditingContext)dict.valueForKey("editingContext");
 		NSArray students = (NSArray)dict.valueForKey("students");
-		if(students == null || students.count() == 0)
+		if(students == null || students.count() == 0) {
+			message = (String)application().valueForKeyPath(
+				"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
 			return;
+		}
 		if(ec == null)
 			ec = ((EOEnterpriseObject)students.objectAtIndex(0)).editingContext();
 		contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
-		if(contacts == null)
+		message = null;
+		if(contacts == null || contacts.count() == 0) {
+			message = (String)application().valueForKeyPath(
+				"strings.RujelContacts_Contacts.SendMailForm.noAddresses");
 			return;
-		students = contacts.allValues();
-		if(students == null || students.count() == 0)
-			return;
+		}
 		Enumeration enu = students.objectEnumerator();
-		NSMutableArray allContacts = new NSMutableArray();
+		//NSMutableArray allContacts = new NSMutableArray();
 		while (enu.hasMoreElements()) {
-			NSArray cur = (NSArray) enu.nextElement();
-			allContacts.addObjectsFromArray(cur);
+			Student stu = (Student)enu.nextElement();
+			NSArray cur = (NSArray) contacts.forPersonLink(stu);
+			if(cur == null || cur.count() == 0) {
+				if(message == null)
+					message = (String)application().valueForKeyPath(
+						"strings.RujelContacts_Contacts.SendMailForm.noAddressesFor") + ": ";
+				else
+					message = message + ", ";
+				message = message + Person.Utility.fullName(stu, true, 2, 2, 0);
+				continue;
+			}
+			//allContacts.addObjectsFromArray(cur);
 			Enumeration cts = cur.objectEnumerator();
 			while (cts.hasMoreElements()) {
 				Contact c = (Contact) cts.nextElement();
@@ -97,10 +111,11 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		subjStart = "RUJEL: " + dict.valueForKeyPath("eduGroup.name") + " : ";
-		message = null;
 	}
 		
 	public NSArray persContacts() {
+		if(contacts == null)
+			return null;
 		return (NSArray)contacts.forPersonLink(persItem);
 	}
 	

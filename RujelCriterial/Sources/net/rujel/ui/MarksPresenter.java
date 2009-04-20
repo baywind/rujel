@@ -238,7 +238,7 @@ public class MarksPresenter extends NotePresenter {
 			result.takeValueForKey(initData,"identifierDictionary");
 		result.takeValueForKey(usedCriteria(), "keys");
 		StringBuffer description = new StringBuffer();
-		if(lesson().theme() != null)
+		if(lesson() != null && lesson().theme() != null)
 			description.append(lesson().theme()).append(" : ");
 		description.append(Person.Utility.fullName(student(), true, 2, 2, 0));
 		result.takeValueForKey(description.toString(), "description");

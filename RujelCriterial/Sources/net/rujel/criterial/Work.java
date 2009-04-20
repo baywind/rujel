@@ -320,7 +320,10 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	public NSArray allValues() {
 		return marks();
 	}
-	
+	public int count() {
+		return marksIndex().count();
+	}
+
 	public Mark[] forPersonLink(PersonLink pers) {
 		return (Mark[])marksIndex().objectForKey(pers);
 	}
