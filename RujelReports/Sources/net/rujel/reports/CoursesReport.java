@@ -226,4 +226,12 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 			return "display:none;";
 		return null;
 	}
+	
+	public WOActionResults export() {
+		WOComponent exportPage = pageWithName("ReportTable");
+		exportPage.takeValueForKey(courses, "list");
+		exportPage.takeValueForKey(display, "properties");
+ 		exportPage.takeValueForKey("'CoursesReport'yyMMdd", "filenameFormatter");
+		return exportPage;
+	}
 }

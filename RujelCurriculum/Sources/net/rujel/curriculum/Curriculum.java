@@ -661,4 +661,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return Boolean.FALSE;
 		return session().valueForKeyPath("readAccess.create.Reason");
 	}
+	
+	public WOActionResults export() {
+		WOComponent exportPage = pageWithName("ReportTable");
+		exportPage.takeValueForKey(list, "list");
+		exportPage.takeValueForKey(currTab.valueForKey("properties"), "properties");
+    	String entityName = (String)currTab.valueForKey("entity");
+		exportPage.takeValueForKey('\'' + entityName + "'yyMMdd", "filenameFormatter");
+		return exportPage;
+	}
 }

@@ -438,23 +438,4 @@ public class Overview extends WOComponent {
 		nextPage.takeValueForKey(per, "period");
 		return nextPage;
 	}
-	
-	protected WOComponent subsReport;
-	public WOComponent subsReport() {
-		if(subsReport == null) {
-			subsReport = pageWithName("SubsReport");
-		}
-		subsReport.ensureAwakeInContext(context());
-		subsReport.takeValueForKey(since, "begin");
-		subsReport.takeValueForKey(to, "end");
-		return subsReport;
-	}
-	
-	public String subTitle() {
-		if(!Various.boolForObject(session().valueForKeyPath("readAccess.read.SubsReport")))
-			return null;
-		String result = (String)application().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.subsReport");
-		return String.format(result, subsReport().valueForKeyPath("substitutes.count"));
-	}
 }
