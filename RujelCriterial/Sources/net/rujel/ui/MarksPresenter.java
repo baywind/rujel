@@ -145,7 +145,8 @@ public class MarksPresenter extends NotePresenter {
 					args.takeValueForKey(parent().valueForKey("currLesson"), "currLesson");
 					args.takeValueForKey(parent().valueForBinding("present"), "present");
 					args.takeValueForKey(parent().valueForKey("lessonsListing"), "lessonsListing");
-					args.takeValueForKey(Thread.currentThread().getStackTrace(), "stackTrace");
+					args.takeValueForKey(
+							new NSArray(Thread.currentThread().getStackTrace()), "stackTrace");
 					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",args);
 				}
 			}
