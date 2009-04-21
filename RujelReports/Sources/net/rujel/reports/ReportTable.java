@@ -271,4 +271,12 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		}
 		return (String)valueOf.valueForKeyPath("item.itemDict.class");
 	}
+	
+	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
+		setItemRow(null);
+		setItemDict(null);
+		list = (NSArray)valueForBinding("list");
+		properties = (NSArray)valueForBinding("properties");
+		return super.invokeAction(aRequest, aContext);
+	}
 }
