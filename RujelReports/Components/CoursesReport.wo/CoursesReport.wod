@@ -1,5 +1,8 @@
 PageWrapper : PageWrapper {
 	title = title;
+	resourcesFramework = "RujelBase";
+	scriptResource = "sorting.js";
+	styles = ".sorting {display:none;}";
 }
 Title : WOString {
   value = title;
@@ -43,7 +46,8 @@ ReportTable : ReportTable {
 
 Form : WOForm {
   class = "backfield2 selectionBorder";
-  style = "position:absolute;right:5em;top:5em;width:12em;";
+  style = "position:absolute;right:5em;top:5em;width:14em;";
+  onsubmit = "enumerate(this,'sorting',1);return true;";
 }
 
 ReportsRepetition : WORepetition {
@@ -57,10 +61,16 @@ ItemCheckBox : WOCheckBox {
   onclick = "toggleReport(this.name,this.checked);";
 }
 
-ItemSorting : WOHiddenField {
+ItemSorting : WOTextField {
   value = item.sort;
+  numberformat = "0";
+  class = "sorting";
 }
-
+SubSorting : WOTextField {
+  value = subItem.sort;
+  numberformat = "0";
+  class = "sorting";
+}
 ShortTitle : WOString {
   value = item.short;
   escapeHTML = false;
@@ -94,6 +104,7 @@ ReportCell : OnClickContainer {
   onclick = session.tryLoad;
   align = "left";
   style = "padding-left:4px;";
+  colspan = "2";
 }
 
 SubCheckBox : WOCheckBox {
@@ -112,8 +123,8 @@ SubTitle : WOString {
   escapeHTML = false;
 }
 
-SubsRow : WOGenericContainer {
-  elementName = "tr";
+SubsContainer : WOGenericContainer {
+  elementName = "tbody";
   id = item.id;
   style = subRowStyle;
 }
@@ -124,13 +135,44 @@ AvailableTitle : WOString {
 }
 
 ReportsTable : WOGenericContainer {
-  elementName = "table";
+  elementName = "div";
   id = "reportsAvailable";
-  width = "100%";
   style = tableStyle;
 }
 
 ExportButton : WOHyperlink {
   action = export;
   string = application.strings.RujelReports_Reports.export;
+}
+
+MoveUp: WOImage {
+	filename = "up.png";
+	framework ="RujelBase";
+	align = "center";
+	valign = "top";
+	onclick="up(get(this,'table',0));";
+	style = "cursor:pointer;";
+}
+MoveDown: WOImage {
+	align = "center";
+	filename = "down.png";
+	framework ="RujelBase";
+	onclick= "down(get(this,'table',0));";
+	style = "cursor:pointer;";
+}
+
+MoveSubUp: WOImage {
+	filename = "up.png";
+	framework ="RujelBase";
+	align = "center";
+	valign = "top";
+	onclick="up(get(this,'tr',0));";
+	style = "cursor:pointer;";
+}
+MoveSubDown: WOImage {
+	align = "center";
+	filename = "down.png";
+	framework ="RujelBase";
+	onclick= "down(get(this,'tr',0));";
+	style = "cursor:pointer;";
 }
