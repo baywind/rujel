@@ -29,12 +29,6 @@
 
 package net.rujel.reports;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.util.Enumeration;
-import java.util.logging.Logger;
-
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Teacher;
@@ -67,65 +61,13 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
     public CoursesReport(WOContext context) {
         super(context);
 
-		ec = new SessionedEditingContext(session());
+		ec = new SessionedEditingContext(context.session());
 		NSArray availableReports = (NSArray)session().valueForKeyPath("modules.CoursesReport");
 		reports = PlistReader.cloneArray(availableReports, true);
         
-        String reportsDirPath = SettingsReader.stringForKeyPath("reportsDir",
-				"LOCALROOT/Library/WebObjects/Configuration/RujelReports");
-        reportsDirPath = Various.convertFilePath(reportsDirPath);
-        File reportsDir = new File(reportsDirPath, "CoursesReport");
-        if (reportsDir.isDirectory()) {
-        	File[] files = reportsDir.listFiles(new FileFilter() {
-        		public boolean accept(File file) {
-        			return (file.isFile() && file.getName().endsWith(
-        			".plist"));
-        		}
-        	});
-        	for (int i = 0; i < files.length; i++) {
-        		try {
-        			FileInputStream fis = new FileInputStream(files[i]);
-        			NSData data = new NSData(fis, fis.available());
-        			fis.close();
-        			String encoding = System.getProperty(
-        					"PlistReader.encoding", "utf8");
-        			Object plist = NSPropertyListSerialization
-        							.propertyListFromData(data, encoding);
-        			if(plist instanceof NSDictionary) {
-        				checkInDict((NSDictionary)plist);
-        			} else if (plist instanceof NSArray) {
-        				Enumeration enu = ((NSArray)plist).objectEnumerator();
-        				while (enu.hasMoreElements()) {
-							NSDictionary dict = (NSDictionary) enu.nextElement();
-							checkInDict(dict);
-						}
-        			}
-        		} catch (Exception e) {
-        			Object [] args = new Object[] {session(),e,files[i].getAbsolutePath()};
-        			Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
-        					"Error reading CoursesReport plist",args);
-        		}
-        	}
-        	EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
-        }
+		reports.addObjectsFromArray(ReportsModule.reportsFromDir("CoursesReport",context));
         //prepareDisplay();
         //modifyList();
-    }
-    
-    protected void checkInDict(NSDictionary dict) {
-		NSArray checkAccess = (NSArray)dict.valueForKey("checkAccess");
-		if(checkAccess != null && checkAccess.count() > 0) {
-			NSKeyValueCodingAdditions readAccess = 
-				(NSKeyValueCodingAdditions)session().valueForKey("readAccess");
-			Enumeration enu = checkAccess.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				String acc = (String) enu.nextElement();
-				if(Various.boolForObject(
-						readAccess.valueForKeyPath("_read." + acc)))
-					return;
-			}
-		}
-		reports.addObject(dict);    	
     }
     
     public NSMutableArray prepareDisplay() {

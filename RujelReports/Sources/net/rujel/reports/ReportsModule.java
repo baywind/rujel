@@ -27,10 +27,27 @@
 
 package net.rujel.reports;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.util.Enumeration;
+import java.util.logging.Logger;
+
+import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOSession;
+import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSData;
+import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSPropertyListSerialization;
 
 public class ReportsModule {
 	
@@ -45,11 +62,93 @@ public class ReportsModule {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelReports_Reports.regimeGroup");
 		} else if(obj.equals("regimes")) {
-			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.CoursesReport")))
-				return null;
-			return WOApplication.application().valueForKeyPath(
-					"strings.RujelReports_Reports.CoursesReport.regime");
+			return regimes(ctx);
 		}
 		return null;
 	}
+	
+	public static Object regimes(WOContext ctx) {
+		Object result = null;
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.CoursesReport")))
+			result = WOApplication.application().valueForKeyPath(
+				"strings.RujelReports_Reports.CoursesReport.regime");
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.CustomReport"))) {
+			Object res2 = WOApplication.application().valueForKeyPath(
+					"strings.RujelReports_Reports.CustomReport.regime");
+			if(result == null)
+				result = res2;
+			else
+				result = new NSArray(new Object[] {result,res2});
+		}
+		return result;
+	}
+
+    public static NSMutableArray reportsFromDir(String dir,WOContext context) {
+    	NSMutableArray reports = new NSMutableArray();
+    	String reportsDirPath = SettingsReader.stringForKeyPath("reportsDir",
+    	"LOCALROOT/Library/WebObjects/Configuration/RujelReports");
+    	reportsDirPath = Various.convertFilePath(reportsDirPath);
+    	File reportsDir = new File(reportsDirPath, dir);
+    	if (reportsDir.isDirectory()) {
+    		File[] files = reportsDir.listFiles(new FileFilter() {
+    			public boolean accept(File file) {
+    				return (file.isFile() && file.getName().endsWith(
+    				".plist"));
+    			}
+    		});
+    		WOSession session = context.session();
+  		NSKeyValueCodingAdditions readAccess = 
+  					(NSKeyValueCodingAdditions)session.valueForKey("readAccess");
+   		for (int i = 0; i < files.length; i++) {
+    			try {
+    				FileInputStream fis = new FileInputStream(files[i]);
+    				NSData data = new NSData(fis, fis.available());
+    				fis.close();
+    				String encoding = System.getProperty(
+    						"PlistReader.encoding", "utf8");
+    				Object plist = NSPropertyListSerialization
+    				.propertyListFromData(data, encoding);
+    				if(plist instanceof NSDictionary) {
+    					if(checkInDict((NSDictionary)plist,readAccess))
+    						reports.addObject(plist);
+    				} else if (plist instanceof NSArray) {
+    					Enumeration enu = ((NSArray)plist).objectEnumerator();
+    					while (enu.hasMoreElements()) {
+    						NSDictionary dict = (NSDictionary) enu.nextElement();
+    						if(checkInDict(dict,readAccess))
+    							reports.addObject(dict);
+    					}
+    				}
+    			} catch (Exception e) {
+    				Object [] args = new Object[] {session,e,files[i].getAbsolutePath()};
+    				Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
+    						"Error reading CoursesReport plist",args);
+    			}
+    		}
+    		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
+    	}
+    	return reports;
+    }
+
+    protected static boolean checkInDict(NSDictionary dict,
+    		NSKeyValueCodingAdditions readAccess) {
+    	NSArray checkAccess = (NSArray)dict.valueForKey("checkAccess");
+    	if(checkAccess != null && checkAccess.count() > 0) {
+//  		NSKeyValueCodingAdditions readAccess = 
+//  		(NSKeyValueCodingAdditions)session.valueForKey("readAccess");
+    		Enumeration enu = checkAccess.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+    			String acc = (String) enu.nextElement();
+    			if(Various.boolForObject(
+    					readAccess.valueForKeyPath("_read." + acc)))
+    				return false;
+    		}
+    	} else {
+    		String entity = (String)dict.valueForKey("entity");
+    		if(entity != null)
+    			return Various.boolForObject(readAccess.valueForKeyPath("read." + entity));
+    	}
+    	//reports.addObject(dict);
+    	return true;
+    }
 }

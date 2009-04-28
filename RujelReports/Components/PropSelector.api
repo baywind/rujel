@@ -16,5 +16,6 @@
             <unsettable name="active"/>
         </validation>
     <binding defaults="Boolean" name="initDefault"/>
+    <binding name="style"/>
     </wo>
 </wodefinitions>

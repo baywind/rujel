@@ -88,6 +88,24 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>CustomReport</key>
+	<dict>
+		<key>title</key>
+		<string>Выборки</string>
+		<key>available</key>
+		<string>Доступные выборки</string>
+		<key>regime</key>
+		<dict>
+			<key>title</key>
+			<string>Выборки</string>
+			<key>component</key>
+			<string>CustomReport</string>
+			<key>group</key>
+			<string>report</string>
+			<key>sort</key>
+			<string>10</string>
+		</dict>
+	</dict>
 	<key>regimeGroup</key>
 	<dict>
 		<key>title</key>

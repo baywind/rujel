@@ -181,6 +181,7 @@ PropSelector : PropSelector {
   active = display;
   available = reports;
   hide = hideSelector;
+  style = "position:absolute;right:5em;top:5em;width:14em;";
   forceActive = prepareDisplay;
   initDefault = true;
 }

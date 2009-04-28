@@ -1,0 +1,20 @@
+PageWrapper : PageWrapper {
+  title = application.strings.RujelReports_Reports.CustomReport.title;
+  resourcesFramework = "RujelBase";
+  scriptResource = "sorting.js";
+  styles = ".sorting {display:none;}";
+}
+Title : WOString {
+  value = title;
+  escapeHTML = false;
+}
+
+ReportsList : Tabs {
+  currTab = currReport;
+  tablist = reports;
+  idAttribute = "title";
+  titleAttribute = "title";
+  vertical = true;
+  hoverAttribute = "description";
+  onClick = session.tryLoad;
+}
