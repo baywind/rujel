@@ -109,7 +109,7 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
         	EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
         }
         //prepareDisplay();
-        modifyList();
+        //modifyList();
     }
     
     protected void checkInDict(NSDictionary dict) {
@@ -128,12 +128,13 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 		reports.addObject(dict);    	
     }
     
-    protected void prepareDisplay() {
-        display = new NSMutableArray(defaultDisplay.valueForKey("subject"));
+    public NSMutableArray prepareDisplay() {
+    	NSMutableArray forceDisplay = new NSMutableArray(defaultDisplay.valueForKey("subject"));
         if((curSource==null)?tabindex == 0:curSource instanceof EduGroup)
-        	display.addObject(defaultDisplay.valueForKey("teacher"));
+        	forceDisplay.addObject(defaultDisplay.valueForKey("teacher"));
         else
-        	display.addObject(defaultDisplay.valueForKey("eduGroup"));
+        	forceDisplay.addObject(defaultDisplay.valueForKey("eduGroup"));
+        return forceDisplay;
     }
     
     public String title() {
@@ -179,7 +180,7 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 				(curSource instanceof EduGroup)?"teacher":"eduGroup"),1);
 	}
 	
-	public void modifyList() {
+/*	public void modifyList() {
 		prepareDisplay();
 		if(item != null) {
 			reports.takeValueForKey(Boolean.FALSE, "active");
@@ -220,11 +221,10 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 			return null;
 		return "display:none;";
 	}
+	*/
 
-	public String tableStyle() {
-		if(display != null && display.count() > 2)
-			return "display:none;";
-		return null;
+	public Boolean hideSelector() {
+		return new Boolean(display != null && display.count() > 2);
 	}
 	
 	public WOActionResults export() {
