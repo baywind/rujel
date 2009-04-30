@@ -1,0 +1,58 @@
+TextField : WOTextField {
+  value = value;
+  size = valueOf.paramsDict.itemDict.fieldSize;
+  onkeypress = onkeypress;
+  formatter = formatter;
+}
+
+SecondField : WOTextField {
+  value = secondValue;
+  size = valueOf.paramsDict.itemDict.fieldSize;
+  onkeypress = onkeypress;
+  formatter = formatter;
+}
+
+ShowField : WOConditional {
+  condition = showField;
+}
+
+ShowSelect : WOConditional {
+  condition = itemDict.select;
+}
+
+PopUpButton : WOPopUpButton {
+  list = valueOf.paramsDict.itemDict.select;
+  selection = value;
+  item = item;
+  displayString = valueOf.item.itemDict.displayString;
+  noSelectionString = valueOf.paramsDict.itemDict.noSelectionString;
+}
+
+IsPopup : WOConditional {
+  condition = itemDict.popup;
+}
+
+PopupCaller : OnClickContainer {
+  elementName = "span";
+  class = "button";
+  onclick = "ajaxPost();";
+}
+
+PopupPresenter : DisplayAny {
+  value = value;
+  dict = itemDict;
+}
+
+IsRange : WOConditional {
+  condition = itemDict.range;
+}
+
+Sign : WOString {
+  value = sign;
+  escapeHTML = false;
+}
+
+SubmitButton : WOSubmitButton {
+  action = selectorPopup;
+  style = "display:none;";
+}

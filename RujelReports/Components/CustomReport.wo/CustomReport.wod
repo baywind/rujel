@@ -18,3 +18,53 @@ ReportsList : Tabs {
   hoverAttribute = "description";
   onClick = session.tryLoad;
 }
+
+Parameters : WORepetition {
+  list = currReport.params;
+  item = item;
+}
+
+ParamTitle : WOString {
+  value = item.title;
+  escapeHTML = false;
+}
+
+ParamContainer : WOGenericContainer {
+  elementName = "td";
+  title = item.hover;
+}
+
+Parameter : Parameter {
+  itemDict = item;
+  paramsDict = params;
+  editingContext = ec;
+}
+
+SearchForm : WOForm {
+}
+
+Description : WOString {
+  value = currReport.description;
+  escapeHTML = false;
+}
+
+ReportTable : ReportTable {
+  list = list;
+  properties = display;
+  rowClass = "ungerade";
+}
+
+SubmitButton : WOSubmitButton {
+  action = go;
+}
+
+PropSelector : PropSelector {
+  active = display;
+  available = currReport.properties;
+  hide = true;
+  style = "position:absolute;right:5em;top:5em;width:14em;";
+  initDefault = true;
+}
+ReportSelected : WOConditional {
+  condition = currReport;
+}

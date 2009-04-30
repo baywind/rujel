@@ -13,47 +13,25 @@
 		<dict>
 			<key>title</key>
 			<string>Период</string>
-			<key>presenter</key>
-			<string>WOPopUpButton</string>
-			<key>takeValuesFromRequest</key>
-			<string>true</string>
-			<key>invokeAction</key>
-			<string>false</string>
-			<key>presenterBindings</key>
-			<dict>
-				<key>list</key>
-				<string>$session.modules.periods</string>
-				<key>item</key>
-				<string>.item</string>
-				<key>displayString</key>
-				<string>.item.title</string>
-				<key>selection</key>
-				<string>.period</string>
-			</dict>
+			<key>attribute</key>
+			<string>eduPeriod</string>
+			<key>select</key>
+			<string>$session.modules.periods</string>
+			<key>displayString</key>
+			<string>.title</string>
 		</dict>
 		<dict>
 			<key>title</key>
 			<string>Величина</string>
-			<key>presenter</key>
-			<string>WOPopUpButton</string>
-			<key>takeValuesFromRequest</key>
-			<string>true</string>
-			<key>invokeAction</key>
-			<string>false</string>
-			<key>presenterBindings</key>
-			<dict>
-				<key>list</key>
-				<string>$session.modules.periods</string>
-				<key>item</key>
-				<string>.item</string>
-				<key>displayString</key>
-				<string>.item.title</string>
-				<key>selection</key>
-				<string>.period</string>
-			</dict>
+			<key>attribute</key>
+			<string>value</string>
+			<key>formatter</key>
+			<string>0.#</string>
+			<key>fieldSize</key>
+			<integer>3</integer>
 		</dict>
 	</array>
-	<key>qualifier</key>
+	<key>_qualifier</key>
 	<dict>
 		<key>args</key>
 		<array>
@@ -77,6 +55,12 @@
 			<string>eduCourse.eduGroup</string>
 			<key>titlePath</key>
 			<string>name</string>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<string>10</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -98,6 +82,12 @@
 				<key>second</key>
 				<string>0</string>
 			</dict>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<string>20</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -108,6 +98,12 @@
 			<string>subjectWithComment</string>
 			<key>escapeHTML</key>
 			<false/>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<string>30</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -131,6 +127,10 @@
 			</dict>
 			<key>active</key>
 			<false/>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>sort</key>
+			<string>40</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -139,6 +139,10 @@
 			<string>mark</string>
 			<key>style</key>
 			<string>text-align:center;font-weight:bold;</string>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<string>50</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -147,12 +151,22 @@
 			<string>value</string>
 			<key>titlePath</key>
 			<string>stripTrailingZeros</string>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<string>60</string>
 		</dict>
 		<dict>
 			<key>title</key>
 			<string>Выполнено</string>
 			<key>keyPath</key>
 			<string>complete</string>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<string>70</string>
 		</dict>
 	</array>
 </dict>

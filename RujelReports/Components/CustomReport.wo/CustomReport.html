@@ -1,6 +1,27 @@
 <webobject name = "PageWrapper">
 <h1><webobject name = "Title"/></h1>
-<div class = "selectionBorder" style = "float:left;width:12em;border-style:none none none solid;">
-<webobject name = "ReportsList">
+<div class = "selectionBorder" style = "float:left;width:12em;border-style:none solid none none;">
+<webobject name = "ReportsList"/>
+</div>
+<webobject name = "ReportSelected">
+	<webobject name = "Description"/>
+	<webobject name = "SearchForm">
+		<table>
+		<thead><tr>
+			<th></th><th></th>
+		</tr></thead><tfoot>
+		<tr><td colspan = "2"><webobject name = "SubmitButton"/></td></tr>
+		</tfoot>
+		<tbody><webobject name = "Parameters">
+		<tr><webobject name = "ParamContainer"><webobject name = "ParamTitle"/></webobject>
+			<td><webobject name = "Parameter"/></td>
+		</webobject></tbody>
+		</table>
+	</webobject>
+	<webobject name = "PropSelector"/>
+	</webobject>
+
+<div class = "backfield2">
+<webobject name = "ReportTable"></webobject>
 </div>
 </webobject>

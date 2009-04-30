@@ -279,4 +279,11 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		properties = (NSArray)valueForBinding("properties");
 		return super.invokeAction(aRequest, aContext);
 	}
+	public void takeValuesFromRequest(WORequest aRequest, WOContext aContext) {
+		setItemRow(null);
+		setItemDict(null);
+		list = (NSArray)valueForBinding("list");
+		properties = (NSArray)valueForBinding("properties");
+		super.takeValuesFromRequest(aRequest, aContext);
+	}
 }
