@@ -35,7 +35,7 @@ IsPopup : WOConditional {
 PopupCaller : OnClickContainer {
   elementName = "span";
   class = "button";
-  onclick = "ajaxPost();";
+  onclick = "ajaxPost(this.getElementsByTagName('input')[0],event);";
 }
 
 PopupPresenter : DisplayAny {
@@ -54,5 +54,18 @@ Sign : WOString {
 
 SubmitButton : WOSubmitButton {
   action = selectorPopup;
-  style = "display:none;";
+  onclick = "ajaxPost(this,event);return false;";
+  value = application.strings.RujelReports_Reports.choose;
+}
+
+HasValue : WOConditional {
+  condition = value;
+}
+
+ClearParam : WOImageButton {
+  action = clearParam;
+  framework = "RujelBase";
+  filename = "cross.png";
+  height = "8";
+  width = "8";
 }

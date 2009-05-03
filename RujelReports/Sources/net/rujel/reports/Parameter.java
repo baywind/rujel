@@ -1,6 +1,7 @@
 package net.rujel.reports;
 
 import java.text.Format;
+import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
 import net.rujel.reusables.DisplayAny;
@@ -10,6 +11,7 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
@@ -52,7 +54,6 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		_attrib = (String)itemDict().valueForKey("attribute");
 		return _attrib;
 	}
-	
     
     public Object value() {
     	boolean range = Various.boolForObject(itemDict().valueForKey("range"));
@@ -91,7 +92,7 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     public void setSecondValue(Object value) {
     	if(value == null)
     		value = NullValue;
-    	String attribute = "min_" + attribute();
+    	String attribute = "max_" + attribute();
     	paramsDict().takeValueForKey(value, attribute);
     }
 
@@ -142,6 +143,10 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		selector.takeValueForKey(dict, "dict");
 		return selector;
 	}
+	
+	public void clearParam() {
+		paramsDict().takeValueForKey(null, attribute());
+	}
 	    
 	public void reset() {
 		_paramsDict = null;
@@ -159,24 +164,45 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public static EOQualifier qualForParam(
-			NSKeyValueCoding itemDict, NSKeyValueCoding params) {
-		if(itemDict == null || params == null)
+			NSKeyValueCoding itemDict, NSKeyValueCoding params,WOComponent page) {
+		if(itemDict == null)
 			return null;
-    	boolean range = Various.boolForObject(itemDict.valueForKey("range"));
+		String selectorString = (String)itemDict.valueForKey("qualifierFormat");
+		if (selectorString != null) {
+			NSArray args = (NSArray) itemDict.valueForKey("args");
+			if (args != null && args.count() > 0) {
+				Enumeration enu = args.objectEnumerator();
+				args = new NSMutableArray();
+				while (enu.hasMoreElements()) {
+					Object arg = enu.nextElement();
+					Object param = DisplayAny.ValueReader.evaluateValue(arg,
+							"params", page);
+					if (param == null)
+						param = NullValue;
+					((NSMutableArray) args).addObject(param);
+				}
+			}
+			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+					selectorString, args);
+			return qual;
+		}
+		if(params == null)
+			return null;
+		boolean range = Various.boolForObject(itemDict.valueForKey("range"));
+		selectorString = (String)itemDict.valueForKey("qualifierSelector");
 		String attrib = (String)itemDict.valueForKey("attribute");
-		String selectorString = (String)itemDict.valueForKey("qualifierSelector");
 		if(range) {
 			if(selectorString != null && selectorString.indexOf('=') < 0)
 				range = false;
 			Object min = params.valueForKey("min_" + attrib);
 			Object max = params.valueForKey("max_" + attrib);
 			NSMutableArray quals = new NSMutableArray();
-			if(min != null || min != NullValue) {
+			if(min != null && min != NullValue) {
 				quals.addObject(new EOKeyValueQualifier(attrib,
 						(range)?EOQualifier.QualifierOperatorGreaterThanOrEqualTo
 								:EOQualifier.QualifierOperatorGreaterThan,min));
 			}
-			if(max != null || max != NullValue) {
+			if(max != null && max != NullValue) {
 				quals.addObject(new EOKeyValueQualifier(attrib,
 						(range)?EOQualifier.QualifierOperatorLessThanOrEqualTo
 								:EOQualifier.QualifierOperatorLessThan,max));
