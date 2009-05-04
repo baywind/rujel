@@ -1,4 +1,3 @@
-<webobject name = "Form">
 <script language="JavaScript">
 function toggleReport(id,val) {
 	var boxes = document.getElementsByName(id);
@@ -20,8 +19,6 @@ function toggleSub(id,val) {
 	}
 }
 </script>
-<div onclick = "toggleObj('reportsAvailable');" style = "font-size:larger;margin:3px;" onmouseover = "dim(this);" onmouseout = "unDim(this);">
-<webobject name = "AvailableTitle"/>:</div>
 <webobject name = "ReportsTable">
 		<webobject name = "ReportsRepetition"><table width = "100%" style = "margin-top:4px;"><thead>
 			<tr class = "grey"><td style = "width:1.2em;"><webobject name = "ItemCheckBox"/>
@@ -40,5 +37,4 @@ function toggleSub(id,val) {
 				</webobject>
 		</table>
 		</webobject>
-<div style = "padding:1ex;"><webobject name = "SubmitButton"/></div>
-</webobject></webobject>
+</webobject>

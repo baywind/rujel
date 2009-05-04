@@ -59,7 +59,7 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
     	display = (NSMutableArray)valueForBinding("active");
     	if((display == null || display.count() == 0) && 
     			Various.boolForObject(valueForBinding("initDefault"))) {
-    		modifyList();
+    		selectOne();
     	}
     		
     	super.appendToResponse(aResponse, aContext);
@@ -76,24 +76,28 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
     }
 
 	
-	public void modifyList() {
-//		display = (NSMutableArray)valueForBinding("active");
-//		if(display == null)
-			display = (NSMutableArray)valueForBinding("forceActive");
-		if(display == null)
-			display = new NSMutableArray();
-		if(item != null) {
-			reports.takeValueForKey(Boolean.FALSE, "active");
-			item.takeValueForKey(Boolean.TRUE, "active");
-			NSArray subs = (NSArray)item.valueForKey("subParams");
-			if(subs != null)
-				subs.takeValueForKey(Boolean.TRUE, "active");
-			display.addObject(item);
-			setValueForBinding(display, "active");
-			return;
-		}
-		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
-		Enumeration enu = reports.objectEnumerator();
+    public void selectOne() {
+    	display = (NSMutableArray)valueForBinding("forceActive");
+    	if(display == null)
+    		display = new NSMutableArray();
+    	if(item == null) {
+    		display.addObjectsFromArray(prepareActiveList(reports));
+    		setValueForBinding(display, "active");
+    		return;
+    	}
+    	reports.takeValueForKey(Boolean.FALSE, "active");
+    	item.takeValueForKey(Boolean.TRUE, "active");
+    	NSArray subs = (NSArray)item.valueForKey("subParams");
+    	if(subs != null)
+    		subs.takeValueForKey(Boolean.TRUE, "active");
+    	display.addObject(item);
+    	setValueForBinding(display, "active");
+    }
+	
+	public static NSMutableArray prepareActiveList(NSMutableArray available) {
+		EOSortOrdering.sortArrayUsingKeyOrderArray(available, ModulesInitialiser.sorter);
+		Enumeration enu = available.objectEnumerator();
+		NSMutableArray active = new NSMutableArray();
 		while (enu.hasMoreElements()) {
 			NSMutableDictionary rDict = (NSMutableDictionary) enu.nextElement();
 			NSMutableArray sub = (NSMutableArray) rDict.valueForKey("subParams");
@@ -103,7 +107,7 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
 				continue;
 			DisplayAny.ValueReader.clearResultCache(rDict, null, true);
 			rDict = rDict.mutableClone();
-			display.addObject(rDict);
+			active.addObject(rDict);
 			if(sub != null) {
 				Enumeration subEnu = sub.objectEnumerator();
 				sub = new NSMutableArray();
@@ -115,7 +119,7 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
 				rDict.takeValueForKey(sub, "subParams");
 			}
 		}
-		setValueForBinding(display, "active");
+		return active;
 	}
 
 	public String subRowStyle() {

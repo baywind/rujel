@@ -72,24 +72,6 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 
     public void go() {
     	NSMutableArray quals = new NSMutableArray();
-/*    	NSKeyValueCoding dict = (NSKeyValueCoding)currReport.valueForKey("qualifier");
-    	if(dict != null) {
-    		NSArray args = (NSArray)dict.valueForKey("args");
-    		if(args != null && args.count() > 0) {
-    			Enumeration enu = args.objectEnumerator();
-    			args = new NSMutableArray();
-    			while (enu.hasMoreElements()) {
-    				Object arg = enu.nextElement();
-    				Object param = DisplayAny.ValueReader.evaluateValue(arg, "params", this);
-    				if(param == null)
-    					param = NullValue;
-    				((NSMutableArray)args).addObject(param);
-    			}
-    		}
-    		String qualifierFormat = (String)dict.valueForKey("formatString");
-    		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat, args);
-    		quals.addObject(qual);
-    	}*/
     	String entityName = (String)currReport.valueForKey("entity");
    	
     	NSMutableDictionary inQuals = new NSMutableDictionary();
@@ -97,6 +79,8 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     	Enumeration enu = paramDicts.objectEnumerator();
     	while (enu.hasMoreElements()) {
 			NSKeyValueCoding dict = (NSKeyValueCoding) enu.nextElement();
+			if(!Various.boolForObject(dict.valueForKey("active")))
+				continue;
 			EOQualifier qual = Parameter.qualForParam(dict, params,this);
 			if(qual != null) {
 				NSKeyValueCoding in = (NSKeyValueCoding)dict.valueForKey("in");
@@ -164,9 +148,22 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     	if(args != null && args.count() > 0)
     		fs.setPrefetchingRelationshipKeyPaths(args);
     	list = ec.objectsWithFetchSpecification(fs);
+    	if(list == null || list.count() == 0) {
+    		session().takeValueForKey(application().valueForKeyPath(
+    				"strings.RujelReports_Reports.CustomReport.nothingFound"), "message");
+    	} else {
+    		setupDisplay();
+    	}
+    }
+    
+    public void setupDisplay() {
+    	display = PropSelector.prepareActiveList((NSMutableArray)currReport.valueForKey("properties"));
     	if(list != null && list.count() > 1)
     		list = sort(list,display,Various.boolForObject(currReport.valueForKey("sortAll")));
-    	display = (NSMutableArray)currReport.valueForKey("properties");
+    }
+    
+    public void newQuery() {
+    	list = null;
     }
     
     public static NSArray sort(NSArray list, NSArray properties,boolean all) {
@@ -202,4 +199,18 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 		}
     	return EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
     }
+    
+	public WOActionResults export() {
+		WOComponent exportPage = pageWithName("ReportTable");
+		exportPage.takeValueForKey(list, "list");
+		exportPage.takeValueForKey(display, "properties");
+ 		exportPage.takeValueForKey(currReport.valueForKey("entity"), "filenameFormatter");
+		return exportPage;
+	}
+	
+	public String paramCellStyle() {
+		if(Various.boolForObject(item.valueForKey("active")))
+			return "visibility:visible;";
+		return "visibility:hidden;";
+	}
 }

@@ -1,6 +1,13 @@
 <webobject name = "PageWrapper">
 <h1><webobject name = "Title"/></h1>
-<webobject name = "PropSelector"/>
+<webobject name = "Form">
+<div onclick = "toggleObj('reportsAvailable');" style = "font-size:larger;margin:3px;" onmouseover = "dim(this);" onmouseout = "unDim(this);">
+<webobject name = "AvailableTitle"/>:</div>
+<webobject name = "PropsDiv">
+	<webobject name = "PropSelector"/>
+	<div style = "padding:1ex;"><webobject name = "SubmitButton"/></div>
+	</webobject>
+</webobject>
 <table width = "100%" cellspacing = "0" cellpadding = "0"><tr>
 	<td><webobject name = "Tabs"/></td>
 	<td width = "90%" align = "right"><webobject name = "ExportButton"/></td>

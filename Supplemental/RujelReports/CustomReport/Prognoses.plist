@@ -13,6 +13,8 @@
 		<dict>
 			<key>title</key>
 			<string>Период</string>
+			<key>active</key>
+			<true/>
 			<key>attribute</key>
 			<string>eduPeriod</string>
 			<key>select</key>
@@ -59,6 +61,8 @@
 				<string>1</string>
 				<key>second</key>
 				<string>1</string>
+				<key>valueWhenEmpty</key>
+				<string>Выбрать</string>
 			</dict>
 			<key>popup</key>
 			<dict>
@@ -162,6 +166,24 @@
 			<true/>
 			<key>sort</key>
 			<string>30</string>
+			<key>exportDict</key>
+			<dict>
+				<key>subParams</key>
+				<array>
+					<dict>
+						<key>title</key>
+						<string>Предмет</string>
+						<key>titlePath</key>
+						<string>cycle.subject</string>
+					</dict>
+					<dict>
+						<key>title</key>
+						<string>()</string>
+						<key>titlePath</key>
+						<string>comment</string>
+					</dict>
+				</array>
+			</dict>
 		</dict>
 		<dict>
 			<key>title</key>

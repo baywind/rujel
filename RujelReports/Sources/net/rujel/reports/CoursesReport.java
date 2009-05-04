@@ -122,51 +122,15 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 				(curSource instanceof EduGroup)?"teacher":"eduGroup"),1);
 	}
 	
-/*	public void modifyList() {
-		prepareDisplay();
-		if(item != null) {
-			reports.takeValueForKey(Boolean.FALSE, "active");
-			item.takeValueForKey(Boolean.TRUE, "active");
-			NSArray subs = (NSArray)item.valueForKey("subParams");
-			if(subs != null)
-				subs.takeValueForKey(Boolean.TRUE, "active");
-			display.addObject(item);
-			return;
-		}
-		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
-		Enumeration enu = reports.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			NSMutableDictionary rDict = (NSMutableDictionary) enu.nextElement();
-			NSMutableArray sub = (NSMutableArray) rDict.valueForKey("subParams");
-			if(sub != null)
-				EOSortOrdering.sortArrayUsingKeyOrderArray(sub, ModulesInitialiser.sorter);
-			if(!Various.boolForObject(rDict.valueForKey("active")))
-				continue;
-			DisplayAny.ValueReader.clearResultCache(rDict, null, true);
-			rDict = rDict.mutableClone();
-			display.addObject(rDict);
-			if(sub != null) {
-				Enumeration subEnu = sub.objectEnumerator();
-				sub = new NSMutableArray();
-				while (subEnu.hasMoreElements()) {
-					NSMutableDictionary sDict = (NSMutableDictionary) subEnu.nextElement();
-					if(Various.boolForObject(sDict.valueForKey("active")))
-						sub.addObject(sDict);
-				}
-				rDict.takeValueForKey(sub, "subParams");
-			}
-		}
+	public void modifyList() {
+		display = prepareDisplay();
+		display.addObjectsFromArray(PropSelector.prepareActiveList(reports));
 	}
 
-	public String subRowStyle() {
-		if(item == null || Various.boolForObject(item.valueForKey("active")))
-			return null;
-		return "display:none;";
-	}
-	*/
-
-	public Boolean hideSelector() {
-		return new Boolean(display != null && display.count() > 2);
+	public String reportStyle() {
+		if(display != null && display.count() > 2)
+			return "display:none;";
+		return null;
 	}
 	
 	public WOActionResults export() {

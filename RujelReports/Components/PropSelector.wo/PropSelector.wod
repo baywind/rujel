@@ -62,7 +62,7 @@ SubmitButton : WOSubmitButton {
 
 ReportCell : OnClickContainer {
   elementName = "td";
-  invokeAction = modifyList;
+  invokeAction = selectOne;
   onclick = session.tryLoad;
   align = "left";
   style = "padding-left:4px;";
@@ -98,8 +98,8 @@ AvailableTitle : WOString {
 
 ReportsTable : WOGenericContainer {
   elementName = "div";
-  id = "reportsAvailable";
-  style = tableStyle;
+  id = ^id;
+  style = ^style;
 }
 
 ExportButton : WOHyperlink {

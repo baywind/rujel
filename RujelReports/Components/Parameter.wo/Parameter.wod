@@ -3,6 +3,7 @@ TextField : WOTextField {
   size = valueOf.paramsDict.itemDict.fieldSize;
   onkeypress = onkeypress;
   formatter = formatter;
+  style = "text-align:center;";
 }
 
 SecondField : WOTextField {
@@ -10,6 +11,7 @@ SecondField : WOTextField {
   size = valueOf.paramsDict.itemDict.fieldSize;
   onkeypress = onkeypress;
   formatter = formatter;
+  style = "text-align:center;";
 }
 
 ShowField : WOConditional {
@@ -34,7 +36,7 @@ IsPopup : WOConditional {
 
 PopupCaller : OnClickContainer {
   elementName = "span";
-  class = "button";
+  style = "font-style:italic;";
   onclick = "ajaxPost(this.getElementsByTagName('input')[0],event);";
 }
 
@@ -56,6 +58,7 @@ SubmitButton : WOSubmitButton {
   action = selectorPopup;
   onclick = "ajaxPost(this,event);return false;";
   value = application.strings.RujelReports_Reports.choose;
+  style = "display:none";
 }
 
 HasValue : WOConditional {
