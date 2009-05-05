@@ -34,9 +34,21 @@
 		</dict>
 		<dict>
 			<key>title</key>
-			<string>Величина</string>
+			<string>Успешность</string>
 			<key>attribute</key>
 			<string>value</string>
+			<key>formatter</key>
+			<string>0.####</string>
+			<key>fieldSize</key>
+			<integer>5</integer>
+			<key>range</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>title</key>
+			<string>Выполнено</string>
+			<key>attribute</key>
+			<string>complete</string>
 			<key>formatter</key>
 			<string>0.####</string>
 			<key>fieldSize</key>
@@ -223,14 +235,34 @@
 			<true/>
 			<key>sort</key>
 			<string>50</string>
+			<key>comparison</key>
+			<string>CompareCaseInsensitiveDescending</string>
 		</dict>
 		<dict>
 			<key>title</key>
 			<string>Успешность</string>
 			<key>keyPath</key>
 			<string>value</string>
-			<key>titlePath</key>
-			<string>stripTrailingZeros</string>
+			<key>value</key>
+			<dict>
+				<key>object</key>
+				<string>.value</string>
+				<key>methodName</key>
+				<string>movePointRight</string>
+				<key>paramClasses</key>
+				<array>
+					<string>int</string>
+				</array>
+				<key>paramValues</key>
+				<array>
+					<integer>2</integer>
+				</array>
+			</dict>
+			<key>presenterBindings</key>
+			<dict>
+				<key>numberformat</key>
+				<string>&apos;0%</string>
+			</dict>
 			<key>comparison</key>
 			<string>CompareAscending</string>
 			<key>active</key>
@@ -243,6 +275,28 @@
 			<string>Выполнено</string>
 			<key>keyPath</key>
 			<string>complete</string>
+			<key>value</key>
+			<dict>
+				<key>object</key>
+				<string>.complete</string>
+				<key>methodName</key>
+				<string>movePointRight</string>
+				<key>paramClasses</key>
+				<array>
+					<string>int</string>
+				</array>
+				<key>paramValues</key>
+				<array>
+					<integer>2</integer>
+				</array>
+			</dict>
+			<key>presenterBindings</key>
+			<dict>
+				<key>numberformat</key>
+				<string>&apos;0%</string>
+			</dict>
+			<key>comparison</key>
+			<string>CompareDescending</string>
 			<key>active</key>
 			<true/>
 			<key>sort</key>

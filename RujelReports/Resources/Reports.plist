@@ -98,6 +98,8 @@
 		<string>Параметры запроса</string>
 		<key>displayAttributes</key>
 		<string>Поля таблицы результатов</string>
+		<key>countTitle</key>
+		<string>Кол-во</string>
 		<key>resultsSetup</key>
 		<string>Настройка таблицы</string>
 		<key>newQuery</key>

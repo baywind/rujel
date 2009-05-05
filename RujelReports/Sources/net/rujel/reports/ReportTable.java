@@ -50,6 +50,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public Object itemRow;
 	public Object item;
 	public NSKeyValueCodingAdditions subDict;
+	public Object extra;
 	public String filenameFormatter;
 
 	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);;
@@ -64,8 +65,19 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		if(parent() != null) {
 			list = (NSArray)valueForBinding("list");
 			properties = (NSArray)valueForBinding("properties");
+			if(hasBinding("index"))
+				setValueForBinding(null, "index");
 			super.appendToResponse(aResponse, aContext);
 		} else { // exporting
+			if(extra != null) {
+				if(extra instanceof NSArray) {
+					properties = (properties == null)?(NSArray)extra:
+							properties.arrayByAddingObjectsFromArray((NSArray)extra);
+				} else if (extra instanceof NSKeyValueCodingAdditions) {
+					properties = (properties == null)? new NSArray(extra):
+						properties.arrayByAddingObject(extra);
+				}
+			}
 			if(properties == null || properties.count() == 0)
 				return;
 			appendRowToResponse(aResponse,aContext);
@@ -81,6 +93,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			} // rows
 	    	aResponse.setHeader("application/octet-stream","Content-Type");
 	    	StringBuffer buf = new StringBuffer("attachment; filename=\"");
+//	    	String filenameFormatter = (export == null)?null:
+//	    				(String)export.valueForKey("filenameFormatter");
 	    	try {
 	    		SimpleDateFormat sdf = new SimpleDateFormat(
 	    				(filenameFormatter == null) ? "yyyyMMdd" : filenameFormatter);
@@ -104,7 +118,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			if(tmp != null)
 				itemDict = tmp;
 			NSArray subParams = (NSArray)itemDict.valueForKey("subParams");
-			if(subParams == null) {
+			if(subParams == null) { // no subs
 				aResponse.appendContentCharacter('"');
 				if(itemRow == null) {
 					Object value = valueOf.valueForKeyPath("item.itemDict.title");
@@ -120,7 +134,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 					display.appendToResponse(aResponse, aContext);
 				}
 				aResponse.appendContentCharacter('"');
-			} else {
+			} else { // subs
 				Enumeration subs = subParams.objectEnumerator();
 				while (subs.hasMoreElements()) { // subs
 					subDict = (NSKeyValueCodingAdditions) subs.nextElement();
@@ -153,8 +167,17 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			} // subs
 			if(props.hasMoreElements())
 				aResponse.appendContentCharacter(',');
-		} // title params
+		} // properties.objectEnumerator()
 		aResponse.appendContentCharacter('\r');
+	}
+	
+	public Object nextValue() {
+		if(itemDict == null)
+			return null;
+		Enumeration valuesEnumeration = (Enumeration)itemDict.valueForKey("valuesEnumeration");
+		if(valuesEnumeration.hasMoreElements())
+			return valuesEnumeration.nextElement();
+		return null;
 	}
 
 	public String rowID() {
@@ -172,10 +195,21 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	
     public void setItemDict(NSKeyValueCodingAdditions newDict) {
     	itemDict = newDict;
+    	item = valueFromDict(itemDict,itemRow,this);
+    	if(parent() != null) {
+    		setValueForBinding(itemDict, "itemDict");
+    		setValueForBinding(item, "item");
+    	}
+    }	
+	
+    public static Object valueFromDict(NSKeyValueCodingAdditions itemDict, 
+    		Object itemRow,WOComponent page) {
+    	Object item = null;
     	if(itemRow == null || itemDict == null) {
     		item = null;
     	} else if(itemDict.valueForKey("value") != null) {
-    		item = valueOf.valueForKeyPath("itemRow.itemDict.value");
+    		item = DisplayAny.ValueReader.evaluateValue(itemDict.valueForKey("value"),
+    				itemRow, page); //valueOf.valueForKeyPath("itemRow.itemDict.value");
     	} else {
     		String keyPath = (String)itemDict.valueForKey("keyPath");
     		if(keyPath == null || keyPath.equals("."))
@@ -183,11 +217,15 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     		else
     			item = NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, keyPath);
     	}
-    	if(parent() != null) {
-    		setValueForBinding(itemDict, "itemDict");
-    		setValueForBinding(item, "item");
-    	}
+    	return item;
      }
+    
+/*    public void setFilenameFormatter(String value) {
+    	if(export == null)
+    		export = new NSMutableDictionary(value,"filenameFormatter");
+    	else
+    		export.takeValueForKey(value, "filenameFormatter");
+    }*/
 	
 	public boolean isStateless() {
 		return true;
@@ -275,6 +313,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
 		setItemRow(null);
 		setItemDict(null);
+		if(hasBinding("index"))
+			setValueForBinding(null, "index");
 		list = (NSArray)valueForBinding("list");
 		properties = (NSArray)valueForBinding("properties");
 		return super.invokeAction(aRequest, aContext);
@@ -282,6 +322,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public void takeValuesFromRequest(WORequest aRequest, WOContext aContext) {
 		setItemRow(null);
 		setItemDict(null);
+		if(hasBinding("index"))
+			setValueForBinding(null, "index");
 		list = (NSArray)valueForBinding("list");
 		properties = (NSArray)valueForBinding("properties");
 		super.takeValuesFromRequest(aRequest, aContext);

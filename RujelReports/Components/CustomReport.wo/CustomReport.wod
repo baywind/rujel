@@ -56,6 +56,7 @@ ReportTable : ReportTable {
   list = list;
   properties = display;
   rowClass = "backfield2";
+  index = index;
 }
 
 SubmitButton : WOSubmitButton {
@@ -148,4 +149,9 @@ ParamCell : WOGenericContainer {
 IsActive : WOCheckBox {
   checked = item.active;
   style = "display:none;";
+}
+
+ShowCount : WOString {
+  value = showCount;
+  escapeHTML = false;
 }
