@@ -46,7 +46,8 @@ public class PageWrapper extends WOComponent {
 		if(aContext.hasSession())
 			aContext.session().takeValueForKey(null, "message");
 	}
-		public WOComponent chooseRegime() {
+	
+	public WOComponent chooseRegime() {
     	WOComponent nextPage = (WOComponent)session().objectForKey("ChooseRegime");
     	if (nextPage == null) {
     		nextPage = pageWithName("ChooseRegime");

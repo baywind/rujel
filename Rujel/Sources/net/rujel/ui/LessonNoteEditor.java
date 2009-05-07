@@ -920,8 +920,32 @@ public class LessonNoteEditor extends WOComponent {
 		}
 	}
 	
+	protected WOComponent srcMark () {
+	   	NSMutableArray pathStack = (NSMutableArray)session().valueForKey("pathStack");
+		WOComponent resultPage = null;
+		if(pathStack != null && pathStack.count() > 0) {
+			resultPage = (WOComponent)pathStack.lastObject();
+			if(resultPage instanceof SrcMark) {
+				pathStack.removeLastObject();
+			} else if(pathStack.count() > 1) {
+				resultPage = (WOComponent)pathStack.objectAtIndex(0);
+				if(resultPage instanceof SrcMark) {
+					pathStack.removeAllObjects();
+				} else {
+					resultPage = null;
+				}
+			} else {
+				resultPage = null;
+			}
+		}
+		if(resultPage == null) {
+			resultPage = pageWithName("SrcMark");
+		}
+		return resultPage;
+	}
+	
 	public WOActionResults chooseEduGroup() {
-		WOComponent resultPage = (WOComponent)session().valueForKey("pullComponent");
+		WOComponent resultPage = srcMark();
 		resultPage.takeValueForKey(course.eduGroup(), "currClass");
     	WOActionResults  result = (WOActionResults)resultPage.valueForKey("selectClass");
 		if(result == null)
@@ -930,8 +954,8 @@ public class LessonNoteEditor extends WOComponent {
 	}
 	
 	public WOActionResults chooseTeacher() {
-		WOComponent resultPage = (WOComponent)session().valueForKey("pullComponent");
-		resultPage.takeValueForKey(course.teacher(), "currTeacher");
+		WOComponent resultPage = srcMark();
+ 		resultPage.takeValueForKey(course.teacher(), "currTeacher");
     	WOActionResults  result = (WOActionResults)resultPage.valueForKey("selectTeacher");
 		if(result == null)
 			result = resultPage;
