@@ -56,15 +56,15 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 	}
     
     public Object value() {
-    	boolean range = Various.boolForObject(itemDict().valueForKey("range"));
+    	boolean secondSelector = (itemDict().valueForKey("secondSelector") != null);
     	String attribute = attribute();
-    	if(range)
+    	if(secondSelector)
     		attribute = "min_" + attribute;
     	Object value = paramsDict().valueForKey(attribute);
     	if(value != null)
     		return (value == NullValue)?null:value;
     	value = valueOf.valueForKeyPath("paramsDict.itemDict.default" + 
-    			((range)?"Min":"Value"));
+    			((secondSelector)?"Min":"Value"));
     	paramsDict().takeValueForKey((value==null)?NullValue:value, attribute);
     	return value;
     }
@@ -72,9 +72,9 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     public void setValue(Object value) {
     	if(value == null)
     		value = NullValue;
-    	boolean range = Various.boolForObject(itemDict().valueForKey("range"));
+    	boolean secondSelector = (itemDict().valueForKey("secondSelector") != null);
     	String attribute = attribute();
-    	if(range)
+    	if(secondSelector)
     		attribute = "min_" + attribute;
     	paramsDict().takeValueForKey(value, attribute);
     }
@@ -127,9 +127,19 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 	
 	public String sign() {
 		String selector = (String)itemDict().valueForKey("qualifierSelector");
-		if(selector == null || selector.indexOf('=') >= 0)
+		if(selector == null || selector.equals(">="))
 			return "&le;";
-		return "&lt;";
+		else if (selector.equals(">"))
+			return "&lt;";
+		return WOMessage.stringByEscapingHTMLString(selector); 
+	}
+	public String sign2() {
+		String selector = (String)itemDict().valueForKey("secondSelector");
+		if(selector == null || selector.equals("<="))
+			return "&le;";
+		else if (selector.equals("<"))
+			return "&lt;";
+		return WOMessage.stringByEscapingHTMLString(selector); 
 	}
 	
 	public WOActionResults selectorPopup() {
@@ -188,24 +198,23 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		}
 		if(params == null)
 			return null;
-		boolean range = Various.boolForObject(itemDict.valueForKey("range"));
+		String secondSelector = (String)itemDict.valueForKey("secondSelector");
 		selectorString = (String)itemDict.valueForKey("qualifierSelector");
 		String attrib = (String)itemDict.valueForKey("attribute");
-		if(range) {
-			if(selectorString != null && selectorString.indexOf('=') < 0)
-				range = false;
+		if(secondSelector != null) {
+			NSSelector sel = (selectorString == null)?
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo:
+							EOQualifier.operatorSelectorForString(selectorString);;
+				
 			Object min = params.valueForKey("min_" + attrib);
 			Object max = params.valueForKey("max_" + attrib);
 			NSMutableArray quals = new NSMutableArray();
 			if(min != null && min != NullValue) {
-				quals.addObject(new EOKeyValueQualifier(attrib,
-						(range)?EOQualifier.QualifierOperatorGreaterThanOrEqualTo
-								:EOQualifier.QualifierOperatorGreaterThan,min));
+				quals.addObject(new EOKeyValueQualifier(attrib,sel,min));
 			}
 			if(max != null && max != NullValue) {
-				quals.addObject(new EOKeyValueQualifier(attrib,
-						(range)?EOQualifier.QualifierOperatorLessThanOrEqualTo
-								:EOQualifier.QualifierOperatorLessThan,max));
+				sel = EOQualifier.operatorSelectorForString(secondSelector);
+				quals.addObject(new EOKeyValueQualifier(attrib,sel,max));
 			}
 			switch (quals.count()) {
 			case 0:
@@ -219,8 +228,7 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 			NSSelector selector = EOQualifier.QualifierOperatorEqual;
 			Object value = params.valueForKey(attrib);
 			if(value == null || value == NullValue) {
-				range = Various.boolForObject(itemDict.valueForKey("respectNull"));
-				if(range)
+				if(Various.boolForObject(itemDict.valueForKey("respectNull")))
 					return new EOKeyValueQualifier(attrib,selector,NullValue);
 				else
 					return null;

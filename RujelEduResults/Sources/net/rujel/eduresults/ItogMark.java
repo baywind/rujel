@@ -29,16 +29,36 @@
 
 package net.rujel.eduresults;
 
+import java.util.Enumeration;
+
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
 public class ItogMark extends _ItogMark
 {
 	public static NSArray flagKeys = new NSArray(new Object[] {"changed","calculated","incomplete","scheduled","constituents"});
+	
+	public static NSArray localisedFlagKeys() {
+		NSDictionary localisation = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.properties.ItogMark.flags");
+		if(localisation == null || localisation.count() == 0)
+			return flagKeys;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = flagKeys.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			String lKey = (String)localisation.valueForKey(key);
+			if(lKey == null)
+				lKey = key;
+			result.addObject(lKey);
+		}
+		return result;
+	}
 	
 	public static void init() {
 //		EOInitialiser.initialiseRelationship("ItogMark","teacher",false,"teacherID","Teacher");

@@ -195,6 +195,41 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		return course.editingContext().objectsWithFetchSpecification(fspec);*/
 	}
 	
+	public static NSArray periodsInYear(Number eduYear, EOEditingContext ec) {
+		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ec, 
+				ENTITY_NAME, EDU_YEAR_KEY, eduYear);
+		if(result == null || result.count() < 2)
+			return result;
+		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
+	}
+	
+	public static EduPeriod defaultCurrentPeriod(NSTimestamp moment, EOEditingContext ec) {
+		Number eduYear = MyUtility.eduYearForDate(moment);
+		NSArray typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage",
+				"(eduYear = %d OR eduYear = 0) AND eduGroup = nil AND course = nil",
+							new NSArray(eduYear));
+		if(typeUsage == null || typeUsage.count() == 0)
+			return null;
+		PeriodType pertype = null;
+		if(typeUsage.count() > 1) {
+			typeUsage = PeriodType.filterTypeUsageArray(typeUsage,eduYear);
+			typeUsage = (NSArray)typeUsage.valueForKey("periodType");
+			NSMutableArray res = (typeUsage instanceof NSMutableArray)?(NSMutableArray)typeUsage:typeUsage.mutableClone();
+			EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareDescending);
+			EOSortOrdering.sortArrayUsingKeyOrderArray(res,new NSArray(so));
+			typeUsage = res;
+			Enumeration enu = typeUsage.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				pertype = (PeriodType) enu.nextElement();
+				EduPeriod result = pertype.currentPeriod(moment);
+				if(result != null)
+					return result;
+			}
+		} else {
+			pertype = (PeriodType)((EOEnterpriseObject)typeUsage.objectAtIndex(0)).valueForKey("periodType");
+		}
+		return pertype.currentPeriod(moment);
+	}
 	
 	//EduLesson compilance
 	protected transient EduCourse course;

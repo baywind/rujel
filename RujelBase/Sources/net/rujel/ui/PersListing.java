@@ -96,6 +96,13 @@ public class PersListing extends WOComponent {
 		return access;
 	}
 	
+	public Boolean canEdit() {
+		if(Various.boolForObject(valueForBinding("noEdit")))
+			return Boolean.FALSE;
+		return (Boolean)session().valueForKeyPath("session.readAccess.edit." +
+				((item==null)?entity():"item"));
+	}
+	
 	public boolean synchronizesVariablesWithBindings() {
         return false;
 	}

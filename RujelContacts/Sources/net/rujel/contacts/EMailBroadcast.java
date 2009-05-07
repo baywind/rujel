@@ -149,28 +149,11 @@ public class EMailBroadcast implements Runnable{
 		Period defaultPeriod = null;
 		NSMutableDictionary periodsByGroup = null;
 		if(period == null) {
-			NSArray typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage",
-					"(eduYear = %d OR eduYear = 0) AND eduGroup = nil AND course = nil",
-								new NSArray(eduYear));
-			if(typeUsage == null || typeUsage.count() == 0) {
+			defaultPeriod = EduPeriod.defaultCurrentPeriod(moment,ec);
+			if(defaultPeriod == null) {
 				defaultPeriod = new Period.ByDates(MyUtility.yearStart(eduYear.intValue()),moment);
-				
-			} else {
-				PeriodType pertype = null;
-				if(typeUsage.count() > 1) {
-					typeUsage = PeriodType.filterTypeUsageArray(typeUsage,eduYear);
-					typeUsage = (NSArray)typeUsage.valueForKey("periodType");
-					NSMutableArray res = (typeUsage instanceof NSMutableArray)?(NSMutableArray)typeUsage:typeUsage.mutableClone();
-					EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareDescending);
-					EOSortOrdering.sortArrayUsingKeyOrderArray(res,new NSArray(so));
-					typeUsage = res;
-					pertype = (PeriodType)typeUsage.objectAtIndex(0);
-				} else {
-					pertype = (PeriodType)((EOEnterpriseObject)typeUsage.objectAtIndex(0)).valueForKey("periodType");
-				}
-				defaultPeriod = pertype.currentPeriod(moment);
 			}
-			typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0) AND eduGroup != nil AND course = nil",new NSArray(eduYear));
+			NSArray typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0) AND eduGroup != nil AND course = nil",new NSArray(eduYear));
 			if(typeUsage != null && typeUsage.count() > 0) {
 				typeUsage = PeriodType.filterTypeUsageArray(typeUsage,eduYear);
 				periodsByGroup = new NSMutableDictionary();

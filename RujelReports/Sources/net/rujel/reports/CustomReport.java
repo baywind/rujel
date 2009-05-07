@@ -128,7 +128,7 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 						attrQuals.addObject(qual);
 					}
 				}
-			} else { // has qual
+			} else if(!Various.boolForObject(dict.valueForKey("hidden"))) { // has qual
 				dict.takeValueForKey(null, "active");
 			}
 		}
