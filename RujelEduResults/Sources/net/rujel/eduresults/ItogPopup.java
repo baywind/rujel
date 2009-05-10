@@ -39,6 +39,8 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 
@@ -105,8 +107,18 @@ public class ItogPopup extends WOComponent {
 		}
 		if(itog == null || !mark.equals(itog.mark())) {
 			EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
-			EOEditingContext ec = eduCourse.editingContext();
+			if(eduCourse == null)
+				eduCourse = itog.assumeCourse();
+			EOEditingContext ec = (eduCourse==null)?itog.editingContext():eduCourse.editingContext();
 			ec.lock();
+			EOEnterpriseObject prognosis = null;
+			try {
+				Class prClass = Class.forName("net.rujel.autoitog.Prognosis");
+				Method meth = prClass.getMethod("getPrognosis", Student.class,EduCourse.class, EduPeriod.class, Boolean.TYPE);
+				prognosis = (EOEnterpriseObject)meth.invoke(null, student,eduCourse,eduPeriod,Boolean.FALSE);
+			} catch (Exception e) {
+				// cant get corresponding prognosis
+			}
 			try {
 				boolean newItog = (itog == null);
 				/*boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.enable", false);
@@ -129,10 +141,33 @@ public class ItogPopup extends WOComponent {
 					//itog.setValue(null);
 				}
 				itog.setMark(mark);
+				itog.readFlags().setFlagForKey(false,"constituents");
+				itog.readFlags().setFlagForKey(true,"manual");
+				if(prognosis != null) {
+					boolean flag = true;
+					BigDecimal value = (BigDecimal)prognosis.valueForKey("value");
+					itog.setValue(value);
+					if(value != null) {
+						String fromValue = (String)prognosis.valueForKey("markFromValue");
+						if(fromValue != null)
+							flag = !mark.equals(fromValue);
+					}
+					itog.readFlags().setFlagForKey(flag,"forced");
+					flag = !Various.boolForObject(prognosis.valueForKey("isComplete"));
+					itog.readFlags().setFlagForKey(flag,"incomplete");
+//				} else {
+//					itog.readFlags().setFlagForKey(false,"forced");
+//					itog.readFlags().setFlagForKey(false,"incomplete");
+//					itog.setValue(null);
+				}
 				if(ifArchive) {
 					EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 					archive.takeValueForKey(itog, "object");
 					archive.takeValueForKey(changeReason, "reason");
+					if(!itog.readFlags().flagForKey("changed")) {
+						Integer count = (Integer)archive.valueForKey("archivesCount");
+						itog.readFlags().setFlagForKey(count.intValue() > 0,"changed");
+					}
 				}
 				//}
 

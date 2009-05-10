@@ -501,6 +501,16 @@ public class MarkArchive extends _MarkArchive
 		return (value==null)?null:value.toString();
 	}
 	
+	public int archivesCount() {
+		NSArray all = new NSArray(keys);
+		all = all.arrayByAddingObject("usedEntity");
+		NSDictionary keysDict = valuesForKeys(all);
+		all = EOUtilities.objectsMatchingValues(editingContext(), "MarkArchive", keysDict);
+		if(all == null)
+			return 0;
+		return all.count();
+	}
+	
 	public void validateForSave() {
 		if(dict != null) {
 			setData(NSPropertyListSerialization.stringFromPropertyList(dict));

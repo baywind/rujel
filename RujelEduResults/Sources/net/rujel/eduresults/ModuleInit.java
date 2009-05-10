@@ -84,50 +84,15 @@ public class ModuleInit {
 		return null;
 	}		
 	
-/*	public static NamedFlags moduleAccess(WOContext ctx,Object key) {
-		UserPresentation user = (UserPresentation)ctx.session().valueForKey("user");
-		NamedFlags access = null;
-		if(user != null) {
-			try {
-				int lvl = user.accessLevel(key);
-				access = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
-			}  catch (AccessHandler.UnlistedModuleException e) {
-				access = DegenerateFlags.ALL_TRUE;
-			}
-		}
-		if(access == null)
-			access = DegenerateFlags.ALL_TRUE;
-		return access;
-	}*/
-	
 	public static NSMutableDictionary notesAddOns(WOContext ctx) {
-		NSMutableDictionary itogAddOn = addOn.mutableClone();
-		
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
-			//moduleAccess(ctx,"ItogMark");//itogAddOn.valueForKey("id"));
-			/*null;
-		UserPresentation user = (UserPresentation)ctx.session().valueForKey("user");
-		if(user != null) {
-			try {
-				int lvl = user.accessLevel(itogAddOn.valueForKey("id"));
-				access = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
-			}  catch (AccessHandler.UnlistedModuleException e) {
-				access = DegenerateFlags.ALL_TRUE;
-			}
-		}
-		if(access == null)
-			access = DegenerateFlags.ALL_TRUE;*/
 		if(access.getFlag(0)) {
+			NSMutableDictionary itogAddOn = addOn.mutableClone();
 			itogAddOn.takeValueForKey(access,"access");
 			return itogAddOn;
 		}
 		return null;
 	}
-	/* else if(ctx == null && "presentTabs".equals(obj)) {
-		return tab;
-	} else if(ctx != null && "presentTabs".equals(obj)) {
-		return new ItogsTab((EduCourse)ctx.page().valueForKey("course"),tab);
-	}*/
 	
 	public static NSDictionary studentReporter(WOContext ctx) {
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");

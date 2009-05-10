@@ -41,7 +41,7 @@ import com.webobjects.eoaccess.EOUtilities;
 
 public class ItogMark extends _ItogMark
 {
-	public static NSArray flagKeys = new NSArray(new Object[] {"changed","calculated","incomplete","scheduled","constituents"});
+	public static NSArray flagKeys = new NSArray(new Object[] {"changed","forced","incomplete","manual","constituents"});
 	
 	public static NSArray localisedFlagKeys() {
 		NSDictionary localisation = (NSDictionary)WOApplication.application().valueForKeyPath(
@@ -80,14 +80,20 @@ public class ItogMark extends _ItogMark
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     }
-*/
-	
-	public Student student() {
-        return (Student)storedValueForKey("student");
+ */
+
+    public void awakeFromInsertion(EOEditingContext ec) {
+    	super.awakeFromInsertion(ec);
+    	setFlags(new Integer(0));
+    	setMark("?");
     }
-	
+
+    public Student student() {
+    	return (Student)storedValueForKey("student");
+    }
+
     public void setStudent(Student aValue) {
-        takeStoredValueForKey(aValue, "student");
+    	takeStoredValueForKey(aValue, "student");
     }
 	
 	public EduCycle cycle() {
@@ -118,9 +124,9 @@ public class ItogMark extends _ItogMark
 	public NamedFlags readFlags() {
 		if(_namedFlags == null) {
 			try {
-				int flags = 0;
-				if(flags() != null) flags = flags().intValue();
-				_namedFlags = new NamedFlags(flags,flagKeys);
+//				int flags = 0;
+//				if(flags() != null) flags = flags().intValue();
+				_namedFlags = new NamedFlags(flags().intValue(),flagKeys);
 				java.lang.reflect.Method sync = this.getClass().getMethod
 					("_syncFlags",new Class[] {Flags.class});
 				_namedFlags.setSyncParams(this,sync);
@@ -204,5 +210,27 @@ public class ItogMark extends _ItogMark
 			throw new EOUtilities.MoreThanOneException("Multiple ItogMarks found");
 		}
 		return (ItogMark)result.objectAtIndex(0);
+	}
+	
+	public EduCourse assumeCourse() {
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier("eduYear",
+				EOQualifier.QualifierOperatorEqual,eduPeriod().eduYear());
+		quals[1]  = new EOKeyValueQualifier("cycle",
+				EOQualifier.QualifierOperatorEqual,cycle());
+		EOQualifier qual = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,qual,null);
+		NSArray found = editingContext().objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		EduCourse result = (EduCourse)found.objectAtIndex(0);
+		if(found.count() == 1)
+			return result;
+		qual = new EOKeyValueQualifier("groupList",
+				EOQualifier.QualifierOperatorContains,student());
+		found = EOQualifier.filteredArrayWithQualifier(found, qual);
+		if(found.count() > 0)
+			result = (EduCourse)found.objectAtIndex(0);
+		return result;
 	}
 }

@@ -97,15 +97,6 @@ public class AutoItogModule {
 		if(disable)
 			return null;
 		Scheduler sched = Scheduler.sharedInstance();
-		/*EOEditingContext ec = new EOEditingContext();
-		NSTimestamp today = new NSTimestamp();
-		Integer eduYear = MyUtility.eduYearForDate(today);
-		NSArray periodTypes = EOUtilities.objectsWithQualifierFormat(ec,
-				"PeriodTypeUsage","eduYear = 0 OR eduYear = %@",new NSArray(eduYear));
-		periodTypes = (NSArray)periodTypes.valueForKey("periodType");
-		NSSet set = new NSSet(periodTypes);
-		
-		Enumeration enu = set.objectEnumerator();*/
 		java.lang.reflect.Method method = null;
 		try {
 			method = AutoItogModule.class.getMethod("daily",(Class[])null);
@@ -113,33 +104,6 @@ public class AutoItogModule {
 			throw new RuntimeException("Could not get method to schedule",ex);
 		}
 		sched.registerTask(Scheduler.DAILY,method,null,null,"AutoItog");
-		/*
-		int perNum = -1;
-		while (enu.hasMoreElements()) {
-			PeriodType perType = (PeriodType)enu.nextElement();
-			//EduPeriod period = perType.currentPeriod(today);
-			String perTypeId = "EduPeriod." + perType.name();
-			perNum = sched.numForID(perTypeId);//numForPeriod(period);
-			if(perNum == -1) {
-				logger.logp(WOLogLevel.INFO,AutoItogModule.class.getName(),"init3",
-						"Error setting AutoItog task for period - no such period defined in scheduler",perTypeId);
-				continue;
-			}
-			sched.registerTask(perNum,method,null,Scheduler.THIS_PERIOD,"autoItog");
-		}*/
-
-		/*
-		Period timeoutPer = TimeoutPeriod.getRecentPeriod();
-		if(timeoutPer != null) {
-			perNum = sched.registerPeriod(timeoutPer);
-			
-			try {
-				method = TimeoutPeriod.class.getMethod("automateTimedOutPeriod", new Class[]{Period.class});
-				sched.registerTask(perNum,method,null,Scheduler.THIS_PERIOD,timeoutPer.typeID());
-			} catch (Exception ex) {
-				throw new RuntimeException("Could not get method to schedule",ex);
-			}
-		}*/
 		return null;
 	}
 	public static NSKeyValueCoding notesAddOns(WOContext ctx) {
@@ -151,33 +115,6 @@ public class AutoItogModule {
 			ses.setObjectForKey(addOn, key);
 		}
 		return addOn;
-		/*
-		Enumeration enu = addOns.objectEnumerator();
-		NSMutableArray result = new NSMutableArray();
-		while (enu.hasMoreElements()) {
-			NSDictionary dic = (NSDictionary)enu.nextElement();
-			//access
-			UserPresentation user = (UserPresentation)ctx.session().valueForKey("user");
-			NamedFlags access = null;
-			if(user != null) {
-				try {
-					int lvl = user.accessLevel(dic.valueForKey("accessKey"));
-					access = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
-				}  catch (AccessHandler.UnlistedModuleException e) {
-					access = DegenerateFlags.ALL_TRUE;
-				}
-			}
-			if(access == null)
-				access = DegenerateFlags.ALL_TRUE;
-			if(access.getFlag(0)) {
-				dic = dic.mutableClone();
-				dic.takeValueForKey(access,"access");
-				result.addObject(dic);
-			}
-
-		}
-		return result;
-		*/
 	}
 
 	public static Object objectSaved(WOContext ctx) {
@@ -586,52 +523,7 @@ cycleCourses:
 		
 		message(buf);
 	}
-			/*
-			Enumeration studEnum = course.groupList().objectEnumerator();
-			PerPersonLink prognoses = Prognosis.prognosesForCourseAndPeriod(course,period);
-			NSArray itogs = ItogMark.getItogMarks(course.cycle(),period,null,ec);
-cycleStudents:
-			while (studEnum.hasMoreElements()) {
-				Student student = (Student)studEnum.nextElement();
-				Prognosis prognos = (Prognosis)prognoses.forPersonLink(student);
-				if(prognos == null || prognos.getTimeout() != null)
-					continue cycleStudents;
-				prognos.convertToItogMark(itogs);
-				
-				ItogMark itog = ItogMark.getItogMark(null,null,student,itogs);
-				if(itog == null) {
-					itog = (ItogMark)EOUtilities.createAndInsertInstance(ec,"ItogMark");
-					itog.addObjectToBothSidesOfRelationshipWithKey(period,"eduPeriod");
-					itog.addObjectToBothSidesOfRelationshipWithKey(student,"student");
-					itog.addObjectToBothSidesOfRelationshipWithKey(course.cycle(),"cycle");
-				} else {
-					itog.readFlags().setFlagForKey(true,"changed");
-				}
-				itog.setValue(prognos.value());
-				itog.setMark(prognos.presentValue());
-				itog.readFlags().setFlagForKey(true,"calculated");
-				itog.readFlags().setFlagForKey(true,"scheduled");
-				if(BigDecimal.ONE.compareTo(prognos.complete()) > 0) {
-					itog.readFlags().setFlagForKey(true,"incomplete");
-				}
-			} // cycleStudents
-			
-			if(ec.hasChanges()) {
-				try {
-					ec.saveChanges();
-					logger.logp(WOLogLevel.INFO,AutoItogModule.class.getName(),"automateItogForPeriod","Saved itogs based on prognoses for course",course);
-				}  catch (Exception ex) {
-					logger.logp(WOLogLevel.WARNING,AutoItogModule.class.getName(),"automateItogForPeriod","Failed to save itogs based on prognoses for course", new Object[] {course,ex});
-					ec.revert();
-				}
-			} else { //ec.hasChanges()
-				logger.logp(WOLogLevel.INFO,AutoItogModule.class.getName(),"automateItogForPeriod","No itogs to save for course",course);
-			}
-		} // cycleCourses
-		
-		
-	}*/
-	
+
 	public static Object extItog(WOContext ctx) {
 		NSKeyValueCoding reporter = (NSKeyValueCoding)ctx.session().objectForKey("itogReporter");
 		Student student = (Student)reporter.valueForKey("student");

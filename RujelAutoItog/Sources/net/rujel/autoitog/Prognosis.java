@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
 import java.math.*;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -122,14 +123,20 @@ public class Prognosis extends _Prognosis {
     	updateMarkFromValue();
     }
     
-    public void updateMarkFromValue() {
+    public String markFromValue() {
+    	if(value() == null)
+    		return null;
     	PrognosUsage pu = prognosUsage();
     	if(pu == null)
-    		return;
+    		return null;
     	BorderSet presenter = pu.borderSet();
     	if(presenter == null)
-    		return;
-		super.setMark(presenter.presentFraction(value()));
+    		return null;
+    	return presenter.presentFraction(value());
+    }
+    
+    public void updateMarkFromValue() {
+		super.setMark(markFromValue());
     }
     /*
     public void setMark(String mark) {
@@ -151,7 +158,8 @@ public class Prognosis extends _Prognosis {
     	if(_flags==null) {
     		_flags = new NamedFlags(flags().intValue(),flagNames);
     		try{
-    		_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
+    			_flags.setSyncParams(this, getClass().getMethod(
+    					"setNamedFlags", NamedFlags.class));
     		} catch (Exception e) {
     			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
 						"Could not get syncMethod for StudentTimeout flags",e);
@@ -198,7 +206,8 @@ public class Prognosis extends _Prognosis {
 	protected Object _relatedItog;
 	public ItogMark relatedItog() {
 		if(_relatedItog == null) {
-			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),editingContext());
+			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),
+					student(),editingContext());
 			if(_relatedItog == null)
 				_relatedItog = NullValue;
 		}
@@ -207,26 +216,12 @@ public class Prognosis extends _Prognosis {
 		}
 		return (ItogMark)_relatedItog;
 	}
-	/*
-	protected transient FractionPresenter presenter;
-	public String presentValue() {
-		BigDecimal value = value();
-		if(value == null) return null;
-		if(presenter == null) {
-			if(eduPeriod() == null) {
-				return value.toString();
-			}
-			String presenterKey = SettingsReader.stringForKeyPath("edu.prognosisPresenterKey","/5");
-			presenter = BorderSet.fractionPresenterForTitleAndDate(editingContext(),presenterKey,eduPeriod().end());
-			if(presenter == null) return value.toString();
-		}
-		return presenter.presentFraction(value);
-	}*/
 	
 	protected transient Object _timeout;
 	public StudentTimeout getStudentTimeout() {
 		if(_timeout == null) {
-			_timeout = StudentTimeout.timeoutForStudentCourseAndPeriod(student(), eduCourse(), eduPeriod());
+			_timeout = StudentTimeout.timeoutForStudentCourseAndPeriod(
+					student(), eduCourse(), eduPeriod());
 			if(_timeout == null)
 				_timeout = NullValue;
 		}
@@ -257,7 +252,8 @@ public class Prognosis extends _Prognosis {
 	}
 	
 	public NSTimestamp updateFireDate() {
-		CourseTimeout courseTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(eduCourse(), eduPeriod());
+		CourseTimeout courseTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(
+				eduCourse(), eduPeriod());
 		return updateFireDate(courseTimeout);
 	}
 
@@ -336,14 +332,19 @@ public class Prognosis extends _Prognosis {
 	}
 */	
 	public void _setPrognosUsage(PrognosUsage prognosUsage) {
-		_usage = prognosUsage;
+		if(prognosUsage == null)
+			_usage = NullValue;
+		else
+			_usage = prognosUsage;
 	}
 
-	private PrognosUsage _usage;
+	private Object _usage;
 	public PrognosUsage prognosUsage() {
 		if(_usage == null)
-			_usage = PrognosUsage.prognosUsage(eduCourse(), eduPeriod().periodType());
-		return _usage;
+			_setPrognosUsage(PrognosUsage.prognosUsage(eduCourse(), eduPeriod().periodType()));
+		if(_usage == NullValue)
+			return null;
+		return (PrognosUsage)_usage;
 	}
 	/*
 	public static PerPersonLink calculatePrognoses(EduCourse course, EduPeriod period) {
@@ -357,7 +358,8 @@ public class Prognosis extends _Prognosis {
 	public static Prognosis getPrognosis(
 			Student student, EduCourse course, EduPeriod period, boolean create) {
 		EOEditingContext ec = course.editingContext();
-
+		if(course == null || period == null || student == null)
+			throw new IllegalArgumentException("All arguments are required");
 		EOQualifier qual = new EOKeyValueQualifier("eduCourse",
 				EOQualifier.QualifierOperatorEqual, course);
 		NSMutableArray quals = new NSMutableArray(qual);
@@ -379,7 +381,8 @@ public class Prognosis extends _Prognosis {
 			progn.addObjectToBothSidesOfRelationshipWithKey(student, "student");
 		/*	if(progn.prognosUsage().namedFlags().flagForKey("manual") &&
     			SettingsReader.boolForKeyPath("markarchive.Prognosis", false)) {
-				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+																		ec,"MarkArchive");
 				archive.takeValueForKey(progn, "object");
 				archive.takeValueForKey(creator, "user");
 			}*/
@@ -391,14 +394,14 @@ public class Prognosis extends _Prognosis {
 					SessionedEditingContext s_ec = (SessionedEditingContext) ec;
 					args = new Object[] {s_ec.session(),found};
 				}
-				Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
-						"Multiple prognoses found",args);
+				logger.log(WOLogLevel.WARNING,"Multiple prognoses found",args);
 			}
 			return (Prognosis)found.objectAtIndex(0);
 		}
 	}
 
-	public static PerPersonLink prognosesForCourseAndPeriod(EduCourse course, EduPeriod period) {
+	public static PerPersonLink prognosesForCourseAndPeriod(
+								EduCourse course, EduPeriod period) {
 		NSArray args = new NSArray(new Object[] {period,course});
 		NSArray found = EOUtilities.objectsWithQualifierFormat(
 				course.editingContext(),"Prognosis","eduPeriod = %@ AND eduCourse = %@",args);
@@ -406,7 +409,7 @@ public class Prognosis extends _Prognosis {
 		PrognosUsage usage = PrognosUsage.prognosUsage(course, period.periodType());
 		while (enu.hasMoreElements()) {
 			Prognosis pr = (Prognosis) enu.nextElement();
-			pr._usage = usage;
+			pr._setPrognosUsage(usage);
 		}
 		NSDictionary result = new NSDictionary(found,(NSArray)found.valueForKey("student"));
 		return new PerPersonLink.Dictionary(result);
@@ -428,9 +431,6 @@ public class Prognosis extends _Prognosis {
 			return storage.objectForKey(pers);
 		}
 	}*/
-	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite) {
-		return convertToItogMark(itogs, overwrite, null);
-	}
 	
 	protected static void report(String report, Object obj, StringBuffer buf) {
 		if(buf == null) {
@@ -446,12 +446,18 @@ public class Prognosis extends _Prognosis {
 		}
 	}
 	
+	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite) {
+		return convertToItogMark(itogs, overwrite, null);
+	}
+
 	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite, StringBuffer buf) {
 		//ItogMark itog = null;
 		if(itogs != null) {
-			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),itogs);
+			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),
+					student(),itogs);
 		} else {
-			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),student(),editingContext());
+			_relatedItog = ItogMark.getItogMark(eduCourse().cycle(),eduPeriod(),
+					student(),editingContext());
 		}
 		
 		if(namedFlags().flagForKey("disable")) {
@@ -463,15 +469,17 @@ public class Prognosis extends _Prognosis {
 
 		setFireDate(null);
 		if(_relatedItog == null) {
-			_relatedItog = (ItogMark)EOUtilities.createAndInsertInstance(editingContext(),"ItogMark");
+			_relatedItog = (ItogMark)EOUtilities.createAndInsertInstance(
+					editingContext(),"ItogMark");
 			relatedItog().addObjectToBothSidesOfRelationshipWithKey(eduPeriod(),"eduPeriod");
 			relatedItog().addObjectToBothSidesOfRelationshipWithKey(student(),"student");
-			relatedItog().addObjectToBothSidesOfRelationshipWithKey(eduCourse().cycle(),"cycle");
+			relatedItog().addObjectToBothSidesOfRelationshipWithKey(
+					eduCourse().cycle(),"cycle");
 		} else {
 			if(!overwrite) {
 				report("Itog already exists",this, buf);
 				BigDecimal value = relatedItog().value();
-				boolean flag = (value != null && value.equals(this.value()));
+				boolean flag = (value != null && !value.equals(this.value()));
 				relatedItog().readFlags().setFlagForKey(flag,"constituents");
 				return null;
 			}
@@ -479,7 +487,7 @@ public class Prognosis extends _Prognosis {
 				relatedItog().readFlags().setFlagForKey(true,"changed");
 		}
 		relatedItog().setValue(value());
-		relatedItog().setMark(mark());
+		relatedItog().setMark((mark() == null)?" ":mark());
 		Bonus bonus = bonus();
 		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
@@ -495,12 +503,13 @@ public class Prognosis extends _Prognosis {
 			buf.append(bonus.reason()).append(" : ").append(mark());
 			buf.append(" -> ").append(bonus.mark()).append('\n');
 		}
-
-		//itog.readFlags().setFlagForKey(true,"calculated");
+		String markFromValue = markFromValue();
+		
+		boolean flag = (markFromValue == null || !relatedItog().mark().equals(markFromValue));	
+    	relatedItog().readFlags().setFlagForKey(flag,"forced");
 		relatedItog().readFlags().setFlagForKey(false,"constituents");
-		if(!isComplete()) {
-			relatedItog().readFlags().setFlagForKey(true,"incomplete");
-		}
+		relatedItog().readFlags().setFlagForKey(!isComplete(),"incomplete");
+
 		return relatedItog();
 	}
 	
@@ -511,7 +520,7 @@ public class Prognosis extends _Prognosis {
 	
 	
 	public static void convertPrognosesForCourseAndPeriod(
-			EduCourse course, EduPeriod period, java.util.Date scheduled, StringBuffer buffer) {
+			EduCourse course, EduPeriod period, Date scheduled, StringBuffer buffer) {
 		EOEditingContext ec = course.editingContext();
 		NSArray args = new NSArray(new Object[] {period,course,scheduled});
 		StringBuffer buf = (buffer == null)?new StringBuffer():buffer;
@@ -529,11 +538,13 @@ public class Prognosis extends _Prognosis {
 			}
 			return;
 		}
+		PrognosUsage pu = PrognosUsage.prognosUsage(course, period.periodType());
 		NSMutableArray students = course.groupList().mutableClone();
 		
 		Enumeration penu = prognoses.objectEnumerator();
 		NSArray itogs = ItogMark.getItogMarks(course.cycle(),period,null,ec);
-		boolean overwrite = (scheduled == null || SettingsReader.boolForKeyPath("edu.overwriteItogsScheduled", false));
+		boolean overwrite = (scheduled == null || SettingsReader.boolForKeyPath(
+				"edu.overwriteItogsScheduled", false));
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
 cycleStudents:
 			while (penu.hasMoreElements()) {
@@ -544,25 +555,28 @@ cycleStudents:
 				}
 				// check timeout
 				if(prognos.fireDate() == null) {
-					//prognos.getStudentTimeout() != null  && scheduled.compareTo(prognos.getStudentTimeout().dueDate()) < 0)
 					report("Prognosis is already fired", prognos, buf);
 					continue cycleStudents;
 				}
 				if(scheduled != null && scheduled.compareTo(prognos.fireDate()) < 0) {
 					report("Prognosis is timed out", prognos, buf);
-					continue cycleStudents;
+					//continue cycleStudents;
 				}
 				if(idx < 0) {
 					args = new NSArray(new Object[] {period,prognos.student()});
-					NSArray found = EOUtilities.objectsWithQualifierFormat(course.editingContext(),"Prognosis","eduPeriod = %@ AND student = %@",args);
-					EOQualifier qual = new EOKeyValueQualifier("eduCourse.cycle",EOQualifier.QualifierOperatorEqual,course.cycle());
+					NSArray found = EOUtilities.objectsWithQualifierFormat(
+							course.editingContext(),"Prognosis",
+							"eduPeriod = %@ AND student = %@",args);
+					EOQualifier qual = new EOKeyValueQualifier("eduCourse.cycle",
+							EOQualifier.QualifierOperatorEqual,course.cycle());
 					found = EOQualifier.filteredArrayWithQualifier(found, qual);
 					if(found.count() > 1) {
 						Enumeration enu = found.objectEnumerator();
 						while (enu.hasMoreElements()) {
 							Prognosis crp = (Prognosis) enu.nextElement();
 							if(crp.eduCourse().groupList().contains(crp.student())) {
-								report("Skipping prognosis for student not in group - found another prognosis", prognos, buf);
+								report(
+"Skipping prognosis for student not in group - found another prognosis", prognos, buf);
 								if(prognos.complete().compareTo(BigDecimal.ZERO) == 0)
 									ec.deleteObject(prognos);
 								else
@@ -573,15 +587,21 @@ cycleStudents:
 					}
 					report("Setting mark to student not in group", prognos, buf);
 				}
+				prognos._setPrognosUsage(pu);
 				ItogMark itog = prognos.convertToItogMark(itogs,overwrite, buf);
 				if(itog != null && (overwrite || !itogs.containsObject(itog))) {
-					itog.readFlags().setFlagForKey(scheduled != null,"scheduled");
+					itog.readFlags().setFlagForKey(scheduled == null,"manual");
 					if(enableArchive) {
-						EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+						EOEnterpriseObject archive = EOUtilities.
+										createAndInsertInstance(ec,"MarkArchive");
 						archive.takeValueForKey(itog, "object");
-						archive.takeValueForKey("scheduled", "wosid");
-						if(scheduled != null)
+						if(scheduled != null) {
+							archive.takeValueForKey("scheduled", "wosid");
 							archive.takeValueForKey("AutoItog", "user");
+						} else if(!(ec instanceof SessionedEditingContext)) {
+							archive.takeValueForKey("???", "wosid");
+							archive.takeValueForKey("???","user");
+						}
 					}
 				}
 			} // cycleStudents
@@ -597,15 +617,17 @@ cycleStudents:
 		if(ec.hasChanges()) {
 			try {
 				ec.saveChanges();
-				logger.logp(WOLogLevel.FINE,Prognosis.class.getName(), "convertPrognosesForCourseAndPeriod","Saved itogs based on prognoses for course",course);
+				logger.log(WOLogLevel.FINE,
+						"Saved itogs based on prognoses for course",course);
 			}  catch (Exception ex) {
-				logger.logp(WOLogLevel.WARNING,Prognosis.class.getName(), 
-						"convertPrognosesForCourseAndPeriod","Failed to save itogs based on prognoses for course", new Object[] {course,ex});
+				logger.log(WOLogLevel.WARNING,
+						"Failed to save itogs based on prognoses for course",
+						new Object[] {course,ex});
 				buf.append("Failed to save itogs based on prognoses for course");
 				ec.revert();
 			}
 		} else { //ec.hasChanges()
-			logger.logp(WOLogLevel.FINE,Prognosis.class.getName(), "convertPrognosesForCourseAndPeriod","No itogs to save for course",course);
+			logger.log(WOLogLevel.FINE,"No itogs to save for course",course);
 		}
 		if(buffer == null) {		
 			logger.log(WOLogLevel.INFO, buf.toString(),course);
