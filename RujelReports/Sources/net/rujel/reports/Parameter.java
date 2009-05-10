@@ -97,6 +97,8 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     }
 
     public Boolean showField() {
+		if(itemDict().valueForKey("attribute") == null)
+			return Boolean.FALSE;
 		if(itemDict().valueForKey("select") != null)
 			return Boolean.FALSE;
 		if(_itemDict.valueForKey("popup") != null)

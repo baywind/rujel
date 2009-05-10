@@ -41,12 +41,21 @@ public abstract class _Reprimand extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Reprimand";
 
 	// Attributes
+	public static final String AUTHOR_KEY = "author";
 	public static final String CONTENT_KEY = "content";
 	public static final String RAISED_KEY = "raised";
 	public static final String RELIEF_KEY = "relief";
 	public static final String STATUS_KEY = "status";
 
 	// Relationships
+
+  public String author() {
+    return (String) storedValueForKey(AUTHOR_KEY);
+  }
+
+  public void setAuthor(String value) {
+    takeStoredValueForKey(value, AUTHOR_KEY);
+  }
 
   public String content() {
     return (String) storedValueForKey(CONTENT_KEY);

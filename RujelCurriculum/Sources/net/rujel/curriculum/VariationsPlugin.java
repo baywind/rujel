@@ -112,7 +112,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 					new EOAndQualifier(new NSArray(quals)),MyUtility.numSorter);
 			NSArray periods = ec.objectsWithFetchSpecification(fs);
 			if(periods != null && periods.count() > 0) {
-				Enumeration<EduPeriod> enu = periods.objectEnumerator();
+				Enumeration enu = periods.objectEnumerator();
 				int days = 0;
 				int totalWeeks = 0;
 				while (enu.hasMoreElements()) {
@@ -140,20 +140,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 //				}
 			}
 		}
-		EOQualifier dateQual = new EOKeyValueQualifier("date",
-				EOQualifier.QualifierOperatorLessThanOrEqualTo,date); 
-		list = course.lessons();
-		int fact = 0;
-		if(list != null && list.count() > 0) {
-			list = EOQualifier.filteredArrayWithQualifier(list, dateQual);
-			if(list != null) {
-				fact = list.count();
-				result.takeValueForKey(new Integer(fact), "fact");
-			}
-		}
 		if(plan == 0)
 			return result;
-
 		list = Variation.variations(course, null, date, null);
 		int plus = 0;
 		int minus = 0;
@@ -175,7 +163,12 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey(new Integer(minus), "minus");
 		}
 		result.takeValueForKey(new Integer(plan), "plan");
-		if(result.valueForKey("fact") == null)
+		
+		int fact = factOnDate(course, date);
+		if(fact >= 0) {
+			result.takeValueForKey(new Integer(fact), "fact");
+		}
+		if(fact < 0)
 			return result;
 		int deviation = fact - (plan + plus - minus);
 		result.takeValueForKey(new Integer(deviation), "deviation");
@@ -192,5 +185,20 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 //		if(result.valueForKey("weekend") == Boolean.TRUE)
 //			result.takeValueForKey(new Integer(plan + hours), "nextPlan");
 		return result;
+	}
+	
+	public static int factOnDate(EduCourse course, NSTimestamp date) {
+		EOQualifier dateQual = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,date); 
+		NSArray list = course.lessons();
+		if(list != null && list.count() > 0) {
+			list = EOQualifier.filteredArrayWithQualifier(list, dateQual);
+			if(list != null) {
+				return list.count();
+			}
+		} else {
+			return -1;
+		}
+		return 0;
 	}
 }

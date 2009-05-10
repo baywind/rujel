@@ -55,12 +55,15 @@ public class CurriculumModule {
 			Substitute.init();
 			Reason.init();
 			Variation.init();
+			Reprimand.init();
 		} else if ("extendLesson".equals(obj)) {
 			return extendLesson(ctx);
 		} else if ("lessonProperies".equals(obj)) {
 			return lessonProperies(ctx);
 		} else if ("journalPlugins".equals(obj)) {
 			return journalPlugins(ctx);
+		} else if("scheduleTask".equals(obj)) {
+			return scheduleTask(ctx);
 		} else if(obj.equals("regimes")) {
 			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Curriculum")))
 				return null;
@@ -170,5 +173,23 @@ public class CurriculumModule {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Variation")))
 			return null;
 		return journalPlugins;
+	}
+	
+	public static Object scheduleTask(WOContext ctx) {
+		boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
+				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+		if(disable)
+			return null;
+		Scheduler sched = Scheduler.sharedInstance();
+
+		java.lang.reflect.Method method = null;
+		try {
+			method = Reprimand.class.getMethod("planFactCheck",(Class[])null);
+		} catch (Exception ex) {
+			throw new RuntimeException("Could not get method to schedule",ex);
+		}
+		sched.registerTask(Scheduler.DAILY,method,null,null,"PlanFactCheck");
+
+		return null;
 	}
 }

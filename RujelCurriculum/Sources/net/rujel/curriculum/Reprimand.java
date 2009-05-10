@@ -29,21 +29,124 @@
 
 package net.rujel.curriculum;
 
+import java.util.Enumeration;
+import java.util.logging.Logger;
+
+import net.rujel.base.MyUtility;
+import net.rujel.eduresults.EduPeriod;
+import net.rujel.eduresults.PeriodType;
+import net.rujel.interfaces.EOInitialiser;
+import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
+
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class Reprimand extends _Reprimand {
+	protected static Logger logger = Logger.getLogger("rujel.curriculum");
 
 	public static void init() {
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"course",false,"courseID","EduCourse");
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		setRaised(new NSTimestamp());
 		setStatus(new Integer(0));
+		setAuthor("anonymous");
 		super.awakeFromInsertion(ec);
+	}
+	
+	public EduCourse course() {
+		return (EduCourse)storedValueForKey("course");
+	}
+	
+	public void setCourse(EduCourse course) {
+		takeStoredValueForKey(course, "course");
 	}
 
 	public void relieve() {
 		setRelief(new NSTimestamp());
+	}
+	
+	public static void planFactCheck() {
+		EOEditingContext ec = new EOEditingContext();
+		ec.lock();
+		try {
+			NSTimestamp now = new NSTimestamp();
+			Integer eduYear = MyUtility.eduYearForDate(now);
+			NSArray details = EduPeriod.periodsInYear(eduYear, ec);
+			EOQualifier qual = Various.getEOInQualifier("eduPeriod", details);
+			EOFetchSpecification fs = new EOFetchSpecification("PlanDetail",
+					qual, null);
+			details = ec.objectsWithFetchSpecification(fs);
+			EOQualifier[] quals = null;
+			boolean norm = (details == null || details.count() == 0);
+			if (!norm) {
+				quals = new EOQualifier[] {
+						new EOKeyValueQualifier("hours",
+								EOQualifier.QualifierOperatorEqual,
+								new Integer(0)), null };
+			}
+			NSArray courses = EOUtilities.objectsMatchingKeyAndValue(ec,
+					EduCourse.entityName, "eduYear", eduYear);
+			if (courses == null || courses.count() == 0) {
+				ec.unlock();
+				return;
+			}
+			Enumeration enu = courses.objectEnumerator();
+			NSArray pertypeUsages = PeriodType.usagesForYear(eduYear, ec);
+			NSMutableDictionary dayForPertype = new NSMutableDictionary();
+			while (enu.hasMoreElements()) {
+				EduCourse course = (EduCourse) enu.nextElement();
+				if (quals != null) {
+					quals[1] = new EOKeyValueQualifier("course",
+							EOQualifier.QualifierOperatorEqual, course);
+					qual = new EOAndQualifier(new NSArray(quals));
+					norm = (EOQualifier.filteredArrayWithQualifier(details,
+							qual).count() == 0);
+				}
+				Object pertype = PeriodType.pertypesForCourseFromUsageArray(
+						course, pertypeUsages).objectAtIndex(0);
+				if (norm && dayForPertype.count() > 0) {
+					Integer day = (Integer) dayForPertype.objectForKey(pertype);
+					if (day != null && day.intValue() > 0) {
+						logger.log(WOLogLevel.FINEST,"Skipping same: " + day,course);
+						continue;
+					}
+				}
+				NSDictionary planFact = VariationsPlugin.planFact(course, now);
+				Integer day = (Integer) planFact.valueForKey("extraDays");
+				if (norm) {
+					dayForPertype.setObjectForKey(day, pertype);
+				}
+				if (day == null || day.intValue() > 0) {
+					logger.log(WOLogLevel.FINEST,"Skipping: day is " + day,course);
+					continue;
+				}
+				Integer deviation = (Integer) planFact.valueForKey("deviation");
+				if (deviation == null || deviation.intValue() == 0) {
+					logger.log(WOLogLevel.FINEST,"Skipping: no deviation",course);
+					continue;
+				}
+				Reprimand rpr = (Reprimand) EOUtilities
+						.createAndInsertInstance(ec, ENTITY_NAME);
+				rpr.setCourse(course);
+				rpr.setContent((deviation.intValue() > 0) ? "+" + deviation
+						: deviation.toString());
+				rpr.setAuthor("PlanFactCheck Daemon");
+				logger.log(WOLogLevel.FINER,"Creating Reprimand",course);
+			}
+			if (ec.hasChanges()) {
+				ec.saveChanges();
+			}
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error autochecking planFact",e);
+			ec.revert();
+		} finally {
+			ec.unlock();
+		}
+		logger.log(WOLogLevel.FINE,"Automatic PlanFactCheck finished");
 	}
 }

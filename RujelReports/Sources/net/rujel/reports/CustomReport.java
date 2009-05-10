@@ -37,6 +37,8 @@ import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOEntity;
+import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
@@ -104,12 +106,12 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 						String inEntity = (String)in.valueForKey("entity");
 						if(inEntity == null) {
 							try {
-								inEntity = EOUtilities.entityNamed(ec, entityName).
-									relationshipNamed(rel).destinationEntity().name();
+								EOEntity ent = EOUtilities.entityNamed(ec, entityName);
+								EORelationship relat = ent.relationshipNamed(rel);
+								ent = relat.destinationEntity();
+								inEntity = ent.name();
 							} catch (RuntimeException e) {
-								Object[] args = new Object[] {
-									session(),e,dict	
-								};
+								Object[] args = new Object[] { session(),e,dict };
 								logger.log(WOLogLevel.WARNING,"Could not get entityName",args);
 								continue;
 							}

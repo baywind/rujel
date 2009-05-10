@@ -93,7 +93,7 @@ public class AutoItogModule {
 	
 	public static Object scheduleTask(WOContext ctx) {
 		boolean disable = Boolean.getBoolean("AutoItog.disable")
-				|| SettingsReader.boolForKeyPath("disableAutoItog", false);
+				|| SettingsReader.boolForKeyPath("edu.disableAutoItog", false);
 		if(disable)
 			return null;
 		Scheduler sched = Scheduler.sharedInstance();
