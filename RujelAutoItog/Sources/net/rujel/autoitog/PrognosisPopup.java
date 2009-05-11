@@ -69,6 +69,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public boolean noCancel = false;
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(addOn == null)
+    		addOn = new PrognosesAddOn(session());
     	addOn.setCourse(course);
     	addOn.setStudent(student);
     	addOn.setPeriodItem(eduPeriod);

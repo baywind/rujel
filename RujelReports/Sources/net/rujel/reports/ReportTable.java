@@ -254,6 +254,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public WOActionResults select() {
 		if(hasBinding("selectAction"))
 			return (WOActionResults) valueForBinding("selectAction");
+		if(hasBinding("currObject"))
+			setValueForBinding(itemRow, "currObject");
 		if(itemDict instanceof NSMutableDictionary)
 			DisplayAny.ValueReader.clearResultCache(
 					(NSMutableDictionary)itemDict, itemRow, true);

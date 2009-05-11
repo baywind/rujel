@@ -609,7 +609,7 @@
 		<key>disablePlanFactCheck</key>
 		<string>false</string>
 		<key>planFactLagDays</key>
-		<string>0</string>
+		<string>1</string>
 		<key>_ignorePrognosesAfterDays</key>
 		<string>45</string>
 		<key>autogenerateEduPeriods</key>
@@ -681,7 +681,7 @@
 		<key>DAILY</key>
 		<dict>
 			<key>time</key>
-			<string>16:20</string>
+			<string>0:28</string>
 		</dict>
 		<key>MONTHLY</key>
 		<dict/>

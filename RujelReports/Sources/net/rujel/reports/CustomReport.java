@@ -178,6 +178,7 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     		boolean sortAll = Various.boolForObject(currReport.valueForKey("sortAll"));
     		list = sort(fullList,display,sortAll);
     		Object[] prop = display.objects();
+    		params.removeObjectForKey("currObject");
     		if(!sortAll) {
     			for (int i = 0; i < prop.length; i++) {
 					if(sortingProp((NSKeyValueCoding)prop[i],sortAll) == null)
@@ -197,8 +198,9 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 					Object param = ReportTable.valueFromDict((NSDictionary)prop[i], item, this);
 					if(count == 0) {
 						ref[i] = param;
-					} else if (EOSortOrdering.ComparisonSupport.compareValues(param, ref[i],
-							sortingProp((NSKeyValueCoding)prop[i], sortAll)) != 0){
+					} else if (param != ref[i] && 
+							EOSortOrdering.ComparisonSupport.compareValues(param, ref[i],
+							sortingProp((NSKeyValueCoding)prop[i], sortAll)) != 0) {
 						countList.addObject(new Integer(count));
 						if(count > maxCount)
 							maxCount = count;

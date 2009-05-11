@@ -90,6 +90,8 @@ public class ItogPopup extends WOComponent {
 	}
 
 	public NamedFlags access() {
+		if(itog != null)
+			return (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.itog");
 		return (NamedFlags)addOn.valueForKey("access");
 	}
 
@@ -105,10 +107,11 @@ public class ItogPopup extends WOComponent {
 			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 			return returnPage;
 		}
-		if(itog == null || !mark.equals(itog.mark())) {
-			EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
-			if(eduCourse == null)
-				eduCourse = itog.assumeCourse();
+		boolean newItog = (itog == null);
+		boolean same = (!newItog && mark.equals(itog.mark()));
+		if(newItog || !same || itog.readFlags().flagForKey("constituents")) {
+			EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
+				(EduCourse)addOn.valueForKey("eduCourse");
 			EOEditingContext ec = (eduCourse==null)?itog.editingContext():eduCourse.editingContext();
 			ec.lock();
 			EOEnterpriseObject prognosis = null;
@@ -120,7 +123,6 @@ public class ItogPopup extends WOComponent {
 				// cant get corresponding prognosis
 			}
 			try {
-				boolean newItog = (itog == null);
 				/*boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.enable", false);
 			if(mark == null) {
 				if(enableArchive) {
@@ -135,14 +137,16 @@ public class ItogPopup extends WOComponent {
 					itog.addObjectToBothSidesOfRelationshipWithKey(eduPeriod,"eduPeriod");
 					itog.addObjectToBothSidesOfRelationshipWithKey(student,"student");
 					itog.addObjectToBothSidesOfRelationshipWithKey(eduCourse.cycle(),"cycle");
-					addOn.takeValueForKey(null,"agregate");
-				} else {
-					itog.readFlags().setFlagForKey(true,"changed");
-					//itog.setValue(null);
+					if(addOn != null)
+						addOn.takeValueForKey(null,"agregate");
 				}
-				itog.setMark(mark);
+				if(!same) {
+					if(!newItog)
+						itog.readFlags().setFlagForKey(true,"changed");
+					itog.setMark(mark);
+					itog.readFlags().setFlagForKey(true,"manual");
+				}
 				itog.readFlags().setFlagForKey(false,"constituents");
-				itog.readFlags().setFlagForKey(true,"manual");
 				if(prognosis != null) {
 					boolean flag = true;
 					BigDecimal value = (BigDecimal)prognosis.valueForKey("value");
@@ -163,8 +167,11 @@ public class ItogPopup extends WOComponent {
 				if(ifArchive) {
 					EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 					archive.takeValueForKey(itog, "object");
-					archive.takeValueForKey(changeReason, "reason");
-					if(!itog.readFlags().flagForKey("changed")) {
+					if(changeReason == null && same)
+						archive.takeValueForKey(flagNames.valueForKey("constituents"),"reason");
+					else
+						archive.takeValueForKey(changeReason, "reason");
+					if(!same && !itog.readFlags().flagForKey("changed")) {
 						Integer count = (Integer)archive.valueForKey("archivesCount");
 						itog.readFlags().setFlagForKey(count.intValue() > 0,"changed");
 					}
@@ -211,7 +218,8 @@ public class ItogPopup extends WOComponent {
 		} finally {
 			ec.unlock();
 		}
-		addOn.takeValueForKey(null,"agregate");
+		if(addOn != null)
+			addOn.takeValueForKey(null,"agregate");
 		return returnPage;
 	}
 
@@ -232,7 +240,8 @@ public class ItogPopup extends WOComponent {
 	}
 	
 	public NSMutableDictionary identifierDictionary() {
-		EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
+		EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
+				(EduCourse)addOn.valueForKey("eduCourse");
 		if(student == null || eduPeriod == null || eduCourse == null)
     		return null;
 		NSMutableDictionary ident = new NSMutableDictionary("ItogMark","entityName");
