@@ -29,6 +29,7 @@
 
 package net.rujel.curriculum;
 
+import java.util.Calendar;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
@@ -99,6 +100,10 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = course.editingContext();
 		int plan = 0;
 		int hours = 0;
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		if(cal.get(Calendar.HOUR_OF_DAY) == 0)
+			cal = null;
 		NSMutableDictionary result = new NSMutableDictionary();
 		NSArray list = PeriodType.periodTypesForCourse(course);
 		if(list != null && list.count() > 0) {
@@ -131,6 +136,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						hours = 0;
 					}
 				}
+				if(cal != null)
+					days++;
 				result.takeValueForKey(new Integer(plan), "planPre");
 				result.takeValueForKey(new Integer(hours), "maxDeviation");
 				result.takeValueForKey(new Integer(days), "extraDays");
@@ -140,7 +147,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 //				}
 			}
 		}
-		if(plan == 0)
+		if(plan == 0 && hours == 0)
 			return result;
 		list = Variation.variations(course, null, date, null);
 		int plus = 0;
@@ -164,7 +171,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		}
 		result.takeValueForKey(new Integer(plan), "plan");
 		
-		int fact = factOnDate(course, date);
+		int fact = factOnDate(course, date,(cal==null));
 		if(fact >= 0) {
 			result.takeValueForKey(new Integer(fact), "fact");
 		}
@@ -187,7 +194,9 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		return result;
 	}
 	
-	public static int factOnDate(EduCourse course, NSTimestamp date) {
+	public static int factOnDate(EduCourse course, NSTimestamp date,boolean exclude) {
+		if(exclude)
+			date = date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
 		EOQualifier dateQual = new EOKeyValueQualifier("date",
 				EOQualifier.QualifierOperatorLessThanOrEqualTo,date); 
 		NSArray list = course.lessons();

@@ -38,6 +38,7 @@ import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
+
 import java.util.logging.Logger;
 
 public class Session extends WOSession implements WithUser {
@@ -45,7 +46,7 @@ public class Session extends WOSession implements WithUser {
 	protected Logger logger = Logger.getLogger("rujel");
 	protected NSDictionary clientIdentity;
 
-	public NSTimestamp today;// = new NSTimestamp();
+	protected NSTimestamp today;// = new NSTimestamp();
 	public Session() {
         super();
 		//logger.log(WOLogLevel.SESSION,"Session created",this);
@@ -233,6 +234,24 @@ public class Session extends WOSession implements WithUser {
 		if (personGID != null) {
 			PersonLink personLink = (PersonLink)defaultEditingContext().objectForGlobalID(personGID);
 			persList.addObject(personLink.person());
+		}
+	}
+	
+	public NSTimestamp today() {
+		if(today == null) {
+			today = new NSTimestamp();
+		}
+		return today;
+	}
+	
+	public void setToday(NSTimestamp day) {
+		if(day == null) {
+//			Calendar cal = Calendar.getInstance();
+//			cal.set(2008,8,15,0,30);
+//			today = new NSTimestamp(cal.getTimeInMillis());
+			today = new NSTimestamp();
+		} else {
+			today = day;
 		}
 	}
 	

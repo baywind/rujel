@@ -36,6 +36,8 @@ import net.rujel.base.MyUtility;
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
+
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
@@ -347,14 +349,22 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 	}
 	
 	public int daysInPeriod(NSTimestamp toDate) {
-		long millis = end().getTime();
-		if(toDate != null && toDate.getTime() < millis)
-			millis = toDate.getTime();
-		else 
-			toDate = null;
-		millis = millis - begin().getTime();
-		if(millis < 0)
-			return 0;
-		return 1 + (int) (millis/MyUtility.dayMillis);
+		Calendar begin = Calendar.getInstance();
+		begin.setTime(begin());
+		Calendar end = Calendar.getInstance();
+		end.setTime(end());
+		end.add(Calendar.DATE, 1);
+		if(toDate != null){
+			if(toDate.getTime() < begin.getTimeInMillis())
+				return 0;
+			if(toDate.getTime() < end.getTimeInMillis())
+				end.setTime(toDate);
+		}
+		int day = end.get(Calendar.DAY_OF_YEAR) - begin.get(Calendar.DAY_OF_YEAR);
+		while (begin.get(Calendar.YEAR) < end.get(Calendar.YEAR)) {
+			day += begin.getActualMaximum(Calendar.DAY_OF_YEAR);
+			begin.add(Calendar.YEAR, 1);
+		}
+		return day;
 	}
 }

@@ -29,6 +29,7 @@
 
 package net.rujel.curriculum;
 
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -37,6 +38,7 @@ import net.rujel.eduresults.EduPeriod;
 import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -74,7 +76,10 @@ public class Reprimand extends _Reprimand {
 		EOEditingContext ec = new EOEditingContext();
 		ec.lock();
 		try {
-			NSTimestamp now = new NSTimestamp();
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.add(Calendar.DATE, -SettingsReader.intForKeyPath("edu.planFactLagDays", 0));
+			NSTimestamp now = new NSTimestamp(cal.getTimeInMillis());
 			Integer eduYear = MyUtility.eduYearForDate(now);
 			NSArray details = EduPeriod.periodsInYear(eduYear, ec);
 			EOQualifier qual = Various.getEOInQualifier("eduPeriod", details);
@@ -122,12 +127,12 @@ public class Reprimand extends _Reprimand {
 					dayForPertype.setObjectForKey(day, pertype);
 				}
 				if (day == null || day.intValue() > 0) {
-					logger.log(WOLogLevel.FINEST,"Skipping: day is " + day,course);
+					logger.log(WOLogLevel.FINER,"Skipping: day is " + day,course);
 					continue;
 				}
 				Integer deviation = (Integer) planFact.valueForKey("deviation");
 				if (deviation == null || deviation.intValue() == 0) {
-					logger.log(WOLogLevel.FINEST,"Skipping: no deviation",course);
+					logger.log(WOLogLevel.FINER,"Skipping: no deviation",course);
 					continue;
 				}
 				Reprimand rpr = (Reprimand) EOUtilities

@@ -607,7 +607,9 @@
 		<key>autoItogLagDays</key>
 		<string>1</string>
 		<key>disablePlanFactCheck</key>
-		<string>true</string>
+		<string>false</string>
+		<key>planFactLagDays</key>
+		<string>0</string>
 		<key>_ignorePrognosesAfterDays</key>
 		<string>45</string>
 		<key>autogenerateEduPeriods</key>
@@ -679,7 +681,7 @@
 		<key>DAILY</key>
 		<dict>
 			<key>time</key>
-			<string>18:29</string>
+			<string>16:20</string>
 		</dict>
 		<key>MONTHLY</key>
 		<dict/>
@@ -706,7 +708,7 @@
 		<string>dd.MM.yyyy</string>
 		<key>shortDateFormat</key>
 		<string>dd.MM</string>
-		<key>defaultDate</key>
+		<key>_defaultDate</key>
 		<string>08.04.2009</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>
