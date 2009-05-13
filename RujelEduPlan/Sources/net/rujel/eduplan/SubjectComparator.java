@@ -34,6 +34,7 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSForwardException;
+import com.webobjects.foundation.NSKeyValueCoding;
 
 public class SubjectComparator extends NSComparator {
 	private static final String SUBJECT = "Subject";
@@ -45,10 +46,14 @@ public class SubjectComparator extends NSComparator {
 			PlanCycle.SUBJECT_EO_KEY,EOSortOrdering.CompareAscending));
 	
 	public int compare(Object arg0, Object arg1) throws ComparisonException {
-		if(!(arg0 instanceof EOEnterpriseObject && arg1 instanceof EOEnterpriseObject))
-			throw new ComparisonException("Can only compare EOEnterpriseObjects");
 		if(arg1 == arg0)
 			return OrderedSame;
+		if(arg0 == null || arg0 instanceof NSKeyValueCoding.Null)
+			return OrderedAscending;
+		if(arg1 == null || arg1 instanceof NSKeyValueCoding.Null)
+			return OrderedDescending;
+		if(!(arg0 instanceof EOEnterpriseObject && arg1 instanceof EOEnterpriseObject))
+			throw new ComparisonException("Can only compare EOEnterpriseObjects");
 		EOEnterpriseObject left = (EOEnterpriseObject)arg0;
 		EOEnterpriseObject right = (EOEnterpriseObject)arg1;
 		int result = 0;

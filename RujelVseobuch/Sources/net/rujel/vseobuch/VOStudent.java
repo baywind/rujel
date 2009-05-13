@@ -63,7 +63,7 @@ public class VOStudent extends _VOStudent implements Student, Person
 		EOFetchSpecification fs = new EOFetchSpecification("VOList",qual,null);
 		NSArray groups = editingContext().objectsWithFetchSpecification(fs);
 		if (groups == null || groups.count() == 0) return null;
-		NSTimestamp today = (NSTimestamp)valueForKeyPath("editingContext.sesion.today");
+		NSTimestamp today = (NSTimestamp)valueForKeyPath("editingContext.session.today");
 		Integer year = net.rujel.base.MyUtility.eduYearForDate(today);
 		if(year == null)
 			throw new IllegalStateException("Could not get current year");

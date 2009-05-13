@@ -73,7 +73,29 @@ public class TimeoutPopup extends WOComponent {
 	
 	public void setTimeout (Timeout value) {
 		timeout = value;
-		String toClass = (prognosis == null)?"CourseTimeout":"StudentTimeout";
+		String toClass = null;
+		if(timeout == null) {
+			toClass = (prognosis == null)?"CourseTimeout":"StudentTimeout";
+		} else {
+			if(timeout instanceof StudentTimeout) {
+				toClass = "StudentTimeout";
+				if(prognosis == null) {
+					if(course != null) {
+						prognosis = Prognosis.getPrognosis(
+								((StudentTimeout)timeout).student(), course, 
+								timeout.eduPeriod(), false);
+					} else {
+						NSArray prognoses = timeout.relatedPrognoses();
+						if(prognoses != null && prognoses.count() > 0)
+							prognosis = (Prognosis)prognoses.objectAtIndex(0);
+					}
+				}
+				if(course == null && prognosis != null)
+					course = prognosis.eduCourse();
+			} else {
+				toClass = "CourseTimeout";
+			}
+		}
 		NamedFlags access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." + toClass);
 		if(timeout != null) {
 			eduPeriod = timeout.eduPeriod();
@@ -95,10 +117,12 @@ public class TimeoutPopup extends WOComponent {
 	
 	public void setEduPeriod(EduPeriod period) {
 		eduPeriod = period;
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(eduPeriod.end());
-		cal.add(GregorianCalendar.DATE,7);
-		dueDate = new NSTimestamp(cal.getTime());
+		if(dueDate == null) {
+			GregorianCalendar cal = new GregorianCalendar();
+			cal.setTime(eduPeriod.end());
+			cal.add(GregorianCalendar.DATE,7);
+			dueDate = new NSTimestamp(cal.getTime());
+		}
 	}
 
     public String teacherName() {
