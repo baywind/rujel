@@ -194,6 +194,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     	if(Reason.ENTITY_NAME.equals(currTab.valueForKey("entity"))) {
     		currObject = currReason;
     		tmpDict.takeValueForKey(Boolean.FALSE,"allowSelection");
+    	} else {
+    		tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
     	}
     	if(tmpDict.valueForKey("inReason") != null) {
 			String reasonKey = (String)tab.valueForKey("reasonKey");

@@ -191,8 +191,10 @@ public class ChooseRegime extends WOComponent {
     		return _regimeGroups;
     	_regimeGroups = (NSArray)application().valueForKeyPath(
     			"strings.Strings.ChooseRegime.regimeGroups");
+    	NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)
+    							session().valueForKey("readAccess");
     	NSMutableArray result = PlistReader.cloneArray(_regimeGroups, true);
-    	if(Various.boolForObject(session().valueForKeyPath("readAccess._read.Overview"))) {
+    	if(Various.boolForObject(readAccess.valueForKeyPath("_read.Overview"))) {
     		NSMutableDictionary edu = (NSMutableDictionary)result.objectAtIndex(0);
     		if(!"edu".equals(edu.valueForKey("id"))) {
     			for (int i = 1; i < result.count(); i++) {
@@ -216,6 +218,11 @@ public class ChooseRegime extends WOComponent {
     		Enumeration enu = _regimeGroups.objectEnumerator();
     		while (enu.hasMoreElements()) {
     			NSKeyValueCoding reg = (NSKeyValueCoding) enu.nextElement();
+    			String checkAccess = (String) reg.valueForKey("checkAccess");
+    			if(checkAccess == null)
+    				checkAccess = (String) reg.valueForKey("component");
+    			if(Various.boolForObject(readAccess.valueForKeyPath("_read." + checkAccess)))
+    				continue;
     			NSMutableDictionary grp = (NSMutableDictionary)grpsByID.valueForKey(
     					(String)reg.valueForKey("group"));
     			if(grp == null)

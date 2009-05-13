@@ -62,11 +62,13 @@ public class ReportsModule {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelReports_Reports.regimeGroup");
 		} else if(obj.equals("regimes")) {
-			return regimes(ctx);
+//			return regimes(ctx);
+			return WOApplication.application().valueForKeyPath(
+						"strings.RujelReports_Reports.regimes");
 		}
 		return null;
 	}
-	
+/*	
 	public static Object regimes(WOContext ctx) {
 		Object result = null;
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.CoursesReport")))
@@ -83,7 +85,7 @@ public class ReportsModule {
 		return result;
 	}
 
-    public static NSMutableArray reportsFromDir(String dir,WOContext context) {
+*/    public static NSMutableArray reportsFromDir(String dir,WOContext context) {
     	NSMutableArray reports = new NSMutableArray();
     	String reportsDirPath = SettingsReader.stringForKeyPath("reportsDir",
     	"LOCALROOT/Library/WebObjects/Configuration/RujelReports");

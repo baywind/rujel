@@ -65,10 +65,8 @@ public class CurriculumModule {
 		} else if("scheduleTask".equals(obj)) {
 			return scheduleTask(ctx);
 		} else if(obj.equals("regimes")) {
-			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Curriculum")))
-				return null;
 			return WOApplication.application().valueForKeyPath(
-					"strings.RujelCurriculum_Curriculum.curriculumRegime");
+					"strings.RujelCurriculum_Curriculum.regimes");
 		}
 		return null;
 	}
