@@ -30,4 +30,5 @@ Year : WOString {
 
 ExportLink : WOHyperlink {
   action = export;
+  string = application.strings.RujelReports_Reports.export;
 }

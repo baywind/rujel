@@ -623,7 +623,10 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		if(weight == null) return null;
 		if(weight.compareTo(BigDecimal.ZERO) == 0)
 			return BigDecimal.ZERO;
-		return weight.stripTrailingZeros();
+		weight = weight.stripTrailingZeros();
+		if(weight.scale() < 0)
+			weight.setScale(0);
+		return weight;
 	}
 	
 	public static final int CLASSWORK = 0;

@@ -29,12 +29,10 @@
 
 package net.rujel.reports;
 
-import java.text.FieldPosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Enumeration;
 
 import net.rujel.reusables.DisplayAny;
+import net.rujel.reusables.Export;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
@@ -80,7 +78,9 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			}
 			if(properties == null || properties.count() == 0)
 				return;
-			appendRowToResponse(aResponse,aContext);
+			
+			Export export = new Export(aResponse,filenameFormatter);
+			appendRowToResponse(export,aContext);
 			if(list == null || list.count() == 0)
 				return;
 			Enumeration rows = list.objectEnumerator();
@@ -89,9 +89,10 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 				if((itemRow instanceof EOEnterpriseObject) && 
 						((EOEnterpriseObject)itemRow).editingContext() == null)
 					continue;
-				appendRowToResponse(aResponse,aContext);
+				appendRowToResponse(export,aContext);
 			} // rows
-	    	aResponse.setHeader("application/octet-stream","Content-Type");
+			export.generateResponse();
+/*	    	aResponse.setHeader("application/octet-stream","Content-Type");
 	    	StringBuffer buf = new StringBuffer("attachment; filename=\"");
 //	    	String filenameFormatter = (export == null)?null:
 //	    				(String)export.valueForKey("filenameFormatter");
@@ -104,11 +105,13 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	    	}
 			buf.append(".csv\"");
 			aResponse.setHeader(buf.toString(),"Content-Disposition");
+*/
 		} // end exporting
 	}
 	
-	protected void appendRowToResponse(WOResponse aResponse, WOContext aContext) {
+	protected void appendRowToResponse(Export export, WOContext aContext) {
 		Enumeration props = properties.objectEnumerator();
+		export.beginRow();
 		while (props.hasMoreElements()) {
 			NSKeyValueCodingAdditions tmp = (NSKeyValueCodingAdditions)props.nextElement();
 			if(Various.boolForObject(tmp.valueForKey("skipExport")))
@@ -119,26 +122,29 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 				itemDict = tmp;
 			NSArray subParams = (NSArray)itemDict.valueForKey("subParams");
 			if(subParams == null) { // no subs
-				aResponse.appendContentCharacter('"');
+//				aResponse.appendContentCharacter('"');
 				if(itemRow == null) {
 					Object value = valueOf.valueForKeyPath("item.itemDict.title");
 					if(value != null)
-						aResponse.appendContentString(value.toString());
+						export.addValue(value);
+//						aResponse.appendContentString(value.toString());
 				} else {
+					export.beginValue();
 					NSDictionary bindings = new NSDictionary(
 							new Object[] {WOAssociation.associationWithValue(item),
 									WOAssociation.associationWithValue(itemDict)},
 									new String[] {"value","dict"});
 					WOElement display = application().dynamicElementWithName(
 							"DisplayAny", bindings, null, null);
-					display.appendToResponse(aResponse, aContext);
+					display.appendToResponse(export.response(), aContext);
+					export.endValue();
 				}
-				aResponse.appendContentCharacter('"');
+//				aResponse.appendContentCharacter('"');
 			} else { // subs
 				Enumeration subs = subParams.objectEnumerator();
 				while (subs.hasMoreElements()) { // subs
 					subDict = (NSKeyValueCodingAdditions) subs.nextElement();
-					aResponse.appendContentCharacter('"');
+//					aResponse.appendContentCharacter('"');
 					if(Various.boolForObject(subDict.valueForKey("skipExport")))
 						continue;
 					tmp = (NSKeyValueCodingAdditions)subDict.valueForKey("exportDict");
@@ -147,8 +153,10 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 					if(itemRow == null) {
 						Object value = valueOf.valueForKeyPath("item.subDict.title");
 						if(value != null)
-							aResponse.appendContentString(value.toString());
+							export.addValue(value);
+//							aResponse.appendContentString(value.toString());
 					} else {
+						export.beginValue();
 						Object value = item;
 						if(subDict.valueForKey("value") != null)
 							value = valueOf.valueForKeyPath("item.subDict.value");
@@ -158,17 +166,19 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 										new String[] {"value","dict"});
 						WOElement display = application().dynamicElementWithName(
 								"DisplayAny", bindings, null, null);
-						display.appendToResponse(aResponse, aContext);
+						display.appendToResponse(export.response(), aContext);
+						export.endValue();
 					}
-					aResponse.appendContentCharacter('"');
-					if(subs.hasMoreElements())
-						aResponse.appendContentCharacter(',');
+//					aResponse.appendContentCharacter('"');
+//					if(subs.hasMoreElements())
+//						aResponse.appendContentCharacter(',');
 				}
 			} // subs
-			if(props.hasMoreElements())
-				aResponse.appendContentCharacter(',');
+//			if(props.hasMoreElements())
+//				aResponse.appendContentCharacter(',');
 		} // properties.objectEnumerator()
-		aResponse.appendContentCharacter('\r');
+//		aResponse.appendContentCharacter('\r');
+		export.endRow();
 	}
 	
 	public Object nextValue() {

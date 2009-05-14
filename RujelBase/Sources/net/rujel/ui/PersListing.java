@@ -99,7 +99,7 @@ public class PersListing extends WOComponent {
 	public Boolean canEdit() {
 		if(Various.boolForObject(valueForBinding("noEdit")))
 			return Boolean.FALSE;
-		return (Boolean)session().valueForKeyPath("session.readAccess.edit." +
+		return (Boolean)session().valueForKeyPath("readAccess.edit." +
 				((item==null)?entity():"item"));
 	}
 	
