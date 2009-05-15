@@ -42,6 +42,7 @@ import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -404,7 +405,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public WOActionResults selectTeacher() {
-		WOComponent selector = pageWithName("SelectorPopup");
+/*		WOComponent selector = pageWithName("SelectorPopup");
 		selector.takeValueForKey(this, "returnPage");
 		selector.takeValueForKey("reasonTeacher", "resultPath");
 		Teacher teacher = reasonTeacher();
@@ -417,7 +418,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
 		selector.takeValueForKey(dict, "dict");
-		return selector;
+		return selector;*/
+		return TeacherSelector.selectorPopup(this, "reasonTeacher", ec);
 	}
 	
 	public WOActionResults selectEduGroup() {

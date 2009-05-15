@@ -69,6 +69,35 @@
 		<string>Табель преподавателей</string>
 		<key>extTitle</key>
 		<string>Табель учета рабочего времени преподавателей</string>
+		<key>total</key>
+		<string>всего</string>
+		<key>grandTotal</key>
+		<dict>
+			<key>colspan</key>
+			<string>2</string>
+			<key>class</key>
+			<string>ungerade</string>
+			<key>subject</key>
+			<string>Общая сумма</string>
+		</dict>
+		<key>mainTotal</key>
+		<dict>
+			<key>colspan</key>
+			<string>2</string>
+			<key>class</key>
+			<string>gerade</string>
+			<key>subject</key>
+			<string>Основные уроки</string>
+		</dict>
+		<key>subsTotal</key>
+		<dict>
+			<key>colspan</key>
+			<string>2</string>
+			<key>class</key>
+			<string>gerade</string>
+			<key>subject</key>
+			<string>Замены и совмещения</string>
+		</dict>
 	</dict>
 	<key>messages</key>
 	<dict>

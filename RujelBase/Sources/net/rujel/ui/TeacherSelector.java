@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
+import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -237,4 +238,23 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		return "return tryLoad(true);";
 	}
 
+	public static WOActionResults selectorPopup(WOComponent returnPage, 
+			String resultPath, EOEditingContext ec) {
+		WOComponent selector = returnPage.pageWithName("SelectorPopup");
+		selector.takeValueForKey(returnPage, "returnPage");
+		selector.takeValueForKey(resultPath, "resultPath");
+		Teacher teacher = (Teacher)returnPage.valueForKeyPath(resultPath);
+		selector.takeValueForKey(teacher, "value");
+		NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.RujelBase_Base.selectTeacher");
+		dict = PlistReader.cloneDictionary(dict, true);
+		if(teacher != null) {
+			dict.takeValueForKeyPath(new NSArray(teacher), "presenterBindings.forcedList");
+		} else {
+			dict.takeValueForKeyPath(null, "presenterBindings.forcedList");
+		}
+		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
+		selector.takeValueForKey(dict, "dict");
+		return selector;
+	}
 }
