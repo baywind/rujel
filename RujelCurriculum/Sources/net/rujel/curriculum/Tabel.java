@@ -29,7 +29,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public EOEditingContext ec;
 	public NSArray months;
 	public NSDictionary currMonth;
-	public Object item;
+	public NSDictionary item;
 	public Teacher currTeacher;
 	public NSMutableArray details;
 	public Integer index;
@@ -123,7 +123,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	NSArray list = ec.objectsWithFetchSpecification(fs);
     	if(list == null || list.count() == 0) {
     		session().takeValueForKey(application().valueForKeyPath(
-    			"strings.RujelReports_Reports.CustomReport.nothingFound"), "message");
+    				"strings.RujelCurriculum_Curriculum.Tabel.noData"), "message");
     		return null;
     	}
     	NSMutableDictionary byTeacher = new NSMutableDictionary();
@@ -158,9 +158,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	exportPage.addValue(currMonth.valueForKey("name"));
     	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
 		for (int i = 1; i <= days; i++) {
-			exportPage.beginValue();
-			exportPage.response().appendContentString(Integer.toString(i));
-			exportPage.endValue();
+			exportPage.addValue(Integer.toString(i));
 		}
 		exportPage.addValue(application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.total"));
@@ -189,23 +187,71 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	return exportPage;
     }
     
+	public WOActionResults exportDetails() {
+		if(details == null || details.count() == 0) {
+    		session().takeValueForKey(application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.Tabel.noData"), "message");
+    		return null;
+		}
+    	StringBuilder buf = new StringBuilder("details");
+    	buf.append(currMonth.valueForKey("year"));
+    	int month = ((Integer)currMonth.valueForKey("month")).intValue();
+    	month++;
+    	if(month < 10)
+    		buf.append('0');
+    	buf.append(month);
+		Export export = new Export(context(),buf.toString());
+
+		int days = ((Integer)currMonth.valueForKey("days")).intValue();
+		export.beginRow();
+//		export.addValue(currMonth.valueForKey("name"));
+		export.addValue(Person.Utility.fullName(currTeacher, true, 2, 2, 2));
+		export.addValue(null);
+		for (int i = 1; i <= days; i++) {
+			export.addValue(Integer.toString(i));
+		}
+		export.addValue(application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.Tabel.total"));
+		export.endRow();
+
+		Enumeration enu = details.objectEnumerator();
+    	NSNumberFormatter formatter = new NSNumberFormatter();
+    	formatter.setDecimalSeparator(",");
+    	formatter.setThousandSeparator(" ");
+		while (enu.hasMoreElements()) {
+			NSDictionary row = (NSDictionary) enu.nextElement();
+			export.beginRow();
+			export.addValue(row.valueForKey("eduGroup"));
+			export.addValue(row.valueForKey("subject"));
+			BigDecimal[] values = (BigDecimal[])row.valueForKey("values");
+			for (int i = 0; i <= days; i++) {
+				BigDecimal value = values[(i==days)?0:i + 1];
+				if(value != null) {
+					value = value.stripTrailingZeros();
+					if(value.scale() < 0)
+						value = value.setScale(0);
+				}
+				export.addValue(formatter.format(value));
+			}
+			export.endRow();
+		}
+		return export;
+	}
+    
     public void setCurrTeacher(Teacher teacher) {
     	currTeacher = teacher;
-		details = null;
-    	if(currTeacher != null && currMonth != null) {
-    		go();
-    	}
+    	go();
     }
     
     public void setCurrMonth(NSDictionary month) {
 		currMonth = month;
-		details = null;
-    	if(currTeacher != null && currMonth != null) {
-    		go();
-    	}
+		go();
 	}
     
     public void go() {
+    	details = null;
+    	if(currTeacher == null || currMonth == null)
+    		return;
     	NSMutableArray quals = new NSMutableArray();
     	EOQualifier qual = new EOKeyValueQualifier("teacher",
     			EOQualifier.QualifierOperatorEqual,currTeacher);
@@ -238,6 +284,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				"strings.RujelCurriculum_Curriculum.Tabel.mainTotal")).mutableClone();
     		row.setObjectForKey(mainTotals, "values");
     		details.addObject(row);
+    		String itemClass = (String)row.valueForKey("itemClass");
     		Enumeration coursEnu = list.objectEnumerator();
     		while (coursEnu.hasMoreElements()) {
 				EduCourse course = (EduCourse) coursEnu.nextElement();
@@ -251,6 +298,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				row = new NSMutableDictionary(course,"course");
 				row.takeValueForKey(course.eduGroup().name(), "eduGroup");
 				row.takeValueForKey(course.subjectWithComment(),"subject");
+				row.takeValueForKey(itemClass, "class");
 				Enumeration lEnu = list.objectEnumerator();
 				while (lEnu.hasMoreElements()) {
 					EduLesson lesson = (EduLesson) lEnu.nextElement();
@@ -274,6 +322,9 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	qual = new EOAndQualifier(quals);
     	fs.setEntityName(Substitute.ENTITY_NAME);
     	fs.setQualifier(qual);
+    	list = new NSArray(new EOSortOrdering(
+    			Substitute.FACTOR_KEY,EOSortOrdering.CompareDescending));
+    	fs.setSortOrderings(list);
     	list = ec.objectsWithFetchSpecification(fs);
     	if(list == null || list.count() == 0)
     		return;
@@ -281,35 +332,58 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		row = ((NSDictionary)application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.subsTotal")).mutableClone();
 		row.setObjectForKey(subsTotals, "values");
+		String itemClass = (String)row.valueForKey("itemClass");
 		details.addObject(row);
 		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary byCourse = new NSMutableDictionary();
-		days = ((Integer)currMonth.valueForKey("month")).intValue();
-    	while (enu.hasMoreElements()) {
+		int month = ((Integer)currMonth.valueForKey("month")).intValue();
+		BigDecimal currFactor = null;
+		BigDecimal[] factorCounts = null;
+    	while (enu.hasMoreElements()) { //
 			Substitute sub = (Substitute) enu.nextElement();
 			BigDecimal factor = sub.factor();
 			if(factor.compareTo(BigDecimal.ZERO) == 0)
 				continue;
 			cal.setTime(sub.lesson().date());
-			if(days != cal.get(Calendar.MONTH))
+			if(month != cal.get(Calendar.MONTH))
 				continue;
-			addHoursToKey(byCourse, factor, cal, sub.lesson().course());
+			if(!factor.equals(currFactor)) {
+				if(byCourse.count() > 0)
+					appendCourses(byCourse, sorter, itemClass);
+				currFactor = factor;
+				factorCounts = new BigDecimal[days + 1];
+				row = new NSMutableDictionary("2","colspan");
+				row.takeValueForKey("backfield2","class");
+				row.takeValueForKey(sub.title() + " - " + factor.stripTrailingZeros()
+						, "subject");
+				row.takeValueForKey(factorCounts,"values");
+				details.addObject(row);
+			}
+			addHoursToKey(byCourse, BigDecimal.ONE, cal, sub.lesson().course());
+			addHoursToKey(null, BigDecimal.ONE, cal, factorCounts);
 			addHoursToKey(null, factor, cal, subsTotals);
 			addHoursToKey(null, factor, cal, totals);
 		}
-    	list = byCourse.allKeys();
+		if(byCourse.count() > 0)
+			appendCourses(byCourse, sorter, itemClass);
+    }
+    
+    protected void appendCourses(NSMutableDictionary byCourse,NSArray sorter,String itemClass) {
+    	NSArray list = byCourse.allKeys();
     	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
-    	enu = list.objectEnumerator();
+    	Enumeration enu = list.objectEnumerator();
     	while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
-			row = new NSMutableDictionary(course,"course");
+			NSMutableDictionary row = new NSMutableDictionary(course,"course");
 			row.takeValueForKey(course.eduGroup().name(), "eduGroup");
 			row.takeValueForKey(Person.Utility.fullName(course.teacher(), true, 2, 1, 1),
 					"subject");
-			row.takeValueForKey(course.cycle().subject(),"hover");
+//			row.takeValueForKey(course.cycle().subject(),"hover");
+			row.takeValueForKey(itemClass, "class");
     		row.setObjectForKey(byCourse.objectForKey(course), "values");
     		details.addObject(row);
 		}
+    	byCourse.removeAllObjects();
     }
     
 	public WOActionResults selectTeacher() {
@@ -317,7 +391,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String value() {
-		if(!(item instanceof NSDictionary)) {
+		if(item == null) {
 			if(index!=null)
 				return Integer.toString(index.intValue() + 1);
 		}
@@ -338,5 +412,15 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public String sum() {
 		index = null;
 		return value();
+	}
+	
+	public WOActionResults openCourse() {
+		Object course = item.valueForKey("course");
+		if(course == null)
+			return null;
+		WOComponent page = pageWithName("LessonNoteEditor");
+		page.takeValueForKey(course, "course");
+		session().takeValueForKey(this, "pushComponent");
+		return page;
 	}
 }

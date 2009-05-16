@@ -66,17 +66,21 @@
 	<key>Tabel</key>
 	<dict>
 		<key>title</key>
-		<string>Табель преподавателей</string>
+		<string>Табель (бух)</string>
 		<key>extTitle</key>
-		<string>Табель учета рабочего времени преподавателей</string>
+		<string>Табель учета занятий</string>
 		<key>total</key>
 		<string>всего</string>
+		<key>wholeSchool</key>
+		<string>Сводка по всей школе</string>
+		<key>noData</key>
+		<string>нет данных для сохранения</string>
 		<key>grandTotal</key>
 		<dict>
 			<key>colspan</key>
 			<string>2</string>
 			<key>class</key>
-			<string>ungerade</string>
+			<string>grey</string>
 			<key>subject</key>
 			<string>Общая сумма</string>
 		</dict>
@@ -85,18 +89,22 @@
 			<key>colspan</key>
 			<string>2</string>
 			<key>class</key>
-			<string>gerade</string>
+			<string>ungerade</string>
 			<key>subject</key>
-			<string>Основные уроки</string>
+			<string>Основные уроки:</string>
+			<key>itemClass</key>
+			<string>gerade</string>
 		</dict>
 		<key>subsTotal</key>
 		<dict>
 			<key>colspan</key>
 			<string>2</string>
 			<key>class</key>
-			<string>gerade</string>
+			<string>ungerade</string>
 			<key>subject</key>
-			<string>Замены и совмещения</string>
+			<string>Замены и совмещения:</string>
+			<key>itemClass</key>
+			<string>gerade</string>
 		</dict>
 	</dict>
 	<key>messages</key>
@@ -154,9 +162,9 @@
 		</dict>
 		<dict>
 			<key>title</key>
-			<string>Табель преподавателя</string>
+			<string>Табель (бух)</string>
 			<key>hover</key>
-			<string>Табель учета рабочего времени преподавателей</string>
+			<string>Табель учета занятий</string>
 			<key>component</key>
 			<string>Tabel</string>
 			<key>group</key>

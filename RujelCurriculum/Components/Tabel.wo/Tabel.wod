@@ -1,8 +1,11 @@
 PageWrapper : PageWrapper {
+	title = title;
 }
 
 Title : WOString {
   value = application.strings.RujelCurriculum_Curriculum.Tabel.extTitle;
+  escapeHTML = false;
+  valueWhenEmpty = "Teachers tabel";
 }
 
 Form : WOForm {
@@ -13,7 +16,6 @@ SelectMonth : WOPopUpButton {
   item = item;
   selection = currMonth;
   displayString = item.name;
-  escapeHTML = false;
   onchange = "this.form.submit();";
 }
 
@@ -33,11 +35,16 @@ ExportLink : WOHyperlink {
   string = application.strings.RujelReports_Reports.export;
 }
 
+ExportDetails : WOHyperlink {
+  action = exportDetails;
+  string = application.strings.RujelReports_Reports.export;
+}
+
 SelectTeacher : OnClickContainer {
   elementName = "span";
+  class = "button";
   invokeAction = selectTeacher;
   onclick = session.ajaxPopup;
-  disabled = session.readAccess._edit.Tabel;
 }
 
 TeacherName : PersonDisplay {
@@ -46,12 +53,12 @@ TeacherName : PersonDisplay {
   first = 2;
   second = 2;
   startWithLast = true;
-  valueWhenEmpty = application.strings.RujelInterfaces_Names.Teacher.this;
 }
 
 Row : WOGenericContainer {
   elementName = "tr";
   class = item.class;
+  style = "height:2em;vertical-align:middle;";
 }
 
 Details : WORepetition {
@@ -60,9 +67,14 @@ Details : WORepetition {
   item = item;
 }
 
-HeaderCell : WOGenericContainer {
+HeaderCell : OnClickContainer {
   elementName = "td";
   colspan = item.colspan;
+  title = item.course.cycle.subject;
+  disabled  = item.colspan;
+  onclick = session.tryLoad;
+  invokeAction = openCourse;
+  style = "overflow:hidden;width:10em;";
 }
 
 SubjectString : WOString {
@@ -96,5 +108,35 @@ SumValue : WOString {
 
 SumTitle : WOString {
   value = application.strings.RujelCurriculum_Curriculum.Tabel.total;
+  valueWhenEmpty = "total";
   escapeHTML = false;
+}
+
+DateTitle : WOString {
+  value = application.strings.Reusables_Strings.dataTypes.Date;
+  valueWhenEmpty = "Date";
+  escapeHTML = false;
+}
+
+HasDetails : WOConditional {
+  condition = details.count;
+}
+
+WholeSchool : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Tabel.wholeSchool;
+  valueWhenEmpty = "Whole school";
+  escapeHTML = false;
+}
+
+TeacherTitle : WOString {
+  value = application.strings.RujelInterfaces_Names.Teacher.this;
+  valueWhenEmpty = "Teacher";
+}
+
+CanCreate : WOConditional {
+  condition = session.readAccess.create.Tabel;
+}
+
+CanEdit : WOConditional {
+  condition = session.readAccess.edit.Tabel;
 }
