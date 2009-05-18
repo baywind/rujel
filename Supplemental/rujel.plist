@@ -621,6 +621,8 @@
 		<string>1</string>
 		<key>_ignorePrognosesAfterDays</key>
 		<string>45</string>
+		<key>_ignoreUnverifiedReasons</key>
+		<string>true</string>
 		<key>autogenerateEduPeriods</key>
 		<string>true</string>
 		<key>newYearMonth</key>

@@ -116,8 +116,10 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 
     public WOActionResults done(boolean hasChanges) {
     	returnPage.ensureAwakeInContext(context());
-    	if(hasChanges && (returnPage instanceof VariationsList))
+    	if(hasChanges && (returnPage instanceof VariationsList)) {
     		returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
+    		returnPage.takeValueForKey(null,"planFact");
+    	}
     	if(hasChanges)
 			session().removeObjectForKey("lessonProperies");
        	return returnPage;

@@ -136,6 +136,10 @@
 		<string>Поправки</string>
 		<key>editVarDate</key>
 		<string>Введите дату поправки</string>
+		<key>weeksAndDays</key>
+		<string>Нед (дн)</string>
+		<key>deviation</key>
+		<string>Расхождение</string>
 	</dict>
 	<key>plugins</key>
 	<array>

@@ -37,6 +37,7 @@ import net.rujel.eduplan.PlanCycle;
 import net.rujel.eduresults.EduPeriod;
 import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOAndQualifier;
@@ -152,6 +153,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		list = Variation.variations(course, null, date, null);
 		int plus = 0;
 		int minus = 0;
+		boolean verifiedOnly = SettingsReader.boolForKeyPath("ignoreUnverifiedReasons", false);
 		if(list != null && list.count() > 0) {
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -160,6 +162,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				if(var.isExternal()) {
 					plan += value;
 				} else {
+					if(verifiedOnly && var.reason().unverified())
+						continue;
 					if (value > 0)
 						plus += value;
 					else
@@ -168,6 +172,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			}
 			result.takeValueForKey(new Integer(plus), "plus");
 			result.takeValueForKey(new Integer(minus), "minus");
+			result.takeValueForKey(new Integer(plus - minus), "netChange");
 		}
 		result.takeValueForKey(new Integer(plan), "plan");
 		
