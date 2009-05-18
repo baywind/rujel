@@ -38,20 +38,9 @@ import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 
 public class NotesPage extends WOComponent {
-//	protected static final String presenter = SettingsReader.stringForKeyPath(
-//			"ui.presenter.note","NotePresenter");
     public PerPersonLink lessonItem;
     public Student studentItem;
-	//public String selectStudentAction;
-	
-//	public EduCourse course;
-	
-    /** @TypeInfo PerPersonLink */
-    //public NSArray lessonsList;
-    /** @TypeInfo Student */
-    //public NSArray studentsList;
-	
-	//public NSKeyValueCoding present;
+
     public NSMutableDictionary presenterCache = new NSMutableDictionary();
 	
     public NotesPage(WOContext context) {
@@ -85,11 +74,6 @@ public class NotesPage extends WOComponent {
 		return (NSArray)valueForBinding("lessonsList");
 		//return lessonsList;
 	}
-	/*
-	public String selectorPresenter() {
-		if (single) return null;
-		return selectorPresenter;
-	}*/
 	
 	protected PerPersonLink _currLesson;
 	public PerPersonLink currLesson() {
@@ -209,14 +193,19 @@ public class NotesPage extends WOComponent {
 	
 	public void selectLesson() {
 		_currLesson = lessonItem;
+		if(lessonItem instanceof EOEnterpriseObject) {
+			EOEditingContext ec = ((EOEnterpriseObject)lessonItem).editingContext();
+			if(ec == null) {
+				_currLesson = null;
+			} else {
+				if (ec.hasChanges())
+					ec.revert();
+			}
+		}
 			setValueForBinding(_currLesson,"currLesson");
 		//selectStudent = studentItem;
 		if(hasBinding("selectStudent"))
 			setValueForBinding(studentItem,"selectStudent");
-		if(lessonItem instanceof EOEnterpriseObject) {
-			EOEditingContext ec = ((EOEnterpriseObject)lessonItem).editingContext();
-			if (ec.hasChanges()) ec.revert();
-		}
     }
 	
 	public WOActionResults studentSelection() {
@@ -238,15 +227,11 @@ public class NotesPage extends WOComponent {
 	}
 	
 	public void reset() {
-//		selectStudent = null;
 		_currLesson = null;
 		_currPresenter = null;
 		lessonItem = null;
 		studentItem = null;
-//		lessonsList = null;
-//		studentsList = null;
 		_single = null;
-//		present = null;
 		addOnItem = null;
 		allAddOns = null;
 		activeAddOns = null;
@@ -274,70 +259,11 @@ public class NotesPage extends WOComponent {
         WOActionResults result = (WOActionResults)parent().valueForKey("save");
 		_currLesson = (EduLesson)valueForBinding("currLesson");
 		return result; 
-/*		currLesson = null;
-		setValueForBinding(currLesson,"currLesson");
-		return null;*/
     }
 	
 	public boolean isSelected() {
 		return (currLesson() != null && lessonItem == currLesson());
 	}
-/*
-	public String lessonTitle() {
-		if(lessonItem==null)return null;
-        String result = lessonItem.title();
-		if(result != null)
-			return result;
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(lessonItem.date());
-		int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
-		int month = cal.get(GregorianCalendar.MONTH);
-		NSArray months = (NSArray)application().valueForKeyPath("strings.Reusables_Strings.presets.monthShort");
-		return String.format("<small>%1$s</small><br/><b>%2$d</b>",months.objectAtIndex(month),day);
-	}
-	
-	public String tdStyle() {
-		if(lessonItem == currLesson)
-			return "selection";
-		else
-			return studentStyle();
-    }
-	
-    public void setNoteForStudent(String newNoteForStudent) {
-        lessonItem.setNoteForStudent(newNoteForStudent,studentItem);
-    }
-	
-    public String noteForStudent() {
-		if(studentItem == null) return null;
-        return lessonItem.noteForStudent(studentItem);
-    }
-	
-	public String shortNoteForStudent() {
-		String theNote = noteForStudent();
-		if (theNote == null || theNote.length() <= 3)
-			return theNote;
-		String url = application().resourceManager().urlForResourceNamed("text.png"
-				,null,null,context().request());
-		return "<img src=\"" + url + "\" alt=\"" + theNote + "\" height=\"16\" width=\"16\">";
-	}
-	
-	public String fullNoteForStudent() {
-		if(studentItem == null)
-			return lessonItem.theme();
-		String theNote = noteForStudent();
-		if (theNote == null || theNote.length() <= 3)
-			return null;
-		return theNote;
-	}
-	
-	public String onClick() {
-		if(currLesson == null || lessonItem != currLesson) {
-			String href = context().componentActionURL();
-			return "checkRun('" + href + "');";
-		}
-		else
-			return null;
-    } */
 	
 	public void setStudentItem(Object item) {
 		if(item instanceof Student) {
@@ -383,24 +309,7 @@ public class NotesPage extends WOComponent {
 			}
 			if(activeAddOns != null)
 				session().setObjectForKey(activeAddOns, "activeAddOns");
-			//setValueForBinding(activeAddOns,"activeAddOns");
-/*		} else {
-			if(activeAddOns.count() > 0 && allAddOns().count() > 0) {
-				if(activeAddOns.objectAtIndex(0) instanceof String) {
-					NSMutableArray result = new NSMutableArray();
-					Enumeration enu = activeAddOns.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						String id = (String)enu.nextElement();
-						NSKeyValueCoding addOn = GenericAddOn.addonForID(allAddOns,id);
-						if(addOn != null) {
-							addOn = GenericAddOn.activeAddOn(addOn);
-							result.addObject(addOn);
-						}
-					}
-					activeAddOns.setArray(result);
-				}
-			}
-*/		}
+		}
 		return activeAddOns;
 	}
 	
@@ -408,5 +317,4 @@ public class NotesPage extends WOComponent {
 	public boolean single() {
 		return (lessonsList != null && lessonsList.count() == 1);
 	}*/
-    /** @TypeInfo NSKeyValueCoding */
 }
