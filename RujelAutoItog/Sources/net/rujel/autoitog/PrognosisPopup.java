@@ -106,7 +106,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     			ec.unlock();
     		}
     	} // prognosis == null
-    	if(prognosis != null) {
+    	if(prognosis != null && addOn.usage().calculator() != null) {
     		flags.setFlags(prognosis.flags().intValue());
     		mark= prognosis.mark();
     		addOn.setPrognosis(prognosis);
@@ -122,6 +122,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
          	NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
     		editBonusText = accessBonus.flagForKey(
     				(bonus != null && bonus.submitted())?"edit":"create");
+    	} else {
+    		hasBonus = false;
+    		bonusPercent = null;
     	}
      	super.appendToResponse(aResponse, aContext);
     }
@@ -278,7 +281,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     }
  	
 	public String onkeypress() {
-		if(!ifArchive)
+		if(!ifArchive || mark == null)
 			return null;
 		return "showObj('prognosChangeReason');form.changeReason.onkeypress();";
 	}
