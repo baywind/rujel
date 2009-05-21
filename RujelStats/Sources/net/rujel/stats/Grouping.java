@@ -53,17 +53,20 @@ public class Grouping extends _Grouping {
 	public NSDictionary dict() {
 		if(_dict != null)
 			return _dict;
+		_keys = (NSArray)description().valueForKeyPath("borderSet.sortedTitles");
 		NSArray list = statEntries();
 		if(list == null || list.count() == 0)
 			return null;
-		if(list.count() > 1) {
+		if(list.count() > 1 && _keys == null) {
 			EOSortOrdering so = new EOSortOrdering("statKey"
 					,EOSortOrdering.CompareCaseInsensitiveAscending);
 			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, new NSArray(so));
 		}
-		_keys = (NSArray)list.valueForKey("statKey");
+		NSArray keys = (NSArray)list.valueForKey("statKey");
 		list = (NSArray)list.valueForKey("keyCount");
-		_dict = new NSDictionary(list,_keys);
+		_dict = new NSDictionary(list,keys);
+		if(_keys == null)
+			_keys = keys.immutableClone();
 		return _dict;
 	}
 	
@@ -71,7 +74,7 @@ public class Grouping extends _Grouping {
 		if(_keys == null) {
 			dict();
 		}
-		return _keys.immutableClone();
+		return _keys;
 	}
 	
 	public Integer countForKey(String key) {
@@ -106,15 +109,131 @@ public class Grouping extends _Grouping {
 	}
 	
 	public void turnIntoFault(EOFaultHandler handler) {
+		_param1 = null;
+		_param2 = null;
 		_dict = null;
 		_keys = null;
+		
 		super.turnIntoFault(handler);
 	}
 	
-	public void recalculate(NSArray values) {
-		
+	public void calculate(NSArray values) {
+		setDict(description().calculate(values));
 	}
 	
+	protected EOEnterpriseObject _param1;
+	public EOEnterpriseObject param1() {
+		if(_param1 != null)
+			return _param1;
+		if(gid1() == null)
+			return null;
+		return EOUtilities.objectWithPrimaryKeyValue(editingContext(),
+				description().entName(), gid1());
+	}
+	
+	public void setParam1(EOEnterpriseObject param) {
+		_param1 = null;
+		if(param == null) {
+			super.setGid1(null);
+			return;
+		}
+		if(!param.entityName().equals(description().grouping1())) {
+			throw new IllegalArgumentException("Parameter entity: " + param.entityName() +
+					" instead of " + description().grouping1());
+		}
+		EOKeyGlobalID gid = (EOKeyGlobalID)editingContext().globalIDForObject(param);
+		super.setGid1((Integer)gid.keyValues()[0]);
+		_param1 = param;
+	}
+	
+	public void setGid1(Integer value) {
+		super.setGid1(value);
+		_param1 = null;
+	}
+
+	protected EOEnterpriseObject _param2;
+	public EOEnterpriseObject param2() {
+		if(_param2 != null)
+			return _param2;
+		if(gid2() == null)
+			return null;
+		return EOUtilities.objectWithPrimaryKeyValue(editingContext(),
+				description().entName(), gid2());
+	}
+	
+	public void setParam2(EOEnterpriseObject param) {
+		_param2 = null;
+		if(param == null) {
+			super.setGid2(null);
+			return;
+		}
+		if(!param.entityName().equals(description().grouping2())) {
+			throw new IllegalArgumentException("Parameter entity: " + param.entityName() +
+					" instead of " + description().grouping2());
+		}
+		EOKeyGlobalID gid = (EOKeyGlobalID)editingContext().globalIDForObject(param);
+		super.setGid2((Integer)gid.keyValues()[0]);
+		_param2 = param;
+	}
+
+	public void setGid2(Integer value) {
+		super.setGid2(value);
+		_param2 = null;
+	}
+
+	public void setDict(NSDictionary newDict) {
+		_dict = null;
+		_keys = null;
+		NSMutableDictionary dict = (newDict == null)? new NSMutableDictionary():
+														newDict.mutableClone();
+		Integer total = (Integer)dict.removeObjectForKey(TOTAL_KEY);
+		if(dict.objectForKey("keys") instanceof NSArray) {
+			_keys = (NSArray)dict.removeObjectForKey("keys");
+		}
+		_dict = dict.immutableClone();
+		int checksum = 0;
+		NSArray statEntries = statEntries();
+		EOEditingContext ec = editingContext();
+		if(statEntries != null && statEntries.count() > 0) {
+			Enumeration enu = statEntries.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject entry = (EOEnterpriseObject) enu.nextElement();
+				Object key = entry.valueForKey("statKey");
+				Integer value = (Integer)dict.removeObjectForKey(key);
+				if(value == null) {
+					removeObjectFromBothSidesOfRelationshipWithKey(entry, STAT_ENTRIES_KEY);
+					ec.deleteObject(entry);
+				} else {
+					entry.takeValueForKey(value, "keyCount");
+					checksum += value.intValue();
+				}
+			}
+		}
+		if(dict.count() > 0) {
+			Enumeration enu = dict.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				Integer value = (Integer)dict.objectForKey(key);
+				EOEnterpriseObject entry = EOUtilities.createAndInsertInstance(ec, "StatEntry");
+				entry.takeValueForKey(key, "statKey");
+				entry.takeValueForKey(value, "keyCount");
+				addObjectToBothSidesOfRelationshipWithKey(entry, STAT_ENTRIES_KEY);
+				checksum += value.intValue();
+			}
+		}
+		if(total != null && checksum > total.intValue()) {
+			EOEnterpriseObject entry = EOUtilities.createAndInsertInstance(ec, "StatEntry");
+			entry.takeValueForKey(TOTAL_KEY, "statKey");
+			entry.takeValueForKey(total, "keyCount");
+			addObjectToBothSidesOfRelationshipWithKey(entry, STAT_ENTRIES_KEY);
+			checksum += total.intValue();
+			total = null;
+		}
+		if(total == null)
+			total = new Integer(checksum);
+		setTotal(total);
+	}
+
 	public static NSDictionary multyStats(NSArray groupings) {
 		if(groupings == null || groupings.count() == 0)
 			return NSDictionary.EmptyDictionary;
@@ -154,6 +273,14 @@ public class Grouping extends _Grouping {
 				;
 			}
 		}
+		enu = keys.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			Counter c = (Counter)result.objectForKey(key);
+			result.setObjectForKey(new Integer(c.intValue()), key);
+		}
+		if(!keys.containsObject(TOTAL_KEY))
+			result.setObjectForKey(new Integer(total.intValue()), TOTAL_KEY);
 		return result;
 	}
 }

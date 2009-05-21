@@ -103,6 +103,12 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		return _sortedBorders;
 	}
 	
+	public NSArray sortedTitles() {
+		NSMutableArray result = new NSMutableArray(zeroValue());
+		result.addObjectsFromArray((NSArray)sortedBorders().valueForKey("title"));
+		return result;
+	}
+	
 	public void setBorders(NSArray aValue) {
         _sortedBorders = null;
 		super.setBorders(aValue);
@@ -152,6 +158,15 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		if(formatString() != null)
 			title = String.format(formatString(), title);
 		return title;
+	}
+	
+	public String presentFraction(Number fraction) {
+		if(fraction == null)
+			return null;
+		if(fraction instanceof BigDecimal)
+			return presentFraction((BigDecimal)fraction);
+		else
+			return presentFraction(fraction.doubleValue());
 	}
 	
 	public EOEnterpriseObject borderForFraction(double fraction) {

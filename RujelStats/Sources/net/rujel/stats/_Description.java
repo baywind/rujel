@@ -44,8 +44,10 @@ public abstract class _Description extends EOGenericRecord {
 	public static final String ENT_NAME_KEY = "entName";
 	public static final String GROUPING1_KEY = "grouping1";
 	public static final String GROUPING2_KEY = "grouping2";
+	public static final String STAT_FIELD_KEY = "statField";
 
 	// Relationships
+	public static final String BORDER_SET_KEY = "borderSet";
 
   public String entName() {
     return (String) storedValueForKey(ENT_NAME_KEY);
@@ -71,4 +73,20 @@ public abstract class _Description extends EOGenericRecord {
     takeStoredValueForKey(value, GROUPING2_KEY);
   }
 
+  public String statField() {
+    return (String) storedValueForKey(STAT_FIELD_KEY);
+  }
+
+  public void setStatField(String value) {
+    takeStoredValueForKey(value, STAT_FIELD_KEY);
+  }
+
+  public net.rujel.criterial.BorderSet borderSet() {
+    return (net.rujel.criterial.BorderSet)storedValueForKey(BORDER_SET_KEY);
+  }
+
+  public void setBorderSet(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, BORDER_SET_KEY);
+  }
+  
 }

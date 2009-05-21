@@ -29,16 +29,144 @@
 
 package net.rujel.stats;
 
+import java.util.Enumeration;
+
+import net.rujel.criterial.BorderSet;
+
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOObjectNotAvailableException;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class Description extends _Description {
 
-	public static void init() {
-	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 	}
- 
+	
+	public NSDictionary calculate(NSArray values) {
+		return calculate(values, statField(), borderSet());
+	}
+
+	public static NSDictionary calculate(NSArray values, String attribute, BorderSet bSet) {
+		if(values == null || values.count() == 0)
+			return NSDictionary.EmptyDictionary;
+		NSMutableDictionary result = new NSMutableDictionary(
+				new Integer(values.count()),Grouping.TOTAL_KEY);
+		if(values.count() > 1) {
+			EOSortOrdering so = new EOSortOrdering(attribute,EOSortOrdering.CompareAscending);
+			values = EOSortOrdering.sortedArrayUsingKeyOrderArray(values, new NSArray(so));
+		}
+		NSMutableArray keys = null;
+		if(bSet == null) {
+			keys = new NSMutableArray();
+			result.setObjectForKey(keys, "keys");
+		} else {
+			result.setObjectForKey(bSet.sortedTitles(), "keys");
+		}
+		Enumeration enu = values.objectEnumerator();
+		Object currKey = null;
+		int currCount = 0;
+		while (enu.hasMoreElements()) {
+			Object value  = enu.nextElement();
+			if(attribute != null)
+				value = NSKeyValueCoding.Utility.valueForKey(value,attribute);
+			if(bSet != null) {
+				value = bSet.presentFraction((Number)value);
+			}
+			if(value == null)
+				value = NullValue;
+			if(value.equals(currKey)) {
+				currCount++;
+			} else {
+				if(currKey != null)
+					result.setObjectForKey(new Integer(currCount), currKey);
+				currCount = 1;
+				currKey = value;
+				if(keys != null)
+					keys.addObject(value);
+			}
+		}
+		if(currKey != null)
+			result.setObjectForKey(new Integer(currCount), currKey);
+		return result;
+	}
+	
+	public Grouping getGrouping(EOEnterpriseObject param1, EOEnterpriseObject param2,
+																		boolean create) {
+		Object gid1 = NullValue;
+		if(param1 != null) {
+			EOKeyGlobalID gid = (EOKeyGlobalID)editingContext().globalIDForObject(param1);
+			gid1 = gid.keyValues()[0];
+		}
+		Object gid2 = NullValue;
+		if(param2 != null) {
+			EOKeyGlobalID gid = (EOKeyGlobalID)editingContext().globalIDForObject(param2);
+			gid1 = gid.keyValues()[0];
+		}
+		NSDictionary params = new NSDictionary(new Object[] {this,gid1,gid2},
+				new String[] {Grouping.DESCRIPTION_KEY,Grouping.GID1_KEY,Grouping.GID2_KEY});
+		try {
+			return (Grouping)EOUtilities.objectMatchingValues(editingContext(),
+					Grouping.ENTITY_NAME, params);
+		} catch (EOObjectNotAvailableException e) {
+			if(create) {
+				Grouping grouping = (Grouping)EOUtilities.createAndInsertInstance(
+							editingContext(), Grouping.ENTITY_NAME);
+				grouping.takeValuesFromDictionary(params);
+			}
+		}
+		return null;
+	}
+	
+	public static Grouping getGrouping(String entName, String statField, 
+			EOEnterpriseObject param1, EOEnterpriseObject param2, boolean create) {
+		if(entName == null)
+			throw new IllegalArgumentException("Entity name required");
+		EOEditingContext ec = null;
+		if(param1 != null)
+			ec = param1.editingContext();
+		else if(param2 != null)
+			ec = param2.editingContext();
+		else
+			throw new IllegalArgumentException("At least one grouping param is required");
+		String ent1 = (param1 == null)?null:param1.entityName();
+		String ent2 = (param2 == null)?null:param2.entityName();
+		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(ENT_NAME_KEY,
+				EOQualifier.QualifierOperatorEqual,entName));
+		quals.addObject(new EOKeyValueQualifier(GROUPING1_KEY,
+				EOQualifier.QualifierOperatorEqual,ent1));
+		quals.addObject(new EOKeyValueQualifier(GROUPING2_KEY,
+				EOQualifier.QualifierOperatorEqual,ent2));
+		if(statField != null) {
+			quals.addObject(new EOKeyValueQualifier(STAT_FIELD_KEY,
+					EOQualifier.QualifierOperatorEqual,statField));
+		}
+		EOQualifier qual = new EOAndQualifier(quals);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0) {
+			quals.replaceObjectAtIndex(new EOKeyValueQualifier(GROUPING1_KEY,
+					EOQualifier.QualifierOperatorEqual,ent2), 1);
+			quals.replaceObjectAtIndex(new EOKeyValueQualifier(GROUPING2_KEY,
+					EOQualifier.QualifierOperatorEqual,ent1), 2);
+			qual = new EOAndQualifier(quals);
+			fs.setQualifier(qual);
+			found = ec.objectsWithFetchSpecification(fs);
+		}
+		Description desc = null;
+		if(found != null && found.count() > 0) {
+			desc = (Description)found.objectAtIndex(0);
+		} else {
+			if(!create)
+				return null;
+			desc = (Description)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+			desc.setEntName(entName);
+			desc.setStatField(statField);
+			desc.setGrouping1(ent1);
+			desc.setGrouping2(ent2);
+		}
+		return desc.getGrouping(param1, param2, create);	
+	}
 }

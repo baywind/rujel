@@ -43,10 +43,19 @@
     ); 
     attributesUsedForLocking = (bsID, entName, grouping1, grouping2, statField); 
     className = "net.rujel.stats.Description"; 
-    classProperties = (entName, grouping1, grouping2, statField); 
+    classProperties = (borderSet, entName, grouping1, grouping2, statField); 
     externalName = DESCRIPTION; 
     fetchSpecificationDictionary = {}; 
     internalInfo = {"_javaClientClassName" = Description; }; 
     name = Description; 
     primaryKeyAttributes = (dID); 
+    relationships = (
+        {
+            destination = BorderSet; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = bsID; sourceAttribute = bsID; }); 
+            name = borderSet; 
+        }
+    ); 
 }
