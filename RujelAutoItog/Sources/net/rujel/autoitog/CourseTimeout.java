@@ -167,45 +167,49 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		if(timeouts == null || timeouts.count() == 0) {
 			return null;
 		}
-		CourseTimeout _courseTimeout = null;
-		if(timeouts.count() == 1) {
-			_courseTimeout = (CourseTimeout)timeouts.objectAtIndex(0);
-		} else {
-			Enumeration enu = timeouts.objectEnumerator();
-			NSTimestamp maxDate = null;
-			NSTimestamp minDate = null;
-			CourseTimeout maxT = null;
-			CourseTimeout minT = null;
-			while (enu.hasMoreElements()) {
-				CourseTimeout curT = (CourseTimeout) enu.nextElement();
-				NSTimestamp curDate = curT.dueDate();
-				if(curT.namedFlags().flagForKey("negative")) {
-					if(minDate == null || curDate.compare(minDate) < 0) {
-						minT = curT;
-						minDate = curDate;
-					}
-				} else {
-					if(maxDate == null || curDate.compare(maxDate) > 0) {
-						maxT = curT;
-						maxDate = curDate;
-					}
+		return chooseOne(timeouts);
+	}
+
+    public static CourseTimeout chooseOne(NSArray timeouts) {
+    	if(timeouts == null || timeouts.count() == 0)
+    		return null;
+    	if(timeouts.count() == 1)
+    		return (CourseTimeout)timeouts.objectAtIndex(0);
+		Enumeration enu = timeouts.objectEnumerator();
+		NSTimestamp maxDate = null;
+		NSTimestamp minDate = null;
+		CourseTimeout maxT = null;
+		CourseTimeout minT = null;
+		while (enu.hasMoreElements()) {
+			CourseTimeout curT = (CourseTimeout) enu.nextElement();
+			NSTimestamp curDate = curT.dueDate();
+			if(curT.namedFlags().flagForKey("negative")) {
+				if(minDate == null || curDate.compare(minDate) < 0
+						|| curT.namedFlags().flagForKey("priority")) {
+					minT = curT;
+					minDate = curDate;
 				}
-			}
-			if(minT == null) {
-				_courseTimeout = maxT;
-			} else if (maxT == null) {
-				_courseTimeout = minT;
 			} else {
-				if(minT.namedFlags().flagForKey("priority")) {
-					_courseTimeout = minT;
-				} else {
-					_courseTimeout = maxT;
+				if(maxDate == null || curDate.compare(maxDate) > 0
+						|| curT.namedFlags().flagForKey("priority")) {
+					maxT = curT;
+					maxDate = curDate;
 				}
 			}
 		}
-		return _courseTimeout;
-	}
-
+		if(minT == null) {
+			return maxT;
+		}
+		if (maxT == null) {
+			return minT;
+		}
+		if(minT.namedFlags().flagForKey("priority")) {
+			return minT;
+		} else {
+			return maxT;
+		}
+    }
+    
 	public NSArray relatedPrognoses() {
 		if(eduCourse() != null) {
 	    	NSDictionary dict = new NSDictionary(
@@ -224,15 +228,29 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		return editingContext().objectsWithFetchSpecification(fs);
 	}
 	
+	public EOQualifier courseQualifier() {
+		if(eduCourse() != null)
+			return EOUtilities.qualifierForEnterpriseObject(editingContext(), eduCourse());
+		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier("eduYear",
+				EOQualifier.QualifierOperatorEqual,eduPeriod().eduYear()));
+		if(cycle() != null)
+			quals.addObject(new EOKeyValueQualifier("cycle",
+				EOQualifier.QualifierOperatorEqual,cycle()));
+		if(eduGroup() != null)
+			quals.addObject(new EOKeyValueQualifier("eduGroup",
+				EOQualifier.QualifierOperatorEqual,eduGroup()));
+		if(teacher() != null)
+			quals.addObject(new EOKeyValueQualifier("teacher",
+				EOQualifier.QualifierOperatorEqual,teacher()));
+		return new EOAndQualifier(quals);
+	}
+	
 	public NSArray relatedCourses() {
 		if(eduCourse() != null)
 			return new NSArray(eduCourse());
-		NSMutableDictionary dict = new NSMutableDictionary
-				(eduPeriod().eduYear(),"eduYear");
-		dict.takeValueForKey(cycle(), "cycle");
-		dict.takeValueForKey(eduGroup(), "eduGroup");
-		dict.takeValueForKey(teacher(), "teacher");
-    	NSArray courses = EOUtilities.objectsMatchingValues(editingContext(), EduCourse.entityName, dict);
+		EOQualifier qual = courseQualifier();
+		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,qual,null);
+    	NSArray courses = editingContext().objectsWithFetchSpecification(fs);
     	Enumeration enu = courses.objectEnumerator();
     	NSMutableArray result = new NSMutableArray();
     	while (enu.hasMoreElements()) {
@@ -287,7 +305,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		return qual;
 	}
 	
-	public NSMutableDictionary extItog() {
+	public NSMutableDictionary extItog(EduCycle cycle) {
 		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout"));
@@ -297,7 +315,16 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		Format df = MyUtility.dateFormat();
 		df.format(dueDate(), buf, new FieldPosition(DateFormat.DATE_FIELD));
 		buf.append(" : <em>").append(reason()).append("</em>");
+		if(eduCourse() == null) {
+//			if(cycle() != null)
+//				buf.append(" (").append(cycle().subject()).append(')');
+			if(eduGroup() != null)
+				buf.append(" (").append(eduGroup().name()).append(')');
+			if(teacher() != null)
+				buf.append(" (").append(Person.Utility.fullName(teacher(), true, 2, 1, 1)).append(')');
+		}
 		result.takeValueForKey(buf.toString(), "text");
+		result.takeValueForKey(cycle, "cycle");
 		return result;
 	}
 }

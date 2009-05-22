@@ -530,14 +530,14 @@ cycleCourses:
 		Integer eduYear = (Integer)reporter.valueForKey("eduYear");
 		EOEditingContext ec = student.editingContext();
 		
-		NSArray eduPeriods = (NSArray)reporter.valueForKey("eduPeriods");
-		if(eduPeriods == null || eduPeriods.count() == 0) {
-			eduPeriods = EOUtilities.objectsMatchingKeyAndValue(ec,"EduPeriod", "eduYear",eduYear);
-			reporter.takeValueForKey(eduPeriods,"eduPeriods");
+		NSArray list = (NSArray)reporter.valueForKey("eduPeriods");
+		if(list == null || list.count() == 0) {
+			list = EOUtilities.objectsMatchingKeyAndValue(ec,"EduPeriod", "eduYear",eduYear);
+			reporter.takeValueForKey(list,"eduPeriods");
 		} else {
-			eduPeriods = EOUtilities.localInstancesOfObjects(ec,eduPeriods);
+			list = EOUtilities.localInstancesOfObjects(ec,list);
 		}
-		EOQualifier perQual = Various.getEOInQualifier("eduPeriod", eduPeriods);
+		EOQualifier perQual = Various.getEOInQualifier("eduPeriod", list);
 		if(perQual == null)
 			return null;
 		NSMutableArray quals = new NSMutableArray(perQual);
@@ -548,11 +548,13 @@ cycleCourses:
 		NSMutableArray result = new NSMutableArray();
 		
 		// StudentTimeout
+		
+		//list = new NSArray(new EOSortOrdering("eduPeriod",EOSortOrdering.CompareAscending));
 		EOFetchSpecification fs = new EOFetchSpecification(
 				StudentTimeout.ENTITY_NAME,qual,null);
-		NSArray timeouts = ec.objectsWithFetchSpecification(fs);
-		if(timeouts != null && timeouts.count() > 0) {
-			result.addObjectsFromArray((NSArray)timeouts.valueForKey("extItog"));
+		list = ec.objectsWithFetchSpecification(fs);
+		if(list != null && list.count() > 0) {
+			result.addObjectsFromArray((NSArray)list.valueForKey("extItog"));
 		}
 		
 		// Bonus
@@ -562,9 +564,9 @@ cycleCourses:
 		qual = new EOAndQualifier(quals);
 		fs.setEntityName(Bonus.ENTITY_NAME);
 		fs.setQualifier(qual);
-		NSArray bonuses = ec.objectsWithFetchSpecification(fs);
-		if(bonuses != null && bonuses.count() > 0) {
-			result.addObjectsFromArray((NSArray)bonuses.valueForKey("extItog"));
+		list = ec.objectsWithFetchSpecification(fs);
+		if(list != null && list.count() > 0) {
+			result.addObjectsFromArray((NSArray)list.valueForKey("extItog"));
 		}
 		
 		
@@ -573,17 +575,54 @@ cycleCourses:
 		if(courses == null || courses.count() == 0)
 			return result;
 		
-		timeouts = (NSArray)reporter.valueForKey("courseTimeouts");
-		if(timeouts == null) {
+		list = (NSArray)reporter.valueForKey("courseTimeouts");
+		if(list == null) {
 			fs.setEntityName(CourseTimeout.ENTITY_NAME);
 			fs.setQualifier(perQual);
-			timeouts = ec.objectsWithFetchSpecification(fs);
-			reporter.takeValueForKey(timeouts,"courseTimeouts");
+			list = ec.objectsWithFetchSpecification(fs);
+			reporter.takeValueForKey(list,"courseTimeouts");
 		} else {
-			timeouts = EOUtilities.localInstancesOfObjects(ec,timeouts);
+			list = EOUtilities.localInstancesOfObjects(ec,list);
+		}
+		if(list.count() > 1) {
+			NSArray tmp = new NSArray(new EOSortOrdering("eduPeriod",EOSortOrdering.CompareAscending));
+			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, tmp);
 		}
 
-		Enumeration enu = courses.objectEnumerator();
+		EduPeriod period = null;
+		Enumeration enu = list.objectEnumerator();
+		NSMutableDictionary byCycle = new NSMutableDictionary();
+		while (enu.hasMoreElements()) {
+			CourseTimeout cto = (CourseTimeout) enu.nextElement();
+			if(period != cto.eduPeriod()) {
+				if(period != null)
+					append(byCycle, result);
+				period = cto.eduPeriod();
+			}
+			EduCourse course = cto.eduCourse();
+			if(course != null) {
+				if(courses.contains(course)) {
+					register(byCycle, cto, course.cycle());
+				}
+				continue;
+			}
+			NSArray related = EOQualifier.filteredArrayWithQualifier
+				(courses, cto.courseQualifier());
+			if(related == null || related.count() == 0)
+				continue;
+			if(related.count() == courses.count()) {
+				register(byCycle, cto, "none");
+				continue;
+			}
+			Enumeration rEnu = related.objectEnumerator();
+			while (rEnu.hasMoreElements()) {
+				course = (EduCourse) rEnu.nextElement();
+				register(byCycle, cto, course.cycle());
+			}
+		}
+		append(byCycle, result);
+
+/*		Enumeration enu = courses.objectEnumerator();
 		NSArray sort = new NSArray(new Object[] {
 				new EOSortOrdering("eduPeriod",EOSortOrdering.CompareAscending),
 				EOSortOrdering.sortOrderingWithKey("dueDate",EOSortOrdering.CompareDescending),
@@ -597,7 +636,7 @@ cycleCourses:
 				continue;
 			if(tos.count() > 1)
 				EOSortOrdering.sortArrayUsingKeyOrderArray(tos, sort);
-			// TODO: more accurate CourseTimeout selection 
+			// TODOs: more accurate CourseTimeout selection 
 			EduPeriod per = null;
 			for (int i = 0; i < tos.count(); i++) {
 				CourseTimeout ct = (CourseTimeout)tos.objectAtIndex(i);
@@ -608,8 +647,40 @@ cycleCourses:
 				dict.takeValueForKey(course.cycle(), "cycle");
 				result.addObject(dict);
 			}
-		}
+		}*/
 
 		return result;
+	}
+	
+	private static void append(NSMutableDictionary byCycle, NSMutableArray result) {
+		NSArray list = (NSArray)byCycle.removeObjectForKey("none");
+		CourseTimeout grand = null;
+		if(list != null) {
+			grand = CourseTimeout.chooseOne(list);
+			result.addObject(grand.extItog(null));
+		}
+		Enumeration enu = byCycle.keyEnumerator();
+		while (enu.hasMoreElements()) {
+			Object key = enu.nextElement();
+			NSMutableArray tmp = (NSMutableArray)byCycle.objectForKey(key);
+			if(grand != null)
+				tmp.addObject(grand);
+			CourseTimeout cto = CourseTimeout.chooseOne(tmp);
+			if(cto == grand)
+				continue;
+			NSMutableDictionary dict = cto.extItog((EduCycle)key);
+			result.addObject(dict);
+		}
+		byCycle.removeAllObjects();
+	}
+	
+	private static void register (NSMutableDictionary byCycle, Object value, Object key) {
+		NSMutableArray tmp = (NSMutableArray) byCycle.objectForKey(key);
+		if(tmp == null) {
+			tmp = new NSMutableArray(value);
+			byCycle.setObjectForKey(tmp, key);
+		} else {
+			tmp.addObject(value);
+		}
 	}
 }
