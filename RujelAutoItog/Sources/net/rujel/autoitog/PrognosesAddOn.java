@@ -527,4 +527,13 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		ec.unlock();
 	}
 
+	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("eduCourse",
+				EOQualifier.QualifierOperatorEqual,course);
+		quals[1] = new EOKeyValueQualifier("eduPeriod",
+				EOQualifier.QualifierOperatorEqual,period);
+		quals[2] = Various.getEOInQualifier("student", course.groupList());
+		return null;
+	}
 }

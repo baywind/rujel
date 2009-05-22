@@ -55,7 +55,8 @@ public class Description extends _Description {
 		NSMutableDictionary result = new NSMutableDictionary(
 				new Integer(values.count()),Grouping.TOTAL_KEY);
 		if(values.count() > 1) {
-			EOSortOrdering so = new EOSortOrdering(attribute,EOSortOrdering.CompareAscending);
+			EOSortOrdering so = new EOSortOrdering(attribute,
+					EOSortOrdering.CompareCaseInsensitiveAscending);
 			values = EOSortOrdering.sortedArrayUsingKeyOrderArray(values, new NSArray(so));
 		}
 		NSMutableArray keys = null;
@@ -66,7 +67,7 @@ public class Description extends _Description {
 			result.setObjectForKey(bSet.sortedTitles(), "keys");
 		}
 		Enumeration enu = values.objectEnumerator();
-		Object currKey = null;
+		String currKey = null;
 		int currCount = 0;
 		while (enu.hasMoreElements()) {
 			Object value  = enu.nextElement();
@@ -77,13 +78,13 @@ public class Description extends _Description {
 			}
 			if(value == null)
 				value = NullValue;
-			if(value.equals(currKey)) {
+			if(((String)value).equalsIgnoreCase(currKey)) {
 				currCount++;
 			} else {
 				if(currKey != null)
 					result.setObjectForKey(new Integer(currCount), currKey);
 				currCount = 1;
-				currKey = value;
+				currKey = (String)value;
 				if(keys != null)
 					keys.addObject(value);
 			}

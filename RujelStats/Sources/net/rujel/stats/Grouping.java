@@ -117,7 +117,7 @@ public class Grouping extends _Grouping {
 		super.turnIntoFault(handler);
 	}
 	
-	public void calculate(NSArray values) {
+	public void setArray(NSArray values) {
 		setDict(description().calculate(values));
 	}
 	
