@@ -167,6 +167,8 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     				"strings.RujelReports_Reports.CustomReport.nothingFound"), "message");
     	} else {
     		setupDisplay();
+        	logger.log(WOLogLevel.MASS_READING,"Generating report '" + 
+        			currReport.valueForKey("title") + "' found: " + fullList.count(),session());
     	}
     }
     

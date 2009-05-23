@@ -552,13 +552,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 				ec.revert();
 			}
 			if(currReason.editingContext() != null) {
+				Object[] args = new Object[] {session(),ec.globalIDForObject(currReason)};
 				ec.deleteObject(currReason);
 				ec.saveChanges();
-				Object[] args = new Object[] {session(),currObject};
 				logger.log(WOLogLevel.UNOWNED_EDITING,"Reason deleted",args);
 			}
 		} catch (Exception e) {
-			Object[] args = new Object[] {session(),currObject,e};
+			Object[] args = new Object[] {session(),currReason,e};
 			logger.log(WOLogLevel.WARNING,"Error deleting Reason",args);
 			session().takeValueForKey(e.getMessage(), "message");
 		} finally {
