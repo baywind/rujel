@@ -186,9 +186,9 @@ public class NotesPage extends WOComponent {
     public NSMutableArray activeAddOns;
 //    public String activeAddOnItem;
 	
-	public Integer idx() {
+	public String number() {
 		if(idx == null)return null;
-		return new Integer(idx.intValue() + 1);
+		return String.valueOf(idx.intValue() + 1);
 	}
 	
 	public void selectLesson() {
@@ -229,7 +229,7 @@ public class NotesPage extends WOComponent {
 	public void reset() {
 		_currLesson = null;
 		_currPresenter = null;
-		lessonItem = null;
+//		lessonItem = null;
 		studentItem = null;
 		_single = null;
 		addOnItem = null;

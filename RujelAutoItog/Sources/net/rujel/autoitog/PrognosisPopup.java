@@ -106,26 +106,27 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     			ec.unlock();
     		}
     	} // prognosis == null
-    	if(prognosis != null && addOn.usage().calculator() != null) {
-    		flags.setFlags(prognosis.flags().intValue());
-    		mark= prognosis.mark();
-    		addOn.setPrognosis(prognosis);
-    		Bonus bonus = prognosis.bonus();
-    		if(bonus != null)
-    			bonusText = bonus.reason();
-           	BigDecimal bonusValue = (bonus == null)?Bonus.calculateBonus(prognosis,null,false)
-           			:bonus.calculateValue(prognosis, false);
-    		hasBonus = (bonus != null && 
-    				bonus.value().compareTo(bonusValue) == 0);
-         	bonusPercent = (bonusValue == null)?null:fractionToPercent(bonusValue);
-        	//String param = (hasBonus)?"Bonus":"BonusText";
-         	NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
-    		editBonusText = accessBonus.flagForKey(
-    				(bonus != null && bonus.submitted())?"edit":"create");
-    	} else {
-    		hasBonus = false;
-    		bonusPercent = null;
-    	}
+		hasBonus = false;
+		bonusPercent = null;
+		if(prognosis != null) {
+			flags.setFlags(prognosis.flags().intValue());
+			mark= prognosis.mark();
+			addOn.setPrognosis(prognosis);
+			if(addOn.usage().calculator() != null) {
+				Bonus bonus = prognosis.bonus();
+				if(bonus != null)
+					bonusText = bonus.reason();
+				BigDecimal bonusValue = (bonus == null)?Bonus.calculateBonus(prognosis,null,false)
+						:bonus.calculateValue(prognosis, false);
+				hasBonus = (bonus != null && 
+						bonus.value().compareTo(bonusValue) == 0);
+				bonusPercent = (bonusValue == null)?null:fractionToPercent(bonusValue);
+				//String param = (hasBonus)?"Bonus":"BonusText";
+				NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
+				editBonusText = accessBonus.flagForKey(
+						(bonus != null && bonus.submitted())?"edit":"create");
+			}
+		}
      	super.appendToResponse(aResponse, aContext);
     }
     
@@ -145,6 +146,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     }
     
     public WOActionResults save() {
+    	if(prognosis != null && prognosis.editingContext() == null)
+    		prognosis = null;
     	if(prognosis !=null || mark != null) {
     		EOEditingContext ec = course.editingContext();
 	    	Logger logger = Logger.getLogger("rujel.autoitog");

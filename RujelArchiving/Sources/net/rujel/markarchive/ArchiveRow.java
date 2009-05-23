@@ -48,7 +48,7 @@ public class ArchiveRow extends com.webobjects.appserver.WOComponent {
 		_archives = (NSArray)valueForBinding("list");
 		if(_archives == null) {
 			EOEnterpriseObject eo = (EOEnterpriseObject)valueForBinding("object");
-			if(eo != null)
+			if(eo != null && eo.editingContext() != null)
 				_archives = MarkArchive.archivesForObject(eo);
 		}
 		if(_archives == null) {

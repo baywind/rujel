@@ -142,6 +142,7 @@ public class MarksPresenter extends NotePresenter {
 					NSMutableDictionary args = new NSMutableDictionary(parent().name(),"parent");
 					args.takeValueForKey(session(), "session");
 					args.takeValueForKey(context().elementID(), "elementID");
+					args.takeValueForKey(student(), "student");
 					args.takeValueForKey(parent().valueForKey("currLesson"), "currLesson");
 					args.takeValueForKey(parent().valueForBinding("present"), "present");
 					args.takeValueForKey(parent().valueForKey("lessonsListing"), "lessonsListing");
