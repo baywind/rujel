@@ -143,8 +143,10 @@ public class MarksPresenter extends NotePresenter {
 					args.takeValueForKey(session(), "session");
 					args.takeValueForKey(context().elementID(), "elementID");
 					args.takeValueForKey(student(), "student");
-					args.takeValueForKey(parent().valueForKey("currLesson"), "currLesson");
+					args.takeValueForKey(valueForKeyPath("context.page.currLesson"), "currLesson");
+					args.takeValueForKey(valueForKeyPath("context.page.course"), "currLesson");
 					args.takeValueForKey(parent().valueForBinding("present"), "present");
+					args.takeValueForKey(parent().valueForBinding("single"), "single");
 					args.takeValueForKey(parent().valueForKey("lessonsListing"), "lessonsListing");
 					args.takeValueForKey(
 							new NSArray(Thread.currentThread().getStackTrace()), "stackTrace");

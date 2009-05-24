@@ -229,7 +229,7 @@ public class NotesPage extends WOComponent {
 	public void reset() {
 		_currLesson = null;
 		_currPresenter = null;
-//		lessonItem = null;
+		lessonItem = null;
 		studentItem = null;
 		_single = null;
 		addOnItem = null;
