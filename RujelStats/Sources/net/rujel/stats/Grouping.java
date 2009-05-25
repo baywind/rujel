@@ -39,11 +39,15 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class Grouping extends _Grouping {
+	public static NSArray sorter = new NSArray(new EOSortOrdering[] {
+		new EOSortOrdering("param1",EOSortOrdering.CompareAscending),
+		new EOSortOrdering("param2",EOSortOrdering.CompareAscending)});
 
 	public static void init() {
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
+		setTotal(new Integer(0));
 		super.awakeFromInsertion(ec);
 	}
  
@@ -128,7 +132,7 @@ public class Grouping extends _Grouping {
 		if(gid1() == null)
 			return null;
 		return EOUtilities.objectWithPrimaryKeyValue(editingContext(),
-				description().entName(), gid1());
+				description().grouping1(), gid1());
 	}
 	
 	public void setParam1(EOEnterpriseObject param) {
@@ -158,7 +162,7 @@ public class Grouping extends _Grouping {
 		if(gid2() == null)
 			return null;
 		return EOUtilities.objectWithPrimaryKeyValue(editingContext(),
-				description().entName(), gid2());
+				description().grouping2(), gid2());
 	}
 	
 	public void setParam2(EOEnterpriseObject param) {
@@ -199,11 +203,15 @@ public class Grouping extends _Grouping {
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject entry = (EOEnterpriseObject) enu.nextElement();
 				Object key = entry.valueForKey("statKey");
-				Integer value = (Integer)dict.removeObjectForKey(key);
+				if(key == null)
+					key = "";
+				Number value = (Number)dict.removeObjectForKey(key);
 				if(value == null) {
 					removeObjectFromBothSidesOfRelationshipWithKey(entry, STAT_ENTRIES_KEY);
 					ec.deleteObject(entry);
 				} else {
+					if(!(value instanceof Integer))
+						value = new Integer(value.intValue());
 					entry.takeValueForKey(value, "keyCount");
 					checksum += value.intValue();
 				}
@@ -213,9 +221,11 @@ public class Grouping extends _Grouping {
 			Enumeration enu = dict.keyEnumerator();
 			while (enu.hasMoreElements()) {
 				String key = (String) enu.nextElement();
-				Integer value = (Integer)dict.objectForKey(key);
+				Number value = (Number)dict.objectForKey(key);
 				EOEnterpriseObject entry = EOUtilities.createAndInsertInstance(ec, "StatEntry");
 				entry.takeValueForKey(key, "statKey");
+				if(!(value instanceof Integer))
+					value = new Integer(value.intValue());
 				entry.takeValueForKey(value, "keyCount");
 				addObjectToBothSidesOfRelationshipWithKey(entry, STAT_ENTRIES_KEY);
 				checksum += value.intValue();
@@ -255,6 +265,8 @@ public class Grouping extends _Grouping {
 			while (entries.hasMoreElements()) {
 				EOEnterpriseObject entry = (EOEnterpriseObject) entries.nextElement();
 				String key = (String)entry.valueForKey("statKey");
+				if(key == null)
+					key = "";
 				Integer value = (Integer)entry.valueForKey("keyCount");
 				Counter count = (Counter)result.objectForKey(key);
 				if(count == null) {

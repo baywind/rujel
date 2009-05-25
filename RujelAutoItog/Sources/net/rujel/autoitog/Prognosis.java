@@ -401,6 +401,13 @@ public class Prognosis extends _Prognosis {
 	}
 
 	public static PerPersonLink prognosesForCourseAndPeriod(
+			EduCourse course, EduPeriod period) {
+		NSArray found = prognosesArrayForCourseAndPeriod(course, period);
+		NSDictionary result = new NSDictionary(found,(NSArray)found.valueForKey("student"));
+		return new PerPersonLink.Dictionary(result);
+	}
+	
+	public static NSArray prognosesArrayForCourseAndPeriod(
 								EduCourse course, EduPeriod period) {
 		NSArray args = new NSArray(new Object[] {period,course});
 		NSArray found = EOUtilities.objectsWithQualifierFormat(
@@ -411,8 +418,7 @@ public class Prognosis extends _Prognosis {
 			Prognosis pr = (Prognosis) enu.nextElement();
 			pr._setPrognosUsage(usage);
 		}
-		NSDictionary result = new NSDictionary(found,(NSArray)found.valueForKey("student"));
-		return new PerPersonLink.Dictionary(result);
+		return found;
 	}
 	
 	/*
@@ -625,6 +631,18 @@ cycleStudents:
 						new Object[] {course,ex});
 				buf.append("Failed to save itogs based on prognoses for course");
 				ec.revert();
+			}
+			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
+			if(grouping != null) {
+				NSDictionary stats = ModuleInit.statCourse(course, period);
+				grouping.takeValueForKey(stats, "dict");
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
+							new Object[] {course,e});
+					ec.revert();
+				}
 			}
 		} else { //ec.hasChanges()
 			logger.log(WOLogLevel.FINE,"No itogs to save for course",course);

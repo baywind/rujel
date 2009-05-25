@@ -29,6 +29,7 @@
 
 package net.rujel.autoitog;
 
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -518,6 +519,11 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(!um && _prognosesMatrix != null && prognoses != null) {
 				_prognosesMatrix.setObjectForKey(prognoses, periodItem);
 			}
+			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(_course, periodItem);
+			if(grouping != null) {
+				NSDictionary stats = PrognosesAddOn.statCourse(_course, prognoses.allValues());
+				grouping.takeValueForKey(stats, "dict");
+			}
 			ec.saveChanges();
 		} catch (RuntimeException ex) {
 			ec.revert();
@@ -528,12 +534,75 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	}
 
 	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
-		EOQualifier[] quals = new EOQualifier[3];
+/*		EOQualifier[] quals = new EOQualifier[3];
 		quals[0] = new EOKeyValueQualifier("eduCourse",
 				EOQualifier.QualifierOperatorEqual,course);
 		quals[1] = new EOKeyValueQualifier("eduPeriod",
 				EOQualifier.QualifierOperatorEqual,period);
 		quals[2] = Various.getEOInQualifier("student", course.groupList());
-		return null;
+*/		
+		EOEditingContext ec = course.editingContext();
+		NSDictionary dict = new NSDictionary(
+				new Object[] {course,period},
+				new String[] {"eduCourse","eduPeriod"});
+		NSArray prognoses = EOUtilities.objectsMatchingValues(ec, "Prognosis", dict);
+		return statCourse(course, prognoses);
+	}
+	
+	public static NSDictionary statCourse(EduCourse course, NSArray prognoses) {
+		if(prognoses == null || prognoses.count() == 0)
+			return NSDictionary.EmptyDictionary;
+		if(prognoses.count() > 1) {
+			EOSortOrdering so = new EOSortOrdering(Prognosis.MARK_KEY,
+					EOSortOrdering.CompareCaseInsensitiveAscending);
+			prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, new NSArray(so));
+		}
+		NSMutableArray keys = new NSMutableArray();
+		NSArray group = course.groupList();
+		NSMutableDictionary result = new NSMutableDictionary(keys, "keys");
+		int total = group.count();
+		result.setObjectForKey(new Integer(total), "total");
+		Enumeration enu = prognoses.objectEnumerator();
+		String currKey = null;
+		int currCount = 0;
+		while (enu.hasMoreElements()) {
+			Prognosis pr = (Prognosis) enu.nextElement();
+			if(!group.containsObject(pr.student()))
+				continue;
+			if((currKey==null)?pr.mark()==null:currKey.equalsIgnoreCase(pr.mark())) {
+				currCount++;
+			} else {
+				if(currCount > 0)
+					result.setObjectForKey(new Integer(currCount), (currKey==null)?"":currKey);
+				currKey = pr.mark();
+				keys.addObject((currKey==null)?" ":currKey);
+				currCount = 1;
+			}
+			total--;
+		}
+		if(currCount > 0)
+			result.setObjectForKey(new Integer(currCount), currKey);
+		if(total > 0)
+			result.setObjectForKey(new Integer(total), "");
+		return result;
+	}
+	
+	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
+		EOEnterpriseObject grouping = null;
+		try {
+			Class descClass = Class.forName("net.rujel.stats.Description");
+			Method method = descClass.getMethod("getGrouping", String.class, String.class,
+					EOEnterpriseObject.class, EOEnterpriseObject.class, Boolean.TYPE);
+			grouping = (EOEnterpriseObject)method.invoke(null, Prognosis.ENTITY_NAME, 
+					Prognosis.MARK_KEY, course, period, Boolean.TRUE);
+			if(grouping.valueForKeyPath("description.description") == null) {
+				String prName = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelAutoItog_AutoItog.properties.Prognosis.this");
+				grouping.takeValueForKeyPath(prName,"description.description");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return grouping;
 	}
 }

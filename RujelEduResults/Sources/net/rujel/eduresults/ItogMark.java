@@ -167,7 +167,7 @@ public class ItogMark extends _ItogMark
 				return qual;
 			quals.addObject(qual);
 		}
-		if(quals == null)
+		if(quals == null || quals.count() == 0)
 			return null;
 		qual = new EOAndQualifier(quals);
 		return qual;

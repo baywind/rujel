@@ -38,6 +38,8 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 
 public class ModuleInit {
@@ -178,5 +180,65 @@ public class ModuleInit {
 			result.addObject(new PeriodTab(per,isCurrent));
 		}
 		return new NSArray((Object)result);
+	}
+	
+	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
+		NSArray itogs = ItogMark.getItogMarks(course.cycle(), period,
+				null,course.editingContext());
+		return statCourse(course, itogs);
+	}
+	
+	public static NSDictionary statCourse(EduCourse course, NSArray itogs) {
+		if(itogs == null || itogs.count() == 0)
+			return NSDictionary.EmptyDictionary;
+		if(itogs.count() > 1) {
+			EOSortOrdering so = new EOSortOrdering(ItogMark.MARK_KEY,
+					EOSortOrdering.CompareCaseInsensitiveAscending);
+			itogs = EOSortOrdering.sortedArrayUsingKeyOrderArray(itogs, new NSArray(so));
+		}
+		NSMutableArray keys = new NSMutableArray();
+		NSArray group = course.groupList();
+		NSMutableDictionary result = new NSMutableDictionary(keys, "keys");
+		result.setObjectForKey(new Integer(group.count()), "total");
+		Enumeration enu = itogs.objectEnumerator();
+		String currKey = null;
+		int currCount = 0;
+		while (enu.hasMoreElements()) {
+			ItogMark itog = (ItogMark) enu.nextElement();
+			if(!group.containsObject(itog.student()))
+				continue;
+			if((currKey==null)?itog.mark()==null:currKey.equalsIgnoreCase(itog.mark())) {
+				currCount++;
+			} else {
+				if(currCount > 0)
+					result.setObjectForKey(new Integer(currCount), (currKey==null)?"":currKey);
+				currKey = itog.mark();
+				keys.addObject((currKey==null)?"":currKey);
+				currCount = 1;
+			}
+		}
+		if(currCount > 0)
+			result.setObjectForKey(new Integer(currCount), currKey);
+
+		return result;
+	}
+	
+	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
+		EOEnterpriseObject grouping = null;
+		try {
+			Class descClass = Class.forName("net.rujel.stats.Description");
+			Method method = descClass.getMethod("getGrouping", String.class, String.class,
+					EOEnterpriseObject.class, EOEnterpriseObject.class, Boolean.TYPE);
+			grouping = (EOEnterpriseObject)method.invoke(null, ItogMark.ENTITY_NAME, 
+					ItogMark.MARK_KEY, course, period, Boolean.TRUE);
+			if(grouping.valueForKeyPath("description.description") == null) {
+				String prName = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduResults_EduResults.properties.ItogMark.this");
+				grouping.takeValueForKeyPath(prName,"description.description");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return grouping;
 	}
 }

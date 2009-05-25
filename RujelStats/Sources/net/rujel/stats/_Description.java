@@ -41,6 +41,7 @@ public abstract class _Description extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Description";
 
 	// Attributes
+	public static final String DESCRIPTION_KEY = "description";
 	public static final String ENT_NAME_KEY = "entName";
 	public static final String GROUPING1_KEY = "grouping1";
 	public static final String GROUPING2_KEY = "grouping2";
@@ -48,6 +49,14 @@ public abstract class _Description extends EOGenericRecord {
 
 	// Relationships
 	public static final String BORDER_SET_KEY = "borderSet";
+
+  public String description() {
+    return (String) storedValueForKey(DESCRIPTION_KEY);
+  }
+
+  public void setDescription(String value) {
+    takeStoredValueForKey(value, DESCRIPTION_KEY);
+  }
 
   public String entName() {
     return (String) storedValueForKey(ENT_NAME_KEY);

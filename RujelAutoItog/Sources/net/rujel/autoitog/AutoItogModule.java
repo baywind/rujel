@@ -168,6 +168,11 @@ public class AutoItogModule {
 							archivePrognosisChange(progn, usage);
 						}
 					}
+					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod);
+					if(grouping != null) {
+						NSDictionary stats = PrognosesAddOn.statCourse(course, prognoses.allValues());
+						grouping.takeValueForKey(stats, "dict");
+					}
 				}
 			} else {
 				Prognosis progn = usage.calculator().calculateForStudent(student, course, eduPeriod);
@@ -176,6 +181,11 @@ public class AutoItogModule {
 					if(ifArchive) {
 						archivePrognosisChange(progn, usage);
 					}
+				}
+				EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod);
+				if(grouping != null) {
+					NSDictionary stats = PrognosesAddOn.statCourse(course, eduPeriod);
+					grouping.takeValueForKey(stats, "dict");
 				}
 				if(addOn != null)
 					addOn.reset();
@@ -344,7 +354,7 @@ public class AutoItogModule {
 		so = new EOSortOrdering ("eduCourse", EOSortOrdering.CompareAscending);
 		sorter.addObject(so);
 		prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, sorter);
-		int last = 0;
+//		int last = 0;
 		EduPeriod period = null;
 		//EduGroup group = null;
 		//EduCycle cycle = null;
@@ -356,18 +366,32 @@ public class AutoItogModule {
 			if(prognos.eduPeriod() != period) {
 				period = prognos.eduPeriod();
 				buf.append(period.name()).append('\n');
+				course = null;
 			}
 			if(prognos.eduCourse() != course) {
 				course = prognos.eduCourse();
-				if((i - last) > 12) {
+//				if((i - last) > 12) {
+				if(i > 0) {
 					try {
-						last = i;
+//						last = i;
 						ec.saveChanges();
 					}  catch (Exception ex) {
-						logger.log(WOLogLevel.WARNING,
-								"Failed to save timed out prognoses", ex);
+						logger.log(WOLogLevel.WARNING,"Failed to save timed out prognoses for course", 
+								new Object[] {course, ex});
 						buf.append("Failed to save timed out prognoses");
 						ec.revert();
+					}
+					EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
+					if(grouping != null) {
+						NSDictionary stats = ModuleInit.statCourse(course, period);
+						grouping.takeValueForKey(stats, "dict");
+						try {
+							ec.saveChanges();
+						} catch (Exception e) {
+							logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
+									new Object[] {course,e});
+							ec.revert();
+						}
 					}
 					buf.append("--\n");
 				}
@@ -392,10 +416,22 @@ public class AutoItogModule {
 		try {
 			ec.saveChanges();
 		}  catch (Exception ex) {
-			logger.log(WOLogLevel.WARNING,
-					"Failed to save timed out prognoses", ex);
+			logger.log(WOLogLevel.WARNING,"Failed to save timed out prognoses for course", 
+					new Object[] {course, ex});
 			buf.append("Failed to save timed out prognoses");
 			ec.revert();
+		}
+		EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
+		if(grouping != null) {
+			NSDictionary stats = ModuleInit.statCourse(course, period);
+			grouping.takeValueForKey(stats, "dict");
+			try {
+				ec.saveChanges();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
+						new Object[] {course,e});
+				ec.revert();
+			}
 		}
 		message(buf);
 	}

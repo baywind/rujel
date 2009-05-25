@@ -181,6 +181,20 @@ public class ItogPopup extends WOComponent {
 				ec.saveChanges();
 				String message = (newItog)?"New Itog created":"Itog is changed";
 				logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
+				if (!same) {
+					EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(eduCourse, eduPeriod);
+					if (grouping != null) {
+						NSDictionary stats = ModuleInit.statCourse(eduCourse,eduPeriod);
+						grouping.takeValueForKey(stats, "dict");
+						try {
+							ec.saveChanges();
+						} catch (Exception e) {
+							logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
+									new Object[] { eduCourse, e });
+							ec.revert();
+						}
+					}
+				}
 			} catch (Exception ex) {
 				logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save itog",new Object[] {session(),itog,ex});
 				session().takeValueForKey(ex.getMessage(),"message");
@@ -194,6 +208,8 @@ public class ItogPopup extends WOComponent {
 	public WOComponent delete() {
 		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
+		if(itog == null)
+			return returnPage;
 		if(!access().flagForKey("delete")) {
 			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 			return returnPage;
@@ -211,6 +227,20 @@ public class ItogPopup extends WOComponent {
 			ec.deleteObject(itog);
 			ec.saveChanges();
 			logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
+			EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
+				(EduCourse)addOn.valueForKey("eduCourse");
+			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(eduCourse, eduPeriod);
+			if (grouping != null) {
+				NSDictionary stats = ModuleInit.statCourse(eduCourse,eduPeriod);
+				grouping.takeValueForKey(stats, "dict");
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
+							new Object[] { eduCourse, e });
+					ec.revert();
+				}
+			}
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});
 			session().takeValueForKey(ex.getMessage(),"message");

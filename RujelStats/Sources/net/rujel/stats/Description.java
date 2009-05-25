@@ -40,6 +40,7 @@ import com.webobjects.eocontrol.*;
 
 public class Description extends _Description {
 
+	public static String UNSTORED = "unstored";
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -52,12 +53,20 @@ public class Description extends _Description {
 	public static NSDictionary calculate(NSArray values, String attribute, BorderSet bSet) {
 		if(values == null || values.count() == 0)
 			return NSDictionary.EmptyDictionary;
-		NSMutableDictionary result = new NSMutableDictionary(
-				new Integer(values.count()),Grouping.TOTAL_KEY);
-		if(values.count() > 1) {
+		NSMutableDictionary result = new NSMutableDictionary();
+		NSMutableArray list = values.mutableClone();
+		if(attribute != null && list.lastObject() instanceof Number) {
+			Number num = (Number)list.removeLastObject();
+			result.setObjectForKey(num, "");
+			num = new Integer(num.intValue() + list.count());
+			result.setObjectForKey(num,Grouping.TOTAL_KEY);
+		} else {
+			result.setObjectForKey(new Integer(values.count()),Grouping.TOTAL_KEY);
+		}
+		if(list.count() > 1) {
 			EOSortOrdering so = new EOSortOrdering(attribute,
 					EOSortOrdering.CompareCaseInsensitiveAscending);
-			values = EOSortOrdering.sortedArrayUsingKeyOrderArray(values, new NSArray(so));
+			EOSortOrdering.sortArrayUsingKeyOrderArray(list, new NSArray(so));
 		}
 		NSMutableArray keys = null;
 		if(bSet == null) {
@@ -66,7 +75,7 @@ public class Description extends _Description {
 		} else {
 			result.setObjectForKey(bSet.sortedTitles(), "keys");
 		}
-		Enumeration enu = values.objectEnumerator();
+		Enumeration enu = list.objectEnumerator();
 		String currKey = null;
 		int currCount = 0;
 		while (enu.hasMoreElements()) {
@@ -77,7 +86,7 @@ public class Description extends _Description {
 				value = bSet.presentFraction((Number)value);
 			}
 			if(value == null)
-				value = NullValue;
+				value = "";
 			if(((String)value).equalsIgnoreCase(currKey)) {
 				currCount++;
 			} else {
@@ -96,15 +105,21 @@ public class Description extends _Description {
 	
 	public Grouping getGrouping(EOEnterpriseObject param1, EOEnterpriseObject param2,
 																		boolean create) {
+		if(UNSTORED.equalsIgnoreCase(grouping1()))
+			return null;
 		Object gid1 = NullValue;
 		if(param1 != null) {
+			if(!param1.entityName().equals(grouping1()))
+				throw new IllegalArgumentException("Param1 is of wrong entity");
 			EOKeyGlobalID gid = (EOKeyGlobalID)editingContext().globalIDForObject(param1);
 			gid1 = gid.keyValues()[0];
 		}
 		Object gid2 = NullValue;
 		if(param2 != null) {
+			if(!param2.entityName().equals(grouping2()))
+				throw new IllegalArgumentException("Param2 is of wrong entity");
 			EOKeyGlobalID gid = (EOKeyGlobalID)editingContext().globalIDForObject(param2);
-			gid1 = gid.keyValues()[0];
+			gid2 = gid.keyValues()[0];
 		}
 		NSDictionary params = new NSDictionary(new Object[] {this,gid1,gid2},
 				new String[] {Grouping.DESCRIPTION_KEY,Grouping.GID1_KEY,Grouping.GID2_KEY});
@@ -116,6 +131,7 @@ public class Description extends _Description {
 				Grouping grouping = (Grouping)EOUtilities.createAndInsertInstance(
 							editingContext(), Grouping.ENTITY_NAME);
 				grouping.takeValuesFromDictionary(params);
+				return grouping;
 			}
 		}
 		return null;
