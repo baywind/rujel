@@ -32,6 +32,7 @@ package net.rujel.autoitog;
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.eduresults.*;
+import net.rujel.base.MyUtility;
 import net.rujel.criterial.BorderSet;
 
 import com.webobjects.foundation.*;
@@ -634,8 +635,11 @@ cycleStudents:
 			}
 			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
 			if(grouping != null) {
-				NSDictionary stats = ModuleInit.statCourse(course, period);
-				grouping.takeValueForKey(stats, "dict");
+				itogs = ItogMark.getItogMarks(course.cycle(), period, null, ec);
+				itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
+				grouping.takeValueForKey(itogs, "array");
+//				NSDictionary stats = ModuleInit.statCourse(course, period);
+//				grouping.takeValueForKey(stats, "dict");
 				try {
 					ec.saveChanges();
 				} catch (Exception e) {

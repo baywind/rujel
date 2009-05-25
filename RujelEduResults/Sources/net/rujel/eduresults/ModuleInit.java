@@ -181,14 +181,8 @@ public class ModuleInit {
 		}
 		return new NSArray((Object)result);
 	}
-	
-	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
-		NSArray itogs = ItogMark.getItogMarks(course.cycle(), period,
-				null,course.editingContext());
-		return statCourse(course, itogs);
-	}
-	
-	public static NSDictionary statCourse(EduCourse course, NSArray itogs) {
+/*	
+	public static NSDictionary statByCourse(EduCourse course, NSArray itogs) {
 		if(itogs == null || itogs.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(itogs.count() > 1) {
@@ -199,7 +193,8 @@ public class ModuleInit {
 		NSMutableArray keys = new NSMutableArray();
 		NSArray group = course.groupList();
 		NSMutableDictionary result = new NSMutableDictionary(keys, "keys");
-		result.setObjectForKey(new Integer(group.count()), "total");
+		int total = group.count();
+		result.setObjectForKey(new Integer(total), "total");
 		Enumeration enu = itogs.objectEnumerator();
 		String currKey = null;
 		int currCount = 0;
@@ -213,15 +208,17 @@ public class ModuleInit {
 				if(currCount > 0)
 					result.setObjectForKey(new Integer(currCount), (currKey==null)?"":currKey);
 				currKey = itog.mark();
-				keys.addObject((currKey==null)?"":currKey);
+				keys.addObject((currKey==null)?" ":currKey);
 				currCount = 1;
 			}
+			total--;
 		}
 		if(currCount > 0)
 			result.setObjectForKey(new Integer(currCount), currKey);
-
+		if(total > 0)
+			result.setObjectForKey(new Integer(total), "");
 		return result;
-	}
+	}*/
 	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
 		EOEnterpriseObject grouping = null;

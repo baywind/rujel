@@ -39,6 +39,7 @@ import com.webobjects.appserver.WOSession;
 import java.text.Format;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 
 import net.rujel.interfaces.EduLesson;
@@ -228,5 +229,24 @@ public class MyUtility {
 		if(inProgress) 
 			currLesson.setNumber(num);
 		return num;
+	}
+	
+	public static NSArray filterByGroup(NSArray list, String key, 
+													NSArray group, boolean addTotal) {
+		if(list == null || list.count() == 0)
+			return list;
+		int total = group.count();
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Object obj = enu.nextElement();
+			if(!group.containsObject(NSKeyValueCoding.Utility.valueForKey(obj, key)))
+				continue;
+			result.addObject(obj);
+			total--;
+		}
+		if(total > 0)
+			result.addObject(new Integer(total));
+		return result;
 	}
 }

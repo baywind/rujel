@@ -521,8 +521,11 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			}
 			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(_course, periodItem);
 			if(grouping != null) {
-				NSDictionary stats = PrognosesAddOn.statCourse(_course, prognoses.allValues());
-				grouping.takeValueForKey(stats, "dict");
+//				NSDictionary stats = PrognosesAddOn.statCourse(_course, prognoses.allValues());
+//				grouping.takeValueForKey(stats, "dict");
+				NSArray list = MyUtility.filterByGroup(prognoses.allValues(),
+						"student", _course.groupList(), true);
+				grouping.takeValueForKey(list, "array");
 			}
 			ec.saveChanges();
 		} catch (RuntimeException ex) {
@@ -532,24 +535,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		}
 		ec.unlock();
 	}
-
-	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
-/*		EOQualifier[] quals = new EOQualifier[3];
-		quals[0] = new EOKeyValueQualifier("eduCourse",
-				EOQualifier.QualifierOperatorEqual,course);
-		quals[1] = new EOKeyValueQualifier("eduPeriod",
-				EOQualifier.QualifierOperatorEqual,period);
-		quals[2] = Various.getEOInQualifier("student", course.groupList());
-*/		
-		EOEditingContext ec = course.editingContext();
-		NSDictionary dict = new NSDictionary(
-				new Object[] {course,period},
-				new String[] {"eduCourse","eduPeriod"});
-		NSArray prognoses = EOUtilities.objectsMatchingValues(ec, "Prognosis", dict);
-		return statCourse(course, prognoses);
-	}
-	
-	public static NSDictionary statCourse(EduCourse course, NSArray prognoses) {
+/*	
+	public static NSDictionary statByCourse(EduCourse course, NSArray prognoses) {
 		if(prognoses == null || prognoses.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(prognoses.count() > 1) {
@@ -585,7 +572,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		if(total > 0)
 			result.setObjectForKey(new Integer(total), "");
 		return result;
-	}
+	}*/
 	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
 		EOEnterpriseObject grouping = null;

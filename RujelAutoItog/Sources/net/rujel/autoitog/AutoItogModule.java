@@ -30,6 +30,7 @@
 package net.rujel.autoitog;
 
 import net.rujel.interfaces.*;
+import net.rujel.base.MyUtility;
 import net.rujel.eduresults.*;
 import net.rujel.reusables.*;
 
@@ -170,8 +171,11 @@ public class AutoItogModule {
 					}
 					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod);
 					if(grouping != null) {
-						NSDictionary stats = PrognosesAddOn.statCourse(course, prognoses.allValues());
-						grouping.takeValueForKey(stats, "dict");
+//						NSDictionary stats = PrognosesAddOn.statCourse(course, prognoses.allValues());
+//						grouping.takeValueForKey(stats, "dict");
+						NSArray list = MyUtility.filterByGroup(prognoses.allValues(),
+								"student", course.groupList(), true);
+						grouping.takeValueForKey(list, "array");
 					}
 				}
 			} else {
@@ -184,8 +188,13 @@ public class AutoItogModule {
 				}
 				EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod);
 				if(grouping != null) {
-					NSDictionary stats = PrognosesAddOn.statCourse(course, eduPeriod);
-					grouping.takeValueForKey(stats, "dict");
+					NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
+							course, eduPeriod);
+					prognoses = MyUtility.filterByGroup(prognoses, "student", 
+							course.groupList(), true);
+					grouping.takeValueForKey(prognoses, "array");
+//					NSDictionary stats = PrognosesAddOn.statCourse(course, eduPeriod);
+//					grouping.takeValueForKey(stats, "dict");
 				}
 				if(addOn != null)
 					addOn.reset();
@@ -383,8 +392,12 @@ public class AutoItogModule {
 					}
 					EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
 					if(grouping != null) {
-						NSDictionary stats = ModuleInit.statCourse(course, period);
-						grouping.takeValueForKey(stats, "dict");
+//						NSDictionary stats = ModuleInit.statCourse(course, period);
+//						grouping.takeValueForKey(stats, "dict");
+						NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null, ec);
+						itogs = MyUtility.filterByGroup(itogs,
+								"student", course.groupList(), true);
+						grouping.takeValueForKey(itogs, "array");
 						try {
 							ec.saveChanges();
 						} catch (Exception e) {
@@ -423,8 +436,11 @@ public class AutoItogModule {
 		}
 		EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
 		if(grouping != null) {
-			NSDictionary stats = ModuleInit.statCourse(course, period);
-			grouping.takeValueForKey(stats, "dict");
+			NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null, ec);
+			itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
+			grouping.takeValueForKey(itogs, "array");
+//			NSDictionary stats = ModuleInit.statCourse(course, period);
+//			grouping.takeValueForKey(stats, "dict");
 			try {
 				ec.saveChanges();
 			} catch (Exception e) {
