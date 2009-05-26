@@ -46,6 +46,7 @@ public class ModuleInit {
 	protected static final NSDictionary tab = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogTab");
 	protected static final NSDictionary addOn = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn");
 	protected static final NSDictionary studentReporter = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
+	protected static final NSArray marksPreset = ((NSArray)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.marksPreset")).immutableClone();
 	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -237,5 +238,46 @@ public class ModuleInit {
 			e.printStackTrace();
 		}
 		return grouping;
+	}
+	
+	public static NSArray marksPreset() {
+		return marksPreset;
+	}
+	
+	public static Object statCourseReport(WOContext ctx) {
+		EOEditingContext ec = null;
+		try {
+			ec = (EOEditingContext)ctx.page().valueForKey("ec");
+		} finally {
+			if(ec == null)
+				ec = ctx.session().defaultEditingContext();
+		}
+		Integer year = (Integer)ctx.session().valueForKey("eduYear");
+		NSArray list = PeriodType.usagesForYear(year,ec);
+		if(list == null || list.count() == 0)
+			return null;
+		list = (NSArray)list.valueForKey("periodType");
+		NSSet pertypes = new NSSet(list);
+		NSMutableArray result = new NSMutableArray();
+		
+		Enumeration enu = EduPeriod.periodsInYear(year, ec).objectEnumerator();
+		Object[] params = new Object[] 
+		              {ItogMark.ENTITY_NAME, ItogMark.MARK_KEY,".",EduPeriod.ENTITY_NAME};
+		String title = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.itogAddOn.title");
+		int sort = 50;
+		while (enu.hasMoreElements()) {
+			EduPeriod period = (EduPeriod) enu.nextElement();
+			if(!pertypes.containsObject(period.periodType()))
+				continue;
+			params[3] = period;
+			NSMutableDictionary dict = new NSMutableDictionary(String.valueOf(sort),"params");
+			dict.setObjectForKey(title + " - " + period.title(),"title");
+			dict.setObjectForKey(new NSArray(params),"params");
+			dict.setObjectForKey(marksPreset(), "keys");
+			result.addObject(dict);
+			sort++;
+		}
+		return result;
 	}
 }

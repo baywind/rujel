@@ -43,6 +43,8 @@ import com.webobjects.eoaccess.EOUtilities;
 
 public class PeriodType extends _PeriodType  {
 	
+	public static NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareDescending));
+	
 	public static void init() {
 		EOInitialiser.initialiseRelationship("PeriodTypeUsage","course",false,"eduCourseID","EduCourse").setIsMandatory(false);//.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		EOInitialiser.initialiseRelationship("PeriodTypeUsage","eduGroup",false,"eduGroupID","EduGroup").setIsMandatory(false);
@@ -82,8 +84,7 @@ public class PeriodType extends _PeriodType  {
 			qual = new EOOrQualifier(quals);
 		}
 		
-		EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareAscending);
-		EOFetchSpecification fs = new EOFetchSpecification("PeriodType",qual,new NSArray(so));
+		EOFetchSpecification fs = new EOFetchSpecification("PeriodType",qual,sorter);
 		return ec.objectsWithFetchSpecification(fs);
 	}
 	
@@ -285,7 +286,7 @@ public class PeriodType extends _PeriodType  {
 			quals.addObject(qual);
 			qual = new EOAndQualifier(quals);
 			quals = noYear.mutableClone();
-			EOQualifier.filteredArrayWithQualifier(quals,qual);
+			EOQualifier.filterArrayWithQualifier(quals,qual);
 			if(quals != null && quals.count() > 0) {
 				noYear.removeObjectsInArray(quals);
 				if(noYear.count() <= 0)
@@ -294,5 +295,14 @@ public class PeriodType extends _PeriodType  {
 		}
 		return withYear.arrayByAddingObjectsFromArray(noYear);
 	}
-	
+
+	public NSArray periodsForYear(Integer year) {
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,EOQualifier.QualifierOperatorEqual,year);
+		quals[1] = new EOKeyValueQualifier(EduPeriod.PERIOD_TYPE_KEY,EOQualifier.QualifierOperatorEqual,this);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		NSArray ps = new NSArray(new EOSortOrdering(EduPeriod.NUM_KEY,EOSortOrdering.CompareAscending));
+		EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,quals[0],ps);
+		return editingContext().objectsWithFetchSpecification(fs);
+	}
 }

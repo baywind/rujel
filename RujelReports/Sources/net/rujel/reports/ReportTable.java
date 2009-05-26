@@ -185,6 +185,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		if(itemDict == null)
 			return null;
 		Enumeration valuesEnumeration = (Enumeration)itemDict.valueForKey("valuesEnumeration");
+		if(valuesEnumeration == null)
+			return null;
 		if(valuesEnumeration.hasMoreElements())
 			return valuesEnumeration.nextElement();
 		return null;

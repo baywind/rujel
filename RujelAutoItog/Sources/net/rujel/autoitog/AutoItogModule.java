@@ -88,6 +88,8 @@ public class AutoItogModule {
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if("extItog".equals(obj)) {
 			return extItog(ctx);
+		} else if("statCourseReport".equals(obj)) {
+			return statCourseReport(ctx);
 		}
 		return null;
 	}
@@ -257,7 +259,7 @@ public class AutoItogModule {
 		
 		results = ec.objectsWithFetchSpecification(fs);
 		NSMutableDictionary result =  new NSMutableDictionary((NSArray)results.valueForKey("mark"),(NSArray)results.valueForKey("eduCourse"));
-		String title = (String)WOApplication.application().valueForKeyPath("strings.RujelAutoItog_AutoItog.prognosis");
+		String title = (String)WOApplication.application().valueForKeyPath("strings.RujelAutoItog_AutoItog.properties.Prognosis.this");
 		//title.append(' ').append('(').append(')');
 		result.setObjectForKey(title,"title");
 		result.setObjectForKey("30","sort");
@@ -734,5 +736,55 @@ cycleCourses:
 		} else {
 			tmp.addObject(value);
 		}
+	}
+	
+	public static Object statCourseReport(WOContext ctx) {
+		EOEditingContext ec = null;
+		try {
+			ec = (EOEditingContext)ctx.page().valueForKey("ec");
+		} finally {
+			if(ec == null)
+				ec = ctx.session().defaultEditingContext();
+		}
+		NSArray list = new NSArray(ctx.session().valueForKey("eduYear"));
+		list = EOUtilities.objectsWithQualifierFormat(ec, PrognosUsage.ENTITY_NAME, 
+				"(eduYear = %d OR eduYear = 0)", list);
+			//PeriodType.allPeriodTypes(ec, (Integer)ctx.session().valueForKey("eduYear"));
+		if(list == null || list.count() == 0)
+			return null;
+		Enumeration enu = list.objectEnumerator();
+		NSMutableArray result = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			PrognosUsage pu = (PrognosUsage) enu.nextElement();
+			if(!pu.namedFlags().flagForKey("active"))
+				continue;
+			if(!result.containsObject(pu.periodType()))
+				result.addObject(pu.periodType());
+		}
+		if(result.count() == 0)
+			return null;
+		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(result, PeriodType.sorter);
+		result.removeAllObjects();
+		enu = list.objectEnumerator();
+		Object[] params = new Object[] 
+		              {Prognosis.ENTITY_NAME, Prognosis.MARK_KEY,".",EduPeriod.ENTITY_NAME};
+		NSTimestamp today = (NSTimestamp)ctx.session().valueForKey("today");
+		String title = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelAutoItog_AutoItog.prognoses");
+		int sort = 30;
+		while (enu.hasMoreElements()) {
+			PeriodType perType = (PeriodType) enu.nextElement();
+			EduPeriod period = perType.currentPeriod(today);
+			if(period == null)
+				continue;
+			params[3] = period;
+			NSMutableDictionary dict = new NSMutableDictionary(String.valueOf(sort),"params");
+			dict.setObjectForKey(title + " - " + period.title(),"title");
+			dict.setObjectForKey(new NSArray(params),"params");
+			dict.setObjectForKey(ModuleInit.marksPreset(), "keys");
+			result.addObject(dict);
+			sort++;
+		}
+		return result;
 	}
 }
