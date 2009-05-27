@@ -199,6 +199,7 @@ public class Grouping extends _Grouping {
 		NSArray statEntries = statEntries();
 		EOEditingContext ec = editingContext();
 		if(statEntries != null && statEntries.count() > 0) {
+			statEntries = statEntries.immutableClone();
 			Enumeration enu = statEntries.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject entry = (EOEnterpriseObject) enu.nextElement();

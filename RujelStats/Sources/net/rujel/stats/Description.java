@@ -137,23 +137,14 @@ public class Description extends _Description {
 		return null;
 	}
 	
-	public static Grouping getGrouping(String entName, String statField, 
-			EOEnterpriseObject param1, EOEnterpriseObject param2, boolean create) {
-		if(entName == null)
-			throw new IllegalArgumentException("Entity name required");
-		EOEditingContext ec = null;
-		if(param1 != null)
-			ec = param1.editingContext();
-		else if(param2 != null)
-			ec = param2.editingContext();
-		else
-			throw new IllegalArgumentException("At least one grouping param is required");
-		String ent1 = (param1 == null)?null:param1.entityName();
-		String ent2 = (param2 == null)?null:param2.entityName();
+	public static Description getDescription(String entName, String statField, 
+			String ent1, String ent2, EOEditingContext ec, boolean create) {
 		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(ENT_NAME_KEY,
 				EOQualifier.QualifierOperatorEqual,entName));
+		if(ent1 != null)
 		quals.addObject(new EOKeyValueQualifier(GROUPING1_KEY,
 				EOQualifier.QualifierOperatorEqual,ent1));
+		if(ent2 != null)
 		quals.addObject(new EOKeyValueQualifier(GROUPING2_KEY,
 				EOQualifier.QualifierOperatorEqual,ent2));
 		if(statField != null) {
@@ -163,11 +154,13 @@ public class Description extends _Description {
 		EOQualifier qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found == null || found.count() == 0) {
+		if((found == null || found.count() == 0) && (ent2 != ent1)) {
+			if(ent2 != null)
 			quals.replaceObjectAtIndex(new EOKeyValueQualifier(GROUPING1_KEY,
 					EOQualifier.QualifierOperatorEqual,ent2), 1);
+			if(ent1 != null)
 			quals.replaceObjectAtIndex(new EOKeyValueQualifier(GROUPING2_KEY,
-					EOQualifier.QualifierOperatorEqual,ent1), 2);
+					EOQualifier.QualifierOperatorEqual,ent1), (ent2==null)?1:2);
 			qual = new EOAndQualifier(quals);
 			fs.setQualifier(qual);
 			found = ec.objectsWithFetchSpecification(fs);
@@ -184,6 +177,23 @@ public class Description extends _Description {
 			desc.setGrouping1(ent1);
 			desc.setGrouping2(ent2);
 		}
+		return desc;
+	}
+	
+	public static Grouping getGrouping(String entName, String statField, 
+			EOEnterpriseObject param1, EOEnterpriseObject param2, boolean create) {
+		if(entName == null)
+			throw new IllegalArgumentException("Entity name required");
+		EOEditingContext ec = null;
+		if(param1 != null)
+			ec = param1.editingContext();
+		else if(param2 != null)
+			ec = param2.editingContext();
+		else
+			throw new IllegalArgumentException("At least one grouping param is required");
+		String ent1 = (param1 == null)?null:param1.entityName();
+		String ent2 = (param2 == null)?null:param2.entityName();
+		Description desc = getDescription(entName, statField, ent1, ent2, ec, create);
 		return desc.getGrouping(param1, param2, create);	
 	}
 }

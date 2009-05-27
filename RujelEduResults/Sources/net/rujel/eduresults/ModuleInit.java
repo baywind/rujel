@@ -30,6 +30,7 @@
 package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 
@@ -41,6 +42,7 @@ import com.webobjects.appserver.WOContext;
 
 import java.lang.reflect.Method;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 public class ModuleInit {
 	protected static final NSDictionary tab = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogTab");
@@ -66,6 +68,8 @@ public class ModuleInit {
 			return periods(ctx);
 		} else if("lessonTabs".equals(obj)) {
 			return lessonTabs(ctx);
+		} else if("statCourseReport".equals(obj)) {
+			return statCourseReport(ctx);
 		}
 		return null;
 	}
@@ -182,8 +186,10 @@ public class ModuleInit {
 		}
 		return new NSArray((Object)result);
 	}
-/*	
-	public static NSDictionary statByCourse(EduCourse course, NSArray itogs) {
+
+	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
+		NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null);
+//		itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
 		if(itogs == null || itogs.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(itogs.count() > 1) {
@@ -207,7 +213,7 @@ public class ModuleInit {
 				currCount++;
 			} else {
 				if(currCount > 0)
-					result.setObjectForKey(new Integer(currCount), (currKey==null)?"":currKey);
+					result.setObjectForKey(new Integer(currCount), (currKey==null)?" ":currKey);
 				currKey = itog.mark();
 				keys.addObject((currKey==null)?" ":currKey);
 				currCount = 1;
@@ -216,10 +222,12 @@ public class ModuleInit {
 		}
 		if(currCount > 0)
 			result.setObjectForKey(new Integer(currCount), currKey);
-		if(total > 0)
+		if(total > 0) {
 			result.setObjectForKey(new Integer(total), "");
+			keys.addObject("");
+		}
 		return result;
-	}*/
+	}
 	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
 		EOEnterpriseObject grouping = null;
@@ -240,6 +248,29 @@ public class ModuleInit {
 		return grouping;
 	}
 	
+	public static EOEnterpriseObject prepareStats(EduCourse course, EduPeriod period, boolean save) {
+		EOEnterpriseObject grouping = getStatsGrouping(course, period);
+		if(grouping != null) {
+			NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null);
+			itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
+			grouping.takeValueForKey(itogs, "array");
+//			NSDictionary stats = ModuleInit.statCourse(course, period);
+//			grouping.takeValueForKey(stats, "dict");
+			if (save) {
+				EOEditingContext ec = grouping.editingContext();
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					Logger.getLogger("rujel.eduresults").log(WOLogLevel.WARNING,
+							"Failed to save itog Stats for course", new Object[] {course,e});
+					ec.revert();
+				}
+			}
+		}
+		return grouping;
+	}
+
+	
 	public static NSArray marksPreset() {
 		return marksPreset;
 	}
@@ -248,9 +279,8 @@ public class ModuleInit {
 		EOEditingContext ec = null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");
-		} finally {
-			if(ec == null)
-				ec = ctx.session().defaultEditingContext();
+		} catch (Exception e) {
+			ec = new SessionedEditingContext(ctx.session());
 		}
 		Integer year = (Integer)ctx.session().valueForKey("eduYear");
 		NSArray list = PeriodType.usagesForYear(year,ec);
@@ -261,8 +291,18 @@ public class ModuleInit {
 		NSMutableArray result = new NSMutableArray();
 		
 		Enumeration enu = EduPeriod.periodsInYear(year, ec).objectEnumerator();
-		Object[] params = new Object[] 
-		              {ItogMark.ENTITY_NAME, ItogMark.MARK_KEY,".",EduPeriod.ENTITY_NAME};
+		NSMutableDictionary template = new NSMutableDictionary(ItogMark.ENTITY_NAME,"entName");
+		template.setObjectForKey(ItogMark.MARK_KEY, "statField");
+		template.setObjectForKey(marksPreset(),"keys");
+		
+		try {
+			Method method = ModuleInit.class.getMethod("statCourse",
+					EduCourse.class, EduPeriod.class);
+			template.setObjectForKey(method,"ifEmpty");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		String title = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.itogAddOn.title");
 		int sort = 50;
@@ -270,14 +310,14 @@ public class ModuleInit {
 			EduPeriod period = (EduPeriod) enu.nextElement();
 			if(!pertypes.containsObject(period.periodType()))
 				continue;
-			params[3] = period;
-			NSMutableDictionary dict = new NSMutableDictionary(String.valueOf(sort),"params");
+			NSMutableDictionary dict = template.mutableClone();
 			dict.setObjectForKey(title + " - " + period.title(),"title");
-			dict.setObjectForKey(new NSArray(params),"params");
-			dict.setObjectForKey(marksPreset(), "keys");
+			dict.setObjectForKey(period,"param2");
+			dict.setObjectForKey(String.valueOf(sort),"sort");
 			result.addObject(dict);
 			sort++;
 		}
+
 		return result;
 	}
 }

@@ -51,7 +51,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public Object extra;
 	public String filenameFormatter;
 
-	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);;
+	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);
 	
 	public ReportTable(WOContext context) {
         super(context);

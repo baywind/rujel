@@ -535,8 +535,9 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		}
 		ec.unlock();
 	}
-/*	
-	public static NSDictionary statByCourse(EduCourse course, NSArray prognoses) {
+	
+	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
+		NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period);
 		if(prognoses == null || prognoses.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(prognoses.count() > 1) {
@@ -560,7 +561,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 				currCount++;
 			} else {
 				if(currCount > 0)
-					result.setObjectForKey(new Integer(currCount), (currKey==null)?"":currKey);
+					result.setObjectForKey(new Integer(currCount), (currKey==null)?" ":currKey);
 				currKey = pr.mark();
 				keys.addObject((currKey==null)?" ":currKey);
 				currCount = 1;
@@ -569,10 +570,12 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		}
 		if(currCount > 0)
 			result.setObjectForKey(new Integer(currCount), currKey);
-		if(total > 0)
+		if(total > 0) {
 			result.setObjectForKey(new Integer(total), "");
+			keys.addObject("");
+		}
 		return result;
-	}*/
+	}
 	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
 		EOEnterpriseObject grouping = null;

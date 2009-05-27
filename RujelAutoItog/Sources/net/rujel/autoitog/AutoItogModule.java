@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.FieldPosition;
@@ -392,22 +393,7 @@ public class AutoItogModule {
 						buf.append("Failed to save timed out prognoses");
 						ec.revert();
 					}
-					EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
-					if(grouping != null) {
-//						NSDictionary stats = ModuleInit.statCourse(course, period);
-//						grouping.takeValueForKey(stats, "dict");
-						NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null, ec);
-						itogs = MyUtility.filterByGroup(itogs,
-								"student", course.groupList(), true);
-						grouping.takeValueForKey(itogs, "array");
-						try {
-							ec.saveChanges();
-						} catch (Exception e) {
-							logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
-									new Object[] {course,e});
-							ec.revert();
-						}
-					}
+					ModuleInit.prepareStats(course, period, true);
 					buf.append("--\n");
 				}
 //				if(course.eduGroup() != group) {
@@ -436,24 +422,10 @@ public class AutoItogModule {
 			buf.append("Failed to save timed out prognoses");
 			ec.revert();
 		}
-		EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, period);
-		if(grouping != null) {
-			NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null, ec);
-			itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
-			grouping.takeValueForKey(itogs, "array");
-//			NSDictionary stats = ModuleInit.statCourse(course, period);
-//			grouping.takeValueForKey(stats, "dict");
-			try {
-				ec.saveChanges();
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
-						new Object[] {course,e});
-				ec.revert();
-			}
-		}
+		ModuleInit.prepareStats(course, period, true);
 		message(buf);
 	}
-	
+		
 	protected static NSArray coursesForPeriod (EduPeriod period) {
 		EOEditingContext ec = period.editingContext();
 		
@@ -742,9 +714,8 @@ cycleCourses:
 		EOEditingContext ec = null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");
-		} finally {
-			if(ec == null)
-				ec = ctx.session().defaultEditingContext();
+		} catch (Exception e) {
+			ec = new SessionedEditingContext(ctx.session());
 		}
 		NSArray list = new NSArray(ctx.session().valueForKey("eduYear"));
 		list = EOUtilities.objectsWithQualifierFormat(ec, PrognosUsage.ENTITY_NAME, 
@@ -766,8 +737,19 @@ cycleCourses:
 		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(result, PeriodType.sorter);
 		result.removeAllObjects();
 		enu = list.objectEnumerator();
-		Object[] params = new Object[] 
-		              {Prognosis.ENTITY_NAME, Prognosis.MARK_KEY,".",EduPeriod.ENTITY_NAME};
+//		Object[] params = new Object[] 
+//		              {Prognosis.ENTITY_NAME, Prognosis.MARK_KEY,".",EduPeriod.ENTITY_NAME};
+		NSMutableDictionary template = new NSMutableDictionary(Prognosis.ENTITY_NAME,"entName");
+		template.setObjectForKey(Prognosis.MARK_KEY, "statField");
+		template.setObjectForKey(ModuleInit.marksPreset(),"keys");
+		try {
+			Method method = PrognosesAddOn.class.getMethod("statCourse",
+					EduCourse.class, EduPeriod.class);
+			template.setObjectForKey(method,"ifEmpty");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		NSTimestamp today = (NSTimestamp)ctx.session().valueForKey("today");
 		String title = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelAutoItog_AutoItog.prognoses");
@@ -777,11 +759,10 @@ cycleCourses:
 			EduPeriod period = perType.currentPeriod(today);
 			if(period == null)
 				continue;
-			params[3] = period;
-			NSMutableDictionary dict = new NSMutableDictionary(String.valueOf(sort),"params");
+			NSMutableDictionary dict = template.mutableClone();
+			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(title + " - " + period.title(),"title");
-			dict.setObjectForKey(new NSArray(params),"params");
-			dict.setObjectForKey(ModuleInit.marksPreset(), "keys");
+			dict.setObjectForKey(period,"param2");
 			result.addObject(dict);
 			sort++;
 		}

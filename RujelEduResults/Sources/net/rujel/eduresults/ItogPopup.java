@@ -31,7 +31,6 @@ package net.rujel.eduresults;
 
 
 import net.rujel.reusables.*;
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 //import net.rujel.eduresults.*;
 
@@ -183,7 +182,7 @@ public class ItogPopup extends WOComponent {
 				String message = (newItog)?"New Itog created":"Itog is changed";
 				logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
 				if (!same) {
-					stat(eduCourse, ec);
+					ModuleInit.prepareStats(eduCourse, eduPeriod,true);
 				}
 			} catch (Exception ex) {
 				logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save itog",new Object[] {session(),itog,ex});
@@ -193,25 +192,6 @@ public class ItogPopup extends WOComponent {
 			}
 		}
 		return returnPage;
-	}
-	
-	private void stat(EduCourse eduCourse, EOEditingContext ec) {
-		EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(eduCourse, eduPeriod);
-		if (grouping != null) {
-//			EOEditingContext ec = eduCourse.editingContext();
-			NSArray itogs = ItogMark.getItogMarks(eduCourse.cycle(), eduPeriod, null, ec);
-			itogs = MyUtility.filterByGroup(itogs, "student", eduCourse.groupList(), true);
-			grouping.takeValueForKey(itogs, "array");
-//			NSDictionary stats = ModuleInit.statCourse(eduCourse,eduPeriod);
-//			grouping.takeValueForKey(stats, "dict");
-			try {
-				ec.saveChanges();
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Failed to save itog Stats for course",
-						new Object[] { eduCourse, e });
-				ec.revert();
-			}
-		}
 	}
 	
 	public WOComponent delete() {
@@ -238,7 +218,7 @@ public class ItogPopup extends WOComponent {
 			logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
 			EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
 				(EduCourse)addOn.valueForKey("eduCourse");
-			stat(eduCourse, ec);
+			ModuleInit.prepareStats(eduCourse, eduPeriod,true);
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});
 			session().takeValueForKey(ex.getMessage(),"message");

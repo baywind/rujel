@@ -62,7 +62,7 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
         super(context);
 
 		ec = new SessionedEditingContext(context.session());
-		NSArray availableReports = (NSArray)session().valueForKeyPath("modules.CoursesReport");
+		NSArray availableReports = (NSArray)session().valueForKeyPath("modules.coursesReport");
 		reports = PlistReader.cloneArray(availableReports, true);
         
 		reports.addObjectsFromArray(ReportsModule.reportsFromDir("CoursesReport",context));

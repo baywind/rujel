@@ -604,6 +604,8 @@
 		<string>true</string>
 		<key>net.rujel.reports.ReportsModule</key>
 		<string>true</string>
+		<key>net.rujel.stats.StatsModule</key>
+		<string>true</string>
 	</dict>
 	<key>edu</key>
 	<dict>

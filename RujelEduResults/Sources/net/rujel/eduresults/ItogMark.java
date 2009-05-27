@@ -175,12 +175,12 @@ public class ItogMark extends _ItogMark
 	
 	public static NSArray getItogMarks(EduCycle cycle, EduPeriod period, Student student) {
 		EOEditingContext ec = null;
-		if(student != null)
-			ec = student.editingContext();
+		if(period != null)
+			ec = period.editingContext();
 		else if(cycle != null)
 			ec = cycle.editingContext();
-		else if(period != null)
-			ec = period.editingContext();
+		else if(student != null)
+			ec = student.editingContext();
 		else
 			throw new NullPointerException("At least one of parameters should have value");
 		return getItogMarks(cycle,period,student,ec);
