@@ -60,7 +60,9 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.prognosReport")).mutableClone();
 		EduPeriod eduper = null;
-		NSTimestamp to = (NSTimestamp)settings.valueForKey("to");
+		NSTimestamp date = (NSTimestamp)settings.valueForKey("to");
+		if(date == null && period != null)
+			date = new NSTimestamp(period.end());
 		Enumeration enu = courses.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
@@ -70,16 +72,38 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 				NSArray pertypes = PeriodType.periodTypesForCourse(course);
 				if(pertypes != null && pertypes.count() > 0) {
 					PeriodType pt = (PeriodType)pertypes.objectAtIndex(0);
-					eduper = pt.currentPeriod(to);
-				}
+					if(date != null)
+						eduper = pt.currentPeriod(date);
+/*					if(eduper == null) {
+						date = (NSTimestamp)settings.valueForKey("since");
+						if(date == null && period != null)
+							date = new NSTimestamp(period.begin());
+						if(date != null)
+							eduper = pt.currentPeriod(date);
+					}
+*/				}
 			}
-			Prognosis progn = Prognosis.getPrognosis(student, course, eduper, false);
 			NSMutableDictionary dict = null;
+			Prognosis progn = (eduper==null)?null:
+				Prognosis.getPrognosis(student, course, eduper, false);
 			if(progn != null)
 				dict = new NSMutableDictionary(progn.mark(),"mark");
 			if(ifTimeout) {
-				StudentTimeout studentTimeout = StudentTimeout.
-				timeoutForStudentCourseAndPeriod(student, course, eduper);
+				StudentTimeout studentTimeout = StudentTimeout.activeTimeout(student, course, date);
+				if (studentTimeout != null) {
+					if (eduper == null) {
+						eduper = studentTimeout.eduPeriod();
+						progn = Prognosis.getPrognosis(student, course, eduper,
+								false);
+						if (progn != null)
+							dict = new NSMutableDictionary(progn.mark(), "mark");
+					} else if (eduper.end().compareTo(
+							studentTimeout.eduPeriod().end()) < 0) {
+						studentTimeout = StudentTimeout
+								.timeoutForStudentCourseAndPeriod(student,
+										course, eduper);
+					}
+				}
 				CourseTimeout courseTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(course, eduper);
 				if(studentTimeout != null || courseTimeout != null) {
 					Timeout timeout = studentTimeout;
@@ -87,11 +111,11 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 						if(timeout == null) {
 							timeout = courseTimeout;
 						} else {
-							NSTimestamp date = (progn == null)?null:progn.fireDate();
-							if(date == null)
-								date = Prognosis.chooseDate(studentTimeout, courseTimeout);
-							if(!date.equals(studentTimeout.dueDate())) {
-								if(date.equals(courseTimeout.dueDate()))
+							NSTimestamp fireDate = (progn == null)?null:progn.fireDate();
+							if(fireDate == null)
+								fireDate = Prognosis.chooseDate(studentTimeout, courseTimeout);
+							if(!fireDate.equals(studentTimeout.dueDate())) {
+								if(fireDate.equals(courseTimeout.dueDate()))
 									timeout = courseTimeout;
 								else {
 									Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
@@ -103,8 +127,8 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 					if(dict == null)
 						dict = new NSMutableDictionary();
 					dict.takeValueForKey(timeout.reason(), "reason");
-					String date = MyUtility.dateFormat().format(timeout.dueDate());
-					dict.setObjectForKey(date, "timeout");
+					String dateStr = MyUtility.dateFormat().format(timeout.dueDate());
+					dict.setObjectForKey(dateStr, "timeout");
 				}
 			}
 			if(dict != null) {

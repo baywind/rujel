@@ -614,11 +614,11 @@
 		<key>maxGrade</key>
 		<string>11</string>
 		<key>disableAutoItog</key>
-		<string>true</string>
-		<key>autoItogLagDays</key>
-		<string>1</string>
-		<key>disablePlanFactCheck</key>
 		<string>false</string>
+		<key>autoItogLagDays</key>
+		<string>-1</string>
+		<key>disablePlanFactCheck</key>
+		<string>true</string>
 		<key>planFactLagDays</key>
 		<string>1</string>
 		<key>_ignorePrognosesAfterDays</key>
@@ -694,7 +694,7 @@
 		<key>DAILY</key>
 		<dict>
 			<key>time</key>
-			<string>0:28</string>
+			<string>16:49</string>
 		</dict>
 		<key>MONTHLY</key>
 		<dict/>

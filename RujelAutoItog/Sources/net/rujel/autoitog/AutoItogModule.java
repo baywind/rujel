@@ -354,15 +354,17 @@ public class AutoItogModule {
 	}
 	
 	protected static void automateTimedOutPrognoses(EOEditingContext ec, NSArray prognoses) {
-		StringBuffer buf = new StringBuffer("Timed out prognoses: ");
-		EOSortOrdering so = new EOSortOrdering ("eduPeriod.countInYear", EOSortOrdering.CompareDescending);
+		StringBuffer buf = new StringBuffer("Timed out prognoses:\n");
+		EOSortOrdering so = new EOSortOrdering ("eduPeriod.eduYear", EOSortOrdering.CompareAscending);
 		NSMutableArray sorter = new NSMutableArray(so);
+		so = new EOSortOrdering ("eduPeriod.countInYear", EOSortOrdering.CompareDescending);
+		sorter.addObject(so);
 		so = new EOSortOrdering ("eduPeriod.begin", EOSortOrdering.CompareAscending);
 		sorter.addObject(so);
 		so = new EOSortOrdering ("eduCourse.eduGroup", EOSortOrdering.CompareAscending);
 		sorter.addObject(so);
-		so = new EOSortOrdering ("eduCourse.cycle", EOSortOrdering.CompareAscending);
-		sorter.addObject(so);
+//		so = new EOSortOrdering ("eduCourse.cycle", EOSortOrdering.CompareAscending);
+//		sorter.addObject(so);
 		so = new EOSortOrdering ("eduCourse", EOSortOrdering.CompareAscending);
 		sorter.addObject(so);
 		prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, sorter);
@@ -376,26 +378,21 @@ public class AutoItogModule {
 		for (int i = 0; i < prognoses.count(); i++) {
 			Prognosis prognos = (Prognosis)prognoses.objectAtIndex(i);
 			if(prognos.eduPeriod() != period) {
+				if(course != null) {
+					savePrognoses(ec, course, period, buf);
+				}
 				period = prognos.eduPeriod();
-				buf.append(period.name()).append('\n');
+				buf.append("\n-- ").append(period.name()).append(' ');
+				buf.append(period.presentEduYear()).append('\n').append('\n');
 				course = null;
 			}
 			if(prognos.eduCourse() != course) {
-				course = prognos.eduCourse();
-//				if((i - last) > 12) {
-				if(i > 0) {
-					try {
-//						last = i;
-						ec.saveChanges();
-					}  catch (Exception ex) {
-						logger.log(WOLogLevel.WARNING,"Failed to save timed out prognoses for course", 
-								new Object[] {course, ex});
-						buf.append("Failed to save timed out prognoses");
-						ec.revert();
-					}
-					ModuleInit.prepareStats(course, period, true);
+				if(course != null) {
+					savePrognoses(ec, course, period, buf);
 					buf.append("--\n");
 				}
+				course = prognos.eduCourse();
+//				if((i - last) > 12) {
 //				if(course.eduGroup() != group) {
 //					group = course.eduGroup();
 					buf.append(course.eduGroup().name()).append(" : ");
@@ -414,6 +411,13 @@ public class AutoItogModule {
 				archive.takeValueForKey("AutoItog", "user");
 			}
 		}
+		if(course != null)
+			savePrognoses(ec, course, period, buf);
+		message(buf);
+	}
+	
+	private static void savePrognoses(EOEditingContext ec, EduCourse course, 
+			EduPeriod period, StringBuffer buf) {
 		try {
 			ec.saveChanges();
 		}  catch (Exception ex) {
@@ -423,7 +427,6 @@ public class AutoItogModule {
 			ec.revert();
 		}
 		ModuleInit.prepareStats(course, period, true);
-		message(buf);
 	}
 		
 	protected static NSArray coursesForPeriod (EduPeriod period) {

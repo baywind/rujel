@@ -146,13 +146,15 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 	}
 	
 	public static NSArray timeoutsForCourseAndPeriod(Student student,EduCourse course,EduPeriod period) {
-		EOQualifier qual = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,course);
+		EOQualifier qual = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,NullValue);
 		NSMutableArray quals = new NSMutableArray(qual);
-		qual = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,null);
-		quals.addObject(qual);
-		qual = new EOOrQualifier(quals);
-		quals.removeAllObjects();
-		quals.addObject(qual);
+		if(course != null) {
+			qual = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,course);
+			quals.addObject(qual);
+			qual = new EOOrQualifier(quals);
+			quals.removeAllObjects();
+			quals.addObject(qual);
+		}
 		qual = new EOKeyValueQualifier("eduPeriod",EOQualifier.QualifierOperatorEqual,period);
 		quals.addObject(qual);
 		if(student == null)
@@ -185,6 +187,33 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 			}
 		}
 		return (StudentTimeout)timeouts.objectAtIndex(0);
+	}
+	
+	public static StudentTimeout activeTimeout(Student student, EduCourse course, NSTimestamp date) {
+		EOQualifier qual = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,NullValue);
+		NSMutableArray quals = new NSMutableArray(qual);
+		if(course != null) {
+			qual = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,course);
+			quals.addObject(qual);
+			qual = new EOOrQualifier(quals);
+			quals.removeAllObjects();
+			quals.addObject(qual);
+		}
+		qual = new EOKeyValueQualifier(DUE_DATE_KEY
+				,EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
+		quals.addObject(qual);
+		if(student == null)
+			qual = Various.getEOInQualifier("student",course.eduGroup().list());
+		else
+			qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
+		quals.addObject(qual);
+		qual = new EOAndQualifier(quals);
+		NSArray sort = new NSArray(new EOSortOrdering(DUE_DATE_KEY,EOSortOrdering.CompareAscending));
+		EOFetchSpecification fs = new EOFetchSpecification("StudentTimeout",qual,sort);
+		NSArray found = course.editingContext().objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		return (StudentTimeout)found.objectAtIndex(0);		
 	}
 
 	public NSMutableDictionary extItog() {
