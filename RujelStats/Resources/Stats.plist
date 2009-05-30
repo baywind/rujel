@@ -8,5 +8,58 @@
 	<string>другие</string>
 	<key>none</key>
 	<string>Без значения</string>
+	<key>omitKey</key>
+	<string>осв</string>
+	<key>formulas</key>
+	<dict>
+		<key>uspevaemost</key>
+		<dict>
+			<key>title</key>
+			<string>Успеваемость</string>
+			<key>short</key>
+			<string>усп</string>
+			<key>presenterBindings</key>
+			<dict>
+				<key>numberformat</key>
+				<string>0%</string>
+			</dict>
+		</dict>
+		<key>znaniy</key>
+		<dict>
+			<key>title</key>
+			<string>Количество знаний</string>
+			<key>short</key>
+			<string>зн</string>
+			<key>presenterBindings</key>
+			<dict>
+				<key>numberformat</key>
+				<string>0%</string>
+			</dict>
+		</dict>
+		<key>average</key>
+		<dict>
+			<key>title</key>
+			<string>Средняя отметка</string>
+			<key>short</key>
+			<string>ср</string>
+			<key>presenterBindings</key>
+			<dict>
+				<key>numberformat</key>
+				<string>#.##</string>
+			</dict>
+		</dict>
+		<key>sou</key>
+		<dict>
+			<key>title</key>
+			<string>по Симонову В. П.</string>
+			<key>short</key>
+			<string>СОУ</string>
+			<key>presenterBindings</key>
+			<dict>
+				<key>numberformat</key>
+				<string>#.0</string>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

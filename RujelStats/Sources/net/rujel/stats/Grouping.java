@@ -59,8 +59,10 @@ public class Grouping extends _Grouping {
 			return _dict;
 		_keys = (NSArray)description().valueForKeyPath("borderSet.sortedTitles");
 		NSArray list = statEntries();
-		if(list == null || list.count() == 0)
-			return null;
+		if(list == null || list.count() == 0) {
+			_dict = new NSDictionary(total(),"total");
+			return _dict;
+		}
 		if(list.count() > 1 && _keys == null) {
 			EOSortOrdering so = new EOSortOrdering("statKey"
 					,EOSortOrdering.CompareCaseInsensitiveAscending);
@@ -68,9 +70,14 @@ public class Grouping extends _Grouping {
 		}
 		NSArray keys = (NSArray)list.valueForKey("statKey");
 		list = (NSArray)list.valueForKey("keyCount");
-		_dict = new NSDictionary(list,keys);
+		_dict = new NSMutableDictionary(list,keys);
+		if(!keys.containsObject("total"))
+			_dict.takeValueForKey(total(), "total");
 		if(_keys == null)
 			_keys = keys.immutableClone();
+		if(!keys.containsObject("keys"))
+			_dict.takeValueForKey(_keys, "keys");
+		_dict = _dict.immutableClone();
 		return _dict;
 	}
 	

@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOApplication;
@@ -62,6 +63,8 @@ public class StatsModule {
 	}
 	
 	public static Object coursesReport(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Stats")))
+			return null;
 		NSArray reports = (NSArray)ctx.session().valueForKeyPath("modules.statCourseReport");
 		if(reports == null || reports.count() == 0)
 			return null;
@@ -137,6 +140,18 @@ public class StatsModule {
 			keyDict.takeValueForKey(new Integer(i), "sort");
 //			keyDict.takeValueForKey("width:1.6em;","titleStyle");
 			subParams.addObject(keyDict);
+			tmp = cfg.valueForKey("addCalculations");
+			if(Various.boolForObject(tmp)) {
+				subParams.addObjectsFromArray(Calculations.allFormulas());
+			}
+			tmp = cfg.valueForKey("formula");
+			if(tmp != null) {
+				subParams.addObject(tmp);
+			}
+			tmp = cfg.valueForKey("formulas");
+			if(tmp != null) {
+				subParams.addObjectsFromArray((NSArray)tmp);
+			}
 			reportDict.setObjectForKey(subParams, "subParams");
 			
 			try {

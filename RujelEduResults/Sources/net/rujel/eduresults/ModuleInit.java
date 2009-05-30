@@ -314,10 +314,10 @@ public class ModuleInit {
 			dict.setObjectForKey(title + " - " + period.title(),"title");
 			dict.setObjectForKey(period,"param2");
 			dict.setObjectForKey(String.valueOf(sort),"sort");
+			dict.setObjectForKey(Boolean.TRUE, "addCalculations");
 			result.addObject(dict);
 			sort++;
 		}
-
 		return result;
 	}
 }
