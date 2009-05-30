@@ -45,6 +45,7 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSComparator.ComparisonException;
@@ -63,7 +64,9 @@ public class StatsModule {
 	}
 	
 	public static Object coursesReport(WOContext ctx) {
-		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Stats")))
+		NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)ctx.
+							session().valueForKey("readAccess");
+		if(Various.boolForObject(readAccess.valueForKeyPath("_read.Stats")))
 			return null;
 		NSArray reports = (NSArray)ctx.session().valueForKeyPath("modules.statCourseReport");
 		if(reports == null || reports.count() == 0)
@@ -75,6 +78,8 @@ public class StatsModule {
 			rNum++;
 			NSDictionary cfg = (NSDictionary) enu.nextElement();
 			String entName = (String)cfg.valueForKey("entName");
+			if(Various.boolForObject(readAccess.valueForKeyPath("_read." + entName)))
+				continue;
 			String statField = (String)cfg.valueForKey("statField");
 			Object param1 = cfg.valueForKey("param1");
 			Object param2 = cfg.valueForKey("param2");
@@ -101,7 +106,7 @@ public class StatsModule {
 			}
 			reportDict.takeValueForKey(tmp, "title");
 			reportDict.takeValueForKey(Integer.toString(50 +rNum),"sort");
-			reportDict.takeValueForKey(new NSArray(entName),"checkAccess");
+//			reportDict.takeValueForKey(new NSArray(entName),"checkAccess");
 			
 			NSMutableArray subParams = new NSMutableArray();
 			
@@ -156,11 +161,10 @@ public class StatsModule {
 			
 			try {
 				Object[] params = new Object[] {entName, statField, param1, param2, keys,
-						cfg.valueForKey("ifEmpty")};
-				
+						cfg.valueForKey("ifEmpty"),readAccess.valueForKeyPath("create.Stats")};
 				NSMutableDictionary valueDict = new NSMutableDictionary("reportDict","methodName");
 				Method method = StatsModule.class.getMethod("reportDict", String.class, String.class, 
-						EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class);
+EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Boolean.TYPE);
 				valueDict.setObjectForKey(method, "parsedMethod");
 				valueDict.setObjectForKey(new NSArray(params), "paramValues");
 				reportDict.setObjectForKey(valueDict, "value");
@@ -183,8 +187,8 @@ public class StatsModule {
 	}
 	
 	public static NSDictionary reportDict(String entName, String statField, 
-			EOEnterpriseObject param1, EOEnterpriseObject param2, NSArray keys, Method ifEmpty) {
-		boolean create = true;
+			EOEnterpriseObject param1, EOEnterpriseObject param2, NSArray keys, 
+			Method ifEmpty, boolean create) {
 		EOEditingContext ec = null;
 		if(param1 != null) {
 			ec = param1.editingContext();

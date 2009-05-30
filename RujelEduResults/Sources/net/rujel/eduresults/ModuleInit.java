@@ -276,6 +276,8 @@ public class ModuleInit {
 	}
 	
 	public static Object statCourseReport(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
+			return null;
 		EOEditingContext ec = null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");

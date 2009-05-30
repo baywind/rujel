@@ -100,7 +100,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 	public static NSDictionary planFact(EduCourse course, NSTimestamp date) {
 		EOEditingContext ec = course.editingContext();
 		int plan = 0;
-		int hours = 0;
+		int maxDev = 0;
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
 		if(cal.get(Calendar.HOUR_OF_DAY) == 0)
@@ -125,22 +125,32 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 					EduPeriod period = (EduPeriod) enu.nextElement();
 					if(date.compare(period.begin()) < 0)
 						break;
-					hours = PlanCycle.planHoursForCourseAndPeriod(course, period);
+					int hours = PlanCycle.planHoursForCourseAndPeriod(course, period);
 					if(hours == 0)
 						continue;
-					days += period.daysInPeriod(date);
+					if (days > 3) {
+						days += period.daysInPeriod(date);
+						if(days > 7) {
+							days -= 7;
+							plan += maxDev;
+							maxDev = 0;
+						}
+					} else {
+						days += period.daysInPeriod(date);
+					}
 					int weeks = days / 7;
 					totalWeeks += weeks;
 					days = days%7;
 					plan += weeks*hours;
-					if(date.compare(period.end()) > 0) {
-						hours = 0;
-					}
+					maxDev = (days > 0)?hours:0;
+//					if(date.compare(period.end()) > 0) {
+//						hours = 0;
+//					}
 				}
 				if(cal != null)
 					days++;
 				result.takeValueForKey(new Integer(plan), "planPre");
-				result.takeValueForKey(new Integer(hours), "maxDeviation");
+				result.takeValueForKey(new Integer(maxDev), "maxDeviation");
 				result.takeValueForKey(new Integer(days), "extraDays");
 				result.takeValueForKey(new Integer(totalWeeks), "weeks");
 //				if(days >= 4) {
@@ -148,7 +158,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 //				}
 			}
 		}
-		if(plan == 0 && hours == 0)
+		if(plan + maxDev == 0)
 			return result;
 		list = Variation.variations(course, null, date, null);
 		int plus = 0;
@@ -187,8 +197,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		if(deviation < 0) {
 			result.takeValueForKey(new Integer(deviation), "result");
 			result.takeValueForKey("warning", "styleClass");
-		} else if(deviation > hours) {
-			result.takeValueForKey(new Integer(deviation - hours), "result");
+		} else if(deviation > maxDev) {
+			result.takeValueForKey(new Integer(deviation - maxDev), "result");
 			result.takeValueForKey("highlight2", "styleClass");
 		} else {
 			result.takeValueForKey(new Integer(0), "result");
