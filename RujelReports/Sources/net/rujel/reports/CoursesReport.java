@@ -60,18 +60,14 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	
     public CoursesReport(WOContext context) {
         super(context);
-
 		ec = new SessionedEditingContext(context.session());
-		NSArray availableReports = (NSArray)session().valueForKeyPath("modules.coursesReport");
-		reports = PlistReader.cloneArray(availableReports, true);
-        
-		reports.addObjectsFromArray(ReportsModule.reportsFromDir("CoursesReport",context));
         //prepareDisplay();
         //modifyList();
     }
     
     public NSMutableArray prepareDisplay() {
-    	NSMutableArray forceDisplay = new NSMutableArray(defaultDisplay.valueForKey("subject"));
+    	NSMutableArray forceDisplay = new NSMutableArray(
+    			defaultDisplay.valueForKey("subject"));
         if((curSource==null)?tabindex == 0:curSource instanceof EduGroup)
         	forceDisplay.addObject(defaultDisplay.valueForKey("teacher"));
         else
@@ -84,9 +80,16 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 				"strings.RujelReports_Reports.CoursesReport.title");
 	}
     
-	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		super.appendToResponse(aResponse, aContext);
-	}
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(reports == null) {
+    		NSArray availableReports = (NSArray)session().valueForKeyPath(
+    				"modules.coursesReport");
+    		reports = PlistReader.cloneArray(availableReports, true);
+    		reports.addObjectsFromArray(ReportsModule.reportsFromDir(
+    				"CoursesReport",context()));
+    	}
+    	super.appendToResponse(aResponse, aContext);
+    }
 
 	public String tabSelected() {
 		if(tabindex == NSArray.NotFound) return null;
@@ -116,7 +119,8 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 		}
 		courses = EOUtilities.objectsMatchingValues(ec, EduCourse.entityName, values);
 		if(courses != null && courses.count() > 1) {
-			courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);  
+			courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+						courses, EduCourse.sorter);  
 		}
 		display.replaceObjectAtIndex(defaultDisplay.valueForKey(
 				(curSource instanceof EduGroup)?"teacher":"eduGroup"),1);

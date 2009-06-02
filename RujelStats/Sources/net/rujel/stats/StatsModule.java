@@ -59,6 +59,8 @@ public class StatsModule {
 			;
 		} else if("coursesReport".equals(obj)) {
 			return coursesReport(ctx);
+		} else if("journalPlugins".equals(obj)) {
+			return journalPlugins(ctx);
 		}
 		return null;
 	}
@@ -90,21 +92,27 @@ public class StatsModule {
 				param1 = ".";
 			}
 			NSMutableDictionary reportDict = new NSMutableDictionary("stats" + rNum,"id");
-			Object tmp = cfg.valueForKey("title");
+			String title = (String)cfg.valueForKey("title");
 			NSArray keys = (NSArray)cfg.valueForKey("keys");
-			if(tmp == null || keys == null) {
+//			if(title == null || keys == null) {
 				EOEditingContext ec = (EOEditingContext)ctx.page().valueForKey("ec");
 				Description desc = Description.getDescription(entName, statField, 
 						entForParam(param1), entForParam(param2), ec, false);
 				if(desc != null) {
-					if(tmp == null)
-						tmp = desc.description();
-					keys = (NSArray)desc.valueForKeyPath("borderSet.sortedTitles");
+					if(title == null)
+						title = desc.description();
+					else 
+						title = desc.description() + " - " + title;
+					if(keys == null)
+						keys = (NSArray)desc.valueForKeyPath("borderSet.sortedTitles");
 				} else {
-					tmp = entName;
+					if(title == null)
+						title = entName;
+					else
+						title = entName + " - " + title;
 				}
-			}
-			reportDict.takeValueForKey(tmp, "title");
+//			}
+			reportDict.takeValueForKey(title, "title");
 			reportDict.takeValueForKey(Integer.toString(50 +rNum),"sort");
 //			reportDict.takeValueForKey(new NSArray(entName),"checkAccess");
 			
@@ -145,7 +153,7 @@ public class StatsModule {
 			keyDict.takeValueForKey(new Integer(i), "sort");
 //			keyDict.takeValueForKey("width:1.6em;","titleStyle");
 			subParams.addObject(keyDict);
-			tmp = cfg.valueForKey("addCalculations");
+			Object tmp = cfg.valueForKey("addCalculations");
 			if(Various.boolForObject(tmp)) {
 				subParams.addObjectsFromArray(Calculations.allFormulas());
 			}
@@ -203,7 +211,7 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 		NSDictionary dict = null;
 		if(ifEmpty != null && 
 				(grouping == null || ec.globalIDForObject(grouping).isTemporary())) {
-			Class[] paramClasses = ifEmpty.getParameterTypes();
+/*			Class[] paramClasses = ifEmpty.getParameterTypes();
 			Object[] params = new Object[paramClasses.length];
 			boolean[] unused = new boolean[] {true,true,true};
 			for (int i = 0; i < paramClasses.length; i++) {
@@ -256,6 +264,8 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 					ec.revert();
 				}
 			} // executing ifEmpty
+*/
+			dict = _execIfEmpty(ifEmpty, grouping, create, param1, param2, ec, entName, statField);	
 		} else if (grouping != null) {
 			dict = grouping.dict();
 		}
@@ -330,5 +340,71 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 			total = new Integer(checkSum);
 		result.takeValueForKey(total, "total");
 		return result;
+	}
+	
+	public static Object journalPlugins(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Stats")))
+			return null;
+		return WOApplication.application().valueForKeyPath("strings.RujelStats_Stats.dashboard");
+	}
+	
+	public static NSDictionary _execIfEmpty(Method ifEmpty,Grouping grouping, boolean create,
+			EOEnterpriseObject param1, EOEnterpriseObject param2, 
+			EOEditingContext ec, String entName, String statField) {
+		Class[] paramClasses = ifEmpty.getParameterTypes();
+		Object[] params = new Object[paramClasses.length];
+		boolean[] unused = new boolean[] {true,true,true};
+		for (int i = 0; i < paramClasses.length; i++) {
+			if(paramClasses[i].isInstance(param1) && unused[1]) {
+				params[i] = param1;
+				unused[1] = false;
+			} else if(paramClasses[i].isInstance(param2) && unused[2]) {
+				params[i] = param2;
+				unused[2] = false;
+			} else if(paramClasses[i].isInstance(ec) && unused[0]) {
+				params[i] = ec;
+				unused[0] = false;
+			}
+		}
+		NSDictionary dict = null;
+		try {
+			Object result = ifEmpty.invoke(null, params);
+			if(result instanceof NSDictionary) {
+				dict = (NSDictionary) result;
+				if(grouping != null)
+					grouping.setDict(dict);
+			}
+			if(result instanceof NSArray) {
+				if(grouping != null) {
+					dict = grouping.description().calculate((NSArray)result);
+					grouping.setDict(dict);
+				} else {
+					String ent1 = (param1 == null)?null:param1.entityName();
+					String ent2 = (param2 == null)?null:param2.entityName();
+					Description desc = Description.getDescription
+								(entName, statField, ent1, ent2, ec, create);
+					if(desc == null)
+						dict = Description.calculate((NSArray)result, statField, null);
+					else
+						dict = desc.calculate((NSArray)result);
+				}
+			}
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error getting stat values for " + entName,
+					new Object[] {e,param1,param2,ifEmpty});
+		}
+		if(ec.hasChanges()) {
+			if(create) {
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Error savig calculated stats",
+							new Object[] {e,param1,param2});
+				}
+			} else {
+				ec.revert();
+			}
+		}
+		return dict;
 	}
 }

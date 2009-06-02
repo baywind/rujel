@@ -305,15 +305,15 @@ public class ModuleInit {
 			e.printStackTrace();
 		}
 
-		String title = (String)WOApplication.application().valueForKeyPath(
-				"strings.RujelEduResults_EduResults.itogAddOn.title");
-		int sort = 50;
+//		String title = (String)WOApplication.application().valueForKeyPath(
+//				"strings.RujelEduResults_EduResults.itogAddOn.title");
+		int sort = 30;
 		while (enu.hasMoreElements()) {
 			EduPeriod period = (EduPeriod) enu.nextElement();
 			if(!pertypes.containsObject(period.periodType()))
 				continue;
 			NSMutableDictionary dict = template.mutableClone();
-			dict.setObjectForKey(title + " - " + period.title(),"title");
+			dict.setObjectForKey(period.title(),"title");
 			dict.setObjectForKey(period,"param2");
 			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(Boolean.TRUE, "addCalculations");

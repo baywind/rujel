@@ -146,6 +146,12 @@ public class ChooseRegime extends WOComponent {
     	return returnPage;
     }
     
+    public WOActionResults flush() {
+    	StringStorage str = (StringStorage)application().valueForKey("strings");
+    	str.flush();
+    	returnPage.ensureAwakeInContext(context());
+    	return returnPage;
+    }
 	/*
 	public static NSArray allRegimes() {
 		try {

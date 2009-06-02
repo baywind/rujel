@@ -58,7 +58,7 @@ public class Calculations {
 	}
 	
 	protected static final String[] func = new String[]
-	                                    {"uspevaemost","znaniy","average","sou"};
+	                                    {"average","uspevaemost","znaniy","sou"};
 	protected static NSArray _allFormulas;
 	
 	public static NSArray allFormulas() {
@@ -141,8 +141,8 @@ public class Calculations {
 		int chisl = count("5",vals)*100;
 		chisl += count("4",vals)*64;
 		chisl += count("3",vals)*36;
-		chisl += count("2",vals)*16;
-		chisl += count("н/а",vals)*7;
+//		chisl += count("2",vals)*16;
+//		chisl += count("н/а",vals)*7;
 		return new Double((double)chisl/total);
 	}
 
