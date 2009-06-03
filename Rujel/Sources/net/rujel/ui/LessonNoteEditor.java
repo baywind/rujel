@@ -395,8 +395,8 @@ public class LessonNoteEditor extends WOComponent {
 						refresh();
 					}
 				} else {
-					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
-						level = WOLogLevel.OWNED_EDITING;
+//					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
+//						level = WOLogLevel.OWNED_EDITING;
 					logger.log(level,"Course comment modified",new Object[] {session(),course});
 				}
 			}// ec.hasChanges
@@ -427,8 +427,8 @@ public class LessonNoteEditor extends WOComponent {
 		WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 		if(currLesson().notes().count() > 0)
 			level = WOLogLevel.MASS_EDITING;
-		if(currLesson() instanceof UseAccess && ((UseAccess)currLesson()).isOwned())
-			level = WOLogLevel.OWNED_EDITING;
+//		if(currLesson() instanceof UseAccess && ((UseAccess)currLesson()).isOwned())
+//			level = WOLogLevel.OWNED_EDITING;
 		ec.lock();
 		try {
 			if(ec.insertedObjects().contains(currLesson())) { //just inserted
