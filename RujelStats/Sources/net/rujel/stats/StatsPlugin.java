@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
@@ -38,6 +39,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 		NSArray currKeys = null;
 		cols = 0;
 		Object currDesc = null;
+		NSArray formulas = null;
 		while (enu.hasMoreElements()) {
 			NSDictionary cfg = (NSDictionary) enu.nextElement();
 			String entName = (String)cfg.valueForKey("entName");
@@ -81,8 +83,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				if(!keys.contains(""))
 					keys = keys.arrayByAddingObject("");
 				currKeys = keys;
-				if(keys.count() > cols)
-					cols = keys.count() +2;
+				
 				NSMutableDictionary rowDict = new NSMutableDictionary("grey","styleClass");
 				rowDict.takeValueForKey("font-weight:bold;", "style");
 				if(desc instanceof Description)
@@ -91,7 +92,29 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 					rowDict.takeValueForKey(entName, "title");
 				rowDict.takeValueForKey(application().valueForKeyPath(
 						"strings.RujelStats_Stats.total"), "total");
-				rowDict.takeValueForKey(keys.objects(),"values");
+
+				Object tmp = cfg.valueForKey("addCalculations");
+				if(Various.boolForObject(tmp)) {
+					formulas = Calculations.allFormulas();
+				} else {
+					formulas = null;
+				}
+				tmp = cfg.valueForKey("formula");
+				if(tmp != null) {
+					if(formulas == null) formulas = new NSArray(tmp);
+					else formulas = formulas.arrayByAddingObject(tmp);
+				}
+				tmp = cfg.valueForKey("formulas");
+				if(tmp != null) {
+					if(formulas == null) formulas = (NSArray)tmp;
+					else formulas = formulas.arrayByAddingObjectsFromArray((NSArray)tmp);
+				}
+
+				if(formulas != null)
+					currKeys = currKeys.arrayByAddingObjectsFromArray(formulas);
+				if(currKeys.count() > cols)
+					cols = currKeys.count() +2;
+				rowDict.takeValueForKey(currKeys.objects(),"values");
 				rows.addObject(rowDict);
 			}
 			NSMutableDictionary rowDict = new NSMutableDictionary("gerade","styleClass");
@@ -134,6 +157,26 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				others.append('\'').append(key).append('\'');
 				others.append(':').append(dict.objectForKey(key));
 			} // process keys
+			if(formulas != null && formulas.count() > 0) {
+				int idx = row.length - formulas.count();
+				kEnu = formulas.objectEnumerator();
+				NSNumberFormatter format = new NSNumberFormatter();
+				while (kEnu.hasMoreElements()) {
+					NSDictionary fla = (NSDictionary) kEnu.nextElement();
+					Object val = DisplayAny.ValueReader.evaluateValue(
+							fla.valueForKey("value"), dict, this);
+					if(val != null) {
+						String pattern = (String)fla.valueForKeyPath(
+						"presenterBindings.numberformat");
+						if(pattern != null)
+							format.setPattern(pattern);
+						else
+							format.setPattern(NSNumberFormatter.DefaultPattern);
+						row[idx] = format.format(val);
+					}
+					idx++;
+				}
+			}
 			rowDict.takeValueForKey(row, "values");
 //			rowDict.takeValueForKey(new Integer(row.length), "valuesCount");
 			rows.addObject(rowDict);
@@ -171,7 +214,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
     	StringBuilder buf = new StringBuilder(12);
     		buf.append((titleRow)?"<th":"<td");
     	if(cols > num +1)
-    		buf.append("colspan = \"").append(cols - num).append('"');
+    		buf.append(" align = \"left\" colspan = \"").append(cols - num).append('"');
 //    	if(titleRow)
 //    		buf.append(" style = \"");
     	buf.append('>');
@@ -196,25 +239,40 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				return null;
 			if(row[idx] == null)
 				return "<td></td>";
-			String val = row[idx].toString();
 			if(!titleRow())
 				return "<td>" + row[idx].toString() + "</td>";
 			StringBuilder result = new StringBuilder("<th style = \"");
-			boolean quote = (val.length() < 3);
+			String val = null;
+			String title = null;
+			boolean quote = false;
+			if(row[idx] instanceof NSDictionary) {
+				NSDictionary dict = (NSDictionary)row[idx];
+				title = (String)dict.valueForKey("title");
+				val = (String)dict.valueForKey("short");
+				if(val == null) {
+					val = title;
+					title = null;
+				}
+				quote = (val.length() < 3);
+			} else {
+				val = row[idx].toString();
+				quote = (val.length() < 3);
+				val = WOMessage.stringByEscapingHTMLString(val.toString());
+			}
 			if(quote) {
 				result.append("min-width:1.6em;\"");
 			} else {
 				result.append("white-space:nowrap;\"");
 			}
 			if(val.equals("")) {
-				val = (String)application().valueForKeyPath("strings.RujelStats_Stats.none");
-				if(val != null)
-					result.append(" title = \"").append(val).append('"');
+				title = (String)application().valueForKeyPath("strings.RujelStats_Stats.none");
 				val = "&oslash;";
 				quote = false;
-			} else {
-				val = WOMessage.stringByEscapingHTMLString(val.toString());
+			} else if(row[idx] instanceof NSDictionary) {
+				quote = false;
 			}
+			if(title != null)
+				result.append(" title = \"").append(title).append('"');
 			result.append('>');
 			if(quote) result.append('\'');
 			result.append(val);

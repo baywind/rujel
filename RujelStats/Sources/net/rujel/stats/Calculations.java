@@ -94,8 +94,10 @@ public class Calculations {
 			return null;
 		NSDictionary vals = (NSDictionary)dict.objectForKey("dict");
 		if(vals == null)
-			return null;
+			vals = dict;
 		int total = count("total",dict) - count(omitKey,vals);
+		if(total == 0)
+			return null;
 		int chisl = count("5", vals) + count("4", vals) + count("3", vals);
 		return new Double((double)100*chisl/total);
 	}
@@ -105,8 +107,10 @@ public class Calculations {
 			return null;
 		NSDictionary vals = (NSDictionary)dict.objectForKey("dict");
 		if(vals == null)
-			return null;
+			vals = dict;
 		int total = count("total",dict) - count(omitKey,vals);
+		if(total == 0)
+			return null;
 		int chisl = count("5",vals) + count("4", vals);
 		return new  Double((double)100*chisl/total);
 	}
@@ -116,8 +120,10 @@ public class Calculations {
 			return null;
 		NSDictionary vals = (NSDictionary)dict.objectForKey("dict");
 		if(vals == null)
-			return null;
+			vals = dict;
 		int total = count("total",dict) - count(omitKey,vals);
+		if(total == 0)
+			return null;
 		int chisl = count("5",vals)*5;
 		chisl += count("4",vals)*4;
 		chisl += count("3",vals)*3;
@@ -136,8 +142,10 @@ public class Calculations {
 			return null;
 		NSDictionary vals = (NSDictionary)dict.objectForKey("dict");
 		if(vals == null)
-			return null;
+			vals = dict;
 		int total = count("total",dict) - count(omitKey,vals);
+		if(total == 0)
+			return null;
 		int chisl = count("5",vals)*100;
 		chisl += count("4",vals)*64;
 		chisl += count("3",vals)*36;
