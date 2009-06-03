@@ -36,6 +36,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.criterial.BorderSet;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
@@ -672,4 +673,22 @@ cycleStudents:
 		}
 		return false;
 	}
+	
+	public static NSArray localisedFlagKeys() {
+		NSDictionary localisation = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.RujelAutoItog_AutoItog.properties.Prognosis.flags");
+		if(localisation == null || localisation.count() == 0)
+			return flagNames;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = flagNames.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			String lKey = (String)localisation.valueForKey(key);
+			if(lKey == null)
+				lKey = key;
+			result.addObject(lKey);
+		}
+		return result;
+	}
+
 }

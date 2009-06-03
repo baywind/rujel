@@ -32,10 +32,13 @@ package net.rujel.interfaces;
 //import java.util.Collection;
 
 import java.lang.reflect.Method;
+
+import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSTimestamp;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSForwardException;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOSortOrdering;
 
 /** Should implement static method <tt>public static NSArray listGroups(NSTimestamp date, EOEditingContext ec)</tt>  */
 
@@ -63,6 +66,49 @@ public interface EduGroup extends PersonGroup {
 			} catch (Exception ex) {
 				throw new NSForwardException(ex, "Could not initialise EduGroup listing method");
 			}			
+		}
+	}
+	
+	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
+
+		public int compareAscending(Object left, Object right) {
+			try {
+				EduGroup leftGroup = (EduGroup)left;
+				EduGroup rightGroup = (EduGroup)right;
+				int result = compareValues(leftGroup.grade(), rightGroup.grade(),
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftGroup.title(), rightGroup.title(),
+						EOSortOrdering.CompareAscending);
+				return result;
+			} catch (Exception e) {
+				return super.compareAscending(left, right);
+			}
+		}
+
+		public int compareCaseInsensitiveAscending(Object left, Object right) {
+			try {
+				EduGroup leftGroup = (EduGroup)left;
+				EduGroup rightGroup = (EduGroup)right;
+				int result = compareValues(leftGroup.grade(), rightGroup.grade(),
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftGroup.title(), rightGroup.title(),
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+				return result;
+			} catch (Exception e) {
+				return super.compareCaseInsensitiveAscending(left, right);
+			}
+		}
+
+		public int compareDescending(Object left, Object right) {
+			return compareAscending(right, left);
+		}
+
+		public int compareCaseInsensitiveDescending(Object left, Object right) {
+			return compareCaseInsensitiveAscending(right, left);
 		}
 	}
 }

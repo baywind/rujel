@@ -30,13 +30,20 @@
 package net.rujel.vseobuch;
 
 import net.rujel.interfaces.*;
+
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
 public class VOClass extends _VOClass implements EduGroup
 {
-    public VOClass() {
+
+	public static void init() {
+		EOSortOrdering.ComparisonSupport.setSupportForClass(
+				new EduGroup.ComparisonSupport(), VOClass.class);
+	}
+    
+	public VOClass() {
         super();
     }
 
@@ -109,6 +116,4 @@ public class VOClass extends _VOClass implements EduGroup
 /*		NSDictionary dict = new NSDictionary(year,"year");
         return EOUtilities.objectsWithFetchSpecificationAndBindings(ec,"VOClass","AllClassesInYear",dict);*/
     }
-	
-
 }
