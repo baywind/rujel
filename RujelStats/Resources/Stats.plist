@@ -111,7 +111,7 @@
 			<string>$session.ajaxPopup</string>
 		</dict>
 		<key>sort</key>
-		<string>20</string>
+		<string>30</string>
 	</dict>
 </dict>
 </plist>

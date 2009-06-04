@@ -45,11 +45,7 @@ import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.*;
 
 public class CurriculumModule {
-	
-	public static NSArray journalPlugins = (NSArray)WOApplication.application().valueForKeyPath(
-			"strings.RujelCurriculum_Curriculum.plugins");
-
-	
+		
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			Substitute.init();
@@ -167,10 +163,20 @@ public class CurriculumModule {
 		return result;
 	}
 	
-	public static NSArray journalPlugins(WOContext ctx) {
-		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Variation")))
-			return null;
-		return journalPlugins;
+	public static Object journalPlugins(WOContext ctx) {
+		Object result = null;
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.Variation")))
+				result = WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.varsPlugin");
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.Reprimand"))) {
+			NSDictionary rp = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.reprPlugin");
+			if(result==null)
+				result = rp;
+			else
+				result = new NSArray(new Object[] {result,rp});
+		}
+		return result;
 	}
 	
 	public static Object scheduleTask(WOContext ctx) {

@@ -1,0 +1,80 @@
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  align = "right";
+  height = 10;
+  width = 10;
+  onclick = "closePopup();";
+  style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
+}
+
+Form : WOForm {
+  onsubmit = "ajaxPost(this);return false;";
+}
+
+Title : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Reprimand.title;
+  escapeHTML = false;
+  valueWhenEmpty = "Reprimands";
+}
+
+List : WORepetition {
+  list = list;
+  item = item;
+}
+
+Row : WOGenericContainer {
+  elementName = "tr";
+  class = styleClass;
+}
+
+DateTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Reprimand.raised;
+  escapeHTML = false;
+  valueWhenEmpty = "Date";
+}
+
+ReliefTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Reprimand.relief;
+  escapeHTML = false;
+  valueWhenEmpty = "Relief";
+}
+
+ContentTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Reprimand.content;
+  escapeHTML = false;
+  valueWhenEmpty = "Content";
+}
+
+AuthorTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Reprimand.author;
+  escapeHTML = false;
+  valueWhenEmpty = "Author";
+}
+
+RaiseDate : WOString {
+  value = item.raised;
+  dateformat = application.prefs.ui.dateFormat;
+}
+
+ RaiseTime : WOString {
+  value = item.raised;
+  dateformat = "HH:mm";
+}
+
+ReliefDate : WOString {
+  value = item.relief;
+  dateformat = application.prefs.ui.dateFormat;
+}
+
+ ReliefTime : WOString {
+  value = item.relief;
+  dateformat = "HH:mm";
+}
+Content : WOString {
+  value = item.content;
+}
+
+Author : WOString {
+  value = item.author;
+}
