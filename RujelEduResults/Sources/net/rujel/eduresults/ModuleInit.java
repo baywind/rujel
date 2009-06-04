@@ -305,8 +305,8 @@ public class ModuleInit {
 			e.printStackTrace();
 		}
 
-//		String title = (String)WOApplication.application().valueForKeyPath(
-//				"strings.RujelEduResults_EduResults.itogAddOn.title");
+		String title = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.itogAddOn.title");
 		int sort = 30;
 		while (enu.hasMoreElements()) {
 			EduPeriod period = (EduPeriod) enu.nextElement();
@@ -314,6 +314,7 @@ public class ModuleInit {
 				continue;
 			NSMutableDictionary dict = template.mutableClone();
 			dict.setObjectForKey(period.title(),"title");
+			dict.setObjectForKey(title,"description");
 			dict.setObjectForKey(period,"param2");
 			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(Boolean.TRUE, "addCalculations");

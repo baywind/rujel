@@ -754,8 +754,8 @@ cycleCourses:
 		}
 		
 		NSTimestamp today = (NSTimestamp)ctx.session().valueForKey("today");
-//		String title = (String)WOApplication.application().valueForKeyPath(
-//				"strings.RujelAutoItog_AutoItog.prognoses");
+		String title = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelAutoItog_AutoItog.prognoses");
 		int sort = 50;
 		while (enu.hasMoreElements()) {
 			PeriodType perType = (PeriodType) enu.nextElement();
@@ -765,6 +765,7 @@ cycleCourses:
 			NSMutableDictionary dict = template.mutableClone();
 			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(period.title(),"title");
+			dict.setObjectForKey(title,"description");
 			dict.setObjectForKey(period,"param2");
 			result.addObject(dict);
 			sort++;

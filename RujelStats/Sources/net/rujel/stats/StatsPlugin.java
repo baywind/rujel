@@ -66,8 +66,17 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 						param1, param2, ec, entName, statField);
 				desc = Description.getDescription(entName, statField, 
 						entForParam(param1), entForParam(param2), ec, create);
-				if(desc == null)
+				if(desc == null) {
 					desc = entName + "_" + statField;
+				} else if (((Description)desc).description() == null) {
+					NSKeyValueCoding.Utility.takeValueForKey(desc, cfg.valueForKey(
+							Description.DESCRIPTION_KEY), Description.DESCRIPTION_KEY);
+					try {
+						ec.saveChanges();
+					} catch (Exception e) {
+						ec.revert();
+					}
+				}
 			} else {
 				dict = grouping.dict();
 				desc = grouping.description();
@@ -86,10 +95,12 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				
 				NSMutableDictionary rowDict = new NSMutableDictionary("grey","styleClass");
 				rowDict.takeValueForKey("font-weight:bold;", "style");
-				if(desc instanceof Description)
+				if(desc instanceof Description) {
 					rowDict.takeValueForKey(((Description)desc).description(), "title");
-				else
-					rowDict.takeValueForKey(entName, "title");
+				} else {
+					Object title = cfg.valueForKey(Description.DESCRIPTION_KEY);
+					rowDict.takeValueForKey((title!=null)?title:entName, "title");
+				}
 				rowDict.takeValueForKey(application().valueForKeyPath(
 						"strings.RujelStats_Stats.total"), "total");
 

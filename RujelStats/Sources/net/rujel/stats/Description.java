@@ -194,6 +194,6 @@ public class Description extends _Description {
 		String ent1 = (param1 == null)?null:param1.entityName();
 		String ent2 = (param2 == null)?null:param2.entityName();
 		Description desc = getDescription(entName, statField, ent1, ent2, ec, create);
-		return desc.getGrouping(param1, param2, create);	
+		return (desc == null)?null:desc.getGrouping(param1, param2, create);	
 	}
 }

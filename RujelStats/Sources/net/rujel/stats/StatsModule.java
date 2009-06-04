@@ -76,6 +76,7 @@ public class StatsModule {
 		Enumeration enu = reports.objectEnumerator();
 		NSMutableArray result = new NSMutableArray();
 		int rNum = 0;
+		boolean create = Various.boolForObject(readAccess.valueForKeyPath("create.Stats"));
 		while (enu.hasMoreElements()) {
 			rNum++;
 			NSDictionary cfg = (NSDictionary) enu.nextElement();
@@ -95,29 +96,37 @@ public class StatsModule {
 			String title = (String)cfg.valueForKey("title");
 			NSArray keys = (NSArray)cfg.valueForKey("keys");
 //			if(title == null || keys == null) {
-				EOEditingContext ec = (EOEditingContext)ctx.page().valueForKey("ec");
-				Description desc = Description.getDescription(entName, statField, 
-						entForParam(param1), entForParam(param2), ec, false);
-				if(desc != null) {
-					if(title == null)
-						title = desc.description();
-					else 
-						title = desc.description() + " - " + title;
-					if(keys == null)
-						keys = (NSArray)desc.valueForKeyPath("borderSet.sortedTitles");
+			EOEditingContext ec = (EOEditingContext)ctx.page().valueForKey("ec");
+			Description desc = Description.getDescription(entName, statField, 
+					entForParam(param1), entForParam(param2), ec, create);
+			String description = (String)cfg.valueForKey(Description.DESCRIPTION_KEY);
+			if(description == null)
+				description = entName;
+			if(desc != null) {
+				if(desc.description() != null) {
+					description = desc.description();
 				} else {
-					if(title == null)
-						title = entName;
-					else
-						title = entName + " - " + title;
+					desc.setDescription(description);
+					try {
+						ec.saveChanges();
+					} catch (Exception e) {
+						ec.revert();
+					}
 				}
+				if(keys == null)
+					keys = (NSArray)desc.valueForKeyPath("borderSet.sortedTitles");
+			}
+			if(title == null)
+				title = description;
+			else 
+				title = description + " - " + title;
 //			}
 			reportDict.takeValueForKey(title, "title");
 			reportDict.takeValueForKey(Integer.toString(50 +rNum),"sort");
 //			reportDict.takeValueForKey(new NSArray(entName),"checkAccess");
-			
+
 			NSMutableArray subParams = new NSMutableArray();
-			
+
 			NSMutableDictionary keyDict = new NSMutableDictionary(".total","value");
 			keyDict.takeValueForKey(WOApplication.application().valueForKeyPath(
 				"strings.RujelStats_Stats.total"),"title");
@@ -169,7 +178,7 @@ public class StatsModule {
 			
 			try {
 				Object[] params = new Object[] {entName, statField, param1, param2, keys,
-						cfg.valueForKey("ifEmpty"),readAccess.valueForKeyPath("create.Stats")};
+						cfg.valueForKey("ifEmpty"),create};
 				NSMutableDictionary valueDict = new NSMutableDictionary("reportDict","methodName");
 				Method method = StatsModule.class.getMethod("reportDict", String.class, String.class, 
 EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Boolean.TYPE);
