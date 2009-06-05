@@ -190,6 +190,15 @@
 	</dict>
 	<key>reprPlugin</key>
 	<dict>
+		<key>component</key>
+		<string>ReprPlugin</string>
+		<key>title</key>
+		<string>Замечания по ведению журнала</string>
+		<key>sort</key>
+		<string>20</string>
+	</dict>
+	<key>_reprPlugin</key>
+	<dict>
 		<key>title</key>
 		<string>Замечания по ведению журнала</string>
 		<key>component</key>
@@ -225,6 +234,13 @@
 		</dict>
 		<key>sort</key>
 		<string>20</string>
+	</dict>
+	<key>ReprimList</key>
+	<dict>
+		<key>relieve</key>
+		<string>закрыть замечание</string>
+		<key>unrelieve</key>
+		<string>активировать замечание</string>
 	</dict>
 </dict>
 </plist>

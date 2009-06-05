@@ -2,14 +2,12 @@ Cross : WOImage {
   framework = "RujelBase";
   filename = "cross.png";
   align = "right";
-  height = 10;
-  width = 10;
-  onclick = "closePopup();";
-  style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
+  height = 16;
+  width = 16;
 }
 
 Form : WOForm {
-  onsubmit = "ajaxPost(this);return false;";
+  onsubmit = "ajaxPost(this,document.getElementById('ajaxPopup'));return false;";
 }
 
 Title : WOString {
@@ -77,4 +75,47 @@ Content : WOString {
 
 Author : WOString {
   value = item.author;
+}
+
+Text : WOText {
+  value = text;
+  rows = 2;
+  style = "width:90%;";
+  id = "reprimandText";
+}
+
+Num : WOTextField {
+  value = ident;
+  numberformat = "0";
+  id = "reprimandToEdit";
+  style = "display:none;";
+}
+
+Save: WOSubmitButton {
+	action = save;
+	value = application.strings.Reusables_Strings.uiElements.Add;
+	id = "reprimandSubmit";
+}
+
+ReliefCell : OnClickContainer {
+  elementName = "td";
+  onclick = relievOnClick;
+  invokeAction = toggleRelief;
+  disabled = session.readAccess._delete.item;
+}
+
+ContentCell : WOGenericContainer {
+  elementName = "td";
+  onclick = editOnClick;
+}
+
+Close : WOGenericContainer {
+  elementName = "span";
+  onclick = closeOnClick;
+  invokeAction = closePopup;
+  style = "cursor:pointer;position:absolute;right:12pt;top:12pt;";
+}
+
+CanCreate : WOConditional {
+  condition = session.readAccess.create.Reprimand;
 }
