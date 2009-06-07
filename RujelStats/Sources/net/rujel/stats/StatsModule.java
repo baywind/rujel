@@ -122,6 +122,7 @@ public class StatsModule {
 				title = description + " - " + title;
 //			}
 			reportDict.takeValueForKey(title, "title");
+			reportDict.takeValueForKey(cfg.valueForKey("hover"), "hover");
 			reportDict.takeValueForKey(Integer.toString(50 +rNum),"sort");
 //			reportDict.takeValueForKey(new NSArray(entName),"checkAccess");
 

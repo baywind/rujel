@@ -54,6 +54,11 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
         super(context);
     }
 	
+	public WOElement template() {
+		reports = (NSMutableArray)valueForBinding("available");
+		return super.template();
+	}
+	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {		
     	reports = (NSMutableArray)valueForBinding("available");
     	display = (NSMutableArray)valueForBinding("active");
@@ -64,17 +69,6 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
     		
     	super.appendToResponse(aResponse, aContext);
 	}
-	
-	public void takeValuesFromRequest(WORequest aRequest, WOContext aContext) {
-	   	reports = (NSMutableArray)valueForBinding("available");
-    	super.takeValuesFromRequest(aRequest, aContext);
-	}
-	
-    public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
-    	reports = (NSMutableArray)valueForBinding("available");
-    	return super.invokeAction(aRequest, aContext);
-    }
-
 	
     public void selectOne() {
     	display = (NSMutableArray)valueForBinding("forceActive");
@@ -113,8 +107,9 @@ public class PropSelector extends com.webobjects.appserver.WOComponent {
 				sub = new NSMutableArray();
 				while (subEnu.hasMoreElements()) {
 					NSMutableDictionary sDict = (NSMutableDictionary) subEnu.nextElement();
-					if(Various.boolForObject(sDict.valueForKey("active")))
+					if(Various.boolForObject(sDict.valueForKey("active"))) {
 						sub.addObject(sDict);
+					}
 				}
 				rDict.takeValueForKey(sub, "subParams");
 			}

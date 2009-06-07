@@ -50,23 +50,34 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCodingAdditions subDict;
 	public Object extra;
 	public String filenameFormatter;
+	public Integer index;
 
 	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);
 	
 	public ReportTable(WOContext context) {
         super(context);
     }
-
-	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+	
+	public WOElement template() {
 		setItemRow(null);
 		setItemDict(null);
+		if(hasBinding("index"))
+			setValueForBinding(null, "index");
+		list = (NSArray)valueForBinding("list");
+		properties = (NSArray)valueForBinding("properties");
+		return super.template();
+	}
+	
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(parent() != null) {
-			list = (NSArray)valueForBinding("list");
-			properties = (NSArray)valueForBinding("properties");
-			if(hasBinding("index"))
-				setValueForBinding(null, "index");
+//			list = (NSArray)valueForBinding("list");
+//			properties = (NSArray)valueForBinding("properties");
+//			if(hasBinding("index"))
+//				setValueForBinding(null, "index");
 			super.appendToResponse(aResponse, aContext);
 		} else { // exporting
+			setItemRow(null);
+			setItemDict(null);
 			if(extra != null) {
 				if(extra instanceof NSArray) {
 					properties = (properties == null)?(NSArray)extra:
@@ -232,6 +243,66 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     	return item;
      }
     
+    public String rowspan() {
+    	if(valueForKeyPath("itemDict.subParams") == null)
+    		return "2";
+    	return null;
+    }
+    
+    public String hover() {
+    	NSKeyValueCodingAdditions dict = subDict;
+    	if(dict == null)
+    		dict = itemDict;
+    	if(dict == null)
+    		return null;
+    	String hover = (String)dict.valueForKey("hover");
+    	if(dict.valueForKey("short") == null)
+    		return hover;
+    	if(hover == null)
+    		hover = (String)dict.valueForKey("title");
+    	return hover;
+    }
+    
+    public String style() {
+    	String style = null;
+    	if(itemRow == null) {
+    		if(subDict == null)
+    			style =  (String)valueForKeyPath("itemDict.titleStyle");
+    		else
+    			style = (String)valueForKeyPath("subDict.titleStyle");
+    	} else {
+    		if(subDict == null)
+    			style =  (String)valueOf.valueForKeyPath("item.itemDict.style");
+    		else
+    			style = (String)valueOf.valueForKeyPath("item.subDict.style");
+    	}
+    	if(subDict == null) {
+    		if(valueForKeyPath("itemDict.subParams") == null)
+    			return style;
+    		if(style == null)
+    			style = "border:1px #666666;border-style:none solid;";
+    		else 
+    			style = "border:1px #666666;border-style:none solid;" + style;    		
+    	} else {
+    		if(index == null || index.intValue() == 0) {
+    			if(style == null)
+    				style = "border-left:1px solid #666666;";
+    			else 
+    				style = "border-left:1px solid #666666;" + style;
+    		}
+    		NSArray subParams = (NSArray)valueForKeyPath("itemDict.subParams");
+    		if(subParams == null || index == null)
+    			return style;
+    		if(subParams.count() == index.intValue() + 1) {
+    			if(style == null)
+    				style = "border-right:1px solid #666666;";
+    			else 
+    				style = "border-right:1px solid #666666;" + style;
+    		}
+    	}
+    	return style;
+    }
+    
 /*    public void setFilenameFormatter(String value) {
     	if(export == null)
     		export = new NSMutableDictionary(value,"filenameFormatter");
@@ -252,6 +323,9 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		properties = null;
 		itemRow = null;
 		item = null;
+		index = null;
+		subDict = null;
+		itemDict = null;
 		super.reset();
 	}
 
@@ -322,24 +396,5 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 				return result;
 		}
 		return (String)valueOf.valueForKeyPath("item.itemDict.class");
-	}
-	
-	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
-		setItemRow(null);
-		setItemDict(null);
-		if(hasBinding("index"))
-			setValueForBinding(null, "index");
-		list = (NSArray)valueForBinding("list");
-		properties = (NSArray)valueForBinding("properties");
-		return super.invokeAction(aRequest, aContext);
-	}
-	public void takeValuesFromRequest(WORequest aRequest, WOContext aContext) {
-		setItemRow(null);
-		setItemDict(null);
-		if(hasBinding("index"))
-			setValueForBinding(null, "index");
-		list = (NSArray)valueForBinding("list");
-		properties = (NSArray)valueForBinding("properties");
-		super.takeValuesFromRequest(aRequest, aContext);
 	}
 }

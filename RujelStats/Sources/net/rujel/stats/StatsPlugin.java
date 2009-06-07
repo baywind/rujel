@@ -252,17 +252,17 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				return "<td></td>";
 			if(!titleRow())
 				return "<td>" + row[idx].toString() + "</td>";
-			StringBuilder result = new StringBuilder("<th style = \"");
 			String val = null;
 			String title = null;
 			boolean quote = false;
 			if(row[idx] instanceof NSDictionary) {
 				NSDictionary dict = (NSDictionary)row[idx];
-				title = (String)dict.valueForKey("title");
+				title = (String)dict.valueForKey("hover");
 				val = (String)dict.valueForKey("short");
 				if(val == null) {
-					val = title;
-					title = null;
+					val = (String)dict.valueForKey("title");
+				} else if (title == null) {
+					title = (String)dict.valueForKey("title");
 				}
 				quote = (val.length() < 3);
 			} else {
@@ -270,6 +270,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				quote = (val.length() < 3);
 				val = WOMessage.stringByEscapingHTMLString(val.toString());
 			}
+			StringBuilder result = new StringBuilder("<th style = \"");
 			if(quote) {
 				result.append("min-width:1.6em;\"");
 			} else {
