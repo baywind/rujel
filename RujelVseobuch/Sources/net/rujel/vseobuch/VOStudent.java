@@ -57,20 +57,21 @@ public class VOStudent extends _VOStudent implements Student, Person
 */
 
 	public EduGroup recentMainEduGroup() {
-		EOQualifier qual1 = new EOKeyValueQualifier("isArhive",EOQualifier.QualifierOperatorNotEqual,Boolean.TRUE);
+		EOQualifier qual1 = new EOKeyValueQualifier("isArhive",EOQualifier.QualifierOperatorNotEqual,new Integer(1));
 		EOQualifier qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,this);
 		qual = new EOAndQualifier(new NSArray(new Object[] {qual1, qual }));
 		EOFetchSpecification fs = new EOFetchSpecification("VOList",qual,null);
 		NSArray groups = editingContext().objectsWithFetchSpecification(fs);
 		if (groups == null || groups.count() == 0) return null;
-		NSTimestamp today = (NSTimestamp)valueForKeyPath("editingContext.session.today");
-		Integer year = net.rujel.base.MyUtility.eduYearForDate(today);
+//		NSTimestamp today = (NSTimestamp)valueForKeyPath("editingContext.session.today");
+		Integer year = (Integer)valueForKeyPath("editingContext.session.eduYear");
+			//net.rujel.base.MyUtility.eduYearForDate(today);
 		if(year == null)
 			throw new IllegalStateException("Could not get current year");
 		java.util.Enumeration en = groups.objectEnumerator();
 		VOClass cl = null;
 		while(en.hasMoreElements()) {
-			cl = (VOClass)((EOEnterpriseObject)en.nextElement()).storedValueForKey("class");
+			cl = (VOClass)((EOEnterpriseObject)en.nextElement()).valueForKey("eduClass");
 			if(year.equals(cl.eduYear()))
 				return cl;
 		}

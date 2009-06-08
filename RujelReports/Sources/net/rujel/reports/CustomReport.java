@@ -200,15 +200,19 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 					Object param = ReportTable.valueFromDict((NSDictionary)prop[i], item, this);
 					if(count == 0) {
 						ref[i] = param;
-					} else if (param != ref[i] && 
-							EOSortOrdering.ComparisonSupport.compareValues(param, ref[i],
-							sortingProp((NSKeyValueCoding)prop[i], sortAll)) != 0) {
-						countList.addObject(new Integer(count));
-						if(count > maxCount)
-							maxCount = count;
-						count = 0;
-						newList.addObject(item);
-						ref[i] = param;
+					} else if (param != ref[i]) {
+						NSSelector sorter = sortingProp((NSKeyValueCoding)prop[i], sortAll);
+						int dev = EOSortOrdering.ComparisonSupport.compareValues(param, 
+								ref[i],sorter);
+						if(dev != 0) {
+							countList.addObject(new Integer(count));
+							if(count > maxCount)
+								maxCount = count;
+							count = 0;
+							newList.addObject(item);
+							ref[i] = param;
+
+						}
 					}
 				}
     			count++;

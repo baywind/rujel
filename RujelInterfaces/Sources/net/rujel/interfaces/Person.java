@@ -29,6 +29,9 @@
 
 package net.rujel.interfaces;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
@@ -225,6 +228,23 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 
 			EOFetchSpecification fspec = new EOFetchSpecification(entity,qual,sorter);
 			return ec.objectsWithFetchSpecification(fspec);		
+		}
+		
+		public static int calculateAge(Date birth, Date day) {
+			if(birth == null || day == null)
+				return -1;
+			Calendar calB = Calendar.getInstance();
+			calB.setTime(birth);
+			Calendar calD = Calendar.getInstance();
+			calD .setTime(day);
+			int result = calD.get(Calendar.YEAR) - calB.get(Calendar.YEAR);
+			if(calD.get(Calendar.MONTH) < calB.get(Calendar.MONTH)) {
+				result--;
+			} else if(calD.get(Calendar.MONTH) == calB.get(Calendar.MONTH) &&
+					calD.get(Calendar.DAY_OF_MONTH) < calB.get(Calendar.DAY_OF_MONTH)) {
+				result--;
+			}
+			return result;
 		}
 	}
 	

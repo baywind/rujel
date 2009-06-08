@@ -91,7 +91,7 @@ public class VOClass extends _VOClass implements EduGroup
 			while(en.hasMoreElements()) {
 				curr = (EOEnterpriseObject)en.nextElement();
 				Integer arch = (Integer)curr.valueForKey("isArhive");
-				if(arch != 1) {
+				if(arch == null ||arch.intValue() != 1) {
 					result.addObject(curr.storedValueForKey("student"));
 				}
 			}
