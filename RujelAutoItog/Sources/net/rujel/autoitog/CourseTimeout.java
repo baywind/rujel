@@ -321,7 +321,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 			if(eduGroup() != null)
 				buf.append(" (").append(eduGroup().name()).append(')');
 			if(teacher() != null)
-				buf.append(" (").append(Person.Utility.fullName(teacher(), true, 2, 1, 1)).append(')');
+				buf.append(" <span style=\"white-space:nowrap;\">(").append(Person.Utility.fullName(teacher(), true, 2, 1, 1)).append(")</span>");
 		}
 		result.takeValueForKey(buf.toString(), "text");
 		result.takeValueForKey(cycle, "cycle");

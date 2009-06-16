@@ -38,12 +38,14 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
+import java.text.FieldPosition;
 import java.text.Format;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.base.MyUtility;
+import net.rujel.eduresults.EduPeriod;
 
 public class Overview extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -311,10 +313,27 @@ public class Overview extends WOComponent {
 		reportPage.takeValueForKey(to,"to");
 		reportPage.takeValueForKey(period,"period");
 		reportPage.takeValueForKey(currClass, "eduGroup");
-		Format dateFormat = MyUtility.dateFormat();
- 		logger.logp(WOLogLevel.MASS_READING,"Overview","selectStudent",
- 				"Printing marks for multiple (" + studentsToReport.count() + ") students ("
- 				+ dateFormat.format(since) + " - " + dateFormat.format(to) +')',
+		StringBuffer buf = new StringBuffer("Printing marks for multiple (");
+		buf.append(studentsToReport.count()).append(") students (");
+		if(period instanceof EduPeriod)
+			buf.append(((EduPeriod)period).title());
+		if(since != null || to != null) {
+			if(period != null)
+				buf.append(':').append(' ');
+			Format dateFormat = MyUtility.dateFormat();
+			FieldPosition fp = new FieldPosition(0);
+			if(since != null)
+				dateFormat.format(since, buf, fp);
+			else
+				buf.append("...");
+			buf.append(" - "); 
+			if(to != null)
+				dateFormat.format(to, buf, fp);
+			else
+				buf.append("...");
+		}
+		buf.append(')');
+ 		logger.logp(WOLogLevel.MASS_READING,"Overview","selectStudent",buf.toString(),
  				new Object[] {session(),currClass});
 		return reportPage;
 	}
