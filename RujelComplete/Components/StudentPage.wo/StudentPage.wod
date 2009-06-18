@@ -1,0 +1,28 @@
+StudentName : PersonDisplay {
+  person = student;
+  first = 2;
+  second = 1;
+  last = 2;
+  birthdayFormat = application.prefs.ui.dateFormat;
+}
+
+ClassName : WOString {
+  value = eduGroup.name;
+}
+
+Reports : WORepetition {
+  list = reports;
+  item = item;
+}
+
+Hyperlink : WOGenericContainer {
+  elementName = "a";
+  href = href;
+  title = item.hover;
+  target = "content";
+}
+
+ReportName : WOString {
+  value = item.title;
+  escapeHTML = false;
+}

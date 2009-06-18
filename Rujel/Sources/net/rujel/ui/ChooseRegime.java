@@ -200,7 +200,7 @@ public class ChooseRegime extends WOComponent {
     	NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)
     							session().valueForKey("readAccess");
     	NSMutableArray result = PlistReader.cloneArray(_regimeGroups, true);
-    	if(Various.boolForObject(readAccess.valueForKeyPath("_read.Overview"))) {
+/*    	if(Various.boolForObject(readAccess.valueForKeyPath("_read.Overview"))) {
     		NSMutableDictionary edu = (NSMutableDictionary)result.objectAtIndex(0);
     		if(!"edu".equals(edu.valueForKey("id"))) {
     			for (int i = 1; i < result.count(); i++) {
@@ -214,36 +214,39 @@ public class ChooseRegime extends WOComponent {
     		if(edu != null) {
     			edu.removeObjectForKey("regimes");
     		}
-    	}
+    	}*/
     	_regimeGroups = (NSArray)session().valueForKeyPath("modules.regimeGroups");
     	if(_regimeGroups != null && _regimeGroups.count() > 0)
     		result.addObjectsFromArray(PlistReader.cloneArray(_regimeGroups, true));
     	NSDictionary grpsByID = new NSDictionary(result,(NSArray)result.valueForKey("id"));
+    	NSArray allRegimes = (NSArray)application().valueForKeyPath(
+    		"strings.Strings.ChooseRegime.defaultRegimes");
     	_regimeGroups = (NSArray)session().valueForKeyPath("modules.regimes");
-    	if(_regimeGroups != null && _regimeGroups.count() > 0) {
-    		Enumeration enu = _regimeGroups.objectEnumerator();
-    		while (enu.hasMoreElements()) {
-    			NSKeyValueCoding reg = (NSKeyValueCoding) enu.nextElement();
-    			String checkAccess = (String) reg.valueForKey("checkAccess");
-    			if(checkAccess == null)
-    				checkAccess = (String) reg.valueForKey("component");
-    			if(Various.boolForObject(readAccess.valueForKeyPath("_read." + checkAccess)))
-    				continue;
-    			NSMutableDictionary grp = (NSMutableDictionary)grpsByID.valueForKey(
-    					(String)reg.valueForKey("group"));
-    			if(grp == null)
-    				grp = (NSMutableDictionary)grpsByID.valueForKey("other");
-    			NSMutableArray regimes = (NSMutableArray)grp.valueForKey("regimes");
-    			if(regimes == null) {
-    				regimes = new NSMutableArray(reg);
-    				grp.takeValueForKey(regimes, "regimes");
-    			} else {
-    				regimes.addObject(reg);
-    				EOSortOrdering.sortArrayUsingKeyOrderArray(regimes, ModulesInitialiser.sorter);
-    			}
+    	if(_regimeGroups != null && regimeGroups().count() > 0) {
+    		allRegimes = allRegimes.arrayByAddingObjectsFromArray(_regimeGroups);
+    	}
+    	Enumeration enu = allRegimes.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+    		NSKeyValueCoding reg = (NSKeyValueCoding) enu.nextElement();
+    		String checkAccess = (String) reg.valueForKey("checkAccess");
+    		if(checkAccess == null)
+    			checkAccess = (String) reg.valueForKey("component");
+    		if(Various.boolForObject(readAccess.valueForKeyPath("_read." + checkAccess)))
+    			continue;
+    		NSMutableDictionary grp = (NSMutableDictionary)grpsByID.valueForKey(
+    				(String)reg.valueForKey("group"));
+    		if(grp == null)
+    			grp = (NSMutableDictionary)grpsByID.valueForKey("other");
+    		NSMutableArray regimes = (NSMutableArray)grp.valueForKey("regimes");
+    		if(regimes == null) {
+    			regimes = new NSMutableArray(reg);
+    			grp.takeValueForKey(regimes, "regimes");
+    		} else {
+    			regimes.addObject(reg);
+    			EOSortOrdering.sortArrayUsingKeyOrderArray(regimes, ModulesInitialiser.sorter);
     		}
     	} // place regimes to groups
-    	Enumeration enu = result.objectEnumerator();
+    	enu = result.objectEnumerator();
     	result = new NSMutableArray(result.count());
     	while (enu.hasMoreElements()) {
     		NSMutableDictionary rGrp = (NSMutableDictionary) enu.nextElement();

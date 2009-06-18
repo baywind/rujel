@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title><webobject name = "Title"/></title>
+	<base target="right"/>
+	<style type="text/css">
+		a {
+			display: block;
+			text-decoration: none;
+		}
+		
+		a:hover {
+			text-decoration: underline;
+		}
+		
+		.gr {
+			font-weight: bold;
+			background-color: #cccccc;
+			border-top: 1px solid #666666;
+			cursor: pointer;
+		}
+	</style>
+	<script type="text/javascript" language="JavaScript">
+		var obj;
+		function toggleObj(id) {
+			if(obj) {
+				obj.style.display = 'none';
+				if(obj.id == id) {
+					obj = null;
+					return obj;
+				}
+			}
+			obj = document.getElementById(id);
+			if(obj == null) return false;
+				obj.style.display = 'block';
+			return obj;
+		}
+	</script>
+</head>
+<body>
+<a href = "../courses/index.html" target = "_self"><webobject name = "CourseCatalog"/></a>
+<webobject name = "GroupsList">
+	<webobject name = "GroupContainer"><webobject name = "GroupName"/></webobject>
+	<webobject name = "StudentsDiv"><webobject name = "StudentsList">
+		<webobject name = "StudentLink"><webobject name = "StudentName"/></webobject>
+	</webobject></webobject>
+</webobject>
+</body>
+</html>

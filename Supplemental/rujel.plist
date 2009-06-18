@@ -443,6 +443,13 @@
 				<key>teacher</key>
 				<string>1</string>
 			</dict>
+			<key>AdminPage</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>1</string>
+			</dict>
 			<key>login</key>
 			<dict>
 				<key>root</key>
@@ -630,6 +637,8 @@
 		<string>true</string>
 		<key>net.rujel.stats.StatsModule</key>
 		<string>true</string>
+		<key>net.rujel.complete.CompleteModule</key>
+		<string>true</string>
 	</dict>
 	<key>edu</key>
 	<dict>
@@ -649,6 +658,8 @@
 		<string>45</string>
 		<key>_ignoreUnverifiedReasons</key>
 		<string>true</string>
+		<key>completeDir</key>
+		<string>/Users/Shared/test</string>
 		<key>autogenerateEduPeriods</key>
 		<string>true</string>
 		<key>newYearMonth</key>
@@ -692,7 +703,7 @@
 		<key>writeToFile</key>
 		<string>true</string>
 		<key>writeFileDir</key>
-		<string>~/test</string>
+		<string>/Users/Shared/test</string>
 	</dict>
 	<key>markarchive</key>
 	<dict>

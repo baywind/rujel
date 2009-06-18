@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>StudentCatalog</key>
+	<string>ученики</string>
+	<key>CourseCatalog</key>
+	<string>курсы</string>
+	<key>folderError</key>
+	<string>не удалось создать папку для архива</string>
+	<key>adminModule</key>
+	<dict>
+		<key>title</key>
+		<string>Закрытие года</string>
+		<key>component</key>
+		<string>CompleteSetup</string>
+	</dict>
+</dict>
+</plist>

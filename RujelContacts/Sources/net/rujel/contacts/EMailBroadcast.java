@@ -122,12 +122,9 @@ public class EMailBroadcast implements Runnable{
 		}
 		
 		ERMailDeliveryHTML mail = new ERMailDeliveryHTML ();*/
-		WOContext ctx = dummyContext(null);
-		WOSession ses = null;
+		WOContext ctx = MyUtility.dummyContext(null);
+		WOSession ses = ctx.session();;
 		if(ec == null) {
-			ses = ctx.session(); 
-			if(ses.valueForKey("user") == null)
-			   ses.takeValueForKey(Boolean.TRUE,"dummyUser");
 			ec = new SessionedEditingContext(ses);
 		}
 		ec.lock();
@@ -361,7 +358,7 @@ st:			while (stEnu.hasMoreElements()) {
 	}
 	
 	protected WOSession ses;
-	protected WOContext context;
+//	protected WOContext context;
 	protected EOEditingContext ec;
 	protected void doBroadcast(NSDictionary params) {
 		NSArray students = (NSArray)params.valueForKey("students");
@@ -371,12 +368,12 @@ st:			while (stEnu.hasMoreElements()) {
 
 		WOContext ctx = (WOContext)params.valueForKey("ctx");
 		if(ctx == null) {
-			if(context == null)
-				context = dummyContext(ses);
-			ctx = context;
+			if(ctx == null)
+				ctx = MyUtility.dummyContext(ses);
+//			ctx = context;
 			if(ses == null) {
 				ses = ctx.session();
-				ses.takeValueForKey(Boolean.TRUE,"dummyUser");
+//				ses.takeValueForKey(Boolean.TRUE,"dummyUser");
 			}
 		}
 		
@@ -536,18 +533,5 @@ st:		while (stEnu.hasMoreElements()) {
 		}
 		return result;
 	}
-
-	public static WOContext dummyContext(WOSession ses) {
-		WOApplication app = WOApplication.application();
-		String dummyUrl = app.cgiAdaptorURL() + "/" + app.name() + ".woa/wa/dummy";
-		if(ses != null) {
-			dummyUrl = dummyUrl + "?wosid=" + ses.sessionID();
-		}
-		WORequest request = app.createRequest( "GET", dummyUrl, "HTTP/1.0", null, null, null);
-		WOContext context = app.createContextForRequest (request);
-		//context._generateCompleteURLs ();
-		return context;
-	}
-
 
 }

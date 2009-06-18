@@ -112,7 +112,7 @@ public class PersonDisplay extends ExtDynamicElement {
     	}
        	
     	tmp = valueForBinding("birthdayFormat",aContext);
-    	if(tmp != null) {
+    	if(tmp != null && person.birthDate() != null) {
     		aResponse.appendContentCharacter(' ');
     		Format format = null;
     		if(tmp instanceof Format) {

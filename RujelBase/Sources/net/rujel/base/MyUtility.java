@@ -34,6 +34,8 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WOSession;
 
 import java.text.Format;
@@ -248,5 +250,21 @@ public class MyUtility {
 		if(total > 0)
 			result.addObject(new Integer(total));
 		return result;
+	}
+	
+	public static WOContext dummyContext(WOSession ses) {
+		WOApplication app = WOApplication.application();
+		String dummyUrl = app.cgiAdaptorURL() + "/" + app.name() + ".woa/wa/dummy";
+		if(ses != null) {
+			dummyUrl = dummyUrl + "?wosid=" + ses.sessionID();
+		}
+		WORequest request = app.createRequest( "GET", dummyUrl, "HTTP/1.0", null, null, null);
+		WOContext context = app.createContextForRequest (request);
+		if(ses == null) {
+			ses = context.session();
+			ses.takeValueForKey(Boolean.TRUE,"dummyUser");
+		}
+		context.generateCompleteURLs();
+		return context;
 	}
 }

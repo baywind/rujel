@@ -106,7 +106,8 @@ public class ModuleInit {
 		//NamedFlags access = moduleAccess(ctx,"ItogMark");
 		if(!access.getFlag(0))
 				return null;
-		NSMutableDictionary result = studentReporter.mutableClone();
+		NSDictionary result = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
+		result = result.mutableClone();
 		result.takeValueForKey(access,"access");
 		return result;
 	}

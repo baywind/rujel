@@ -1,0 +1,51 @@
+Title : WOString {
+  value = application.strings.RujelComplete_Complete.StudentCatalog;
+  valueWhenEmpty = "StudentCatalog";
+  escapeHTML = false;
+}
+
+CourseCatalog : WOString {
+  value = application.strings.RujelComplete_Complete.CourseCatalog;
+  valueWhenEmpty = "CourseCatalog";
+  escapeHTML = false;
+}
+
+GroupName : WOString {
+  value = group.name;
+}
+
+StudentsDiv : WOGenericContainer {
+  elementName = "div";
+  style = "display:none;padding-left:1em;";
+  id = groupID;
+}
+
+GroupsList : WORepetition {
+  list = eduGroups;
+  item = group;
+}
+
+StudentsList : WORepetition {
+  list = group.list;
+  item = student;
+}
+
+StudentLink : WOGenericContainer {
+  elementName = "a";
+  href = studentLink;
+}
+
+StudentName : PersonDisplay {
+  person = student;
+  last = 2;
+  first = 2;
+  second = 0;
+}
+
+GroupContainer : WOGenericContainer {
+  elementName = "div";
+  class = "gr";
+  onmouseover = "style.backgroundColor='#999999';";
+  onmouseout = "style.backgroundColor='#cccccc'";
+  onclick = onclick;
+}
