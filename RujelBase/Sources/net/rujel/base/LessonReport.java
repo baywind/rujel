@@ -30,13 +30,16 @@
 package net.rujel.base;
 
 import java.text.Format;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.Period;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -59,27 +62,55 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
 				.valueForKeyPath("strings.RujelBase_Base.lessonReport")).mutableClone();
 		int count = 0;
-		NSTimestamp since = (NSTimestamp)settings.valueForKey("since");
-		NSTimestamp to = (NSTimestamp)settings.valueForKey("to");		
-		NSMutableArray args = new NSMutableArray(new Object[] { since,to,student });
+		Date since = (NSTimestamp)settings.valueForKey("since");
+		Date to = (NSTimestamp)settings.valueForKey("to");		
+		Period period = (Period)settings.valueForKey("period");
+		if(period != null) {
+			if(since == null) {
+				since = period.begin();
+				if(!(since instanceof NSTimestamp))
+					since = new NSTimestamp(since);
+			}
+			if(to == null) {
+				to = period.begin();
+				if(!(to instanceof NSTimestamp))
+					to = new NSTimestamp(to);
+			}
+		}
+//		NSMutableArray args = new NSMutableArray(new Object[] { since,to,student });
 		if(!options.flagForKey("all")) { //get existing notes
-			NSArray allNotes = EOUtilities.objectsWithQualifierFormat(ec, "BaseNote",
-					"lesson.date >= %@ AND lesson.date <= %@ AND student = %@", args);
+			NSMutableArray list = new NSMutableArray(new EOKeyValueQualifier("student",
+					EOQualifier.QualifierOperatorEqual,student));
+			if(since != null)
+				list.addObject(new EOKeyValueQualifier("lesson.date",
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+			if(to != null)
+				list.addObject(new EOKeyValueQualifier("lesson.date",
+						EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+			EOFetchSpecification fs = new EOFetchSpecification("BaseNote",
+					new EOAndQualifier(list),null);
+			NSArray allNotes = ec.objectsWithFetchSpecification(fs);
 			if(allNotes == null || allNotes.count() == 0)
 				return null;
 			NSMutableDictionary tmpRes = new NSMutableDictionary();
 			Enumeration enu = allNotes.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject note = (EOEnterpriseObject) enu.nextElement();
+				EduCourse course = (EduCourse)note.valueForKeyPath("lesson.course");
+				if(course == null) {
+					Logger.getLogger("rujel.base").
+							log(WOLogLevel.INFO,"Dangling note found",note);
+					continue;
+				}
 				EduLesson lesson = (EduLesson)note.valueForKey("lesson");
 				NSMutableDictionary dict = formatLesson(lesson);
 				dict.takeValueForKey(note.valueForKey("note"), "note");
-				NSMutableArray courseLessons = (NSMutableArray)tmpRes.objectForKey(lesson.course());
-				if(courseLessons == null) {
-					courseLessons = new NSMutableArray(dict);
-					tmpRes.setObjectForKey(courseLessons, lesson.course());
+				list = (NSMutableArray)tmpRes.objectForKey(course);
+				if(list == null) {
+					list = new NSMutableArray(dict);
+					tmpRes.setObjectForKey(list, course);
 				} else {
-					courseLessons.addObject(dict);
+					list.addObject(dict);
 				}
 			} //notes iteration
 			enu = tmpRes.keyEnumerator();
@@ -95,10 +126,17 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 			NSArray courses = (NSArray)settings.valueForKey("courses");
 
 			Enumeration enu = courses.objectEnumerator();
-			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
+			NSMutableArray preQuals = new NSMutableArray();
+			if(since != null)
+				preQuals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY,
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+			if(to != null)
+				preQuals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY,
+						EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+//			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
 			while(enu.hasMoreElements()) { //get lessons for courses;
 				EduCourse course = (EduCourse)enu.nextElement();
-				NSMutableArray quals = new NSMutableArray(qual);
+				NSMutableArray quals = preQuals.mutableClone();// new NSMutableArray(qual);
 				quals.add(new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,course));
 				EOFetchSpecification fs = new EOFetchSpecification("BaseLesson",
 						new EOAndQualifier(quals),EduLesson.sorter);

@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 
 import java.text.Format;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 import java.math.BigDecimal;
 
 public class StudentMarks extends WOComponent {	
@@ -102,11 +103,17 @@ public class StudentMarks extends WOComponent {
 		NSMutableArray[] allWorks = new NSMutableArray[courses.count()];
 		
 		//Enumeration enu = courses.objectEnumerator();
-		NSMutableArray args = new NSMutableArray(new Object[] { since,to });
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
+		NSMutableArray args = new NSMutableArray();
+		if(since != null)
+			args.addObject(new EOKeyValueQualifier(Work.DATE_KEY,
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+		if(to != null)
+			args.addObject(new EOKeyValueQualifier(Work.DATE_KEY,
+					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+//		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
 		for(int i = 0; i < courses.count(); i++) { //get works for courses;
 			EduCourse c = (EduCourse)courses.objectAtIndex(i);
-			NSMutableArray quals = new NSMutableArray(qual);
+			NSMutableArray quals = args.mutableClone();//new NSMutableArray(qual);
 			quals.add(new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,c));
 			if(!options.flagForKey("all")) {
 				if(options.flagForKey("markable")) {
@@ -155,23 +162,54 @@ public class StudentMarks extends WOComponent {
 		NSMutableArray extraWorks = new NSMutableArray();
 		if(options.flagForKey("marked")) { //add works with marks
 			args.removeAllObjects();
-			args.addObjects(new Object[] { student,since,to,since,to });
-			String qualifierFormat = "student = %@ AND ";
+//			args.addObjects(new Object[] { student,since,to,since,to });
+//			String qualifierFormat = "student = %@ AND ";
+			args.addObject(new EOKeyValueQualifier("student",
+					EOQualifier.QualifierOperatorEqual,student));
 			if(period != null) {
-				qualifierFormat = qualifierFormat + "(work.date >= %@ AND work.date <= %@)";
-			} else {
-				qualifierFormat = qualifierFormat + "((dateSet >= %@ AND dateSet <= %@) OR (work.date >= %@ AND work.date <= %@))";
+				args.addObject(new EOKeyValueQualifier("work.date",
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,period.begin()));
+				args.addObject(new EOKeyValueQualifier("work.date",
+						EOQualifier.QualifierOperatorLessThanOrEqualTo,period.end()));
+//				qualifierFormat = qualifierFormat + "(work.date >= %@ AND work.date <= %@)";
+			} else if(since != null || to != null) {
+				EOQualifier[] or = new EOQualifier[2];
+				if(since != null) {
+					or[0] = new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+					or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+					args.addObject(new EOOrQualifier(new NSArray(or)));
+				}
+				if(to != null) {
+					or[0] = new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+					or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+					args.addObject(new EOOrQualifier(new NSArray(or)));
+				}
+//				qualifierFormat = qualifierFormat + "((dateSet >= %@ AND dateSet <= %@) OR (work.date >= %@ AND work.date <= %@))";
 			}
-			qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat,args);
-			EOFetchSpecification fs = new EOFetchSpecification("Mark",qual,null);
+//			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat,args);
+			EOFetchSpecification fs = new EOFetchSpecification("Mark",
+					new EOAndQualifier(args),null);
 			fs.setRefreshesRefetchedObjects(true);
 			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
 			//insert WorkNotes
 			fs.setEntityName("WorkNote");
 			if(period == null) {
-				qual = EOQualifier.qualifierWithQualifierFormat(
-						"student = %@ AND work.date >= %@ AND work.date <= %@",args);
-				fs.setQualifier(qual);
+				while (args.count() > 1) {
+					args.removeLastObject();
+				}
+				if(since != null)
+					args.addObject(new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+				if(to != null)
+					args.addObject(new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+//				EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+//						"student = %@ AND work.date >= %@ AND work.date <= %@",args);
+				fs.setQualifier(new EOAndQualifier(args));
 			}
 			NSArray workNotes = ec.objectsWithFetchSpecification(fs);
 			if(workNotes != null && workNotes.count() > 0)
@@ -181,12 +219,17 @@ public class StudentMarks extends WOComponent {
 			NSMutableArray extraCourses = new NSMutableArray();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject m = (EOEnterpriseObject)enu.nextElement();
+				EduCourse course = (EduCourse)m.valueForKeyPath("work.course");
+				if(course == null) {
+					Logger.getLogger("rujel.criterial").log(WOLogLevel.INFO,"Dangling mark found",m);
+					continue;
+				}
 				Work w = (Work)m.valueForKey("work");
-				int idx = courses.indexOfIdenticalObject(w.course());
+				int idx = courses.indexOfIdenticalObject(course);
 				if(idx == NSArray.NotFound) {
 					idx = courses.count();
-					extraCourses.addObject(w.course());
-					courses = courses.arrayByAddingObject(w.course());
+					extraCourses.addObject(course);
+					courses = courses.arrayByAddingObject(course);
 					extraWorks.addObject(new NSMutableArray(w));
 				} else {
 					NSMutableArray works = null;//(NSMutableArray)allWorks.objectAtIndex(i);

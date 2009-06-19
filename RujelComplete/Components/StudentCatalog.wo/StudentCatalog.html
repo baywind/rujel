@@ -6,39 +6,8 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<title><webobject name = "Title"/></title>
 	<base target="right"/>
-	<style type="text/css">
-		a {
-			display: block;
-			text-decoration: none;
-		}
-		
-		a:hover {
-			text-decoration: underline;
-		}
-		
-		.gr {
-			font-weight: bold;
-			background-color: #cccccc;
-			border-top: 1px solid #666666;
-			cursor: pointer;
-		}
-	</style>
-	<script type="text/javascript" language="JavaScript">
-		var obj;
-		function toggleObj(id) {
-			if(obj) {
-				obj.style.display = 'none';
-				if(obj.id == id) {
-					obj = null;
-					return obj;
-				}
-			}
-			obj = document.getElementById(id);
-			if(obj == null) return false;
-				obj.style.display = 'block';
-			return obj;
-		}
-	</script>
+	<link rel="stylesheet" type="text/css" href = "../styles.css"/>
+	<script type="text/javascript" language="JavaScript" src = "../scripts.js"></script>
 </head>
 <body>
 <a href = "../courses/index.html" target = "_self"><webobject name = "CourseCatalog"/></a>
