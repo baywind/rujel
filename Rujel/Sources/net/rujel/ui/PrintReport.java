@@ -29,6 +29,7 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import com.webobjects.foundation.*;
@@ -93,4 +94,10 @@ public class PrintReport extends WOComponent {
 		}
 		return result.toString();
 	}
+	
+	public String eduYear() {
+		Integer year = (Integer)session().valueForKey("eduYear");
+		return MyUtility.presentEduYear(year);
+	}
+
 }

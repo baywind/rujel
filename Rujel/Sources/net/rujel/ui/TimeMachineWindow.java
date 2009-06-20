@@ -54,11 +54,7 @@ public class TimeMachineWindow extends WOComponent {
 	
 	public String eduYear() {
 		Integer year = (Integer)session().valueForKey("eduYear");
-		StringBuilder result = new StringBuilder(year.toString());
-		result.append(" / ");
-		year = new Integer(year.intValue() + 1);
-		result.append(year.toString().substring(2));
-		return result.toString();
+		return MyUtility.presentEduYear(year);
 	}
 	
 	public String onClick() {

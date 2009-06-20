@@ -3,7 +3,6 @@ StudentName : PersonDisplay {
   first = 2;
   second = 1;
   last = 2;
-  birthdayFormat = application.prefs.ui.dateFormat;
 }
 
 ClassName : WOString {
@@ -20,9 +19,16 @@ Hyperlink : WOGenericContainer {
   href = href;
   title = item.hover;
   target = "content";
+  style = "margin-right:1em;";
 }
 
 ReportName : WOString {
   value = item.title;
   escapeHTML = false;
+}
+
+NewWindow : WOString {
+  value = application.strings.RujelComplete_Complete.newWindow;
+  escapeHTML = false;
+  valueWhenEmpty = "print";
 }

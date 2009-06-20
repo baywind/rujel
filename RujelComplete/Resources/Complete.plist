@@ -8,6 +8,8 @@
 	<string>курсы</string>
 	<key>folderError</key>
 	<string>не удалось создать папку для архива</string>
+	<key>newWindow</key>
+	<string>печать</string>
 	<key>adminModule</key>
 	<dict>
 		<key>title</key>

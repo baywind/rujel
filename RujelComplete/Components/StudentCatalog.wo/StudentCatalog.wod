@@ -33,6 +33,7 @@ StudentsList : WORepetition {
 StudentLink : WOGenericContainer {
   elementName = "a";
   href = studentLink;
+  onclick = "updateFrame(this.href);";
 }
 
 StudentName : PersonDisplay {
@@ -45,7 +46,7 @@ StudentName : PersonDisplay {
 GroupContainer : WOGenericContainer {
   elementName = "div";
   class = "gr";
-  onmouseover = "style.backgroundColor='#999999';";
-  onmouseout = "style.backgroundColor='#cccccc'";
+  onmouseover = "dim(this);";
+  onmouseout = "unDim(this);";
   onclick = onclick;
 }
