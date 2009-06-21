@@ -21,7 +21,7 @@ function unDim(obj) {
 	obj.style.backgroundColor='';
 }
 
-var pageName = "/recentMarks.html";
+var pageName;
 function updateFrame(head) {
 	var frame = window.parent.frames["content"];
 	try {

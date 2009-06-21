@@ -1,3 +1,7 @@
-Prepare : WOHyperlink {
-  action = prepareStructure;
+Form : WOForm {
+	action = prepareStructure;
+}
+
+CheckBox : WOCheckBox {
+	checked = writeReports;
 }
