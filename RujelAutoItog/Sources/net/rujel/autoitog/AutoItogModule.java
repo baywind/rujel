@@ -296,6 +296,7 @@ public class AutoItogModule {
 				}
 				if(courses == null || courses.count() == 0)
 					continue;
+				logger.log(WOLogLevel.INFO,"EduPeriod " + per.name() +  "ends today.",per);
 				automateItogForPeriod(per,courses);
 			}
 		}
@@ -313,6 +314,7 @@ public class AutoItogModule {
 		/*found = EOUtilities.objectsWithQualifierFormat(ec,
 				"CourseTimeout","dueDate <= %@ AND flags < 64",args);*/
 		if(found != null && found.count() > 0) {
+			logger.log(WOLogLevel.INFO,"Automating course timeouts: " + found.count());
 			Enumeration enu = found.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				CourseTimeout cto = (CourseTimeout) enu.nextElement();
@@ -347,6 +349,7 @@ public class AutoItogModule {
 		} finally {
 			ec.unlock();
 		}
+		logger.log(WOLogLevel.FINE,"AutoItog completed");
 	}
 	
 	private static void message(CharSequence text) {
@@ -354,6 +357,7 @@ public class AutoItogModule {
 	}
 	
 	protected static void automateTimedOutPrognoses(EOEditingContext ec, NSArray prognoses) {
+		logger.log(WOLogLevel.INFO,"Automating timed out prognoses: " + prognoses.count());
 		StringBuffer buf = new StringBuffer("Timed out prognoses:\n");
 		EOSortOrdering so = new EOSortOrdering ("eduPeriod.eduYear", EOSortOrdering.CompareAscending);
 		NSMutableArray sorter = new NSMutableArray(so);
@@ -375,11 +379,13 @@ public class AutoItogModule {
 		EduCourse course = null;
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
 		boolean overwrite = SettingsReader.boolForKeyPath("edu.overwriteItogsScheduled", false);
+		int inCourse = 0;
 		for (int i = 0; i < prognoses.count(); i++) {
 			Prognosis prognos = (Prognosis)prognoses.objectAtIndex(i);
 			if(prognos.eduPeriod() != period) {
 				if(course != null) {
 					savePrognoses(ec, course, period, buf);
+					buf.append("-- ").append(inCourse).append(" --\n");
 				}
 				period = prognos.eduPeriod();
 				buf.append("\n-- ").append(period.name()).append(' ');
@@ -389,9 +395,10 @@ public class AutoItogModule {
 			if(prognos.eduCourse() != course) {
 				if(course != null) {
 					savePrognoses(ec, course, period, buf);
-					buf.append("--\n");
+					buf.append("-- ").append(inCourse).append(" --\n");
 				}
 				course = prognos.eduCourse();
+				inCourse = 0;
 //				if((i - last) > 12) {
 //				if(course.eduGroup() != group) {
 //					group = course.eduGroup();
@@ -404,6 +411,8 @@ public class AutoItogModule {
 				buf.append('\n');
 			}
 			ItogMark itog = prognos.convertToItogMark(null, overwrite, buf);
+			if(itog != null)
+				inCourse++;
 			if(enableArchive && itog != null) {
 				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 				archive.takeValueForKey(itog, "object");
