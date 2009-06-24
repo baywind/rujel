@@ -7,6 +7,7 @@ StudentName : PersonDisplay {
 
 ClassName : WOString {
   value = eduGroup.name;
+  valueWhenEmpty = student.recentMainEduGroup.name;
 }
 
 Reports : WORepetition {

@@ -4,12 +4,6 @@ Title : WOString {
   escapeHTML = false;
 }
 
-CourseCatalog : WOString {
-  value = application.strings.RujelComplete_Complete.CourseCatalog;
-  valueWhenEmpty = "CourseCatalog";
-  escapeHTML = false;
-}
-
 GroupName : WOString {
   value = group.name;
 }
@@ -26,7 +20,7 @@ GroupsList : WORepetition {
 }
 
 StudentsList : WORepetition {
-  list = group.list;
+  list = list;
   item = student;
 }
 

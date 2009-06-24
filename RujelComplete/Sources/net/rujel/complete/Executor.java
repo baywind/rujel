@@ -30,17 +30,12 @@
 package net.rujel.complete;
 
 import java.io.*;
-import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
-import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.*;
 
 public class Executor implements Runnable {
@@ -74,7 +69,8 @@ public class Executor implements Runnable {
 
 	public void run() {
 		try {
-			prepareStudents();
+			StudentCatalog.prepareStudents(folder, ctx, writeReports);
+			CoursesCatalog.prepareCourses(folder, ctx, writeReports);
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING,"Error in Complete",new Object[] {ctx.session(),e});
 		} finally {
@@ -162,67 +158,4 @@ public class Executor implements Runnable {
     				'/' + filename,e);
     	}
     }
-
-    public void prepareStudents() {
-    	EOEditingContext ec = new SessionedEditingContext(ctx.session());
-   		File subFolder = new File(folder,"students");
-		if(!subFolder.exists())
-			subFolder.mkdirs();
-		Integer year = (Integer) ctx.session().valueForKey("eduYear");
-		createIndex(subFolder, MyUtility.presentEduYear(year), "list.html");
-		copyResource(subFolder,"scripts.js");
-		copyResource(subFolder,"styles.css");
-		
-		NSArray groups = EduGroup.Lister.listGroups(
-				(NSTimestamp)ctx.session().valueForKey("today"), ec);
-		WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
-		page.takeValueForKey(ec, "ec");
-		page.takeValueForKey(groups, "eduGroups");
-		
-		writeFile(subFolder, "list.html", page,false);
-		Enumeration grenu = groups.objectEnumerator();
-		NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
-				"modules.studentReporter");
-		NSDictionary reporter = (NSDictionary)WOApplication.application().valueForKeyPath(
-				"strings.Strings.Overview.defaultReporter");
-		reports.insertObjectAtIndex(reporter,0);
-		StringBuilder filename = new StringBuilder(12);
-		while (grenu.hasMoreElements()) {
-			EduGroup gr = (EduGroup) grenu.nextElement();
-			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(gr);
-			filename.append(gr.grade()).append('_');
-			filename.append(gid.keyValues()[0]);
-			File grDir = new File(subFolder,filename.toString());
-			filename.delete(0, filename.length());
-			Enumeration stenu = gr.list().objectEnumerator();
-			NSArray args = new NSArray(new Object[] {year, gr });
-			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
-					EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
-			while (stenu.hasMoreElements()) {
-				Student student = (Student) stenu.nextElement();
-				gid = (EOKeyGlobalID)ec.globalIDForObject(student);
-				File stDir = new File(grDir,gid.keyValues()[0].toString());
-				if(!stDir.exists())
-					stDir.mkdirs();
-				page = WOApplication.application().pageWithName("StudentPage", ctx);
-	    		page.takeValueForKey(student, "student");
-	    		page.takeValueForKey(gr, "eduGroup");
-	    		page.takeValueForKey(reports, "reports");
-	    		writeFile(stDir, "index.html", page,false);
-	    		if(!writeReports)
-	    			continue;
-				Enumeration repEnu = reports.objectEnumerator();
-				while (repEnu.hasMoreElements()) {
-					reporter = (NSDictionary) repEnu.nextElement();
-					page = WOApplication.application().pageWithName("PrintReport",ctx);
-					page.takeValueForKey(reporter,"reporter");
-					page.takeValueForKey(existingCourses,"courses");
-					page.takeValueForKey(new NSArray(student),"students");
-					filename.append(reporter.valueForKey("id")).append(".html");
-		    		writeFile(stDir, filename.toString(), page,false);
-					filename.delete(0, filename.length());
-				}
-			}
-		}
-	}
 }
