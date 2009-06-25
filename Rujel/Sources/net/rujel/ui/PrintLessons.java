@@ -62,18 +62,24 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     	buf.append(" - ").append(Person.Utility.fullName(tp, true, 2, 1, 1));
     	return buf.toString();
     }
-    
+/*    
     public String eduYear() {
+    	if(period == null) {
+    		Integer year = (Integer) session().valueForKey("eduYear");
+    		return MyUtility.presentEduYear(year.intValue());
+    	}
     	if (period instanceof EduPeriod) {
 			EduPeriod ep = (EduPeriod) period;
 			return ep.presentEduYear();
 		} else {
-			int year = MyUtility.eduYearForDate(period.end());
-			return MyUtility.presentEduYear(year);
+			Integer year = MyUtility.eduYearForDate(period.end());
+			return MyUtility.presentEduYear(year.intValue());
 		}
     }
-    
-    public String persentPeriod() {
+*/
+    public String presentPeriod() {
+    	if(period == null)
+    		return null;
     	if (period instanceof EduPeriod) {
 			EduPeriod ep = (EduPeriod) period;
 			return ep.name();
@@ -87,19 +93,23 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
 			return buf.toString();
 		}
     }
-    
+/*    
     public String teacher() {
     	if(course == null)
     		return null;
     	Person tp = course.teacher().person();
     	return Person.Utility.fullName(tp, true, 2, 2, 2);
     }
-    
+*/    
     public NSArray lessonList() {
+    	if(course.lessons() == null)
+    		return null;
     	NSMutableArray result = course.lessons().mutableClone();
-    	NSArray args = new NSArray(new Object[] {period.begin(),period.end()});
-    	EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@", args);
-    	EOQualifier.filterArrayWithQualifier(result, qual);
+    	if(period != null) {
+    		NSArray args = new NSArray(new Object[] {period.begin(),period.end()});
+    		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@", args);
+    		EOQualifier.filterArrayWithQualifier(result, qual);
+    	}
     	EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduLesson.sorter);
     	return result;
     }

@@ -172,7 +172,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			page.takeValueForKey(existingCourses,"courses");
 			page.takeValueForKey(new NSArray(student),"students");
 			String filename = reporter.valueForKey("id") + ".html";
-			Executor.writeFile(stDir, filename.toString(), page,overwrite);
+			Executor.writeFile(stDir, filename, page,overwrite);
 		}
     }
 }

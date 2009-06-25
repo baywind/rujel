@@ -262,6 +262,7 @@ ShowThemes : WOHyperlink {
 LessonsLink : WOString {
   value = application.strings.RujelInterfaces_Names.EduCourse.lessons;
   valueWhenEmpty = "lessons";
+  escapeHTML = false;
 }
 
 CoursesCSS : ResourceLink {

@@ -1,7 +1,7 @@
 StudentName : PersonDisplay {
   person = student;
   first = 2;
-  second = 1;
+  second = 2;
   last = 2;
 }
 
@@ -19,7 +19,6 @@ Hyperlink : WOGenericContainer {
   elementName = "a";
   href = href;
   title = item.hover;
-  target = "content";
   style = "margin-right:1em;";
 }
 
