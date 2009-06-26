@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import java.util.Date;
+import java.util.Enumeration;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
@@ -67,28 +68,22 @@ public class WorkList extends LessonList {
 		return critItem;
 	}
 	
-    public void setCritItem(EOEnterpriseObject item) {
+	public void setCritItem(EOEnterpriseObject item) {
 		critItem = item;
-		
-		if(work() != null) {
-			if(item == null) {
-				_itemMask = null;
-				return;
-			}
-			NSArray mask = work().criterMask();
-			if(mask == null || mask.count() == 0)  {
-				_itemMask = null;
-				return;
-			}
-			EOQualifier qual = new EOKeyValueQualifier("criterion",EOQualifier.QualifierOperatorEqual,critItem);
-			NSArray result = EOQualifier.filteredArrayWithQualifier(mask,qual);
-			if(result != null && result.count() > 0)
-				_itemMask = (EOEnterpriseObject)result.objectAtIndex(0);
-			else
-				_itemMask = null;
+		_itemMask = null;
+		if(item == null)
+			return;
+		NSArray mask = (NSArray)valueForKeyPath("work.criterMask");
+		if(mask == null || mask.count() == 0)
+			return;
+		Enumeration enu = mask.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
+			if(critItem == crit.valueForKey("criterion"))
+				_itemMask = crit;
 		}
 	}
-	
+
 	
     public Number criterMax() {
         if(_itemMask == null) return null;

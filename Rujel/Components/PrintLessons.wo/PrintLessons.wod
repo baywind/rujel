@@ -22,7 +22,7 @@ WeightTitle : WOString {
 
 Date : WOString {
   value = lessonItem.date;
-  dateformat = "%d.%m";
+  dateformat = application.prefs.ui.shortDateFormat;
 }
 Weight : WOString {
   value = lessonItem.weight;

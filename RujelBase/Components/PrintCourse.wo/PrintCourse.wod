@@ -22,7 +22,7 @@ Subject : WOString {
 }
 
 Teacher : PersonDisplay {
-  value = ^course.teacher;
+  person = ^course.teacher;
   startWithLast = true;
   first = 2;
   second = 2;

@@ -54,28 +54,22 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequest;
 
 public class ModuleInit {
-//	protected static NSArray tabs = (NSArray)WOApplication.application().
-//							valueForKeyPath("strings.RujelCriterial_Strings.tabs");
-	protected static NSDictionary worksTab = (NSDictionary)WOApplication.application().
-							valueForKeyPath("strings.RujelCriterial_Strings.worksTab");
-	protected static NSDictionary reportSettings = (NSDictionary)WOApplication.application().
-							valueForKeyPath("strings.RujelCriterial_Strings.reportSettings");
-	protected static NSArray diaryTabs = (NSArray)WOApplication.application().
-							valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
 
-	public static Object init(Object obj) {
+/*	public static Object init(Object obj) {
 		if("presentTabs".equals(obj)) {
-			return worksTab;
+			return init(obj, null);
 		}
 		return null;
 	}
-	
+*/	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			init();
 //		} else if("init2".equals(obj)) {
 			Work.initTypes();
 		} else if("presentTabs".equals(obj)) {
+			NSDictionary worksTab = (NSDictionary)WOApplication.application().
+				valueForKeyPath("strings.RujelCriterial_Strings.worksTab");
 			return worksTab.mutableClone();
 		} else if ("extendLesson".equals(obj)) {
 			return extendLesson(ctx);
@@ -83,11 +77,18 @@ public class ModuleInit {
 			NSDictionary settings = (NSDictionary)ctx.session().objectForKey("reportForStudent");
 			return StudentMarks.reportForStudent(settings);
 		} else if("reportSettingsForStudent".equals(obj)) {
+			NSDictionary reportSettings = (NSDictionary)WOApplication.application().
+				valueForKeyPath("strings.RujelCriterial_Strings.reportSettings");
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if ("lessonProperies".equals(obj)) {
 			return lessonProperies(ctx);
 		} else if ("diary".equals(obj)) {
+			NSArray diaryTabs = (NSArray)WOApplication.application().
+					valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
 			return PlistReader.cloneArray(diaryTabs, true);
+		} else if ("courseComplete".equals(obj)) {
+			return WOApplication.application().
+					valueForKeyPath("strings.RujelCriterial_Strings.courseComplete");
 		}
 		return null;
 	}
@@ -280,7 +281,8 @@ public class ModuleInit {
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
-		}
+		}NSArray diaryTabs = (NSArray)WOApplication.application().
+				valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
 		NSArray result = PlistReader.cloneArray(diaryTabs, true);
 		String regime = req.stringFormValueForKey("regime");
 		if(courses == null && regime == null)

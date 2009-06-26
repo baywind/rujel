@@ -1,27 +1,26 @@
 <webobject name = "PrintCourse">
 <table border = "0" cellspacing = "0" cellpadding = "2" style = "margin-top:2em;width:100%;">
 <tr style="border:black 1px solid;">
-<th style="width:5ex;border-right:black 1px solid;"><webobject name = "DateTitle"/></th>
+<th style="width:5ex;border-left-style:none;"><webobject name = "DateTitle"/></th>
 <webobject name = "IfCriterial">
-	<th style="width:3ex;border-right:black 1px solid;"><webobject name = "WeightTitle" /></th>
+	<th style="width:3ex;"><webobject name = "WeightTitle" /></th>
 </webobject>
-<th style="width:45%;border-right:black 1px solid;"><webobject name = "ThemeTitle"/></th>
+<th style="width:45%;"><webobject name = "ThemeTitle"/></th>
 <th><webobject name = "HometaskTitle"/></th>
 </tr>
 <webobject name = "LessonsRepetition">
-	<tr style = "border-top:black 1px solid;">
-	<td style = "text-align:center;border-right-style:solid;">
+	<tr>
+	<td style = "text-align:center;border-left-style:none;">
 		<webobject name = "Date"/></td>
 	<webobject name = "IfCriterial">
-		<td style = "text-align:center;border-right-style:solid;">
+		<td style = "text-align:center;">
 			<webobject name = "Weight"/></td>
 	</webobject>
-	<td style = "border-right-style:solid;">
-		<webobject name = "Theme"/></td>
+	<td><webobject name = "Theme"/></td>
 	<td><webobject name = "IfSubstitute">
 		<table border="0" align = "right" cellspacing = "0" cellpadding = "0" 
 				style="margin-left:1ex; padding-left:2pt;">
-		<tr><td style = "border-top-style:none;">
+		<tr><td style = "border-style:none;">
 			<webobject name = "Substitute"/>
 		</td></tr>
 		</table>

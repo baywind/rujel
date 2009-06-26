@@ -34,7 +34,7 @@ Hyperlink : WOGenericContainer {
   elementName = "a";
   href = href;
   title = item.hover;
-  style = "margin-right:1em;";
+  style = "margin-left:1em;";
 }
 
 ReportName : WOString {

@@ -137,17 +137,16 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	
 	
 	public EOEnterpriseObject criterMaskNamed(String critName) {
-		if(integralPresenter() != null && critName.equals(integralPresenter().title()))
-		   return null;
-		//NSArray result = (NSArray)criterMask().valueForKey("criterion");
-		if(criterMask() == null || criterMask().count() == 0) return null;
-		EOQualifier qual = new EOKeyValueQualifier(
-				"criterion.title",EOQualifier.QualifierOperatorEqual,critName);
-		NSArray result = EOQualifier.filteredArrayWithQualifier(criterMask(),qual);
-		if(result == null || result.count() == 0)
+		NSArray mask = criterMask();
+		if(mask == null || mask.count() == 0)
 			return null;
-		//throw new IllegalArgumentException("No such criterion defined for this work");
-		return (EOEnterpriseObject)result.objectAtIndex(0);
+		Enumeration enu = mask.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
+			if(critName.equals(crit.valueForKeyPath("criterion.title")))
+				return crit;
+		}
+		return null;
 	}
 	
 	protected boolean specCriterion(String criterion) {
