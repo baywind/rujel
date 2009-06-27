@@ -61,6 +61,9 @@ public class StatsModule {
 			return coursesReport(ctx);
 		} else if("journalPlugins".equals(obj)) {
 			return journalPlugins(ctx);
+		} else if("courseComplete".equals(obj)) {
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelStats_Stats.courseComplete");
 		}
 		return null;
 	}

@@ -8,6 +8,7 @@ import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.*;
@@ -40,6 +41,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 		cols = 0;
 		Object currDesc = null;
 		NSArray formulas = null;
+		StringBuilder buf = new StringBuilder();
 		while (enu.hasMoreElements()) {
 			NSDictionary cfg = (NSDictionary) enu.nextElement();
 			String entName = (String)cfg.valueForKey("entName");
@@ -50,9 +52,13 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 			EOEnterpriseObject param2 =(EOEnterpriseObject) cfg.valueForKey("param2");
 			if(param2 == null && param1 != null) {
 				param2 = course;
+			} else if (param2 != null) {
+				param2 = EOUtilities.localInstanceOfObject(ec, param2);
 			}
 			if(param1 == null) {
 				param1 = course;
+			} else {
+				param1 = EOUtilities.localInstanceOfObject(ec, param1);
 			}
 			boolean create = (Boolean)readAccess.valueForKeyPath("create.Stats");
 			NSDictionary dict = null;
@@ -93,16 +99,25 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 					keys = keys.arrayByAddingObject("");
 				currKeys = keys;
 				
-				NSMutableDictionary rowDict = new NSMutableDictionary("grey","styleClass");
-				rowDict.takeValueForKey("font-weight:bold;", "style");
+				NSMutableDictionary rowDict = new NSMutableDictionary(Boolean.TRUE,"titleRow");
+				if(parent() == null)
+					rowDict.takeValueForKey("grey","styleClass");
+				//rowDict.takeValueForKey("font-weight:bold;", "style");
+				buf.append("<th style=\"white-space:nowrap;border-left-style:none;text-align:left;\">");
 				if(desc instanceof Description) {
-					rowDict.takeValueForKey(((Description)desc).description(), "title");
+					buf.append(((Description)desc).description());
 				} else {
 					Object title = cfg.valueForKey(Description.DESCRIPTION_KEY);
-					rowDict.takeValueForKey((title!=null)?title:entName, "title");
+					buf.append((title!=null)?title:entName);
 				}
-				rowDict.takeValueForKey(application().valueForKeyPath(
-						"strings.RujelStats_Stats.total"), "total");
+				buf.append("</th>");
+				rowDict.takeValueForKey(buf.toString(),"title");
+				buf.delete(0, buf.length());
+				buf.append("<th>");
+				buf.append(application().valueForKeyPath(
+						"strings.RujelStats_Stats.total"));
+				buf.append("</th>");
+				rowDict.takeValueForKey(buf.toString(),"total");
 
 				Object tmp = cfg.valueForKey("addCalculations");
 				if(Various.boolForObject(tmp)) {
@@ -127,13 +142,24 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 					cols = currKeys.count() +2;
 				rowDict.takeValueForKey(currKeys.objects(),"values");
 				rows.addObject(rowDict);
-			}
-			NSMutableDictionary rowDict = new NSMutableDictionary("gerade","styleClass");
-			rowDict.takeValueForKey(cfg.valueForKey("title"), "title");
+			} // titleRow
+			NSMutableDictionary rowDict = new NSMutableDictionary();
+			if(parent() == null)
+				rowDict.takeValueForKey("gerade","styleClass");
+			buf.delete(0, buf.length());
+			buf.append("<td style = \"white-space:nowrap;border-left-style:none;text-align:left;font-weight:bold;\">" );
+			buf.append(cfg.valueForKey("title"));
+			buf.append("</td>");
+			rowDict.takeValueForKey(buf.toString(), "title");
 			Object[] row = new Object[currKeys.count()];
+			buf.delete(0, buf.length());
+			buf.append("<td>");
 			if(grouping != null) {
-				rowDict.takeValueForKey(grouping.total(), "total");
+				buf.append(grouping.total());
 			}
+			buf.append("</td>");
+			rowDict.takeValueForKey(buf.toString(), "total");
+			buf.delete(0, buf.length());
 			Enumeration kEnu = dict.keyEnumerator();
 			while (kEnu.hasMoreElements()) {
 				Object key = kEnu.nextElement();
@@ -203,7 +229,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 	}
 	
     public boolean titleRow() {
-    	return ("grey".equals(((NSDictionary)item).valueForKey("styleClass")));
+    	return Various.boolForObject(((NSDictionary)item).valueForKey("titleRow"));
     }
     
     public int count() {
@@ -293,5 +319,9 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 			return result.toString();
 		}
 		return null;
+	}
+	
+	public Boolean notPopup() {
+		return (parent() != null);
 	}
 }
