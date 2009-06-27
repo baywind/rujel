@@ -63,6 +63,9 @@ public class CurriculumModule {
 		} else if(obj.equals("regimes")) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.regimes");
+		} else if(obj.equals("courseComplete")) {
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.courseComplete");
 		}
 		return null;
 	}

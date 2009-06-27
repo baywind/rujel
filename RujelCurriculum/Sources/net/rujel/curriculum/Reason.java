@@ -43,8 +43,10 @@ import net.rujel.reusables.*;
 public class Reason extends _Reason {
 
 	public static void init() {
-		EOInitialiser.initialiseRelationship(ENTITY_NAME,"eduGroup",false,"eduGroupID","EduGroup");
-		EOInitialiser.initialiseRelationship(ENTITY_NAME,"teacher",false,"teacherID","Teacher");
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"eduGroup",
+				false,"eduGroupID","EduGroup");
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"teacher",
+				false,"teacherID","Teacher");
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -100,7 +102,8 @@ public class Reason extends _Reason {
     	if(_flags==null) {
     		_flags = new NamedFlags(flags().intValue(),flagNames);
     		try{
-    			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
+    			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
+    					NamedFlags.class));
     		} catch (Exception e) {
     			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
 						"Could not get syncMethod for Reason flags",e);
@@ -180,9 +183,11 @@ public class Reason extends _Reason {
 				props = new Props(course);
 			} else {
 				if(props.ec != event.editingContext())
-					throw new IllegalArgumentException("Given events belong to different editing contexts");
+					throw new IllegalArgumentException(
+							"Given events belong to different editing contexts");
 				if(!props.school.equals(event.reason().school()))
-					throw new IllegalArgumentException("Given events belong to different schools");
+					throw new IllegalArgumentException(
+							"Given events belong to different schools");
 				if(props.eduGroup != null && props.eduGroup != course.eduGroup())
 					props.eduGroup = null;
 				if(props.teacher != null && course.teacher() != props.teacher())
@@ -253,9 +258,11 @@ public class Reason extends _Reason {
 				Reason r = (Reason) enu.nextElement();
 				if(hideExternal && r.external())
 					continue;
-				if(r.namedFlags().flagForKey("forEduGroup") && r.eduGroup() != props.eduGroup)
+				if(r.namedFlags().flagForKey("forEduGroup") 
+						&& r.eduGroup() != props.eduGroup)
 					continue;
-				else if(r.namedFlags().flagForKey("forTeacher") && r.teacher() != props.teacher())
+				else if(r.namedFlags().flagForKey("forTeacher")
+						&& r.teacher() != props.teacher())
 					continue;
 				else
 					result.addObject(r);

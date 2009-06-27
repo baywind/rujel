@@ -4,6 +4,10 @@ PrintCourse : PrintCourse {
   title = application.strings.RujelCriterial_Strings.works;
 }
 
+Title : WOString {
+  value = application.strings.RujelCriterial_Strings.works;
+}
+
 DeadLineTitle: WOString {
 	value = application.strings.RujelCriterial_Strings.shortDeadline;
 	valueWhenEmpty = application.strings.Reusables_Strings.dataTypes.date;

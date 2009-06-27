@@ -14,6 +14,8 @@
 		<string>Совмещение</string>
 		<key>Factor</key>
 		<string>Коэффициент</string>
+		<key>factor</key>
+		<string>коэфф</string>
 		<key>Substitutor</key>
 		<string>Заменяющий</string>
 	</dict>
@@ -153,6 +155,8 @@
 		<string>Нед (дн)</string>
 		<key>deviation</key>
 		<string>Расхождение</string>
+		<key>substitutes</key>
+		<string>Замены (совмещения)</string>
 	</dict>
 	<key>regimes</key>
 	<array>
@@ -242,5 +246,38 @@
 		<key>unrelieve</key>
 		<string>активировать замечание</string>
 	</dict>
+	<key>courseComplete</key>
+	<array>
+		<dict>
+			<key>id</key>
+			<string>substitutes</string>
+			<key>title</key>
+			<string>замены</string>
+			<key>component</key>
+			<string>PrintSubstitutes</string>
+			<key>sort</key>
+			<string>20</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>variations</string>
+			<key>title</key>
+			<string>поправки</string>
+			<key>component</key>
+			<string>PrintVariations</string>
+			<key>sort</key>
+			<string>30</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>reprimands</string>
+			<key>title</key>
+			<string>замечания</string>
+			<key>component</key>
+			<string>PrintReprimands</string>
+			<key>sort</key>
+			<string>40</string>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -101,19 +101,22 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = course.editingContext();
 		int plan = 0;
 		int maxDev = 0;
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		if(cal.get(Calendar.HOUR_OF_DAY) == 0)
-			cal = null;
+		Calendar cal = null;
+		if (date != null) {
+			cal = Calendar.getInstance();
+			cal.setTime(date);
+			if (cal.get(Calendar.HOUR_OF_DAY) == 0)
+				cal = null;
+		}
 		NSMutableDictionary result = new NSMutableDictionary();
 		NSArray list = PeriodType.periodTypesForCourse(course);
 		if(list != null && list.count() > 0) {
-			PeriodType perType = (PeriodType)list.objectAtIndex(0);
+//			PeriodType perType = (PeriodType)list.objectAtIndex(0);
 			EOQualifier[] quals = new EOQualifier[2];
 			quals[0] = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
 					EOQualifier.QualifierOperatorEqual, course.eduYear());
 			quals[1] = new EOKeyValueQualifier(EduPeriod.PERIOD_TYPE_KEY,
-					EOQualifier.QualifierOperatorEqual,perType);
+					EOQualifier.QualifierOperatorEqual,list.objectAtIndex(0));
 			EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,
 					new EOAndQualifier(new NSArray(quals)),MyUtility.numSorter);
 			NSArray periods = ec.objectsWithFetchSpecification(fs);
@@ -123,7 +126,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				int totalWeeks = 0;
 				while (enu.hasMoreElements()) {
 					EduPeriod period = (EduPeriod) enu.nextElement();
-					if(date.compare(period.begin()) < 0)
+					if(date != null && date.compare(period.begin()) < 0)
 						break;
 					int hours = PlanCycle.planHoursForCourseAndPeriod(course, period);
 					if(hours == 0)
@@ -187,11 +190,11 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		result.takeValueForKey(new Integer(plan), "plan");
 		
 		int fact = factOnDate(course, date,(cal==null));
-		if(fact >= 0) {
-			result.takeValueForKey(new Integer(fact), "fact");
-		}
 		if(fact < 0)
 			return result;
+		else
+			result.takeValueForKey(new Integer(fact), "fact");
+		
 		int deviation = fact - (plan + plus - minus);
 		result.takeValueForKey(new Integer(deviation), "deviation");
 		if(deviation < 0) {
@@ -210,13 +213,16 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public static int factOnDate(EduCourse course, NSTimestamp date,boolean exclude) {
-		if(exclude)
-			date = date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
-		EOQualifier dateQual = new EOKeyValueQualifier("date",
-				EOQualifier.QualifierOperatorLessThanOrEqualTo,date); 
 		NSArray list = course.lessons();
 		if(list != null && list.count() > 0) {
-			list = EOQualifier.filteredArrayWithQualifier(list, dateQual);
+			if (date != null) {
+				if (exclude)
+					date = date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0,
+							0);
+				EOQualifier dateQual = new EOKeyValueQualifier("date",
+						EOQualifier.QualifierOperatorLessThanOrEqualTo, date);
+				list = EOQualifier.filteredArrayWithQualifier(list, dateQual);
+			}
 			if(list != null) {
 				return list.count();
 			}

@@ -1,0 +1,68 @@
+Title : WOString {
+	value = application.strings.RujelCurriculum_Curriculum.titles.substitutes;
+	escapeHTML = false;
+}
+
+PrintCourse : PrintCourse {
+  course = course;
+  presentPeriod = period;
+  title = application.strings.RujelCurriculum_Curriculum.Reason.substitutes;
+}
+
+DateTitle: WOString {
+	value = application.strings.Reusables_Strings.dataTypes.date;
+	escapeHTML = false;
+}
+TeacherTitle : WOString {
+	value = application.strings.RujelCurriculum_Curriculum.Substitute.Substitutor;
+	escapeHTML = false;
+	valueWhenEmpty = "Substitutor";
+}
+
+FactorTitle : WOString {
+	value = application.strings.RujelCurriculum_Curriculum.Substitute.Factor;
+	escapeHTML = false;
+	valueWhenEmpty = "Factor";
+}
+
+ReasonTitle : WOString {
+	value = application.strings.RujelCurriculum_Curriculum.Reason.Reason;
+	escapeHTML = false;
+	valueWhenEmpty = "Reason";
+}
+
+List : WORepetition {
+	list = list;
+	item = item;
+}
+
+Cell : WOGenericContainer {
+  elementName = "td";
+  rowspan = item.rowspan;
+  style = "border-left-style:none;text-align:center;";
+}
+
+HasDate : WOConditional {
+  condition = item.date;
+}
+
+Date : WOString {
+  value = item.date;
+}
+
+Teacher : WOString {
+  value = item.teacher;
+}
+
+Factor : WOString {
+  value = item.factor;
+}
+
+Reason : WOString {
+  value = item.reason;
+}
+
+ReasonCell : WOGenericContainer {
+  elementName = "td";
+  style = item.reasonStyle;
+}
