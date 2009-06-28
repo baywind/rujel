@@ -2,6 +2,14 @@ Form : WOForm {
 	action = prepareStructure;
 }
 
-CheckBox : WOCheckBox {
+WriteCourses : WOCheckBox {
+	checked = courses;
+}
+
+WriteStudents : WOCheckBox {
+	checked = students;
+}
+
+WriteReports : WOCheckBox {
 	checked = writeReports;
 }

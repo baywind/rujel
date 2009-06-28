@@ -54,3 +54,8 @@ PrintCourse : PrintCourse {
   title = title;
   presentPeriod = presentPeriod;
 }
+
+Title : WOString {
+  value = application.strings.RujelBase_Base.lessons;
+  escapeHTML = false;
+}

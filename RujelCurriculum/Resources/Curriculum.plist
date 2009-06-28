@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>subsReport</key>
-	<string>Замен: %d (загрузить сводку)</string>
 	<key>OrigTeacher</key>
 	<string>Замененный</string>
 	<key>Substitute</key>
@@ -157,6 +155,10 @@
 		<string>Расхождение</string>
 		<key>substitutes</key>
 		<string>Замены (совмещения)</string>
+		<key>reasons</key>
+		<string>Причины и обоснования</string>
+		<key>printCurriculum</key>
+		<string>Выполнение учебного плана</string>
 	</dict>
 	<key>regimes</key>
 	<array>
@@ -250,21 +252,11 @@
 	<array>
 		<dict>
 			<key>id</key>
-			<string>substitutes</string>
+			<string>curriculum</string>
 			<key>title</key>
-			<string>замены</string>
+			<string>выполнение</string>
 			<key>component</key>
-			<string>PrintSubstitutes</string>
-			<key>sort</key>
-			<string>20</string>
-		</dict>
-		<dict>
-			<key>id</key>
-			<string>variations</string>
-			<key>title</key>
-			<string>поправки</string>
-			<key>component</key>
-			<string>PrintVariations</string>
+			<string>PrintCurriculum</string>
 			<key>sort</key>
 			<string>30</string>
 		</dict>

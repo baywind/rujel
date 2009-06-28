@@ -660,6 +660,10 @@
 		<string>true</string>
 		<key>completeDir</key>
 		<string>/Users/gena/Sites/test</string>
+		<key>studentsCompleteDir</key>
+		<string>/Users/gena/Sites/students</string>
+		<key>coursesCompleteDir</key>
+		<string>/Users/gena/Sites/courses</string>
 		<key>autogenerateEduPeriods</key>
 		<string>true</string>
 		<key>newYearMonth</key>

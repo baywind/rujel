@@ -9,6 +9,7 @@ a:hover {
 }
 
 .gr {
+	padding-left:3px;
 	font-weight: bold;
 	background-color: #cccccc;
 	border-top: 1px solid #666666;

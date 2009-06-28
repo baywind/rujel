@@ -43,8 +43,11 @@ public class Executor implements Runnable {
 	
     public WOContext ctx;
 //    public Integer year;
-    public File folder;
+//    public File folder;
     public boolean writeReports = false;
+    public File studentsFolder;
+    public File coursesFolder;
+    
 
     public Executor() {
 		super();
@@ -55,13 +58,14 @@ public class Executor implements Runnable {
 		ctx = MyUtility.dummyContext(null);
 		WOSession ses = ctx.session();
 		ses.takeValueForKey(date, "today");
-		Integer year = MyUtility.eduYearForDate(date);
-		folder = completeFolder(year);
+//		Integer year = MyUtility.eduYearForDate(date);
+//		folder = completeFolder(year);
 	}
 	
 	public static void exec(Executor ex) {
-		if(ex.ctx == null || ex.folder == null)
+		if(ex.ctx == null)
 			throw new IllegalStateException("Executor was not properly initialsed");
+		ex.ctx.session().defaultEditingContext().unlock();
 		Thread t = new Thread(ex,"EMailBroadcast");
 		t.setPriority(Thread.MIN_PRIORITY + 1);
 		t.start();
@@ -69,17 +73,25 @@ public class Executor implements Runnable {
 
 	public void run() {
 		try {
-			StudentCatalog.prepareStudents(folder, ctx, writeReports);
-			CoursesCatalog.prepareCourses(folder, ctx, writeReports);
+			ctx.session().defaultEditingContext().lock();
+			if(studentsFolder != null)
+				StudentCatalog.prepareStudents(studentsFolder, ctx, writeReports);
+			if(coursesFolder != null)
+				CoursesCatalog.prepareCourses(coursesFolder, ctx, writeReports);
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING,"Error in Complete",new Object[] {ctx.session(),e});
 		} finally {
+			ctx.session().defaultEditingContext().unlock();
 			ctx.session().terminate();
 		}
 	}
 
-    public static File completeFolder(Integer year) {
-    	String completeDir = SettingsReader.stringForKeyPath("edu.completeDir", null);
+    public static File completeFolder(Integer year, String type) {
+    	String completeDir = SettingsReader.stringForKeyPath("edu."+ type + "CompleteDir", null);
+    	if(completeDir == null) {
+    		completeDir = SettingsReader.stringForKeyPath("edu.completeDir", null);
+    		type = null;
+    	}
     	completeDir = Various.convertFilePath(completeDir);
     	if(completeDir == null)
     		return null;

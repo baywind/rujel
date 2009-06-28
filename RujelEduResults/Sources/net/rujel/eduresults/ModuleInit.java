@@ -76,6 +76,7 @@ public class ModuleInit {
 	
 	public static Object schedulePeriod(WOContext ctx) {
 		EOEditingContext ec = new EOEditingContext();
+		ec.lock();
 		Integer year = net.rujel.base.MyUtility.eduYearForDate(new NSTimestamp());
 		NSArray starterPeriods = EOUtilities.objectsWithQualifierFormat(ec,"EduPeriod","num = 1 AND eduYear = %@",new NSArray(year));
 		
@@ -88,6 +89,7 @@ public class ModuleInit {
 			if(period == null) continue;
 			Scheduler.sharedInstance().registerPeriod(period);
 		}
+		ec.unlock();
 		return null;
 	}		
 	

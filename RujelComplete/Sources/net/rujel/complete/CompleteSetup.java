@@ -29,8 +29,9 @@
 
 package net.rujel.complete;
 
-import java.io.File;
 import java.util.logging.Logger;
+
+import net.rujel.base.MyUtility;
 
 import com.webobjects.appserver.*;
 import com.webobjects.foundation.NSTimestamp;
@@ -40,6 +41,8 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 	public static Logger logger = Logger.getLogger("rujel.complete");
 	
 	public boolean writeReports;
+	public boolean courses;
+	public boolean students;
 	
     public CompleteSetup(WOContext context) {
         super(context);
@@ -47,15 +50,25 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     
 
     public void prepareStructure() {
-    	Integer year = (Integer)session().valueForKey("eduYear");
-		File folder = Executor.completeFolder(year);
-		if(folder == null) {
-			session().takeValueForKey(application().valueForKeyPath(
-					"strings.RujelComplete_Complete.folderError"), "message");
-			return;
-		}
 		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
 		Executor executor = new Executor(today);
+		Integer year = MyUtility.eduYearForDate(today);
+		if(courses) {
+			executor.coursesFolder = Executor.completeFolder(year,"courses");
+			if(executor.coursesFolder == null) {
+				session().takeValueForKey(application().valueForKeyPath(
+				"strings.RujelComplete_Complete.folderError"), "message");
+				return;
+			}
+		}
+		if(students) {
+			executor.studentsFolder = Executor.completeFolder(year,"students");
+			if(executor.studentsFolder == null) {
+				session().takeValueForKey(application().valueForKeyPath(
+				"strings.RujelComplete_Complete.folderError"), "message");
+				return;
+				}
+		}
 		executor.writeReports = writeReports;	
 		Executor.exec(executor);
     }

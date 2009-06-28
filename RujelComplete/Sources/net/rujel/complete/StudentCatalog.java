@@ -34,7 +34,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
-import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -96,14 +96,18 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public static void prepareStudents(File folder, WOContext ctx, boolean writeReports) {
-    	EOEditingContext ec = new SessionedEditingContext(ctx.session());
-   		File subFolder = new File(folder,"students");
-		if(!subFolder.exists())
-			subFolder.mkdirs();
+    	EOEditingContext ec = ctx.session().defaultEditingContext();
 		Integer year = (Integer) ctx.session().valueForKey("eduYear");
-		Executor.createIndex(subFolder, MyUtility.presentEduYear(year), "list.html");
-		Executor.copyResource(subFolder,"scripts.js");
-		Executor.copyResource(subFolder,"styles.css");
+		if(SettingsReader.stringForKeyPath("edu.studentsCompleteDir", null) == null) {
+			folder = new File(folder,"students");
+//		} else {
+//			folder = new File(folder,year.toString());
+		}
+		if(!folder.exists())
+			folder.mkdirs();
+		Executor.createIndex(folder, MyUtility.presentEduYear(year), "list.html");
+		Executor.copyResource(folder,"scripts.js");
+		Executor.copyResource(folder,"styles.css");
 		
 		NSArray groups = EduGroup.Lister.listGroups(
 				(NSTimestamp)ctx.session().valueForKey("today"), ec);
@@ -111,7 +115,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		page.takeValueForKey(ec, "ec");
 		page.takeValueForKey(groups, "eduGroups");
 		
-		Executor.writeFile(subFolder, "list.html", page,false);
+		Executor.writeFile(folder, "list.html", page,false);
 		Enumeration grenu = groups.objectEnumerator();
 		NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
 				"modules.studentReporter");
@@ -123,7 +127,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(gr);
 			filename.append(gr.grade()).append('_');
 			filename.append(gid.keyValues()[0]);
-			File grDir = new File(subFolder,filename.toString());
+			File grDir = new File(folder,filename.toString());
 			filename.delete(0, filename.length());
 			Enumeration stenu = gr.list().objectEnumerator();
 			NSArray args = new NSArray(new Object[] {year, gr });

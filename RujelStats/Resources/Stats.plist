@@ -122,7 +122,7 @@
 		<key>component</key>
 		<string>PrintStats</string>
 		<key>sort</key>
-		<string>50</string>
+		<string>20</string>
 	</dict>
 </dict>
 </plist>

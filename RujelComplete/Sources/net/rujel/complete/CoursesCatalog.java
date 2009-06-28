@@ -6,7 +6,7 @@ import java.util.Enumeration;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
-import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -126,23 +126,28 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public static void prepareCourses(File folder, WOContext ctx, boolean writeReports) {
-    	EOEditingContext ec = new SessionedEditingContext(ctx.session());
-   		File subFolder = new File(folder,"courses");
-		if(!subFolder.exists())
-			subFolder.mkdirs();
+    	EOEditingContext ec = ctx.session().defaultEditingContext();
 		Integer year = (Integer) ctx.session().valueForKey("eduYear");
-		Executor.createIndex(subFolder, MyUtility.presentEduYear(year), "eduGroup.html");
-		Executor.copyResource(subFolder,"scripts.js");
-		Executor.copyResource(subFolder,"styles.css");
+//		if(folder.getName().equals(year.toString())) {
+		if(SettingsReader.stringForKeyPath("edu.coursesCompleteDir", null) == null)
+			folder = new File(folder,"courses");
+//		} else {
+//			folder = new File(folder,year.toString());
+//		}
+		if(!folder.exists())
+			folder.mkdirs();
+		Executor.createIndex(folder, MyUtility.presentEduYear(year), "eduGroup.html");
+		Executor.copyResource(folder,"scripts.js");
+		Executor.copyResource(folder,"styles.css");
 
 		WOComponent page = WOApplication.application().pageWithName("CoursesCatalog", ctx);
 		page.takeValueForKey(ec, "ec");
 		page.takeValueForKey("teacher", "grouping");
-		Executor.writeFile(subFolder, "teacher.html", page,false);
+		Executor.writeFile(folder, "teacher.html", page,false);
 		page.takeValueForKey("cycle", "grouping");
-		Executor.writeFile(subFolder, "cycle.html", page,false);
+		Executor.writeFile(folder, "cycle.html", page,false);
 		page.takeValueForKey("eduGroup", "grouping");
-		Executor.writeFile(subFolder, "eduGroup.html", page,false);
+		Executor.writeFile(folder, "eduGroup.html", page,false);
 		
 		NSArray courses = (NSArray)page.valueForKey("allCourses");
 		NSArray reports = (NSArray)ctx.session().valueForKeyPath("modules.courseComplete");
@@ -150,7 +155,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(course);
-			File cDir = new File(subFolder,gid.keyValues()[0].toString());
+			File cDir = new File(folder,gid.keyValues()[0].toString());
 			if(!cDir.exists())
 				cDir.mkdir();
 			page = WOApplication.application().pageWithName("CoursePage", ctx);
