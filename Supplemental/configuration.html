@@ -299,12 +299,15 @@
 <p>За что отвечают модули:</p>
 
 <ul><li><strong>net.rujel.base.BaseModule</strong> - уроки
+</li><li><strong>net.rujel.criterial.ModuleInit</strong> - критериальное оценивание (работы)
 </li><li><strong>net.rujel.eduplan.PlanCycle</strong> - учебный план
+</li><li><strong>net.rujel.eduresults.ModuleInit</strong> - итоговые оценки и периодичность
 </li><li><strong>net.rujel.autoitog.AutoItogModule</strong> - автоматический расчет и выставление итоговых (прогнозы)
 </li><li><strong>net.rujel.contacts.EMailBroadcast</strong> - почтовая рассылка
-</li><li><strong>net.rujel.criterial.ModuleInit</strong> - критериальное оценивание (работы)
-</li><li><strong>net.rujel.eduresults.ModuleInit</strong> - итоговые оценки и периодичность
-</li><li><strong>net.rujel.curriculum.CurriculumModule</strong> - учебный процесс (замены)
+</li><li><strong>net.rujel.reports.ReportsModule</strong> - подготовка отчетов по курсам и произвольных выборок по базе данных
+</li><li><strong>net.rujel.curriculum.CurriculumModule</strong> - учебный процесс: замены, дополнительные и пропущенные уроки, исполнение учебного плана, замечания к ведению журнала
+</li><li><strong>net.rujel.stats.StatsModule</strong> - рассчет и хранение статистики по результатам учебного процесса.
+</li><li><strong>net.rujel.complete.CompleteModule</strong> - закрытие учебного года: подготовка набора статических файлов HTML с информацией из журнала
 
 </li></ul>
 
@@ -335,7 +338,9 @@
 
 </li><li><strong>weightToMax</strong> - автоматически приравнивать веса критериев к максимумам по этим критериям (при критериальном оценивании работы)
 
-</li><li><strong>completeDir</strong> - путь до папки, в которую должны складываться файлы при свертке учебного года
+</li><li><strong>studentsCompleteDir</strong> - путь до папки, в которую должны складываться файлы по учащимся при свертке учебного года
+</li><li><strong>coursesCompleteDir</strong> - путь до папки, в которую должны складываться файлы по учебным курсам при свертке учебного года
+</li><li><strong>completeDir</strong> - путь до папки, в которую должны складываться все файлы при свертке учебного года (в случае если не указаны предыдущие два параметра)
 
 </li><li><span class="node">edu.presenters</span> - подраздел для настройки способа отображения интегральных оценок  (при критериальном оценивании работы)
 <ul>
