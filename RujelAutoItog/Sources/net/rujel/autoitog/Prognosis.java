@@ -604,6 +604,8 @@ cycleStudents:
 										createAndInsertInstance(ec,"MarkArchive");
 						archive.takeValueForKey(itog, "object");
 						if(scheduled != null) {
+							logger.log(WOLogLevel.INFO,"AutoItog", new Object[] {
+								itog,Thread.currentThread(),new Exception("AutoItog")});
 							archive.takeValueForKey("scheduled", "wosid");
 							archive.takeValueForKey("AutoItog", "user");
 						} else if(!(ec instanceof SessionedEditingContext)) {

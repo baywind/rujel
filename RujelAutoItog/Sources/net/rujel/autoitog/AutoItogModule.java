@@ -415,6 +415,8 @@ public class AutoItogModule {
 				inCourse++;
 			if(enableArchive && itog != null) {
 				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+				logger.log(WOLogLevel.INFO,"AutoItog", new Object[] {
+						itog,Thread.currentThread(),new Exception("AutoItog")});
 				archive.takeValueForKey(itog, "object");
 				archive.takeValueForKey("scheduled", "wosid");
 				archive.takeValueForKey("AutoItog", "user");
