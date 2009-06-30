@@ -215,6 +215,13 @@
 	</dict>
 	<key>AdminPage</key>
 	<dict>
+		<key>maintenance</key>
+		<dict>
+			<key>title</key>
+			<string>Системные процедуры</string>
+			<key>component</key>
+			<string>Maintenance</string>
+		</dict>
 		<key>title</key>
 		<string>Центр управления</string>
 	</dict>
