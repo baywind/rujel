@@ -130,7 +130,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     	} else {
     		item = (Reprimand)EOUtilities.objectWithPrimaryKeyValue(
     				ec, Reprimand.ENTITY_NAME, ident);
-    		if(System.currentTimeMillis() - item.raised().getTime() > MyUtility.dayMillis)
+    		if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay)
     			addInfo = MyUtility.dateFormat().format(new NSTimestamp());
     		if(usr != null && !usr.equals(item.author())) {
     			if(addInfo == null) {

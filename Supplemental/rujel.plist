@@ -450,6 +450,11 @@
 				<key>zavuch</key>
 				<string>1</string>
 			</dict>
+			<key>Maintenance</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+			</dict>
 			<key>login</key>
 			<dict>
 				<key>root</key>
@@ -593,6 +598,41 @@
 			<key>skip</key>
 			<string>true</string>
 		</dict>
+		<key>AutoItog</key>
+		<dict>
+			<key>untagged</key>
+			<string>AutoItog</string>
+			<key>dbName</key>
+			<string>AutoItog%s</string>
+		</dict>
+		<key>_BaseJournal</key>
+		<dict>
+			<key>untagged</key>
+			<string>BaseJournal</string>
+			<key>dbName</key>
+			<string>BaseJournal%s</string>
+		</dict>
+		<key>_Criterial</key>
+		<dict>
+			<key>untagged</key>
+			<string>Criterial</string>
+			<key>dbName</key>
+			<string>Criterial%s</string>
+		</dict>
+		<key>_Curriculum</key>
+		<dict>
+			<key>untagged</key>
+			<string>Curriculum</string>
+			<key>dbName</key>
+			<string>Curriculum%s</string>
+		</dict>
+		<key>_MarkArchive</key>
+		<dict>
+			<key>untagged</key>
+			<string>MarkArchive</string>
+			<key>dbName</key>
+			<string>MarkArchive%s</string>
+		</dict>
 		<key>serverURL</key>
 		<string>jdbc:mysql://127.0.0.1</string>
 		<key>urlSuffix</key>
@@ -601,6 +641,8 @@
 		<string>rujel</string>
 		<key>password</key>
 		<string></string>
+		<key>yearTag</key>
+		<string>true</string>
 	</dict>
 	<key>interfaces</key>
 	<dict>

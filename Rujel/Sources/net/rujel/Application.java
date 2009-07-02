@@ -29,9 +29,11 @@
 
 package net.rujel;
 
+import net.rujel.base.MyUtility;
 import net.rujel.reusables.*;
 
 import com.webobjects.eoaccess.EODatabaseContext;
+import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -59,8 +61,26 @@ public class Application extends UTF8Application {
 		}
 		
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
-		DataBaseConnector.makeConnections();
-
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			NSTimestamp today = null;
+			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
+			if(defaultDate == null) {
+				today = new NSTimestamp();
+			} else {
+				try {
+					today = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING, "Failed parsing default date " + 
+							defaultDate + ". Using today.",e);
+					today = new NSTimestamp();
+				}
+			}
+			Integer year = MyUtility.eduYearForDate(today);
+			DataBaseConnector.makeConnections(
+					EOObjectStoreCoordinator.defaultCoordinator(), year.toString());
+		} else {
+			DataBaseConnector.makeConnections();
+		}
 		net.rujel.interfaces.EOInitialiser.initAll();
 		SettingsReader node = SettingsReader.settingsForPath("modules",true);
 		ModulesInitialiser.initModules(node,"init");

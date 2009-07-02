@@ -48,9 +48,6 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
 
 public class MyUtility {
-	public static final long dayMillis = 1000*60*60*24;
-	public static final long weekMillis = dayMillis*7;
-	
 	public static NSArray numSorter = new NSArray(
 			new EOSortOrdering("num",EOSortOrdering.CompareAscending));
 	public static NSArray dateSorter = new NSArray(EOSortOrdering.sortOrderingWithKey(

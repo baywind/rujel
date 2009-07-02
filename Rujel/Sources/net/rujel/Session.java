@@ -41,7 +41,7 @@ import com.webobjects.eoaccess.EOUtilities;
 
 import java.util.logging.Logger;
 
-public class Session extends WOSession implements WithUser {
+public class Session extends WOSession {
 	private UserPresentation user = null;
 	protected Logger logger = Logger.getLogger("rujel");
 	protected NSDictionary clientIdentity;
@@ -52,19 +52,27 @@ public class Session extends WOSession implements WithUser {
 		//logger.log(WOLogLevel.SESSION,"Session created",this);
         
 		setDefaultEditingContext(new SessionedEditingContext(this));
-		String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
-		if(defaultDate == null) {
-			today = new NSTimestamp();
-		} else {
-			try {
-				today = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING, "Failed parsing default date " + 
-						defaultDate + ". Using today.",e);
-				today = new NSTimestamp();
-			}
-		}
    }
+	
+	protected SessionedEditingContext _defaultEC;
+	public SessionedEditingContext defaultEditingContext() {
+		EOObjectStore os = EOObjectStoreCoordinator.defaultCoordinator();
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			os = (EOObjectStore)objectForKey("objectStore");
+			if(os == null)
+				os = DataBaseConnector.objectStoreForTag(eduYear().toString());
+			if(_defaultEC == null || _defaultEC.parentObjectStore() != os) {
+				if(_defaultEC != null)
+					_defaultEC.unlock();
+				_defaultEC = new SessionedEditingContext(os,this);
+				_defaultEC.lock();
+			}
+		} else if (_defaultEC == null) {
+			_defaultEC = new SessionedEditingContext(os,this);
+			_defaultEC.lock();
+		}
+		return _defaultEC;
+	}
     
 	protected ReadAccess _readAccess;
 	
@@ -99,6 +107,13 @@ public class Session extends WOSession implements WithUser {
 				clientIdentity = curr;
 			}
 		}
+		if(_defaultEC != null)
+			_defaultEC.lock();
+	}
+	
+	public void sleep() {
+		if(_defaultEC != null)
+			_defaultEC.unlock();
 	}
 	
 	public void setUser(UserPresentation aUser) {
@@ -239,7 +254,18 @@ public class Session extends WOSession implements WithUser {
 	
 	public NSTimestamp today() {
 		if(today == null) {
-			today = new NSTimestamp();
+			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
+			if(defaultDate == null) {
+				today = new NSTimestamp();
+			} else {
+				try {
+					today = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING, "Failed parsing default date " + 
+							defaultDate + ". Using today.",e);
+					today = new NSTimestamp();
+				}
+			}
 		}
 		return today;
 	}
@@ -253,10 +279,21 @@ public class Session extends WOSession implements WithUser {
 		} else {
 			today = day;
 		}
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear().toString());
+			setObjectForKey(os, "objectStore");
+			if(persList != null && persList.count() > 0) {
+				persList.removeAllObjects();
+			}
+//			if(defaultEditingContext().rootObjectStore() != os) {
+//				defaultEditingContext().unlock();
+//				setDefaultEditingContext(new SessionedEditingContext(os,this));
+//			}
+		}
 	}
 	
 	public Integer eduYear() {
-		return MyUtility.eduYearForDate(today);
+		return MyUtility.eduYearForDate(today());
 	}
 	
 	public String checkRun() {
