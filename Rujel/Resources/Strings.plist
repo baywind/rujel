@@ -185,6 +185,8 @@
 		<string>РУЖЕЛЬ просит Вас закончить работу и нажать &quot;Выход&quot;. &lt;br/&gt;Ждем Вас сразу после завершения технических работ</string>
 		<key>unsavedChanges</key>
 		<string>Несохраненные изменения будут потеряны</string>
+		<key>unavailableYearlyDb</key>
+		<string>Для выбранного учебного года %1$s нет базы данных.</string>
 	</dict>
 	<key>ErrorPages</key>
 	<dict>

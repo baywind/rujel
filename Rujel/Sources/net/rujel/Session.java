@@ -272,15 +272,18 @@ public class Session extends WOSession {
 	
 	public void setToday(NSTimestamp day) {
 		if(day == null) {
-//			Calendar cal = Calendar.getInstance();
-//			cal.set(2008,8,15,0,30);
-//			today = new NSTimestamp(cal.getTimeInMillis());
-			today = new NSTimestamp();
-		} else {
-			today = day;
+			day = new NSTimestamp();
 		}
 		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
-			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear().toString());
+			Integer year = MyUtility.eduYearForDate(day);
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(year.toString());
+			if(os == null) {
+				String msg = (String)WOApplication.application().valueForKeyPath(
+				"strings.Strings.messages.unavailableYearlyDb");
+				msg = String.format(msg, MyUtility.presentEduYear(year.intValue()));
+				setMessage(msg);
+				return;
+			}
 			setObjectForKey(os, "objectStore");
 			if(persList != null && persList.count() > 0) {
 				persList.removeAllObjects();
@@ -290,6 +293,7 @@ public class Session extends WOSession {
 //				setDefaultEditingContext(new SessionedEditingContext(os,this));
 //			}
 		}
+		today = day;
 	}
 	
 	public Integer eduYear() {
