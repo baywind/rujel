@@ -45,7 +45,6 @@ public abstract class _CriteriaSet extends EOGenericRecord {
 
 	// Relationships
 	public static final String CRITERIA_KEY = "criteria";
-	public static final String CYCLE_CRIT_SET_KEY = "cycleCritSet";
 
   public String comment() {
     return (String) storedValueForKey(COMMENT_KEY);
@@ -69,22 +68,6 @@ public abstract class _CriteriaSet extends EOGenericRecord {
 
   public void removeFromCriteria(EOEnterpriseObject object) {
     excludeObjectFromPropertyWithKey(object, CRITERIA_KEY);
-  }
-
-  public NSArray cycleCritSet() {
-    return (NSArray)storedValueForKey(CYCLE_CRIT_SET_KEY);
-  }
- 
-  public void setCycleCritSet(NSArray value) {
-    takeStoredValueForKey(value, CYCLE_CRIT_SET_KEY);
-  }
-  
-  public void addToCycleCritSet(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, CYCLE_CRIT_SET_KEY);
-  }
-
-  public void removeFromCycleCritSet(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, CYCLE_CRIT_SET_KEY);
   }
 
 }

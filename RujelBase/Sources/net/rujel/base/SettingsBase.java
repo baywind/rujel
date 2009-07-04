@@ -35,6 +35,7 @@ import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class SettingsBase extends _SettingsBase {
@@ -92,5 +93,30 @@ public class SettingsBase extends _SettingsBase {
 			return (grade != null && grade.equals(course.cycle().grade()));
 		}
 		return (bc.valueForKey(key) == course.valueForKey(key));
+	}
+	
+	public static EOEnterpriseObject settingForCourse(String key, EduCourse course, 
+			EOEditingContext ec) {
+		if(ec == null && course != null)
+			ec = course.editingContext();
+		try {
+			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
+					ENTITY_NAME, "key", key);
+			return sb.forCourse(course);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	public static Integer numericSettingForCourse(String key, EduCourse course, 
+			EOEditingContext ec) {
+		EOEnterpriseObject eo = settingForCourse(key, course, ec);
+		return (eo==null)?null:(Integer)eo.valueForKey(NUMERIC_VALUE_KEY);
+	}
+	
+	public static String stringSettingForCourse(String key, EduCourse course, 
+			EOEditingContext ec) {
+		EOEnterpriseObject eo = settingForCourse(key, course, ec);
+		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
 	}
 }

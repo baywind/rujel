@@ -81,4 +81,48 @@ create table RujelYear2008.TEXT_STORE select T_ID,ENTITY,STORED_TEXT from BaseJo
   where T_ID in (select TASK FROM RujelYear2008.`WORK` where TASK is not null);
 alter table RujelYear2008.TEXT_STORE ADD PRIMARY KEY (`T_ID`);
 
+create table RujelYear2007.CRITER_MASK select * from Criterial.CRITER_MASK
+  where WORK in (select W_ID FROM RujelYear2007.`WORK`);
+alter table RujelYear2007.CRITER_MASK ADD PRIMARY KEY (`WORK`,`CRITERION`);
+
+create table RujelYear2008.CRITER_MASK select * from Criterial.CRITER_MASK
+  where WORK in (select W_ID FROM RujelYear2008.`WORK`);
+alter table RujelYear2008.CRITER_MASK ADD PRIMARY KEY (`WORK`,`CRITERION`);
+
+create table RujelYear2007.MARK select * from Criterial.MARK
+  where WORK in (select W_ID FROM RujelYear2007.`WORK`);
+alter table RujelYear2007.MARK ADD PRIMARY KEY (`WORK`,`CRITER`,`STUDENT`);
+
+create table RujelYear2008.MARK select * from Criterial.MARK
+  where WORK in (select W_ID FROM RujelYear2008.`WORK`);
+alter table RujelYear2008.MARK ADD PRIMARY KEY (`WORK`,`CRITER`,`STUDENT`);
+
+create table RujelYear2007.WORK_NOTE select * from Criterial.WORK_NOTE
+  where WORK in (select W_ID FROM RujelYear2007.`WORK`);
+alter table RujelYear2007.WORK_NOTE ADD PRIMARY KEY (`WORK`,`STUDENT`);
+
+create table RujelYear2008.WORK_NOTE select * from Criterial.WORK_NOTE
+  where WORK in (select W_ID FROM RujelYear2008.`WORK`);
+alter table RujelYear2008.WORK_NOTE ADD PRIMARY KEY (`WORK`,`STUDENT`);
+
+insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`NUM_VALUE`) values (1,'CriteriaSet',1);
+
+create table RujelStatic.BORDER select * from Criterial.BORDER;
+alter table RujelStatic.BORDER ADD PRIMARY KEY (`B_ID`);
+
+create table RujelStatic.BORDER_SET select * from Criterial.BORDER_SET;
+alter table RujelStatic.BORDER_SET ADD PRIMARY KEY (`BS_ID`);
+
+create table RujelStatic.CRIT_SET select * from Criterial.CRIT_SET;
+alter table RujelStatic.CRIT_SET ADD PRIMARY KEY (`CS_ID`);
+
+create table RujelStatic.CRITERION select * from Criterial.CRITERION;
+alter table RujelStatic.CRITERION ADD PRIMARY KEY (`CR_ID`);
+
+alter table Criterial.INDEXER ADD COLUMN `DEFAULT_VALUE` VARCHAR(255);
+create table RujelStatic.INDEXER select * from Criterial.INDEXER;
+alter table RujelStatic.INDEXER ADD PRIMARY KEY (`IND_ID`);
+
+create table RujelStatic.INDEX_ROW select * from Criterial.INDEX_ROW;
+alter table RujelStatic.INDEX_ROW ADD PRIMARY KEY (`IND`,`IDX`);
 

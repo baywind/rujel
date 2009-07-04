@@ -615,12 +615,17 @@
 			<key>dbName</key>
 			<string>RujelStatic</string>
 		</dict>
-		<key>_Criterial</key>
+		<key>Criterial</key>
 		<dict>
-			<key>untagged</key>
+			<key>_untagged</key>
 			<string>Criterial</string>
 			<key>dbName</key>
-			<string>Criterial%s</string>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>CriterialStatic</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
 		</dict>
 		<key>_Curriculum</key>
 		<dict>

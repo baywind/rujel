@@ -130,7 +130,8 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	private transient NSArray _allCriteria;
 	public NSArray allCriteria() {
 		if(_allCriteria == null) {
-			_allCriteria = CriteriaSet.criteriaForCycle(course().cycle());
+			_allCriteria = CriteriaSet.criteriaForCourse(course());
+			//criteriaForCycle(course().cycle());
 		}
 		return _allCriteria;
 	}

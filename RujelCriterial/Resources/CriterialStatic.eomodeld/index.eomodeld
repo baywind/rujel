@@ -10,8 +10,8 @@
         {className = "net.rujel.criterial.BorderSet"; name = BorderSet; }, 
         {className = "net.rujel.criterial.CriteriaSet"; name = CriteriaSet; }, 
         {className = EOGenericRecord; name = Criterion; }, 
-        {className = EOGenericRecord; name = IndexRow; }, 
-        {className = "net.rujel.criterial.Indexer"; name = Indexer; } 
+        {className = "net.rujel.criterial.Indexer"; name = Indexer; }, 
+        {className = EOGenericRecord; name = IndexRow; } 
     ); 
     userInfo = {
         "_EntityModeler" = {

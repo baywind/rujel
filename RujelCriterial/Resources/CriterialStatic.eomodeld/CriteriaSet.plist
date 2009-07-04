@@ -5,7 +5,7 @@
     ); 
     attributesUsedForLocking = (comment); 
     className = "net.rujel.criterial.CriteriaSet"; 
-    classProperties = (comment, criteria, cycleCritSet); 
+    classProperties = (comment, criteria); 
     externalName = "CRIT_SET"; 
     fetchSpecificationDictionary = {}; 
     name = CriteriaSet; 
@@ -18,15 +18,6 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = critSet; sourceAttribute = setID; }); 
             name = criteria; 
-            ownsDestination = Y; 
-        }, 
-        {
-            deleteRule = EODeleteRuleDeny; 
-            destination = CycleCritSet; 
-            isToMany = Y; 
-            joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = critSet; sourceAttribute = setID; }); 
-            name = cycleCritSet; 
             ownsDestination = Y; 
         }
     ); 

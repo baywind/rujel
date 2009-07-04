@@ -327,7 +327,6 @@
     }; 
     entities = (
         {className = EOGenericRecord; name = CriterMask; }, 
-        {className = EOGenericRecord; name = CycleCritSet; }, 
         {className = "net.rujel.criterial.Mark"; name = Mark; }, 
         {className = "net.rujel.criterial.Work"; name = Work; }, 
         {className = EOGenericRecord; name = WorkNote; }

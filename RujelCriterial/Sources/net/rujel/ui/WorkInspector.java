@@ -117,7 +117,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	private NSArray _criteria;
     public NSArray criteria() {
 		if(_criteria == null) {
-			_criteria = CriteriaSet.criteriaForCycle(work.course().cycle());
+			_criteria = CriteriaSet.criteriaForCourse(work.course());
+			//criteriaForCycle(work.course().cycle());
 		}
 		return _criteria;
     }

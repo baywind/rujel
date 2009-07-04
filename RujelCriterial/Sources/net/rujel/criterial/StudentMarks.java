@@ -437,7 +437,8 @@ public class StudentMarks extends WOComponent {
 		String integral = SettingsReader.stringForKeyPath("edu.presenters.workIntegral","~");
 		result.takeValueForKey(integral, "integral");
 
-		NSArray criteria = CriteriaSet.criteriaForCycle(course.cycle());
+		NSArray criteria = CriteriaSet.criteriaForCourse(course);
+		//criteriaForCycle(course.cycle());
 		/*WOApplication app  = WOApplication.application();
 		String title = workIntegral;
 		String comment = app.valueForKeyPath("strings.RujelCriterial_Strings.integral");

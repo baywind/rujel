@@ -116,7 +116,8 @@ public class MarksPresenter extends NotePresenter {
 			if(lesson() == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
 				if(course != null) {
-					_allCriteria = (NSArray)CriteriaSet.criteriaForCycle(course.cycle());
+					_allCriteria = (NSArray)CriteriaSet.criteriaForCourse(course);
+					//criteriaForCycle(course.cycle());
 				}
 			} else {
 				_allCriteria = (NSArray)lesson().allCriteria();//.valueForKey("title");

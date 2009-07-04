@@ -91,7 +91,8 @@ public class PrintWorks extends com.webobjects.appserver.WOComponent {
 	private NSArray _criteria;
     public NSArray criteria() {
 		if(_criteria == null) {
-			_criteria = CriteriaSet.criteriaForCycle(course.cycle());
+			_criteria = CriteriaSet.criteriaForCourse(course);
+			//criteriaForCycle(course.cycle());
 			if(_criteria == null)
 				_criteria = NSArray.EmptyArray;
 		}

@@ -161,6 +161,7 @@ HasSelector: WOConditional {
 CriterSelector1: WOSwitchComponent {
 	WOComponentName = present.selector;
 	cycle = course.cycle;
+	course = course;
 }
 
 PresentTabs: Tabs {

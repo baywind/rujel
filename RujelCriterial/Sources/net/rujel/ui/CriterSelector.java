@@ -31,7 +31,6 @@ package net.rujel.ui;
 
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduCycle;
 import net.rujel.reusables.SettingsReader;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -69,34 +68,16 @@ public class CriterSelector extends WOComponent {
 	private NSArray _criteria;
 	public NSArray criteria() {
 		if(_criteria == null && (hasBinding("cycle") || hasBinding("course"))) {
-			EduCycle cycle = (EduCycle)valueForBinding("cycle");
-			if(cycle == null) {
+//			EduCycle cycle = (EduCycle)valueForBinding("cycle");
+//			if(cycle == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
-				cycle = course.cycle();
-			}
-			NSArray critSets = CriteriaSet.critSetsForCycle(cycle);
-			_criteria = CriteriaSet.criteriaForSets(critSets);
+//				cycle = course.cycle();
+//			}
+//			NSArray critSets = CriteriaSet.critSetsForCycle(cycle);
+			_criteria = CriteriaSet.criteriaForCourse(course);//criteriaForSets(critSets);
 		}
 		return _criteria;
 	}
-	/*
-    public static NSArray criteriaForCourse(EOEnterpriseObject course) {
-		NSArray sets = (NSArray)course.valueForKeyPath("cycle.cycleCritSets.criteriaSet");
-		if(sets != null && sets.count() > 0) {
-			CriteriaSet set = (CriteriaSet)sets.objectAtIndex(0);
-			if(sets.count() > 1) {
-				NSMutableArray result = set.sortedCriteria().mutableClone();
-				for (int i = 1; i < sets.count(); i++) {
-					set = (CriteriaSet)sets.objectAtIndex(i);
-					result.addObjectsFromArray(set.sortedCriteria());
-				}
-				return result.immutableClone();
-			} else {
-				return set.sortedCriteria();
-			}
-		}
-		return null;
-	}*/
 	
     public String crClass() {
 		if(selection().equals(critItem.valueForKey("title")))

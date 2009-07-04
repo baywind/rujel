@@ -32,6 +32,8 @@ package net.rujel.criterial;
 
 import java.util.Enumeration;
 
+import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 
 import com.webobjects.foundation.*;
@@ -106,7 +108,7 @@ public class CriteriaSet extends _CriteriaSet
 		return result.immutableClone();
 	}
 	
-	protected static NSArray qualifiers;
+/*	protected static NSArray qualifiers;
 	protected static NSArray relatedSets;
 	public static NSArray critSetsForCycle(EduCycle cycle) {
 		EOEditingContext ec = cycle.editingContext();
@@ -153,7 +155,7 @@ public class CriteriaSet extends _CriteriaSet
 
 		//TODO: select cycles
 		return result.immutableClone();
-	}
+	}*/
 	
 	public static NSArray criteriaForSets(NSArray sets) {
 		if(sets != null && sets.count() > 0) {
@@ -172,8 +174,20 @@ public class CriteriaSet extends _CriteriaSet
 		}
 		return null;
 	}
+/*
 	public static NSArray criteriaForCycle(EduCycle cycle) {
 		NSArray critSets = critSetsForCycle(cycle);
 		return criteriaForSets(critSets);
+	}
+*/	
+	public static CriteriaSet critSetForCourse(EduCourse course) {
+		EOEditingContext ec = course.editingContext();
+		Integer set = SettingsBase.numericSettingForCourse("CriteriaSet", course,ec);
+		return (CriteriaSet)EOUtilities.objectWithPrimaryKeyValue(ec, ENTITY_NAME, set);
+	}
+	
+	public static NSArray criteriaForCourse(EduCourse course) {
+		CriteriaSet set = critSetForCourse(course);
+		return (set==null)?null:set.sortedCriteria();
 	}
 }

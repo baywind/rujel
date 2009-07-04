@@ -213,7 +213,8 @@ public class WorkList extends LessonList {
     public NSArray criteria() {
 		if(_criteria == null) {
 			EduCourse course = (EduCourse)valueForBinding("course");
-			_criteria = CriteriaSet.criteriaForCycle(course.cycle());
+			_criteria = CriteriaSet.criteriaForCourse(course);
+			//criteriaForCycle(course.cycle());
 		}
 		return _criteria;
     }

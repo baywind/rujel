@@ -97,29 +97,7 @@ public class ModuleInit {
 		EOInitialiser.initialiseRelationship("WorkNote","student",false,"studentID","Student").
 						anyInverseRelationship().setPropagatesPrimaryKey(true);
 
-		EORelationship relationship = EOInitialiser.initialiseRelationship
-									("CycleCritSet","cycle",false,"cycleID","EduCycle");
-		/*
-		EOJoin join = (EOJoin)relationship.joins().objectAtIndex(0);
-		join = new EOJoin(join.destinationAttribute(),join.sourceAttribute());
-		EORelationship backrel = new EORelationship();
-		backrel.setName("cycleCritSets");
-		relationship.destinationEntity().addRelationship(backrel);
-		backrel.addJoin(join);
-		backrel.setToMany(true);
-		backrel.setJoinSemantic(EORelationship.InnerJoin);
-		backrel.setPropagatesPrimaryKey(true);
-		backrel.setOwnsDestination(true);
-		backrel.setDeleteRule(EOClassDescription.DeleteRuleCascade);
-
-		relationship = EOInitialiser.initialiseRelationship(
-				"Work","taskText",false,"workID","TaskText");
-		relationship.setOwnsDestination(true);
-		relationship.setPropagatesPrimaryKey(true);
-		relationship.setDeleteRule(EOClassDescription.DeleteRuleCascade);
-		relationship.setIsMandatory(false);
-		*/
-		relationship = EOInitialiser.initialiseRelationship("Work","course",false,
+		EORelationship relationship = EOInitialiser.initialiseRelationship("Work","course",false,
 				"courseID","EduCourse");
 		if(EduLesson.entityName.equals("Work")) {
 			EORelationship backrel = relationship.destinationEntity().relationshipNamed("lessons");
