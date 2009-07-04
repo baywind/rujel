@@ -29,7 +29,7 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
-            allowsNull = N; 
+            allowsNull = Y; 
             columnName = "NUM_VALUE"; 
             name = numericValue; 
             prototypeName = integer; 

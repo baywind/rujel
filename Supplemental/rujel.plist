@@ -605,12 +605,15 @@
 			<key>dbName</key>
 			<string>AutoItog%s</string>
 		</dict>
-		<key>_BaseJournal</key>
+		<key>BaseYearly</key>
 		<dict>
-			<key>untagged</key>
-			<string>BaseJournal</string>
 			<key>dbName</key>
-			<string>BaseJournal%s</string>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>BaseStatic</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
 		</dict>
 		<key>_Criterial</key>
 		<dict>
