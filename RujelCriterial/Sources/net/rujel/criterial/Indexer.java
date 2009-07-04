@@ -29,6 +29,10 @@
 
 package net.rujel.criterial;
 
+import java.util.Enumeration;
+
+import com.webobjects.eocontrol.EOEnterpriseObject;
+
 public class Indexer extends _Indexer
 {
     public Indexer() {
@@ -47,7 +51,15 @@ public class Indexer extends _Indexer
     }
 */	
 	public String stringForIndex(Number index) {
-		return null;
+		if(index == null)
+			return null;
+		Enumeration enu = indexRows().objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject row = (EOEnterpriseObject) enu.nextElement();
+			if(index.equals(row.valueForKey("idx")))
+				return (String)row.valueForKey("value");
+		}
+		return defaultValue();
 	}
 
 }

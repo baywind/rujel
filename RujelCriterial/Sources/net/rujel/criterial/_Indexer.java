@@ -1,5 +1,4 @@
 // _Indexer.java
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Indexer.java instead.
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -8,15 +7,15 @@
  * Redistribution and use in source and binary forms, with or without modification, are
  * permitted provided that the following conditions are met:
  * 
- * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 	o	Redistributions of source code must retain the above copyright notice, this
  * 		list of conditions and the following disclaimer.
- * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 	o	Redistributions in binary form must reproduce the above copyright notice,
  * 		this list of conditions and the following disclaimer in the documentation
  * 		and/or other materials provided with the distribution.
- * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
- * 		to endorse or promote products derived from this software without specific 
+ * 	o	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific
  * 		prior written permission.
- * 		
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
@@ -27,6 +26,9 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+// Created by eogenerator
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Indexer.java instead.
 
 package net.rujel.criterial;
 
@@ -39,11 +41,20 @@ public abstract class _Indexer extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Indexer";
 
 	// Attributes
+	public static final String DEFAULT_VALUE_KEY = "defaultValue";
 	public static final String TITLE_KEY = "title";
 	public static final String TYPE_KEY = "type";
 
 	// Relationships
-	public static final String INDEX_ROW_KEY = "indexRow";
+	public static final String INDEX_ROWS_KEY = "indexRows";
+
+  public String defaultValue() {
+    return (String) storedValueForKey(DEFAULT_VALUE_KEY);
+  }
+
+  public void setDefaultValue(String value) {
+    takeStoredValueForKey(value, DEFAULT_VALUE_KEY);
+  }
 
   public String title() {
     return (String) storedValueForKey(TITLE_KEY);
@@ -53,28 +64,28 @@ public abstract class _Indexer extends EOGenericRecord {
     takeStoredValueForKey(value, TITLE_KEY);
   }
 
-  public Byte type() {
-    return (Byte) storedValueForKey(TYPE_KEY);
+  public Integer type() {
+    return (Integer) storedValueForKey(TYPE_KEY);
   }
 
-  public void setType(Byte value) {
+  public void setType(Integer value) {
     takeStoredValueForKey(value, TYPE_KEY);
   }
 
-  public NSArray indexRow() {
-    return (NSArray)storedValueForKey(INDEX_ROW_KEY);
+  public NSArray indexRows() {
+    return (NSArray)storedValueForKey(INDEX_ROWS_KEY);
   }
  
-  public void setIndexRow(NSArray value) {
-    takeStoredValueForKey(value, INDEX_ROW_KEY);
+  public void setIndexRows(NSArray value) {
+    takeStoredValueForKey(value, INDEX_ROWS_KEY);
   }
   
-  public void addToIndexRow(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, INDEX_ROW_KEY);
+  public void addToIndexRows(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, INDEX_ROWS_KEY);
   }
 
-  public void removeFromIndexRow(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, INDEX_ROW_KEY);
+  public void removeFromIndexRows(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, INDEX_ROWS_KEY);
   }
 
 }

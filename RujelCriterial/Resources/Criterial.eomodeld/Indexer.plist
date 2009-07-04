@@ -1,12 +1,18 @@
 {
     attributes = (
+        {
+            columnName = "DEFAULT_VALUE"; 
+            name = defaultValue; 
+            prototypeName = string; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
         {columnName = "IND_ID"; name = indID; prototypeName = short; }, 
         {columnName = TITLE; name = title; prototypeName = word; }, 
         {allowsNull = N; columnName = TYPE; name = type; prototypeName = byte; }
     ); 
-    attributesUsedForLocking = (type, title); 
+    attributesUsedForLocking = (type, title, defaultValue); 
     className = "net.rujel.criterial.Indexer"; 
-    classProperties = (type, title, indexRow); 
+    classProperties = (type, title, defaultValue, indexRows); 
     externalName = INDEXER; 
     fetchSpecificationDictionary = {}; 
     name = Indexer; 
@@ -18,7 +24,7 @@
             isToMany = Y; 
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = indID; sourceAttribute = indID; }); 
-            name = indexRow; 
+            name = indexRows; 
             ownsDestination = Y; 
             propagatesPrimaryKey = Y; 
         }
