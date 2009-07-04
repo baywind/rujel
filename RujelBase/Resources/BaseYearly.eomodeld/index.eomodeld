@@ -2,7 +2,7 @@
     EOModelVersion = "2.1"; 
     adaptorName = JDBC; 
     connectionDictionary = {
-        URL = "jdbc:mysql://localhost/BaseJournal? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
+        URL = "jdbc:mysql://localhost/BaseYearly? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
         driver = ""; 
         jdbc2Info = {
             "ANSI92_CONFORMANCE" = ANSI92EntryLevel; 
@@ -326,13 +326,10 @@
         username = rujel; 
     }; 
     entities = (
-        {className = "net.rujel.base.BaseCourse"; name = BaseCourse; }, 
         {className = "net.rujel.base.BaseLesson"; name = BaseLesson; }, 
         {className = EOGenericRecord; name = BaseNote; }, 
         {className = "net.rujel.base.BaseTab"; name = BaseTab; }, 
         {className = EOGenericRecord; name = CourseAudience; }, 
-        {className = "net.rujel.base.EntityIndex"; name = EntityIndex; }, 
-        {className = "net.rujel.base.PrimitiveEduCycle"; name = PrimitiveEduCycle; }, 
         {className = EOGenericRecord; name = TextStore; }
     ); 
     userInfo = {
@@ -342,7 +339,7 @@
                 Default = {
                     adaptorName = JDBC; 
                     connectionDictionary = {
-                        URL = "jdbc:mysql://localhost/BaseJournal? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
+                        URL = "jdbc:mysql://localhost/BaseYearly? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
                         driver = ""; 
                         jdbc2Info = {
                             "ANSI92_CONFORMANCE" = ANSI92EntryLevel; 
