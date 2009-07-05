@@ -29,13 +29,14 @@
 
 package net.rujel.interfaces;
 
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.reusables.Period;
 
-public interface EOPeriod extends Period {
+public interface EOPeriod extends Period,EOEnterpriseObject {
  	public static final NSArray sorter = new NSArray(new Object[] {
  			EOSortOrdering.sortOrderingWithKey("end",EOSortOrdering.CompareAscending),
  			EOSortOrdering.sortOrderingWithKey("begin",EOSortOrdering.CompareDescending)});

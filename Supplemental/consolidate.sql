@@ -1,3 +1,5 @@
+SET NAMES utf8;
+
 create database RujelStatic default character set utf8;
 
 create table RujelStatic.BASE_COURSE select * from BaseJournal.BASE_COURSE;
@@ -20,6 +22,7 @@ CREATE TABLE  RujelStatic.SETTINGS_BASE (
 CREATE TABLE  RujelStatic.SETTING_BY_COURSE (
   `SC_ID` mediumint NOT NULL,
   `SETTINGS` mediumint NOT NULL,
+  `EDU_YEAR` smallint,
   `COURSE` mediumint,
   `CYCLE` mediumint,
   `GRADE` smallint,
@@ -126,3 +129,40 @@ alter table RujelStatic.INDEXER ADD PRIMARY KEY (`IND_ID`);
 create table RujelStatic.INDEX_ROW select * from Criterial.INDEX_ROW;
 alter table RujelStatic.INDEX_ROW ADD PRIMARY KEY (`IND`,`IDX`);
 
+create table RujelStatic.ITOG_TYPE select ID_TYPE as T_ID, 
+  TITLE, NAME, IN_YEAR_COUNT, ARCHIVE_SINCE as SORT from EduResults.PER_TYPE;
+alter table RujelStatic.ITOG_TYPE ADD PRIMARY KEY (`T_ID`);
+update RujelStatic.ITOG_TYPE set SORT = (10 - IN_YEAR_COUNT);
+
+create table RujelStatic.ITOG select ID_PER as I_ID, PER_TYPE as TYPE, NUM, EDU_YEAR
+  from EduResults.EDU_PERIOD where EDU_YEAR in (2007,2008);
+alter table RujelStatic.ITOG ADD PRIMARY KEY (`I_ID`);
+
+create table RujelStatic.ITOG_MARK select PERIOD as CONTAINER, EDU_CYCLE as CYCLE, STUDENT,
+  MARK, VALUE, FLAGS from EduResults.ITOG_MARK;
+alter table RujelStatic.ITOG_MARK ADD COLUMN `COMMENT` mediumint;
+alter table RujelStatic.ITOG_MARK ADD PRIMARY KEY (`CONTAINER`,`CYCLE`,`STUDENT`);
+
+create table RujelStatic.ITOG_COMMENT (
+  C_ID mediumint NOT NULL,
+  COMMENT text NOT NULL,
+  PRIMARY KEY (`C_ID`)
+);
+
+insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 
+	values (2,'ItogType','Общий');
+
+insert into RujelStatic.SETTING_BY_COURSE (SC_ID, SETTINGS, COURSE, EDU_GROUP, EDU_YEAR, TEXT_VALUE)
+select PKEY - 2 , 2, EDU_COURSE, EDU_GROUP, EDU_YEAR, 'Семестры' from EduResults.PERTYPE_USAGE where PERTYPE_ID = 2;
+
+update RujelStatic.SETTING_BY_COURSE S,  RujelStatic.BASE_COURSE C
+set S.EDU_YEAR = C.EDU_YEAR where S.COURSE = C.CR_ID;
+
+create table RujelStatic.ITOG_TYPE_LIST (
+  TL_ID mediumint NOT NULL,
+  LIST_NAME varchar(28) NOT NULL,
+  ITOG_TYPE smallint NOT NULL,
+  PRIMARY KEY (`TL_ID`)
+);
+
+insert into RujelStatic.ITOG_TYPE_LIST values (1,'Общий',3), (2,'Общий',1), (3,'Семестры',2);

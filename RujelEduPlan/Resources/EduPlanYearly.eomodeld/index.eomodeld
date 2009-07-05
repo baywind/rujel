@@ -3,13 +3,13 @@
     adaptorName = JDBC; 
     connectionDictionary = {
         URL = "jdbc:mysql://localhost/EduPlan? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
-        username = "rujel"; 
+        username = rujel; 
     }; 
     entities = (
-        {className = "net.rujel.eduresults.EduPeriod"; name = EduPeriod; }, 
-        {className = "net.rujel.eduresults.PeriodTemplate"; name = PeriodTemplate; }, 
-        {className = "net.rujel.eduresults.PeriodType"; name = PeriodType; }, 
-        {className = EOGenericRecord; name = PlanDetail; } 
+        {className = "net.rujel.eduplan.EduPeriod"; name = EduPeriod; }, 
+        {className = "net.rujel.eduplan.PeriodTemplate"; name = PeriodTemplate; }, 
+        {className = "net.rujel.eduplan.PeriodType"; name = PeriodType; }, 
+        {className = EOGenericRecord; name = PlanDetail; }
     ); 
     userInfo = {
         "_EntityModeler" = {

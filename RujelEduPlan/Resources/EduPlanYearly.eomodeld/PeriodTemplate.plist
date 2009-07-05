@@ -38,7 +38,7 @@
         {columnName = "PER_TYPE"; name = perType; prototypeName = short; }
     ); 
     attributesUsedForLocking = (perNum, beginMonth, beginDay, endDay, endMonth); 
-    className = "net.rujel.eduresults.PeriodTemplate"; 
+    className = "net.rujel.eduplan.PeriodTemplate"; 
     classProperties = (perNum, beginMonth, beginDay, periodType, endDay, endMonth); 
     externalName = "PER_TEMPLATE"; 
     fetchSpecificationDictionary = {}; 

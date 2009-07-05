@@ -45,7 +45,6 @@ import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.EduPeriod;
 
 public class Overview extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -315,8 +314,8 @@ public class Overview extends WOComponent {
 		reportPage.takeValueForKey(currClass, "eduGroup");
 		StringBuffer buf = new StringBuffer("Printing marks for multiple (");
 		buf.append(studentsToReport.count()).append(") students (");
-		if(period instanceof EduPeriod)
-			buf.append(((EduPeriod)period).title());
+		if(period instanceof EOPeriod)
+			buf.append(((EOPeriod)period).valueForKey("title"));
 		if(since != null || to != null) {
 			if(period != null)
 				buf.append(':').append(' ');

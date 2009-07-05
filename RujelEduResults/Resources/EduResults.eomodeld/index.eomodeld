@@ -326,11 +326,13 @@
         username = rujel; 
     }; 
     entities = (
+        {className = EOGenericRecord; name = ItogComment; }, 
         {className = "net.rujel.eduresults.ItogContainer"; name = ItogContainer; }, 
         {className = "net.rujel.eduresults.ItogMark"; name = ItogMark; }, 
         {className = "net.rujel.eduresults.ItogType"; name = ItogType; }, 
-        {className = EOGenericRecord; name = TypeList; }
+        {className = EOGenericRecord; name = ItogTypeList; }
     ); 
+    internalInfo = {"_deletedEntityNamesInObjectStore" = (TypeList); }; 
     userInfo = {
         "_EntityModeler" = {
             activeDatabaseConfigName = Default; 

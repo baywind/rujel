@@ -33,8 +33,6 @@ import java.util.Date;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.EduPeriod;
-//import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -60,6 +58,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 				return null;
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.planRegime");
+		} else if("lessonTabs".equals(obj)) {
+			return EduPeriod.lessonTabs(ctx);
 		}
 		return null;
 	}

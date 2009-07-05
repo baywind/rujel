@@ -32,7 +32,6 @@ package net.rujel.eduresults;
 import net.rujel.reusables.*;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduLesson;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
@@ -45,7 +44,6 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class ModuleInit {
-	protected static final NSDictionary tab = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogTab");
 	protected static final NSDictionary addOn = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn");
 	protected static final NSDictionary studentReporter = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
 	protected static final NSArray marksPreset = ((NSArray)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.marksPreset")).immutableClone();
@@ -53,45 +51,22 @@ public class ModuleInit {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			ItogMark.init();
-			PeriodType.init();
+			ItogType.init();
 			EOSortOrdering.ComparisonSupport.setSupportForClass(
-					new EduPeriod.ComparisonSupport(), Period.class);
+					new ItogContainer.ComparisonSupport(), Period.class);
 			EOSortOrdering.ComparisonSupport.setSupportForClass(
-					new EduPeriod.ComparisonSupport(), EduPeriod.class);
-		} else if("schedulePeriod".equals(obj)) {
-			return schedulePeriod(ctx);
+					new ItogContainer.ComparisonSupport(), ItogContainer.class);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
 		} else if("studentReporter".equals(obj)) {
 			return studentReporter(ctx);
 		} else if("periods".equals(obj)) {
 			return periods(ctx);
-		} else if("lessonTabs".equals(obj)) {
-			return lessonTabs(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
 		}
 		return null;
 	}
-	
-	public static Object schedulePeriod(WOContext ctx) {
-		EOEditingContext ec = new EOEditingContext();
-		ec.lock();
-		Integer year = net.rujel.base.MyUtility.eduYearForDate(new NSTimestamp());
-		NSArray starterPeriods = EOUtilities.objectsWithQualifierFormat(ec,"EduPeriod","num = 1 AND eduYear = %@",new NSArray(year));
-		
-		//NSArray periodTypes = PeriodType.allPeriodTypes(ec);
-		Enumeration enu = starterPeriods.objectEnumerator();
-		//NSTimestamp today = new NSTimestamp();
-		while (enu.hasMoreElements()) {
-			//PeriodType perType = (PeriodType)enu.nextElement();
-			EduPeriod period = (EduPeriod)enu.nextElement();//perType.currentPeriod(today);
-			if(period == null) continue;
-			Scheduler.sharedInstance().registerPeriod(period);
-		}
-		ec.unlock();
-		return null;
-	}		
 	
 	public static NSMutableDictionary notesAddOns(WOContext ctx) {
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
@@ -117,81 +92,13 @@ public class ModuleInit {
 	public static NSArray periods(WOContext ctx) {
 		Object eduYear = ctx.session().valueForKey("eduYear");
 		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ctx.session().defaultEditingContext()
-				,"EduPeriod","eduYear",eduYear);
+				,"ItogContainer","eduYear",eduYear);
 		return result;
-		//return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,EduPeriod.sorter);
+		//return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,ItogContainer.sorter);
 	}
 
-	protected static class PeriodTab implements Tabs.GenericTab {
-		protected String title;
-		protected String hover;
-		protected EOQualifier qual;
-		protected boolean current;
-		protected int code;
-		
-		public PeriodTab(EduPeriod period, boolean isCurrent) {
-			title = period.title();
-			code = period.code();
-			current = isCurrent;
-			NSMutableArray quals = new NSMutableArray();
-			quals.addObject(new EOKeyValueQualifier
-					("date",EOQualifier.QualifierOperatorGreaterThanOrEqualTo,period.begin()));
-			quals.addObject(new EOKeyValueQualifier
-					("date",EOQualifier.QualifierOperatorLessThanOrEqualTo,period.end()));
-			qual = new EOAndQualifier(quals);
-			hover = period.name();
-		}
-		public boolean defaultCurrent() {
-			return current;
-		}
-
-		public String title() {
-			return title;
-		}
-		public String hover() {
-			return hover;
-		}		
-		public EOQualifier qualifier() {
-			return qual;
-		}
-		
-		public boolean equals(Object obj) {
-			if (obj instanceof PeriodTab) {
-				PeriodTab aTab = (PeriodTab) obj;
-				return (this.code == aTab.code);
-			}
-			return false;
-		}
-
-		public int hashCode() {
-			return code;
-		}
-
-	}
-
-	public static NSArray lessonTabs(WOContext ctx) {
-		EduCourse course = (EduCourse)ctx.session().objectForKey("courseForlessons");
-		NSTimestamp currDate = (NSTimestamp)ctx.session().objectForKey("recentDate");
-		if(currDate == null) {
-		EduLesson currLesson = (EduLesson)ctx.session().objectForKey("selectedLesson");
-		currDate = (currLesson != null)?currLesson.date():
-			(NSTimestamp)ctx.session().valueForKey("today");
-		}
-		NSArray periods = EduPeriod.periodsForCourse(course);
-		if(periods == null || periods.count() == 0)
-			return null;
-		Enumeration enu = periods.objectEnumerator();
-		NSMutableArray result = new NSMutableArray();
-		while (enu.hasMoreElements()) {
-			EduPeriod per = (EduPeriod) enu.nextElement();
-			boolean isCurrent = per.contains(currDate);
-			result.addObject(new PeriodTab(per,isCurrent));
-		}
-		return new NSArray((Object)result);
-	}
-
-	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
-		NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null);
+	public static NSDictionary statCourse(EduCourse course, ItogContainer container) {
+		NSArray itogs = ItogMark.getItogMarks(course.cycle(), container, null);
 //		itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
 		if(itogs == null || itogs.count() == 0)
 			return NSDictionary.EmptyDictionary;
@@ -232,7 +139,7 @@ public class ModuleInit {
 		return result;
 	}
 	
-	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
+	public static EOEnterpriseObject getStatsGrouping (EduCourse course, ItogContainer period) {
 		EOEnterpriseObject grouping = null;
 		try {
 			Class descClass = Class.forName("net.rujel.stats.Description");
@@ -251,7 +158,7 @@ public class ModuleInit {
 		return grouping;
 	}
 	
-	public static EOEnterpriseObject prepareStats(EduCourse course, EduPeriod period, boolean save) {
+	public static EOEnterpriseObject prepareStats(EduCourse course, ItogContainer period, boolean save) {
 		EOEnterpriseObject grouping = getStatsGrouping(course, period);
 		if(grouping != null) {
 			NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null);
@@ -287,22 +194,27 @@ public class ModuleInit {
 		} catch (Exception e) {
 			ec = new SessionedEditingContext(ctx.session());
 		}
+		ec.lock();
 		Integer year = (Integer)ctx.session().valueForKey("eduYear");
-		NSArray list = PeriodType.usagesForYear(year,ec);
-		if(list == null || list.count() == 0)
+		EOQualifier qual = new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
+				EOQualifier.QualifierOperatorEqual,year);
+		EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,
+				qual,ItogContainer.sorter);
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0) {
+			ec.unlock();
 			return null;
-		list = (NSArray)list.valueForKey("periodType");
-		NSSet pertypes = new NSSet(list);
+		}
 		NSMutableArray result = new NSMutableArray();
 		
-		Enumeration enu = EduPeriod.periodsInYear(year, ec).objectEnumerator();
+		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary template = new NSMutableDictionary(ItogMark.ENTITY_NAME,"entName");
 		template.setObjectForKey(ItogMark.MARK_KEY, "statField");
 		template.setObjectForKey(marksPreset(),"keys");
 		
 		try {
 			Method method = ModuleInit.class.getMethod("statCourse",
-					EduCourse.class, EduPeriod.class);
+					EduCourse.class, ItogContainer.class);
 			template.setObjectForKey(method,"ifEmpty");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -311,19 +223,27 @@ public class ModuleInit {
 		String title = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.itogAddOn.title");
 		int sort = 30;
+		fs.setEntityName(ItogMark.ENTITY_NAME);
+		fs.setSortOrderings(null);
+		fs.setFetchLimit(1);
 		while (enu.hasMoreElements()) {
-			EduPeriod period = (EduPeriod) enu.nextElement();
-			if(!pertypes.containsObject(period.periodType()))
+			ItogContainer itog = (ItogContainer) enu.nextElement();
+			qual = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY,
+					EOQualifier.QualifierOperatorEqual,itog);
+			fs.setQualifier(qual);
+			list = ec.objectsWithFetchSpecification(fs);
+			if(list == null || list.count() == 0)
 				continue;
 			NSMutableDictionary dict = template.mutableClone();
-			dict.setObjectForKey(period.title(),"title");
+			dict.setObjectForKey(itog.title(),"title");
 			dict.setObjectForKey(title,"description");
-			dict.setObjectForKey(period,"param2");
+			dict.setObjectForKey(itog,"param2");
 			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(Boolean.TRUE, "addCalculations");
 			result.addObject(dict);
 			sort++;
 		}
+		ec.unlock();
 		return result;
 	}
 }

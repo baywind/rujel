@@ -62,9 +62,13 @@ public class SettingsBase extends _SettingsBase {
 		EOEnterpriseObject result = this;
 		Enumeration en = byCourse.objectEnumerator();
 		NSMutableArray matches = new NSMutableArray();
+		Integer eduYear = course.eduYear();
 		bycourse:
 		while (en.hasMoreElements()) {
 			EOEnterpriseObject bc = (EOEnterpriseObject) en.nextElement();
+			Integer year = (Integer)bc.valueForKey("eduYear");
+			if(year != null && !year.equals(eduYear))
+				continue bycourse;
 			if(bc.valueForKey("course") == course)
 				return bc;
 			if(matches.count() > 0) {

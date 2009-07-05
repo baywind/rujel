@@ -34,8 +34,8 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.EduPeriod;
-import net.rujel.eduresults.PeriodType;
+import net.rujel.base.SettingsBase;
+import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.SettingsReader;
@@ -50,7 +50,8 @@ public class Reprimand extends _Reprimand {
 	protected static Logger logger = Logger.getLogger("rujel.curriculum");
 
 	public static void init() {
-		EOInitialiser.initialiseRelationship(ENTITY_NAME,"course",false,"courseID","EduCourse");
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,
+				"course",false,"courseID","EduCourse");
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -101,8 +102,8 @@ public class Reprimand extends _Reprimand {
 				return;
 			}
 			Enumeration enu = courses.objectEnumerator();
-			NSArray pertypeUsages = PeriodType.usagesForYear(eduYear, ec);
-			NSMutableDictionary dayForPertype = new NSMutableDictionary();
+//			NSArray pertypeUsages = PeriodType.usagesForYear(eduYear, ec);
+			NSMutableDictionary dayForListName = new NSMutableDictionary();
 			while (enu.hasMoreElements()) {
 				EduCourse course = (EduCourse) enu.nextElement();
 				if (quals != null) {
@@ -112,22 +113,23 @@ public class Reprimand extends _Reprimand {
 					norm = (EOQualifier.filteredArrayWithQualifier(details,
 							qual).count() == 0);
 				}
-				Object pertype = PeriodType.pertypesForCourseFromUsageArray(
-						course, pertypeUsages).objectAtIndex(0);
-				if (norm && dayForPertype.count() > 0) {
-					Integer day = (Integer) dayForPertype.objectForKey(pertype);
+				String listName = SettingsBase.stringSettingForCourse
+										(EduPeriod.ENTITY_NAME, course, ec);
+				if (norm && dayForListName.count() > 0) {
+					Integer day = (Integer) dayForListName.valueForKey(listName);
 					if (day != null && day.intValue() > 0) {
-						logger.log(WOLogLevel.FINEST,"Skipping same: " + day,course);
+						logger.log(WOLogLevel.FINEST,"Skipping " + listName,course);
 						continue;
 					}
 				}
 				NSDictionary planFact = VariationsPlugin.planFact(course, now);
 				Integer day = (Integer) planFact.valueForKey("extraDays");
 				if (norm) {
-					dayForPertype.setObjectForKey(day, pertype);
+					dayForListName.setObjectForKey(day, listName);
 				}
 				if (day == null || day.intValue() > 0) {
-					logger.log(WOLogLevel.FINER,"Skipping: day is " + day,course);
+					logger.log(WOLogLevel.FINER,"Skipping " + listName + 
+							": day is " + day,course);
 					continue;
 				}
 				Integer deviation = (Integer) planFact.valueForKey("deviation");

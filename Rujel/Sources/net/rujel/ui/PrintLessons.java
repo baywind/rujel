@@ -34,7 +34,6 @@ import java.text.Format;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Period;
 
@@ -80,9 +79,8 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     public String presentPeriod() {
     	if(period == null)
     		return null;
-    	if (period instanceof EduPeriod) {
-			EduPeriod ep = (EduPeriod) period;
-			return ep.name();
+    	if (period instanceof EOPeriod) {
+			return (String)NSKeyValueCoding.Utility.valueForKey(period, "name");
 		} else {
 			StringBuffer buf = new StringBuffer();
 			Format df = MyUtility.dateFormat();

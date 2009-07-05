@@ -27,22 +27,24 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.rujel.eduresults;
+package net.rujel.eduplan;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOContext;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
 
-public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
+public class EduPeriod extends _EduPeriod implements EOPeriod
 {
 
 	public EduPeriod() {
@@ -153,48 +155,42 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		 return currentPeriodOfType(type,today,ec);
 	 }*/
 	
-	public static NSArray periodsForCourse(EduCourse course) {
-		NSArray types = PeriodType.periodTypesForCourse(course);
-		if(types == null || types.count() == 0) return null;
-		EOEditingContext ec = course.editingContext();
-		NSMutableArray result = new NSMutableArray();
-		Enumeration enu = types.objectEnumerator();
-		NSMutableDictionary dict = new NSMutableDictionary(course.eduYear(),"eduYear");
-		while(enu.hasMoreElements()) {
-			PeriodType perType = (PeriodType)enu.nextElement();
-			dict.setObjectForKey(perType,"periodType");
-			NSArray found = EOUtilities.objectsMatchingValues(ec,"EduPeriod",dict);
-			if((found == null || found.count() == 0) && !ec.hasChanges()) {
-				if(!SettingsReader.boolForKeyPath("edu.autogenerateEduPeriods", true))
-					continue;
-				try {
-					ec.lock();
-					found = perType.generatePeriodsFromTemplates(course.eduYear().intValue());
-					ec.saveChanges();
-				} catch (Exception ex) {
-					ec.revert();
-				} finally {
-					ec.unlock();
-				}
-			}
-			if(found != null && found.count() > 0)
-				result.addObjectsFromArray(found);
+	public static NSArray periodsInList(String listName,EOEditingContext ec) {
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
+				"PeriodTypeList", "listName", listName);
+		if(list != null && list.count() > 0) {
+			list = (NSArray)list.valueForKey("period");
+			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
 		}
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result,sorter);
-		return result;
-		/*
-		EOQualifier qual = Various.getEOInQualifier("periodType",types);
-		NSMutableArray arr = new NSMutableArray(qual);
-		qual = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,course.eduYear());
-		arr.addObject(qual);
-		qual = new EOAndQualifier(arr);
-		
-		arr.removeAllObjects();
-		arr.addObject(EOSortOrdering.sortOrderingWithKey("end",EOSortOrdering.CompareAscending));
-		arr.addObject(EOSortOrdering.sortOrderingWithKey("begin",EOSortOrdering.CompareDescending));
-		
-		EOFetchSpecification fspec = new EOFetchSpecification("EduPeriod",qual,sorter);
-		return course.editingContext().objectsWithFetchSpecification(fspec);*/
+		return list;
+	}
+	
+	public static NSArray defaultPeriods(EOEditingContext ec) {
+		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
+		return periodsInList(listName, ec);
+	}
+	
+	public static NSArray periodsForCourse(EduCourse course) {
+		// TODO: verify
+		EOEditingContext ec = course.editingContext();
+		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
+		EOQualifier qual = new EOKeyValueQualifier("listName",
+				EOQualifier.QualifierOperatorEqual,listName);
+		EOFetchSpecification fs = new EOFetchSpecification("PeriodTypeList",qual,null);
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0) {
+			listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
+			qual = new EOKeyValueQualifier("listName",
+					EOQualifier.QualifierOperatorEqual,listName);
+			fs.setQualifier(qual);
+			list = ec.objectsWithFetchSpecification(fs);
+			// log this
+		}
+		if(list != null && list.count() > 0) {
+			list = (NSArray)list.valueForKey("period");
+			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+		}
+		return list;
 	}
 	
 	public static NSArray periodsInYear(Number eduYear, EOEditingContext ec) {
@@ -205,46 +201,20 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
 	}
 	
-	public static EduPeriod defaultCurrentPeriod(NSTimestamp moment, EOEditingContext ec) {
-		Number eduYear = MyUtility.eduYearForDate(moment);
-		NSArray typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage",
-				"(eduYear = %d OR eduYear = 0) AND eduGroup = nil AND course = nil",
-							new NSArray(eduYear));
-		if(typeUsage == null || typeUsage.count() == 0)
-			return null;
-		PeriodType pertype = null;
-		if(typeUsage.count() > 1) {
-			typeUsage = PeriodType.filterTypeUsageArray(typeUsage,eduYear);
-			typeUsage = (NSArray)typeUsage.valueForKey("periodType");
-			NSMutableArray res = (typeUsage instanceof NSMutableArray)?(NSMutableArray)typeUsage:typeUsage.mutableClone();
-			EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareDescending);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(res,new NSArray(so));
-			typeUsage = res;
-			Enumeration enu = typeUsage.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				pertype = (PeriodType) enu.nextElement();
-				EduPeriod result = pertype.currentPeriod(moment);
-				if(result != null)
-					return result;
-			}
-		} else {
-			pertype = (PeriodType)((EOEnterpriseObject)typeUsage.objectAtIndex(0)).valueForKey("periodType");
+	public static EduPeriod getCurrentPeriod(NSTimestamp moment, EduCourse course,
+			EOEditingContext ec) {
+		NSArray periods = null;
+		if(course == null)
+			periods = defaultPeriods(ec);
+		else
+			periods = periodsForCourse(course);
+		Enumeration enu = periods.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduPeriod per = (EduPeriod) enu.nextElement();
+			if(per.contains(moment))
+				return per;
 		}
-		return pertype.currentPeriod(moment);
-	}
-	
-	//EduLesson compilance
-	protected transient EduCourse course;
-//	protected transient Number lesNum;
-	protected transient NSArray itogs;
-	
-	
-	public EduCourse course() {
-		return course;
-	}
-	public void setCourse(EduCourse newCourse) {
-		itogs = null;
-		course = newCourse;
+		return null;
 	}
 	
 	public String title() {
@@ -316,23 +286,7 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 		itogForStudent(student).setComment(note);
 	}
 	*/
-	
-	public NSArray allValues() {
-		if(itogs == null) {
-			if(course == null)
-				throw new IllegalStateException("Course is not set");
-			itogs = ItogMark.getItogMarks(course.cycle(),this,null);
-		}
-		return itogs;
-	}
-	public int count() {
-		return allValues().count();
-	}
-	
-	public ItogMark forPersonLink(PersonLink student) {
-		return ItogMark.getItogMark(course.cycle(),this,(Student)student,allValues());
-	}
-	
+		
 	public Number sort() {
 		return new Integer (100*(100 - countInYear()) + (num().intValue()));
 	}
@@ -366,5 +320,72 @@ public class EduPeriod extends _EduPeriod implements PerPersonLink,EOPeriod
 			begin.add(Calendar.YEAR, 1);
 		}
 		return day;
+	}
+	
+	protected static class PeriodTab implements Tabs.GenericTab {
+		protected String title;
+		protected String hover;
+		protected EOQualifier qual;
+		protected boolean current;
+		protected int code;
+		
+		public PeriodTab(EduPeriod period, boolean isCurrent) {
+			title = period.title();
+			code = period.code();
+			current = isCurrent;
+			NSMutableArray quals = new NSMutableArray();
+			quals.addObject(new EOKeyValueQualifier
+					("date",EOQualifier.QualifierOperatorGreaterThanOrEqualTo,period.begin()));
+			quals.addObject(new EOKeyValueQualifier
+					("date",EOQualifier.QualifierOperatorLessThanOrEqualTo,period.end()));
+			qual = new EOAndQualifier(quals);
+			hover = period.name();
+		}
+		public boolean defaultCurrent() {
+			return current;
+		}
+
+		public String title() {
+			return title;
+		}
+		public String hover() {
+			return hover;
+		}		
+		public EOQualifier qualifier() {
+			return qual;
+		}
+		
+		public boolean equals(Object obj) {
+			if (obj instanceof PeriodTab) {
+				PeriodTab aTab = (PeriodTab) obj;
+				return (this.code == aTab.code);
+			}
+			return false;
+		}
+
+		public int hashCode() {
+			return code;
+		}
+	}
+	
+	public static NSArray lessonTabs(WOContext ctx) {
+		EduCourse course = (EduCourse)ctx.session().objectForKey("courseForlessons");
+		NSTimestamp currDate = (NSTimestamp)ctx.session().objectForKey("recentDate");
+		if(currDate == null) {
+		EduLesson currLesson = (EduLesson)ctx.session().objectForKey("selectedLesson");
+		currDate = (currLesson != null)?currLesson.date():
+			(NSTimestamp)ctx.session().valueForKey("today");
+		}
+		NSArray periods = EduPeriod.periodsForCourse(course);
+		if(periods == null || periods.count() == 0)
+			return null;
+		Enumeration enu = periods.objectEnumerator();
+		NSMutableArray result = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			EduPeriod per = (EduPeriod) enu.nextElement();
+			boolean isCurrent = per.contains(currDate);
+			result.addObject(new PeriodTab(per,isCurrent));
+		}
+		return new NSArray((Object)result);
 	}
 }

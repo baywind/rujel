@@ -1,4 +1,4 @@
-// _PeriodType.java
+// _ItogType.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,43 +28,25 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PeriodType.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to ItogType.java instead.
 
-package net.rujel.eduplan;
+package net.rujel.eduresults;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _PeriodType extends EOGenericRecord {
-	public static final String ENTITY_NAME = "PeriodType";
+public abstract class _ItogType extends EOGenericRecord {
+	public static final String ENTITY_NAME = "ItogType";
 
 	// Attributes
-	public static final String ARCHIVE_SINCE_KEY = "archiveSince";
-	public static final String COLOR_KEY = "color";
 	public static final String IN_YEAR_COUNT_KEY = "inYearCount";
 	public static final String NAME_KEY = "name";
+	public static final String SORT_KEY = "sort";
 	public static final String TITLE_KEY = "title";
 
 	// Relationships
-	public static final String TEMPLATES_KEY = "templates";
-
-  public Integer archiveSince() {
-    return (Integer) storedValueForKey(ARCHIVE_SINCE_KEY);
-  }
-
-  public void setArchiveSince(Integer value) {
-    takeStoredValueForKey(value, ARCHIVE_SINCE_KEY);
-  }
-
-  public String color() {
-    return (String) storedValueForKey(COLOR_KEY);
-  }
-
-  public void setColor(String value) {
-    takeStoredValueForKey(value, COLOR_KEY);
-  }
 
   public Integer inYearCount() {
     return (Integer) storedValueForKey(IN_YEAR_COUNT_KEY);
@@ -82,28 +64,20 @@ public abstract class _PeriodType extends EOGenericRecord {
     takeStoredValueForKey(value, NAME_KEY);
   }
 
+  public Integer sort() {
+    return (Integer) storedValueForKey(SORT_KEY);
+  }
+
+  public void setSort(Integer value) {
+    takeStoredValueForKey(value, SORT_KEY);
+  }
+
   public String title() {
     return (String) storedValueForKey(TITLE_KEY);
   }
 
   public void setTitle(String value) {
     takeStoredValueForKey(value, TITLE_KEY);
-  }
-
-  public NSArray templates() {
-    return (NSArray)storedValueForKey(TEMPLATES_KEY);
-  }
- 
-  public void setTemplates(NSArray value) {
-    takeStoredValueForKey(value, TEMPLATES_KEY);
-  }
-  
-  public void addToTemplates(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, TEMPLATES_KEY);
-  }
-
-  public void removeFromTemplates(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, TEMPLATES_KEY);
   }
 
 }

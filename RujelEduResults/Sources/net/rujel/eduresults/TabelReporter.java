@@ -68,7 +68,7 @@ public class TabelReporter extends WOComponent {
 	protected Number eduYear;
 	
 	public NSArray perlist;
-    public EduPeriod perItem;
+    public ItogContainer perItem;
     public NSKeyValueCoding item;
 	public int perIdx;
 	
@@ -93,7 +93,8 @@ public class TabelReporter extends WOComponent {
 		
 		eduPeriods = (NSArray)reporter.valueForKey("eduPeriods");
 		if(eduPeriods == null) {
-			eduPeriods = EOUtilities.objectsMatchingKeyAndValue(ec,"EduPeriod", "eduYear",eduYear);
+			eduPeriods = EOUtilities.objectsMatchingKeyAndValue(ec,ItogContainer.ENTITY_NAME,
+					ItogContainer.EDU_YEAR_KEY,eduYear);
 			reporter.takeValueForKey(eduPeriods,"eduPeriods");
 		} else {
 			eduPeriods = EOUtilities.localInstancesOfObjects(ec,eduPeriods);
@@ -104,8 +105,8 @@ public class TabelReporter extends WOComponent {
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
 		student = (Student)valueForBinding("student");
 		Object tmp = valueForBinding("period");
-		if(tmp instanceof EduPeriod) {
-			eduYear = ((EduPeriod)tmp).eduYear();
+		if(tmp instanceof ItogContainer) {
+			eduYear = ((ItogContainer)tmp).eduYear();
 		} 
 		if(eduYear == null) {
 			tmp = valueForBinding("to");
@@ -142,7 +143,8 @@ public class TabelReporter extends WOComponent {
 		while (enu.hasMoreElements()) { //agregate courses
 			//put course
 			EduCourse currCourse = (EduCourse)enu.nextElement();
-			NSArray coursePertypes = PeriodType.pertypesForCourseFromUsageArray(currCourse,perTypeUsage);
+			NSArray coursePertypes = ItogType.typesForCourse(currCourse);
+			//pertypesForCourseFromUsageArray(currCourse,perTypeUsage);
 			
 			perlist = (NSArray)list4type.objectForKey(coursePertypes);
 			if(perlist == null) {
@@ -166,7 +168,7 @@ public class TabelReporter extends WOComponent {
 			Enumeration pen = cyclesForPerlists.keyEnumerator();
 getgroup:	while (pen.hasMoreElements()) {
 				NSArray curPerList = (NSArray)pen.nextElement();
-				perIdx = curPerList.indexOfIdenticalObject(currMark.eduPeriod());
+				perIdx = curPerList.indexOfIdenticalObject(currMark.container());
 				if(perIdx == NSArray.NotFound)
 					continue getgroup;
 				NSArray cycles = (NSArray)cyclesForPerlists.objectForKey(curPerList);
@@ -243,11 +245,10 @@ getgroup:	while (pen.hasMoreElements()) {
 		NSMutableArray list = new NSMutableArray();
 		Enumeration enu = types.objectEnumerator();
 		while (enu.hasMoreElements()) {
-			PeriodType type = (PeriodType)enu.nextElement();
+			ItogType type = (ItogType)enu.nextElement();
 			NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 			dict.setObjectForKey(type,"periodType");
 			EOQualifier qual = EOQualifier.qualifierToMatchAllValues(dict);
-			//NSArray pers = EOUtilities.objectsMatchingValues(type.editingContext(),"EduPeriod",dict);
 			NSArray pers = EOQualifier.filteredArrayWithQualifier(eduPeriods,qual);
 			if(pers instanceof NSMutableArray) {
 				EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)pers,MyUtility.numSorter);
@@ -299,7 +300,7 @@ getgroup:	while (pen.hasMoreElements()) {
 	public boolean commentPeriod() {
 		if(perItem == item.valueForKey("eduPeriod"))
 			return false;
-		perItem = (EduPeriod)item.valueForKey("eduPeriod");
+		perItem = (ItogContainer)item.valueForKey("eduPeriod");
 		return true;
 	}
 	
@@ -307,17 +308,17 @@ getgroup:	while (pen.hasMoreElements()) {
 		/*NSDictionary perAlias = (NSDictionary)marksAgregate.objectForKey("none");
 		String alias = (perAlias == null)?null:(String)perAlias.objectForKey(perItem); */
 		StringBuffer buf = new StringBuffer();
-		if(perItem.countInYear() > 1) {
+		if(perItem.num() > 0) {
 			/*if(alias != null)
 				buf.append("<span style=\"white-space:nowrap;\">");*/
 			buf.append(Various.makeRoman(perItem.num().intValue()));
 			/*if(alias != null)
 				buf.append(" <sup class=\"sup\">(").append(alias).append("</sup>").append("</span>");*/
 			buf.append("<br>\n<small>");
-			buf.append(perItem.periodType().title());
+			buf.append(perItem.itogType().title());
 			buf.append("</small>");
 		} else {
-			buf.append(perItem.periodType().title());
+			buf.append(perItem.itogType().title());
 			/*if(alias != null)
 				buf.append("<sup>").append(alias).append("</sup>");*/
 		}

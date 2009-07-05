@@ -16,6 +16,13 @@
         }, 
         {
             allowsNull = N; 
+            columnName = SORT; 
+            name = sort; 
+            prototypeName = short; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
             columnName = "T_ID"; 
             name = tID; 
             prototypeName = short; 
@@ -28,9 +35,9 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (inYearCount, name, title); 
+    attributesUsedForLocking = (inYearCount, name, sort, title); 
     className = "net.rujel.eduresults.ItogType"; 
-    classProperties = (inYearCount, name, title); 
+    classProperties = (inYearCount, name, sort, title); 
     externalName = "ITOG_TYPE"; 
     fetchSpecificationDictionary = {}; 
     name = ItogType; 

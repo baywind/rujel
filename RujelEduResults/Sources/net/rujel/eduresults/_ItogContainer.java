@@ -1,4 +1,4 @@
-// _Subject.java
+// _ItogContainer.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,42 +28,31 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Subject.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to ItogContainer.java instead.
 
-package net.rujel.eduplan;
+package net.rujel.eduresults;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _Subject extends EOGenericRecord {
-	public static final String ENTITY_NAME = "Subject";
+public abstract class _ItogContainer extends EOGenericRecord {
+	public static final String ENTITY_NAME = "ItogContainer";
 
 	// Attributes
-	public static final String FULL_NAME_KEY = "fullName";
-	public static final String NORMAL_GROUP_KEY = "normalGroup";
+	public static final String EDU_YEAR_KEY = "eduYear";
 	public static final String NUM_KEY = "num";
-	public static final String SUBGROUPS_KEY = "subgroups";
-	public static final String SUBJECT_KEY = "subject";
 
 	// Relationships
-	public static final String AREA_KEY = "area";
+	public static final String ITOG_TYPE_KEY = "itogType";
 
-  public String fullName() {
-    return (String) storedValueForKey(FULL_NAME_KEY);
+  public Integer eduYear() {
+    return (Integer) storedValueForKey(EDU_YEAR_KEY);
   }
 
-  public void setFullName(String value) {
-    takeStoredValueForKey(value, FULL_NAME_KEY);
-  }
-
-  public Integer normalGroup() {
-    return (Integer) storedValueForKey(NORMAL_GROUP_KEY);
-  }
-
-  public void setNormalGroup(Integer value) {
-    takeStoredValueForKey(value, NORMAL_GROUP_KEY);
+  public void setEduYear(Integer value) {
+    takeStoredValueForKey(value, EDU_YEAR_KEY);
   }
 
   public Integer num() {
@@ -74,28 +63,12 @@ public abstract class _Subject extends EOGenericRecord {
     takeStoredValueForKey(value, NUM_KEY);
   }
 
-  public Integer subgroups() {
-    return (Integer) storedValueForKey(SUBGROUPS_KEY);
+  public net.rujel.eduresults.ItogType itogType() {
+    return (net.rujel.eduresults.ItogType)storedValueForKey(ITOG_TYPE_KEY);
   }
 
-  public void setSubgroups(Integer value) {
-    takeStoredValueForKey(value, SUBGROUPS_KEY);
-  }
-
-  public String subject() {
-    return (String) storedValueForKey(SUBJECT_KEY);
-  }
-
-  public void setSubject(String value) {
-    takeStoredValueForKey(value, SUBJECT_KEY);
-  }
-
-  public EOGenericRecord area() {
-    return (EOGenericRecord)storedValueForKey(AREA_KEY);
-  }
-
-  public void setArea(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, AREA_KEY);
+  public void setItogType(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, ITOG_TYPE_KEY);
   }
   
 }

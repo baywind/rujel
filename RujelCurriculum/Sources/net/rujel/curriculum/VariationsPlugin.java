@@ -32,17 +32,11 @@ package net.rujel.curriculum;
 import java.util.Calendar;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
-import net.rujel.eduplan.PlanCycle;
-import net.rujel.eduresults.EduPeriod;
-import net.rujel.eduresults.PeriodType;
+import net.rujel.eduplan.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eocontrol.EOAndQualifier;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.*;
@@ -98,7 +92,6 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public static NSDictionary planFact(EduCourse course, NSTimestamp date) {
-		EOEditingContext ec = course.editingContext();
 		int plan = 0;
 		int maxDev = 0;
 		Calendar cal = null;
@@ -108,8 +101,11 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			if (cal.get(Calendar.HOUR_OF_DAY) == 0)
 				cal = null;
 		}
+		NSArray periods = EduPeriod.periodsForCourse(course);
+		if(periods == null || periods.count() == 0)
+			return null;
 		NSMutableDictionary result = new NSMutableDictionary();
-		NSArray list = PeriodType.periodTypesForCourse(course);
+/*		NSArray list = PeriodType.periodTypesForCourse(course);
 		if(list != null && list.count() > 0) {
 //			PeriodType perType = (PeriodType)list.objectAtIndex(0);
 			EOQualifier[] quals = new EOQualifier[2];
@@ -121,7 +117,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 					new EOAndQualifier(new NSArray(quals)),MyUtility.numSorter);
 			NSArray periods = ec.objectsWithFetchSpecification(fs);
 			if(periods != null && periods.count() > 0) {
-				Enumeration enu = periods.objectEnumerator();
+*/				Enumeration enu = periods.objectEnumerator();
 				int days = 0;
 				int totalWeeks = 0;
 				while (enu.hasMoreElements()) {
@@ -159,16 +155,16 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 //				if(days >= 4) {
 //					result.takeValueForKey(Boolean.TRUE, "weekend");
 //				}
-			}
-		}
+//			}
+//		}
 		if(plan + maxDev == 0)
 			return result;
-		list = Variation.variations(course, null, date, null);
+		NSArray list = Variation.variations(course, null, date, null);
 		int plus = 0;
 		int minus = 0;
 		boolean verifiedOnly = SettingsReader.boolForKeyPath("ignoreUnverifiedReasons", false);
 		if(list != null && list.count() > 0) {
-			Enumeration enu = list.objectEnumerator();
+			enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Variation var = (Variation) enu.nextElement();
 				int value = var.value().intValue();

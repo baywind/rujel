@@ -48,7 +48,7 @@ public class ItogPopup extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.itog");
 	public ItogMark itog;
 
-    public EduPeriod eduPeriod;
+    public ItogContainer itogContainer;
 	//public EduCycle cycle;
     public Student student;
     public String mark;
@@ -117,8 +117,8 @@ public class ItogPopup extends WOComponent {
 			EOEnterpriseObject prognosis = null;
 			try {
 				Class prClass = Class.forName("net.rujel.autoitog.Prognosis");
-				Method meth = prClass.getMethod("getPrognosis", Student.class,EduCourse.class, EduPeriod.class, Boolean.TYPE);
-				prognosis = (EOEnterpriseObject)meth.invoke(null, student,eduCourse,eduPeriod,Boolean.FALSE);
+				Method meth = prClass.getMethod("getPrognosis", Student.class,EduCourse.class, ItogContainer.class, Boolean.TYPE);
+				prognosis = (EOEnterpriseObject)meth.invoke(null, student,eduCourse,itogContainer,Boolean.FALSE);
 			} catch (Exception e) {
 				// cant get corresponding prognosis
 			}
@@ -134,7 +134,8 @@ public class ItogPopup extends WOComponent {
 			} else {*/
 				if(newItog) {
 					itog = (ItogMark)EOUtilities.createAndInsertInstance(ec,"ItogMark");
-					itog.addObjectToBothSidesOfRelationshipWithKey(eduPeriod,"eduPeriod");
+					itog.addObjectToBothSidesOfRelationshipWithKey(itogContainer,
+							ItogMark.CONTAINER_KEY);
 					itog.addObjectToBothSidesOfRelationshipWithKey(student,"student");
 					itog.addObjectToBothSidesOfRelationshipWithKey(eduCourse.cycle(),"cycle");
 					if(addOn != null)
@@ -182,7 +183,7 @@ public class ItogPopup extends WOComponent {
 				String message = (newItog)?"New Itog created":"Itog is changed";
 				logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
 				if (!same) {
-					ModuleInit.prepareStats(eduCourse, eduPeriod,true);
+					ModuleInit.prepareStats(eduCourse, itogContainer,true);
 				}
 			} catch (Exception ex) {
 				logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save itog",new Object[] {session(),itog,ex});
@@ -218,7 +219,7 @@ public class ItogPopup extends WOComponent {
 			logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
 			EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
 				(EduCourse)addOn.valueForKey("eduCourse");
-			ModuleInit.prepareStats(eduCourse, eduPeriod,true);
+			ModuleInit.prepareStats(eduCourse, itogContainer,true);
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});
 			session().takeValueForKey(ex.getMessage(),"message");
@@ -250,10 +251,10 @@ public class ItogPopup extends WOComponent {
 	public NSMutableDictionary identifierDictionary() {
 		EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
 				(EduCourse)addOn.valueForKey("eduCourse");
-		if(student == null || eduPeriod == null || eduCourse == null)
+		if(student == null || itogContainer == null || eduCourse == null)
     		return null;
 		NSMutableDictionary ident = new NSMutableDictionary("ItogMark","entityName");
-		ident.takeValueForKey(eduPeriod,"period");
+		ident.takeValueForKey(itogContainer,"period");
 		ident.takeValueForKey(student, "student");
 		ident.takeValueForKey(eduCourse.cycle(),"eduCycle");
 		ident.takeValueForKey(eduCourse.editingContext(), "editingContext");

@@ -30,7 +30,7 @@
 // Created by eogenerator
 // $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PeriodTemplate.java instead.
 
-package net.rujel.eduresults;
+package net.rujel.eduplan;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
@@ -90,8 +90,8 @@ public abstract class _PeriodTemplate extends EOGenericRecord {
     takeStoredValueForKey(value, PER_NUM_KEY);
   }
 
-  public net.rujel.eduresults.PeriodType periodType() {
-    return (net.rujel.eduresults.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
+  public net.rujel.eduplan.PeriodType periodType() {
+    return (net.rujel.eduplan.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
   }
 
   public void setPeriodType(EOEnterpriseObject value) {

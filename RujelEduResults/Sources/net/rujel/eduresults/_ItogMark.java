@@ -46,7 +46,8 @@ public abstract class _ItogMark extends EOGenericRecord {
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String EDU_PERIOD_KEY = "eduPeriod";
+	public static final String CONTAINER_KEY = "container";
+	public static final String ITOG_COMMENT_KEY = "itogComment";
 
   public Integer flags() {
     return (Integer) storedValueForKey(FLAGS_KEY);
@@ -72,12 +73,20 @@ public abstract class _ItogMark extends EOGenericRecord {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public net.rujel.eduresults.EduPeriod eduPeriod() {
-    return (net.rujel.eduresults.EduPeriod)storedValueForKey(EDU_PERIOD_KEY);
+  public net.rujel.eduresults.ItogContainer container() {
+    return (net.rujel.eduresults.ItogContainer)storedValueForKey(CONTAINER_KEY);
   }
 
-  public void setEduPeriod(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, EDU_PERIOD_KEY);
+  public void setContainer(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, CONTAINER_KEY);
+  }
+  
+  public EOGenericRecord itogComment() {
+    return (EOGenericRecord)storedValueForKey(ITOG_COMMENT_KEY);
+  }
+
+  public void setItogComment(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, ITOG_COMMENT_KEY);
   }
   
 }

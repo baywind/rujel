@@ -47,7 +47,7 @@ public class ItogsPresenter extends WOComponent {
 	private NSArray _periods;
 	private ItogMark[] _arr;
 	
-	public EduPeriod periodItem;
+	public ItogContainer periodItem;
 	
     public ItogsPresenter(WOContext context) {
         super(context);
@@ -100,7 +100,7 @@ public class ItogsPresenter extends WOComponent {
 				_periods = (NSArray)currAddOn().valueForKey("periods");
 			}
 			if(_periods == null) {
-				_periods = EduPeriod.periodsForCourse(course());
+				_periods = ItogType.itogsForCourse(course());//EduPeriod.periodsForCourse(course());
 				if(_periods == null)
 					_periods = NSArray.EmptyArray;
 				currAddOn().takeValueForKey(_periods,"periods");
@@ -121,7 +121,7 @@ public class ItogsPresenter extends WOComponent {
 				NSArray periods = periods();
 				if(periods == null || periods.count() == 0)
 					return new PerPersonLink.Dictionary(NSDictionary.EmptyDictionary);
-				EOQualifier qual = Various.getEOInQualifier("eduPeriod",periods);
+				EOQualifier qual = Various.getEOInQualifier(ItogMark.CONTAINER_KEY,periods);
 				NSMutableArray quals = new NSMutableArray(qual);
 				qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,course().cycle());
 				quals.addObject(qual);
@@ -139,12 +139,12 @@ public class ItogsPresenter extends WOComponent {
 							arr = new ItogMark[periods.count()];
 							agregate.setObjectForKey(arr,curr.student());
 						}
-						int idx = periods.indexOfIdenticalObject(curr.eduPeriod());
+						int idx = periods.indexOfIdenticalObject(curr.container());
 						if(idx < 0) {
 							NSMutableDictionary args = new NSMutableDictionary(session(),"session");
 							args.takeValueForKey(curr, "mark");
 							args.takeValueForKey(course(), "course");
-							args.takeValueForKey(curr.eduPeriod(), "period");
+							args.takeValueForKey(curr.container(), "period");
 							//Object[] args = new Object[] {session(),curr,course(),curr.eduPeriod()};
 							Logger.getLogger("rujel.eduresults").log(WOLogLevel.WARNING,
 									"Found ItogMark for wrong period",args);
@@ -171,10 +171,10 @@ public class ItogsPresenter extends WOComponent {
 	}
 	
 	public String periodTitle() {
-		if(periodItem.countInYear() > 1) {
-			return Various.makeRoman(periodItem.num().intValue()) + "<br/>\n<small>" + periodItem.periodType().title() + "</small>";
+		if(periodItem.num() > 0) {
+			return Various.makeRoman(periodItem.num().intValue()) + "<br/>\n<small>" + periodItem.itogType().title() + "</small>";
 		}
-		return periodItem.periodType().title();
+		return periodItem.itogType().title();
 	}
 	
     public WOComponent moreInfo() {
@@ -184,27 +184,27 @@ public class ItogsPresenter extends WOComponent {
 		if(itog == null) {
 			itog = (ItogMark)EOUtilities.createAndInsertInstance(course().editingContext(),"ItogMark");
 			itog.setStudent(student());
-			itog.setEduPeriod(periodItem);
+			itog.setItogContainer(periodItem);
 			itog.setCycle(course().cycle());
 		}*/
 		nextPage.takeValueForKey(itog(),"itog");
 		nextPage.takeValueForKey(student(),"student");
-		nextPage.takeValueForKey(periodItem,"eduPeriod");
+		nextPage.takeValueForKey(periodItem,"itogContainer");
 		//nextPage.takeValueForKey(course().cycle(),"cycle");
 		nextPage.takeValueForKey(context().page(),"returnPage");
 		nextPage.takeValueForKey(currAddOn(),"addOn");
         return nextPage;
     }
 
-	protected PeriodType _pertype;
+	protected ItogType _pertype;
     protected String _styleClass;
 	public String styleClass() {
-		if(_pertype != periodItem.periodType()) {
+		if(_pertype != periodItem.itogType()) {
 			if(_styleClass == null || _styleClass.startsWith("un"))
 				_styleClass = "gerade";
 			else
 				_styleClass = "ungerade";
-			_pertype = periodItem.periodType();
+			_pertype = periodItem.itogType();
 		}
 		return _styleClass;
     }

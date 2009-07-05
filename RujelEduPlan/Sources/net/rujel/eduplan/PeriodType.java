@@ -27,9 +27,10 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.rujel.eduresults;
+package net.rujel.eduplan;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
@@ -37,6 +38,7 @@ import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
+
 import java.util.*;
 import java.util.logging.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -187,113 +189,6 @@ public class PeriodType extends _PeriodType  {
 		}
 		if(today == null) today = new NSTimestamp();*/
 		return currentPeriod(null);
-	}
-	
-	public static NSArray usagesForYear(Number eduYear, EOEditingContext ec) {
-		return EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0)",new NSArray(eduYear));
-	}
-	
-	public static NSArray periodTypesForCourse(EduCourse course) {
-		Number eduYear = course.eduYear();
-		EOEditingContext ec = course.editingContext();
-		//NSMutableArray args = new NSMutableArray(new Object[]{eduYear,course});
-		//String qualString = "(eduYear = %d OR eduYear = 0) AND course = %@";
-
-		NSArray result = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0)",new NSArray(eduYear));
-		return pertypesForCourseFromUsageArray(course,result);
-/*
-		if(result == null || result.count() == 0) {
-			args.replaceObjectAtIndex(course.eduGroup(),1);
-			qualString = "(eduYear = %d OR eduYear = 0) AND eduGroup = %@ AND course = nil";
-			result = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", qualString,args);
-		}
-		
-		if(result == null || result.count() == 0) {
-			qualString = "(eduYear = %d OR eduYear = 0) AND eduGroup = nil AND course = nil";
-			result = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", qualString,args);
-		}
-		if(result == null || result.count() == 0) return null;
-		result = (NSArray)result.valueForKey("periodType");
-		if(result.count() > 1) {
-			NSMutableArray res = (result instanceof NSMutableArray)?(NSMutableArray)result:result.mutableClone();
-			EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareDescending);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(res,new NSArray(so));
-			result = res;
-		}
-		return result;*/
-	}
-	
-	
-	public static NSArray pertypesForCourseFromUsageArray(EduCourse course, NSArray array) {
-		Number eduYear = course.eduYear();
-		NSMutableArray args = new NSMutableArray(new Object[]{eduYear,course});
-		String qualString = "(eduYear = %d OR eduYear = 0) AND course = %@";
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualString,args);
-		NSArray result = EOQualifier.filteredArrayWithQualifier(array,qual);
-		
-		if(result == null || result.count() == 0) {
-			args.replaceObjectAtIndex(course.eduGroup(),1);
-			qualString = "(eduYear = %d OR eduYear = 0) AND eduGroup = %@ AND course = nil";
-			qual = EOQualifier.qualifierWithQualifierFormat(qualString,args);
-			result = EOQualifier.filteredArrayWithQualifier(array,qual);
-		}
-		
-		if(result == null || result.count() == 0) {
-			qualString = "(eduYear = %d OR eduYear = 0) AND eduGroup = nil AND course = nil";
-			qual = EOQualifier.qualifierWithQualifierFormat(qualString,args);
-			result = EOQualifier.filteredArrayWithQualifier(array,qual);
-		}
-		if(result == null || result.count() == 0) return null;
-		result = filterTypeUsageArray(result,eduYear);
-		result = (NSArray)result.valueForKey("periodType");
-		if(result.count() > 1) {
-			NSMutableArray res = (result instanceof NSMutableArray)?(NSMutableArray)result:result.mutableClone();
-			EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("inYearCount",EOSortOrdering.CompareDescending);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(res,new NSArray(so));
-			result = res;
-		}
-		return result;
-	}
-	
-	public static NSArray filterTypeUsageArray(NSArray usage,Number year) {
-		EOQualifier qual = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,new Integer(0));
-		NSMutableArray noYear = usage.mutableClone();
-		EOQualifier.filterArrayWithQualifier(noYear,qual);
-		
-		if(noYear != null && noYear.count() == usage.count())
-			return usage;
-		
-		if(year == null) {
-			qual = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorNotEqual,new Integer(0));
-		} else {
-			qual = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,year);
-		}
-		NSArray withYear = EOQualifier.filteredArrayWithQualifier(usage,qual);
-		
-		if(withYear == null || withYear.count() == 0)
-			return noYear;
-		if(withYear.count() == usage.count())
-			return usage;
-			
-		Enumeration en = withYear.objectEnumerator();
-		NSMutableArray quals = new NSMutableArray();
-		while (en.hasMoreElements()) {
-			EOEnterpriseObject cur = (EOEnterpriseObject)en.nextElement();
-			quals.removeAllObjects();
-			qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual, cur.valueForKey("eduGroup"));
-			quals.addObject(qual);
-			qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual, cur.valueForKey("eduGroup"));
-			quals.addObject(qual);
-			qual = new EOAndQualifier(quals);
-			quals = noYear.mutableClone();
-			EOQualifier.filterArrayWithQualifier(quals,qual);
-			if(quals != null && quals.count() > 0) {
-				noYear.removeObjectsInArray(quals);
-				if(noYear.count() <= 0)
-					return withYear;
-			}
-		}
-		return withYear.arrayByAddingObjectsFromArray(noYear);
 	}
 
 	public NSArray periodsForYear(Integer year) {

@@ -16,6 +16,13 @@
         }, 
         {
             allowsNull = Y; 
+            columnName = "EDU_YEAR"; 
+            name = eduYear; 
+            prototypeName = short; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = Y; 
             columnName = GRADE; 
             name = grade; 
             prototypeName = short; 
@@ -66,6 +73,7 @@
     attributesUsedForLocking = (
         courseID, 
         cycleID, 
+        eduYear, 
         grade, 
         groupID, 
         numericValue, 
@@ -74,7 +82,7 @@
         textValue
     ); 
     className = EOGenericRecord; 
-    classProperties = (grade, numericValue, settingsBase, textValue); 
+    classProperties = (eduYear, grade, numericValue, settingsBase, textValue); 
     externalName = "SETTING_BY_COURSE"; 
     fetchSpecificationDictionary = {}; 
     name = SettingByCourse; 

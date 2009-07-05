@@ -14,7 +14,7 @@
         {columnName = "ID_TYPE"; name = typeID; prototypeName = short; }
     ); 
     attributesUsedForLocking = (name, inYearCount, archiveSince, color, title); 
-    className = "net.rujel.eduresults.PeriodType"; 
+    className = "net.rujel.eduplan.PeriodType"; 
     classProperties = (inYearCount, name, templates, archiveSince, color, title); 
     externalName = "PER_TYPE"; 
     fetchSpecificationDictionary = {}; 

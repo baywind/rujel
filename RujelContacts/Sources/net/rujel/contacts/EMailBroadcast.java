@@ -33,7 +33,7 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
 import net.rujel.reusables.WOLogLevel;
-import net.rujel.eduresults.*;
+import net.rujel.eduplan.*;
 //import er.javamail.*;
 
 import com.webobjects.foundation.*;
@@ -143,13 +143,15 @@ public class EMailBroadcast implements Runnable{
 
 		// select period 
 		
-		Period defaultPeriod = null;
-		NSMutableDictionary periodsByGroup = null;
+//		Period defaultPeriod = null;
+//		NSMutableDictionary periodsByGroup = null;
 		if(period == null) {
-			defaultPeriod = EduPeriod.defaultCurrentPeriod(moment,ec);
-			if(defaultPeriod == null) {
-				defaultPeriod = new Period.ByDates(MyUtility.yearStart(eduYear.intValue()),moment);
-			}
+			period = EduPeriod.getCurrentPeriod(moment, null, ec);
+			if(period == null) {
+				ec.unlock();
+				return;
+//				defaultPeriod = new Period.ByDates(MyUtility.yearStart(eduYear.intValue()),moment);
+			}/*
 			NSArray typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0) AND eduGroup != nil AND course = nil",new NSArray(eduYear));
 			if(typeUsage != null && typeUsage.count() > 0) {
 				typeUsage = PeriodType.filterTypeUsageArray(typeUsage,eduYear);
@@ -167,7 +169,7 @@ public class EMailBroadcast implements Runnable{
 					per = pt.currentPeriod(moment);
 					periodsByGroup.setObjectForKey(per,gr);
 				}
-			}
+			}*/
 		} else { // period != null
 			if(period instanceof EOEnterpriseObject) {
 				period = (Period)EOUtilities.localInstanceOfObject(ec,(EOEnterpriseObject)period);
@@ -198,14 +200,14 @@ gr:		while (eduGroups.hasMoreElements()) {
 			dict.setObjectForKey(eduGroup,"eduGroup");
 			NSArray existingCourses = EOUtilities.objectsMatchingValues(ec,EduCourse.entityName,dict);
 			
-			if(defaultPeriod != null) {
+/*			if(defaultPeriod != null) {
 				if(periodsByGroup != null) {
 					period = (Period)periodsByGroup.objectForKey(eduGroup);
 				}
 				if(period == null) {
 					period = defaultPeriod;
 				}
-			}
+			}*/
 //			broadcastMarksToList(students,period,reporter,eduGroup.name(),existingCourses,ctx);
 			NSMutableDictionary params = new NSMutableDictionary();
 			params.takeValueForKey(students,"students");

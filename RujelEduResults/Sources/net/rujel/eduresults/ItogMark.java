@@ -146,7 +146,7 @@ public class ItogMark extends _ItogMark
 		setFlags(new Integer(toSync.intValue()));
 	}
 
-	public static EOQualifier qualifyItogMark(EduCycle cycle, EduPeriod period, Student student) {
+	public static EOQualifier qualifyItogMark(EduCycle cycle, ItogContainer period, Student student) {
 		EOQualifier qual= null;
 		NSMutableArray quals = new NSMutableArray();
 		if(cycle != null) {
@@ -156,7 +156,8 @@ public class ItogMark extends _ItogMark
 			quals.addObject(qual);
 		}
 		if(period != null) {
-			qual = new EOKeyValueQualifier("eduPeriod",EOQualifier.QualifierOperatorEqual,period);
+			qual = new EOKeyValueQualifier(CONTAINER_KEY,
+					EOQualifier.QualifierOperatorEqual,period);
 			if(cycle == null && student == null)
 				return qual;
 			quals.addObject(qual);
@@ -173,20 +174,20 @@ public class ItogMark extends _ItogMark
 		return qual;
 	}
 	
-	public static NSArray getItogMarks(EduCycle cycle, EduPeriod period, Student student) {
+	public static NSArray getItogMarks(EduCycle cycle, ItogContainer itog, Student student) {
 		EOEditingContext ec = null;
-		if(period != null)
-			ec = period.editingContext();
+		if(itog != null)
+			ec = itog.editingContext();
 		else if(cycle != null)
 			ec = cycle.editingContext();
 		else if(student != null)
 			ec = student.editingContext();
 		else
 			throw new NullPointerException("At least one of parameters should have value");
-		return getItogMarks(cycle,period,student,ec);
+		return getItogMarks(cycle,itog,student,ec);
 	}
 		
-	public static NSArray getItogMarks(EduCycle cycle, EduPeriod period, Student student, EOEditingContext ec) {
+	public static NSArray getItogMarks(EduCycle cycle, ItogContainer period, Student student, EOEditingContext ec) {
 		EOQualifier qual = qualifyItogMark(cycle,period,student);
 		if(qual == null)
 			throw new NullPointerException("No parameters specified");
@@ -194,7 +195,7 @@ public class ItogMark extends _ItogMark
 		return ec.objectsWithFetchSpecification(fspec);
 	}
 	
-	public static ItogMark getItogMark(EduCycle cycle, EduPeriod period, Student student, EOEditingContext ec) {
+	public static ItogMark getItogMark(EduCycle cycle, ItogContainer period, Student student, EOEditingContext ec) {
 		NSArray result = getItogMarks(cycle,period,student,ec);
 		if(result == null || result.count() == 0) return null;
 		if(result.count() > 1) {
@@ -203,7 +204,7 @@ public class ItogMark extends _ItogMark
 		return (ItogMark)result.objectAtIndex(0);
 	}
 	
-	public static ItogMark getItogMark(EduCycle cycle, EduPeriod period, Student student, NSArray list) {
+	public static ItogMark getItogMark(EduCycle cycle, ItogContainer period, Student student, NSArray list) {
 		NSArray result = EOQualifier.filteredArrayWithQualifier(list,qualifyItogMark(cycle,period,student));
 		if(result == null || result.count() == 0) return null;
 		if(result.count() > 1) {
@@ -215,7 +216,7 @@ public class ItogMark extends _ItogMark
 	public EduCourse assumeCourse() {
 		EOQualifier[] quals = new EOQualifier[2];
 		quals[0] = new EOKeyValueQualifier("eduYear",
-				EOQualifier.QualifierOperatorEqual,eduPeriod().eduYear());
+				EOQualifier.QualifierOperatorEqual,container().eduYear());
 		quals[1]  = new EOKeyValueQualifier("cycle",
 				EOQualifier.QualifierOperatorEqual,cycle());
 		EOQualifier qual = new EOAndQualifier(new NSArray(quals));

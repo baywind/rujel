@@ -8,23 +8,13 @@
         {columnName = "PER_TYPE"; name = perType; prototypeName = short; }
     ); 
     attributesUsedForLocking = (perType, begin, end, num, eduYear); 
-    className = "net.rujel.eduresults.EduPeriod"; 
+    className = "net.rujel.eduplan.EduPeriod"; 
     classProperties = (begin, eduYear, end, num, periodType); 
     externalName = "EDU_PERIOD"; 
     fetchSpecificationDictionary = {}; 
     name = EduPeriod; 
     primaryKeyAttributes = (perID); 
     relationships = (
-        {
-            deleteRule = EODeleteRuleDeny; 
-            destination = ItogMark; 
-            internalInfo = {"_nameInObjectStore" = itogmark; }; 
-            isToMany = Y; 
-            joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = periodID; sourceAttribute = perID; }); 
-            name = itogmarks; 
-            propagatesPrimaryKey = Y; 
-        }, 
         {
             destination = PeriodType; 
             isMandatory = Y; 
