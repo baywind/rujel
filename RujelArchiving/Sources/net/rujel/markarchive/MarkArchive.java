@@ -75,6 +75,12 @@ public class MarkArchive extends _MarkArchive
 			setUser(usr);
 		}
 	}
+	
+	public void setUser(String user) {
+		super.setUser(user);
+		if("AutoItog".equals(user))
+			Thread.dumpStack();
+	}
 
 	public void setObjectIdentifier(EOEnterpriseObject eo) {
 		NSDictionary pKey = objectIdentifierDict(eo);

@@ -30,6 +30,7 @@
 package net.rujel.eduresults;
 
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
@@ -86,6 +87,8 @@ public class ItogMark extends _ItogMark
     	super.awakeFromInsertion(ec);
     	setFlags(new Integer(0));
     	setMark("?");
+		Logger.getLogger("rujel.eduresults").log(WOLogLevel.INFO,"Generating ItogMark",
+			new Object[] {this,Thread.currentThread(),new Exception("Generating ItogMark")});
     }
 
     public Student student() {
