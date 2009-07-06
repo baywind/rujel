@@ -33,6 +33,7 @@ import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class ItogContainer extends _ItogContainer {
@@ -46,6 +47,14 @@ public class ItogContainer extends _ItogContainer {
 	public static void init() {
 	}
 
+	public static NSArray itogsInYear(Number eduYear, EOEditingContext ec) {
+		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ec, 
+				ENTITY_NAME, EDU_YEAR_KEY, eduYear);
+		if(result == null || result.count() < 2)
+			return result;
+		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
+	}
+	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 		setNum(new Integer(0));
@@ -83,8 +92,8 @@ public class ItogContainer extends _ItogContainer {
 			int result = compareValues(l.eduYear(), r.eduYear(),
 					EOSortOrdering.CompareAscending);
 			if(result == NSComparator.OrderedSame)
-			result = compareValues(l.valueForKey("itogType.sort"), 
-					r.valueForKey("itogType.sort"), EOSortOrdering.CompareAscending);
+			result = compareValues(l.valueForKeyPath("itogType.sort"), 
+					r.valueForKeyPath("itogType.sort"), EOSortOrdering.CompareAscending);
 			if(result == NSComparator.OrderedSame)
 				result = compareValues(l.num(), r.num(), EOSortOrdering.CompareAscending);
 			return result;

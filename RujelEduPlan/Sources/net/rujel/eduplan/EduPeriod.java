@@ -193,6 +193,19 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		return list;
 	}
 	
+	public static NSArray periods(WOContext ctx) {
+		Integer eduYear = (Integer)ctx.session().valueForKey("eduYear");
+		EOEditingContext ec = null;
+		try {
+			ec = (EOEditingContext)ctx.page().valueForKey("ec");
+		} catch (Exception e) {
+			;
+		}
+		if(ec == null)
+			ec = ctx.session().defaultEditingContext();
+		return periodsInYear(eduYear, ec);
+	}
+	
 	public static NSArray periodsInYear(Number eduYear, EOEditingContext ec) {
 		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ec, 
 				ENTITY_NAME, EDU_YEAR_KEY, eduYear);

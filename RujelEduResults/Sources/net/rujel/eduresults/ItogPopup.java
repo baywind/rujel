@@ -254,7 +254,7 @@ public class ItogPopup extends WOComponent {
 		if(student == null || itogContainer == null || eduCourse == null)
     		return null;
 		NSMutableDictionary ident = new NSMutableDictionary("ItogMark","entityName");
-		ident.takeValueForKey(itogContainer,"period");
+		ident.takeValueForKey(itogContainer,"container");
 		ident.takeValueForKey(student, "student");
 		ident.takeValueForKey(eduCourse.cycle(),"eduCycle");
 		ident.takeValueForKey(eduCourse.editingContext(), "editingContext");

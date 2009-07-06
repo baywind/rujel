@@ -332,7 +332,6 @@
         {className = "net.rujel.eduresults.ItogType"; name = ItogType; }, 
         {className = EOGenericRecord; name = ItogTypeList; }
     ); 
-    internalInfo = {"_deletedEntityNamesInObjectStore" = (TypeList); }; 
     userInfo = {
         "_EntityModeler" = {
             activeDatabaseConfigName = Default; 

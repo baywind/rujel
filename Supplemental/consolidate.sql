@@ -166,3 +166,6 @@ create table RujelStatic.ITOG_TYPE_LIST (
 );
 
 insert into RujelStatic.ITOG_TYPE_LIST values (1,'Общий',3), (2,'Общий',1), (3,'Семестры',2);
+
+update MarkArchive.USED_ENTITY set KEY3 = 'containerID' where ENTITY_NAME = 'ItogMark';
+update Stats.DESCRIPTION set GROUPING2 = 'ItogContainer' where ENT_NAME = 'ItogMark';

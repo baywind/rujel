@@ -42,6 +42,7 @@
             name = container; 
         }, 
         {
+            deleteRule = EODeleteRuleCascade; 
             destination = ItogComment; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 

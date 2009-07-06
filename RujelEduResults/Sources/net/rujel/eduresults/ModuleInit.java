@@ -35,7 +35,6 @@ import net.rujel.interfaces.EduCourse;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 
@@ -60,8 +59,6 @@ public class ModuleInit {
 			return notesAddOns(ctx);
 		} else if("studentReporter".equals(obj)) {
 			return studentReporter(ctx);
-		} else if("periods".equals(obj)) {
-			return periods(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
 		}
@@ -87,14 +84,6 @@ public class ModuleInit {
 		result = result.mutableClone();
 		result.takeValueForKey(access,"access");
 		return result;
-	}
-	
-	public static NSArray periods(WOContext ctx) {
-		Object eduYear = ctx.session().valueForKey("eduYear");
-		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ctx.session().defaultEditingContext()
-				,"ItogContainer","eduYear",eduYear);
-		return result;
-		//return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,ItogContainer.sorter);
 	}
 
 	public static NSDictionary statCourse(EduCourse course, ItogContainer container) {

@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 public class MarkArchive extends _MarkArchive
 {
 	public static final String REASON_KEY = "?";
+	protected static final Logger logger = Logger.getLogger("rujel.markarchive");
 	
     public MarkArchive() {
         super();
@@ -80,8 +81,7 @@ public class MarkArchive extends _MarkArchive
 		NSDictionary pKey = objectIdentifierDict(eo);
 		if(pKey == null) {
 			editingContext().deleteObject(this);
-			Logger.getLogger("rujel.archiving").log(WOLogLevel.FINER,
-					"Archiving delayed for new object",eo);
+			logger.log(WOLogLevel.FINER, "Archiving delayed for new object",eo);
 			if(dict == null)
 				dict = new NSMutableDictionary();
 			waiterForEc(eo.editingContext()).registerArchive(dict, eo);
@@ -139,7 +139,7 @@ public class MarkArchive extends _MarkArchive
 		}
 		if(pKeys.count() > 0) {
 			Object[] args = new Object[] {eo,keyDict,pKeys};
-			Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
+			logger.log(WOLogLevel.WARNING,
 					"Could not resolve required attributes for archiving eo",args);
 			//editingContext().deleteObject(this);
 			return null;
@@ -178,7 +178,7 @@ public class MarkArchive extends _MarkArchive
 				throw new IllegalArgumentException(
 						"Could not generate 'usedEntity' for archiving: illegal entityKeys");					
 			usedEntity = EOUtilities.createAndInsertInstance(ec, "UsedEntity");
-			Logger.getLogger("rujel.archiving").log(WOLogLevel.COREDATA_EDITING,
+			logger.log(WOLogLevel.COREDATA_EDITING,
 				"Registering new archivable entity :" + entityName,pKeys);
 			usedEntity.takeValueForKey(entityName, "usedEntity");
 			Enumeration enu = pKeys.objectEnumerator();
@@ -193,7 +193,7 @@ public class MarkArchive extends _MarkArchive
 				usedEntity.takeValueForKey(enu.nextElement(),"key3");
 		} else {
 			if(found.count() > 1)
-				Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
+				logger.log(WOLogLevel.WARNING,
 						"Found several descriptions for entity named:" + entityName);
 			usedEntity = (EOEnterpriseObject)found.objectAtIndex(0);
 		}
@@ -286,6 +286,9 @@ public class MarkArchive extends _MarkArchive
 			}
 			if(value == null) {
 				takeValueForKey(zero, keys[i]);
+				logger.log(WOLogLevel.FINE,"Archiving " + 
+						usedEntity.valueForKey("usedEntity") + ": null value for key " + key,
+						identifierDict);
 			} else if(value instanceof Number) {
 				takeValueForKey(value, keys[i]);
 			} else if(value instanceof EOEnterpriseObject) {
@@ -307,7 +310,7 @@ public class MarkArchive extends _MarkArchive
 				}
 			} else {
 				takeValueForKey(zero, keys[i]);
-				Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
+				logger.log(WOLogLevel.WARNING, 
 						"Illegal datatype to archive in key" + key,identifierDict);
 			}
 		}
@@ -369,11 +372,14 @@ public class MarkArchive extends _MarkArchive
 				continue;
 			Object value = pKey.valueForKey(key);
 			if(value == null && key.endsWith("ID")) {
-				key = key.substring(0, key.length() -2);
-				value = pKey.valueForKey(key);
+				String tmpKey = key.substring(0, key.length() -2);
+				value = pKey.valueForKey(tmpKey);
 			}
-			if(value == null)
+			if(value == null) {
+				logger.log(WOLogLevel.FINE,"Key '" + key + "' not available for " +
+						usedEntity.valueForKey("usedEntity"), pKey);
 				continue;
+			}
 			if(value instanceof EOEnterpriseObject) {
 				EOEditingContext ec = ((EOEnterpriseObject)value).editingContext();
 				EOGlobalID gid = ec.globalIDForObject((EOEnterpriseObject)value);
@@ -384,8 +390,7 @@ public class MarkArchive extends _MarkArchive
 					Object[] args = new Object[] {"?",gid,pKey};
 					if(ec instanceof SessionedEditingContext)
 						args[0] = ((SessionedEditingContext)ec).session();
-					Logger.getLogger("rujel.archiving").log(WOLogLevel.WARNING,
-							"Uninitialised values in dict",args);
+					logger.log(WOLogLevel.WARNING, "Uninitialised values in dict",args);
 					//throw new IllegalArgumentException("Uninitialised values in dict");
 					return null;
 				}

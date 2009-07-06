@@ -60,6 +60,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 					"strings.RujelEduPlan_EduPlan.planRegime");
 		} else if("lessonTabs".equals(obj)) {
 			return EduPeriod.lessonTabs(ctx);
+		} else if("periods".equals(obj)) {
+			return EduPeriod.periods(ctx);
 		}
 		return null;
 	}
