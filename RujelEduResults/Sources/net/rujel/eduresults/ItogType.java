@@ -63,6 +63,9 @@ public class ItogType extends _ItogType {
 	public static NSArray typesForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
+		return typesForList(listName, ec);
+	}
+	public static NSArray typesForList(String listName, EOEditingContext ec) {
 		EOQualifier qual = new EOKeyValueQualifier("listName",
 				EOQualifier.QualifierOperatorEqual,listName);
 		NSArray sorter = new NSArray(new EOSortOrdering("itogType.sort",
@@ -82,13 +85,11 @@ public class ItogType extends _ItogType {
 		return list;
 	}
 	
-	public static NSArray itogsForCourse(EduCourse course) {
-		NSArray list = typesForCourse(course);
+	public static NSArray itogsForTypeList(NSArray list, Integer eduYear) {
 		if(list == null || list.count() == 0)
 			return null;
 		Enumeration enu = list.objectEnumerator();
 		NSMutableArray result = new NSMutableArray();
-		Integer eduYear = course.eduYear();
 		while (enu.hasMoreElements()) {
 			ItogType type = (ItogType) enu.nextElement();
 			result.addObjectsFromArray(type.itogsInYear(eduYear));

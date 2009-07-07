@@ -29,6 +29,7 @@
 
 package net.rujel.eduresults;
 
+import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 
@@ -53,6 +54,11 @@ public class ItogContainer extends _ItogContainer {
 		if(result == null || result.count() < 2)
 			return result;
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
+	}
+	
+	public static NSArray itogsForCourse(EduCourse course) {
+		NSArray list = ItogType.typesForCourse(course);
+		return ItogType.itogsForTypeList(list,course.eduYear());
 	}
 	
 	public void awakeFromInsertion(EOEditingContext ec) {

@@ -100,7 +100,7 @@ public class ItogsPresenter extends WOComponent {
 				_periods = (NSArray)currAddOn().valueForKey("periods");
 			}
 			if(_periods == null) {
-				_periods = ItogType.itogsForCourse(course());//EduPeriod.periodsForCourse(course());
+				_periods = ItogContainer.itogsForCourse(course());//EduPeriod.periodsForCourse(course());
 				if(_periods == null)
 					_periods = NSArray.EmptyArray;
 				currAddOn().takeValueForKey(_periods,"periods");
@@ -172,7 +172,8 @@ public class ItogsPresenter extends WOComponent {
 	
 	public String periodTitle() {
 		if(periodItem.num() > 0) {
-			return Various.makeRoman(periodItem.num().intValue()) + "<br/>\n<small>" + periodItem.itogType().title() + "</small>";
+			return Various.makeRoman(periodItem.num().intValue()) + 
+					"<br/>\n<small>" + periodItem.itogType().title() + "</small>";
 		}
 		return periodItem.itogType().title();
 	}

@@ -42,6 +42,8 @@ import com.webobjects.eoaccess.EOUtilities;
 public class ItogMark extends _ItogMark
 {
 	public static NSArray flagKeys = new NSArray(new Object[] {"changed","forced","incomplete","manual","constituents"});
+	public static final String STUDENT_KEY = "student";
+	public static final String CYCLE_KEY = "cycle";
 	
 	public static NSArray localisedFlagKeys() {
 		NSDictionary localisation = (NSDictionary)WOApplication.application().valueForKeyPath(
@@ -62,8 +64,14 @@ public class ItogMark extends _ItogMark
 	
 	public static void init() {
 //		EOInitialiser.initialiseRelationship("ItogMark","teacher",false,"teacherID","Teacher");
-		EOInitialiser.initialiseRelationship("ItogMark","cycle",false,"eduCycleID","EduCycle").anyInverseRelationship().setPropagatesPrimaryKey(true);
-		EOInitialiser.initialiseRelationship("ItogMark","student",false,"studentID","Student").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("ItogMark",CYCLE_KEY,false,"eduCycleID",
+				"EduCycle").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("ItogMark",STUDENT_KEY,false,"studentID",
+				"Student").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("ItogComment",CYCLE_KEY,false,"eduCycleID",
+				"EduCycle").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("ItogComment",STUDENT_KEY,false,"studentID",
+				"Student").anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
 	
     public ItogMark() {
@@ -78,7 +86,8 @@ public class ItogMark extends _ItogMark
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream in) 
+    		throws java.io.IOException, java.lang.ClassNotFoundException {
     }
  */
 
@@ -89,19 +98,19 @@ public class ItogMark extends _ItogMark
     }
 
     public Student student() {
-    	return (Student)storedValueForKey("student");
+    	return (Student)storedValueForKey(STUDENT_KEY);
     }
 
     public void setStudent(Student aValue) {
-    	takeStoredValueForKey(aValue, "student");
+    	takeStoredValueForKey(aValue, STUDENT_KEY);
     }
 	
 	public EduCycle cycle() {
-        return (EduCycle)storedValueForKey("cycle");
+        return (EduCycle)storedValueForKey(CYCLE_KEY);
     }
 	
     public void setCycle(EduCycle aValue) {
-        takeStoredValueForKey(aValue, "cycle");
+        takeStoredValueForKey(aValue, CYCLE_KEY);
     }
 
 	public void setMark(String aValue) {
@@ -136,9 +145,93 @@ public class ItogMark extends _ItogMark
 		}
 		return _namedFlags;
 	}
+	
+	protected Object _commentEO;
+	protected NSKeyValueCoding _comments;
+	public static final String MANUAL = "manual";
+	
+	public EOEnterpriseObject commentEO() {
+		if(_commentEO == null) {
+			_commentEO = getItogComment(cycle(), container(), student());
+			if(_commentEO == null) {
+				_commentEO = NullValue;
+				return null;
+			}
+		} else if(_commentEO == NullValue) { 
+			return null;
+		}
+		return (EOEnterpriseObject)_commentEO;
+	}
+	
+	public static NSMutableDictionary commentsDict(EOEnterpriseObject commentEO) {
+		String string = (String)commentEO.valueForKey("comment");
+		return NSPropertyListSerialization.
+					dictionaryForString(string).mutableClone();
+	}
+	
+	public NSKeyValueCoding comments() {
+		if(_comments == null)
+		_comments = new NSKeyValueCoding() {
+			protected NSMutableDictionary comments;
+			public Object valueForKey(String key) {
+				if(comments != null)
+					return (String)comments.valueForKey(key);
+				if(commentEO() == null) {
+					comments = new NSMutableDictionary();
+					return null;
+				}
+				comments = commentsDict(commentEO());
+				return (String)comments.valueForKey(key);
+			}
+			public void takeValueForKey(Object value, String key) {
+				Object tmp = valueForKey(key);
+				if(tmp != null && tmp.equals(value))
+					return;
+				comments.takeValueForKey(value, key);
+				if(comments.count() > 0) {
+				commentEO().takeValueForKey(NSPropertyListSerialization.
+									stringFromPropertyList(comments), "comment");
+				} else if(commentEO() != null) {
+					editingContext().deleteObject(commentEO());
+				}
+			}
+		};
+		return _comments;
+	}
+	
+	public String comment() {
+		return (String)comments().valueForKey(MANUAL);
+	}
+
+/*	public String commentForKey(String key) {
+		if(_comments != null)
+			return (String)_comments.valueForKey(key);
+		if(commentEO() == null) {
+			_comments = new NSMutableDictionary();
+			return null;
+		}
+		String comments = (String)commentEO().valueForKey("comment");
+		_comments = NSPropertyListSerialization.dictionaryForString(comments).mutableClone();
+		return (String)_comments.valueForKey(key);
+	}
+
+	public void setCommentForKey(String key, String value) {
+		String tmp = commentForKey(key);
+		if(tmp != null && tmp.equals(value))
+			return;
+		_comments.takeValueForKey(value, key);
+		if(_comments.count() > 0) {
+		commentEO().takeValueForKey(NSPropertyListSerialization.
+							stringFromPropertyList(_comments), "comment");
+		} else if(commentEO() != null) {
+			editingContext().deleteObject(commentEO());
+		}
+	}*/
 
 	public void turnIntoFault(EOFaultHandler handler){
 		_namedFlags = null;
+		_commentEO = null;
+		_comments = null;
 		super.turnIntoFault(handler);
 	}
 	
@@ -150,7 +243,7 @@ public class ItogMark extends _ItogMark
 		EOQualifier qual= null;
 		NSMutableArray quals = new NSMutableArray();
 		if(cycle != null) {
-			qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,cycle);
+			qual = new EOKeyValueQualifier(CYCLE_KEY,EOQualifier.QualifierOperatorEqual,cycle);
 			if(period == null && student == null)
 				return qual;
 			quals.addObject(qual);
@@ -163,7 +256,7 @@ public class ItogMark extends _ItogMark
 			quals.addObject(qual);
 		}
 		if(student != null) {
-			qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
+			qual = new EOKeyValueQualifier(STUDENT_KEY,EOQualifier.QualifierOperatorEqual,student);
 			if(period == null && cycle == null)
 				return qual;
 			quals.addObject(qual);
@@ -204,6 +297,19 @@ public class ItogMark extends _ItogMark
 		return (ItogMark)result.objectAtIndex(0);
 	}
 	
+	public static EOEnterpriseObject getItogComment(EduCycle cycle, ItogContainer period, Student student) {
+		if(cycle == null || period == null || student == null)
+			throw new NullPointerException("All parameters are required");
+		EOQualifier qual = qualifyItogMark(cycle, period, student);
+		EOFetchSpecification fs = new EOFetchSpecification("ItogComment",qual,null);
+		NSArray result = cycle.editingContext().objectsWithFetchSpecification(fs);
+		if(result == null || result.count() == 0) return null;
+		if(result.count() > 1) {
+			throw new EOUtilities.MoreThanOneException("Multiple ItogComments found");
+		}
+		return (EOEnterpriseObject)result.objectAtIndex(0);
+	}
+
 	public static ItogMark getItogMark(EduCycle cycle, ItogContainer period, Student student, NSArray list) {
 		NSArray result = EOQualifier.filteredArrayWithQualifier(list,qualifyItogMark(cycle,period,student));
 		if(result == null || result.count() == 0) return null;
@@ -217,7 +323,7 @@ public class ItogMark extends _ItogMark
 		EOQualifier[] quals = new EOQualifier[2];
 		quals[0] = new EOKeyValueQualifier("eduYear",
 				EOQualifier.QualifierOperatorEqual,container().eduYear());
-		quals[1]  = new EOKeyValueQualifier("cycle",
+		quals[1]  = new EOKeyValueQualifier(CYCLE_KEY,
 				EOQualifier.QualifierOperatorEqual,cycle());
 		EOQualifier qual = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,qual,null);
@@ -234,4 +340,6 @@ public class ItogMark extends _ItogMark
 			result = (EduCourse)found.objectAtIndex(0);
 		return result;
 	}
+	
+	
 }

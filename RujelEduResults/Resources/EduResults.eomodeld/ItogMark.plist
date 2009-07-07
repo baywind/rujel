@@ -16,18 +16,11 @@
             columnName = CONTAINER; 
             name = containerID; 
             prototypeName = short; 
-        }, 
-        {
-            allowsNull = Y; 
-            columnName = COMMENT; 
-            name = commentID; 
-            prototypeName = "int_3"; 
-            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (value, mark, flags, commentID); 
+    attributesUsedForLocking = (value, mark, flags); 
     className = "net.rujel.eduresults.ItogMark"; 
-    classProperties = (value, mark, flags, container, itogComment); 
+    classProperties = (value, mark, flags, container); 
     externalName = "ITOG_MARK"; 
     fetchSpecificationDictionary = {}; 
     name = ItogMark; 
@@ -40,15 +33,6 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = iID; sourceAttribute = containerID; }); 
             name = container; 
-        }, 
-        {
-            deleteRule = EODeleteRuleCascade; 
-            destination = ItogComment; 
-            isToMany = N; 
-            joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = cID; sourceAttribute = commentID; }); 
-            name = itogComment; 
-            ownsDestination = Y; 
         }
     ); 
 }

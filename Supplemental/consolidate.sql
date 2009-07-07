@@ -140,13 +140,14 @@ alter table RujelStatic.ITOG ADD PRIMARY KEY (`I_ID`);
 
 create table RujelStatic.ITOG_MARK select PERIOD as CONTAINER, EDU_CYCLE as CYCLE, STUDENT,
   MARK, VALUE, FLAGS from EduResults.ITOG_MARK;
-alter table RujelStatic.ITOG_MARK ADD COLUMN `COMMENT` mediumint;
 alter table RujelStatic.ITOG_MARK ADD PRIMARY KEY (`CONTAINER`,`CYCLE`,`STUDENT`);
 
 create table RujelStatic.ITOG_COMMENT (
-  C_ID mediumint NOT NULL,
+  CONTAINER smallint NOT NULL,
+  CYCLE mediumint NOT NULL,
+  STUDENT int NOT NULL,
   COMMENT text NOT NULL,
-  PRIMARY KEY (`C_ID`)
+  PRIMARY KEY (`CONTAINER`,`CYCLE`,`STUDENT`)
 );
 
 insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 

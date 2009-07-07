@@ -44,7 +44,6 @@ import java.util.logging.Logger;
 
 public class ModuleInit {
 	protected static final NSDictionary addOn = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn");
-	protected static final NSDictionary studentReporter = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
 	protected static final NSArray marksPreset = ((NSArray)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.marksPreset")).immutableClone();
 	
 	public static Object init(Object obj, WOContext ctx) {
@@ -75,14 +74,14 @@ public class ModuleInit {
 		return null;
 	}
 	
-	public static NSDictionary studentReporter(WOContext ctx) {
+	public static Object studentReporter(WOContext ctx) {
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
 		//NamedFlags access = moduleAccess(ctx,"ItogMark");
 		if(!access.getFlag(0))
 				return null;
-		NSDictionary result = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
-		result = result.mutableClone();
-		result.takeValueForKey(access,"access");
+		Object result = WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
+//		result = result.mutableClone();
+//		result.takeValueForKey(access,"access");
 		return result;
 	}
 
