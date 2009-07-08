@@ -2,7 +2,7 @@
     EOModelVersion = "2.1"; 
     adaptorName = JDBC; 
     connectionDictionary = {
-        URL = "jdbc:mysql://localhost/EduPlan? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
+        URL = "jdbc:mysql://localhost/EduPlanYearly? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
         username = rujel; 
     }; 
     entities = (
@@ -18,7 +18,7 @@
                 Default = {
                     adaptorName = JDBC; 
                     connectionDictionary = {
-                        URL = "jdbc:mysql://localhost/EduPlan? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
+                        URL = "jdbc:mysql://localhost/EduPlanYearly? capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
                         username = rujel; 
                     }; 
                 }; 

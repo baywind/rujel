@@ -261,7 +261,7 @@ public class LessonNoteEditor extends WOComponent {
 		}
 		session().setObjectForKey(course, "courseForlessons");
 		allTabs = (NSArray)session().valueForKeyPath("modules.lessonTabs");
-		if(_currTab == null && allTabs != null) {
+		if(_currTab == null && allTabs != null && allTabs.count() > 0) {
 			NSArray tablist = (NSArray)allTabs.objectAtIndex(0);
 			Enumeration enu = tablist.objectEnumerator();
 			while (enu.hasMoreElements()) {

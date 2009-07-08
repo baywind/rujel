@@ -1,7 +1,5 @@
 {
     attributes = (
-        {columnName = "ARCHIVE_SINCE"; name = archiveSince; prototypeName = short; }, 
-        {columnName = COLOR; name = color; prototypeName = word; }, 
         {
             allowsNull = N; 
             columnName = "IN_YEAR_COUNT"; 
@@ -11,12 +9,12 @@
         }, 
         {columnName = NAME; name = name; prototypeName = word; }, 
         {columnName = TITLE; name = title; prototypeName = anagram; }, 
-        {columnName = "ID_TYPE"; name = typeID; prototypeName = short; }
+        {columnName = "T_ID"; name = typeID; prototypeName = short; }
     ); 
-    attributesUsedForLocking = (name, inYearCount, archiveSince, color, title); 
+    attributesUsedForLocking = (name, inYearCount, title); 
     className = "net.rujel.eduplan.PeriodType"; 
-    classProperties = (inYearCount, name, templates, archiveSince, color, title); 
-    externalName = "PER_TYPE"; 
+    classProperties = (inYearCount, name, templates, title); 
+    externalName = "PERIOD_TYPE"; 
     fetchSpecificationDictionary = {}; 
     name = PeriodType; 
     primaryKeyAttributes = (typeID); 

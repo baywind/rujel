@@ -634,6 +634,16 @@
 			<key>dbName</key>
 			<string>Curriculum%s</string>
 		</dict>
+		<key>EduPlanModel</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
+		</dict>
+		<key>EduPlanYearly</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
 		<key>EduResults</key>
 		<dict>
 			<key>dbName</key>

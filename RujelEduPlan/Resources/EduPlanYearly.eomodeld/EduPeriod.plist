@@ -4,8 +4,8 @@
         {columnName = "EDU_YEAR"; name = eduYear; prototypeName = short; }, 
         {columnName = END; name = end; prototypeName = date; }, 
         {columnName = NUM; name = num; prototypeName = byte; valueType = i; }, 
-        {columnName = "ID_PER"; name = perID; prototypeName = short; }, 
-        {columnName = "PER_TYPE"; name = perType; prototypeName = short; }
+        {columnName = "PER_TYPE"; name = perType; prototypeName = short; }, 
+        {columnName = "P_ID"; name = pID; prototypeName = short; }
     ); 
     attributesUsedForLocking = (perType, begin, end, num, eduYear); 
     className = "net.rujel.eduplan.EduPeriod"; 
@@ -13,7 +13,7 @@
     externalName = "EDU_PERIOD"; 
     fetchSpecificationDictionary = {}; 
     name = EduPeriod; 
-    primaryKeyAttributes = (perID); 
+    primaryKeyAttributes = (pID); 
     relationships = (
         {
             destination = PeriodType; 

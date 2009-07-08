@@ -14,7 +14,7 @@
     attributesUsedForLocking = (hours, total); 
     className = EOGenericRecord; 
     classProperties = (eduPeriod, hours, total); 
-    externalName = DETAIL; 
+    externalName = "PLAN_DETAIL"; 
     fetchSpecificationDictionary = {}; 
     name = PlanDetail; 
     primaryKeyAttributes = (courseID, periodID); 
@@ -24,7 +24,7 @@
             isMandatory = Y; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = perID; sourceAttribute = periodID; }); 
+            joins = ({destinationAttribute = pID; sourceAttribute = periodID; }); 
             name = eduPeriod; 
         }
     ); 

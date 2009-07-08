@@ -170,3 +170,108 @@ insert into RujelStatic.ITOG_TYPE_LIST values (1,'Общий',3), (2,'Общий
 
 update MarkArchive.USED_ENTITY set KEY3 = 'containerID' where ENTITY_NAME = 'ItogMark';
 update Stats.DESCRIPTION set GROUPING2 = 'ItogContainer' where ENT_NAME = 'ItogMark';
+
+create table RujelStatic.SUBJ_AREA select CG_ID as A_ID, NAME, NUM from EduPlan.SUBJ_AREA;
+alter table RujelStatic.SUBJ_AREA ADD PRIMARY KEY (`A_ID`);
+
+create table RujelStatic.SUBJECT select S_ID, AREA_ID as AREA, NUM, SUBJECT, FULL_NAME,
+SUBGROUPS, NORMAL_GROUP from EduPlan.SUBJECT;
+alter table RujelStatic.SUBJECT ADD PRIMARY KEY (`S_ID`);
+
+create table RujelStatic.PLAN_CYCLE select * from EduPlan.CYCLE;
+alter table RujelStatic.PLAN_CYCLE add column `TOTAL` SMALLINT NOT NULL AFTER `HOURS`,
+ ADD PRIMARY KEY (`C_ID`);
+update RujelStatic.PLAN_CYCLE set TOTAL = HOURS * 34;
+
+create table RujelStatic.PERIOD_TYPE select ID_TYPE as T_ID, TITLE, NAME, IN_YEAR_COUNT
+from EduResults.PER_TYPE;
+alter table RujelStatic.PERIOD_TYPE ADD PRIMARY KEY (`T_ID`);
+
+create table RujelStatic.PERIOD_TEMPLATE select * from EduResults.PER_TEMPLATE;
+alter table RujelStatic.PERIOD_TEMPLATE ADD PRIMARY KEY (`PER_TYPE`,`PER_NUM`);
+
+create table RujelStatic.HOLIDAY_TYPE (
+  HT_ID smallint NOT NULL,
+  NAME varchar(28) NOT NULL,
+  BEGIN_MONTH tinyint NOT NULL,
+  BEGIN_DAY tinyint NOT NULL,
+  END_MONTH tinyint NOT NULL,
+  END_DAY tinyint NOT NULL,
+  PRIMARY KEY (`HT_ID`)
+);
+
+create table RujelYear2007.PLAN_DETAIL (
+  COURSE smallint NOT NULL,
+  PERIOD smallint NOT NULL,
+  HOURS smallint NOT NULL,
+  TOTAL smallint NOT NULL,
+  PRIMARY KEY (`COURSE`,`PERIOD`)
+);
+
+create table RujelYear2008.PLAN_DETAIL (
+  COURSE smallint NOT NULL,
+  PERIOD smallint NOT NULL,
+  HOURS smallint NOT NULL,
+  TOTAL smallint NOT NULL,
+  PRIMARY KEY (`COURSE`,`PERIOD`)
+);
+
+create table RujelYear2007.PERIOD_LIST (
+  PL_ID smallint NOT NULL,
+  PERIOD smallint NOT NULL,
+  LIST_NAME varchar(28) NOT NULL,
+  PRIMARY KEY (`L_ID`)
+);
+
+create table RujelYear2008.PERIOD_LIST (
+  PL_ID smallint NOT NULL,
+  PERIOD smallint NOT NULL,
+  LIST_NAME varchar(28) NOT NULL,
+  PRIMARY KEY (`L_ID`)
+);
+
+create table RujelYear2007.EDU_PERIOD select ID_PER as P_ID, PER_TYPE, NUM, EDU_YEAR, BEGIN, END
+from EduResults.EDU_PERIOD where EDU_YEAR = 2007 AND PER_TYPE > 1;
+alter table RujelYear2007.EDU_PERIOD ADD PRIMARY KEY (`P_ID`);
+
+create table RujelYear2008.EDU_PERIOD select ID_PER as P_ID, PER_TYPE, NUM, EDU_YEAR, BEGIN, END
+from EduResults.EDU_PERIOD where EDU_YEAR = 2008 AND PER_TYPE > 1;
+alter table RujelYear2008.EDU_PERIOD ADD PRIMARY KEY (`P_ID`);
+
+insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 
+	values (3,'EduPeriod','Общий');
+
+insert into RujelYear2007.PERIOD_LIST (PL_ID,PERIOD,LIST_NAME)
+SELECT P_ID, P_ID,'Общий' FROM RujelYear2007.EDU_PERIOD where PER_TYPE = 3;
+
+insert into RujelYear2008.PERIOD_LIST (PL_ID,PERIOD,LIST_NAME)
+SELECT P_ID, P_ID,'Общий' FROM RujelYear2008.EDU_PERIOD where PER_TYPE = 3;
+
+insert into RujelStatic.SETTING_BY_COURSE (SC_ID, SETTINGS, COURSE, EDU_GROUP, EDU_YEAR, TEXT_VALUE)
+select SC_ID + 8 , 3, COURSE, EDU_GROUP, EDU_YEAR, 'Семестры' from RujelStatic.SETTING_BY_COURSE where SETTINGS = 2;
+
+insert into RujelYear2007.PERIOD_LIST (PL_ID,PERIOD,LIST_NAME)
+SELECT P_ID, P_ID,'Семестры' FROM RujelYear2007.EDU_PERIOD where PER_TYPE = 2;
+
+create table RujelYear2007.HOLYDAY (
+  H_ID smallint NOT NULL,
+  TYPE smallint NOT NULL,
+  DAYS smallint NOT NULL,
+  EDU_YEAR smallint NOT NULL,
+  BEGIN date NOT NULL,
+  END date NOT NULL,
+  LIST_NAME varchar(28),
+  PRIMARY KEY (`H_ID`)
+);
+
+create table RujelYear2008.HOLYDAY (
+  H_ID smallint NOT NULL,
+  TYPE smallint NOT NULL,
+  DAYS smallint NOT NULL,
+  EDU_YEAR smallint NOT NULL,
+  BEGIN date NOT NULL,
+  END date NOT NULL,
+  LIST_NAME varchar(28),
+  PRIMARY KEY (`H_ID`)
+);
+
