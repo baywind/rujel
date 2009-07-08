@@ -30,7 +30,6 @@
 package net.rujel.eduplan;
 
 import net.rujel.base.MyUtility;
-import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;

@@ -1,0 +1,42 @@
+{
+    attributes = (
+        {
+            allowsNull = N; 
+            columnName = "L_ID"; 
+            name = lID; 
+            prototypeName = short; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = "LIST_NAME"; 
+            name = listName; 
+            prototypeName = word; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = PERIOD; 
+            name = periodID; 
+            prototypeName = short; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }
+    ); 
+    attributesUsedForLocking = (listName, periodID); 
+    className = EOGenericRecord; 
+    classProperties = (listName, period); 
+    externalName = PeriodList; 
+    fetchSpecificationDictionary = {}; 
+    name = PeriodList; 
+    primaryKeyAttributes = (lID); 
+    relationships = (
+        {
+            destination = EduPeriod; 
+            isMandatory = Y; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = perID; sourceAttribute = periodID; }); 
+            name = period; 
+        }
+    ); 
+}

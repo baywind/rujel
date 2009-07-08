@@ -2,11 +2,18 @@
     attributes = (
         {allowsNull = N; columnName = COURSE; name = courseID; prototypeName = short; }, 
         {allowsNull = N; columnName = HOURS; name = hours; prototypeName = short; }, 
-        {allowsNull = N; columnName = PERIOD; name = periodID; prototypeName = short; }
+        {allowsNull = N; columnName = PERIOD; name = periodID; prototypeName = short; }, 
+        {
+            allowsNull = N; 
+            columnName = TOTAL; 
+            name = total; 
+            prototypeName = short; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }
     ); 
-    attributesUsedForLocking = (hours); 
+    attributesUsedForLocking = (hours, total); 
     className = EOGenericRecord; 
-    classProperties = (eduPeriod, hours); 
+    classProperties = (eduPeriod, hours, total); 
     externalName = DETAIL; 
     fetchSpecificationDictionary = {}; 
     name = PlanDetail; 

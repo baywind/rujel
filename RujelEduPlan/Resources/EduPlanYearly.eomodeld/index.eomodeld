@@ -7,8 +7,8 @@
     }; 
     entities = (
         {className = "net.rujel.eduplan.EduPeriod"; name = EduPeriod; }, 
-        {className = "net.rujel.eduplan.PeriodTemplate"; name = PeriodTemplate; }, 
-        {className = "net.rujel.eduplan.PeriodType"; name = PeriodType; }, 
+        {className = "net.rujel.eduplan.Holiday"; name = Holiday; }, 
+        {className = EOGenericRecord; name = PeriodList; }, 
         {className = EOGenericRecord; name = PlanDetail; }
     ); 
     userInfo = {

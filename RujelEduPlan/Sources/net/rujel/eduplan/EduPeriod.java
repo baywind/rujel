@@ -157,7 +157,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	
 	public static NSArray periodsInList(String listName,EOEditingContext ec) {
 		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
-				"PeriodTypeList", "listName", listName);
+				"PeriodList", "listName", listName);
 		if(list != null && list.count() > 0) {
 			list = (NSArray)list.valueForKey("period");
 			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
@@ -171,25 +171,11 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	}
 	
 	public static NSArray periodsForCourse(EduCourse course) {
-		// TODO: verify
 		EOEditingContext ec = course.editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
-		EOQualifier qual = new EOKeyValueQualifier("listName",
-				EOQualifier.QualifierOperatorEqual,listName);
-		EOFetchSpecification fs = new EOFetchSpecification("PeriodTypeList",qual,null);
-		NSArray list = ec.objectsWithFetchSpecification(fs);
-		if(list == null || list.count() == 0) {
-			listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
-			qual = new EOKeyValueQualifier("listName",
-					EOQualifier.QualifierOperatorEqual,listName);
-			fs.setQualifier(qual);
-			list = ec.objectsWithFetchSpecification(fs);
-			// log this
-		}
-		if(list != null && list.count() > 0) {
-			list = (NSArray)list.valueForKey("period");
-			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
-		}
+		NSArray list = periodsInList(listName, ec); 
+		if(list == null || list.count() == 0)
+			list = defaultPeriods(ec); 
 		return list;
 	}
 	
@@ -202,7 +188,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 			;
 		}
 		if(ec == null)
-			ec = ctx.session().defaultEditingContext();
+			ec = EOSharedEditingContext.defaultSharedEditingContext();
 		return periodsInYear(eduYear, ec);
 	}
 	
