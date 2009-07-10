@@ -39,7 +39,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
@@ -200,20 +199,24 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
 	}
 	
-	public static EduPeriod getCurrentPeriod(NSTimestamp moment, EduCourse course,
+	public static EduPeriod getCurrentPeriod(NSTimestamp date, String listName,
 			EOEditingContext ec) {
-		NSArray periods = null;
-		if(course == null)
-			periods = defaultPeriods(ec);
-		else
-			periods = periodsForCourse(course);
-		Enumeration enu = periods.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			EduPeriod per = (EduPeriod) enu.nextElement();
-			if(per.contains(moment))
-				return per;
-		}
-		return null;
+		if(listName == null)
+			listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("period.begin",
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
+		quals[1] = new EOKeyValueQualifier("period.end",
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
+		quals[2] = new EOKeyValueQualifier("listName",
+				EOQualifier.QualifierOperatorEqual,listName);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification("PeriodList",quals[0],null);
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0)
+			return null;
+		EOEnterpriseObject pl = (EOEnterpriseObject)list.objectAtIndex(0);
+		return (EduPeriod)pl.valueForKey("period");
 	}
 	
 	public String title() {
@@ -287,7 +290,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	*/
 		
 	public Number sort() {
-		return new Integer (100*(100 - countInYear()) + (num().intValue()));
+		return new Integer (100*(99 - countInYear()) + (num().intValue()));
 	}
 	
 	public int code() {
@@ -302,25 +305,70 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	}
 	
 	public int daysInPeriod(NSTimestamp toDate) {
-		Calendar begin = Calendar.getInstance();
-		begin.setTime(begin());
-		Calendar end = Calendar.getInstance();
-		end.setTime(end());
-		end.add(Calendar.DATE, 1);
+		return daysInPeriod(toDate,null);
+	}
+	public int daysInPeriod(NSTimestamp toDate, String listName) {
+		NSTimestamp begin = begin();
+		NSTimestamp end = end();
 		if(toDate != null){
-			if(toDate.getTime() < begin.getTimeInMillis())
+			if(toDate.compare(begin) < 0)
 				return 0;
-			if(toDate.getTime() < end.getTimeInMillis())
-				end.setTime(toDate);
+			if(toDate.compare(end) < 0)
+				end = toDate;
 		}
-		int day = end.get(Calendar.DAY_OF_YEAR) - begin.get(Calendar.DAY_OF_YEAR);
-		while (begin.get(Calendar.YEAR) < end.get(Calendar.YEAR)) {
-			day += begin.getActualMaximum(Calendar.DAY_OF_YEAR);
-			begin.add(Calendar.YEAR, 1);
+		int days = MyUtility.countDays(begin, end);
+		if(listName == null) {
+			NSArray list = EOUtilities.objectsMatchingKeyAndValue(editingContext(), 
+					"PeriodList", "period", this);
+			if(list != null && list.count() == 1) {
+				EOEnterpriseObject pl = (EOEnterpriseObject)list.objectAtIndex(0);
+				listName = (String)pl.valueForKey("listName");
+			}
 		}
-		return day;
+		days -= Holiday.freeDaysInDates(begin, end, editingContext(), listName);
+		return days;
 	}
 	
+	public int[] weeksAndDays(NSTimestamp toDate, EduCourse course) {
+		EOEditingContext ec = editingContext();
+		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
+		int days = daysInPeriod(toDate, listName);
+		int weekDays = SettingsBase.numericSettingForCourse("weekDays", course, ec, 7);
+		int[] result = new int[2];
+		result[0] = days/weekDays;
+		result[1] = days%weekDays;
+		return result;
+	}
+	
+	public static int daysForList(String listName, EOEditingContext ec) {
+		return daysForList(listName, null, ec);
+	}
+	
+	public static int daysForList(String listName, NSTimestamp date, EOEditingContext ec) {
+		NSArray periods = periodsInList(listName, ec);
+		if(periods == null || periods.count() == 0)
+			periods = defaultPeriods(ec); 
+		if(periods == null || periods.count() == 0)
+			return 0;
+		int sumDays = 0;
+		Enumeration enu = periods.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduPeriod per = (EduPeriod) enu.nextElement();
+			sumDays += per.daysInPeriod(date, listName);
+		}
+		return sumDays;
+	}
+	
+	public static int dayState(NSTimestamp date, EOEditingContext ec, String listName) {
+		EduPeriod current = getCurrentPeriod(date, listName, ec);
+		if(current == null)
+			return 2;
+		NSArray list = Holiday.holidaysInDates(date, date, ec, listName);
+		if(list != null && list.count() > 0)
+			return 1;
+		return 0;
+	}
+
 	protected static class PeriodTab implements Tabs.GenericTab {
 		protected String title;
 		protected String hover;

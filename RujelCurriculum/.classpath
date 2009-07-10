@@ -4,7 +4,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelBase"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduResults"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduPlan"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelReports"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

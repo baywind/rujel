@@ -206,8 +206,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     public NSArray reasonList() {
 //    	if (Various.boolForObject(valueForBinding("readOnly")))
 //    		return ((reason == null)?null:new NSArray(reason));
-    	NSArray reasons = Reason.reasons(date(), course(),
-    			Various.boolForObject(valueForBinding("hideExternal")));
+    	NSArray reasons = Reason.reasons(date(), course());
     	if(reason == null || reasons.contains(reason))
     		return reasons;
     	Object[] args = new Object[] {session(),reason,date()};
@@ -223,9 +222,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     	if(rItem == reason)
     		return "selection";
     	return rItem.styleClass();
-/*   	if(rItem.external().booleanValue())
-    		return "backfield2";
-    	if(rItem.unverified())
+/*  	if(rItem.unverified())
     		return "ungerade";
     	return "gerade";
 */    }

@@ -179,9 +179,8 @@ SUBGROUPS, NORMAL_GROUP from EduPlan.SUBJECT;
 alter table RujelStatic.SUBJECT ADD PRIMARY KEY (`S_ID`);
 
 create table RujelStatic.PLAN_CYCLE select * from EduPlan.CYCLE;
-alter table RujelStatic.PLAN_CYCLE add column `TOTAL` SMALLINT NOT NULL AFTER `HOURS`,
- ADD PRIMARY KEY (`C_ID`);
-update RujelStatic.PLAN_CYCLE set TOTAL = HOURS * 34;
+alter table RujelStatic.PLAN_CYCLE ADD PRIMARY KEY (`C_ID`);
+update RujelStatic.PLAN_CYCLE set HOURS = HOURS * 34;
 
 create table RujelStatic.PERIOD_TYPE select ID_TYPE as T_ID, TITLE, NAME, IN_YEAR_COUNT
 from EduResults.PER_TYPE;
@@ -204,7 +203,7 @@ create table RujelYear2007.PLAN_DETAIL (
   COURSE smallint NOT NULL,
   PERIOD smallint NOT NULL,
   HOURS smallint NOT NULL,
-  TOTAL smallint NOT NULL,
+  WEEKLY smallint NOT NULL,
   PRIMARY KEY (`COURSE`,`PERIOD`)
 );
 
@@ -212,7 +211,7 @@ create table RujelYear2008.PLAN_DETAIL (
   COURSE smallint NOT NULL,
   PERIOD smallint NOT NULL,
   HOURS smallint NOT NULL,
-  TOTAL smallint NOT NULL,
+  WEEKLY smallint NOT NULL,
   PRIMARY KEY (`COURSE`,`PERIOD`)
 );
 
@@ -256,7 +255,6 @@ SELECT P_ID, P_ID,'Семестры' FROM RujelYear2007.EDU_PERIOD where PER_TYP
 create table RujelYear2007.HOLYDAY (
   H_ID smallint NOT NULL,
   TYPE smallint NOT NULL,
-  DAYS smallint NOT NULL,
   EDU_YEAR smallint NOT NULL,
   BEGIN date NOT NULL,
   END date NOT NULL,
@@ -267,7 +265,6 @@ create table RujelYear2007.HOLYDAY (
 create table RujelYear2008.HOLYDAY (
   H_ID smallint NOT NULL,
   TYPE smallint NOT NULL,
-  DAYS smallint NOT NULL,
   EDU_YEAR smallint NOT NULL,
   BEGIN date NOT NULL,
   END date NOT NULL,
@@ -275,3 +272,25 @@ create table RujelYear2008.HOLYDAY (
   PRIMARY KEY (`H_ID`)
 );
 
+create table RujelYear2008.REASON select * from Curriculum.REASON where FLAGS != 1;
+alter table RujelYear2008.REASON ADD PRIMARY KEY (`R_ID`);
+
+create table RujelYear2008.SUBSTITUTE select * from Curriculum.SUBSTITUTE
+where REASON in (select R_ID from RujelYear2008.REASON);
+alter table RujelYear2008.SUBSTITUTE ADD PRIMARY KEY (`LESSON`,`TEACHER`);
+
+create table RujelYear2008.VARIATION select * from Curriculum.VARIATION
+where REASON in (select R_ID from RujelYear2008.REASON);
+alter table RujelYear2008.VARIATION ADD PRIMARY KEY (`V_ID`);
+
+create table RujelYear2008.REPRIMAND select * from Curriculum.REPRIMAND;
+alter table RujelYear2008.REPRIMAND ADD PRIMARY KEY (`R_ID`);
+
+insert into RujelStatic.HOLIDAY_TYPE (HT_ID, NAME, BEGIN_MONTH, BEGIN_DAY, END_MONTH, END_DAY)
+  select R_ID, REASON, MONTH(BEGIN), DAYOFMONTH(BEGIN), MONTH(END), DAYOFMONTH(END)
+from Curriculum.reason where FLAGS = 1 and BEGIN != '2008-09-01';
+update RujelStatic.HOLIDAY_TYPE set BEGIN_MONTH = BEGIN_MONTH + if(BEGIN_MONTH < 7, 12, 0),
+   END_MONTH = END_MONTH + if(END_MONTH < 7, 12, 0);
+
+insert into RujelYear2008.HOLYDAY (H_ID, TYPE, BEGIN, END)
+  select R_ID, R_ID, BEGIN, END from Curriculum.reason where FLAGS = 1 and BEGIN != '2008-09-01';

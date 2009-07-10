@@ -31,18 +31,11 @@
             prototypeName = byte; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
             valueType = i; 
-        }, 
-        {
-            allowsNull = N; 
-            columnName = TOTAL; 
-            name = total; 
-            prototypeName = short; 
-            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (classID, grade, hours, level, school, subjID, subject, year, total); 
+    attributesUsedForLocking = (classID, grade, hours, level, school, subjID, subject, year); 
     className = "net.rujel.eduplan.PlanCycle"; 
-    classProperties = (grade, hours, level, school, subject, subjectEO, total, year); 
+    classProperties = (grade, hours, level, school, subject, subjectEO, year); 
     externalName = "PLAN_CYCLE"; 
     fetchSpecificationDictionary = {}; 
     name = PlanCycle; 

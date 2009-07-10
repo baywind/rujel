@@ -95,7 +95,7 @@ public class Reason extends _Reason {
 	}
 	
 	public static NSArray flagNames = new NSArray(new String[] {
-			"external","-2-","-4","-8-","forEduGroup","forTeacher"});
+			"-1-","-2-","-4","-8-","forEduGroup","forTeacher"});
 
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {
@@ -123,10 +123,6 @@ public class Reason extends _Reason {
     	super.setFlags(value);
     }
 
-	public boolean external() {
-		return namedFlags().getFlag(0);//flagForKey("external");
-	}
-	
 	protected void exts(StringBuilder result) {
 		if(teacher() != null) {
 			Person t = teacher().person();
@@ -157,18 +153,16 @@ public class Reason extends _Reason {
 	}
 	
     public String styleClass() {
-    	if(external())
-    		return "grey";
     	if(unverified())
     		return "ungerade";
     	return "gerade";
     }
 	
-	public static NSArray reasons (NSTimestamp date, EduCourse course, boolean hideExternal) {
+	public static NSArray reasons (NSTimestamp date, EduCourse course) {
 		Props props = new Props(course);
 		props.begin = date;
 		props.end = date;
-		return reasons(props, hideExternal);
+		return reasons(props);
 	}
 	
 	public static Props propsFromEvents(NSArray events) {
@@ -202,7 +196,7 @@ public class Reason extends _Reason {
 		return props;
 	}
 	
-	public static NSArray reasons (Props props, boolean hideExternal) {
+	public static NSArray reasons (Props props) {
 		EOQualifier qual = null;
 		NSMutableArray quals = new NSMutableArray();
 		if (props.teacher != null) {
@@ -256,8 +250,6 @@ public class Reason extends _Reason {
 			NSMutableArray result = new NSMutableArray();
 			while (enu.hasMoreElements()) {
 				Reason r = (Reason) enu.nextElement();
-				if(hideExternal && r.external())
-					continue;
 				if(r.namedFlags().flagForKey("forEduGroup") 
 						&& r.eduGroup() != props.eduGroup)
 					continue;

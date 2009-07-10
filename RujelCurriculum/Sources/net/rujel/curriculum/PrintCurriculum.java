@@ -73,7 +73,7 @@ public class PrintCurriculum extends com.webobjects.appserver.WOComponent {
 			else
 				end = new NSTimestamp(date);
 		}
-		variations = Variation.variations(course, begin, end, Boolean.FALSE);
+		variations = Variation.variations(course, begin, end);
 		NSMutableSet rSet = new NSMutableSet();
 		Enumeration enu;
 		if (variations != null && variations.count() > 0) {

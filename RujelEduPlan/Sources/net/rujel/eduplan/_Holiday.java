@@ -1,4 +1,4 @@
-// _PeriodType.java
+// _Holiday.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PeriodType.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Holiday.java instead.
 
 package net.rujel.eduplan;
 
@@ -37,55 +37,47 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _PeriodType extends EOGenericRecord {
-	public static final String ENTITY_NAME = "PeriodType";
+public abstract class _Holiday extends EOGenericRecord {
+	public static final String ENTITY_NAME = "Holiday";
 
 	// Attributes
-	public static final String IN_YEAR_COUNT_KEY = "inYearCount";
-	public static final String NAME_KEY = "name";
-	public static final String TITLE_KEY = "title";
+	public static final String BEGIN_KEY = "begin";
+	public static final String EDU_YEAR_KEY = "eduYear";
+	public static final String END_KEY = "end";
+	public static final String LIST_NAME_KEY = "listName";
 
 	// Relationships
-	public static final String TEMPLATES_KEY = "templates";
 
-  public Integer inYearCount() {
-    return (Integer) storedValueForKey(IN_YEAR_COUNT_KEY);
-  }
-
-  public void setInYearCount(Integer value) {
-    takeStoredValueForKey(value, IN_YEAR_COUNT_KEY);
+  public NSTimestamp begin() {
+    return (NSTimestamp) storedValueForKey(BEGIN_KEY);
   }
 
-  public String name() {
-    return (String) storedValueForKey(NAME_KEY);
+  public void setBegin(NSTimestamp value) {
+    takeStoredValueForKey(value, BEGIN_KEY);
   }
 
-  public void setName(String value) {
-    takeStoredValueForKey(value, NAME_KEY);
+  public Integer eduYear() {
+    return (Integer) storedValueForKey(EDU_YEAR_KEY);
   }
 
-  public String title() {
-    return (String) storedValueForKey(TITLE_KEY);
+  public void setEduYear(Integer value) {
+    takeStoredValueForKey(value, EDU_YEAR_KEY);
   }
 
-  public void setTitle(String value) {
-    takeStoredValueForKey(value, TITLE_KEY);
+  public NSTimestamp end() {
+    return (NSTimestamp) storedValueForKey(END_KEY);
   }
 
-  public NSArray templates() {
-    return (NSArray)storedValueForKey(TEMPLATES_KEY);
-  }
- 
-  public void setTemplates(NSArray value) {
-    takeStoredValueForKey(value, TEMPLATES_KEY);
-  }
-  
-  public void addToTemplates(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, TEMPLATES_KEY);
+  public void setEnd(NSTimestamp value) {
+    takeStoredValueForKey(value, END_KEY);
   }
 
-  public void removeFromTemplates(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, TEMPLATES_KEY);
+  public String listName() {
+    return (String) storedValueForKey(LIST_NAME_KEY);
+  }
+
+  public void setListName(String value) {
+    takeStoredValueForKey(value, LIST_NAME_KEY);
   }
 
 }

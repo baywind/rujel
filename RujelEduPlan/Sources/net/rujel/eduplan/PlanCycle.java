@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -335,11 +336,40 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		if (course.cycle() instanceof PlanCycle) {
 			PlanCycle cycle = (PlanCycle) course.cycle();
-			return cycle.hours();
+			return cycle.weeklyHours(period.eduYear())[0];
 		}
 		return 0;
 	}
 
+	public int[] weeksAndDays(Integer eduYear) {
+		EOEditingContext ec = editingContext();
+		EOEnterpriseObject setting = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
+				this, eduYear, ec);
+		String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+		setting = SettingsBase.settingForValue("weekDays", this, eduYear, ec);
+		int weekDays = (setting==null)?7:
+			((Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY)).intValue();
+		int days = EduPeriod.daysForList(listName, ec);
+		return new int[] {days/weekDays,days%weekDays};
+	}
+	
+	public int weekly() {
+		return weeklyHours(null)[0];
+	}
+	
+	public int[] weeklyHours(Integer eduYear) {
+		int[] weeksAndDays = weeksAndDays(eduYear);
+		int[] weeklyHours = new int[2]; 
+		int hours = hours().intValue();
+		weeklyHours[0] = hours / weeksAndDays[0];
+		weeklyHours[1] = hours % weeksAndDays[0];
+		if(weeklyHours[1] > weeklyHours[0]) {
+			weeklyHours[0]++;
+			weeklyHours[1] = hours - weeksAndDays[0]*weeklyHours[0];
+		}
+		return weeklyHours;
+	}
+	
 /*	
 	public static int planLessonsInPeriod(EduPeriod period, int planHours, NSTimestamp toDate) {
 		long millis = period.end().getTime();

@@ -600,7 +600,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return;
 		}
 		Reason.Props props = Reason.propsFromEvents(set);
-		NSArray reasons = Reason.reasons(props, false);
+		NSArray reasons = Reason.reasons(props);
 		if(reasons == null)
 			reasons = NSArray.EmptyArray;
 		tmpDict.takeValueForKey(reasons, "reasonsToMoveIn");

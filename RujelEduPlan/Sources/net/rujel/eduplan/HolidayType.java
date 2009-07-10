@@ -1,4 +1,4 @@
-// _PeriodType.java
+//  HolidayType.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -27,65 +27,17 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PeriodType.java instead.
-
 package net.rujel.eduplan;
 
-import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
-import java.math.BigDecimal;
+import com.webobjects.eocontrol.*;
 
-@SuppressWarnings("all")
-public abstract class _PeriodType extends EOGenericRecord {
-	public static final String ENTITY_NAME = "PeriodType";
+public class HolidayType extends _HolidayType {
 
-	// Attributes
-	public static final String IN_YEAR_COUNT_KEY = "inYearCount";
-	public static final String NAME_KEY = "name";
-	public static final String TITLE_KEY = "title";
+	public static void init() {
+	}
 
-	// Relationships
-	public static final String TEMPLATES_KEY = "templates";
-
-  public Integer inYearCount() {
-    return (Integer) storedValueForKey(IN_YEAR_COUNT_KEY);
-  }
-
-  public void setInYearCount(Integer value) {
-    takeStoredValueForKey(value, IN_YEAR_COUNT_KEY);
-  }
-
-  public String name() {
-    return (String) storedValueForKey(NAME_KEY);
-  }
-
-  public void setName(String value) {
-    takeStoredValueForKey(value, NAME_KEY);
-  }
-
-  public String title() {
-    return (String) storedValueForKey(TITLE_KEY);
-  }
-
-  public void setTitle(String value) {
-    takeStoredValueForKey(value, TITLE_KEY);
-  }
-
-  public NSArray templates() {
-    return (NSArray)storedValueForKey(TEMPLATES_KEY);
-  }
- 
-  public void setTemplates(NSArray value) {
-    takeStoredValueForKey(value, TEMPLATES_KEY);
-  }
-  
-  public void addToTemplates(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, TEMPLATES_KEY);
-  }
-
-  public void removeFromTemplates(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, TEMPLATES_KEY);
-  }
-
+	public void awakeFromInsertion(EOEditingContext ec) {
+		super.awakeFromInsertion(ec);
+	}
 }

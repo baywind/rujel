@@ -1,4 +1,4 @@
-// _PeriodType.java
+// _HolidayType.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PeriodType.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to HolidayType.java instead.
 
 package net.rujel.eduplan;
 
@@ -37,23 +37,49 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _PeriodType extends EOGenericRecord {
-	public static final String ENTITY_NAME = "PeriodType";
+public abstract class _HolidayType extends EOGenericRecord {
+	public static final String ENTITY_NAME = "HolidayType";
 
 	// Attributes
-	public static final String IN_YEAR_COUNT_KEY = "inYearCount";
+	public static final String BEGIN_DAY_KEY = "beginDay";
+	public static final String BEGIN_MONTH_KEY = "beginMonth";
+	public static final String END_DAY_KEY = "endDay";
+	public static final String END_MONTH_KEY = "endMonth";
 	public static final String NAME_KEY = "name";
-	public static final String TITLE_KEY = "title";
 
 	// Relationships
-	public static final String TEMPLATES_KEY = "templates";
+	public static final String HOLIDAYS_KEY = "holidays";
 
-  public Integer inYearCount() {
-    return (Integer) storedValueForKey(IN_YEAR_COUNT_KEY);
+  public Integer beginDay() {
+    return (Integer) storedValueForKey(BEGIN_DAY_KEY);
   }
 
-  public void setInYearCount(Integer value) {
-    takeStoredValueForKey(value, IN_YEAR_COUNT_KEY);
+  public void setBeginDay(Integer value) {
+    takeStoredValueForKey(value, BEGIN_DAY_KEY);
+  }
+
+  public Integer beginMonth() {
+    return (Integer) storedValueForKey(BEGIN_MONTH_KEY);
+  }
+
+  public void setBeginMonth(Integer value) {
+    takeStoredValueForKey(value, BEGIN_MONTH_KEY);
+  }
+
+  public Integer endDay() {
+    return (Integer) storedValueForKey(END_DAY_KEY);
+  }
+
+  public void setEndDay(Integer value) {
+    takeStoredValueForKey(value, END_DAY_KEY);
+  }
+
+  public Integer endMonth() {
+    return (Integer) storedValueForKey(END_MONTH_KEY);
+  }
+
+  public void setEndMonth(Integer value) {
+    takeStoredValueForKey(value, END_MONTH_KEY);
   }
 
   public String name() {
@@ -64,28 +90,20 @@ public abstract class _PeriodType extends EOGenericRecord {
     takeStoredValueForKey(value, NAME_KEY);
   }
 
-  public String title() {
-    return (String) storedValueForKey(TITLE_KEY);
-  }
-
-  public void setTitle(String value) {
-    takeStoredValueForKey(value, TITLE_KEY);
-  }
-
-  public NSArray templates() {
-    return (NSArray)storedValueForKey(TEMPLATES_KEY);
+  public NSArray holidays() {
+    return (NSArray)storedValueForKey(HOLIDAYS_KEY);
   }
  
-  public void setTemplates(NSArray value) {
-    takeStoredValueForKey(value, TEMPLATES_KEY);
+  public void setHolidays(NSArray value) {
+    takeStoredValueForKey(value, HOLIDAYS_KEY);
   }
   
-  public void addToTemplates(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, TEMPLATES_KEY);
+  public void addToHolidays(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, HOLIDAYS_KEY);
   }
 
-  public void removeFromTemplates(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, TEMPLATES_KEY);
+  public void removeFromHolidays(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, HOLIDAYS_KEY);
   }
 
 }

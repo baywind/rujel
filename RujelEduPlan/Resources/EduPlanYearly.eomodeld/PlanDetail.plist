@@ -5,15 +5,15 @@
         {allowsNull = N; columnName = PERIOD; name = periodID; prototypeName = short; }, 
         {
             allowsNull = N; 
-            columnName = TOTAL; 
-            name = total; 
+            columnName = WEEKLY; 
+            name = weekly; 
             prototypeName = short; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (hours, total); 
+    attributesUsedForLocking = (hours, weekly); 
     className = EOGenericRecord; 
-    classProperties = (eduPeriod, hours, total); 
+    classProperties = (eduPeriod, hours, weekly); 
     externalName = "PLAN_DETAIL"; 
     fetchSpecificationDictionary = {}; 
     name = PlanDetail; 

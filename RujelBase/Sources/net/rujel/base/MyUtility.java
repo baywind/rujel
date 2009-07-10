@@ -40,6 +40,7 @@ import com.webobjects.appserver.WOSession;
 
 import java.text.Format;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
@@ -263,5 +264,18 @@ public class MyUtility {
 		}
 		context.generateCompleteURLs();
 		return context;
+	}
+	
+	public static int countDays(Date begin, Date end) {
+		Calendar cal1 = Calendar.getInstance();
+		cal1.setTime(begin);
+		Calendar cal2 = Calendar.getInstance();
+		cal2.setTime(end);
+		int days = cal2.get(Calendar.DAY_OF_YEAR) - cal1.get(Calendar.DAY_OF_YEAR);
+		while (cal1.get(Calendar.YEAR) < cal2.get(Calendar.YEAR)) {
+			days += cal1.getActualMaximum(Calendar.DAY_OF_YEAR);
+			cal1.add(Calendar.YEAR, 1);
+		}
+		return days +1;
 	}
 }

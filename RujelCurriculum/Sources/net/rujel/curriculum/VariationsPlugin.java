@@ -32,11 +32,16 @@ package net.rujel.curriculum;
 import java.util.Calendar;
 import java.util.Enumeration;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.*;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOAndQualifier;
+import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.*;
@@ -94,98 +99,118 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 	public static NSDictionary planFact(EduCourse course, NSTimestamp date) {
 		int plan = 0;
 		int maxDev = 0;
-		Calendar cal = null;
-		if (date != null) {
-			cal = Calendar.getInstance();
-			cal.setTime(date);
-			if (cal.get(Calendar.HOUR_OF_DAY) == 0)
-				cal = null;
+		int days = 0;
+		int weeks = 0;
+		int extraDays = 0;
+		int active = 2;
+		boolean exclude = false;
+		EOEditingContext ec = course.editingContext();
+		int weekDays = SettingsBase.numericSettingForCourse("weekDays", course, ec,7);
+	
+		String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, 
+				course, ec);
+		if(date != null) {
+			active = EduPeriod.dayState(date, ec, listName);
+			if(active==0) {
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(date);
+				exclude = (cal.get(Calendar.HOUR_OF_DAY) == 0);
+			}
 		}
-		NSArray periods = EduPeriod.periodsForCourse(course);
-		if(periods == null || periods.count() == 0)
-			return null;
-		NSMutableDictionary result = new NSMutableDictionary();
-/*		NSArray list = PeriodType.periodTypesForCourse(course);
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec,
+				"PlanDetail","course", course);
 		if(list != null && list.count() > 0) {
-//			PeriodType perType = (PeriodType)list.objectAtIndex(0);
-			EOQualifier[] quals = new EOQualifier[2];
-			quals[0] = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual, course.eduYear());
-			quals[1] = new EOKeyValueQualifier(EduPeriod.PERIOD_TYPE_KEY,
-					EOQualifier.QualifierOperatorEqual,list.objectAtIndex(0));
-			EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,
-					new EOAndQualifier(new NSArray(quals)),MyUtility.numSorter);
-			NSArray periods = ec.objectsWithFetchSpecification(fs);
-			if(periods != null && periods.count() > 0) {
-*/				Enumeration enu = periods.objectEnumerator();
-				int days = 0;
-				int totalWeeks = 0;
-				while (enu.hasMoreElements()) {
-					EduPeriod period = (EduPeriod) enu.nextElement();
-					if(date != null && date.compare(period.begin()) < 0)
-						break;
-					int hours = PlanCycle.planHoursForCourseAndPeriod(course, period);
-					if(hours == 0)
+			Enumeration enu = list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject pd = (EOEnterpriseObject) enu.nextElement();
+				Integer hours = (Integer)pd.valueForKey("hours");
+				if(hours == null || hours.intValue() == 0)
+					continue;
+				EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
+				if(date == null || date.compare(per.end()) > 0) {
+					days += per.daysInPeriod(null,listName);
+					plan += hours.intValue();
+				} else if(date.compare(per.begin()) > 0) {
+					hours = (Integer)pd.valueForKey("weekly");
+					if(hours == null || hours.intValue() == 0)
 						continue;
-					if (days > 3) {
-						days += period.daysInPeriod(date);
-						if(days > 7) {
-							days -= 7;
-							plan += maxDev;
-							maxDev = 0;
-						}
-					} else {
-						days += period.daysInPeriod(date);
+					int perDays = per.daysInPeriod(date,listName);
+					if(active == 0 && perDays > 0)
+						perDays--;
+					days += perDays;
+					int perWeeks = perDays/weekDays;
+					maxDev = hours.intValue();
+					plan += perWeeks*maxDev;
+					if (perDays > 0) {
+						extraDays = perDays % weekDays;
+						if (active == 0 && !exclude)
+							extraDays++;
 					}
-					int weeks = days / 7;
-					totalWeeks += weeks;
-					days = days%7;
-					plan += weeks*hours;
-					maxDev = (days > 0)?hours:0;
-//					if(date.compare(period.end()) > 0) {
-//						hours = 0;
-//					}
 				}
-				if(cal != null)
-					days++;
-				result.takeValueForKey(new Integer(plan), "planPre");
-				result.takeValueForKey(new Integer(maxDev), "maxDeviation");
-				result.takeValueForKey(new Integer(days), "extraDays");
-				result.takeValueForKey(new Integer(totalWeeks), "weeks");
-//				if(days >= 4) {
-//					result.takeValueForKey(Boolean.TRUE, "weekend");
-//				}
-//			}
-//		}
-		if(plan + maxDev == 0)
+				if(maxDev == 0)
+					active = 2;
+				weeks = days/weekDays;
+			}
+		} else {
+			days = EduPeriod.daysForList(listName, date, ec);
+			if(active == 0 && days > 0)
+				days--;
+			else if(active == 2) {
+				EOQualifier[] quals = new EOQualifier[2];
+				quals[0] = new EOKeyValueQualifier("period.end",
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
+				quals[1] = new EOKeyValueQualifier("listName",
+						EOQualifier.QualifierOperatorEqual,listName);
+				quals[0] = new EOAndQualifier(new NSArray(quals));
+				EOFetchSpecification fs = new EOFetchSpecification("PeriodList",quals[0],null);
+				fs.setFetchLimit(1);
+				list = ec.objectsWithFetchSpecification(fs);
+				if(list == null || list.count() == 0)
+					active = 3;
+			}
+			weeks = days/weekDays;
+			extraDays = days%weekDays;
+			PlanCycle cl = (PlanCycle)course.cycle();
+			maxDev = cl.weeklyHours(course.eduYear())[0];
+			if(active < 3) {
+				plan = weeks*maxDev;
+				if(active == 0 && !exclude)
+					extraDays++;
+			} else {
+				plan = cl.hours().intValue();
+			}
+		}
+
+		NSMutableDictionary result = new NSMutableDictionary();
+		result.takeValueForKey(new Integer(plan), "plan");
+		result.takeValueForKey(new Integer(maxDev), "maxDeviation");
+		result.takeValueForKey(new Integer(extraDays), "extraDays");
+		result.takeValueForKey(new Integer(weeks), "weeks");
+
+		if(plan + extraDays == 0)
 			return result;
-		NSArray list = Variation.variations(course, null, date, null);
+		list = Variation.variations(course, null, date);
 		int plus = 0;
 		int minus = 0;
-		boolean verifiedOnly = SettingsReader.boolForKeyPath("ignoreUnverifiedReasons", false);
+//		boolean verifiedOnly = SettingsReader.boolForKeyPath("ignoreUnverifiedReasons", false);
+		int verifiedOnly = SettingsBase.numericSettingForCourse("ignoreUnverifiedReasons", course, ec, 0);
 		if(list != null && list.count() > 0) {
-			enu = list.objectEnumerator();
+			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Variation var = (Variation) enu.nextElement();
 				int value = var.value().intValue();
-				if(var.isExternal()) {
-					plan += value;
-				} else {
-					if(verifiedOnly && var.reason().unverified())
+					if(verifiedOnly > 0 && var.reason().unverified())
 						continue;
 					if (value > 0)
 						plus += value;
 					else
 						minus -= value;
-				}
 			}
 			result.takeValueForKey(new Integer(plus), "plus");
 			result.takeValueForKey(new Integer(minus), "minus");
 			result.takeValueForKey(new Integer(plus - minus), "netChange");
-		}
-		result.takeValueForKey(new Integer(plan), "plan");
-		
-		int fact = factOnDate(course, date,(cal==null));
+		}		
+		int fact = factOnDate(course, date,exclude);
 		if(fact < 0)
 			return result;
 		else

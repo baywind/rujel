@@ -33,6 +33,9 @@ import java.util.Enumeration;
 
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
+import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Teacher;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -61,42 +64,103 @@ public class SettingsBase extends _SettingsBase {
 			return this;
 		EOEnterpriseObject result = this;
 		Enumeration en = byCourse.objectEnumerator();
-		NSMutableArray matches = new NSMutableArray();
+		int matches = 0;
 		Integer eduYear = course.eduYear();
-		bycourse:
 		while (en.hasMoreElements()) {
 			EOEnterpriseObject bc = (EOEnterpriseObject) en.nextElement();
 			Integer year = (Integer)bc.valueForKey("eduYear");
 			if(year != null && !year.equals(eduYear))
-				continue bycourse;
+				continue;
 			if(bc.valueForKey("course") == course)
 				return bc;
-			if(matches.count() > 0) {
-				Enumeration menu = matches.objectEnumerator();
-				while (menu.hasMoreElements()) {
-					String key = (String) menu.nextElement();
-					if(!match(bc, course, key))
-						continue bycourse;
-				}
-			}
-			if(matches.count() > 0)
-				matches.removeAllObjects();
-			for (int i = 0; i < keys.length; i++) {
-				if(match(bc, course, keys[i])) {
-					matches.addObject(keys[i]);
-					result = bc;
-				}
+			int match = match(bc, course);
+			if(match > matches) {
+				matches = match;
+				result = bc;
 			}
 		}
 		return result;
 	}
 	
-	protected boolean match(EOEnterpriseObject bc, EduCourse course, String key) {
-		if(key.equals("grade")) {
-			Integer grade = (Integer)bc.valueForKey(key);
-			return (grade != null && grade.equals(course.cycle().grade()));
+	protected int match(EOEnterpriseObject bc, EduCourse course) {
+		int match = 0;
+		for (int i = 1; i < keys.length; i++) {
+			if (bc.valueForKey(keys[i]) == course.valueForKey(keys[i]))
+				match++;
 		}
-		return (bc.valueForKey(key) == course.valueForKey(key));
+		Integer grade = (Integer)bc.valueForKey(keys[0]);
+		if (grade != null && grade.equals(course.cycle().grade()))
+			match++;
+		return match;
+	}
+	
+	public EOEnterpriseObject forValue(Object value, Integer eduYear) {
+		if(value == null || value == NullValue)
+			return this;
+		if(value instanceof EduCourse)
+			return forCourse((EduCourse)value);
+		NSArray byCourse = byCourse();
+		if(byCourse == null || byCourse.count() == 0)
+			return this;
+		int idx = -1;
+		Number grade = null;
+		if(value instanceof Number) {
+			idx = 0;
+//			grade = (Number)value;
+		} else if(value instanceof EduCycle) {
+			idx = 1;
+			grade = ((EduCycle)value).grade();
+		} else if(value instanceof EduGroup) {
+			idx = 2;
+			grade = ((EduGroup)value).grade();
+		} else if(value instanceof Teacher) {
+			idx = 3;
+		} else {
+			return null;
+		}
+		Enumeration en = byCourse.objectEnumerator();
+		EOEnterpriseObject forGrade = this;
+		loop:
+		while (en.hasMoreElements()) {
+			EOEnterpriseObject bc = (EOEnterpriseObject) en.nextElement();
+			Integer year = (Integer)bc.valueForKey("eduYear");
+			if(year != null && !year.equals(eduYear))
+				continue;
+			if(!value.equals(bc.valueForKey(keys[idx]))) {
+				if(grade != null && grade.equals(bc.valueForKey(keys[0]))) {
+					for (int i = 1; i < keys.length; i++) {
+						if(bc.valueForKey(keys[i]) != null)
+							continue loop;
+					}
+					forGrade = bc;
+				}
+				continue;				
+			}
+			if(bc.valueForKey("course") != null)
+				continue;
+			for (int i = 1; i < keys.length; i++) {
+				if(i == idx)
+					continue;
+				if(bc.valueForKey(keys[i]) != null)
+					continue loop;
+			}
+			Object grd = bc.valueForKey(keys[0]); 
+			if(grd == null || grd.equals(grade))
+				return bc;
+		}
+		return forGrade;
+	}
+	
+
+	public static EOEnterpriseObject settingForValue(String key, Object value, 
+			Integer eduYear, EOEditingContext ec) {
+		try {
+			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
+					ENTITY_NAME, KEY_KEY, key);
+			return sb.forValue(value, eduYear);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
 	public static EOEnterpriseObject settingForCourse(String key, EduCourse course, 
@@ -105,13 +169,21 @@ public class SettingsBase extends _SettingsBase {
 			ec = course.editingContext();
 		try {
 			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
-					ENTITY_NAME, "key", key);
+					ENTITY_NAME, KEY_KEY, key);
 			return sb.forCourse(course);
 		} catch (Exception e) {
 			return null;
 		}
 	}
 	
+	public static int numericSettingForCourse(String key, EduCourse course, 
+			EOEditingContext ec, int defaultValue) {
+		EOEnterpriseObject eo = settingForCourse(key, course, ec);
+		if (eo==null)
+			return defaultValue;
+		return ((Integer)eo.valueForKey(NUMERIC_VALUE_KEY)).intValue();
+	}
+
 	public static Integer numericSettingForCourse(String key, EduCourse course, 
 			EOEditingContext ec) {
 		EOEnterpriseObject eo = settingForCourse(key, course, ec);

@@ -69,7 +69,6 @@ public class PeriodType extends _PeriodType  {
 	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
-		setArchiveSince(new Integer(0));
 	}
 	
 	public static NSArray allPeriodTypes(EOEditingContext ec) {

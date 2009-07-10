@@ -627,12 +627,10 @@
 			<key>dbName</key>
 			<string>RujelStatic</string>
 		</dict>
-		<key>_Curriculum</key>
+		<key>Curriculum</key>
 		<dict>
-			<key>untagged</key>
-			<string>Curriculum</string>
 			<key>dbName</key>
-			<string>Curriculum%s</string>
+			<string>RujelYear%s</string>
 		</dict>
 		<key>EduPlanModel</key>
 		<dict>
@@ -697,7 +695,7 @@
 		<key>net.rujel.eduresults.ModuleInit</key>
 		<string>true</string>
 		<key>net.rujel.curriculum.CurriculumModule</key>
-		<string>false</string>
+		<string>true</string>
 		<key>net.rujel.reports.ReportsModule</key>
 		<string>true</string>
 		<key>net.rujel.stats.StatsModule</key>

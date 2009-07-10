@@ -33,11 +33,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
 import net.rujel.base.MyUtility;
-//import net.rujel.eduplan.PlanCycle;
-//import net.rujel.eduresults.EduPeriod;
-//import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
-import net.rujel.reusables.Various;
 
 public class Variation extends _Variation implements Reason.Event {
 
@@ -58,12 +54,8 @@ public class Variation extends _Variation implements Reason.Event {
 		takeStoredValueForKey(newCourse, "course");
 	}
 	
-	public boolean isExternal() {
-		return Various.boolForObject(valueForKeyPath("reason.external"));
-	}
-	
 	public static NSArray variations(EduCourse course, 
-			NSTimestamp begin, NSTimestamp end,Boolean ext) {
+			NSTimestamp begin, NSTimestamp end) {
 		EOQualifier qual = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual, course);
 		NSMutableArray quals = new NSMutableArray(qual);
@@ -81,18 +73,13 @@ public class Variation extends _Variation implements Reason.Event {
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,MyUtility.dateSorter);
 		fs.setRefreshesRefetchedObjects(true);
 		NSArray vars = course.editingContext().objectsWithFetchSpecification(fs);
-		if(ext != null) {
-			qual = new EOKeyValueQualifier("isExternal",
-					EOQualifier.QualifierOperatorEqual,ext);
-			vars = EOQualifier.filteredArrayWithQualifier(vars, qual);
-		}
 //		if(vars == null)
 //			vars = NSArray.EmptyArray;
 		return vars;
 	}
 	
 	public static int totalVariations(EduCourse course, NSTimestamp begin, NSTimestamp end) {
-		NSArray vars = variations(course, begin, end, Boolean.FALSE);
+		NSArray vars = variations(course, begin, end);
 		if(vars == null || vars.count() == 0)
 			return 0;
 		Number result = (Number)vars.valueForKeyPath("@sum.value");
@@ -130,9 +117,6 @@ public class Variation extends _Variation implements Reason.Event {
 	}*/
 	
     public String valueStyle() {
-    	if(isExternal()) {
-    		return "font-weight:bold;text-align:center;color:#666666;";    		
-    	}
     	if(value().intValue() > 0) {
     		return "font-weight:bold;text-align:left;color:#009933;";
     	}
