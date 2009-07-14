@@ -29,7 +29,12 @@
 
 package net.rujel.eduplan;
 
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class HolidayType extends _HolidayType {
@@ -39,5 +44,63 @@ public class HolidayType extends _HolidayType {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+	}
+	
+	public void validateForSave() throws NSValidation.ValidationException {
+		super.validateForSave();
+		int dif = endMonth().intValue() - beginMonth().intValue();
+		if(dif == 0) dif = endDay().intValue() - beginDay().intValue();
+		if(dif <= 0) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.beginEndPeriod");
+			throw new NSValidation.ValidationException(message);
+		}
+		int day = beginDay().intValue();
+		int month = beginMonth().intValue();
+		if(month > 12)
+			month -= 12;
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.set(GregorianCalendar.MONTH,month);
+//		2004,month,1);
+		if(day > cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH)) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.invalidDateInMonth");
+			throw new NSValidation.ValidationException(message);
+		}
+		day = endDay().intValue();
+		month = endMonth().intValue();
+		if(month > 12)
+			month -= 12;
+		cal.set(GregorianCalendar.MONTH,month);
+		if(day > cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH)) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.invalidDateInMonth");
+			throw new NSValidation.ValidationException(message);
+		}
+	}
+	
+	public Holiday makeHoliday(Integer eduYear) {
+		Holiday hd = (Holiday)EOUtilities.createAndInsertInstance(editingContext(),
+				Holiday.ENTITY_NAME);
+		hd.addObjectToBothSidesOfRelationshipWithKey(this, Holiday.HOLIDAY_TYPE_KEY);
+		int year = eduYear.intValue();
+		int month = beginMonth().intValue();
+		if(month > 12) {
+			month -= 12;
+			year++;
+		}
+		int day =  beginDay().intValue();
+		NSTimestamp datum = new NSTimestamp(year,month,day,0,0,0,TimeZone.getDefault());
+		hd.setBegin(datum);
+		year = eduYear;
+		month = beginMonth().intValue();
+		if(month > 12) {
+			month -= 12;
+			year++;
+		}
+		day =  beginDay().intValue();
+		datum = new NSTimestamp(year,month,day,0,0,0,TimeZone.getDefault());
+		hd.setEnd(datum);
+		return hd;
 	}
 }

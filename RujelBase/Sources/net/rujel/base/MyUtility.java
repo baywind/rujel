@@ -44,6 +44,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
@@ -277,5 +279,36 @@ public class MyUtility {
 			cal1.add(Calendar.YEAR, 1);
 		}
 		return days +1;
+	}
+	
+	public static void scheduleTaskOnTime(TimerTask task, String time) {
+		Timer timer = (Timer)WOApplication.application().valueForKey("timer");
+		if(timer == null)
+			return;
+		if(time == null || task == null)
+			throw new NullPointerException("Both attributes are required");
+		int hour = 0;
+		int minute = 0;
+		int idx = time.indexOf(':');
+		if(idx < 0) {
+			hour = Integer.parseInt(time);
+		} else {
+			hour = Integer.parseInt(time.substring(0,idx));
+			time = time.substring(idx+1);
+			idx = time.indexOf(':');
+			if(idx < 0) {
+				minute = Integer.parseInt(time);
+				idx = 1;
+			} else {
+				minute = Integer.parseInt(time.substring(0,idx));
+				idx = Integer.parseInt(time.substring(idx+1));
+			}
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.HOUR, hour);
+		cal.set(Calendar.MINUTE, minute);
+		cal.set(Calendar.SECOND, idx);
+		if(System.currentTimeMillis() < cal.getTimeInMillis())
+			timer.schedule(task, cal.getTime());
 	}
 }

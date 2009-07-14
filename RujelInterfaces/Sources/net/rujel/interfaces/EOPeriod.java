@@ -46,6 +46,8 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 	
 	public NSTimestamp end();
 	
+	public String name();
+	
 	//public boolean contains(NSTimestamp date);
 
 	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {

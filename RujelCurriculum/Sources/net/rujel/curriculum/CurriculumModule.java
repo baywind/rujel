@@ -30,8 +30,10 @@
 package net.rujel.curriculum;
 
 import java.util.Enumeration;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
@@ -187,16 +189,13 @@ public class CurriculumModule {
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 		if(disable)
 			return null;
-		Scheduler sched = Scheduler.sharedInstance();
-
-		java.lang.reflect.Method method = null;
-		try {
-			method = Reprimand.class.getMethod("planFactCheck",(Class[])null);
-		} catch (Exception ex) {
-			throw new RuntimeException("Could not get method to schedule",ex);
-		}
-		sched.registerTask(Scheduler.DAILY,method,null,null,"PlanFactCheck");
-
+		String checkTime = SettingsReader.stringForKeyPath("edu.planFactCheckTime", "0:59");
+		TimerTask task = new TimerTask() {
+			public void run() {
+				Reprimand.planFactCheck();
+			}
+		};
+		MyUtility.scheduleTaskOnTime(task,checkTime);
 		return null;
 	}
 }

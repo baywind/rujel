@@ -44,5 +44,33 @@
 		<key>sort</key>
 		<string>40</string>
 	</dict>
+	<key>EduPeriod</key>
+	<dict>
+		<key>this</key>
+		<string>Учебный период</string>
+		<key>eduYear</key>
+		<string>Учебный год</string>
+		<key>name</key>
+		<string>Название</string>
+		<key>begin</key>
+		<string>Начало</string>
+		<key>end</key>
+		<string>Конец</string>
+		<key>title</key>
+		<string>Кратко</string>
+		<key>fullName</key>
+		<string>Полное название</string>
+	</dict>
+	<key>messages</key>
+	<dict>
+		<key>beginEndPeriod</key>
+		<string>Конец периода не может быть раньше начала</string>
+		<key>invalidDateInMonth</key>
+		<string>Неверная дата для выбранного месяца</string>
+		<key>titleRequired</key>
+		<string>Необходимо указать краткое название периода</string>
+		<key>titleTooLong</key>
+		<string>Слишком длинное краткое название периода.&lt;br/&gt; Можно использовать не более двух слов длиной не более 4 букв каждое.</string>
+	</dict>
 </dict>
 </plist>

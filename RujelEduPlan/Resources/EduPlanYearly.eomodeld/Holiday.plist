@@ -7,12 +7,6 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
-            columnName = "EDU_YEAR"; 
-            name = eduYear; 
-            prototypeName = short; 
-            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
-        }, 
-        {
             columnName = END; 
             name = end; 
             prototypeName = date; 
@@ -39,10 +33,10 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (begin, eduYear, end, listName, typeID); 
+    attributesUsedForLocking = (begin, end, listName, typeID); 
     className = "net.rujel.eduplan.Holiday"; 
-    classProperties = (begin, eduYear, end, listName); 
-    externalName = HOLYDAY; 
+    classProperties = (begin, end, holidayType, listName); 
+    externalName = HOLIDAY; 
     fetchSpecificationDictionary = {}; 
     name = Holiday; 
     primaryKeyAttributes = (hID); 

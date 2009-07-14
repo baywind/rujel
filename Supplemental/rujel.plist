@@ -600,6 +600,8 @@
 		</dict>
 		<key>AutoItog</key>
 		<dict>
+			<key>skip</key>
+			<string>true</string>
 			<key>untagged</key>
 			<string>AutoItog</string>
 			<key>dbName</key>

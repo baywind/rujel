@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
@@ -62,68 +63,30 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	 }
 	 */
 	
-	public int countInYear() {
-		PeriodType type = periodType();
-		if(type != null && type.inYearCount() != null)
-			return type.inYearCount().intValue();
-		return 0;
-	}
-	
 	public boolean contains(Date date) {
 		return (date.compareTo(begin()) >= 0 && date.compareTo(end()) <= 0);
-	}
-	
-	public String typeID() {
-		return "EduPeriod." + periodType().name();
-	}
-	
-	public EduPeriod nextPeriod() {
-		Number year = eduYear();
-		Number num = num();
-		if(year == null || num == null || num.intValue() >= countInYear())
-			return null;
-		NSMutableDictionary attrs = new NSMutableDictionary(year,"eduYear");
-		Integer nextNum = new Integer(num.intValue() + 1);
-		attrs.setObjectForKey(nextNum,"num");
-		attrs.setObjectForKey(periodType(),"periodType");
-		try {
-			return (EduPeriod)EOUtilities.objectMatchingValues(editingContext(),"EduPeriod",attrs);
-		} catch (Exception ex) {
-			if(ex instanceof EOUtilities.MoreThanOneException) {
-				/// log
-			}
-			return null;
-		}
-	}
-	
-	public Number validateNum(Object aValue) throws NSValidation.ValidationException {
-		Integer numberValue;
-		if (aValue instanceof String) {
-			// Convert the String to an Integer.
-			try {
-				numberValue = new Integer((String)aValue);
-			} catch (NumberFormatException numberFormatException) {
-				throw new NSValidation.ValidationException("Validation exception: Unable to convert the String " + aValue + " to an Integer");
-			}
-		} else if (aValue instanceof Number) {
-			numberValue = new Integer(((Number)aValue).intValue());
-		} else {
-			throw new NSValidation.ValidationException("Validation exception: Unable to convert the Object " + aValue + " to an Integer");
-		}
-		
-		int num = numberValue.intValue();
-		if (num <= 0 || num > countInYear()) {
-			String message = String.format((String)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.invalidPeriodNum"),periodType().inYearCount());
-			throw new NSValidation.ValidationException(message, this, "num");
-		}
-		return numberValue;
 	}
 	
 	public void validateForSave() throws NSValidation.ValidationException {
 		super.validateForSave();
 		if(begin().compare(end()) >= 0) {
-			String message = (String)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.beginEndPeriod");
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.beginEndPeriod");
 			throw new NSValidation.ValidationException(message);
+		}
+		String title = title();
+		if(title == null) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.titleRequired");
+			throw new NSValidation.ValidationException(message);
+		}
+		if(title.length() > 4) {
+			int idx = title.indexOf(' ');
+			if(idx < 0 || idx >= 4 || (title.length() - idx) > 6) {
+				String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.titleTooLong");
+				throw new NSValidation.ValidationException(message);
+			}
 		}
 	}
 	
@@ -218,83 +181,28 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		EOEnterpriseObject pl = (EOEnterpriseObject)list.objectAtIndex(0);
 		return (EduPeriod)pl.valueForKey("period");
 	}
-	
-	public String title() {
-		if(countInYear() > 1) {
-			return Various.makeRoman(num().intValue()) + ' ' + periodType().title();
-		}
-		return periodType().title();
-	}
-	
+		
 	public String name() {
-		if(countInYear() > 1) {
-			return Various.makeRoman(num().intValue()) + ' ' + periodType().name();
-		}
-		return periodType().name();
+		if(fullName() == null)
+			return title();
+		return fullName();
 	}
-
-	/*
-	public Number number() {
-		if(lesNum == null)
-			return num();
-		return lesNum;
-	}
-	public void setNumber(Number newNumber) {
-		lesNum = newNumber;
-	}
-	
-	public NSTimestamp date() {
-		return end();
-	}
-	public void setDate(NSTimestamp newDate) {
-		throw new UnsupportedOperationException("You can't change date here");
-	}
-	
-	public void setTitle(String newTitle) {
-		throw new UnsupportedOperationException("You can't change title here");
-	}	
-	
-	public String theme() {
-		return periodType().name();
-	}
-	public void setTheme(String newTheme) {
-		throw new UnsupportedOperationException("You can't change theme here");
-	}
-	
-	
-	public String homeTask() {
-		return null;
-	}
-	public void setHomeTask(String newTask) {
-		throw new UnsupportedOperationException("Hometask is unavalable for itogs");
-	}	
-	
-	public NSArray notes() {
-		if(itogs == null) {
-			if(course == null)
-				throw new IllegalStateException("Course is not set");
-			itogs = ItogMark.getItogMarks(course.cycle(),this,null);
-		}
-		return itogs;
-	}
-	public NSArray students() {
-		return course.groupList();
-	}
-	
-	public String noteForStudent(Student student) {
-		return itogForStudent(student).comment();
-	}
-	public void setNoteForStudent(String note, Student student) {
-		itogForStudent(student).setComment(note);
-	}
-	*/
 		
 	public Number sort() {
-		return new Integer (100*(99 - countInYear()) + (num().intValue()));
+		return new Integer(code());
 	}
 	
 	public int code() {
-		return 10000*eduYear().intValue() + sort().intValue();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(begin());
+		int result = cal.get(Calendar.YEAR);
+		result -= 2000;
+		result = result*10000;
+		result += cal.get(Calendar.MONTH)*100;
+		result += cal.get(Calendar.DAY_OF_MONTH);
+		result = (result+1)*1000;
+		result -= MyUtility.countDays(begin(), end());
+		return result;
 	}
 	
 	public String presentEduYear() {
@@ -379,6 +287,14 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		public PeriodTab(EduPeriod period, boolean isCurrent) {
 			title = period.title();
 			code = period.code();
+/*			try {
+				EOKeyGlobalID gid = (EOKeyGlobalID)period.editingContext().
+						globalIDForObject(period);
+				Integer key = (Integer)gid.keyValues()[0];
+				code = key.intValue();
+			} catch (Exception e) {
+				code = 0;
+			}*/
 			current = isCurrent;
 			NSMutableArray quals = new NSMutableArray();
 			quals.addObject(new EOKeyValueQualifier

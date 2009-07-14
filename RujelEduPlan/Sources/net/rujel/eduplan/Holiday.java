@@ -29,14 +29,16 @@
 
 package net.rujel.eduplan;
 
+import java.util.Date;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EOPeriod;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 
-public class Holiday extends _Holiday {
+public class Holiday extends _Holiday implements EOPeriod {
 
 	public static void init() {
 	}
@@ -95,4 +97,16 @@ public class Holiday extends _Holiday {
 		}
 		return days;
 	}
+
+	public boolean contains(Date date) {
+		if (date.compareTo(begin()) >= 0 && date.compareTo(end()) <= 0)
+			return true;
+		
+		return false;
+	}
+
+	public String name() {
+		return holidayType().name();
+	}
+
 }

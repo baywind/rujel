@@ -3,25 +3,22 @@
         {columnName = BEGIN; name = begin; prototypeName = date; }, 
         {columnName = "EDU_YEAR"; name = eduYear; prototypeName = short; }, 
         {columnName = END; name = end; prototypeName = date; }, 
-        {columnName = NUM; name = num; prototypeName = byte; valueType = i; }, 
-        {columnName = "PER_TYPE"; name = perType; prototypeName = short; }, 
-        {columnName = "P_ID"; name = pID; prototypeName = short; }
+        {columnName = NAME; name = fullName; prototypeName = word; }, 
+        {columnName = "P_ID"; name = pID; prototypeName = short; }, 
+        {
+            allowsNull = N; 
+            columnName = TITLE; 
+            name = title; 
+            prototypeName = anagram; 
+            valueType = i; 
+            width = 9; 
+        }
     ); 
-    attributesUsedForLocking = (perType, begin, end, num, eduYear); 
+    attributesUsedForLocking = (begin, end, eduYear, fullName, title); 
     className = "net.rujel.eduplan.EduPeriod"; 
-    classProperties = (begin, eduYear, end, num, periodType); 
+    classProperties = (begin, eduYear, end, fullName, title); 
     externalName = "EDU_PERIOD"; 
     fetchSpecificationDictionary = {}; 
     name = EduPeriod; 
     primaryKeyAttributes = (pID); 
-    relationships = (
-        {
-            destination = PeriodType; 
-            isMandatory = Y; 
-            isToMany = N; 
-            joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = typeID; sourceAttribute = perType; }); 
-            name = periodType; 
-        }
-    ); 
 }

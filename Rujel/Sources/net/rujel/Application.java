@@ -37,11 +37,15 @@ import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
+import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 public class Application extends UTF8Application {
 	private StringStorage _strings = new StringStorage(application().resourceManager());
 	protected static Logger logger = Logger.getLogger("rujel");
+	protected Timer timer;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -84,23 +88,33 @@ public class Application extends UTF8Application {
 		net.rujel.interfaces.EOInitialiser.initAll();
 		SettingsReader node = SettingsReader.settingsForPath("modules",true);
 		ModulesInitialiser.initModules(node,"init");
-		net.rujel.reusables.Scheduler.sharedInstance();
-		ModulesInitialiser.initModules(node,"schedulePeriod");
-		ModulesInitialiser.initModules(node,"scheduleTask");
-		
-//		byte[] bytes = resourceManager().bytesForResourceNamed("Strings.plist",null,null);
-//		NSDictionary strings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(new NSData(bytes),"UTF8");
-//		_strings.setObjectForKey(strings,"Strings");
 		
 		int cacheSize = SettingsReader.intForKeyPath("ui.keyValueCacheSize", 0);
 		if(cacheSize > 0) {
 			keyValueCache = new KeyValueCache(cacheSize);
 		}
 		
-		/*
-		String sesTimeout = System.getProperty("WOSessionTimeOut");
-		setSessionTimeOut(Integer.valueOf(sesTimeout));*/
+		if (!Boolean.getBoolean("DisableScheduledTasks")) {
+			timer = new Timer(true);
+			TimerTask task = new TimerTask() {
+				public void run() {
+					ModulesInitialiser.useModules(null, "scheduleTask");
+				}
+			};
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 1);
+			if (cal.getTimeInMillis() < System.currentTimeMillis())
+				cal.add(Calendar.DATE, 1);
+			timer.scheduleAtFixedRate(task, cal.getTime(), NSLocking.OneDay);
+			ModulesInitialiser.useModules(null, "scheduleTask");
+		}
 		logger.logp(WOLogLevel.INFO,"Application","<init>","Rujel started " + webserverConnectURL());
+	}
+	
+	public Timer timer() {
+		return timer;
 	}
 	
 	protected KeyValueCache keyValueCache;
@@ -121,12 +135,6 @@ public class Application extends UTF8Application {
         WOApplication.main(argv, Application.class);
 		logger.logp(WOLogLevel.INFO,"Application","main","Rujel ended");
     }
-	/*
-	public WOSession createSessionForRequest(WORequest aRequest) {
-		WOSession ses = super.createSessionForRequest(aRequest);
-		logger.log(WOLogLevel.SESSION,"Session created",new Object[] {ses,ses.clientIdentity(aRequest)});
-		return ses;
-	} */
     
     public WOResponse handleSessionRestorationErrorInContext(WOContext aContext) {
     	WOComponent page = pageWithName("MessagePage", aContext);
@@ -198,41 +206,6 @@ public class Application extends UTF8Application {
 		return _strings;
 	}
 	
-/*	public NSDictionary strings() {
-		return (NSDictionary)_strings.objectForKey("Strings");
-	}
-	
-	public NSKeyValueCoding extStrings() {
-		return new NSKeyValueCoding() {
-			public Object valueForKey(String key) {
-				NSDictionary dict = (NSDictionary)_strings.valueForKey(key);
-				if(dict == null) {
-					String frw = null;
-					String res = key + ".plist";
-					int idx = key.indexOf('-');
-					if(idx < 0) idx = key.indexOf('_');
-					if(idx > 0) {
-						frw = key.substring(0,idx);
-						res = res.substring(idx + 1);
-					}
-					byte[] bytes = resourceManager().bytesForResourceNamed(res,frw,null);
-					if(bytes != null && bytes.length > 0)
-						dict = (NSDictionary)NSPropertyListSerialization.propertyListFromData(new NSData(bytes),"UTF8");
-					if(dict == null) {
-						dict = NSDictionary.EmptyDictionary;
-						logger.log(WOLogLevel.WARNING,"Could not load dictionary for resource named " + key);
-					}
-					_strings.setObjectForKey(dict,key);
-				}
-				return dict;
-			}
-			
-			public void takeValueForKey(Object value, String key) {
-				;
-			}
-		};
-	}*/
-	
 	public void refuseNewSessions(boolean aVal) {
 		super.refuseNewSessions(aVal);
 		if(aVal) {
@@ -242,6 +215,8 @@ public class Application extends UTF8Application {
 		}
 	}
 	public void terminate() {
+		if(timer != null)
+			timer.cancel();
 		logger.info("Application is terminating");
 		super.terminate();
 	}

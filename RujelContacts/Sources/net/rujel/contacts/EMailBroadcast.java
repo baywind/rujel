@@ -42,9 +42,10 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.*;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
 import java.util.logging.Logger;
+import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.TimerTask;
 
 import javax.mail.internet.InternetAddress;
 
@@ -59,27 +60,18 @@ public class EMailBroadcast implements Runnable{
 			boolean dontBcast = Boolean.getBoolean("EMailBroadcast.disableWeekly");
 			if(dontBcast)
 				return null;
-			try {
-				Method method = EMailBroadcast.class.getMethod("broadcastMarks",(Class[])null);
-				Scheduler.sharedInstance().registerTask(Scheduler.WEEKLY,method,
-						null,null,"EMailBroadcast.weekly");
-			} catch (Exception ex) {
-				logger.log(WOLogLevel.WARNING,"Failed to schedule mail broadcast",ex);
-			}
-/*		} else if (obj instanceof Period.Week) {
-			EOEditingContext ec = new EOEditingContext();
-			NSArray pertypes = PeriodType.allPeriodTypes(ec,new Integer(2007));
-			PeriodType prt = null;
-			Enumeration enu = pertypes.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				prt = (PeriodType)enu.nextElement();
-				if(prt.inYearCount().intValue() == 3) {
-					break;
+			int weekday = SettingsReader.intForKeyPath("mail.broadcastWeekday", -1);
+			Calendar cal = Calendar.getInstance();
+			if(cal.get(Calendar.DAY_OF_WEEK) != weekday)
+				return null;
+			String time = SettingsReader.stringForKeyPath("mail.broadcastTime", "5:30");
+			TimerTask task = new TimerTask() {
+				public void run() {
+					broadcastMarksForPeriod(null, null, null);
 				}
-			}
-			EduPeriod per = prt.currentPeriod(new NSTimestamp(((Period)obj).begin()));
-			broadcastMarksForPeriod(per,null);
-*/		} else if(obj.equals("overviewAction")) {
+			};
+			MyUtility.scheduleTaskOnTime(task, time);
+		} else if(obj.equals("overviewAction")) {
 			return overviewAction(ctx);
 		} else if(obj.equals("regimes")) {
 			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Contacts")))
@@ -101,10 +93,6 @@ public class EMailBroadcast implements Runnable{
 			return result;
 		return null;
 	}
-
-	public static void broadcastMarks() {
-		broadcastMarksForPeriod(null,null,(EOEditingContext)null);
-	}
 	
 	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter,
 			EOEditingContext ec) {
@@ -123,7 +111,7 @@ public class EMailBroadcast implements Runnable{
 		
 		ERMailDeliveryHTML mail = new ERMailDeliveryHTML ();*/
 		WOContext ctx = MyUtility.dummyContext(null);
-		WOSession ses = ctx.session();;
+		WOSession ses = ctx.session();
 		if(ec == null) {
 			ec = new SessionedEditingContext(ses);
 		}

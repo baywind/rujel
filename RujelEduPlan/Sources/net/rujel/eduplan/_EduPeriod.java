@@ -44,10 +44,10 @@ public abstract class _EduPeriod extends EOGenericRecord {
 	public static final String BEGIN_KEY = "begin";
 	public static final String EDU_YEAR_KEY = "eduYear";
 	public static final String END_KEY = "end";
-	public static final String NUM_KEY = "num";
+	public static final String FULL_NAME_KEY = "fullName";
+	public static final String TITLE_KEY = "title";
 
 	// Relationships
-	public static final String PERIOD_TYPE_KEY = "periodType";
 
   public NSTimestamp begin() {
     return (NSTimestamp) storedValueForKey(BEGIN_KEY);
@@ -73,20 +73,20 @@ public abstract class _EduPeriod extends EOGenericRecord {
     takeStoredValueForKey(value, END_KEY);
   }
 
-  public Integer num() {
-    return (Integer) storedValueForKey(NUM_KEY);
+  public String fullName() {
+    return (String) storedValueForKey(FULL_NAME_KEY);
   }
 
-  public void setNum(Integer value) {
-    takeStoredValueForKey(value, NUM_KEY);
+  public void setFullName(String value) {
+    takeStoredValueForKey(value, FULL_NAME_KEY);
   }
 
-  public net.rujel.eduplan.PeriodType periodType() {
-    return (net.rujel.eduplan.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
+  public String title() {
+    return (String) storedValueForKey(TITLE_KEY);
   }
 
-  public void setPeriodType(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, PERIOD_TYPE_KEY);
+  public void setTitle(String value) {
+    takeStoredValueForKey(value, TITLE_KEY);
   }
-  
+
 }
