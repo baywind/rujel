@@ -68,7 +68,11 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	}
 	
 	public void validateForSave() throws NSValidation.ValidationException {
-		super.validateForSave();
+		if(begin() == null || end() == null) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelEduPlan_EduPlan.messages.emptyDate");
+			throw new NSValidation.ValidationException(message);
+		}
 		if(begin().compare(end()) >= 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.messages.beginEndPeriod");
@@ -82,40 +86,42 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		}
 		if(title.length() > 4) {
 			int idx = title.indexOf(' ');
-			if(idx < 0 || idx >= 4 || (title.length() - idx) > 6) {
+			if(idx < 0 || idx > 4 || (title.length() - idx) > 5) {
 				String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.messages.titleTooLong");
 				throw new NSValidation.ValidationException(message);
 			}
 		}
+		super.validateForSave();
 	}
 	
-	/*
-	 public static EduPeriod currentPeriodOfType(PeriodType type, NSTimestamp date, EOEditingContext ec) {
-		 EOQualifier qual = new EOKeyValueQualifier("periodType",EOQualifier.QualifierOperatorEqual,type);
-		 NSMutableArray quals = new NSMutableArray(qual);
-		 qual = new EOKeyValueQualifier("begin",EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
-		 quals.addObject(qual);
-		 qual = new EOKeyValueQualifier("end",EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
-		 quals.addObject(qual);
-		 qual = new EOAndQualifier(quals);
-		 EOFetchSpecification fspec = new EOFetchSpecification("EduPeriod",qual,null);
-		 NSArray result = ec.objectsWithFetchSpecification(fspec);
-		 if(result == null || result.count() == 0) return null;
-		 if(result.count() > 1) {
-			 /// log
-		 }
-		 return (EduPeriod)result.objectAtIndex(0);
-	 }
-	 public static EduPeriod currentPeriodOfType(PeriodType type, EOEditingContext ec) {
-		 NSTimestamp today = null;
-		 if(ec instanceof SessionedEditingContext) {
-			 today = (NSTimestamp)((SessionedEditingContext)ec).session().valueForKey("today");
-		 }
-		 if(today == null) today = new NSTimestamp();
-		 
-		 return currentPeriodOfType(type,today,ec);
-	 }*/
+	public boolean addToList(String listName) {
+		NSDictionary dict = new NSDictionary(new Object[] {this,listName},
+				new String[] {"period","listName"});
+		EOEditingContext ec = editingContext();
+		NSArray list = EOUtilities.objectsMatchingValues(ec, "PeriodList", dict);
+		if(list != null && list.count() > 0)
+			return false;
+		EOEnterpriseObject pl = EOUtilities.createAndInsertInstance(ec, "PeriodList");
+		pl.takeValuesFromDictionary(dict);
+		return true;
+	}
+	
+	public boolean removeFromList(String listName) {
+		NSDictionary dict = new NSDictionary(new Object[] {this,listName},
+				new String[] {"period","listName"});
+		EOEditingContext ec = editingContext();
+		NSArray list = EOUtilities.objectsMatchingValues(ec, "PeriodList", dict);
+		if(list == null || list.count() == 0)
+			return false;
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject pl = (EOEnterpriseObject) enu.nextElement();
+			pl.removeObjectFromBothSidesOfRelationshipWithKey(this, "period");
+			ec.deleteObject(pl);
+		}
+		return true;
+	}
 	
 	public static NSArray periodsInList(String listName,EOEditingContext ec) {
 		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
@@ -126,7 +132,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		}
 		return list;
 	}
-	
+		
 	public static NSArray defaultPeriods(EOEditingContext ec) {
 		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
 		return periodsInList(listName, ec);
@@ -237,6 +243,37 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		return days;
 	}
 	
+	public static int intersect (NSTimestamp since, NSTimestamp to, EOPeriod per) {
+		NSTimestamp begin = per.begin();
+		if(begin.compare(since) < 0)
+			begin = since;
+		NSTimestamp end = per.end();
+		if(end.compare(to) > 0)
+			end = to;
+		if(begin.compare(end) > 0)
+			return 0;
+		int result = MyUtility.countDays(begin, end);
+//		if(result < 0)
+//			result = 0;
+		return result;
+	}
+	
+	public static int verifyList(NSArray list) {
+		if(list == null || list.count() < 2)
+			return 0;
+		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, EOPeriod.sorter);
+		Enumeration enu = list.objectEnumerator();
+		NSTimestamp lastEnd = null;
+		int result = 0;
+		while (enu.hasMoreElements()) {
+			EOPeriod per = (EOPeriod) enu.nextElement();
+			if(lastEnd != null && lastEnd.compare(per.begin()) >= 0)
+				result += MyUtility.countDays(per.begin(), lastEnd);
+			lastEnd = per.end();
+		}
+		return result;
+	}
+	
 	public int[] weeksAndDays(NSTimestamp toDate, EduCourse course) {
 		EOEditingContext ec = editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
@@ -258,8 +295,11 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 			periods = defaultPeriods(ec); 
 		if(periods == null || periods.count() == 0)
 			return 0;
+		return daysForList(listName, date, periods);
+	}
+	public static int daysForList(String listName, NSTimestamp date, NSArray list) {
 		int sumDays = 0;
-		Enumeration enu = periods.objectEnumerator();
+		Enumeration enu = list.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduPeriod per = (EduPeriod) enu.nextElement();
 			sumDays += per.daysInPeriod(date, listName);

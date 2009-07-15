@@ -31,19 +31,6 @@
 		<key>subgrTitle</key>
 		<string>количество подгрупп в классе</string>
 	</dict>
-	<key>GlobalPlan</key>
-	<string>Учебный план </string>
-	<key>planRegime</key>
-	<dict>
-		<key>title</key>
-		<string>Учебный План</string>
-		<key>component</key>
-		<string>GlobalPlan</string>
-		<key>group</key>
-		<string>edu</string>
-		<key>sort</key>
-		<string>40</string>
-	</dict>
 	<key>EduPeriod</key>
 	<dict>
 		<key>this</key>
@@ -60,9 +47,58 @@
 		<string>Кратко</string>
 		<key>fullName</key>
 		<string>Полное название</string>
+		<key>weeksDays</key>
+		<string>недель (дней)</string>
+	</dict>
+	<key>GlobalPlan</key>
+	<string>Учебный план </string>
+	<key>SetupPeriods</key>
+	<dict>
+		<key>title</key>
+		<string>Настройка периодов</string>
+		<key>basicTitle</key>
+		<string>&lt;h2&gt;Базовые учебные модули&lt;/h2&gt;&lt;div style=&quot;text-align:center&quot;&gt;(для большинства учебных групп)&lt;/div&gt;</string>
+		<key>defaultListName</key>
+		<string>Базовый</string>
+		<key>total</key>
+		<string>всего</string>
+	</dict>
+	<key>planTabs</key>
+	<array>
+		<dict>
+			<key>page</key>
+			<string>GlobalPlan</string>
+			<key>title</key>
+			<string>Общий план</string>
+		</dict>
+		<dict>
+			<key>page</key>
+			<string>SetupPeriods</string>
+			<key>title</key>
+			<string>Учебные Периоды</string>
+		</dict>
+		<dict>
+			<key>page</key>
+			<string>PlanDetails</string>
+			<key>title</key>
+			<string>Детализация плана</string>
+		</dict>
+	</array>
+	<key>planRegime</key>
+	<dict>
+		<key>title</key>
+		<string>Учебный План</string>
+		<key>component</key>
+		<string>GlobalPlan</string>
+		<key>group</key>
+		<string>edu</string>
+		<key>sort</key>
+		<string>40</string>
 	</dict>
 	<key>messages</key>
 	<dict>
+		<key>emptyDate</key>
+		<string>Необходимо указывать и начало и конец периода</string>
 		<key>beginEndPeriod</key>
 		<string>Конец периода не может быть раньше начала</string>
 		<key>invalidDateInMonth</key>
@@ -71,6 +107,12 @@
 		<string>Необходимо указать краткое название периода</string>
 		<key>titleTooLong</key>
 		<string>Слишком длинное краткое название периода.&lt;br/&gt; Можно использовать не более двух слов длиной не более 4 букв каждое.</string>
+		<key>periodsIntersect</key>
+		<string>Периоды в списке пересекаются</string>
+		<key>confirmDelete</key>
+		<string>Этот период включен в %d списков. Вы уверены, что хотите его удалить?</string>
+		<key>confirmRemove</key>
+		<string>Вы уверены, что хотите убрать этот период из списка \&apos;%s\&apos;?</string>
 	</dict>
 </dict>
 </plist>

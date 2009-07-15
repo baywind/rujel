@@ -21,4 +21,15 @@
     fetchSpecificationDictionary = {}; 
     name = EduPeriod; 
     primaryKeyAttributes = (pID); 
+    relationships = (
+        {
+            deleteRule = EODeleteRuleCascade; 
+            destination = PeriodList; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = periodID; sourceAttribute = pID; }); 
+            name = periodLists; 
+            ownsDestination = Y; 
+        }
+    ); 
 }

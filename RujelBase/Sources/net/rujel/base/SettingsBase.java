@@ -38,6 +38,7 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Teacher;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
@@ -174,6 +175,21 @@ public class SettingsBase extends _SettingsBase {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+	
+	public static SettingsBase createBaseForKey(String key, EOEditingContext ec, 
+			String stringValue, Integer numericValue) {
+		SettingsBase sb = null;
+		try {
+			sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec,
+					ENTITY_NAME, KEY_KEY, key);
+		} catch (EOObjectNotAvailableException e) {
+			sb = (SettingsBase)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+			sb.setKey(key);
+		}
+		sb.setNumericValue(numericValue);
+		sb.setTextValue(stringValue);
+		return sb;
 	}
 	
 	public static int numericSettingForCourse(String key, EduCourse course, 

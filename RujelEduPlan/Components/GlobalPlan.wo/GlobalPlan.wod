@@ -177,3 +177,13 @@ Title : WOString {
   value = application.strings.RujelEduPlan_EduPlan.GlobalPlan;
   valueWhenEmpty = "Edu Plan";
 }
+
+Tabs : Tabs {
+  currTab = context.page;
+  tablist = application.strings.RujelEduPlan_EduPlan.planTabs;
+  onClick = session.checkRun;
+  titleAttribute = "title";
+  hoverAttribute = "hover";
+  vertical = false;
+  pushValues = "ec";
+}

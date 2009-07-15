@@ -87,13 +87,14 @@ public class Holiday extends _Holiday implements EOPeriod {
 		int days = 0;
 		while (enu.hasMoreElements()) {
 			Holiday hd = (Holiday) enu.nextElement();
-			NSTimestamp begin = hd.begin();
+/*			NSTimestamp begin = hd.begin();
 			if(begin.compare(since) < 0)
 				begin = since;
 			NSTimestamp end = hd.end();
 			if(end.compare(to) > 0)
 				end = to;
-			days += MyUtility.countDays(begin, end);
+			days += MyUtility.countDays(begin, end);*/
+			days += EduPeriod.intersect(since, to, hd);
 		}
 		return days;
 	}
