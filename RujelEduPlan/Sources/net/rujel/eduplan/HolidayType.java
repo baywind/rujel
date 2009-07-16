@@ -39,9 +39,10 @@ import com.webobjects.eocontrol.*;
 
 public class HolidayType extends _HolidayType {
 
-	public static void init() {
-	}
-
+	public static NSArray sorter = new NSArray(new EOSortOrdering[] {
+			new EOSortOrdering(BEGIN_MONTH_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering(BEGIN_DAY_KEY,EOSortOrdering.CompareAscending)});
+	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 	}
@@ -50,7 +51,7 @@ public class HolidayType extends _HolidayType {
 		super.validateForSave();
 		int dif = endMonth().intValue() - beginMonth().intValue();
 		if(dif == 0) dif = endDay().intValue() - beginDay().intValue();
-		if(dif <= 0) {
+		if(dif < 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.messages.beginEndPeriod");
 			throw new NSValidation.ValidationException(message);
@@ -79,11 +80,22 @@ public class HolidayType extends _HolidayType {
 		}
 	}
 	
-	public Holiday makeHoliday(Integer eduYear) {
+	public static NSTimestamp dateFromPreset(Integer eduYear, Integer aMonth, Integer aDay) {
+		int year = eduYear.intValue();
+		int month = aMonth.intValue();
+		if(month > 12) {
+			month -= 12;
+			year++;
+		}
+		int day =  aDay.intValue();
+		return new NSTimestamp(year,month,day,0,0,0,TimeZone.getDefault());
+	}
+	
+	public Holiday makeHoliday(Integer eduYear, String listName) {
 		Holiday hd = (Holiday)EOUtilities.createAndInsertInstance(editingContext(),
 				Holiday.ENTITY_NAME);
 		hd.addObjectToBothSidesOfRelationshipWithKey(this, Holiday.HOLIDAY_TYPE_KEY);
-		int year = eduYear.intValue();
+/*		int year = eduYear.intValue();
 		int month = beginMonth().intValue();
 		if(month > 12) {
 			month -= 12;
@@ -101,6 +113,10 @@ public class HolidayType extends _HolidayType {
 		day =  beginDay().intValue();
 		datum = new NSTimestamp(year,month,day,0,0,0,TimeZone.getDefault());
 		hd.setEnd(datum);
+*/		
+		hd.setBegin(dateFromPreset(eduYear, beginDay(), beginMonth()));
+		hd.setEnd(dateFromPreset(eduYear, endMonth(), endDay()));
+		hd.setListName(listName);
 		return hd;
 	}
 }

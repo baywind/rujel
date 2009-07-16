@@ -73,6 +73,12 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 					"strings.RujelEduPlan_EduPlan.messages.emptyDate");
 			throw new NSValidation.ValidationException(message);
 		}
+		if(!eduYear().equals(MyUtility.eduYearForDate(begin())) ||
+				!eduYear().equals(MyUtility.eduYearForDate(end()))) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelEduPlan_EduPlan.messages.datesNotInYear");
+			throw new NSValidation.ValidationException(message);
+		}
 		if(begin().compare(end()) >= 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.messages.beginEndPeriod");

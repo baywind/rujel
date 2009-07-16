@@ -38,9 +38,8 @@ import net.rujel.reusables.Period;
 
 public interface EOPeriod extends Period,EOEnterpriseObject {
  	public static final NSArray sorter = new NSArray(new Object[] {
- 			EOSortOrdering.sortOrderingWithKey("end",EOSortOrdering.CompareAscending),
- 			EOSortOrdering.sortOrderingWithKey("begin",EOSortOrdering.CompareDescending)});
-
+ 			EOSortOrdering.sortOrderingWithKey("begin",EOSortOrdering.CompareAscending),
+ 			EOSortOrdering.sortOrderingWithKey("end",EOSortOrdering.CompareDescending)});
  	
 	public NSTimestamp begin();
 	

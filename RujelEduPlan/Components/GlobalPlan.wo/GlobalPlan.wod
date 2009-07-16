@@ -51,6 +51,8 @@ Subject : WOString {
 }
 
 Form : WOForm {
+  class = "selectionBorder backfield1";
+  style = "border-style: solid none none;width:100%;padding:1em 0px;";
 }
 
 SubjectsRepetition : WORepetition {

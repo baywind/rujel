@@ -23,7 +23,7 @@ CREATE TABLE  RujelStatic.SETTING_BY_COURSE (
   `SC_ID` mediumint NOT NULL,
   `SETTINGS` mediumint NOT NULL,
   `EDU_YEAR` smallint,
-  `COURSE` mediumint,
+  `COURSE` smallint,
   `CYCLE` mediumint,
   `GRADE` smallint,
   `EDU_GROUP` mediumint,
@@ -289,16 +289,60 @@ create table RujelYear2008.HOLIDAY (
   PRIMARY KEY (`H_ID`)
 );
 
+CREATE TABLE  `RujelYear2007`.`REASON` (
+  `R_ID` mediumint(9) NOT NULL,
+  `BEGIN` date NOT NULL DEFAULT '2000-09-01',
+  `END` date DEFAULT NULL,
+  `REASON` varchar(255) NOT NULL,
+  `TEACHER` mediumint(9) DEFAULT NULL,
+  `EDU_GROUP` mediumint(9) DEFAULT NULL,
+  `VERIFICATION` varchar(255) DEFAULT NULL,
+  `SCHOOL` smallint(6) NOT NULL DEFAULT '0',
+  `FLAGS` tinyint(4) NOT NULL,
+  PRIMARY KEY (`R_ID`)
+);
+
 create table RujelYear2008.REASON select * from Curriculum.REASON where FLAGS != 1;
 alter table RujelYear2008.REASON ADD PRIMARY KEY (`R_ID`);
+
+CREATE TABLE  `RujelYear2007`.`SUBSTITUTE` (
+  `LESSON` int(11) NOT NULL,
+  `TEACHER` mediumint(9) NOT NULL,
+  `REASON` mediumint(9) NOT NULL,
+  `LESSON_DATE` date NOT NULL,
+  `FACTOR` decimal(4,2) NOT NULL,
+  PRIMARY KEY (`LESSON`,`TEACHER`)
+);
 
 create table RujelYear2008.SUBSTITUTE select * from Curriculum.SUBSTITUTE
 where REASON in (select R_ID from RujelYear2008.REASON);
 alter table RujelYear2008.SUBSTITUTE ADD PRIMARY KEY (`LESSON`,`TEACHER`);
 
+CREATE TABLE  RujelYear2007.`VARIATION` (
+  `V_ID` int(11) NOT NULL,
+  `COURSE` smallint(6) DEFAULT NULL,
+  `V_DATE` date NOT NULL,
+  `VALUE` tinyint(4) NOT NULL,
+  `REASON` mediumint(9) NOT NULL,
+  PRIMARY KEY (`V_ID`)
+);
+
 create table RujelYear2008.VARIATION select * from Curriculum.VARIATION
 where REASON in (select R_ID from RujelYear2008.REASON);
-alter table RujelYear2008.VARIATION ADD PRIMARY KEY (`V_ID`);
+alter table RujelYear2008.VARIATION
+  MODIFY COLUMN `COURSE` smallint,
+  ADD PRIMARY KEY (`V_ID`);
+
+CREATE TABLE  `RujelYear2007`.`REPRIMAND` (
+  `R_ID` mediumint(9) NOT NULL,
+  `COURSE` smallint(6) NOT NULL,
+  `RAISED` datetime NOT NULL,
+  `RELIEF` datetime DEFAULT NULL,
+  `CONTENT` varchar(255) NOT NULL,
+  `AUTHOR` varchar(255) NOT NULL,
+  `STATUS` tinyint(4) NOT NULL,
+  PRIMARY KEY (`R_ID`)
+);
 
 create table RujelYear2008.REPRIMAND select * from Curriculum.REPRIMAND;
 alter table RujelYear2008.REPRIMAND ADD PRIMARY KEY (`R_ID`);

@@ -455,6 +455,24 @@
 				<key>root</key>
 				<string>1023</string>
 			</dict>
+			<key>EduPeriod</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>any</key>
+				<string>1</string>
+			</dict>
+			<key>Holiday</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>any</key>
+				<string>1</string>
+			</dict>
 			<key>login</key>
 			<dict>
 				<key>root</key>

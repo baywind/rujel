@@ -28,3 +28,8 @@ PeriodSelector : EduPeriodSelector {
   currPeriod = currPeriod;
   listName = listName;
 }
+
+HolidaysList : HolidaysList {
+  ec = ec;
+  listName = listName;
+}

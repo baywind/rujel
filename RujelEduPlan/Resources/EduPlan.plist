@@ -14,6 +14,8 @@
 		<string>Предмет</string>
 		<key>subjects</key>
 		<string>Предметы</string>
+		<key>name</key>
+		<string>Название</string>
 		<key>fullName</key>
 		<string>Полное название</string>
 		<key>area</key>
@@ -30,6 +32,10 @@
 		<string>групп</string>
 		<key>subgrTitle</key>
 		<string>количество подгрупп в классе</string>
+		<key>holidays</key>
+		<string>Каникулы и праздники</string>
+		<key>listName</key>
+		<string>Траектория</string>
 	</dict>
 	<key>EduPeriod</key>
 	<dict>
@@ -37,8 +43,6 @@
 		<string>Учебный период</string>
 		<key>eduYear</key>
 		<string>Учебный год</string>
-		<key>name</key>
-		<string>Название</string>
 		<key>begin</key>
 		<string>Начало</string>
 		<key>end</key>
@@ -101,6 +105,8 @@
 		<string>Необходимо указывать и начало и конец периода</string>
 		<key>beginEndPeriod</key>
 		<string>Конец периода не может быть раньше начала</string>
+		<key>datesNotInYear</key>
+		<string>указанные даты начала и конца не попадают в текущий учебный год</string>
 		<key>invalidDateInMonth</key>
 		<string>Неверная дата для выбранного месяца</string>
 		<key>titleRequired</key>

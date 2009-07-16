@@ -74,7 +74,7 @@ public class Holiday extends _Holiday implements EOPeriod {
 		}
 		quals[1] = qual;
 		qual = new EOAndQualifier(new NSArray(quals));
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,EduPeriod.sorter);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,EOPeriod.sorter);
 		return ec.objectsWithFetchSpecification(fs);
 	}
 	
@@ -95,6 +95,9 @@ public class Holiday extends _Holiday implements EOPeriod {
 				end = to;
 			days += MyUtility.countDays(begin, end);*/
 			days += EduPeriod.intersect(since, to, hd);
+			if(hd.end().compare(to) > 0)
+				break;
+			since = hd.end().timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
 		}
 		return days;
 	}
@@ -110,4 +113,7 @@ public class Holiday extends _Holiday implements EOPeriod {
 		return holidayType().name();
 	}
 
+//	public Boolean _disabled() {
+//		return Boolean.FALSE;
+//	}
 }
