@@ -370,7 +370,11 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 			try{
 				EduCourse leftCourse = (EduCourse)left;
 				EduCourse rightCourse = (EduCourse)right;
-				int result = compareValues(leftCourse.cycle(), rightCourse.cycle(), 
+				int result = compareValues(leftCourse.eduGroup(), rightCourse.eduGroup(), 
+						EOSortOrdering.CompareAscending);
+				if(result != NSComparator.OrderedSame)
+					return result;
+				result = compareValues(leftCourse.cycle(), rightCourse.cycle(), 
 						EOSortOrdering.CompareAscending);
 				if(result != NSComparator.OrderedSame)
 					return result;

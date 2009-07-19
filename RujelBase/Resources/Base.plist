@@ -106,5 +106,16 @@
 	</dict>
 	<key>allTeachers</key>
 	<string>Все учителя</string>
+	<key>SettingsBase</key>
+	<dict>
+		<key>duplicateByCourse</key>
+		<string>Указанная настройка уже существует</string>
+		<key>byCourse</key>
+		<string>Привязка</string>
+		<key>default</key>
+		<string>Для всех курсов</string>
+		<key>unspecified</key>
+		<string>(все)</string>
+	</dict>
 </dict>
 </plist>

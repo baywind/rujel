@@ -30,6 +30,7 @@
 package net.rujel;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.reusables.*;
 
 import com.webobjects.eoaccess.EODatabaseContext;
@@ -85,6 +86,7 @@ public class Application extends UTF8Application {
 		} else {
 			DataBaseConnector.makeConnections();
 		}
+		SettingsBase.init();
 		net.rujel.interfaces.EOInitialiser.initAll();
 		SettingsReader node = SettingsReader.settingsForPath("modules",true);
 		ModulesInitialiser.initModules(node,"init");

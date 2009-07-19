@@ -1,4 +1,4 @@
-#Thu Jul 16 12:03:22 MSD 2009
+#Fri Jul 17 12:26:14 MSD 2009
 eclipse.preferences.version=1
 encoding//Components/AreaEditor.wo=UTF-8
 encoding//Components/AreaEditor.wo/AreaEditor.html=UTF-8
@@ -13,6 +13,11 @@ encoding//Components/HolidaysList.wo=UTF-8
 encoding//Components/HolidaysList.wo/HolidaysList.html=UTF-8
 encoding//Components/HolidaysList.wo/HolidaysList.wod=UTF-8
 encoding//Components/HolidaysList.wo/HolidaysList.woo=UTF-8
+encoding//Components/ListSettings.api=UTF-8
+encoding//Components/ListSettings.wo=UTF-8
+encoding//Components/ListSettings.wo/ListSettings.html=UTF-8
+encoding//Components/ListSettings.wo/ListSettings.wod=UTF-8
+encoding//Components/ListSettings.wo/ListSettings.woo=UTF-8
 encoding//Components/SetupPeriods.wo=UTF-8
 encoding//Components/SetupPeriods.wo/SetupPeriods.html=UTF-8
 encoding//Components/SetupPeriods.wo/SetupPeriods.wod=UTF-8
@@ -25,5 +30,6 @@ encoding//Sources/net/rujel/eduplan/AreaEditor.java=UTF-8
 encoding//Sources/net/rujel/eduplan/EduPeriodSelector.java=UTF-8
 encoding//Sources/net/rujel/eduplan/GlobalPlan.java=UTF-8
 encoding//Sources/net/rujel/eduplan/HolidaysList.java=UTF-8
+encoding//Sources/net/rujel/eduplan/ListSettings.java=UTF-8
 encoding//Sources/net/rujel/eduplan/SetupPeriods.java=UTF-8
 encoding//Sources/net/rujel/eduplan/SubjectEditor.java=UTF-8

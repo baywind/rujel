@@ -118,7 +118,7 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 		return result.toString();
 	}
     
-    public void save() {
+    public WOActionResults save() {
     	EOEditingContext ec = ec();
     	ec.lock();
     	EduPeriod per = currPeriod();
@@ -174,6 +174,8 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 			title = null;
 			fullName = null;
 		}
+    	WOActionResults result =  (WOActionResults)valueForBinding("selectAction");
+    	return result;
     }
     
 	public void delete() {

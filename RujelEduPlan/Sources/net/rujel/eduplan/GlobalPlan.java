@@ -61,7 +61,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		session().savePageInPermanentCache(this);
     }
 	
-	protected static NSArray prepareGrades(EOEditingContext ec, int eduYear) {
+	public static NSArray prepareGrades(EOEditingContext ec, int eduYear) {
 		NSMutableArray specGroups = null;
 		if(eduYear > 0) {
 			if (eduYear > 100)
@@ -84,8 +84,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		}
 
 		NSMutableArray prepareGrades = new NSMutableArray();
-		for (int i = SettingsReader.intForKeyPath("edu.minGrade", 1); 
-		i <= SettingsReader.intForKeyPath("edu.maxGrade", 11); i++) {
+		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
+		for (int i = SettingsReader.intForKeyPath("edu.minGrade", 1); i <= maxGrade; i++) {
 			Integer grade = new Integer(i);
 			if(specGroups != null) {
 				EOQualifier qual = new EOKeyValueQualifier("number",

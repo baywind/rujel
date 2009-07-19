@@ -101,16 +101,16 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		super.validateForSave();
 	}
 	
-	public boolean addToList(String listName) {
+	public EOEnterpriseObject addToList(String listName) {
 		NSDictionary dict = new NSDictionary(new Object[] {this,listName},
 				new String[] {"period","listName"});
 		EOEditingContext ec = editingContext();
 		NSArray list = EOUtilities.objectsMatchingValues(ec, "PeriodList", dict);
 		if(list != null && list.count() > 0)
-			return false;
+			return (EOEnterpriseObject)list.objectAtIndex(0);
 		EOEnterpriseObject pl = EOUtilities.createAndInsertInstance(ec, "PeriodList");
 		pl.takeValuesFromDictionary(dict);
-		return true;
+		return pl;
 	}
 	
 	public boolean removeFromList(String listName) {

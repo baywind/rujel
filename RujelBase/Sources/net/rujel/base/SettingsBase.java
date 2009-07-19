@@ -44,13 +44,13 @@ import com.webobjects.eocontrol.*;
 
 public class SettingsBase extends _SettingsBase {
 
-	protected static final String[] keys = new String[] {"grade","cycle","eduGroup","teacher"};
+	protected static final String[] keys = new String[] {"grade","eduGroup","cycle","teacher"};
 	
 	public static void init() {
-		EOInitialiser.initialiseRelationship("SettingsByCourse","course",false,"courseID","EduCourse");
-		EOInitialiser.initialiseRelationship("SettingsByCourse","cycle",false,"cycleID","EduCycle");
-		EOInitialiser.initialiseRelationship("SettingsByCourse","eduGroup",false,"groupID","EduGroup");
-		EOInitialiser.initialiseRelationship("SettingsByCourse","teacher",false,"teacherID","Teacher");
+		EOInitialiser.initialiseRelationship("SettingByCourse","course",false,"courseID","EduCourse");
+		EOInitialiser.initialiseRelationship("SettingByCourse","cycle",false,"cycleID","EduCycle");
+		EOInitialiser.initialiseRelationship("SettingByCourse","eduGroup",false,"groupID","EduGroup");
+		EOInitialiser.initialiseRelationship("SettingByCourse","teacher",false,"teacherID","Teacher");
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -86,8 +86,12 @@ public class SettingsBase extends _SettingsBase {
 	protected int match(EOEnterpriseObject bc, EduCourse course) {
 		int match = 0;
 		for (int i = 1; i < keys.length; i++) {
+			if(bc.valueForKey(keys[i]) == null)
+				continue;
 			if (bc.valueForKey(keys[i]) == course.valueForKey(keys[i]))
-				match++;
+				match += 1<<i;
+			else
+				return 0;
 		}
 		Integer grade = (Integer)bc.valueForKey(keys[0]);
 		if (grade != null && grade.equals(course.cycle().grade()))
@@ -177,8 +181,7 @@ public class SettingsBase extends _SettingsBase {
 		}
 	}
 	
-	public static SettingsBase createBaseForKey(String key, EOEditingContext ec, 
-			String stringValue, Integer numericValue) {
+	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {
 		SettingsBase sb = null;
 		try {
 			sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec,
@@ -187,6 +190,12 @@ public class SettingsBase extends _SettingsBase {
 			sb = (SettingsBase)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
 			sb.setKey(key);
 		}
+		return sb;
+	}
+	
+	public static SettingsBase createBaseForKey(String key, EOEditingContext ec, 
+			String stringValue, Integer numericValue) {
+		SettingsBase sb = baseForKey(key, ec, true);
 		sb.setNumericValue(numericValue);
 		sb.setTextValue(stringValue);
 		return sb;
@@ -210,5 +219,79 @@ public class SettingsBase extends _SettingsBase {
 			EOEditingContext ec) {
 		EOEnterpriseObject eo = settingForCourse(key, course, ec);
 		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
+	}
+	
+	public static class Comparator extends NSComparator {
+		public int compare(Object arg0, Object arg1) throws ComparisonException {
+			if(arg0 == null && arg1 == null)
+				return OrderedSame;
+			try {
+				NSKeyValueCoding l = (NSKeyValueCoding)arg0;
+				NSKeyValueCoding r = (NSKeyValueCoding)arg1;
+				if(l == null)
+					return OrderedDescending;
+				else if(r == null)
+					return OrderedAscending;
+				if(l instanceof SettingsBase) {
+					if(r instanceof SettingsBase)
+						return OrderedSame;
+					return OrderedAscending;
+				} else if(r instanceof SettingsBase) {
+					return OrderedDescending;
+				}
+				int result = compareKeys(l, r, "course");
+				if(result != OrderedSame)
+					return result;
+				int lCount = 0;
+				int rCount = 0;
+				int order = 0;
+				for (int i = 0; i < keys.length; i++) {
+					if(l.valueForKey(keys[i]) != null)
+						lCount += 1<<i;
+					if(r.valueForKey(keys[i]) != null)
+						rCount += 1<<i;
+					if(lCount == rCount) {
+						order += compareKeys(l, r, keys[i])<<(keys.length -i);
+					}
+				}
+				if(lCount == 0)
+					lCount = 7;
+				if(rCount == 0)
+					rCount = 7;
+				if(lCount < rCount)
+					return OrderedAscending;
+				if(lCount > rCount)
+					return OrderedDescending;
+				if(order > 0)
+					return OrderedDescending;
+				if(order < 0)
+					return OrderedAscending;
+			} catch (RuntimeException e) {
+				throw new ComparisonException("Illegal arguments to compare");
+			}
+			return OrderedSame;
+		}
+		
+		protected int compareKeys(NSKeyValueCoding l, NSKeyValueCoding r, String key) {
+			Object lo = l.valueForKey(key);
+			Object ro = r.valueForKey(key);
+			if(lo != null) {
+				if(ro == null) {
+					return OrderedDescending;
+				} else {
+					return EOSortOrdering.ComparisonSupport.compareValues
+										(lo, ro, EOSortOrdering.CompareAscending);
+//					EOSortOrdering.ComparisonSupport support = 
+//						EOSortOrdering.ComparisonSupport.supportForClass(lo.getClass());
+//					return support.compareAscending(lo, ro);
+				}
+			} else {
+				if(ro == null)
+					return OrderedSame;
+				else
+					return OrderedAscending;
+			}
+		}
+		
 	}
 }

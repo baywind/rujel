@@ -66,6 +66,26 @@
 		<string>Базовый</string>
 		<key>total</key>
 		<string>всего</string>
+		<key>showDetails</key>
+		<string>Показать подробности</string>
+		<key>choosePeriod</key>
+		<dict>
+			<key>title</key>
+			<string>Учебный модуль</string>
+			<key>presenter</key>
+			<string>EduPeriodSelector</string>
+			<key>takeValuesFromRequest</key>
+			<true/>
+			<key>invokeAction</key>
+			<true/>
+			<key>presenterBindings</key>
+			<dict>
+				<key>selectAction</key>
+				<string>$returnPage</string>
+				<key>selected</key>
+				<string>.</string>
+			</dict>
+		</dict>
 	</dict>
 	<key>planTabs</key>
 	<array>

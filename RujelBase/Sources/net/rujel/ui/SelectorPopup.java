@@ -57,7 +57,7 @@ public class SelectorPopup extends com.webobjects.appserver.WOComponent {
 		if(!Various.boolForObject(dict.valueForKey("invokeAction")))
 			dict.takeValueForKey(Boolean.TRUE, "invokeAction");
 		WOActionResults result = super.invokeAction(aRequest, aContext);
-		if(result == null) {
+		if(result == null || result == returnPage) {
 			result = returnPage;
 			returnPage.ensureAwakeInContext(context());
 			returnPage.takeValueForKeyPath(value, resultPath);
