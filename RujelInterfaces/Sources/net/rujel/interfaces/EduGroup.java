@@ -50,6 +50,9 @@ public interface EduGroup extends PersonGroup {
 	public Integer grade();
 	public String title();
 	
+	/** If this eduGroup is valid only for specific eduYear. Otherwise null */
+	public Integer eduYear();
+	
 	//public NSArray studentsList();
 	//public Collection<Student> studentsList();
 

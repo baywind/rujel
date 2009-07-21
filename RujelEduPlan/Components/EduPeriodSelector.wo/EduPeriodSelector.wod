@@ -129,8 +129,8 @@ DeleteSpan : OnClickContainer {
 Cross : WOImage {
   framework = "RujelBase";
   filename = "cross.png";
-  height = 16;
-  width = 16;
+  height = 12;
+  width = 12;
 }
 
 TotalTitle : WOString {

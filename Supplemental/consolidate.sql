@@ -152,7 +152,7 @@ create table RujelStatic.ITOG_COMMENT (
 );
 
 insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 
-	values (2,'ItogType','Общий');
+	values (2,'ItogType','Базовый');
 
 insert into RujelStatic.SETTING_BY_COURSE (SC_ID, SETTINGS, COURSE, EDU_GROUP, EDU_YEAR, TEXT_VALUE)
 select PKEY - 2 , 2, EDU_COURSE, EDU_GROUP, EDU_YEAR, 'Семестры' from EduResults.PERTYPE_USAGE where PERTYPE_ID = 2;
@@ -167,7 +167,7 @@ create table RujelStatic.ITOG_TYPE_LIST (
   PRIMARY KEY (`TL_ID`)
 );
 
-insert into RujelStatic.ITOG_TYPE_LIST values (1,'Общий',3), (2,'Общий',1), (3,'Семестры',2);
+insert into RujelStatic.ITOG_TYPE_LIST values (1,'Базовый',3), (2,'Базовый',1), (3,'Семестры',2);
 
 update MarkArchive.USED_ENTITY set KEY3 = 'containerID' where ENTITY_NAME = 'ItogMark';
 update Stats.DESCRIPTION set GROUPING2 = 'ItogContainer' where ENT_NAME = 'ItogMark';
@@ -257,13 +257,13 @@ create table RujelYear2008.PERIOD_LIST (
 );
 
 insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 
-	values (3,'EduPeriod','Общий');
+	values (3,'EduPeriod','Базовый');
 
 insert into RujelYear2007.PERIOD_LIST (PL_ID,PERIOD,LIST_NAME)
-select ID_PER, ID_PER,'Общий' FROM EduResults.EDU_PERIOD where PER_TYPE = 3 AND EDU_YEAR = 2007;
+select ID_PER, ID_PER,'Базовый' FROM EduResults.EDU_PERIOD where PER_TYPE = 3 AND EDU_YEAR = 2007;
 
 insert into RujelYear2008.PERIOD_LIST (PL_ID,PERIOD,LIST_NAME)
-select ID_PER, ID_PER,'Общий' FROM EduResults.EDU_PERIOD where PER_TYPE = 3 AND EDU_YEAR = 2008;
+select ID_PER, ID_PER,'Базовый' FROM EduResults.EDU_PERIOD where PER_TYPE = 3 AND EDU_YEAR = 2008;
 
 insert into RujelStatic.SETTING_BY_COURSE (SC_ID, SETTINGS, COURSE, EDU_GROUP, EDU_YEAR, TEXT_VALUE)
 select SC_ID + 8 , 3, COURSE, EDU_GROUP, EDU_YEAR, 'Семестры' from RujelStatic.SETTING_BY_COURSE where SETTINGS = 2;
@@ -306,17 +306,20 @@ create table RujelYear2008.REASON select * from Curriculum.REASON where FLAGS !=
 alter table RujelYear2008.REASON ADD PRIMARY KEY (`R_ID`);
 
 CREATE TABLE  `RujelYear2007`.`SUBSTITUTE` (
-  `LESSON` int(11) NOT NULL,
-  `TEACHER` mediumint(9) NOT NULL,
-  `REASON` mediumint(9) NOT NULL,
+  `LESSON` int NOT NULL,
+  `TEACHER` mediumint NOT NULL,
+  `REASON` mediumint NOT NULL,
   `LESSON_DATE` date NOT NULL,
+  `FROM_LESSON` int NOT NULL,
   `FACTOR` decimal(4,2) NOT NULL,
   PRIMARY KEY (`LESSON`,`TEACHER`)
 );
 
 create table RujelYear2008.SUBSTITUTE select * from Curriculum.SUBSTITUTE
 where REASON in (select R_ID from RujelYear2008.REASON);
-alter table RujelYear2008.SUBSTITUTE ADD PRIMARY KEY (`LESSON`,`TEACHER`);
+alter table RujelYear2008.SUBSTITUTE
+  ADD COLUMN `FROM_LESSON` int,
+  ADD PRIMARY KEY (`LESSON`,`TEACHER`);
 
 CREATE TABLE  RujelYear2007.`VARIATION` (
   `V_ID` int(11) NOT NULL,

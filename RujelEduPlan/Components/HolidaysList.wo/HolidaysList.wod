@@ -164,3 +164,7 @@ Days : WOString {
 DaysTitle : WOString {
   value = totalDays;
 }
+
+ShowButtton : WOConditional {
+  condition = session.readAccess.create.Holiday;
+}

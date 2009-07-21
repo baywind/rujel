@@ -2,7 +2,6 @@ Tabs : Tabs {
   currTab = currList;
   tablist = lists;
   vertical = true;
-  selectAction = select;
 }
 
 Usage : WORepetition {
@@ -24,6 +23,7 @@ AddByCourse : OnClickContainer {
   invokeAction = addByCourse;
   class = "green";
   style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
+  hide = session.readAccess._create.SettingByCourse;
 }
 
 AddListForm : WOForm {
@@ -67,4 +67,35 @@ TeacherLabel: WOString {
 	value = application.strings.RujelInterfaces_Names.EduCourse.teacher;
 	valueWhenEmpty = "Teacher";
 	escapeHTML = false;
+}
+
+ByCourseList : WORepetition {
+  list = byCourse;
+  item = item;
+}
+
+BasePresenter : ByCoursePresenter {
+  value = base;
+  showString = true;
+}
+
+ByCoursePresenter2 : ByCoursePresenter {
+  value = item;
+}
+
+ListsOverviewTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.SetupPeriods.listsOverview;
+}
+
+CanCreate : WOConditional {
+  condition = ^access._create;
+  negate = true;
+}
+
+BcListName : WOString {
+  value = item.textValue;
+}
+
+BaseTextValue : WOString {
+  value = base.textValue;
 }

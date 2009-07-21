@@ -455,7 +455,7 @@
 				<key>root</key>
 				<string>1023</string>
 			</dict>
-			<key>EduPeriod</key>
+			<key>SettingByCourse</key>
 			<dict>
 				<key>root</key>
 				<string>1023</string>
@@ -465,6 +465,24 @@
 				<string>1</string>
 			</dict>
 			<key>Holiday</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>any</key>
+				<string>1</string>
+			</dict>
+			<key>EduPeriod</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>any</key>
+				<string>1</string>
+			</dict>
+			<key>PeriodList</key>
 			<dict>
 				<key>root</key>
 				<string>1023</string>
@@ -726,7 +744,7 @@
 	<key>edu</key>
 	<dict>
 		<key>minGrade</key>
-		<string>1</string>
+		<string>5</string>
 		<key>maxGrade</key>
 		<string>11</string>
 		<key>disableAutoItog</key>

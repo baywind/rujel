@@ -92,19 +92,25 @@ CourseTeacher : PersonDisplay {
 }
 
 Form : WOForm {
+  style = "padding:1ex; width:8em;";
 }
 
 SubmitButton : WOSubmitButton {
   action = save;
   value = application.strings.Reusables_Strings.uiElements.Done;
+  style = "font-size:larger;font-weight:bold;";
 }
 
 CurrYear : WOCheckBox {
   value = session.eduYear;
   selection = byCourse.eduYear;
-  disabled = byCourse.course;
+  disabled = forceEduYear;
 }
 
 Year : WOString {
   value = session.eduYear;
+}
+
+HasSelection : WOConditional {
+  condition = byCourse.grade;
 }

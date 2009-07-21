@@ -151,6 +151,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		byCourse().takeValueForKey(null, "eduGroup");
     		byCourse().takeValueForKey(null, "course");
     		byCourse().takeValueForKey(null, "cycle");
+    		byCourse().takeValueForKey(null, "eduYear");
     		cycles = EduCycle.Lister.cyclesForGrade(gradeItem, base.editingContext());
     		coursesByCycle = null;
     	}
@@ -168,6 +169,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		byCourse().takeValueForKey(null, "cycle");
     	}
     	byCourse().takeValueForKey(groupItem, "eduGroup");
+    	byCourse().takeValueForKey(groupItem.eduYear(), "eduYear");
 		byCourse().takeValueForKey(null, "course");
 		prepareCourses(groupItem);
     }
@@ -216,6 +218,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		byCourse().takeValueForKey(cycleItem, "cycle");
     	}
 		byCourse().takeValueForKey(null, "course");
+		byCourse().takeValueForKey(valueForKeyPath("byCourse.eduGroup.eduYear"), "eduYear");
     }
     
     public void selectCourse() {
@@ -273,6 +276,11 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 		String href = context().componentActionURL();
 		String result = "ajaxPopupAction('" + href + "');";
 		return result;
+    }
+    
+    public boolean forceEduYear() {
+    	return (byCourse().valueForKey("course") != null || 
+    			valueForKeyPath("byCourse.eduGroup.eduYear") != null);
     }
     
     public WOActionResults save() {

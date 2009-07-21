@@ -106,6 +106,8 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     			enu = extraLists.objectEnumerator();
     			while (enu.hasMoreElements()) {
 					Object listName = enu.nextElement();
+					if(listKey == null && listName instanceof NSKeyValueCoding)
+						listKey = "listName";
 					if(listKey != null)
 						listName = NSKeyValueCoding.Utility.valueForKey(listName, listKey);
 					if(!_lists.containsObject(listName))
@@ -116,9 +118,13 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     	return _lists;
     }
 
-    public void select() {
-//    	currList = item;
+    public void setCurrList(String list) {
+    	if(list == null || list.equals(currList))
+    		return;
+    	currList = list;
     	setValueForBinding(currList, "currList");
+    }
+    public void updateUsage() {
     	if(currList == null) {
     		usage = null;
     		return;
@@ -147,7 +153,6 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     	if(!lists().contains(currList)) {
     		lists().addObject(currList);
     	}
-    	select();
     }
     
     public WOActionResults addByCourse() {
@@ -167,7 +172,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     			currList = base().textValue();
     		}
     	}
-    	select();
+    	updateUsage();
     	super.appendToResponse(aResponse, aContext);
     }
     

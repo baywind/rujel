@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wodefinitions>
-        <wo class="ByCoursePresenter.java" wocomponentcontent="false">
+        <wo class="ByCoursePresenter.java" wocomponentcontent="true">
 
         <binding name="value"/>
         <validation message="'value' is a required binding.">
             <unbound name="value"/>
         </validation>
-        <binding defaults="Boolean" name="showString"/>
-        <binding defaults="Boolean" name="showNum"/>
+        
+        
     <binding name="editList"/>
     </wo>
 </wodefinitions>

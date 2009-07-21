@@ -38,6 +38,9 @@ ListSettings : ListSettings {
   ec = ec;
   key = "EduPeriod";
   currList = listName;
+  extraLists = extraLists;
+  access = session.readAccess.FLAGS.PeriodList;
+  
 }
 
 NoDetails: WOConditional {
@@ -90,16 +93,47 @@ TotalTitle : WOString {
 }
 
 AddPeriod : OnClickContainer {
-  elementName = "span";
+  elementName = "td";
   onclick = session.ajaxPopup;
   invokeAction = addPeriodToList;
   class = "green";
   style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
+  hide = session.readAccess._create.PeriodList;
 }
 
-PeriodRow : OnClickContainer {
-  elementName = "tr";
-  class = "ungerade";
+PeriodCell : OnClickContainer {
+  elementName = "td";
   invokeAction = editPeriod;
   onclick = session.ajaxPopup;
+  disabled = session.readAccess._edit.item.period;
+  parent = "tr";
+}
+
+DeleteCell : OnClickContainer {
+  elementName = "td";
+  invokeAction = deletePeriod;
+  disabled = session.readAccess._delete.item;
+  onclick = session.tryLoad;
+  hide = session.readAccess._create.PeriodList;
+}
+
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  height = 12;
+  width = 12;
+}
+PeriodsTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.SetupPeriods.choosePeriod.title;
+  escapeHTML = false;
+}
+
+WeeksTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.EduPeriod.weeksDays;
+  escapeHTML = false;
+}
+
+EmptyCell : WOGenericElement {
+  elementName = "td";
+  omitTags = session.readAccess._create.PeriodList;
 }

@@ -93,7 +93,7 @@ BaseString : WOString {
 EditCell : OnClickContainer {
   elementName = "td";
   invokeAction = edit;
-  disabled = session.readAccess._edit.bc;
+  hide = session.readAccess._edit.bc;
   onclick = session.ajaxPopup;
 }
 
@@ -109,13 +109,22 @@ EditImage : WOImage {
 DeleteCell : OnClickContainer {
   elementName = "td";
   invokeAction = delete;
-  disabled = session.readAccess._delete.bc;
+  hide = session.readAccess._delete.bc;
   onclick = session.tryLoad;
 }
 
 Cross : WOImage {
   framework = "RujelBase";
   filename = "cross.png";
-  height = 16;
-  width = 16;
+  height = 12;
+  width = 12;
+}
+
+ComponentContent : WOComponentContent {
+}
+
+Row : WOGenericContainer {
+  elementName = "tr";
+  title = bc.eduYear;
+   class = "grey";
 }

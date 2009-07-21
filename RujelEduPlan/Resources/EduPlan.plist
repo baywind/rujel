@@ -35,7 +35,7 @@
 		<key>holidays</key>
 		<string>Каникулы и праздники</string>
 		<key>listName</key>
-		<string>Траектория</string>
+		<string>График</string>
 	</dict>
 	<key>EduPeriod</key>
 	<dict>
@@ -68,6 +68,8 @@
 		<string>всего</string>
 		<key>showDetails</key>
 		<string>Показать подробности</string>
+		<key>listsOverview</key>
+		<string>Список учебных графиков</string>
 		<key>choosePeriod</key>
 		<dict>
 			<key>title</key>
@@ -136,7 +138,7 @@
 		<key>periodsIntersect</key>
 		<string>Периоды в списке пересекаются</string>
 		<key>confirmDelete</key>
-		<string>Этот период включен в %d списков. Вы уверены, что хотите его удалить?</string>
+		<string> Вы уверены, что хотите удалить этот период? Он включен в %d списков: </string>
 		<key>confirmRemove</key>
 		<string>Вы уверены, что хотите убрать этот период из списка \&apos;%s\&apos;?</string>
 	</dict>
