@@ -67,14 +67,13 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
     
 	public SetupPeriods(WOContext context) {
         super(context);
+        setEc((EOEditingContext)context.page().valueForKey("ec"));
     }
 	
 	public void setEc(EOEditingContext newEc) {
 		ec = newEc;
 		ec.lock();
 		try {
-			if(ec.hasChanges())
-				ec.revert();
 			base = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, true);
 			setListName(base.textValue());
 			if(listName == null) {
@@ -82,7 +81,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 					"strings.RujelEduPlan_EduPlan.SetupPeriods.defaultListName"));
 				base.setTextValue(listName);
 				ec.saveChanges();
-				GlobalPlan.logger.log(WOLogLevel.SETTINGS_EDITING,
+				EduPlan.logger.log(WOLogLevel.SETTINGS_EDITING,
 						"Created default EduPeriod ListName setting: " + listName,
 						new Object[] {session(), base});
 				details = Boolean.FALSE;
@@ -113,7 +112,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 			}
 			weekDays = SettingsBase.numericSettingForCourse("weekDays", null, ec, 7);
 		} catch (Exception e) {
-			GlobalPlan.logger.log(WOLogLevel.WARNING,
+			EduPlan.logger.log(WOLogLevel.WARNING,
 					"Error creating default EduPeriod ListName setting",
 					new Object[] {session(), e});
 		} finally {
@@ -121,7 +120,11 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		}
 	}
 	
-	public void showDetails() {
+    public boolean synchronizesVariablesWithBindings() {
+        return false;
+	}
+
+    public void showDetails() {
 		if(ec.hasChanges()) {
 			ec.lock();
 			ec.revert();
@@ -162,8 +165,9 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
     
 	public WOActionResults addPeriodToList() {
 		WOComponent selector = pageWithName("SelectorPopup");
-		selector.takeValueForKey(this, "returnPage");
+		selector.takeValueForKey(context().page(), "returnPage");
 		selector.takeValueForKey("addPeriod", "resultPath");
+		selector.takeValueForKey(this, "resultGetter");
 		NSDictionary dict = (NSDictionary)application().valueForKeyPath(
 				"strings.RujelEduPlan_EduPlan.SetupPeriods.choosePeriod");
 		dict = PlistReader.cloneDictionary(dict, true);
@@ -199,7 +203,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 			EOEnterpriseObject pl = per.addToList(listName);
 			try {
 				ec.saveChanges();
-				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Added period to list "
+				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Added period to list "
 						+ listName,  new Object[] {session(),per});
 				if(perList == null) {
 					perList = new NSMutableArray(pl);
@@ -214,7 +218,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 					perList = resultList;
 				}
 			} catch (Exception e) {
-				GlobalPlan.logger.log(WOLogLevel.INFO,"Error adding period to list "
+				EduPlan.logger.log(WOLogLevel.INFO,"Error adding period to list "
 						+ listName,  new Object[] {session(),per,e});
 				ec.revert();
 				session().takeValueForKey(e.getMessage(), "message");
@@ -230,8 +234,9 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults editPeriod() {
 		WOComponent selector = pageWithName("SelectorPopup");
-		selector.takeValueForKey(this, "returnPage");
+		selector.takeValueForKey(context().page(), "returnPage");
 		selector.takeValueForKey("addPeriod", "resultPath");
+		selector.takeValueForKey(this, "resultGetter");
 		NSDictionary dict = (NSDictionary)application().valueForKeyPath(
 				"strings.RujelEduPlan_EduPlan.SetupPeriods.choosePeriod");
 		dict = PlistReader.cloneDictionary(dict, true);
@@ -252,7 +257,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		ec.lock();
 		EduPeriod per = (EduPeriod)((EOEnterpriseObject)item).valueForKey("period");
 		try {
-			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Removing period from list "
+			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Removing period from list "
 					+ listName, new Object[] {session(),per});
 			ec.deleteObject((EOEnterpriseObject)item);
 			ec.saveChanges();
@@ -260,7 +265,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 				perList = perList.mutableClone();
 			((NSMutableArray)perList).removeObject(item);
 		} catch (Exception e) {
-			GlobalPlan.logger.log(WOLogLevel.INFO,"Error removing period from list "
+			EduPlan.logger.log(WOLogLevel.INFO,"Error removing period from list "
 					+ listName,  
 					new Object[] {session(),per,e});
 			ec.revert();

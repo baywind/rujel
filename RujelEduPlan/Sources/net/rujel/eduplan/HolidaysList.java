@@ -121,11 +121,11 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     	try {
     		convert(ec);
      		ec.saveChanges();
-			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Saved Holidays changes",
+			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Saved Holidays changes",
 					session());
     	} catch (Exception e) {
     		session().takeValueForKey(e.getMessage(), "message");
-			GlobalPlan.logger.log(WOLogLevel.INFO,"Error saving Holidays changes",
+			EduPlan.logger.log(WOLogLevel.INFO,"Error saving Holidays changes",
 					new Object[] {session(),e});
 		} finally {
 			ec.unlock();
@@ -185,7 +185,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 					if(notGlobal()) {
 						message = message + " from list '" + listName + '\'';
 					}
-					GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,
+					EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,
 							message,new Object[] {session(),hd});
 					if(!notGlobal() || listName.equals(hd.listName())) {
 						ec.deleteObject(hd);

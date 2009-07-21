@@ -88,11 +88,11 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     				}
     				returnPage.takeValueForKey(subject, "forced");
         			Object[] args = new Object[] {session(),subject};
-    				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
+    				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
     			}
     		} catch (Exception ex) {
     			Object[] args = new Object[] {session(),subject,ex};
-    			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to save changes",args);
+    			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to save changes",args);
     			String message = (String)application().
     			valueForKeyPath("strings.Strings.messages.error") + "<br/>" + ex.toString();
     			session().takeValueForKey(message, "message");

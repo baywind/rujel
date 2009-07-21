@@ -92,7 +92,7 @@ CourseTeacher : PersonDisplay {
 }
 
 Form : WOForm {
-  style = "padding:1ex; width:8em;";
+  style = "padding:1ex; min-width:8em;white-space:nowrap;";
 }
 
 SubmitButton : WOSubmitButton {

@@ -59,6 +59,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 				return null;
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.planRegime");
+		} else if("planTabs".equals(obj)) {
+			return WOApplication.application().valueForKeyPath(
+				"strings.RujelEduPlan_EduPlan.planTabs");
 		} else if("lessonTabs".equals(obj)) {
 			return EduPeriod.lessonTabs(ctx);
 		} else if("periods".equals(obj)) {

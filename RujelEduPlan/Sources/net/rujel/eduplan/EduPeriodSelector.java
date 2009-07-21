@@ -133,7 +133,7 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     	per.setFullName(fullName);
     	try {
     		ec.saveChanges();
-			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"EduPeriod " + act + "ed",
+			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"EduPeriod " + act + "ed",
 					new Object[] {session(),per});
         	if(listName != null &&
         			EduPeriod.verifyList(EduPeriod.periodsInList(listName, ec)) > 0) {
@@ -151,7 +151,7 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
         	}
     	} catch (Exception e) {
 			session().takeValueForKey(e.getMessage(), "message");
-			GlobalPlan.logger.log(WOLogLevel.FINE,"Error " + act + "ing period",
+			EduPlan.logger.log(WOLogLevel.FINE,"Error " + act + "ing period",
 					new Object[] {session(),per,e});
 			if(hasBinding("currPeriod"))
 				_currPeriod = per;
@@ -190,12 +190,12 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 							ec.deleteObject(pl);
 						}
 					}
-					GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting EduPeriod",
+					EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting EduPeriod",
 							new Object[] {session(),_currPeriod});
 					ec().deleteObject(currPeriod());
 				} else {
 					currPeriod().removeFromList(listName);
-					GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,
+					EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,
 							"Removing EduPeriod from list: " + listName,
 							new Object[] {session(),_currPeriod});
 				}
@@ -203,7 +203,7 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 			}
 			_currPeriod = null;
 		} catch (Exception e) {
-			GlobalPlan.logger.log(WOLogLevel.WARNING,"Error deleting EduPeriod",
+			EduPlan.logger.log(WOLogLevel.WARNING,"Error deleting EduPeriod",
 					new Object[] {session(),_currPeriod,e});
 			ec().revert();
 		} finally {

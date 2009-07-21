@@ -1,9 +1,13 @@
-#Fri Jul 17 12:26:14 MSD 2009
+#Tue Jul 21 17:45:43 MSD 2009
 eclipse.preferences.version=1
 encoding//Components/AreaEditor.wo=UTF-8
 encoding//Components/AreaEditor.wo/AreaEditor.html=UTF-8
 encoding//Components/AreaEditor.wo/AreaEditor.wod=UTF-8
 encoding//Components/AreaEditor.wo/AreaEditor.woo=UTF-8
+encoding//Components/EduPlan.wo=UTF-8
+encoding//Components/EduPlan.wo/EduPlan.html=UTF-8
+encoding//Components/EduPlan.wo/EduPlan.wod=UTF-8
+encoding//Components/EduPlan.wo/EduPlan.woo=UTF-8
 encoding//Components/GlobalPlan.wo=UTF-8
 encoding//Components/GlobalPlan.wo/GlobalPlan.html=UTF-8
 encoding//Components/GlobalPlan.wo/GlobalPlan.wod=UTF-8
@@ -18,6 +22,10 @@ encoding//Components/ListSettings.wo=UTF-8
 encoding//Components/ListSettings.wo/ListSettings.html=UTF-8
 encoding//Components/ListSettings.wo/ListSettings.wod=UTF-8
 encoding//Components/ListSettings.wo/ListSettings.woo=UTF-8
+encoding//Components/PlanDetails.wo=UTF-8
+encoding//Components/PlanDetails.wo/PlanDetails.html=UTF-8
+encoding//Components/PlanDetails.wo/PlanDetails.wod=UTF-8
+encoding//Components/PlanDetails.wo/PlanDetails.woo=UTF-8
 encoding//Components/SetupPeriods.wo=UTF-8
 encoding//Components/SetupPeriods.wo/SetupPeriods.html=UTF-8
 encoding//Components/SetupPeriods.wo/SetupPeriods.wod=UTF-8
@@ -28,8 +36,10 @@ encoding//Components/SubjectEditor.wo/SubjectEditor.wod=UTF-8
 encoding//Components/SubjectEditor.wo/SubjectEditor.woo=UTF-8
 encoding//Sources/net/rujel/eduplan/AreaEditor.java=UTF-8
 encoding//Sources/net/rujel/eduplan/EduPeriodSelector.java=UTF-8
+encoding//Sources/net/rujel/eduplan/EduPlan.java=UTF-8
 encoding//Sources/net/rujel/eduplan/GlobalPlan.java=UTF-8
 encoding//Sources/net/rujel/eduplan/HolidaysList.java=UTF-8
 encoding//Sources/net/rujel/eduplan/ListSettings.java=UTF-8
+encoding//Sources/net/rujel/eduplan/PlanDetails.java=UTF-8
 encoding//Sources/net/rujel/eduplan/SetupPeriods.java=UTF-8
 encoding//Sources/net/rujel/eduplan/SubjectEditor.java=UTF-8

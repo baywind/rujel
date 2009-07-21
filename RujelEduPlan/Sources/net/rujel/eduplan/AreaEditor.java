@@ -86,7 +86,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     				session().takeValueForKey(
     						valueForKeyPath("strings.RujelEduPlan_EduPlan.cantDeleteArea"),
     				"message");
-    				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,
+    				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,
     						"Denied attempt to delete Area containing Subjects",args);
     			}
     		} else {
@@ -123,11 +123,11 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
 						message.append("deleted: ").append(oldName);
     				}
         			Object[] args = new Object[] {session(),currArea};
-    				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
+    				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
     			}
     		} catch (Exception ex) {
     			Object[] args = new Object[] {session(),currArea,ex};
-    			GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to save changes",args);
+    			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to save changes",args);
     			String message = (String)application().
     			valueForKeyPath("strings.Strings.messages.error") + "<br/>" + ex.toString();
     			session().takeValueForKey(message, "message");
