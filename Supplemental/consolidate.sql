@@ -13,7 +13,7 @@ alter table RujelStatic.ENT_INDEX ADD PRIMARY KEY (`E_ID`);
 
 CREATE TABLE  RujelStatic.SETTINGS_BASE (
   `S_ID` mediumint NOT NULL,
-  `KEY` varchar(28) NOT NULL,
+  `SETTING_KEY` varchar(28) NOT NULL,
   `TEXT_VALUE` varchar(255),
   `NUM_VALUE` int,
   PRIMARY KEY (`S_ID`)

@@ -37,12 +37,7 @@ import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOKeyValueQualifier;
-import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
@@ -52,8 +47,8 @@ import com.webobjects.appserver.WOActionResults;
 public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 
  	public static final NSArray listSorter = new NSArray(new Object[] {
- 			EOSortOrdering.sortOrderingWithKey("period.begin",EOSortOrdering.CompareAscending),
- 			EOSortOrdering.sortOrderingWithKey("period.end",EOSortOrdering.CompareDescending)});
+ 		EOSortOrdering.sortOrderingWithKey("period.begin",EOSortOrdering.CompareAscending),
+ 		EOSortOrdering.sortOrderingWithKey("period.end",EOSortOrdering.CompareDescending)});
 
  	public EOEditingContext ec;
 	public String listName;
@@ -62,7 +57,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 	public Boolean details;
 	public NSArray perList;
 	public Object item;
-	protected int weekDays;
+	public int weekDays = 7;
 	public NSArray extraLists;
     
 	public SetupPeriods(WOContext context) {
@@ -110,7 +105,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 					}
 				}
 			}
-			weekDays = SettingsBase.numericSettingForCourse("weekDays", null, ec, 7);
+//			weekDays = SettingsBase.numericSettingForCourse("weekDays", null, ec, 7);
 		} catch (Exception e) {
 			EduPlan.logger.log(WOLogLevel.WARNING,
 					"Error creating default EduPeriod ListName setting",
@@ -124,6 +119,33 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
         return false;
 	}
 
+    public void setWeekDays(Integer wd) {
+    	if(wd == null)
+    		weekDays = 7;
+    	else
+    		weekDays = wd.intValue();
+    }
+    
+    public void saveWeekDays() {
+    	ec.lock();
+    	try {
+			SettingsBase sb = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+			if(sb == null) return;
+			sb.updateNumValuesForText(listName, new Integer(weekDays));
+			ec.saveChanges();
+			EduPlan.logger.log(WOLogLevel.SETTINGS_EDITING, "Changed weekDays for listName '"
+					+ listName + "' : " + weekDays, session());
+		} catch (Exception e) {
+			EduPlan.logger.log(WOLogLevel.WARNING,"Error changing weekDays for listName '"
+					+ listName + '\'', new Object[] {session(),e});
+			session().takeValueForKey(e.getMessage(), "message");
+			ec.revert();
+			weekDays = 0;
+		} finally {
+			ec.unlock();
+		}
+    }
+    
     public void showDetails() {
 		if(ec.hasChanges()) {
 			ec.lock();
@@ -155,13 +177,17 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
     			return "0";
     		days = per.daysInPeriod(null, listName);
     	} else {
-    		days = EduPeriod.daysForList(listName, null, (NSArray)perList.valueForKey("period"));
+    		days = EduPeriod.daysForList(listName,null,(NSArray)perList.valueForKey("period"));
     	}
-		StringBuilder result = new StringBuilder(10);
-		result.append(days/weekDays).append(' ');
-		result.append('(').append(days%weekDays).append(')');
-		return result.toString();
-	}
+    	StringBuilder result = new StringBuilder(10);
+    	if(weekDays > 0) {
+    		result.append(days/weekDays).append(' ');
+    		result.append('(').append(days%weekDays).append(')');
+    	} else {
+    		result.append('(').append(days).append(')');
+    	}
+    	return result.toString();
+    }
     
 	public WOActionResults addPeriodToList() {
 		WOComponent selector = pageWithName("SelectorPopup");

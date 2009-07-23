@@ -2,7 +2,7 @@
     attributes = (
         {
             allowsNull = N; 
-            columnName = KEY; 
+            columnName = "SETTING_KEY"; 
             name = key; 
             prototypeName = word; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 

@@ -1,0 +1,115 @@
+ClassListing : ClassListing {
+	editingContext = ec;
+	selection = selection;
+	width = "100%";
+}
+SubjectsListing : DynamicTableRow {
+  elementName = "div";
+  item = item;
+  list = subjects;
+  useStyles = true;
+  switchParam = item.area;
+  onClick = session.tryLoad;
+  selection = selection;
+  selectAction = select;
+  hover = item.fullName;
+}
+
+SubjectString : WOString {
+  value = item.subject;
+}
+
+CyclesRepetition : WORepetition {
+  list = cycles;
+  item = cycleItem;
+}
+
+Courses : WORepetition {
+  list = cycleItem.courses;
+  item = rowItem;
+  index = courseIndex;
+}
+
+CycleHeadCell : WOGenericContainer {
+  elementName = "td";
+  rowspan = cycleItem.courses.count;
+  class = "grey";
+}
+
+CourseRow : WOGenericContainer {
+  elementName = "tr";
+  class = rowItem.styleClass;
+}
+
+FirstCourse : WOConditional {
+  condition = courseIndex;
+  negate = true;
+}
+
+CycleSubject : WOString {
+  value = cycleItem.cycle.subject;
+}
+
+CycleGrade : WOString {
+  value = cycleItem.cycle.grade;
+}
+
+EduGroup : WOString {
+  value = rowItem.eduGroup.name;
+}
+
+TeacherCell : OnClickContainer {
+  elementName = "td";
+}
+
+Teacher : PersonDisplay {
+  person = rowItem.course.teacher;
+  last = 2;
+  first = 1;
+  second = 1;
+}
+
+ListsRepetition : WORepetition {
+  list = listNames;
+  item = listItem;
+}
+
+PeriodsRepetition : WORepetition {
+  list = listDict.periods;
+  item = periodItem;
+}
+
+PeriodCell : WOGenericContainer {
+  elementName = "td";
+  class = perCellClass;
+  style = "width:3em;";
+}
+
+ShowFields : WOConditional {
+  condition = showFields;
+}
+
+NoFields : WOConditional {
+  condition = showFields;
+  negate = true;
+}
+
+WeeklyHours : WOString {
+  value = weeklyHours;
+}
+
+TotalField : WOTextField {
+  value = totalHours;
+  numberformat = "0";
+  maxlength = 3;
+  style = "width:2.4ex;float:left;";
+}
+
+WeeklyField : WOTextField {
+  value = weeklyHours;
+  maxlength = 2;
+  style = "width:1.8ex;float:right;";
+}
+
+Form : WOForm {
+}

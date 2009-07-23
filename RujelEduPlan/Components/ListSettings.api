@@ -19,5 +19,9 @@
             <unsettable name="renameList"/>
         </validation>
     <binding name="access"/>
+    <binding name="currNum"/>
+        <validation message="'newBinding' must be bound to a settable value">
+            <unsettable name="currNum"/>
+        </validation>
     </wo>
 </wodefinitions>

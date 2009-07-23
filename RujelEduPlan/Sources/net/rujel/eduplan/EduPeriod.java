@@ -280,7 +280,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		return result;
 	}
 	
-	public int[] weeksAndDays(NSTimestamp toDate, EduCourse course) {
+/*	public int[] weeksAndDays(NSTimestamp toDate, EduCourse course) {
 		EOEditingContext ec = editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
 		int days = daysInPeriod(toDate, listName);
@@ -289,7 +289,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		result[0] = days/weekDays;
 		result[1] = days%weekDays;
 		return result;
-	}
+	}*/
 	
 	public static int daysForList(String listName, EOEditingContext ec) {
 		return daysForList(listName, null, ec);

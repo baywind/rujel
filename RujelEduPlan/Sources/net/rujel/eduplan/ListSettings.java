@@ -49,6 +49,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
 	public NSMutableArray byCourse;
 	public EOEditingContext ec;
 	public Object currList;
+	public Integer currNum;
 	public NSMutableArray usage;
 	public Object item;
 	
@@ -84,6 +85,10 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
 					e.printStackTrace();
 				}
     		}
+        	if(hasBinding("currNum")) {
+        		currNum = base.numericValue();
+        		setValueForBinding(currNum, "currNum");
+        	}
 		}
 		return base;
     }
@@ -123,16 +128,25 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		return;
     	currList = list;
     	setValueForBinding(currList, "currList");
-    }
-    public void updateUsage() {
-    	if(currList == null) {
-    		usage = null;
-    		return;
+    	if(hasBinding("currNum")) {
+    		updateUsage();
+    		if(usage == null || usage.count() == 0) {
+    			currNum = null;
+    		} else {
+    			EOEnterpriseObject bc = (EOEnterpriseObject)usage.objectAtIndex(0);
+    			currNum = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+    		}
+    		setValueForBinding(currNum,"currNum");
     	}
+    }
+    
+    public void updateUsage() {
     	if(usage == null)
     		usage = new NSMutableArray();
     	else
     		usage.removeAllObjects();
+    	if(currList == null) 
+    		return;
     	if(currList.equals(base().textValue()))
     		usage.addObject(base);
     	if(byCourse != null && byCourse.count() > 0) {
@@ -161,6 +175,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     	editor.takeValueForKey(byCourse, "baseByCourse");
     	editor.takeValueForKey(base, "base");
     	editor.takeValueForKeyPath(currList, "byCourse.textValue");
+    	editor.takeValueForKeyPath(currNum, "byCourse.numericValue");
     	return editor;
     }
     

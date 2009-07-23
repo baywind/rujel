@@ -105,10 +105,9 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		int active = 2;
 		boolean exclude = false;
 		EOEditingContext ec = course.editingContext();
-		int weekDays = SettingsBase.numericSettingForCourse("weekDays", course, ec,7);
+		int weekDays = SettingsBase.numericSettingForCourse(EduPeriod.ENTITY_NAME, course, ec,7);
 	
-		String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, 
-				course, ec);
+		String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, course, ec);
 		if(date != null) {
 			active = EduPeriod.dayState(date, ec, listName);
 			if(active==0) {

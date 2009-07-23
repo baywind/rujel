@@ -107,55 +107,79 @@ public class SettingsBase extends _SettingsBase {
 		NSArray byCourse = byCourse();
 		if(byCourse == null || byCourse.count() == 0)
 			return this;
-		int idx = -1;
-		Number grade = null;
+		Object[] vals = new Object[keys.length];
 		if(value instanceof Number) {
-			idx = 0;
-//			grade = (Number)value;
+			vals[0] = value;
 		} else if(value instanceof EduCycle) {
-			idx = 1;
-			grade = ((EduCycle)value).grade();
+			vals[1] = value;
+			vals[0] = ((EduCycle)value).grade();
 		} else if(value instanceof EduGroup) {
-			idx = 2;
-			grade = ((EduGroup)value).grade();
+			vals[2] = value;
+			vals[0] = ((EduGroup)value).grade();
 		} else if(value instanceof Teacher) {
-			idx = 3;
+			vals[3] = value;
 		} else {
-			return null;
+			int count = 0;
+			for (int i = 0; i < keys.length; i++) {
+				try {
+					vals[i] = NSKeyValueCoding.Utility.valueForKey(value, keys[i]);
+				} catch (Exception e) {
+					;
+				}
+				if(vals[i] != null) {
+					count++;
+					if(vals[0] == null && (i==1 || i==2))
+						vals[0] = NSKeyValueCoding.Utility.valueForKey(vals[i], keys[0]);
+				}
+			}
+			if(count == 0)
+				return null;
+			if(eduYear == null) {
+				try {
+					eduYear = (Integer)NSKeyValueCoding.Utility.valueForKey(value, "eduYear");
+				} catch (Exception e) {
+					;
+				}
+			}
 		}
 		Enumeration en = byCourse.objectEnumerator();
-		EOEnterpriseObject forGrade = this;
+		EOEnterpriseObject result = this;
+		int count = 0;
 		loop:
 		while (en.hasMoreElements()) {
 			EOEnterpriseObject bc = (EOEnterpriseObject) en.nextElement();
+			if(bc.valueForKey("course") != null)
+				continue;
 			Integer year = (Integer)bc.valueForKey("eduYear");
 			if(year != null && !year.equals(eduYear))
 				continue;
-			if(!value.equals(bc.valueForKey(keys[idx]))) {
-				if(grade != null && grade.equals(bc.valueForKey(keys[0]))) {
-					for (int i = 1; i < keys.length; i++) {
-						if(bc.valueForKey(keys[i]) != null)
-							continue loop;
-					}
-					forGrade = bc;
-				}
-				continue;				
-			}
-			if(bc.valueForKey("course") != null)
-				continue;
+			int bcCount = 0;
 			for (int i = 1; i < keys.length; i++) {
-				if(i == idx)
-					continue;
-				if(bc.valueForKey(keys[i]) != null)
-					continue loop;
+				if(bc.valueForKey(keys[i]) != null) {
+					if(!bc.valueForKey(keys[i]).equals(vals[i]))
+						continue loop;
+					else
+						bcCount += 1<<i;
+				}
+				if(bcCount > count) {
+					result = bc;
+					count = 0;
+				}
 			}
-			Object grd = bc.valueForKey(keys[0]); 
-			if(grd == null || grd.equals(grade))
-				return bc;
 		}
-		return forGrade;
+		return result;
 	}
 	
+	public void updateNumValuesForText(String textValue, Integer numValue) {
+		if(textValue.equals(textValue()))
+			setNumericValue(numValue);
+		NSDictionary values = new NSDictionary(new Object[] {this,textValue},
+				new String[] {"settingsBase",TEXT_VALUE_KEY});
+		NSArray subs = EOUtilities.objectsMatchingValues(
+				editingContext(), "SettingByCourse", values);
+		if(subs != null && subs.count() > 0)
+			subs.takeValueForKey(numValue, NUMERIC_VALUE_KEY);
+	}
 
 	public static EOEnterpriseObject settingForValue(String key, Object value, 
 			Integer eduYear, EOEditingContext ec) {
@@ -172,13 +196,13 @@ public class SettingsBase extends _SettingsBase {
 			EOEditingContext ec) {
 		if(ec == null && course != null)
 			ec = course.editingContext();
-		try {
+//		try {
 			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
 					ENTITY_NAME, KEY_KEY, key);
 			return sb.forCourse(course);
-		} catch (Exception e) {
-			return null;
-		}
+//		} catch (Exception e) {
+//			return null;
+//		}
 	}
 	
 	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {

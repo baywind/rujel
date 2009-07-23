@@ -20,7 +20,7 @@ ListSettings : ListSettings {
   currList = listName;
   extraLists = extraLists;
   access = session.readAccess.FLAGS.PeriodList;
-  
+  currNum = weekDays;
 }
 
 NoDetails: WOConditional {
@@ -116,4 +116,28 @@ WeeksTitle : WOString {
 EmptyCell : WOGenericElement {
   elementName = "td";
   omitTags = session.readAccess._create.PeriodList;
+}
+
+WeekDaysForm : WOForm {
+  action = saveWeekDays;
+  style = "white-space:nowrap;";
+}
+
+WeekDaysField : WOTextField {
+  value = weekDays;
+  size = 2;
+  maxlength = 3;
+  numberformat = "0";
+  style = "text-align:center;";
+  disabled = session.readAccess._edit.SettingsBase;
+  onkeypress = "return isNumberInput(event,false);";
+}
+
+WeekTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.SetupPeriods.week;
+  escapeHTML = false;
+}
+DaysTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.SetupPeriods.days;
+  escapeHTML = false;
 }

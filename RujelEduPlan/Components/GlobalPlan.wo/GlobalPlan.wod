@@ -63,6 +63,7 @@ CycleHours : WOTextField {
   numberformat = "0";
   style = "width:2em;";
   onchange = "checkChanges(this);";
+  onkeypress = "return isNumberInput(event,false);";
 }
 
 Save: WOSubmitButton {
@@ -166,4 +167,5 @@ GroupsField : WOTextField {
   disabled = access._edit;
   style = "width:2em;";
   onchange = "checkChanges(this);";
+  onkeypress = "return isNumberInput(event,false);";
 }

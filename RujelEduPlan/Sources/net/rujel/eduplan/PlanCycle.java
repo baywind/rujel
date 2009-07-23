@@ -214,6 +214,27 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",qual,null);
 		return ec.objectsWithFetchSpecification(fs);
 	}
+	
+	public static NSArray subjectsForYear(EOEditingContext ec, int eduYear) {
+		NSArray cycles = cyclesForSubjectAndYear(ec, null, eduYear);
+		if(cycles == null || cycles.count() == 0)
+			return null;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = cycles.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			PlanCycle cycle = (PlanCycle) enu.nextElement();
+			if(!result.containsObject(cycle.subjectEO()) && 
+					cycle.hours() != null && cycle.hours().intValue() > 0)
+			result.addObject(cycle.subjectEO());
+		}
+		try {
+			SubjectComparator comparator = new SubjectComparator();
+			result.sortUsingComparator(comparator);
+		} catch (ComparisonException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
 
 	public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec) {
 		Integer year = null;
@@ -349,9 +370,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOEnterpriseObject setting = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
 				this, eduYear, ec);
 		String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-		setting = SettingsBase.settingForValue("weekDays", this, eduYear, ec);
-		int weekDays = (setting==null)?7:
-			((Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY)).intValue();
+//		setting = SettingsBase.settingForValue("weekDays", this, eduYear, ec);
+		Integer wd = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+		int weekDays = (wd==null)?7:wd.intValue();
 		int days = EduPeriod.daysForList(listName, ec);
 		return new int[] {days/weekDays,days%weekDays};
 	}

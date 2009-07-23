@@ -70,6 +70,10 @@
 		<string>Показать подробности</string>
 		<key>listsOverview</key>
 		<string>Список учебных графиков</string>
+		<key>week</key>
+		<string>цикл</string>
+		<key>days</key>
+		<string>дней</string>
 		<key>choosePeriod</key>
 		<dict>
 			<key>title</key>
