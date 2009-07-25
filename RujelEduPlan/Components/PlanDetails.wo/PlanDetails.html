@@ -1,18 +1,41 @@
-<table class = "backfield1"><tr>
-	<td valign = "top" style = "min-width:4em;"><webobject name = "ClassListing"></webobject></td>
-	<td valign = "top"><webobject name = "SubjectsListing"><webobject name = "SubjectString"/></webobject></td>
-	<td valign = "top"><webobject name = "Form"><table cellpadding = "3"><thead>
+<table class = "backfield1" cellspacing = "0" style = "padding: 0px 1em;"><tr valign = "top">
+	<webobject name = "ShowEduGroup"><td style = "min-width:5em;">
+		<webobject name = "ClassListing"></webobject></td></webobject>
+	<webobject name = "ShowSubjects"><td><table cellpadding = "3"  class = "backfield2">
+	<thead><tr><th><webobject name="SubjectLabel"/></th></tr></thead>
+	<tbody><webobject name = "SubjectsListing"><td><webobject name = "SubjectString"/></td>
+	</webobject></tbody></table></td>
+	</webobject><td class = "selectionBorder" style = "border-style:none none none solid;">
+	<webobject name = "Form"><table cellpadding = "3"><thead>
+	<tr><th><webobject name = "CycleHead"/></th><webobject name = "ShowSubjects">
+		<th><webobject name="EduGroupLabel"></webobject></th></webobject>
+		<th><webobject name="TeacherLabel"/></th>
+		<webobject name = "ListsRepetition"><webobject name = "ListCell">
+			<webobject name = "ListName"/></webobject>
+		</webobject><th><webobject name = "TotalLabel"/></th>
+		<th><webobject name = "PlanLabel"/></th></tr>
+	<tr><td style = "border-top:2px solid #cccccc;"></td>
+	<webobject name = "ShowSubjects"><td style = "border-top:2px solid #cccccc;"></td>
+	</webobject><td style = "border-top:2px solid #cccccc;"></td><webobject name = "ListsRepetition">
+	<webobject name = "PeriodsRepetition"><th align = "center" class = "grey">
+		<div style = "width:4ex;"><webobject name = "PeriodTitle"/></div>
+		<div style = "color:#666666;white-space:nowrap;min-width:3em;">
+		<webobject name = "PerWeeksDays"/></div></th></webobject></webobject>
+		<td style = "border-top:2px solid #cccccc;"></td>
+		<td style = "border-top:2px solid #cccccc;"></td></tr>
 	</thead><tbody><webobject name = "CyclesRepetition"><webobject name = "Courses">
 	<webobject name = "CourseRow"><webobject name = "FirstCourse">
-		<webobject name = "CycleHeadCell"><webobject name = "CycleSubject"/>
-			<webobject name = "CycleGrade"/></webobject></webobject>
-		<td><webobject name = "EduGroup"/></td>
+		<webobject name = "CycleHeadCell"><webobject name = "CycleTitle"/></webobject>
+		</webobject><webobject name = "ShowSubjects"><webobject name = "GroupCell">
+			<webobject name = "EduGroup"/></webobject></webobject>
 		<webobject name = "TeacherCell"><webobject name = "Teacher"/></webobject>
 		<webobject name = "ListsRepetition"><webobject name = "PeriodsRepetition">
 		<webobject name = "PeriodCell"><webobject name = "ShowFields">
 			<webobject name = "TotalField"/> <webobject name = "WeeklyField"/>
 			</webobject><webobject name = "NoFields"><webobject name = "WeeklyHours"/>
 			</webobject></webobject></webobject></webobject>
-		</webobject>
+			<webobject name = "TotalCell"/><webobject name = "FirstCourse">
+		<webobject name = "CycleTailCell"><webobject name = "PlanHours"/></webobject>
+		</webobject></webobject>
 	</webobject></webobject></tbody></table></webobject></td>
 </tr></table>

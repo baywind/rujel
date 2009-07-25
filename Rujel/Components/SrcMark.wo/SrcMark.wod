@@ -118,6 +118,8 @@ TeacherLN: PersonDisplay {
 	first = 1;
 	second = 1;
 	startWithLast = true;
+	valueWhenEmpty = application.strings.RujelBase_Base.vacant;
+	emptyStyle = "font-style:italic;";
 }
 
 EditLink: WOHyperlink {

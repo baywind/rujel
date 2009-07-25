@@ -42,6 +42,7 @@ import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
@@ -73,9 +74,12 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	public static void init() {
 		EOInitialiser.initialiseRelationship("PlanCycle",SPEC_CLASS_KEY,false,"classID","EduGroup")
 				.anyInverseRelationship().setPropagatesPrimaryKey(true);
-		EOInitialiser.initialiseRelationship("PlanDetail","course",false,"courseID","EduCourse")
-				.anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EORelationship back = EOInitialiser.initialiseRelationship(
+				"PlanDetail","course",false,"courseID","EduCourse").anyInverseRelationship();
+		back.setPropagatesPrimaryKey(true);
+		back.setDeleteRule(EOClassDescription.DeleteRuleCascade);
 	}
+	
 	public static String SPEC_CLASS_KEY = "specClass";
 	
     public PlanCycle() {

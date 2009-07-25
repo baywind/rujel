@@ -4,12 +4,24 @@
         {columnName = "CR_ID"; name = courseID; prototypeName = short; }, 
         {allowsNull = N; columnName = CYCLE; name = cycleID; prototypeName = short; }, 
         {columnName = "EDU_YEAR"; name = eduYear; prototypeName = short; }, 
+        {
+            allowsNull = N; 
+            columnName = FLAGS; 
+            name = flags; 
+            prototypeName = byte; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
         {columnName = "EDU_GROUP"; name = groupID; prototypeName = "int_3"; }, 
-        {columnName = TEACHER; name = teacherID; prototypeName = "int_3"; }
+        {
+            allowsNull = Y; 
+            columnName = TEACHER; 
+            name = teacherID; 
+            prototypeName = "int_3"; 
+        }
     ); 
-    attributesUsedForLocking = (cycleID, teacherID, groupID, eduYear, comment); 
+    attributesUsedForLocking = (cycleID, teacherID, groupID, eduYear, comment, flags); 
     className = "net.rujel.base.BaseCourse"; 
-    classProperties = (cycle, lessons, eduYear, audience, lessonTabs, comment); 
+    classProperties = (lessons, eduYear, audience, lessonTabs, comment, flags); 
     externalName = "BASE_COURSE"; 
     fetchSpecificationDictionary = {}; 
     name = BaseCourse; 
@@ -25,14 +37,6 @@
             name = audience; 
             ownsDestination = Y; 
             propagatesPrimaryKey = Y; 
-        }, 
-        {
-            destination = PrimitiveEduCycle; 
-            isMandatory = Y; 
-            isToMany = N; 
-            joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = cycleID; sourceAttribute = cycleID; }); 
-            name = cycle; 
         }, 
         {
             deleteRule = EODeleteRuleCascade; 

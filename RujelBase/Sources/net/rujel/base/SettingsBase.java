@@ -196,13 +196,13 @@ public class SettingsBase extends _SettingsBase {
 			EOEditingContext ec) {
 		if(ec == null && course != null)
 			ec = course.editingContext();
-//		try {
+		try {
 			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
 					ENTITY_NAME, KEY_KEY, key);
 			return sb.forCourse(course);
-//		} catch (Exception e) {
-//			return null;
-//		}
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
 	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {

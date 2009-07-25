@@ -80,7 +80,7 @@ public class Reason extends _Reason {
 	}
 	
 	public void setTeacher(Object newTeacher) {
-		namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
+//		namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
 		takeStoredValueForKey((newTeacher==NullValue)?null:newTeacher, "teacher");
 	}
 	
@@ -123,25 +123,30 @@ public class Reason extends _Reason {
     	super.setFlags(value);
     }
 
-	protected void exts(StringBuilder result) {
-		if(teacher() != null) {
-			Person t = teacher().person();
-			result.append(t.lastName()).append(' ');
-			if(t.firstName() != null) {
-				result.append(t.firstName().charAt(0)).append('.');
-				if(t.secondName() != null)
-				result.append(' ').append(t.secondName().charAt(0)).append('.');
-			}
-		}
-		if(eduGroup() != null) {
-			if(teacher() != null)
+    protected void exts(StringBuilder result) {
+    	if(namedFlags().flagForKey("forTeacher")) {
+    		if(teacher() != null) {
+    			Person t = teacher().person();
+    			result.append(t.lastName()).append(' ');
+    			if(t.firstName() != null) {
+    				result.append(t.firstName().charAt(0)).append('.');
+    				if(t.secondName() != null)
+    					result.append(' ').append(t.secondName().charAt(0)).append('.');
+    			}
+    		} else {
+    			result.append(WOApplication.application().valueForKeyPath(
+    					"strings.RujelBase_Base.vacant"));
+    		}
+    	}
+    	if(eduGroup() != null) {
+    		if(teacher() != null)
 				result.append(',').append(' ');
 			result.append(eduGroup().name());
 		}		
 	}
 	
 	public String extToString() {
-		if(teacher() == null && eduGroup() == null)
+		if(!namedFlags().flagForKey("forTeacher") && eduGroup() == null)
 			return null;
 		StringBuilder sb = new StringBuilder(12);
 		exts(sb);

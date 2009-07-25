@@ -36,6 +36,10 @@
 		<string>Каникулы и праздники</string>
 		<key>listName</key>
 		<string>График</string>
+		<key>plan</key>
+		<string>по плану</string>
+		<key>total</key>
+		<string>сумма</string>
 	</dict>
 	<key>EduPeriod</key>
 	<dict>

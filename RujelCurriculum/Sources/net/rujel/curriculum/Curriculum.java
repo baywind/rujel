@@ -398,7 +398,12 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 	public boolean noTeacher() {
-		return (reasonTeacher() == null ||  tmpDict.valueForKey("reasonsToMoveIn") != null);
+		return (tmpDict.valueForKey("reasonsToMoveIn") != null);
+//			return true;
+//		if(currReason == null || 
+//				Various.boolForObject(valueForKeyPath("currReason.namedFlags.forTeacher")))
+//			return false;
+//		return (reasonTeacher() == null);
 	}
 	public boolean noEduGroup() {
 		return (reasonGroup() == null || tmpDict.valueForKey("reasonsToMoveIn") != null);

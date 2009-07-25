@@ -46,7 +46,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 	public NSArray tablist;
 	public NSKeyValueCoding currTab;
 	public EOEditingContext ec;
-	
+	public WOComponent toReset;
+		
     public EduPlan(WOContext context) {
         super(context);
         ec = new SessionedEditingContext(context.session());
@@ -57,6 +58,10 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
     public void revertEc() {
 		ec.lock();
 		try {
+			if(toReset != null) {
+				toReset.reset();
+				toReset = null;
+			}
 			if(ec.hasChanges())
 				ec.revert();
 		} catch (Exception e) {

@@ -56,8 +56,17 @@ public class PersonDisplay extends ExtDynamicElement {
     	Object tmp = valueForBinding("person",aContext);
     	if(tmp == null) {
     		tmp = valueForBinding("valueWhenEmpty", aContext);
-    		if(tmp != null)
+    		if(tmp != null) {
+    			String emptyStyle = (String)valueForBinding("emptyStyle", aContext);
+    			if(emptyStyle != null) {
+    				aResponse.appendContentString("<span style=\"");
+    				aResponse.appendContentString(emptyStyle);
+    				aResponse.appendContentString("\">");
+    			}
     			aResponse.appendContentString(tmp.toString());
+    			if(emptyStyle != null)
+    				aResponse.appendContentString("</span>");
+    		}
     		//aResponse.appendContentString("?");
     		return;
     	}

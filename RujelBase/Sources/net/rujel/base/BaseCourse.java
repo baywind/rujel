@@ -38,7 +38,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
 
-public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
+public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 {
     public BaseCourse() {
         super();
@@ -73,26 +73,6 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		}
 		return _access.immutableClone();
 	}
-	/*
-	private transient NSMutableDictionary _schemeCache;
-	public NamedFlags schemeAccess(String schemePath) {
-		NamedFlags result = null;
-		if(_schemeCache == null) {
-			_schemeCache = new NSMutableDictionary();
-		} else {
-			result = (NamedFlags)_schemeCache.objectForKey(schemePath);
-		}
-		if(result == null) {
-			result = StaticImplementation.schemeAccess(this,schemePath);
-			if(result == null) {
-				result = DegenerateFlags.ALL_FALSE;
-			}
-			_schemeCache.setObjectForKey(result,schemePath);
-		}
-		if(result == DegenerateFlags.ALL_FALSE)
-			return null;
-		else return result;
-	}*/
 	
 	public boolean isOwned() {
 		return StaticImplementation.isOwned(this);
@@ -131,13 +111,10 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
     public void setCycle(EduCycle aValue) {
         takeStoredValueForKey(aValue, "cycle");
     }
-	
-    public String comment() {
-        return (String)storedValueForKey("comment");
-    }
-	
-    public void setComment(String aValue) {
-        takeStoredValueForKey(aValue, "comment");
+    
+    public void awakeFromInsertion(EOEditingContext ec) {
+    	super.awakeFromInsertion(ec);
+		setFlags(new Integer(0));
     }
 
 	public void validateForSave() throws NSValidation.ValidationException {
@@ -151,18 +128,6 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		if(cg != null && eg != null && !cg.equals(eg))
 			throw new NSValidation.ValidationException("Grade of cycle does not match grade of edu group");
 	}
-	
-	public Integer eduYear() {
-        return (Integer)storedValueForKey("eduYear");
-    }
-	
-    public void setEduYear(Integer year) {
-        takeStoredValueForKey(year, "eduYear");
-    }
-	
-    public NSArray lessons() {
-        return (NSArray)storedValueForKey("lessons");
-    }
 	
 	public NSArray sortedLessons() {
 		NSArray less = lessons();
@@ -269,31 +234,6 @@ public class BaseCourse extends EOGenericRecord implements EduCourse, UseAccess
 		}
     }
 	
-	/*
-	public NSArray audience() {
-		_subgroup = null;
-        return (NSArray)storedValueForKey("audience");
-    }
-	
-    public void setAudience(NSArray aValue) {
-        takeStoredValueForKey(aValue, "audience");
-		_subgroup = null;
-   }
-	
-    public void addToAudience(EOEnterpriseObject object) {
-		if(audience() == null || !audience().containsObject(object)) {
-			includeObjectIntoPropertyWithKey(object, "audience");
-			Object st = object.storedValueForKey("student");
-			if(_subgroup != null && st != null)_subgroup.addObject(st);
-		}
-    }
-	
-    public void removeFromAudience(EOEnterpriseObject object) {
-		excludeObjectFromPropertyWithKey(object, "audience");
-		Object st = object.storedValueForKey("student");
-		if(_subgroup != null && st != null)_subgroup.removeObject(st);
-   }
-*/
 	public void setSubgroup(NSArray newList) {
 		if(newList == null || newList.count() == 0) {
 			takeStoredValueForKey(new NSArray(),"audience");

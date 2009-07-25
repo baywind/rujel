@@ -283,6 +283,10 @@
 						<string>1</string>
 						<key>second</key>
 						<string>1</string>
+						<key>valueWhenEmpty</key>
+						<string>$application.strings.RujelBase_Base.vacant</string>
+						<key>emptyStyle</key>
+						<string>font-style:italic;</string>
 					</dict>
 					<key>course</key>
 					<string>lesson.course</string>
@@ -468,6 +472,10 @@
 						<string>1</string>
 						<key>second</key>
 						<string>1</string>
+						<key>valueWhenEmpty</key>
+						<string>$application.strings.RujelBase_Base.vacant</string>
+						<key>emptyStyle</key>
+						<string>font-style:italic;</string>
 					</dict>
 					<key>course</key>
 					<string>course</string>

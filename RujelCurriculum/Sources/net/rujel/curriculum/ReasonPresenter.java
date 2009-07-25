@@ -45,9 +45,9 @@ public class ReasonPresenter extends com.webobjects.appserver.WOComponent {
     }
     
     public String iconName() {
-    	if(reason().teacher() != null)
+    	if(reason().namedFlags().flagForKey("forTeacher"))
     		return "teacher.png";
-    	if(reason().eduGroup() != null)
+    	if(reason().namedFlags().flagForKey("forEduGroup"))
     		return "group.png";
     	return "school.png";
     }

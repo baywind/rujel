@@ -34,6 +34,10 @@ import java.util.Enumeration;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Person;
+import net.rujel.interfaces.Teacher;
+import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -71,66 +75,99 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		setSelection(item);
 	}
 	
+	public void selectSubject() {
+		setSelection(cycleItem.valueForKeyPath("cycle.subjectEO"));
+	}
+	
+	public void selectEduGroup() {
+		setSelection(rowItem.valueForKeyPath("course.eduGroup"));
+	}
+	
 	public NSArray subjects() {
 		if(subjects == null) {
+			context().page().takeValueForKey(this, "toReset");
 			Integer eduYear = (Integer)session().valueForKey("eduYear");
 	        subjects = PlanCycle.subjectsForYear(ec, eduYear.intValue());
 		}
 		return subjects;
 	}
 	
+	public boolean hideGroups() {
+		return (selection instanceof Subject);
+	}
+	
+	public boolean hideSubjects() {
+		return (selection instanceof EduGroup);
+	}
+
 	public void setSelection(Object sel) {
-		selection = sel;
-		if(sel == null) {
-			cycles = null;
-			return;
-		}
-		Integer eduYear = (Integer)session().valueForKey("eduYear");
-		NSArray groups = null;
-		if (sel instanceof EduGroup) {
-			EduGroup gr = (EduGroup) sel;
-			cycles = PlanCycle.cyclesForEduGroup(gr);
-//			values.takeValueForKey(gr, "eduGroup");
-//			groups = new NSArray(sel);
-		} else if (sel instanceof Subject) {
-			Subject subject = (Subject) sel;
-			cycles = PlanCycle.cyclesForSubjectAndYear(ec, subject, eduYear.intValue());
-			NSTimestamp date = (NSTimestamp)session().valueForKey("today");
-			groups = EduGroup.Lister.listGroups(date, ec);
-		}
-		if(cycles == null || cycles.count() == 0)
-			return;
-		NSMutableArray cycleDicts = new NSMutableArray();
-		NSMutableDictionary values = new NSMutableDictionary(eduYear,"eduYear");
-		Enumeration enu = cycles.objectEnumerator();
-		if(listNames == null)
-			listNames = new NSMutableArray();
-		else
-			listNames.removeAllObjects();
-		while (enu.hasMoreElements()) {
-			PlanCycle cycle = (PlanCycle) enu.nextElement();
-			values.takeValueForKey(cycle, "cycle");
-			NSMutableDictionary dict = observeValue(cycle, eduYear);
-			dict = new NSMutableDictionary(dict, "listName");
-			dict.takeValueForKey(cycle,"cycle");
-//			dict.takeValueForKey(new Integer(cycle.weekly()), "weekly");
-			NSMutableArray courses = new NSMutableArray();
-			if(sel instanceof EduGroup) {
-				prepareCourses((EduGroup)sel, cycle, values, courses);
-			} else {
-				EOQualifier qual = new EOKeyValueQualifier("grade",
-						EOQualifier.QualifierOperatorEqual,cycle.grade());
-				NSArray relatedGroups = EOQualifier.filteredArrayWithQualifier(groups, qual);
-				Enumeration grEnu = relatedGroups.objectEnumerator();
-				while (grEnu.hasMoreElements()) {
-					EduGroup gr = (EduGroup) grEnu.nextElement();
-					prepareCourses(gr, cycle, values, courses);
-				}
+		ec.lock();
+		try {
+			if(ec.hasChanges())
+				ec.revert();
+			selection = sel;
+			if(sel == null) {
+				cycles = null;
+				return;
 			}
-			dict.takeValueForKey(courses, "courses");
-			cycleDicts.addObject(dict);
+			Integer eduYear = (Integer)session().valueForKey("eduYear");
+			NSArray groups = null;
+			if (sel instanceof EduGroup) {
+				EduGroup gr = (EduGroup) sel;
+				cycles = PlanCycle.cyclesForEduGroup(gr);
+//				values.takeValueForKey(gr, "eduGroup");
+//				groups = new NSArray(sel);
+			} else if (sel instanceof Subject) {
+				Subject subject = (Subject) sel;
+				cycles = PlanCycle.cyclesForSubjectAndYear(ec, subject, eduYear.intValue());
+				EOSortOrdering so =new EOSortOrdering("grade",EOSortOrdering.CompareAscending);
+				cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, new NSArray(so));
+				NSTimestamp date = (NSTimestamp)session().valueForKey("today");
+				groups = EduGroup.Lister.listGroups(date, ec);
+			} else {
+				return;
+			}
+			if(cycles == null || cycles.count() == 0)
+				return;
+			NSMutableArray cycleDicts = new NSMutableArray();
+			NSMutableDictionary values = new NSMutableDictionary(eduYear,"eduYear");
+			Enumeration enu = cycles.objectEnumerator();
+			if(listNames == null)
+				listNames = new NSMutableArray();
+			else
+				listNames.removeAllObjects();
+			while (enu.hasMoreElements()) {
+				PlanCycle cycle = (PlanCycle) enu.nextElement();
+				values.takeValueForKey(cycle, "cycle");
+				NSMutableDictionary dict = observeValue(cycle, eduYear);
+				dict = new NSMutableDictionary(dict, "listName");
+				dict.takeValueForKey(cycle,"cycle");
+//				dict.takeValueForKey(new Integer(cycle.weekly()), "weekly");
+				NSMutableArray courses = new NSMutableArray();
+				if(sel instanceof EduGroup) {
+					dict.takeValueForKey(cycle.subject(), "title");
+					prepareCourses((EduGroup)sel, cycle, values, courses);
+				} else {
+					dict.takeValueForKey(cycle.grade(), "title");
+					EOQualifier qual = new EOKeyValueQualifier("grade",
+							EOQualifier.QualifierOperatorEqual,cycle.grade());
+					NSArray relatedGroups = EOQualifier.filteredArrayWithQualifier(groups, qual);
+					Enumeration grEnu = relatedGroups.objectEnumerator();
+					while (grEnu.hasMoreElements()) {
+						EduGroup gr = (EduGroup) grEnu.nextElement();
+						prepareCourses(gr, cycle, values, courses);
+					}
+				}
+				dict.takeValueForKey(courses, "courses");
+				cycleDicts.addObject(dict);
+			}
+			cycles = cycleDicts;
+		} catch (Exception e) {
+			EduPlan.logger.log(WOLogLevel.WARNING,"Error preparing details list",
+					new Object[] {session(),e});
+		} finally {
+			ec.unlock();
 		}
-		cycles = cycleDicts;
 	}
 
 	protected void prepareCourses(EduGroup gr, PlanCycle cycle, NSMutableDictionary values,
@@ -161,15 +198,22 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		NSMutableDictionary result = new NSMutableDictionary(listSetting, "listSetting");
 		result.takeValueForKey(course.valueForKey("eduGroup"), "eduGroup");
 		int weeks = ((Integer)listSetting.valueForKey("weeks")).intValue();
+		int days = ((Integer)listSetting.valueForKey("days")).intValue();
+		int week = ((Integer)listSetting.valueForKey("week")).intValue();
 		int hours = ((Integer)course.valueForKeyPath("cycle.hours")).intValue();
 		int weekly = hours/weeks;
-		int total = weeks*weekly;
 		int extra = hours%weeks;
+		String indication = "grey";
 		if(extra > weekly) {
 			weekly++;
-			total = weeks*weekly;
+			indication = "highlight2";
+		} else if(extra > 0) {
+			Integer extraDays = (Integer)listSetting.valueForKey("extraDays");
+			if(extra > extraDays.intValue())
+				indication = "warning";
 		}
-		
+		int total = weekly * days / week;
+		result.takeValueForKey(indication, "indication");
 		result.takeValueForKey(new Integer(weekly), "weekly");
 		if(course instanceof EduCourse) {
 			result.takeValueForKey(course,"course");
@@ -178,12 +222,12 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			if(details != null && details.count() > 0) {
 				NSMutableDictionary detailsDict = new NSMutableDictionary();
 				Enumeration enu = details.objectEnumerator();
-				total = 0;
+//				total = 0;
 				while (enu.hasMoreElements()) {
 					EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
 					detailsDict.setObjectForKey(detail,detail.valueForKey("eduPeriod"));
-					int dHours = ((Integer)detail.valueForKey("hours")).intValue();
-					total += dHours;
+//					int dHours = ((Integer)detail.valueForKey("hours")).intValue();
+//					total += dHours;
 				}
 				result.takeValueForKey(detailsDict, "details");
 			}
@@ -192,8 +236,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey("grey", "styleClass");
 		}
 		result.takeValueForKey(new Integer(total), "total");
-		extra = hours - total;
-		result.takeValueForKey(new Integer(extra), "extra");
+//		extra = hours - total;
+//		result.takeValueForKey(new Integer(extra), "extra");
 		return result;
 	}
 	
@@ -227,27 +271,47 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		if(periodsForList == null)
 			return;
 		listDict = (li==null)?null:(NSMutableDictionary)periodsForList.valueForKey(li);
+		if (rowItem != null) {
+			NSDictionary details = (NSDictionary) rowItem
+					.valueForKey("details");
+			if (details != null && details.count() == 0)
+				rowItem.removeObjectForKey("details");
+		}
 	}
-	
+
+	protected int perDays = -1;
 	public EduPeriod periodItem() {
-		return (EduPeriod)item;
+		if(item instanceof EduPeriod)
+			return (EduPeriod)item;
+		return null;
 	}
-	
+
 	public void setPeriodItem(EduPeriod periodItem) {
 		item = periodItem;
 		pdItem = null;
-		if(rowItem != null) {
-			NSDictionary details = (NSDictionary)rowItem.valueForKey("details");
-			if(details != null)
-				pdItem = (EOEnterpriseObject)details.objectForKey(periodItem);
+		if(periodItem != null) {
+			perDays = periodItem.daysInPeriod(null, listItem);
+			if(rowItem != null) {
+				NSDictionary details = (NSDictionary)rowItem.valueForKey("details");
+				if(details != null)
+					pdItem = (EOEnterpriseObject)details.objectForKey(periodItem);
+			}
+		} else {
+			perDays = -1;
 		}
 	}
-	
-	public String perCellClass() {
-		
-		return null;
+
+	public String perWeeksDays() {
+		if(periodItem() == null)
+			return null;
+//		int days = periodItem().daysInPeriod(null, listItem);
+		Integer week = (Integer)valueForKeyPath("listDict.week");
+		int wd = (week==null)?7:week.intValue();
+		StringBuilder buf = new StringBuilder(7);
+		buf.append(perDays/wd).append(' ').append('(').append(perDays%wd).append(')');
+		return buf.toString();
 	}
-	
+		
 	public Boolean showFields() {
 		if(listItem == null || rowItem.valueForKey("course") == null ||
 				!listItem.equals(rowItem.valueForKeyPath("listSetting.listName")))
@@ -255,19 +319,86 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		return Boolean.TRUE;
 	}
 
-	public String weeklyHours() {
-		if(listItem == null || 
+	public String perCellClass() {
+		if(listItem == null || rowItem.valueForKey("course") == null ||
 				!listItem.equals(rowItem.valueForKeyPath("listSetting.listName")))
 			return null;
-		if(rowItem.valueForKey("details") == null)
-			return rowItem.valueForKey("weekly").toString();
-		if(pdItem != null)
-			return pdItem.valueForKey("weekly").toString();
+		if(pdItem == null) {
+			if(Various.boolForObject(valueForKeyPath("rowItem.details.count")))
+				return "grey";
+			else
+				return null;
+		}
+		Integer week = (Integer)listDict.valueForKeyPath("week");
+		int weeks = perDays / week.intValue();
+		Integer weekly = (Integer)pdItem.valueForKey("weekly");
+		if(weekly == null)
+			return "orange";
+		int total = weeks * weekly.intValue();
+		Integer hours = (Integer)pdItem.valueForKey("hours");
+		if(hours == null)
+			return "orange";
+		if (hours.intValue() - total > weekly.intValue())
+			return "warning";
+		if (total > hours.intValue())
+			return "highlight2";
 		return null;
 	}
 
+	public String weeklyHours() {
+		if(pdItem != null)
+			return pdItem.valueForKey("weekly").toString();
+		if(listItem == null || 
+				!listItem.equals(rowItem.valueForKeyPath("listSetting.listName")))
+			return null;
+//		if(Various.boolForObject(valueForKeyPath("rowItem.details.count")))
+		if(rowItem.valueForKey("details") != null)
+			return null;
+		return rowItem.valueForKey("weekly").toString();
+	}
+
 	public void setWeeklyHours(String weeklyHours) {
-		// TODO
+		NSMutableDictionary details = (NSMutableDictionary)rowItem.valueForKey("details");
+		if(pdItem != null) {
+			if(weeklyHours == null) {
+				boolean isNew = ec.globalIDForObject(pdItem).isTemporary();
+				if(pdItem.valueForKey("hours") == null) {
+					ec.deleteObject(pdItem);
+					details.removeObjectForKey(periodItem());
+					pdItem = null;
+				} else {
+					if(!isNew && pdItem.valueForKey("weekly") == null)
+						pdItem.takeValueForKey(new Integer(0), "weekly");
+				}
+			} else {
+				Integer weekly = new Integer(weeklyHours);
+				pdItem.takeValueForKey(weekly, "weekly");
+				if(pdItem.valueForKey("hours") == null) {
+					Integer week = (Integer)listDict.valueForKeyPath("week");
+					int total = weekly.intValue() * perDays / week;
+					pdItem.takeValueForKey(new Integer(total), "hours");
+				}
+			}
+			return;
+		} else if(details != null) {
+			if(weeklyHours == null)
+				return;
+		} else if(rowItem.valueForKey("weekly").toString().equals(weeklyHours)) {
+			return;
+		}
+		createDetail();
+		details = (NSMutableDictionary)rowItem.valueForKey("details");
+		if(weeklyHours == null) {
+			ec.deleteObject(pdItem);
+			details.removeObjectForKey(periodItem());
+			pdItem = null;
+		} else {
+			Integer weekly = new Integer(weeklyHours);
+			pdItem.takeStoredValueForKey(weekly, "weekly");
+			Integer week = (Integer)listDict.valueForKeyPath("week");
+			int total = weekly.intValue() * perDays / week;
+			pdItem.takeValueForKey(new Integer(total), "hours");
+		}
 	}
 
 	public Integer totalHours() {
@@ -277,10 +408,95 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setTotalHours(Integer totalHours) {
-		// TODO
+		if(pdItem != null) {
+//			boolean isNew = ec.globalIDForObject(pdItem).isTemporary();
+//			if(totalHours != null || !isNew)
+			if(totalHours == null || !totalHours.equals(pdItem.valueForKey("hours")))
+				pdItem.takeValueForKey(totalHours, "hours");
+			if(totalHours == null)
+				pdItem.takeValueForKey(new Integer(0), "weekly");
+			return;
+		} else if(totalHours == null)
+			return;
+		createDetail();
+		pdItem.takeValueForKey(totalHours, "hours");
+		Integer week = (Integer)listDict.valueForKeyPath("week");
+		int weeks = perDays / week.intValue();
+		int weekly = totalHours.intValue() / weeks;
+		pdItem.takeValueForKey(new Integer(weekly), "weekly");
+	}
+
+	protected EOEnterpriseObject createDetail() {
+		if(pdItem != null)
+			return pdItem;
+		EduCourse course = (EduCourse)rowItem.valueForKey("course");
+		if(course == null)
+			return null;
+		NSMutableDictionary details = (NSMutableDictionary)rowItem.valueForKey("details");
+		/*if(details == null) {
+			details = new NSMutableDictionary();
+			rowItem.setObjectForKey(details, "details");
+		}*/
+		if(details != null) {
+			pdItem = (EOEnterpriseObject)details.objectForKey(periodItem());
+			if(pdItem != null)
+				return pdItem;
+			pdItem = EOUtilities.createAndInsertInstance(ec, "PlanDetail");
+			pdItem.takeValueForKey(periodItem(), "eduPeriod");
+			pdItem.takeValueForKey(course, "course");
+			details.setObjectForKey(pdItem, periodItem());
+		} else {
+			details = new NSMutableDictionary();
+			rowItem.setObjectForKey(details, "details");
+			Enumeration enu = ((NSArray)listDict.valueForKey("periods")).objectEnumerator();
+			Integer weekly = (Integer)rowItem.valueForKey("weekly");
+			Integer week = (Integer)listDict.valueForKeyPath("week");
+			while (enu.hasMoreElements()) {
+				EduPeriod per = (EduPeriod) enu.nextElement();
+				EOEnterpriseObject pd = EOUtilities.createAndInsertInstance(ec, "PlanDetail");
+				pd.takeValueForKey(per, "eduPeriod");
+				pd.takeValueForKey(course, "course");
+				pd.takeValueForKey(weekly, "weekly");
+				int total = weekly.intValue() * per.daysInPeriod(null, listItem) / week;
+				pd.takeValueForKey(new Integer(total), "hours");
+				details.setObjectForKey(pd, per);
+				if(per == item)
+					pdItem = pd;
+			}
+		}
+		return pdItem;
+	}
+	
+	public String totalCell() {
+		NSDictionary details = (NSDictionary)rowItem.valueForKey("details");
+		StringBuilder buf = new StringBuilder("<td class=\"");
+		if(details == null) {
+			buf.append(rowItem.valueForKey("indication")).append('"').append('>');
+			buf.append(rowItem.valueForKey("total"));
+		} else {
+			int total = 0;
+			Enumeration enu = details.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
+				int dHours = ((Integer)detail.valueForKey("hours")).intValue();
+				total += dHours;
+			}
+			int plan = ((Integer)cycleItem.valueForKeyPath("cycle.hours")).intValue();
+			if(total > plan)
+				buf.append("highlight2");
+			else if(total < plan)
+				buf.append("warning");
+			else
+				buf.append("green");
+			buf.append('"').append('>').append(total);
+		}
+		buf.append("</td>");
+		return buf.toString();
 	}
 
 	public void save() {
+		if(!ec.hasChanges())
+			return;
 	   	ec.lock();
     	try {
 			ec.saveChanges();
@@ -295,12 +511,120 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		}
 	}
 	
+	public String teacherString() {
+		if(rowItem == null)
+			return null;
+		EduCourse course = (EduCourse)rowItem.valueForKey("course");
+		if(course == null)
+			return (String)application().valueForKeyPath(
+					"strings.Reusables_Strings.uiElements.Add");
+		Teacher teacher = course.teacher();
+		if(teacher == null)
+			return "<em>" + (String)application().valueForKeyPath(
+					"strings.RujelBase_Base.vacant") + "</em>";
+		return Person.Utility.fullName(teacher, true, 2, 1, 1);
+	}
+	
+	public WOActionResults selectTeacher() {
+		WOComponent selector = pageWithName("SelectorPopup");
+		selector.takeValueForKey(context().page(), "returnPage");
+		selector.takeValueForKey("teacher", "resultPath");
+		selector.takeValueForKey(new TeacherGetter(rowItem,ec,
+				(PlanCycle)cycleItem.valueForKey("cycle"),session()), "resultGetter");
+		Object teacher = rowItem.valueForKeyPath("course.teacher");
+		if(teacher == null && rowItem.valueForKey("course") != null)
+			teacher = NullValue;
+		selector.takeValueForKey(teacher, "value");
+		NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.RujelBase_Base.selectTeacher");
+		dict = PlistReader.cloneDictionary(dict, true);
+		if(teacher != null) {
+			dict.takeValueForKeyPath(new NSArray(teacher), "presenterBindings.forcedList");
+		} else {
+			dict.takeValueForKeyPath(null, "presenterBindings.forcedList");
+		}
+		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
+		dict.takeValueForKeyPath(Boolean.TRUE, "presenterBindings.allowDelete");
+		selector.takeValueForKey(dict, "dict");
+		return selector;
+	}
+	
+	protected static class TeacherGetter { 
+		protected NSMutableDictionary row;
+		protected EOEditingContext ec;
+		protected PlanCycle cycle;
+		protected WOSession ses;
+		
+	public TeacherGetter (NSMutableDictionary rowItem, EOEditingContext editingContext, 
+			PlanCycle eduCycle, WOSession session) {
+		super();
+		row = rowItem;
+		ec = editingContext;
+		cycle = eduCycle;
+		ses = session;
+	}
+		
+	public void setTeacher(Object teacher) {
+		ec.lock();
+		try {
+			EduCourse course = (EduCourse)row.valueForKey("course");
+			String message = null;
+			if(course == null) {
+				course = (EduCourse)EOUtilities.createAndInsertInstance(ec,
+						EduCourse.entityName);
+				course.takeValueForKey(ses.valueForKey("eduYear"), "eduYear");
+				course.addObjectToBothSidesOfRelationshipWithKey(cycle, "cycle");
+				course.takeValueForKey(row.valueForKey("eduGroup"), "eduGroup");
+				if(teacher instanceof Teacher)
+					course.setTeacher((Teacher)teacher);
+				message = "Created EduCourse";
+				row.takeValueForKey(course, "course");
+				row.takeValueForKey("green", "styleClass");
+			} else {
+				if(teacher == null) {
+					ec.deleteObject(course);
+					NSDictionary details = (NSDictionary)row.valueForKey("details");
+					if(details != null) {
+						Enumeration enu = details.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
+							ec.deleteObject(detail);
+						}
+						row.removeObjectForKey("details");
+					}
+					row.removeObjectForKey("course");
+					message = "Deleted EduCourse: " + ec.globalIDForObject(course);
+					row.takeValueForKey("grey", "styleClass");
+				} else {
+					if(teacher == NullValue)
+						teacher = null;
+					course.takeValueForKey(teacher, "teacher");
+					message = "Changed teacher on EduCourse";
+				}
+			}
+			ec.saveChanges();
+			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING, message, new Object[]
+			                               {ses, course, teacher});
+		} catch (Exception e) {
+			EduPlan.logger.log(WOLogLevel.INFO,"Error saving EduCourse",
+					new Object[] {ses,e});
+			ses.takeValueForKey(e.getMessage(), "message");
+//			ec.revert();
+		} finally {
+			ec.unlock();
+		}
+	}
+	}
 	public void reset() {
 		super.reset();
 		listNames = null;
-		periodsForList = null;
-		ec = null;
+        ec = (EOEditingContext)context().page().valueForKey("ec");
+        periodsForList = new NSMutableDictionary();
 		subjects = null;
+		selection = null;
+		cycles = null;
+		listNames = null;
+		listDict = null;
 	}
 	
 	public boolean synchronizesVariablesWithBindings() {

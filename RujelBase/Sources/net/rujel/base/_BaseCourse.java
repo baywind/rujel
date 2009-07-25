@@ -43,10 +43,10 @@ public abstract class _BaseCourse extends EOGenericRecord {
 	// Attributes
 	public static final String COMMENT_KEY = "comment";
 	public static final String EDU_YEAR_KEY = "eduYear";
+	public static final String FLAGS_KEY = "flags";
 
 	// Relationships
 	public static final String AUDIENCE_KEY = "audience";
-	public static final String CYCLE_KEY = "cycle";
 	public static final String LESSONS_KEY = "lessons";
 	public static final String LESSON_TABS_KEY = "lessonTabs";
 
@@ -66,14 +66,14 @@ public abstract class _BaseCourse extends EOGenericRecord {
     takeStoredValueForKey(value, EDU_YEAR_KEY);
   }
 
-  public net.rujel.base.PrimitiveEduCycle cycle() {
-    return (net.rujel.base.PrimitiveEduCycle)storedValueForKey(CYCLE_KEY);
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
   }
 
-  public void setCycle(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, CYCLE_KEY);
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
   }
-  
+
   public NSArray audience() {
     return (NSArray)storedValueForKey(AUDIENCE_KEY);
   }

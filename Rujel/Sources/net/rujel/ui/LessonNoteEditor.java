@@ -194,7 +194,10 @@ public class LessonNoteEditor extends WOComponent {
 		StringBuilder buf = new StringBuilder(50);
 		buf.append(course.eduGroup().name()).append(" : ");
 		buf.append(course.cycle().subject()).append(" - ");
-		buf.append(Person.Utility.fullName(course.teacher().person(),true,2,1,1));
+		if(course.teacher() != null)
+			buf.append(Person.Utility.fullName(course.teacher().person(),true,2,1,1));
+		else
+			buf.append(application().valueForKeyPath("strings.RujelBase_Base.vacant"));
 		return buf.toString();
 	}
 

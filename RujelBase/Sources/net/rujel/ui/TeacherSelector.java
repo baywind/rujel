@@ -98,13 +98,15 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			EduCourse course = (EduCourse) enu.nextElement();
 			Object subject = course.cycle().subject();
 			Teacher teacher = course.teacher();
-			all.addObject(teacher);
-			NSMutableSet bySubj = (NSMutableSet)dict.objectForKey(subject);
-			if(bySubj == null) {
-				bySubj = new NSMutableSet(teacher);
-				dict.setObjectForKey(bySubj, subject);
-			} else {
-				bySubj.addObject(teacher);
+			if(teacher != null) {
+				all.addObject(teacher);
+				NSMutableSet bySubj = (NSMutableSet)dict.objectForKey(subject);
+				if(bySubj == null) {
+					bySubj = new NSMutableSet(teacher);
+					dict.setObjectForKey(bySubj, subject);
+				} else {
+					bySubj.addObject(teacher);
+				}
 			}
 			if(smartEduPlan) {
 				subject = course.valueForKeyPath("cycle.subjectEO");
@@ -169,6 +171,11 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String teacherClass() {
+		if(item == null) {
+			if(selection == NullValue)
+				return "selection";
+			return "orange";
+		}
 		if(item == selection)
 			return "selection";
 		Boolean sex = (Boolean)NSKeyValueCoding.Utility.valueForKey(item, "sex");
@@ -205,6 +212,16 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 	
+	public WOActionResults selectVacant() {
+		setValueForBinding(NullValue, "selection");
+		return (WOActionResults)valueForBinding("selectAction");
+	}
+	
+	public WOActionResults selectDelete() {
+		setValueForBinding(null, "selection");
+		return (WOActionResults)valueForBinding("selectAction");
+	}
+
 	public NSArray list() {
 		if(currSubject != null)
 			return (NSArray)dict.valueForKey(currSubject);
@@ -243,7 +260,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		WOComponent selector = returnPage.pageWithName("SelectorPopup");
 		selector.takeValueForKey(returnPage, "returnPage");
 		selector.takeValueForKey(resultPath, "resultPath");
-		Teacher teacher = (Teacher)returnPage.valueForKeyPath(resultPath);
+		Object teacher = returnPage.valueForKeyPath(resultPath);
 		selector.takeValueForKey(teacher, "value");
 		NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
 				"strings.RujelBase_Base.selectTeacher");

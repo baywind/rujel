@@ -3,7 +3,11 @@ SET NAMES utf8;
 create database RujelStatic default character set utf8;
 
 create table RujelStatic.BASE_COURSE select * from BaseJournal.BASE_COURSE;
-alter table RujelStatic.BASE_COURSE ADD PRIMARY KEY (`CR_ID`);
+alter table RujelStatic.BASE_COURSE
+  MODIFY COLUMN `TEACHER` mediumint,
+  MODIFY COLUMN `EDU_YEAR` smallint NOT NULL;
+  ADD COLUMN `FLAGS` tinyint NOT NULL
+  ADD PRIMARY KEY (`CR_ID`);
 
 create table RujelStatic.PRIMITIVE_EDU_CYCLE select * from BaseJournal.PRIMITIVE_EDU_CYCLE;
 alter table RujelStatic.PRIMITIVE_EDU_CYCLE ADD PRIMARY KEY (`C_ID`);
