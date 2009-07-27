@@ -56,7 +56,7 @@ public class BorderSet extends _BorderSet implements FractionPresenter
     }
 */
 	
-	public static FractionPresenter fractionPresenterForTitleAndDate(EOEditingContext ec, String title,NSTimestamp date) {
+	public static FractionPresenter fractionPresenterForTitle(EOEditingContext ec, String title) {
 		if(title.charAt(0)=='%') {
 			if(title.length()==1) return PERCENTAGE;
 			int precision = Integer.parseInt(title.substring(1));
@@ -67,22 +67,10 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 				return NONE;
 			return new None(title.substring(4));
 		}
-		NSArray args = new NSArray (new Object[] {title,date});
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("title = %@ AND upto = nil",args);
-		EOSortOrdering sord = EOSortOrdering.sortOrderingWithKey("upto",EOSortOrdering.CompareDescending);
-		EOFetchSpecification fspec = new EOFetchSpecification("BorderSet",qual,new NSArray(sord));
-		NSArray found = ec.objectsWithFetchSpecification(fspec);
-		BorderSet result = null;
-		if(found != null && found.count() > 0)
-			result = (BorderSet)found.objectAtIndex(0);
-		if(result == null) {
-			qual = EOQualifier.qualifierWithQualifierFormat("title = %@ AND upto > %@",args);
-			fspec.setQualifier(qual);
-			fspec.setFetchLimit(1);
-			found = ec.objectsWithFetchSpecification(fspec);
-			if(found == null || found.count() == 0) return PERCENTAGE;
-			result = (BorderSet)found.objectAtIndex(0);
-		}
+		NSArray found =  EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME, TITLE_KEY, title);
+		if(found == null || found.count() == 0)
+			return PERCENTAGE;
+		BorderSet result = (BorderSet)found.objectAtIndex(0);
 		if(result.useClass() !=null && result.useClass().length() > 0) {
 			try {
 				Class resClass = Class.forName(result.useClass());

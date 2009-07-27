@@ -71,17 +71,10 @@ public class WorkList extends LessonList {
 	public void setCritItem(EOEnterpriseObject item) {
 		critItem = item;
 		_itemMask = null;
-		if(item == null)
+		if(item == null || work() == null)
 			return;
-		NSArray mask = (NSArray)valueForKeyPath("work.criterMask");
-		if(mask == null || mask.count() == 0)
-			return;
-		Enumeration enu = mask.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
-			if(critItem == crit.valueForKey("criterion"))
-				_itemMask = crit;
-		}
+		Integer criter = (Integer)critItem.valueForKey("criterion");
+		_itemMask = work().getCriterMask(criter);
 	}
 
 	

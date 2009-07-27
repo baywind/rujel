@@ -41,14 +41,20 @@ public abstract class _Mark extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Mark";
 
 	// Attributes
+	public static final String CRITERION_KEY = "criterion";
 	public static final String DATE_SET_KEY = "dateSet";
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String ALLMARKS_KEY = "allmarks";
-	public static final String CRITERION_KEY = "criterion";
-	public static final String CRITER_MASK_KEY = "criterMask";
 	public static final String WORK_KEY = "work";
+
+  public Integer criterion() {
+    return (Integer) storedValueForKey(CRITERION_KEY);
+  }
+
+  public void setCriterion(Integer value) {
+    takeStoredValueForKey(value, CRITERION_KEY);
+  }
 
   public NSTimestamp dateSet() {
     return (NSTimestamp) storedValueForKey(DATE_SET_KEY);
@@ -66,22 +72,6 @@ public abstract class _Mark extends EOGenericRecord {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public EOGenericRecord criterion() {
-    return (EOGenericRecord)storedValueForKey(CRITERION_KEY);
-  }
-
-  public void setCriterion(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, CRITERION_KEY);
-  }
-  
-  public EOGenericRecord criterMask() {
-    return (EOGenericRecord)storedValueForKey(CRITER_MASK_KEY);
-  }
-
-  public void setCriterMask(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, CRITER_MASK_KEY);
-  }
-  
   public net.rujel.criterial.Work work() {
     return (net.rujel.criterial.Work)storedValueForKey(WORK_KEY);
   }
@@ -90,20 +80,4 @@ public abstract class _Mark extends EOGenericRecord {
     	takeStoredValueForKey(value, WORK_KEY);
   }
   
-  public NSArray allmarks() {
-    return (NSArray)storedValueForKey(ALLMARKS_KEY);
-  }
- 
-  public void setAllmarks(NSArray value) {
-    takeStoredValueForKey(value, ALLMARKS_KEY);
-  }
-  
-  public void addToAllmarks(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, ALLMARKS_KEY);
-  }
-
-  public void removeFromAllmarks(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, ALLMARKS_KEY);
-  }
-
 }

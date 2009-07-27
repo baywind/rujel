@@ -1,8 +1,18 @@
 {
     attributes = (
         {columnName = COMMENT; name = comment; prototypeName = string; }, 
-        {columnName = "CR_ID"; name = critID; prototypeName = short; }, 
-        {columnName = "CRIT_SET"; name = critSet; prototypeName = short; }, 
+        {
+            allowsNull = N; 
+            columnName = CRITERION; 
+            name = criterion; 
+            prototypeName = byte; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = "CRIT_SET"; 
+            name = critSet; 
+            prototypeName = short; 
+        }, 
         {
             allowsNull = Y; 
             columnName = "DFLT_MAX"; 
@@ -23,16 +33,15 @@
             name = indexID; 
             prototypeName = short; 
         }, 
-        {allowsNull = N; columnName = SORT; name = sort; prototypeName = byte; }, 
         {columnName = TITLE; name = title; prototypeName = anagram; }
     ); 
-    attributesUsedForLocking = (title, sort, comment, indexID, dfltMax, dfltWeight); 
+    attributesUsedForLocking = (title, comment, indexID, dfltMax, dfltWeight, criterion); 
     className = EOGenericRecord; 
-    classProperties = (title, sort, comment, criteriaSet, indexer, dfltMax, dfltWeight); 
+    classProperties = (title, comment, criteriaSet, indexer, dfltMax, dfltWeight, criterion); 
     externalName = CRITERION; 
     fetchSpecificationDictionary = {}; 
     name = Criterion; 
-    primaryKeyAttributes = (critID); 
+    primaryKeyAttributes = (criterion, critSet); 
     relationships = (
         {
             destination = CriteriaSet; 

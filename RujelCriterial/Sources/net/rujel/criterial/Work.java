@@ -33,6 +33,7 @@ import net.rujel.reusables.*;
 import net.rujel.auth.*;
 import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.*;
 
@@ -62,25 +63,36 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	}
 	
 	public FractionPresenter integralPresenter() {
-		if(editingContext() instanceof SessionedEditingContext) {
-			WOSession ses = ((SessionedEditingContext)editingContext()).session();
-			FractionPresenter result = (FractionPresenter)ses.objectForKey("integralPresenter");
-			return (result==null)?_integralPresenter:result;
-		} else 
-			return _integralPresenter;
+		if(_integralPresenter == null) {
+			boolean weightless = (weight().compareTo(BigDecimal.ZERO) == 0);
+			String key = (weightless)?"presenters.weightless":"presenters.workIntegral";
+			EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
+			EOEnterpriseObject setting = SettingsBase.settingForCourse(key, course(), ec);
+			if(setting != null) {
+				Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				key = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+				if (pKey != null) {
+					_integralPresenter = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
+							ec, BorderSet.ENTITY_NAME, pKey);
+				} else if(key != null) {
+					_integralPresenter = BorderSet.fractionPresenterForTitle(ec, key);
+				}
+			}
+			if(_integralPresenter == null) {
+				if(weightless)
+					_integralPresenter = new FractionPresenter.None("#"); 
+						//FractionPresenter.NONE;
+				else
+					_integralPresenter = FractionPresenter.PERCENTAGE;
+			}
+		}
+		return _integralPresenter;
 	}
 	
-	public void setIntegralPresenterKey(String key) {
-		NSTimestamp today = null;
-		if(editingContext() instanceof SessionedEditingContext) {
-			WOSession ses = ((SessionedEditingContext)editingContext()).session();
-			today = (NSTimestamp)ses.valueForKey("today");
-		}
-		if(today == null)
-			today = new NSTimestamp();
-		_integralPresenter = BorderSet.fractionPresenterForTitleAndDate(editingContext(),key,today);
-	}
 	/*
+	public void setIntegralPresenterKey(String key) {
+		_integralPresenter = BorderSet.fractionPresenterForTitle(editingContext(),key);
+	}
 	public void setIntegralPresenterDate(NSTimestamp date) {
 		if(_activeCriterion == null)
 			throw new IllegalStateException("Could not determine, required presenter key");
@@ -117,26 +129,44 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	public NSArray usedCriteria() {
 		if(_usedCriteria == null) {
 			if(criterMask() == null || criterMask().count() == 0) return NSArray.EmptyArray;
-			NSMutableArray result = ((NSArray)criterMask().valueForKey("criterion")).mutableClone();
-			EOSortOrdering so = EOSortOrdering.sortOrderingWithKey(
-					"sort",EOSortOrdering.CompareAscending);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(result,new NSArray(so));
-			//result = ((NSArray)result.valueForKey("title")).mutableClone();
-			_usedCriteria = (NSArray)result.valueForKey("title");//result.immutableClone();
+			NSMutableArray result = criterMask().mutableClone();
+			EOSortOrdering.sortArrayUsingKeyOrderArray(result,CriteriaSet.sorter);
+			_usedCriteria = (NSArray)result.valueForKey("criterion");
 		}
 		return _usedCriteria;
+	}
+	
+	public boolean noCriteria() {
+		if(usedCriteria().count() == 0)
+			return true;
+		if(usedCriteria().count() > 1)
+			return false;
+		Integer crit = (Integer)usedCriteria().objectAtIndex(0);
+		return (crit.intValue() == 0);
 	}
 	
 	private transient NSArray _allCriteria;
 	public NSArray allCriteria() {
 		if(_allCriteria == null) {
 			_allCriteria = CriteriaSet.criteriaForCourse(course());
+			if(_allCriteria != null && _allCriteria.count() > 0)
+				_allCriteria = (NSArray)_allCriteria.valueForKey("criterion");
 			//criteriaForCycle(course().cycle());
 		}
 		return _allCriteria;
 	}
 	
+	private transient Object _critSet;
+	public CriteriaSet critSet() {
+		if(_critSet == null) {
+			_critSet = CriteriaSet.critSetForCourse(course());
+			if(_critSet == null)
+				_critSet = NullValue;
+		}
+		return (_critSet == NullValue)?null:(CriteriaSet)_critSet;
+	}
 	
+	@Deprecated
 	public EOEnterpriseObject criterMaskNamed(String critName) {
 		NSArray mask = criterMask();
 		if(mask == null || mask.count() == 0)
@@ -145,6 +175,19 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		while (enu.hasMoreElements()) {
 			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
 			if(critName.equals(crit.valueForKeyPath("criterion.title")))
+				return crit;
+		}
+		return null;
+	}
+	
+	public EOEnterpriseObject getCriterMask(Integer criter) {
+		NSArray mask = criterMask();
+		if(mask == null || mask.count() == 0)
+			return null;
+		Enumeration enu = mask.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
+			if(criter.equals(crit.valueForKeyPath("criterion")))
 				return crit;
 		}
 		return null;
@@ -161,13 +204,8 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			EOObserverCenter.removeObserver(this,object);
 		}
 	}*/
-	public NSArray marksForStudentOrCriterion(Student student,EOEnterpriseObject criterion) {
-		if(criterion != null)
-			return marksForStudentOrCriterion(student,(String)criterion.valueForKey("title"));
-		else
-			return marksForStudentOrCriterion(student,(String)null);
-	}
 	
+	@Deprecated
 	public NSArray marksForStudentOrCriterion(Student student,String criterion) {
 		if(student == null && criterion == null)
 			return marks();
@@ -218,20 +256,25 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			return result.immutableClone();
 		}
 	}
-	
-	public Mark markForStudentWithoutCriterion(Student student) {
-		if(student == null || (_marksIndex != null && _uninitialisedMarks == null)) return null;
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
-				"criterion = nil AND student = %@",new NSArray(student));
-		NSArray toFilter = (_uninitialisedMarks != null)?_uninitialisedMarks:marks();
-		NSArray result = EOQualifier.filteredArrayWithQualifier(toFilter,qual);
-		if(result == null || result.count() == 0)
-			return null;
-		return (Mark)result.objectAtIndex(0);
+
+	public String criterName(Integer criter) {
+		if(criter.intValue() == 0)
+			return "0";
+		if(critSet() == null)
+			return Character.toString((char)('A' + criter.intValue()));
+		return critSet().critNameForNum(criter);
 	}
 	
-	public Mark markForStudentAndCriterion(Student student,EOEnterpriseObject criterion) {
-		return markForStudentAndCriterion(student,(String)criterion.valueForKey("title"));
+	public Integer critForName(String critName) {
+		if(critName == null || critName.length() == 0)
+			return new Integer(0);
+		if(critSet() != null)
+			return critSet().criterionForName(critName);
+		if(critName.length() > 0)
+			return null;
+		char ch = critName.charAt(0);
+		ch = Character.toUpperCase(ch);
+		return new Integer(1 + (int)(ch - 'A'));
 	}
 	
 	public Mark markForStudentAndCriterion(Student student,String criterion) {
@@ -242,10 +285,15 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 
 		if(criterion == null || 
 				(integralPresenter() != null && criterion.equals(integralPresenter().title()))) {
-			return markForStudentWithoutCriterion(student);
+			return markForStudentAndCriterion(student,new Integer(0));
 		}
+		Integer crit = critForName(criterion);
+		return markForStudentAndCriterion(student, crit);
+	}
+
+	public Mark markForStudentAndCriterion(Student student,Integer criterion) {
 		int idx = usedCriteria().indexOf(criterion);
-		Mark[] marks = forPersonLink(student);//(Mark[])marksIndex().objectForKey(student);
+		Mark[] marks = forPersonLink(student);
 		if(idx == NSArray.NotFound) {
 			if(_oddMarksIndex==null) return null;
 			NSDictionary oddMarks = (NSDictionary)_oddMarksIndex.objectForKey(student);
@@ -255,66 +303,64 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			if(marks == null) return null;
 			return marks[idx];
 		}
-		/*NSArray result = marksForStudentOrCriterion(student,criterion);
-		if(result == null || result.count() == 0)
-			return null;
-		if(result.count() > 1)
-			throw new IllegalStateException("Multiple marks found");
-		return (Mark)result.objectAtIndex(0); */
 	}
 	
-//	private NSMutableDictionary _integrals;
+	protected Boolean weightToMax; 
 	public BigDecimal integralForStudent(Student student) {
-		BigDecimal decimalWeightSum = null;
-		BigDecimal result = null;
-//		if(_integrals == null) {
-			Number weightSum = (Number)criterMask().valueForKeyPath("@sum.weight");
-			if(weightSum == null)
-				throw new IllegalStateException("Can't get sum wieght for integral calculation");
-			decimalWeightSum = new BigDecimal(weightSum.intValue());
-/*			 _integrals = new NSMutableDictionary(decimalWeightSum,"weightSum");
-		} else {
-			result = (BigDecimal)_integrals.objectForKey(student);
-			if(result == null) {
-				decimalWeightSum = (BigDecimal)_integrals.objectForKey("weightSum");
-			} else {
-				return result;
-			}
-		}*/
+		NSArray criterMask = criterMask();
+		if(criterMask == null || criterMask.count() == 0)
+			return null;
 		Mark[] marks = forPersonLink(student);// (Mark[])marksIndex().objectForKey(student);
-		if(marks == null) return null;
-		/*if(weight() == null || weight().compareTo(BigDecimal.ZERO) == 0) {
-			if(SettingsReader.boolForKeyPath("edu.noWeightlessIntegral", false))
-				return BigDecimal.ZERO;
-		}*/
-			
-		//MathContext mc = new MathContext(4,RoundingMode.CEILING);
+		if(marks == null)
+			return null;
+		criterMask = EOSortOrdering.sortedArrayUsingKeyOrderArray(criterMask, CriteriaSet.sorter);
+		Number weightSum = (Number)criterMask.valueForKeyPath("@sum.weight");
+		if(weightSum == null)
+			throw new IllegalStateException("Can't get sum weight for integral calculation");
+		BigDecimal decimalWeightSum = new BigDecimal(weightSum.intValue());
 		BigDecimal sum = BigDecimal.ZERO;
-		
+		BigDecimal result = null;
 		for (int i = 0; i < marks.length; i++) {
 			if(marks[i] != null) {
 				BigDecimal value = new BigDecimal(marks[i].value().intValue());
-				Number maxNum = (Number)marks[i].valueForKeyPath("criterMask.max");
-				if(maxNum == null || maxNum.intValue() == 0) {
+				EOEnterpriseObject mask = (EOEnterpriseObject)criterMask.objectAtIndex(i);
+				
+				Number num = (Number)mask.valueForKey("max");
+				if(num == null || num.intValue() == 0) {
 					Logger.getLogger("rujel.criterial").log(
 							WOLogLevel.WARNING,"Found zero max for mark",marks[i]);
 					return BigDecimal.ZERO;
 				}
-				BigDecimal max = new BigDecimal(maxNum.intValue());
-				BigDecimal weight = new BigDecimal(
-						((Number)marks[i].criterMask().valueForKey("weight")).intValue());
+				BigDecimal max = new BigDecimal(num.intValue());
+				num = (Number)mask.valueForKey("weight");
+				if(num == null) {
+					if(critSet() != null) {
+						EOEnterpriseObject criterion = critSet().criterionForNum(
+								(Integer)mask.valueForKey("criterion"));
+						if(criterion != null)
+							num = (Integer)criterion.valueForKey("dfltWeight");
+					}
+					if(num == null && weightToMax == null) {
+							weightToMax = new Boolean(SettingsBase.numericSettingForCourse(
+									"weightToMax", course(), editingContext(), 1) > 0);
+					}
+				}
+				BigDecimal weight = (num == null)?((weightToMax.booleanValue())?
+						max : BigDecimal.ONE) : new BigDecimal(num.intValue());
 				value = (value.multiply(weight)).divide(max,6,BigDecimal.ROUND_CEILING);
 				sum = sum.add(value);
 			}
 		}
 		result = sum.divide(decimalWeightSum,4,BigDecimal.ROUND_HALF_UP);
-//		_integrals.setObjectForKey(result,student);
 		return result;
 	}
 	
 	
 	public String integralForStudent(Student student, FractionPresenter pres) {
-		return pres.presentFraction(integralForStudent(student));
+		BigDecimal integral = integralForStudent(student);
+		if(integral == null)
+			return null;
+		return pres.presentFraction(integral);
 	}
 	
 	public NSArray allValues() {
@@ -331,8 +377,8 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	
 	private transient NSMutableDictionary _marksIndex;
 	private transient NSMutableDictionary _oddMarksIndex;
-	private transient NSMutableArray _oddMarks;
-	private transient NSMutableArray _uninitialisedMarks;
+//	private transient NSMutableArray _oddMarks;
+//	private transient NSMutableArray _uninitialisedMarks;
 	protected NSDictionary marksIndex() {
 		if(_marksIndex == null) {
 			_marksIndex = new NSMutableDictionary();
@@ -343,7 +389,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 				
 			}
 		}
-		if(_uninitialisedMarks != null && _uninitialisedMarks.count() > 0) { 
+/*		if(_uninitialisedMarks != null && _uninitialisedMarks.count() > 0) { 
 			//check if any mark got initialised
 			for (int i = _uninitialisedMarks.count() -1; i >= 0; i--) {
 				Mark curr = (Mark)_uninitialisedMarks.objectAtIndex(i);
@@ -353,47 +399,47 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 				}
 			}
 		}
-		return _marksIndex;
+*/		return _marksIndex;
 	}
 	
-	protected void placeToIndex(Mark curr) {
+	protected void placeToIndex(Mark mark) {
 		if(_marksIndex == null) marksIndex();
-		if(curr.criterion() == null || curr.student() == null) { //mark is not initialised yet
-			if(_uninitialisedMarks == null) {
-				_uninitialisedMarks = new NSMutableArray(curr);
+		if(mark.criterion() == null || mark.student() == null) { //mark is not initialised yet
+/*			if(_uninitialisedMarks == null) {
+				_uninitialisedMarks = new NSMutableArray(mark);
 			} else {
-				_uninitialisedMarks.addObject(curr);
+				_uninitialisedMarks.addObject(mark);
 			}
-			return;
+*/			return;
 		}	//uninitialised mark
-			int idx = usedCriteria().indexOfObject(curr.criterion().valueForKey("title"));
+			int idx = usedCriteria().indexOfObject(mark.criterion());
 		if(idx == NSArray.NotFound) { //mark for wrong criterion
-			if(_oddMarks == null) {
-				_oddMarks = new NSMutableArray(curr);
+/*			if(_oddMarks == null) {
+				_oddMarks = new NSMutableArray(mark);
 			} else {
-				_oddMarks.addObject(curr);
-			}
+				_oddMarks.addObject(mark);
+			}*/
 			NSMutableDictionary marks = null;
 			if(_oddMarksIndex == null) {
-				marks = new NSMutableDictionary(curr,curr.criterion().valueForKey("title"));
-				_oddMarksIndex = new NSMutableDictionary(marks,curr.student());
+				marks = new NSMutableDictionary(mark,mark.criterion());
+				_oddMarksIndex = new NSMutableDictionary(marks,mark.student());
 			} else {
-				marks = (NSMutableDictionary)_oddMarksIndex.objectForKey(curr.student());
+				marks = (NSMutableDictionary)_oddMarksIndex.objectForKey(mark.student());
 				if(marks == null) {
-					marks = new NSMutableDictionary(curr,curr.criterion());
-					_oddMarksIndex.setObjectForKey(marks,curr.student());
+					marks = new NSMutableDictionary(mark,mark.criterion());
+					_oddMarksIndex.setObjectForKey(marks,mark.student());
 				} else {
-					marks.setObjectForKey(curr,curr.criterion());
+					marks.setObjectForKey(mark,mark.criterion());
 				}
 			}
 			return;
 		} // wrong criterion
-		Mark[] marks = (Mark[])_marksIndex.objectForKey(curr.student());
+		Mark[] marks = (Mark[])_marksIndex.objectForKey(mark.student());
 		if (marks == null) {
 			marks = new Mark[usedCriteria().count()];
-			_marksIndex.setObjectForKey(marks,curr.student());
+			_marksIndex.setObjectForKey(marks,mark.student());
 		}
-		marks[idx] = curr;
+		marks[idx] = mark;
 	}
 	
 	public void turnIntoFault(EOFaultHandler handler) {
@@ -401,17 +447,15 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		nullify();
 	}
 	public void nullify() {
-		//_mask = null;
 		_usedCriteria = null;
         _marksIndex = null;
 		_oddMarksIndex = null;
-		_oddMarks = null;
-		_uninitialisedMarks = null;
-		//_studentMarkSets = null;
-		//_editableMarksForStudent = null;
+//		_oddMarks = null;
+//		_uninitialisedMarks = null;
 		_access = null;
 		_allCriteria=null;
-//		_integrals = null;
+		_integralPresenter = null;
+		weightToMax = null;
 	}
 	
 	public void setMarks(NSArray aValue) {
@@ -425,13 +469,13 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			placeToIndex(object);
     }
 	
-    public void removeFromMarks(net.rujel.criterial.Mark object) {
+    public void removeFromMarks(Mark object) {
 		super.removeFromMarks(object);
 		if(_marksIndex == null) return;
-		if(_uninitialisedMarks!=null && _uninitialisedMarks.removeObject(object)) return;
-		int idx = usedCriteria().indexOfObject(object.criterion().valueForKey("title"));
+//		if(_uninitialisedMarks!=null && _uninitialisedMarks.removeObject(object)) return;
+		int idx = usedCriteria().indexOfObject(object.criterion());
 		if(idx == NSArray.NotFound) { //mark for wrong criterion
-			if(_oddMarks!= null)_oddMarks.removeObject(object);
+//			if(_oddMarks!= null)_oddMarks.removeObject(object);
 			if(_oddMarksIndex != null) {
 				NSMutableDictionary oddMarks = (NSMutableDictionary)
 							_oddMarksIndex.objectForKey(object.student());
@@ -449,14 +493,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		if (marks != null)
 		marks[idx] = null;
     }
-    /*
-	public Teacher substitute() {
-		return (Teacher)storedValueForKey("substitute");
-	}
-	
-	public void setSubstitute(Teacher teacher) {
-		takeStoredValueForKey(teacher, "substitute");
-	}*/
 	
     public void setCriterMask(NSArray aValue) {
         nullify();
@@ -563,9 +599,10 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			if(maxWeight == null || maxWeight.intValue() == 0)
 				throw new NSValidation.ValidationException(message);
 		}
-		if(criterMask == null || criterMask.count() == 0)
+/*		if(criterMask == null || criterMask.count() == 0)
 			return;
 		Enumeration en = criterMask().objectEnumerator();
+		// TODO validate max criter values
 		while (en.hasMoreElements()) {
 			EOEnterpriseObject mask = (EOEnterpriseObject)en.nextElement();
 			Number critMax = (Number)mask.valueForKey("max");
@@ -582,7 +619,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 				message = String.format(message,mask.valueForKeyPath("criterion.title"));
 				throw new NSValidation.ValidationException(message);
 			}
-		}
+		}*/
 	}
 	
 	public AccessSchemeAssistant assistantForAttribute(String attribute, NSArray useAccessKeys) {
@@ -614,8 +651,12 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	}
 	
 	public void setWeight(BigDecimal aValue) {
-       if(weight().compareTo(aValue) != 0)
+       if(weight().compareTo(aValue) != 0) {
+    	   if(weight().compareTo(BigDecimal.ZERO) == 0 
+    			   || aValue.compareTo(BigDecimal.ZERO) == 0)
+    		   _integralPresenter = null;
 		   super.setWeight(aValue);
+       }
     }
 	
 	public BigDecimal weight() {

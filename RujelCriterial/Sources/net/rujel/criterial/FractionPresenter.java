@@ -110,7 +110,7 @@ public interface FractionPresenter {
 			if(string == null)
 			return "none";
 			else
-				return "none" + string;
+				return string;
 		}
 		
 		public String presentFraction(double fraction) {

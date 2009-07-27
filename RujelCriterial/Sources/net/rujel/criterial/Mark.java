@@ -59,10 +59,11 @@ public class Mark extends _Mark {
 */
 
 	public double weightedFraction() {
-		if(criterMask() == null)
+		EOEnterpriseObject mask = work().getCriterMask(criterion());
+		if(mask == null)
 			throw new IllegalStateException("This mark was not properly initialised");
-		Number max = (Number)criterMask().valueForKey("max");
-		Number weight = (Number)criterMask().valueForKey("weight");
+		Number max = (Number)mask.valueForKey("max");
+		Number weight = (Number)mask.valueForKey("weight");
 		if(max == null || weight == null || value() == null)
 			throw new IllegalStateException("This mark was not properly initialised");
 		
@@ -88,7 +89,7 @@ public class Mark extends _Mark {
 		setDateSet(now);
 	}
 	
-	public void setCriterionName(String criterionName) {
+/*	public void setCriterionName(String criterionName) {
 		if(work() == null)
 			throw new IllegalStateException("Work should be set first");
 		EOEnterpriseObject mask = work().criterMaskNamed(criterionName);
@@ -97,28 +98,25 @@ public class Mark extends _Mark {
 		EOEnterpriseObject crit = (EOEnterpriseObject)mask.valueForKey("criterion");
 		setCriterMask(mask);
 		setCriterion(crit);
-	}
+	}*/
 	
 	public Integer validateValue(Number aValue) throws NSValidation.ValidationException {
 		if (aValue == null)
 			throw new NSValidation.ValidationException("Mark value can not be null");
-		EOEnterpriseObject criterMask = criterMask();
+		EOEnterpriseObject criterMask = work().getCriterMask(criterion());
 		if(criterMask == null) {
-			String crit = (String)valueForKeyPath("criterion.title");
-			if(crit == null)
-				throw new NSValidation.ValidationException("Criterion not set");
-			criterMask = work().criterMaskNamed(crit);
-			if(criterMask == null) {
-				String message = (String)WOApplication.application().valueForKeyPath
-						("strings.RujelCriterial_Strings.messages.unavailbleCriterion");
-				throw new NSValidation.ValidationException(message);
-			}
+			String message = (String)WOApplication.application().valueForKeyPath
+				("strings.RujelCriterial_Strings.messages.unavailbleCriterion");
+			throw new NSValidation.ValidationException(message);
 		}
 		Number max = (Number)criterMask.valueForKey("max");
 		if(aValue.intValue() > max.intValue()) {
 			String message = (String)WOApplication.application().valueForKeyPath
 						("strings.RujelCriterial_Strings.messages.markValueOverMax");
-			message = String.format(message,criterMask().valueForKeyPath("criterion.title"));
+			String criterion = work().critSet().critNameForNum(criterion());
+			if(criterion == null)
+				criterion = criterion().toString();
+			message = String.format(message,criterion);
 			throw new NSValidation.ValidationException(message);
 		}
 		if(aValue instanceof Integer)
@@ -139,6 +137,7 @@ public class Mark extends _Mark {
 		}
     }
 	
+	@Deprecated
 	public Object handleQueryWithUnboundKey(String key) {
 		if(key.equals(valueForKeyPath("criterion.title")))
 			return value();
@@ -156,6 +155,7 @@ public class Mark extends _Mark {
 			return null;
 	}
 	
+	@Deprecated
 	public void handleTakeValueForUnboundKey(Object value, String key) {
 		if(key.equals(valueForKeyPath("criterion.title"))) {
 			if(value != null) {
@@ -180,7 +180,7 @@ public class Mark extends _Mark {
 				mark = (Mark)EOUtilities.createAndInsertInstance(work().editingContext(),"Mark");
 				work().addObjectToBothSidesOfRelationshipWithKey(mark,"marks");
 				mark.setStudent(student());
-				mark.setCriterionName(key);
+// TODO :			mark.setCriterionName(key);
 			}
 			if (mark.value() == null || ((Integer)value).intValue() != mark.value().intValue()) {
 				mark.setValue((Integer)value);

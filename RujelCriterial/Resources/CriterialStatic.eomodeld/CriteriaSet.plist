@@ -19,6 +19,7 @@
             joins = ({destinationAttribute = critSet; sourceAttribute = setID; }); 
             name = criteria; 
             ownsDestination = Y; 
+            propagatesPrimaryKey = Y; 
         }
     ); 
 }

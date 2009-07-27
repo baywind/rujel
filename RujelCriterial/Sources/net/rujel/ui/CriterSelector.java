@@ -29,11 +29,12 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.reusables.SettingsReader;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class CriterSelector extends WOComponent {
@@ -48,18 +49,17 @@ public class CriterSelector extends WOComponent {
         super(context);
     }
 	
-	private String _selection;
-	protected String selection() {
+	private Integer _selection;
+	protected Integer selection() {
 		if(_selection == null) {
 			if(hasBinding("selection"))
-				_selection = (String)valueForBinding("selection");
+				_selection = (Integer)valueForBinding("selection");
 			else
-				_selection = (String)session().objectForKey("activeCriterion");
-			if(_selection == null) {
-				_selection = integral();
-				session().setObjectForKey(_selection,"activeCriterion");
-			}
-				
+				_selection = (Integer)session().objectForKey("activeCriterion");
+//			if(_selection == null) {
+//				_selection = integral();
+//				session().setObjectForKey(_selection,"activeCriterion");
+//			}				
 		}
 		return _selection;//.toString();
 	}
@@ -68,19 +68,14 @@ public class CriterSelector extends WOComponent {
 	private NSArray _criteria;
 	public NSArray criteria() {
 		if(_criteria == null && (hasBinding("cycle") || hasBinding("course"))) {
-//			EduCycle cycle = (EduCycle)valueForBinding("cycle");
-//			if(cycle == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
-//				cycle = course.cycle();
-//			}
-//			NSArray critSets = CriteriaSet.critSetsForCycle(cycle);
 			_criteria = CriteriaSet.criteriaForCourse(course);//criteriaForSets(critSets);
 		}
 		return _criteria;
 	}
 	
     public String crClass() {
-		if(selection().equals(critItem.valueForKey("title")))
+		if(selection() != null && selection().equals(critItem.valueForKey("criterion")))
 			return "selection";
 		return "orange";
     }
@@ -89,29 +84,36 @@ public class CriterSelector extends WOComponent {
     	if(_integral == null) {
     		_integral = (String)valueForBinding("integralPresenter");
     		if(_integral == null) {
-    			FractionPresenter fs = (FractionPresenter)session().objectForKey("integralPresenter");
-    			if(fs == null) { // ) 
-    				_integral = SettingsReader.stringForKeyPath("edu.presenters.workIntegral","%");
-    				EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
-    				//((EOEnterpriseObject)valueForBinding("cycle")).editingContext();
-    				NSTimestamp today = (NSTimestamp)session().valueForKey("today");
-    				fs = BorderSet.fractionPresenterForTitleAndDate(ec,_integral,today);
-    				session().setObjectForKey(fs,"integralPresenter");
+    			EduCourse course = (EduCourse)valueForBinding("course");
+    			EOEditingContext ec = course.editingContext();
+    			EOEnterpriseObject setting = SettingsBase.settingForCourse(
+    					"presenters.workIntegral", course, ec);
+    			if(setting != null) {
+    				_integral = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+    				if(_integral != null)
+    					return _integral;
+    				Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+    				if (pKey != null) {
+    					BorderSet bSet = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
+    							ec, BorderSet.ENTITY_NAME, pKey);
+    					_integral = bSet.title();
+    				}
     			}
-    			_integral = fs.title();
     		}
+    		if(_integral == null)
+    			_integral = "%";
     	}
     	return _integral;
     }
 
     public String intClass() {
-		if(selection().equals(integral()))
+		if(selection() == null)
 			return "selection";
 		return "orange";
     }
 	
     public String textClass() {
-		if(selection().equals("text"))
+		if(selection() != null && selection().intValue() < 0)
 			return "selection";
 		return "orange";
     }
@@ -123,22 +125,25 @@ public class CriterSelector extends WOComponent {
     }*/
 	
 	public WOActionResults selectIntegral() {
-		return select(integral());
+		return select(null);
 	}
 	
 	public WOActionResults selectCriter() {
-		return select((String)critItem.valueForKey("title"));
+		return select((Integer)critItem.valueForKey("criterion"));
 	}
 	
 	public WOActionResults selectText() {
-		return select("text");
+		return select(new Integer(-1));
 	}
 	
-	public WOActionResults select(String sel) {
+	public WOActionResults select(Integer sel) {
 		if(hasBinding("selection")) {
 			setValueForBinding(sel,"selection");
 		} else {
-			session().setObjectForKey(sel,"activeCriterion");
+			if(sel != null)
+				session().setObjectForKey(sel,"activeCriterion");
+			else
+				session().removeObjectForKey("activeCriterion");
 		}
 		_selection = sel;
 		return (WOActionResults)valueForBinding("selectAction");

@@ -90,11 +90,15 @@ alter table RujelYear2008.TEXT_STORE ADD PRIMARY KEY (`T_ID`);
 
 create table RujelYear2007.CRITER_MASK select * from Criterial.CRITER_MASK
   where WORK in (select W_ID FROM RujelYear2007.`WORK`);
-alter table RujelYear2007.CRITER_MASK ADD PRIMARY KEY (`WORK`,`CRITERION`);
+alter table RujelYear2007.CRITER_MASK
+  MODIFY COLUMN `WEIGHT` SMALLINT,
+  ADD PRIMARY KEY (`WORK`,`CRITERION`);
 
 create table RujelYear2008.CRITER_MASK select * from Criterial.CRITER_MASK
   where WORK in (select W_ID FROM RujelYear2008.`WORK`);
-alter table RujelYear2008.CRITER_MASK ADD PRIMARY KEY (`WORK`,`CRITERION`);
+alter table RujelYear2008.CRITER_MASK
+  MODIFY COLUMN `WEIGHT` SMALLINT,
+  ADD PRIMARY KEY (`WORK`,`CRITERION`);
 
 create table RujelYear2007.MARK select * from Criterial.MARK
   where WORK in (select W_ID FROM RujelYear2007.`WORK`);
@@ -115,7 +119,9 @@ alter table RujelYear2008.WORK_NOTE ADD PRIMARY KEY (`WORK`,`STUDENT`);
 insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`NUM_VALUE`) values (1,'CriteriaSet',1);
 
 create table RujelStatic.BORDER select * from Criterial.BORDER;
-alter table RujelStatic.BORDER ADD PRIMARY KEY (`B_ID`);
+alter table RujelStatic.BORDER 
+  DROP COLUMN `UPTO`,
+  ADD PRIMARY KEY (`B_ID`);
 
 create table RujelStatic.BORDER_SET select * from Criterial.BORDER_SET;
 alter table RujelStatic.BORDER_SET ADD PRIMARY KEY (`BS_ID`);
@@ -125,6 +131,13 @@ alter table RujelStatic.CRIT_SET ADD PRIMARY KEY (`CS_ID`);
 
 create table RujelStatic.CRITERION select * from Criterial.CRITERION;
 alter table RujelStatic.CRITERION ADD PRIMARY KEY (`CR_ID`);
+ALTER TABLE `RujelStatic`.`CRITERION` 
+ DROP PRIMARY KEY,
+ DROP COLUMN `CR_ID`,
+ MODIFY COLUMN `INDEX_ID` SMALLINT,
+ CHANGE COLUMN `SORT` `CRITERION` SMALLINT NOT NULL,
+ ADD PRIMARY KEY (`CRIT_SET`, `CRITERION`);
+
 
 create table RujelStatic.INDEXER select * from Criterial.INDEXER;
 alter table RujelStatic.INDEXER

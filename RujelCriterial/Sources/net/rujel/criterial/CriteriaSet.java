@@ -34,7 +34,6 @@ import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduCycle;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
@@ -42,7 +41,7 @@ import com.webobjects.eoaccess.EOUtilities;
 
 public class CriteriaSet extends _CriteriaSet
 {
-	public static final NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("sort",EOSortOrdering.CompareAscending));
+	public static final NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("criterion",EOSortOrdering.CompareAscending));
     public CriteriaSet() {
         super();
     }
@@ -64,12 +63,39 @@ public class CriteriaSet extends _CriteriaSet
 	}
 	
 	public EOEnterpriseObject criterionNamed(String critName) {
-		if(criteria() == null || criteria().count() == 0) return null;
-		EOQualifier qual = new EOKeyValueQualifier("title",EOQualifier.QualifierOperatorEqual,critName);
-		NSArray result = EOQualifier.filteredArrayWithQualifier(criteria(),qual);
-		if(result == null || result.count() == 0)
+		if(criteria() == null || criteria().count() == 0)
 			return null;
-		return (EOEnterpriseObject)result.objectAtIndex(0);
+		Enumeration enu = criteria().objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
+			if(critName.equals(crit.valueForKey("title")))
+				return crit;
+		}
+		return null;
+	}
+	
+	public String critNameForNum(Integer criterion) {
+		EOEnterpriseObject criter = criterionForNum(criterion);
+		return (criter==null)?null:(String)criter.valueForKey("title");
+	}
+	
+	public EOEnterpriseObject criterionForNum(Integer criterion) {
+		if(criteria() == null || criteria().count() == 0)
+			return null;
+		Enumeration enu = criteria().objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
+			if(criterion.equals(crit.valueForKey("criterion")))
+				return crit;
+		}
+		return null;
+	}
+	
+	public Integer criterionForName(String name) {
+		if(name == null)
+			return new Integer(0);
+		EOEnterpriseObject crit = criterionNamed(name);
+		return (crit == null)?null:(Integer)crit.valueForKey("criterion");
 	}
 	
 	public void addCriterion() {
