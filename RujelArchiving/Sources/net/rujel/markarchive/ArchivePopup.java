@@ -186,7 +186,6 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults save() {
 		if(archive != null) {
-			Object[] args = new Object[] {session(),archive};
 			EOEditingContext ec = archive.editingContext();
 			try {
 				ec.lock();
@@ -196,11 +195,13 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 				session().setObjectForKey(initData, "objectSaved");
 				session().valueForKeyPath("modules.objectSaved");
 				session().removeObjectForKey("objectSaved");
-				logger.log(WOLogLevel.UNOWNED_EDITING,"Changes are saved and archived",args);
+				logger.log(WOLogLevel.UNOWNED_EDITING,"Changes are saved and archived",
+						new Object[] {session(),archive});
 			} catch (Exception e) {
 				session().takeValueForKey(e.getMessage(), "message");
 				session().setObjectForKey(reason, "MarkArchive.reason");
-				logger.log(WOLogLevel.FINER,"Failed to save and archive changes",args);
+				logger.log(WOLogLevel.INFO,"Failed to save and archive changes",
+						new Object[] {session(),archive,e});
 			} finally {
 				ec.unlock();
 			}

@@ -56,8 +56,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			EOSortOrdering.ComparisonSupport.setSupportForClass(
 					new PlanCycle.ComparisonSupport(), PlanCycle.class);
 		} else if(obj.equals("regimes")) {
-			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.GlobalPlan")))
-				return null;
+//			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.EduPlan")))
+//				return null;
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.planRegime");
 		} else if("planTabs".equals(obj)) {

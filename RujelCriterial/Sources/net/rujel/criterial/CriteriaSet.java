@@ -206,9 +206,12 @@ public class CriteriaSet extends _CriteriaSet
 		return criteriaForSets(critSets);
 	}
 */	
+	
 	public static CriteriaSet critSetForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
-		Integer set = SettingsBase.numericSettingForCourse("CriteriaSet", course,ec);
+		Integer set = SettingsBase.numericSettingForCourse(ENTITY_NAME, course,ec);
+		if(set == null || set.intValue() == 0)
+			return null;
 		return (CriteriaSet)EOUtilities.objectWithPrimaryKeyValue(ec, ENTITY_NAME, set);
 	}
 	

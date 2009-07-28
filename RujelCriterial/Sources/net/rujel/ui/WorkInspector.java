@@ -30,7 +30,6 @@
 package net.rujel.ui;
 
 import net.rujel.criterial.*;
-import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -70,6 +69,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public NSArray types() {
+    	critIdx = -1;
     	return Work.workTypes();
     }
     
@@ -81,7 +81,40 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		load = load + minutes;
     	if(work.load() == null || work.load().intValue() != load)
     		work.setLoad(new Integer(load));
-
+    	WORequest req = context().request();
+    	NSNumberFormatter frmt = new NSNumberFormatter("0");
+    	Number critCount = req.numericFormValueForKey("critCount", frmt);
+    	EOEditingContext ec = work.editingContext();
+    	for (int i = 0; i <= critCount.intValue(); i++) {
+    		Integer criterion = new Integer(i);
+			EOEnterpriseObject mask = work.getCriterMask(criterion);
+			Number val = req.numericFormValueForKey("m" + i, frmt);
+			if(val != null && !(val instanceof Integer))
+				val = new Integer(val.intValue());
+			if(val == null) {
+				if(mask != null) {
+					work.removeObjectFromBothSidesOfRelationshipWithKey
+								(mask,Work.CRITER_MASK_KEY);
+					ec.deleteObject(mask);
+				}
+				continue;
+			} else {
+				if(mask == null) {
+					mask = EOUtilities.createAndInsertInstance(ec, "CriterMask");
+					work.addObjectToBothSidesOfRelationshipWithKey(
+							mask, Work.CRITER_MASK_KEY);
+					mask.takeValueForKey(criterion, "criterion");
+				}
+				if(!val.equals(mask.valueForKey("max")))
+					mask.takeValueForKey(val, "max");
+			}
+			if(mask != null) {
+				val = req.numericFormValueForKey("w" + i, frmt);
+				Number mWeight = (Number)mask.valueForKey("weight");
+				if(mWeight == null || val == null || mWeight.intValue() != val.intValue())
+					mask.takeValueForKey(val, "weight");
+			}
+		}
     	returnPage.ensureAwakeInContext(context());
     	WOActionResults result = null;
     	try {
@@ -114,36 +147,80 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	return result;
     }
 
-	private NSArray _criteria;
+/*	private NSArray _criteria;
     public NSArray criteria() {
 		if(_criteria == null) {
 			_criteria = CriteriaSet.criteriaForCourse(work.course());
-			//criteriaForCycle(work.course().cycle());
+			if(_criteria == null)
+				_criteria = NSArray.EmptyArray;
 		}
 		return _criteria;
     }
+*/
+    public int critIdx = -1;
 
-    /** @TypeInfo Criterion */
-    public EOEnterpriseObject critItem;
-
-   protected EOEnterpriseObject itemMask() {
-    	if(work == null)
-    		return null;
-    	if(critItem == null)
-    		return null;
-
+    public Integer critCount() {
+    	Integer count = (Integer)work.valueForKeyPath("critSet.criteria.@max.criterion");
+    	if (count != null && count.intValue() > 0)
+    		return count;
     	NSArray mask = work.criterMask();
-    	if(mask == null || mask.count() == 0) 
+    	if(mask == null || mask.count() == 0)
+    		return new Integer(1);
+    	count = (Integer)mask.valueForKeyPath("@max.criterion");
+    	return new Integer (count.intValue() + 1);
+    }
+    
+    protected Integer criterion() {
+    	return new Integer(critIdx + 1);
+    }
+    
+    public String critName() {
+    	return work.criterName(criterion());
+    }
+    
+    public EOEnterpriseObject critItem() {
+    	if(critIdx < 0)
     		return null;
-
-    	EOQualifier qual = new EOKeyValueQualifier("criterion",EOQualifier.QualifierOperatorEqual,critItem);
-    	NSArray result = EOQualifier.filteredArrayWithQualifier(mask,qual);
-    	if(result != null && result.count() > 0)
-    		return (EOEnterpriseObject)result.objectAtIndex(0);
-    	else
+    	CriteriaSet set = work.critSet();
+    	if(set == null)
     		return null;
+    	return set.criterionForNum(criterion());
+    }
+    
+    protected String fieldName(char prefix) {
+//    	if(critIdx < 0)
+//    		return null;
+    	StringBuilder buf = new StringBuilder(3);
+    	buf.append(prefix).append(critIdx + 1);
+    	return buf.toString();
+    }
+    
+    public String maxName() {
+    	return fieldName('m');
+    }
+    
+    public String weightName() {
+    	return fieldName('w');
+    }
+    
+    public String onChange() {
+    	if(critIdx < 0)
+    		return "return isNumberInput(event);";
+    	if(work.critSet() != null)
+    		return "return isNumberInput(event);";
+    	Integer count = (Integer)work.valueForKeyPath("criterMask.@max.criterion");
+    	if(count != null && critIdx < count.intValue())
+    		return "return isNumberInput(event);";
+    	return "return addCriterion(event);";
     }
 
+    protected EOEnterpriseObject itemMask() {
+    	if(work == null)
+    		return null;
+//    	if(critIdx < 0)
+//    		return null;
+    	return work.getCriterMask(criterion());
+    }
 	
     public Number criterMax() {
     	EOEnterpriseObject _itemMask = itemMask();
@@ -152,7 +229,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     private boolean shouldNullify = false;
-    public void setCriterMax(Number newCriterMax) {
+ /*   public void setCriterMax(Number newCriterMax) {
 		boolean weightToMax = SettingsReader.boolForKeyPath("edu.weightToMax",true);
 		EOEnterpriseObject _itemMask = itemMask();
         if(_itemMask == null) { // create new criterMask
@@ -179,7 +256,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 				_itemMask.takeValueForKey(newCriterMax,"weight");
 			_itemMask.takeValueForKey(newCriterMax,"max");
 		}
-    }
+    }*/
 
     public Number criterWeight() {
     	EOEnterpriseObject _itemMask = itemMask();
@@ -187,13 +264,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	return (Number)_itemMask.valueForKey("weight");
     }
     
-    public void setCriterWeight(Number newCriterWeight) {
+/*    public void setCriterWeight(Number newCriterWeight) {
     	EOEnterpriseObject _itemMask = itemMask();
     	if(_itemMask == null || newCriterWeight == null) {
     		return;
     	}
     	if(newCriterWeight.intValue() != criterWeight().intValue())
     		_itemMask.takeValueForKey(newCriterWeight,"weight");
-    }
+    }*/
 
 }

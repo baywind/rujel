@@ -110,12 +110,12 @@ public class SettingsBase extends _SettingsBase {
 		Object[] vals = new Object[keys.length];
 		if(value instanceof Number) {
 			vals[0] = value;
-		} else if(value instanceof EduCycle) {
-			vals[1] = value;
-			vals[0] = ((EduCycle)value).grade();
 		} else if(value instanceof EduGroup) {
-			vals[2] = value;
+			vals[1] = value;
 			vals[0] = ((EduGroup)value).grade();
+		} else if(value instanceof EduCycle) {
+			vals[2] = value;
+			vals[0] = ((EduCycle)value).grade();
 		} else if(value instanceof Teacher) {
 			vals[3] = value;
 		} else {
@@ -154,17 +154,17 @@ public class SettingsBase extends _SettingsBase {
 			if(year != null && !year.equals(eduYear))
 				continue;
 			int bcCount = 0;
-			for (int i = 1; i < keys.length; i++) {
+			for (int i = 0; i < keys.length; i++) {
 				if(bc.valueForKey(keys[i]) != null) {
 					if(!bc.valueForKey(keys[i]).equals(vals[i]))
 						continue loop;
 					else
 						bcCount += 1<<i;
 				}
-				if(bcCount > count) {
-					result = bc;
-					count = 0;
-				}
+			}
+			if(bcCount > count) {
+				result = bc;
+				count = bcCount;
 			}
 		}
 		return result;

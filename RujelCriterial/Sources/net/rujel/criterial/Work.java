@@ -193,10 +193,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		return null;
 	}
 	
-	protected boolean specCriterion(String criterion) {
-		if(criterion == null) return true;
-		return (criterion.equals(integralPresenter().title()) || "text".equals(criterion));
-	}
 	/*
 	public void objectWillChange(Object object) {
 		if(object == criteriaSet()) {
@@ -205,6 +201,12 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		}
 	}*/
 	
+	@Deprecated
+	protected boolean specCriterion(String criterion) {
+		if(criterion == null) return true;
+		return (criterion.equals(integralPresenter().title()) || "text".equals(criterion));
+	}
+
 	@Deprecated
 	public NSArray marksForStudentOrCriterion(Student student,String criterion) {
 		if(student == null && criterion == null)
@@ -259,9 +261,9 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 
 	public String criterName(Integer criter) {
 		if(criter.intValue() == 0)
-			return "0";
+			return "#";
 		if(critSet() == null)
-			return Character.toString((char)('A' + criter.intValue()));
+			return Character.toString((char)('A' + criter.intValue() -1));
 		return critSet().critNameForNum(criter);
 	}
 	
@@ -296,9 +298,9 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		Mark[] marks = forPersonLink(student);
 		if(idx == NSArray.NotFound) {
 			if(_oddMarksIndex==null) return null;
-			NSDictionary oddMarks = (NSDictionary)_oddMarksIndex.objectForKey(student);
+			NSDictionary oddMarks = (NSDictionary)_oddMarksIndex.objectForKey(criterion);
 			if(oddMarks==null) return null;
-			return (Mark)oddMarks.objectForKey(criterion);
+			return (Mark)oddMarks.objectForKey(student);
 		} else {
 			if(marks == null) return null;
 			return marks[idx];
@@ -314,43 +316,45 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		if(marks == null)
 			return null;
 		criterMask = EOSortOrdering.sortedArrayUsingKeyOrderArray(criterMask, CriteriaSet.sorter);
-		Number weightSum = (Number)criterMask.valueForKeyPath("@sum.weight");
-		if(weightSum == null)
-			throw new IllegalStateException("Can't get sum weight for integral calculation");
-		BigDecimal decimalWeightSum = new BigDecimal(weightSum.intValue());
+//		Number weightSum = (Number)criterMask.valueForKeyPath("@sum.weight");
+//		if(weightSum == null)
+//			throw new IllegalStateException("Can't get sum weight for integral calculation");
+		BigDecimal decimalWeightSum = BigDecimal.ZERO;//new BigDecimal(weightSum.intValue());
 		BigDecimal sum = BigDecimal.ZERO;
 		BigDecimal result = null;
 		for (int i = 0; i < marks.length; i++) {
+			EOEnterpriseObject mask = (EOEnterpriseObject)criterMask.objectAtIndex(i);
+			Number num = (Number)mask.valueForKey("max");
+			if(num == null || num.intValue() == 0) {
+				Logger.getLogger("rujel.criterial").log(
+						WOLogLevel.WARNING,"Found zero max",mask);
+				return BigDecimal.ZERO;
+			}
+			BigDecimal max = new BigDecimal(num.intValue());
+			num = (Number)mask.valueForKey("weight");
+			if(num == null) {
+				if(critSet() != null) {
+					EOEnterpriseObject criterion = critSet().criterionForNum(
+							(Integer)mask.valueForKey("criterion"));
+					if(criterion != null)
+						num = (Integer)criterion.valueForKey("dfltWeight");
+				}
+				if(num == null && weightToMax == null) {
+					weightToMax = new Boolean(SettingsBase.numericSettingForCourse(
+							"weightToMax", course(), editingContext(), 1) > 0);
+				}
+			}
+			BigDecimal weight = (num == null)?((weightToMax.booleanValue())?
+					max : BigDecimal.ONE) : new BigDecimal(num.intValue());
 			if(marks[i] != null) {
 				BigDecimal value = new BigDecimal(marks[i].value().intValue());
-				EOEnterpriseObject mask = (EOEnterpriseObject)criterMask.objectAtIndex(i);
-				
-				Number num = (Number)mask.valueForKey("max");
-				if(num == null || num.intValue() == 0) {
-					Logger.getLogger("rujel.criterial").log(
-							WOLogLevel.WARNING,"Found zero max for mark",marks[i]);
-					return BigDecimal.ZERO;
-				}
-				BigDecimal max = new BigDecimal(num.intValue());
-				num = (Number)mask.valueForKey("weight");
-				if(num == null) {
-					if(critSet() != null) {
-						EOEnterpriseObject criterion = critSet().criterionForNum(
-								(Integer)mask.valueForKey("criterion"));
-						if(criterion != null)
-							num = (Integer)criterion.valueForKey("dfltWeight");
-					}
-					if(num == null && weightToMax == null) {
-							weightToMax = new Boolean(SettingsBase.numericSettingForCourse(
-									"weightToMax", course(), editingContext(), 1) > 0);
-					}
-				}
-				BigDecimal weight = (num == null)?((weightToMax.booleanValue())?
-						max : BigDecimal.ONE) : new BigDecimal(num.intValue());
 				value = (value.multiply(weight)).divide(max,6,BigDecimal.ROUND_CEILING);
 				sum = sum.add(value);
 			}
+			decimalWeightSum = decimalWeightSum.add(weight);
 		}
+		if(decimalWeightSum.intValue() == 0)
+			return null;
 		result = sum.divide(decimalWeightSum,4,BigDecimal.ROUND_HALF_UP);
 		return result;
 	}
@@ -421,15 +425,15 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			}*/
 			NSMutableDictionary marks = null;
 			if(_oddMarksIndex == null) {
-				marks = new NSMutableDictionary(mark,mark.criterion());
-				_oddMarksIndex = new NSMutableDictionary(marks,mark.student());
+				marks = new NSMutableDictionary(mark,mark.student());
+				_oddMarksIndex = new NSMutableDictionary(marks,mark.criterion());
 			} else {
-				marks = (NSMutableDictionary)_oddMarksIndex.objectForKey(mark.student());
+				marks = (NSMutableDictionary)_oddMarksIndex.objectForKey(mark.criterion());
 				if(marks == null) {
-					marks = new NSMutableDictionary(mark,mark.criterion());
-					_oddMarksIndex.setObjectForKey(marks,mark.student());
+					marks = new NSMutableDictionary(mark,mark.student());
+					_oddMarksIndex.setObjectForKey(marks,mark.criterion());
 				} else {
-					marks.setObjectForKey(mark,mark.criterion());
+					marks.setObjectForKey(mark,mark.student());
 				}
 			}
 			return;
@@ -478,11 +482,11 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 //			if(_oddMarks!= null)_oddMarks.removeObject(object);
 			if(_oddMarksIndex != null) {
 				NSMutableDictionary oddMarks = (NSMutableDictionary)
-							_oddMarksIndex.objectForKey(object.student());
+							_oddMarksIndex.objectForKey(object.criterion());
 				if(oddMarks==null) return;
-				if(object.equals(oddMarks.removeObjectForKey(object.criterion()))) {
+				if(object.equals(oddMarks.removeObjectForKey(object.student()))) {
 					if(oddMarks.count() == 0) {
-						_oddMarksIndex.removeObjectForKey(object.student());
+						_oddMarksIndex.removeObjectForKey(object.criterion());
 						//					if(_oddMarksIndex.count() == 0) _oddMarksIndex = null;
 					}
 				}
@@ -590,36 +594,74 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			throw new NSValidation.ValidationException(message);
 		}
 		NSArray criterMask = criterMask();
-		if(BigDecimal.ZERO.compareTo(weight()) != 0) {
-			String message = (String)WOApplication.application().valueForKeyPath(
-			"strings.RujelCriterial_Strings.messages.critersRequired");
-			if(criterMask == null || criterMask.count() == 0)
+		boolean hasWeight = (BigDecimal.ZERO.compareTo(weight()) != 0);
+		if(criterMask == null || criterMask.count() == 0) {
+			if(hasWeight) {
+				String message = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelCriterial_Strings.messages.critersRequired");
 				throw new NSValidation.ValidationException(message);
-			Integer maxWeight = (Integer)criterMask.valueForKeyPath("@max.weight");
-			if(maxWeight == null || maxWeight.intValue() == 0)
-				throw new NSValidation.ValidationException(message);
-		}
-/*		if(criterMask == null || criterMask.count() == 0)
+			}
 			return;
-		Enumeration en = criterMask().objectEnumerator();
-		// TODO validate max criter values
-		while (en.hasMoreElements()) {
-			EOEnterpriseObject mask = (EOEnterpriseObject)en.nextElement();
-			Number critMax = (Number)mask.valueForKey("max");
-			Number markMax = (Number)mask.valueForKeyPath("marks.@max.value");
-			if(critMax == null || critMax.intValue() <= 0) {
+		}
+		criterMask = EOSortOrdering.sortedArrayUsingKeyOrderArray
+												(criterMask,CriteriaSet.sorter);
+		int[] maxs = new int[criterMask.count()];
+		int maxWeight = 0;
+		for (int i = 0; i < maxs.length; i++) {
+			EOEnterpriseObject cm = (EOEnterpriseObject)criterMask.objectAtIndex(i);
+			Number max = (Number)cm.valueForKey("max");
+			Integer criterion = (Integer)cm.valueForKey("criterion");
+			if(criterion.intValue() == 0 && maxs.length > 1) {
+				String message = (String)WOApplication.application().valueForKeyPath(
+						"strings.RujelCriterial_Strings.messages.noCriteriaWithCriteria");
+				throw new NSValidation.ValidationException(message);
+			}
+			if(max == null || max.intValue() <= 0) {
 				String message = (String)WOApplication.application().valueForKeyPath(
 						"strings.RujelCriterial_Strings.messages.maxShouldBeOverZero");
-				message = String.format(message,mask.valueForKeyPath("criterion.title"));
+				message = String.format(message,criterName(criterion));
 				throw new NSValidation.ValidationException(message);
 			}
-			if(markMax != null && markMax.intValue() > critMax.intValue()) {
-				String message = (String)WOApplication.application().valueForKeyPath(
-						"strings.RujelCriterial_Strings.messages.markValueOverMax");
-				message = String.format(message,mask.valueForKeyPath("criterion.title"));
-				throw new NSValidation.ValidationException(message);
+			maxs[i] = max.intValue();
+			if(maxWeight == 0) {
+				max = (Number)cm.valueForKey("weight");
+				maxWeight = (max==null)?maxs[i]:max.intValue();
 			}
-		}*/
+		}
+		if(maxWeight == 0) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelCriterial_Strings.messages.critersRequired");
+					throw new NSValidation.ValidationException(message);
+		}
+		if(_oddMarksIndex != null && _oddMarksIndex.count() > 0) {
+			Enumeration en = _oddMarksIndex.keyEnumerator();
+			StringBuilder buf = new StringBuilder();
+			buf.append(WOApplication.application().valueForKeyPath(
+			"strings.RujelCriterial_Strings.messages.oddCriteria"));
+			while (en.hasMoreElements()) {
+				Integer criterion = (Integer) en.nextElement();
+				buf.append(' ').append('\'').append(criterName(criterion)).append('\'');
+				if(en.hasMoreElements())
+					buf.append(',');
+			}
+			throw new NSValidation.ValidationException(buf.toString());
+		}
+		if(marksIndex().count() == 0)
+			return;
+		Enumeration en = marksIndex().objectEnumerator();
+		while (en.hasMoreElements()) {
+			Mark[] marks = (Mark[])en.nextElement();
+			for (int i = 0; i < maxs.length; i++) {
+				if(marks[i] == null)
+					continue;
+				if(marks[i].value().intValue() > maxs[i]) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+								"strings.RujelCriterial_Strings.messages.markValueOverMax");
+					message = String.format(message,criterName(marks[i].criterion()));
+					throw new NSValidation.ValidationException(message);
+				}
+			}
+		}
 	}
 	
 	public AccessSchemeAssistant assistantForAttribute(String attribute, NSArray useAccessKeys) {

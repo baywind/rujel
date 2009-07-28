@@ -37,10 +37,11 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 
 public class Mark extends _Mark {
-	public static void init() {
-		EOInitialiser.initialiseRelationship("Mark","student",false,"studentID","Student").anyInverseRelationship().setPropagatesPrimaryKey(true);
-	}
 	
+	public static void init() {
+		EOInitialiser.initialiseRelationship("Mark","student",false,"studentID","Student")
+						.anyInverseRelationship().setPropagatesPrimaryKey(true);
+	}
 	
     public Mark() {
         super();
@@ -54,7 +55,8 @@ public class Mark extends _Mark {
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, 
+    				java.lang.ClassNotFoundException {
     }
 */
 
@@ -113,7 +115,7 @@ public class Mark extends _Mark {
 		if(aValue.intValue() > max.intValue()) {
 			String message = (String)WOApplication.application().valueForKeyPath
 						("strings.RujelCriterial_Strings.messages.markValueOverMax");
-			String criterion = work().critSet().critNameForNum(criterion());
+			String criterion = work().criterName(criterion());
 			if(criterion == null)
 				criterion = criterion().toString();
 			message = String.format(message,criterion);
@@ -139,7 +141,7 @@ public class Mark extends _Mark {
 	
 	@Deprecated
 	public Object handleQueryWithUnboundKey(String key) {
-		if(key.equals(valueForKeyPath("criterion.title")))
+		if(key.equals(work().criterName(criterion())))
 			return value();
 		if(key.equals("text"))
 			return work().noteForStudent(student());
@@ -170,7 +172,8 @@ public class Mark extends _Mark {
 			work().setNoteForStudent((String)value, student());
 			return;
 		}
-		if(!work().usedCriteria().contains(key)) {
+		Integer criterion = work().critForName(key);
+		if(criterion == null) {
 			super.handleTakeValueForUnboundKey(value, key);
 			return;
 		}
@@ -180,7 +183,7 @@ public class Mark extends _Mark {
 				mark = (Mark)EOUtilities.createAndInsertInstance(work().editingContext(),"Mark");
 				work().addObjectToBothSidesOfRelationshipWithKey(mark,"marks");
 				mark.setStudent(student());
-// TODO :			mark.setCriterionName(key);
+				mark.setCriterion(criterion);
 			}
 			if (mark.value() == null || ((Integer)value).intValue() != mark.value().intValue()) {
 				mark.setValue((Integer)value);

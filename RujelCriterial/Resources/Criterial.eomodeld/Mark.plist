@@ -20,27 +20,6 @@
     primaryKeyAttributes = (workID, studentID, criterion); 
     relationships = (
         {
-            destination = Mark; 
-            isToMany = Y; 
-            joinSemantic = EOInnerJoin; 
-            joins = (
-                {destinationAttribute = studentID; sourceAttribute = studentID; }, 
-                {destinationAttribute = workID; sourceAttribute = workID; }
-            ); 
-            name = allmarks; 
-        }, 
-        {
-            destination = CriterMask; 
-            isMandatory = Y; 
-            isToMany = N; 
-            joinSemantic = EOInnerJoin; 
-            joins = (
-                {destinationAttribute = criterion; sourceAttribute = criterion; }, 
-                {destinationAttribute = workID; sourceAttribute = workID; }
-            ); 
-            name = criterMask; 
-        }, 
-        {
             destination = Work; 
             isMandatory = Y; 
             isToMany = N; 

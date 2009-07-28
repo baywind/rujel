@@ -32,6 +32,8 @@ package net.rujel.ui;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
+
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -68,8 +70,32 @@ public class CriterSelector extends WOComponent {
 	private NSArray _criteria;
 	public NSArray criteria() {
 		if(_criteria == null && (hasBinding("cycle") || hasBinding("course"))) {
-				EduCourse course = (EduCourse)valueForBinding("course");
-			_criteria = CriteriaSet.criteriaForCourse(course);//criteriaForSets(critSets);
+			EduCourse course = (EduCourse)valueForBinding("course");
+			if(course != null) {
+				_criteria = CriteriaSet.criteriaForCourse(course);//criteriaForSets(critSets);
+			} else {
+				EduCycle cycle = (EduCycle)valueForBinding("cycle");
+				if(cycle == null) {
+					_criteria = NSArray.EmptyArray;
+					return _criteria;
+				}
+				Integer eduYear = (Integer)session().valueForKey("eduYear");
+    			EOEditingContext ec = cycle.editingContext();
+    			EOEnterpriseObject setting = SettingsBase.settingForValue(
+    					CriteriaSet.ENTITY_NAME, cycle,eduYear, ec);
+				if(setting == null) {
+					_criteria = NSArray.EmptyArray;
+					return _criteria;
+				}
+				Integer set = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				if(set == null || set.intValue() == 0) {
+					_criteria = NSArray.EmptyArray;
+					return _criteria;
+				}
+				CriteriaSet critSet = (CriteriaSet)EOUtilities.objectWithPrimaryKeyValue(ec,
+						CriteriaSet.ENTITY_NAME, set);
+				_criteria = critSet.sortedCriteria();
+			}
 		}
 		return _criteria;
 	}
@@ -84,10 +110,17 @@ public class CriterSelector extends WOComponent {
     	if(_integral == null) {
     		_integral = (String)valueForBinding("integralPresenter");
     		if(_integral == null) {
-    			EduCourse course = (EduCourse)valueForBinding("course");
-    			EOEditingContext ec = course.editingContext();
-    			EOEnterpriseObject setting = SettingsBase.settingForCourse(
-    					"presenters.workIntegral", course, ec);
+    			EOEnterpriseObject c = (EduCourse)valueForBinding("course");
+    			Integer eduYear = null;
+    			if(c == null) {
+    				c = (EduCycle)valueForBinding("cycle");
+    				eduYear = (Integer)session().valueForKey("eduYear");
+    			} else {
+    				eduYear = ((EduCourse)c).eduYear();
+    			}
+    			EOEditingContext ec = c.editingContext();
+    			EOEnterpriseObject setting = SettingsBase.settingForValue(
+    					"presenters.workIntegral", c,eduYear, ec);
     			if(setting != null) {
     				_integral = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
     				if(_integral != null)
