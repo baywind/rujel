@@ -456,4 +456,18 @@ public class Overview extends WOComponent {
 		nextPage.takeValueForKey(per, "period");
 		return nextPage;
 	}
+	
+	public NSArray allLessons() {
+		if(courses == null || courses.count() == 0)
+			return null;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = courses.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSDictionary crs = (NSDictionary) enu.nextElement();
+			NSArray cl = (NSArray)crs.valueForKey("lessonsList");
+			if(cl != null && cl.count() > 0)
+				result.addObjectsFromArray(cl);
+		}
+		return result;
+	}
 }

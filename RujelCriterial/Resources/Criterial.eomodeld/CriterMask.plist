@@ -19,17 +19,6 @@
     primaryKeyAttributes = (criterion, workID); 
     relationships = (
         {
-            destination = Mark; 
-            isToMany = Y; 
-            joinSemantic = EOInnerJoin; 
-            joins = (
-                {destinationAttribute = criterion; sourceAttribute = criterion; }, 
-                {destinationAttribute = workID; sourceAttribute = workID; }
-            ); 
-            name = marks; 
-            propagatesPrimaryKey = Y; 
-        }, 
-        {
             destination = Work; 
             isMandatory = Y; 
             isToMany = N; 

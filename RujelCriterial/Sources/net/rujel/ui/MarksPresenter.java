@@ -70,9 +70,9 @@ public class MarksPresenter extends NotePresenter {
 		return _access;
 	}
 	
-    public Integer critItem;
+    public Object critItem;
 	
-	public void setCritItem(Object item) {
+/*	public void setCritItem(Object item) {
 		if(item == null) {
 			critItem = null;//"text";
 		} else if(item instanceof Integer) {
@@ -83,16 +83,13 @@ public class MarksPresenter extends NotePresenter {
 			critItem = null;
 		}
 		_mark = null;
-	}
-	/*
-	public String critItem() {
-		if(_critItem == null || _critItem instanceof String) {
-			return (String)_critItem;
-		} else if(_critItem instanceof EOEnterpriseObject) {
-			return (String)((EOEnterpriseObject)_critItem).valueForKey("title");
-		} else
-			return _critItem.toString();
 	}*/
+	
+	protected Integer critItem() {
+		if(critItem instanceof Integer)
+			return (Integer)critItem;
+		return (Integer)NSKeyValueCoding.Utility.valueForKey(critItem, "criterion");
+	}
 	
     public MarksPresenter(WOContext context) {
         super(context);
@@ -104,31 +101,29 @@ public class MarksPresenter extends NotePresenter {
 	
 	private Mark _mark;
 	public Mark mark() {
-		if(student() == null || lesson() == null || critItem == null || critItem.equals("text")) 
+		if(student() == null || lesson() == null || critItem() == null) 
 			return null;
-		if(_mark == null) {
-			_mark = lesson().markForStudentAndCriterion(student(),critItem);
+		if(_mark == null || !_mark.criterion().equals(critItem())) {
+			_mark = lesson().markForStudentAndCriterion(student(),critItem());
 		}
 		return _mark;
 	}
 		
-	//private NSArray _allCriteria;
+//	private NSArray _allCriteria;
 	protected NSArray allCriteria() {
 		NSArray _allCriteria = null;
-		//if(_allCriteria == null) {
+		if(_allCriteria == null) {
 			if(lesson() == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
 				if(course != null) {
-					_allCriteria = (NSArray)CriteriaSet.criteriaForCourse(course);
-					if(_allCriteria != null && _allCriteria.count() > 0)
-						_allCriteria = (NSArray)_allCriteria.valueForKey("criterion");
-					//criteriaForCycle(course.cycle());
+					_allCriteria = CriteriaSet.criteriaForCourse(course);
+//						Work.allCriteria(CriteriaSet.maxCriterionForCourse(course));
 				}
 			} else {
 				_allCriteria = (NSArray)lesson().allCriteria();//.valueForKey("title");
 			}
-//			if(_allCriteria == null) _allCriteria = NSArray.EmptyArray;
-		//}
+			if(_allCriteria == null) _allCriteria = NSArray.EmptyArray;
+		}
 		return _allCriteria;
 	}
 	
@@ -197,14 +192,22 @@ public class MarksPresenter extends NotePresenter {
 	public String markValue() {
 		if(hasBinding("data")) {
 			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
-			Object result = data.valueForKey(lesson().criterName(critItem));
+			String key = (lesson() == null)?CriteriaSet.titleForCriterion(critItem().intValue()):
+				lesson().criterName(critItem());
+			Object result = data.valueForKey(key);
 			return (result==null)?null:result.toString();
 		}
 		if(student() == null) {
 			StringBuffer result = new StringBuffer("<big>");
-			result.append(lesson().criterName(critItem)).append("</big>");
+			if(critItem instanceof NSKeyValueCoding)
+				result.append(NSKeyValueCoding.Utility.valueForKey(critItem, "title"));
+			else if(lesson() != null) 
+				result.append(lesson().criterName(critItem()));
+			else
+				result.append(CriteriaSet.titleForCriterion(critItem().intValue()));
+			result.append("</big>");
 			if(lesson() != null) {
-				EOEnterpriseObject mask = lesson().getCriterMask(critItem);
+				EOEnterpriseObject mask = lesson().getCriterMask(critItem());
 				result.append("<br/><small>(");
 				result.append((mask == null)?"?":mask.valueForKey("max"));
 				result.append(")</small>");
@@ -257,12 +260,12 @@ public class MarksPresenter extends NotePresenter {
 			if(newMarkValue == null) return;
 			_mark = (Mark)EOUtilities.createAndInsertInstance(lesson().editingContext(),"Mark");
 			_mark.setStudent(student());
-			_mark.setCriterion(critItem);
+			_mark.setCriterion(critItem());
 			lesson().addObjectToBothSidesOfRelationshipWithKey(_mark,"marks");
 		} else if (newMarkValue == null) {
 			lesson().removeObjectFromBothSidesOfRelationshipWithKey(_mark,"marks");
 			lesson().editingContext().deleteObject(_mark);
-			archiveMarkValue(newMarkValue, lesson().criterName(critItem));
+			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
 			_mark = null;
 			return;
 		}
@@ -273,7 +276,7 @@ public class MarksPresenter extends NotePresenter {
         	value = Integer.parseInt(newMarkValue.toString());
         if (mark().value() == null || value != mark().value().intValue()) {
 			mark().setValue(new Integer(value));
-			archiveMarkValue(newMarkValue, lesson().criterName(critItem));
+			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
 		}
 		/*if(mark().value() == null || mark().value().intValue() != newMarkValue.intValue()) {
 			NSTimestamp today = (NSTimestamp)session().valueForKey("today");
@@ -373,7 +376,7 @@ public class MarksPresenter extends NotePresenter {
 		} else if(activeCriterion.intValue() < 0) {
 			return shortNoteForStudent();
 		}
-		setCritItem(activeCriterion);
+		critItem = activeCriterion;
 		return (mark() == null)?null:mark().value().toString();
     }
 
@@ -404,7 +407,7 @@ public class MarksPresenter extends NotePresenter {
     	super.reset();
     	_mark = null;
     	_usedCriteria = null;
-    	//_allCriteria = null;
+//    	_allCriteria = null;
 		critItem = null;
 	}
 /*	
@@ -474,13 +477,17 @@ public class MarksPresenter extends NotePresenter {
 	public String markTitle() {
 		if(student() == null) {
 			if(lesson() != null && critItem != null) {
-				CriteriaSet critSet = lesson().critSet();
-				if(critSet == null)
-					return null;
-				EOEnterpriseObject criterion = critSet.criterionForNum(critItem);
-				if(criterion == null)
-					return "?";
-				return (String)criterion.valueForKey("comment");
+				if(critItem instanceof Integer) {
+					CriteriaSet critSet = lesson().critSet();
+					if(critSet == null)
+						return null;
+					EOEnterpriseObject criterion = critSet.criterionForNum((Integer)critItem);
+					if(criterion == null)
+						return "?";
+					return (String)criterion.valueForKey("comment");
+				} else {
+					return (String)NSKeyValueCoding.Utility.valueForKey(critItem, "comment");
+				}
 			} /*else {
 				if(_critItem instanceof EOEnterpriseObject)
 					return (String)((EOEnterpriseObject)_critItem).valueForKey("comment");
@@ -522,13 +529,34 @@ public class MarksPresenter extends NotePresenter {
 	}
 
 	public String title() {
-		if(Various.boolForObject(valueForBinding("full")))
-			return null;
+//		if(Various.boolForObject(valueForBinding("full")))
+//			return null;
 		String title = null;
-		if(student() == null)
+		if(student() == null){ 
 			title = (String)valueForKeyPath("lesson.theme");
-		else if(activeCriterion() != null && activeCriterion().intValue() < 0)
-			title = fullNoteForStudent();
+		} else if(activeCriterion() != null) {
+			if(activeCriterion().intValue() < 0) {
+				title = fullNoteForStudent();
+			} else {
+				critItem = activeCriterion();
+				return markTitle();
+			}
+		} else {
+			Mark[] marks = lesson().forPersonLink(student());
+			if (marks != null) {
+				NSTimestamp date = null;
+				for (int i = 0; i < marks.length; i++) {
+					if (marks[i] != null
+							&& (date == null || date
+									.compare(marks[i].dateSet()) < 0))
+						date = marks[i].dateSet();
+				}
+				if (date != null)
+					synchronized (dateFormat) {
+						return dateFormat.format(date);
+					}
+			}
+		}
 		if(title == null)
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);

@@ -148,12 +148,19 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	private transient NSArray _allCriteria;
 	public NSArray allCriteria() {
 		if(_allCriteria == null) {
-			_allCriteria = CriteriaSet.criteriaForCourse(course());
-			if(_allCriteria != null && _allCriteria.count() > 0)
-				_allCriteria = (NSArray)_allCriteria.valueForKey("criterion");
-			//criteriaForCycle(course().cycle());
+			_allCriteria = allCriteria(CriteriaSet.maxCriterionForCourse(course()));
 		}
 		return _allCriteria;
+	}
+	
+	public static NSArray allCriteria(int max) {
+		if(max <= 0)
+			return NSArray.EmptyArray;
+		Integer[] result = new Integer[max];
+		for (int i = 0; i < max; i++) {
+			result[i] = new Integer(i + 1);
+		}
+		return new NSArray(result);
 	}
 	
 	private transient Object _critSet;

@@ -32,6 +32,7 @@ package net.rujel.criterial;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -276,190 +277,36 @@ public class StudentMarks extends WOComponent {
 			return null;
 		return result;
 	}
-/*
-	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
-		student = (Student)valueForBinding("student");
-		super.appendToResponse(aResponse, aContext);
-	}
-		since = (NSTimestamp)valueForBinding("since");
-		to = (NSTimestamp)valueForBinding("to");
-		period = (Period)valueForBinding("period");
-		if(period != null) {
-			if(since == null)
-				since = date2timestamp(period.begin());
-			if(to == null)
-				to = date2timestamp(period.end());
-		}
-		courses = ((NSArray)valueForBinding("courses")).mutableClone();
-		
-		EOEditingContext ec = student.editingContext();
-		
-		NSMutableDictionary printStudentResults = new NSMutableDictionary(student,"student");
-		printStudentResults.takeValueForKey(since,"since");
-		printStudentResults.takeValueForKey(to,"to");
-		if(period != null)
-			printStudentResults.takeValueForKey(period,"period");
-
-		WOSession ses = aContext.session();
-		ses.setObjectForKey(printStudentResults,"printStudentResults");
-		NSArray resultsForCourse = (NSArray)ses.valueForKeyPath("modules.printStudentResults");
-		if(resultsForCourse != null && resultsForCourse.count() > 0) {
-			printStudentResults = (NSMutableDictionary)resultsForCourse.objectAtIndex(0);
-		}
-		ses.removeObjectForKey("printStudentResults");
-
-		NSMutableArray args = new NSMutableArray(new Object[] { student,since,to,since,to });
-		String qualifierFormat =
-		"student = %@ AND ";
-		if(period != null && period instanceof EOEnterpriseObject) {
-			qualifierFormat = qualifierFormat + "(work.date >= %@ AND work.date <= %@)";
-		} else {
-			qualifierFormat = qualifierFormat + "((dateSet >= %@ AND dateSet <= %@) OR (work.date >= %@ AND work.date <= %@))";
-		}
-		EOQualifier q = EOQualifier.qualifierWithQualifierFormat(qualifierFormat,args);
-		EOFetchSpecification fs = new EOFetchSpecification("Mark",q,null);
-		fs.setRefreshesRefetchedObjects(true);
-		NSArray allMarks = ec.objectsWithFetchSpecification(fs);
-		//EOUtilities.objectsWithQualifierFormat(ec,"Mark",qualifierFormat,args);
-		
-		NSMutableArray quals = new NSMutableArray();
-		q = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
-		quals.addObject(q);
-
-		q = new EOKeyValueQualifier("groupList",EOQualifier.QualifierOperatorContains,student);
-		quals.addObject(q);
-
-		q = new EOAndQualifier(quals);
-		EOQualifier.filterArrayWithQualifier(courses,q);
-		args.removeAllObjects();
-		args.addObject(EOSortOrdering.sortOrderingWithKey("cycle.subject",EOSortOrdering.CompareCaseInsensitiveAscending));
-		EOSortOrdering.sortArrayUsingKeyOrderArray(courses,args);
-				
-		NSMutableArray allWorks = new NSMutableArray();
-		
-		Enumeration enu = courses.objectEnumerator();
-		while(enu.hasMoreElements()) {
-			EduCourse c = (EduCourse)enu.nextElement();
-			NSMutableArray works = null;
-			NSArray cWorks = c.lessons();
-			if(cWorks != null && cWorks.count() > 0) {
-				works = cWorks.mutableClone();
-				if(since != null || to != null) {
-					args.removeAllObjects();
-					args.addObjects(new Object[] { since,to });
-					EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
-					EOQualifier.filterArrayWithQualifier(works,qual);
-				}
-			} else {
-				works = new NSMutableArray();
-			}
-			allWorks.addObject(works);
-		}
-		
-		enu = allMarks.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			Mark m = (Mark)enu.nextElement();
-			Work w = m.work();
-			int idx = courses.indexOfIdenticalObject(w.course());
-			if(idx == NSArray.NotFound) {
-				idx = courses.count();
-				courses.addObject(w.course());
-				allWorks.addObject(new NSMutableArray(w));
-				
-			} else {
-				NSMutableArray cWorks = (NSMutableArray)allWorks.objectAtIndex(idx);
-				if(cWorks.indexOfIdenticalObject(w) == NSArray.NotFound) {
-					cWorks.addObject(w);
-				}
-			}
-		}
-		
-		
-		coursePresent = new NSMutableArray();
-		for (int i = 0; i < courses.count(); i++) {
-			NSMutableArray works = (NSMutableArray)allWorks.objectAtIndex(i);
-			if(works != null && works.count() > 0) {
-				EduCourse c = (EduCourse)courses.objectAtIndex(i);
-				courseItem = formatCourse(c);
-				Object res = printStudentResults.objectForKey("title");
-				if(res != null)
-					courseItem.setObjectForKey(res,"resultTitle");
-				res = printStudentResults.objectForKey(c);
-				if(res != null)
-					courseItem.setObjectForKey(res,"result");
-				
-				NSArray criteria = (NSArray)courseItem.valueForKeyPath("criteria.title");
-				synchronized (dateFormat) {
-					courseItem.setObjectForKey(formatWorks(works,criteria),"works");
-				}
-				coursePresent.addObject(courseItem);
-			}
-		}
-				
-		super.appendToResponse(aResponse,aContext);
-	}*/
 	
-    public StudentMarks(WOContext context) {
-        super(context);
-    }
-	
-	public boolean isMax() {
-		if(workItem == null) return false;
-		return "max".equals(workItem.valueForKey("kind"));
-	}
 
-
-	public boolean isStateless() {
-		return true;
-	}
-	
-	public boolean synchronizesVariablesWithBindings() {
-        return false;
-	}
-	/*
-	public void reset() {
-		student = null;
-		since = null;
-		to = null;
-		period = null;
-	}
-	*/
 	public static NSMutableDictionary formatCourse(EduCourse course) {
 		NSMutableDictionary result = new NSMutableDictionary();
-		/*
-		result.setObjectForKey(course.cycle().subject(),"subject");
-		if(course.comment() != null) {
-			result.setObjectForKey(course.comment(),"comment");
-		}
-		result.setObjectForKey(Person.Utility.fullName(course.teacher().person(),true,2,2,2), "teacher");
-		result.setObjectForKey(course.eduGroup().name(),"eduGroup");
-		*/
-		String integral = SettingsReader.stringForKeyPath("edu.presenters.workIntegral","~");
+		EOEditingContext ec = course.editingContext();
+		String integral = SettingsBase.stringSettingForCourse(
+				"presenters.workIntegral", course, ec);
+			//SettingsReader.stringForKeyPath("edu.presenters.workIntegral","~");
 		result.takeValueForKey(integral, "integral");
 
 		NSArray criteria = CriteriaSet.criteriaForCourse(course);
-		//criteriaForCycle(course.cycle());
-		/*WOApplication app  = WOApplication.application();
-		String title = workIntegral;
-		String comment = app.valueForKeyPath("strings.RujelCriterial_Strings.integral");
-		
-		NSDictionary specCrit = new NSDictionary(new Object[] {title,comment},keys.objects());*/
 		NSMutableArray critDicts = new NSMutableArray();
-		if(criteria != null && criteria.count() > 0) {
+//		if(criteria != null && criteria.count() > 0) {
 			Enumeration en = criteria.objectEnumerator();
 			while (en.hasMoreElements()) {
-				EOEnterpriseObject criter = (EOEnterpriseObject)en.nextElement();
+				NSKeyValueCoding criter = (NSKeyValueCoding)en.nextElement();
 				NSMutableDictionary critDict = new NSMutableDictionary(
 						criter.valueForKey("title"),"title");
 				critDict.takeValueForKey(criter.valueForKey("comment"), "comment");
 				critDicts.addObject(critDict);
 			}
-		}
-		/*
-		title = app.valueForKeyPath("strings.RujelCriterial_Strings.text");
-		comment = app.valueForKeyPath("strings.RujelCriterial_Strings.comments");
-		specCrit = new NSDictionary(new Object[] {title,comment},keys.objects());
-		critDicts.addObject(specCrit);*/
+/*		} else {
+			int maxCriter = CriteriaSet.maxCriterionForCourse(course);
+			char first = 'A';
+			for (int i = 0; i < maxCriter; i++) {
+				String title = Character.toString((char)(first + i));
+				NSDictionary critDict = new NSDictionary(title,"title");
+				critDicts.addObject(critDict);
+			}
+		}*/
 		result.setObjectForKey(critDicts,"criteria");
 		
 		return result;
@@ -490,9 +337,12 @@ public class StudentMarks extends WOComponent {
 					Enumeration critEnum = currMask.objectEnumerator();
 					while(critEnum.hasMoreElements()) {
 						EOEnterpriseObject mask = (EOEnterpriseObject)critEnum.nextElement();
-						int idx = criteria.indexOfObject(mask.valueForKeyPath("criterion.title"));
-						if(idx == NSArray.NotFound)
-							throw new IllegalArgumentException("Work employs undescribed criterion");
+						int idx = ((Integer)mask.valueForKey("criterion")).intValue() -1;
+						if(idx < 0)
+							continue;
+							//criteria.indexOfObject(mask.valueForKeyPath("criterion.title"));
+//						if(idx == NSArray.NotFound)
+//							throw new IllegalArgumentException("Work employs undescribed criterion");
 						Number max = (Number)mask.valueForKey("max");
 						critMask.replaceObjectAtIndex(max,idx);
 						if(status != 2) {
@@ -520,21 +370,65 @@ public class StudentMarks extends WOComponent {
 					}
 				}
 			} // prepare criter list
-			curr.setObjectForKey(dateFormat.format(currWork.announce()),"announce");
-			curr.setObjectForKey(dateFormat.format(currWork.date()),"date");
+			curr.takeValueForKey(dateFormat.format(currWork.announce()),"announce");
+			curr.takeValueForKey(dateFormat.format(currWork.date()),"date");
+			curr.takeValueForKey(currWork.workType(), "type");
 			String theme = currWork.theme();
-			if(theme != null && theme.length() > 0)
-				curr.setObjectForKey(theme,"theme");
-			curr.setObjectForKey(currWork.workType(), "type");
-			if(BigDecimal.ZERO.compareTo(currWork.weight()) == 0) {
+			if(theme == null) {
+				theme = "- - -";
+			} else {
+				theme = WOMessage.stringByEscapingHTMLString(theme);
+			}
+			BigDecimal weight = currWork.weight().stripTrailingZeros();
+//			if(BigDecimal.ZERO.compareTo(currWork.weight()) == 0) {
+			if(weight.equals(BigDecimal.ZERO)) {
 				curr.setObjectForKey("noWeight","kind");
 				curr.setObjectForKey("color:#333333;","style");
-			} else
+				curr.takeValueForKey(theme,"theme");
+			} else {
 				curr.setObjectForKey("withWeight","kind");
-			
+				StringBuilder buf = new StringBuilder("<strong>");
+				buf.append(theme).append("</strong>");
+//				if(BigDecimal.ONE.compareTo(currWork.weight()) != 0) {
+				if(!weight.equals(BigDecimal.ONE)) {
+					if(weight.scale() < 0)
+						weight = weight.setScale(0);
+					buf.append(" &lt;");
+					buf.append(WOApplication.application().valueForKeyPath(
+							"strings.RujelCriterial_Strings.weight"));
+					buf.append(':').append(' ').append(weight).append("&gt;");
+				}
+				curr.takeValueForKey(buf.toString(),"theme");
+			}
 			result.addObject(curr);
-			
 		}
 		return result;
 	}
+	
+    public StudentMarks(WOContext context) {
+        super(context);
+    }
+	
+	public boolean isMax() {
+		if(workItem == null) return false;
+		return "max".equals(workItem.valueForKey("kind"));
+	}
+
+
+	public boolean isStateless() {
+		return true;
+	}
+	
+	public boolean synchronizesVariablesWithBindings() {
+        return false;
+	}
+	/*
+	public void reset() {
+		student = null;
+		since = null;
+		to = null;
+		period = null;
+	}
+	*/
 }
+

@@ -106,107 +106,6 @@ public class CriteriaSet extends _CriteriaSet
 		criterion.takeValueForKey(num,"sort");
 	}
 	
-	protected static NSArray defaultSets;
-	public static NSArray defaultSets(EOEditingContext ec) {
-		NSMutableArray result = new NSMutableArray();
-		if(defaultSets == null) {
-			String dfltQual = "cycle = nil AND qualifier = nil";
-			NSArray defaults = EOUtilities.objectsWithQualifierFormat(ec, "CycleCritSet",
-					dfltQual, null);
-			if(defaults != null && defaults.count() > 0) {
-				defaults = (NSArray)defaults.valueForKey("criteriaSet");
-				Enumeration enu = defaults.objectEnumerator();
-				while (enu.hasMoreElements()) {
-					EOEnterpriseObject set = (EOEnterpriseObject) enu.nextElement();
-					result.addObject(ec.globalIDForObject(set));
-				}
-			}
-			defaultSets = result.immutableClone();
-			return defaults;
-		} else if (defaultSets.count() > 0) {
-			Enumeration enu = defaultSets.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				EOGlobalID gid = (EOGlobalID) enu.nextElement();
-				result.addObject(ec.faultForGlobalID(gid,ec));
-			}
-		}
-		
-		return result.immutableClone();
-	}
-	
-/*	protected static NSArray qualifiers;
-	protected static NSArray relatedSets;
-	public static NSArray critSetsForCycle(EduCycle cycle) {
-		EOEditingContext ec = cycle.editingContext();
-		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, "CycleCritSet", "cycle", cycle);
-		if(found != null && found.count() >0)
-			return (NSArray)found.valueForKey("criteriaSet");
-		
-		// fill qualifiers
-		if(qualifiers == null) {
-			String qualString = "cycle = nil AND qualifier != nil";
-			found = EOUtilities.objectsWithQualifierFormat(ec, "CycleCritSet",
-					qualString, null);
-			if(found == null || found.count() == 0) {
-				qualifiers = NSArray.EmptyArray;
-			} else {
-				NSMutableArray quals = new NSMutableArray();
-				NSMutableArray sets = new NSMutableArray();
-				Enumeration enu = found.objectEnumerator();
-				while (enu.hasMoreElements()) {
-					EOEnterpriseObject ccs = (EOEnterpriseObject) enu.nextElement();
-					quals.addObject(ccs.valueForKey("qualifier"));
-					EOEnterpriseObject set = (EOEnterpriseObject)ccs.valueForKey("criteriaSet");
-					sets.addObject(ec.globalIDForObject(set));
-				}
-			}
-		}
-		
-		//check qualifiers
-		int count = qualifiers.count();
-		NSMutableArray result = new NSMutableArray();
-		if(count > 0) {
-			for (int i = 0; i < count; i++) {
-				String qualString = (String)qualifiers.objectAtIndex(i);
-				EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualString, null);
-				if(qual.evaluateWithObject(cycle)) {
-					EOGlobalID gid = (EOGlobalID)relatedSets.objectAtIndex(i);
-					result.addObject(ec.faultForGlobalID(gid, ec));
-				}
-			}
-		}
-		//return default
-		if(result.count() == 0)
-			return defaultSets(ec);
-
-		//TODO: select cycles
-		return result.immutableClone();
-	}*/
-	
-	public static NSArray criteriaForSets(NSArray sets) {
-		if(sets != null && sets.count() > 0) {
-			CriteriaSet set = (CriteriaSet)sets.objectAtIndex(0);
-			if(sets.count() > 1) {
-				NSMutableArray result = set.sortedCriteria().mutableClone();
-				int count = sets.count();
-				for (int i = 1; i < count; i++) {
-					set = (CriteriaSet)sets.objectAtIndex(i);
-					result.addObjectsFromArray(set.sortedCriteria());
-				}
-				return result.immutableClone();
-			} else {
-				return set.sortedCriteria();
-			}
-		}
-		return null;
-	}
-/*
-	public static NSArray criteriaForCycle(EduCycle cycle) {
-		NSArray critSets = critSetsForCycle(cycle);
-		return criteriaForSets(critSets);
-	}
-*/	
-	
 	public static CriteriaSet critSetForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
 		Integer set = SettingsBase.numericSettingForCourse(ENTITY_NAME, course,ec);
@@ -217,6 +116,57 @@ public class CriteriaSet extends _CriteriaSet
 	
 	public static NSArray criteriaForCourse(EduCourse course) {
 		CriteriaSet set = critSetForCourse(course);
-		return (set==null)?null:set.sortedCriteria();
+		if (set!=null)
+			return set.sortedCriteria();
+		int maxCriter = maxCriterionForCourse(course);
+		return criteriaForMax(maxCriter);
+	}
+	
+	public static NSArray criteriaForMax(int maxCriter) {
+		if(maxCriter == 0)
+			return NSArray.EmptyArray;
+		char first = 'A';
+		NSDictionary[] result = new NSDictionary[maxCriter];
+		for (int i = 0; i < maxCriter; i++) {
+			String title = Character.toString((char)(first + i));
+			NSDictionary critDict = new NSDictionary( new Object[]
+					{title, new Integer(i + 1)} , new String[] {"title","criterion"});
+			result[i] = critDict;
+		}
+		return new NSArray(result);
+	}
+	
+	public static String titleForCriterion(int criterion) {
+		if(criterion == 0)
+			return "#";
+		return Character.toString((char)('A' + criterion -1));
+	}
+	
+	public static int maxCriterionForCourse(EduCourse course) {
+		CriteriaSet set = critSetForCourse(course);
+		if(set != null) {
+			Integer max = (Integer)set.criteria().valueForKey("@max.criterion");
+			return (max == null)?0:max.intValue();
+		}
+		NSArray works = EOUtilities.objectsMatchingKeyAndValue(course.editingContext(), 
+				Work.ENTITY_NAME, "course", course);
+		return maxCriterionInWorks(works);
+	}
+	
+	public static int maxCriterionInWorks (NSArray works) {
+		if(works == null || works.count() == 0)
+			return 0;
+		int max = 0;
+		Enumeration enu = works.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Work work = (Work) enu.nextElement();
+			NSArray mask = work.criterMask();
+			if(mask != null && mask.count() > 0) {
+				Integer wMax = (Integer)mask.valueForKeyPath("@max.criterion");
+				if(wMax.intValue() > max)
+					max = wMax.intValue();
+			}
+		}
+		return max;
 	}
 }

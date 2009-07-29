@@ -52,7 +52,7 @@ public class WorkList extends LessonList {
 	}
 	
     /** @TypeInfo Criterion */
-    private EOEnterpriseObject critItem;
+    private NSKeyValueCoding critItem;
 	protected EOEnterpriseObject _itemMask;
 
 	public void reset() {
@@ -64,11 +64,11 @@ public class WorkList extends LessonList {
 	}
 	
     /** @TypeInfo Criterion */
-	public EOEnterpriseObject critItem() {
+	public NSKeyValueCoding critItem() {
 		return critItem;
 	}
 	
-	public void setCritItem(EOEnterpriseObject item) {
+	public void setCritItem(NSKeyValueCoding item) {
 		critItem = item;
 		_itemMask = null;
 		if(item == null || work() == null)
@@ -207,7 +207,6 @@ public class WorkList extends LessonList {
 		if(_criteria == null) {
 			EduCourse course = (EduCourse)valueForBinding("course");
 			_criteria = CriteriaSet.criteriaForCourse(course);
-			//criteriaForCycle(course.cycle());
 		}
 		return _criteria;
     }

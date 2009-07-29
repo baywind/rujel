@@ -29,10 +29,13 @@
 
 package net.rujel.ui;
 
+import java.util.logging.Logger;
+
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -44,7 +47,7 @@ public class CriterSelector extends WOComponent {
 		return SettingsReader.stringForKeyPath("edu.presenters.workIntegral","%");
 	}*/
 
-    public EOEnterpriseObject critItem;
+    public NSKeyValueCoding critItem;
     public int idx;
 
     public CriterSelector(WOContext context) {
@@ -75,26 +78,36 @@ public class CriterSelector extends WOComponent {
 				_criteria = CriteriaSet.criteriaForCourse(course);//criteriaForSets(critSets);
 			} else {
 				EduCycle cycle = (EduCycle)valueForBinding("cycle");
-				if(cycle == null) {
-					_criteria = NSArray.EmptyArray;
-					return _criteria;
+				if(cycle != null) {
+					Integer eduYear = (Integer)session().valueForKey("eduYear");
+					EOEditingContext ec = cycle.editingContext();
+					EOEnterpriseObject setting = SettingsBase.settingForValue(
+							CriteriaSet.ENTITY_NAME, cycle,eduYear, ec);
+					if(setting != null) {
+						Integer set = (Integer)setting.valueForKey(
+								SettingsBase.NUMERIC_VALUE_KEY);
+						if(set != null && set.intValue() > 0) {
+							CriteriaSet critSet = (CriteriaSet)EOUtilities.
+								objectWithPrimaryKeyValue(ec,CriteriaSet.ENTITY_NAME, set);
+							_criteria = critSet.sortedCriteria();
+						}
+					}
 				}
-				Integer eduYear = (Integer)session().valueForKey("eduYear");
-    			EOEditingContext ec = cycle.editingContext();
-    			EOEnterpriseObject setting = SettingsBase.settingForValue(
-    					CriteriaSet.ENTITY_NAME, cycle,eduYear, ec);
-				if(setting == null) {
-					_criteria = NSArray.EmptyArray;
-					return _criteria;
+    			if(_criteria != null)
+    				return _criteria;
+				NSArray allLessons = (NSArray)valueForBinding("allLessons");
+				if(allLessons != null) {
+					try {
+						int maxCrit = CriteriaSet.maxCriterionInWorks(allLessons);
+						_criteria = CriteriaSet.criteriaForMax(maxCrit);
+					} catch (RuntimeException e) {
+						Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+								"Could not get criteria from works (lessons)",
+								new Object[] {session(),e});
+					}
 				}
-				Integer set = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-				if(set == null || set.intValue() == 0) {
+				if(_criteria == null)
 					_criteria = NSArray.EmptyArray;
-					return _criteria;
-				}
-				CriteriaSet critSet = (CriteriaSet)EOUtilities.objectWithPrimaryKeyValue(ec,
-						CriteriaSet.ENTITY_NAME, set);
-				_criteria = critSet.sortedCriteria();
 			}
 		}
 		return _criteria;
