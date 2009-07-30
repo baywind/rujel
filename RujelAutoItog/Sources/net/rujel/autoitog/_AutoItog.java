@@ -1,4 +1,4 @@
-// _StudentTimeout.java
+// _AutoItog.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to StudentTimeout.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to AutoItog.java instead.
 
 package net.rujel.autoitog;
 
@@ -37,16 +37,26 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _StudentTimeout extends EOGenericRecord {
-	public static final String ENTITY_NAME = "StudentTimeout";
+public abstract class _AutoItog extends EOGenericRecord {
+	public static final String ENTITY_NAME = "AutoItog";
 
 	// Attributes
+	public static final String CALCULATOR_NAME_KEY = "calculatorName";
 	public static final String FIRE_DATE_KEY = "fireDate";
+	public static final String FIRE_TIME_KEY = "fireTime";
 	public static final String FLAGS_KEY = "flags";
-	public static final String REASON_KEY = "reason";
 
 	// Relationships
-	public static final String AUTO_ITOG_KEY = "autoItog";
+	public static final String BORDER_SET_KEY = "borderSet";
+	public static final String ITOG_CONTAINER_KEY = "itogContainer";
+
+  public String calculatorName() {
+    return (String) storedValueForKey(CALCULATOR_NAME_KEY);
+  }
+
+  public void setCalculatorName(String value) {
+    takeStoredValueForKey(value, CALCULATOR_NAME_KEY);
+  }
 
   public NSTimestamp fireDate() {
     return (NSTimestamp) storedValueForKey(FIRE_DATE_KEY);
@@ -54,6 +64,14 @@ public abstract class _StudentTimeout extends EOGenericRecord {
 
   public void setFireDate(NSTimestamp value) {
     takeStoredValueForKey(value, FIRE_DATE_KEY);
+  }
+
+  public NSTimestamp fireTime() {
+    return (NSTimestamp) storedValueForKey(FIRE_TIME_KEY);
+  }
+
+  public void setFireTime(NSTimestamp value) {
+    takeStoredValueForKey(value, FIRE_TIME_KEY);
   }
 
   public Integer flags() {
@@ -64,20 +82,20 @@ public abstract class _StudentTimeout extends EOGenericRecord {
     takeStoredValueForKey(value, FLAGS_KEY);
   }
 
-  public String reason() {
-    return (String) storedValueForKey(REASON_KEY);
+  public net.rujel.criterial.BorderSet borderSet() {
+    return (net.rujel.criterial.BorderSet)storedValueForKey(BORDER_SET_KEY);
   }
 
-  public void setReason(String value) {
-    takeStoredValueForKey(value, REASON_KEY);
+  public void setBorderSet(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, BORDER_SET_KEY);
+  }
+  
+  public net.rujel.eduresults.ItogContainer itogContainer() {
+    return (net.rujel.eduresults.ItogContainer)storedValueForKey(ITOG_CONTAINER_KEY);
   }
 
-  public net.rujel.autoitog.AutoItog autoItog() {
-    return (net.rujel.autoitog.AutoItog)storedValueForKey(AUTO_ITOG_KEY);
-  }
-
-  public void setAutoItog(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, AUTO_ITOG_KEY);
+  public void setItogContainer(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, ITOG_CONTAINER_KEY);
   }
   
 }

@@ -41,19 +41,19 @@ public abstract class _CourseTimeout extends EOGenericRecord {
 	public static final String ENTITY_NAME = "CourseTimeout";
 
 	// Attributes
-	public static final String DUE_DATE_KEY = "dueDate";
+	public static final String FIRE_DATE_KEY = "fireDate";
 	public static final String FLAGS_KEY = "flags";
 	public static final String REASON_KEY = "reason";
 
 	// Relationships
-	public static final String EDU_PERIOD_KEY = "eduPeriod";
+	public static final String AUTO_ITOG_KEY = "autoItog";
 
-  public NSTimestamp dueDate() {
-    return (NSTimestamp) storedValueForKey(DUE_DATE_KEY);
+  public NSTimestamp fireDate() {
+    return (NSTimestamp) storedValueForKey(FIRE_DATE_KEY);
   }
 
-  public void setDueDate(NSTimestamp value) {
-    takeStoredValueForKey(value, DUE_DATE_KEY);
+  public void setFireDate(NSTimestamp value) {
+    takeStoredValueForKey(value, FIRE_DATE_KEY);
   }
 
   public Integer flags() {
@@ -72,12 +72,12 @@ public abstract class _CourseTimeout extends EOGenericRecord {
     takeStoredValueForKey(value, REASON_KEY);
   }
 
-  public net.rujel.eduresults.EduPeriod eduPeriod() {
-    return (net.rujel.eduresults.EduPeriod)storedValueForKey(EDU_PERIOD_KEY);
+  public net.rujel.autoitog.AutoItog autoItog() {
+    return (net.rujel.autoitog.AutoItog)storedValueForKey(AUTO_ITOG_KEY);
   }
 
-  public void setEduPeriod(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, EDU_PERIOD_KEY);
+  public void setAutoItog(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, AUTO_ITOG_KEY);
   }
   
 }

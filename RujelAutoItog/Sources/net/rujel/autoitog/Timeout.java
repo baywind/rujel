@@ -32,7 +32,6 @@ package net.rujel.autoitog;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
-import net.rujel.eduresults.EduPeriod;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
@@ -43,15 +42,15 @@ public interface Timeout extends EOEnterpriseObject {
 	public static final NSArray flagNames = new NSArray(new String[]
 	               {"-1-","negative","priority","-8-","-16-","-32-","passed"});
 
-    public EduCourse eduCourse();
+    public EduCourse course();
 	
-    public void setEduCourse(EduCourse aValue);
+    public void setCourse(EduCourse aValue);
 
-    public EduPeriod eduPeriod();
+    public AutoItog autoItog();
 	
-    public NSTimestamp dueDate();
+    public NSTimestamp fireDate();
     
-    public void setDueDate(NSTimestamp aValue);
+    public void setFireDate(NSTimestamp aValue);
 
     public Number flags();
     
@@ -64,16 +63,16 @@ public interface Timeout extends EOEnterpriseObject {
     public NSArray relatedPrognoses();
     
     public static class Utility {
-    	public static void setDueDate(Timeout timeout, NSTimestamp date) {
+    	public static void setFireDate(Timeout timeout, NSTimestamp date) {
     		NSArray prognoses = timeout.relatedPrognoses();
-    		if(date == null || timeout.dueDate() == null) {
+    		if(date == null || timeout.fireDate() == null) {
     			prognoses.valueForKey("updateFireDate");
     			return;
     		}
-    		int compare = date.compare(timeout.dueDate());
+    		int compare = date.compare(timeout.fireDate());
     		if(compare == 0)
     			return;
-    		timeout.setDueDate(date);
+    		timeout.setFireDate(date);
     		if(compare > 0) {
     			prognoses.takeValueForKey(date, "laterFireDate");
     		} else {

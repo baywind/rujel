@@ -46,7 +46,6 @@ public abstract class _Bonus extends EOGenericRecord {
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String EDU_PERIOD_KEY = "eduPeriod";
 	public static final String PROGNOSES_KEY = "prognoses";
 
   public String mark() {
@@ -73,14 +72,6 @@ public abstract class _Bonus extends EOGenericRecord {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public net.rujel.eduresults.EduPeriod eduPeriod() {
-    return (net.rujel.eduresults.EduPeriod)storedValueForKey(EDU_PERIOD_KEY);
-  }
-
-  public void setEduPeriod(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, EDU_PERIOD_KEY);
-  }
-  
   public NSArray prognoses() {
     return (NSArray)storedValueForKey(PROGNOSES_KEY);
   }

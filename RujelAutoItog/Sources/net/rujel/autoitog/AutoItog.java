@@ -1,4 +1,4 @@
-// _StudentTimeout.java
+//  AutoItog.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -27,57 +27,51 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to StudentTimeout.java instead.
-
 package net.rujel.autoitog;
 
-import com.webobjects.eocontrol.*;
+import java.util.Calendar;
+
+import net.rujel.interfaces.EOInitialiser;
+
 import com.webobjects.foundation.*;
-import java.math.BigDecimal;
+import com.webobjects.eocontrol.*;
 
-@SuppressWarnings("all")
-public abstract class _StudentTimeout extends EOGenericRecord {
-	public static final String ENTITY_NAME = "StudentTimeout";
+public class AutoItog extends _AutoItog {
 
-	// Attributes
-	public static final String FIRE_DATE_KEY = "fireDate";
-	public static final String FLAGS_KEY = "flags";
-	public static final String REASON_KEY = "reason";
+	public static void init() {
+		EOInitialiser.initialiseRelationship("ItogRelated","course",false,"courseID","EduCourse");
+	}
 
-	// Relationships
-	public static final String AUTO_ITOG_KEY = "autoItog";
+	public void awakeFromInsertion(EOEditingContext ec) {
+		super.awakeFromInsertion(ec);
+		setFlags(new Integer(0));
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.HOUR_OF_DAY, 4);
+		cal.set(Calendar.MINUTE, 20);
+		cal.set(Calendar.DAY_OF_MONTH, 27);
+		cal.add(Calendar.MONTH, 2);
+		NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
+		setFireTime(date);
+		setFireTime(date);
+	}
+	
+	public NSTimestamp fireDateTime() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(fireDate());
+		int year = cal.get(Calendar.YEAR);
+		int day = cal.get(Calendar.DAY_OF_YEAR);
+		cal.setTime(fireTime());
+		cal.set(Calendar.YEAR, year);
+		cal.set(Calendar.DAY_OF_YEAR, day);
+		NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
+		return date;
+	}
+	
+    public boolean noCalculator() {
+    	String calcName = calculatorName();
+		if(calcName == null || calcName.length() == 0 || calcName.equalsIgnoreCase("none"))
+			return true;
+		return false;
+    }
 
-  public NSTimestamp fireDate() {
-    return (NSTimestamp) storedValueForKey(FIRE_DATE_KEY);
-  }
-
-  public void setFireDate(NSTimestamp value) {
-    takeStoredValueForKey(value, FIRE_DATE_KEY);
-  }
-
-  public Integer flags() {
-    return (Integer) storedValueForKey(FLAGS_KEY);
-  }
-
-  public void setFlags(Integer value) {
-    takeStoredValueForKey(value, FLAGS_KEY);
-  }
-
-  public String reason() {
-    return (String) storedValueForKey(REASON_KEY);
-  }
-
-  public void setReason(String value) {
-    takeStoredValueForKey(value, REASON_KEY);
-  }
-
-  public net.rujel.autoitog.AutoItog autoItog() {
-    return (net.rujel.autoitog.AutoItog)storedValueForKey(AUTO_ITOG_KEY);
-  }
-
-  public void setAutoItog(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, AUTO_ITOG_KEY);
-  }
-  
 }

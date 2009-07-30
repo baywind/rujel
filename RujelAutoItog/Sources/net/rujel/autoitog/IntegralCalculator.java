@@ -36,13 +36,12 @@ import com.webobjects.foundation.NSArray;
 
 import net.rujel.criterial.Mark;
 import net.rujel.criterial.Work;
-import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 
 public class IntegralCalculator extends Calculator {
 
 	public Prognosis calculateForStudent(Student student, EduCourse course,
-			EduPeriod period) {
+			AutoItog period) {
 		NSArray<Work> works = works(course, period);
 		double weightSum = 0;
 		double integralSum = 0;

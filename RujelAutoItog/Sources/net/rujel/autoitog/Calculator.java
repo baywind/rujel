@@ -34,12 +34,10 @@ import java.lang.reflect.Field;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -66,17 +64,6 @@ public abstract class Calculator {
 		}
 		//return BachalaureatCalculator.sharedInstance;
 	}
-
-	protected static NSArray works(EduCourse course, EduPeriod period) {
-		NSTimestamp end = new NSTimestamp();
-		if(period.end().compareTo(end) < 0)
-			end = period.end();
-		NSArray args = new NSArray(new Object[] {course,period.begin(),end});//period.end()
-		String qualifierFormat = "course = %@ AND date >= %@ AND date <= %@ AND weight > 0";
-		//EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat,args);
-		//return EOQualifier.filteredArrayWithQualifier(course.lessons(),qual);
-		return EOUtilities.objectsWithQualifierFormat(course.editingContext(), "Work", qualifierFormat, args);
-	}
 	
 	protected static NSArray marksForStudentAndWorks(Student student, NSArray works) {
 		NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("work",works));
@@ -87,14 +74,14 @@ public abstract class Calculator {
 		return student.editingContext().objectsWithFetchSpecification(fs);
 	}
 
-	public abstract Prognosis calculateForStudent(Student student, EduCourse course, EduPeriod period);
+	public abstract Prognosis calculateForStudent(Student student, EduCourse course, AutoItog itog);
 
-	public PerPersonLink calculatePrognoses(EduCourse course, EduPeriod period) {
+	public PerPersonLink calculatePrognoses(EduCourse course, AutoItog itog) {
 		Enumeration enu = course.groupList().objectEnumerator();
 		NSMutableDictionary result = new NSMutableDictionary();
 		while (enu.hasMoreElements()) {
 			Student student = (Student)enu.nextElement();
-			Prognosis progn = calculateForStudent(student, course, period);
+			Prognosis progn = calculateForStudent(student, course, itog);
 			if(progn != null)
 				result.setObjectForKey(progn,student);
 		}

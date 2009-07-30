@@ -36,33 +36,9 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSMutableDictionary;
 
-import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 public class Bonus extends _Bonus {
-
-	public static void init() {
-		EOInitialiser.initialiseRelationship("Bonus","cycle",false,"cycleID","EduCycle")
-			.anyInverseRelationship().setPropagatesPrimaryKey(true);
-		EOInitialiser.initialiseRelationship("Bonus","student",false,"studentID","Student")
-			.anyInverseRelationship().setPropagatesPrimaryKey(true);
-	}
-
-	public Student student() {
-        return (Student)storedValueForKey("student");
-    }
-	
-    public void setStudent(Student aValue) {
-        takeStoredValueForKey(aValue, "student");
-    }
-	
-	public EduCycle cycle() {
-        return (EduCycle)storedValueForKey("cycle");
-    }
-	
-    public void setCycle(EduCycle aValue) {
-        takeStoredValueForKey(aValue, "cycle");
-    }
 
     public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -90,17 +66,17 @@ public class Bonus extends _Bonus {
     	}
     }
 
-    public void initBonus(Prognosis prognosis, boolean setValue) {
+/*    public void initBonus(Prognosis prognosis, boolean setValue) {
     	addObjectToBothSidesOfRelationshipWithKey(prognosis.student(), "student");
     	addObjectToBothSidesOfRelationshipWithKey(prognosis.eduPeriod(), EDU_PERIOD_KEY);
     	addObjectToBothSidesOfRelationshipWithKey(prognosis.eduCourse().cycle(), "cycle");
     	addObjectToBothSidesOfRelationshipWithKey(prognosis,PROGNOSES_KEY);
     	calculateBonus(prognosis, this, setValue);
-    }
+    }*/
     
     public BigDecimal calculateValue(Prognosis prognosis, boolean update) {
     	try {
-    		BigDecimal topValue = prognosis.prognosUsage().borderSet().borderForKey(mark());
+    		BigDecimal topValue = prognosis.autoItog().borderSet().borderForKey(mark());
     		topValue = topValue.movePointLeft(2);
     		BigDecimal prognos = prognosis.value();
     		BigDecimal bonus = (topValue.compareTo(prognos) < 0)?
@@ -122,7 +98,7 @@ public class Bonus extends _Bonus {
     
     public static BigDecimal calculateBonus(Prognosis prognosis,Bonus toUpdate,boolean setValue) {
     	try {
-    		EOEnterpriseObject border = prognosis.prognosUsage().borderSet().
+    		EOEnterpriseObject border = prognosis.autoItog().borderSet().
     					borderForFraction(prognosis.value(), true); 
     		if(border == null)
     			return null;
@@ -147,8 +123,9 @@ public class Bonus extends _Bonus {
     }
     
 	public NSMutableDictionary extItog() {
-		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
-		result.takeValueForKey(cycle(), "cycle");
+		NSMutableDictionary result = new NSMutableDictionary(prognosis().autoItog(),
+				Prognosis.AUTO_ITOG_KEY);
+		result.takeValueForKey(prognosis().course().cycle(), "cycle");
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.markHasBonus"));
 		buf.append('.').append(' ').append((String)WOApplication.application()

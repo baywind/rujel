@@ -31,7 +31,6 @@ package net.rujel.autoitog;
 
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.EduPeriod;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
@@ -56,13 +55,12 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     }
 
 	public static void init() {
-		EOInitialiser.initialiseRelationship("CourseTimeout","eduCourse",false,"courseID","EduCourse").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("CourseTimeout","course",false,"courseID","EduCourse").anyInverseRelationship().setPropagatesPrimaryKey(true);
 		
-		EOInitialiser.initialiseRelationship("CourseTimeout","cycle",false,"eduCycleID","EduCycle").anyInverseRelationship().setPropagatesPrimaryKey(true);
+		EOInitialiser.initialiseRelationship("CourseTimeout","cycle",false,"cycleID","EduCycle").anyInverseRelationship().setPropagatesPrimaryKey(true);
 		EOInitialiser.initialiseRelationship("CourseTimeout","teacher",false,"teacherID","Teacher").anyInverseRelationship().setPropagatesPrimaryKey(true);
 		EOInitialiser.initialiseRelationship("CourseTimeout","eduGroup",false,"eduGroupID","EduGroup").anyInverseRelationship().setPropagatesPrimaryKey(true);
 		
-		//EOInitialiser.initialiseRelationship("CourseTimeout","eduPeriod",false,"periodID","EduPeriod").anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
 	/*
     // If you add instance variables to store property values you
@@ -75,17 +73,9 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     }
 */
-/*
-    public EduPeriod eduPeriod() {
-        return (EduPeriod)storedValueForKey("eduPeriod");
-    }
 	
-    public void setEduPeriod(EduPeriod aValue) {
-        takeStoredValueForKey(aValue, "eduPeriod");
-    }*/
-	
-    public EduCourse eduCourse() {
-        return (EduCourse)storedValueForKey("eduCourse");
+    public EduCourse course() {
+        return (EduCourse)storedValueForKey("course");
     }
 	
     public void awakeFromInsertion(EOEditingContext ec) {
@@ -93,8 +83,8 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     	setFlags(new Integer(0));
     }
 
-    public void setEduCourse(EduCourse aValue) {
-        takeStoredValueForKey(aValue, "eduCourse");
+    public void setCourse(EduCourse aValue) {
+        takeStoredValueForKey(aValue, "course");
     }
 	
 	public EduCycle cycle() {
@@ -121,15 +111,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     public void setEduGroup(EduGroup aValue) {
         takeStoredValueForKey(aValue, "eduGroup");
     }
-    /*
-    public void setDueDate(NSTimestamp newDate) {
-    	NSTimestamp oldDate = dueDate();
-    	super.setDueDate(newDate);
-    	if(oldDate == null || oldDate.compare(newDate) > 0) {
-    		updatePrognoses();
-    	} else {
-    		relatedPrognoses().takeValueForKey(newDate, "laterFireDate");
-    }*/
+
     
     private NamedFlags _flags;
     public NamedFlags namedFlags() {
@@ -150,13 +132,12 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     	setFlags(flags.toInteger());
     }
 
-    public static CourseTimeout getTimeoutForCourseAndPeriod(EduCourse course, EduPeriod period) {
+    public static CourseTimeout getTimeoutForCourseAndPeriod(EduCourse course, AutoItog period) {
     	if(course == null || period == null)
     		return null;
     	NSDictionary dict = new NSDictionary (new Object[] {course,period},
-    			new String[] {"eduCourse","eduPeriod"});
-		NSArray timeouts = EOUtilities.objectsMatchingValues(course.editingContext(), "CourseTimeout", dict);
-		//objectsMatchingKeyAndValue(course.editingContext(), "CourseTimeout", "eduCourse", course);
+    			new String[] {"course",AUTO_ITOG_KEY});
+		NSArray timeouts = EOUtilities.objectsMatchingValues(course.editingContext(), ENTITY_NAME, dict);
 		if(timeouts.count() > 0) {
 			if(timeouts.count() > 1) {
 				logger.log(WOLogLevel.WARNING,"Multple timeouts found for course",course);
@@ -182,7 +163,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		CourseTimeout minT = null;
 		while (enu.hasMoreElements()) {
 			CourseTimeout curT = (CourseTimeout) enu.nextElement();
-			NSTimestamp curDate = curT.dueDate();
+			NSTimestamp curDate = curT.fireDate();
 			if(curT.namedFlags().flagForKey("negative")) {
 				if(minDate == null || curDate.compare(minDate) < 0
 						|| curT.namedFlags().flagForKey("priority")) {
@@ -211,28 +192,28 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     }
     
 	public NSArray relatedPrognoses() {
-		if(eduCourse() != null) {
+		if(course() != null) {
 	    	NSDictionary dict = new NSDictionary(
-	    			new Object[] {eduCourse(),eduPeriod()},
-	    			new String[] {"eduCourse","eduPeriod"});
+	    			new Object[] {course(),autoItog()},
+	    			new String[] {"course",AUTO_ITOG_KEY});
 	    	return EOUtilities.objectsMatchingValues(editingContext(), "Prognosis", dict);
 		}
 		NSArray relatedCourses = relatedCourses();
 		if(relatedCourses == null || relatedCourses.count() == 0)
 			return null;
 		NSMutableArray quals = new NSMutableArray
-				(new EOKeyValueQualifier("eduPeriod",EOQualifier.QualifierOperatorEqual,eduPeriod()));
-		quals.addObject(Various.getEOInQualifier("eduCourse", relatedCourses));
+				(new EOKeyValueQualifier(AUTO_ITOG_KEY,EOQualifier.QualifierOperatorEqual,autoItog()));
+		quals.addObject(Various.getEOInQualifier("course", relatedCourses));
 		EOQualifier qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification("Prognosis",qual,null);
 		return editingContext().objectsWithFetchSpecification(fs);
 	}
 	
 	public EOQualifier courseQualifier() {
-		if(eduCourse() != null)
-			return EOUtilities.qualifierForEnterpriseObject(editingContext(), eduCourse());
+		if(course() != null)
+			return EOUtilities.qualifierForEnterpriseObject(editingContext(), course());
 		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier("eduYear",
-				EOQualifier.QualifierOperatorEqual,eduPeriod().eduYear()));
+				EOQualifier.QualifierOperatorEqual,autoItog().itogContainer().eduYear()));
 		if(cycle() != null)
 			quals.addObject(new EOKeyValueQualifier("cycle",
 				EOQualifier.QualifierOperatorEqual,cycle()));
@@ -246,8 +227,8 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 	}
 	
 	public NSArray relatedCourses() {
-		if(eduCourse() != null)
-			return new NSArray(eduCourse());
+		if(course() != null)
+			return new NSArray(course());
 		EOQualifier qual = courseQualifier();
 		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,qual,null);
     	NSArray courses = editingContext().objectsWithFetchSpecification(fs);
@@ -255,21 +236,21 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     	NSMutableArray result = new NSMutableArray();
     	while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
-			CourseTimeout curTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(course, eduPeriod());
+			CourseTimeout curTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(course, autoItog());
 			if(curTimeout == this)
 				result.addObject(course);
 		}
     	return result;
 	}
 
-	public static NSArray timeoutsForCourseAndPeriod(EduCourse course, EduPeriod period) {
+	public static NSArray timeoutsForCourseAndPeriod(EduCourse course, AutoItog period) {
 		EOQualifier qual = qualifierForCourseAndPeriod(course,period);
 		EOFetchSpecification fs = new EOFetchSpecification("CourseTimeout",qual,null);
 		return course.editingContext().objectsWithFetchSpecification(fs);
 	}
 	
-	public static EOQualifier qualifierForCourseAndPeriod(EduCourse course, EduPeriod period) {
-		EOQualifier qual = new EOKeyValueQualifier("eduCourse", EOQualifier.QualifierOperatorEqual , null);
+	public static EOQualifier qualifierForCourseAndPeriod(EduCourse course, AutoItog period) {
+		EOQualifier qual = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual , null);
 		NSMutableArray allQuals = new NSMutableArray(qual);
 		NSMutableArray quals = new NSMutableArray();
 		
@@ -289,16 +270,16 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		quals.removeAllObjects();
 		
 		// or course
-		qual = new EOKeyValueQualifier("eduCourse", EOQualifier.QualifierOperatorEqual , course);
+		qual = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual , course);
 		quals.addObject(qual);
 		quals.addObject(new EOAndQualifier(allQuals));
 		qual = new EOOrQualifier(quals);
 		
-		// and eduPeriod
+		// and AutoItog
 		if(period != null) {
 			allQuals.removeAllObjects();
 			allQuals.addObject(qual);
-			qual = new EOKeyValueQualifier("eduPeriod", EOQualifier.QualifierOperatorEqual , period);
+			qual = new EOKeyValueQualifier(AUTO_ITOG_KEY, EOQualifier.QualifierOperatorEqual , period);
 			allQuals.addObject(qual);
 			qual = new EOAndQualifier(allQuals);
 		}
@@ -306,16 +287,16 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 	}
 	
 	public NSMutableDictionary extItog(EduCycle cycle) {
-		NSMutableDictionary result = new NSMutableDictionary(eduPeriod(),"eduPeriod");
+		NSMutableDictionary result = new NSMutableDictionary(autoItog(),AUTO_ITOG_KEY);
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout"));
 		buf.append(' ').append((String)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.upTo"));
 		buf.append(' ');
 		Format df = MyUtility.dateFormat();
-		df.format(dueDate(), buf, new FieldPosition(DateFormat.DATE_FIELD));
+		df.format(fireDate(), buf, new FieldPosition(DateFormat.DATE_FIELD));
 		buf.append(" : <em>").append(reason()).append("</em>");
-		if(eduCourse() == null) {
+		if(course() == null) {
 //			if(cycle() != null)
 //				buf.append(" (").append(cycle().subject()).append(')');
 			if(eduGroup() != null)
