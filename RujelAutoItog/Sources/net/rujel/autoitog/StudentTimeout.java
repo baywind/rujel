@@ -42,6 +42,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 import net.rujel.base.MyUtility;
+import net.rujel.eduresults.ItogContainer;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -100,18 +101,17 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
     public NSArray relatedPrognoses() {
     	EduCourse c = course();
     	NSDictionary dict = new NSMutableDictionary(
-    			new Object[] {student(),autoItog()},
-    			new String[] {"student",Prognosis.AUTO_ITOG_KEY});
+    			new Object[] {student(),itogContainer()},
+    			new String[] {"student","autoItog.itogContainer"});
     		dict.takeValueForKey(c, "course");
     	return EOUtilities.objectsMatchingValues(editingContext(), Prognosis.ENTITY_NAME, dict);
     }
-
 	
 	public boolean allCycles() {
 		return (course() == null);
 	}
 	
-	public static NSArray timeoutsForCourseAndPeriod(Student student,EduCourse course,AutoItog period) {
+	public static NSArray timeoutsForCourseAndPeriod(Student student,EduCourse course,ItogContainer period) {
 		EOQualifier qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,NullValue);
 		NSMutableArray quals = new NSMutableArray(qual);
 		if(course != null) {
@@ -121,7 +121,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 			quals.removeAllObjects();
 			quals.addObject(qual);
 		}
-		qual = new EOKeyValueQualifier(AUTO_ITOG_KEY,EOQualifier.QualifierOperatorEqual,period);
+		qual = new EOKeyValueQualifier(ITOG_CONTAINER_KEY,EOQualifier.QualifierOperatorEqual,period);
 		quals.addObject(qual);
 		if(student == null)
 			qual = Various.getEOInQualifier("student",course.eduGroup().list());
@@ -136,7 +136,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 		return new PerPersonLink.Dictionary(result);*/
 	}
 	
-	public static StudentTimeout timeoutForStudentCourseAndPeriod(Student student,EduCourse course,AutoItog period) {
+	public static StudentTimeout timeoutForStudentCourseAndPeriod(Student student,EduCourse course,ItogContainer period) {
 		if(student == null || course == null || period == null)
 			throw new IllegalArgumentException("Non null arguments required");
 		NSArray timeouts = timeoutsForCourseAndPeriod(student,course, period);
@@ -183,7 +183,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 	}
 
 	public NSMutableDictionary extItog() {
-		NSMutableDictionary result = new NSMutableDictionary(autoItog(),AUTO_ITOG_KEY);
+		NSMutableDictionary result = new NSMutableDictionary(itogContainer(),ITOG_CONTAINER_KEY);
 		result.takeValueForKey(valueForKeyPath("course.cycle"), "cycle");
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout"));

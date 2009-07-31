@@ -333,7 +333,6 @@
         {className = "net.rujel.autoitog.AutoItog"; name = AutoItog; }, 
         {className = EOGenericRecord; name = ItogRelated; }
     ); 
-    internalInfo = {"_deletedEntityNamesInObjectStore" = (PrognosUsage); }; 
     userInfo = {
         "_EntityModeler" = {
             activeDatabaseConfigName = Default; 

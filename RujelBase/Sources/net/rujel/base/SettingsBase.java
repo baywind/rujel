@@ -211,8 +211,10 @@ public class SettingsBase extends _SettingsBase {
 			sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec,
 					ENTITY_NAME, KEY_KEY, key);
 		} catch (EOObjectNotAvailableException e) {
-			sb = (SettingsBase)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
-			sb.setKey(key);
+			if(create) {
+				sb = (SettingsBase)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+				sb.setKey(key);
+			}
 		}
 		return sb;
 	}

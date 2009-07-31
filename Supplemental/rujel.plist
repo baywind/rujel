@@ -636,12 +636,8 @@
 		</dict>
 		<key>AutoItog</key>
 		<dict>
-			<key>skip</key>
-			<string>true</string>
-			<key>untagged</key>
-			<string>AutoItog</string>
 			<key>dbName</key>
-			<string>AutoItog%s</string>
+			<string>RujelYear%s</string>
 		</dict>
 		<key>BaseYearly</key>
 		<dict>

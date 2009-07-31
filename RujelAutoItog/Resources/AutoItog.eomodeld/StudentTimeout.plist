@@ -20,19 +20,19 @@
     ); 
     attributesUsedForLocking = (studentID, reason, flags, courseID, fireDate, itogID); 
     className = "net.rujel.autoitog.StudentTimeout"; 
-    classProperties = (autoItog, fireDate, flags, reason); 
+    classProperties = (fireDate, flags, itogContainer, reason); 
     externalName = TIMEOUT; 
     fetchSpecificationDictionary = {}; 
     name = StudentTimeout; 
     primaryKeyAttributes = (tID); 
     relationships = (
         {
-            destination = AutoItog; 
+            destination = ItogContainer; 
             isMandatory = Y; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = aiID; sourceAttribute = itogID; }); 
-            name = autoItog; 
+            joins = ({destinationAttribute = iID; sourceAttribute = itogID; }); 
+            name = itogContainer; 
         }
     ); 
 }

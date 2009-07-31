@@ -45,6 +45,7 @@ public abstract class _AutoItog extends EOGenericRecord {
 	public static final String FIRE_DATE_KEY = "fireDate";
 	public static final String FIRE_TIME_KEY = "fireTime";
 	public static final String FLAGS_KEY = "flags";
+	public static final String LIST_NAME_KEY = "listName";
 
 	// Relationships
 	public static final String BORDER_SET_KEY = "borderSet";
@@ -80,6 +81,14 @@ public abstract class _AutoItog extends EOGenericRecord {
 
   public void setFlags(Integer value) {
     takeStoredValueForKey(value, FLAGS_KEY);
+  }
+
+  public String listName() {
+    return (String) storedValueForKey(LIST_NAME_KEY);
+  }
+
+  public void setListName(String value) {
+    takeStoredValueForKey(value, LIST_NAME_KEY);
   }
 
   public net.rujel.criterial.BorderSet borderSet() {

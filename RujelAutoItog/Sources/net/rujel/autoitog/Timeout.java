@@ -30,6 +30,7 @@
 package net.rujel.autoitog;
 
 
+import net.rujel.eduresults.ItogContainer;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
 
@@ -37,7 +38,8 @@ import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 
 public interface Timeout extends EOEnterpriseObject {
-	public static final NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("dueDate",EOSortOrdering.CompareDescending));
+	public static final NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
+			"fireDate",EOSortOrdering.CompareDescending));
 	
 	public static final NSArray flagNames = new NSArray(new String[]
 	               {"-1-","negative","priority","-8-","-16-","-32-","passed"});
@@ -46,7 +48,7 @@ public interface Timeout extends EOEnterpriseObject {
 	
     public void setCourse(EduCourse aValue);
 
-    public AutoItog autoItog();
+    public ItogContainer itogContainer();
 	
     public NSTimestamp fireDate();
     

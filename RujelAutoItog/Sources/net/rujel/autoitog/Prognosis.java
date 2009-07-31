@@ -190,7 +190,7 @@ public class Prognosis extends _Prognosis {
 	public StudentTimeout getStudentTimeout() {
 		if(_timeout == null) {
 			_timeout = StudentTimeout.timeoutForStudentCourseAndPeriod(
-					student(), course(), autoItog());
+					student(), course(), autoItog().itogContainer());
 			if(_timeout == null)
 				_timeout = NullValue;
 		}
@@ -202,7 +202,7 @@ public class Prognosis extends _Prognosis {
 	
 	public NSTimestamp updateFireDate() {
 		CourseTimeout courseTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(
-				course(), autoItog());
+				course(), autoItog().itogContainer());
 		return updateFireDate(courseTimeout);
 	}
 

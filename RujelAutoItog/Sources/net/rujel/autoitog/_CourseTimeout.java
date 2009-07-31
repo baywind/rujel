@@ -46,7 +46,7 @@ public abstract class _CourseTimeout extends EOGenericRecord {
 	public static final String REASON_KEY = "reason";
 
 	// Relationships
-	public static final String AUTO_ITOG_KEY = "autoItog";
+	public static final String ITOG_CONTAINER_KEY = "itogContainer";
 
   public NSTimestamp fireDate() {
     return (NSTimestamp) storedValueForKey(FIRE_DATE_KEY);
@@ -72,12 +72,12 @@ public abstract class _CourseTimeout extends EOGenericRecord {
     takeStoredValueForKey(value, REASON_KEY);
   }
 
-  public net.rujel.autoitog.AutoItog autoItog() {
-    return (net.rujel.autoitog.AutoItog)storedValueForKey(AUTO_ITOG_KEY);
+  public net.rujel.eduresults.ItogContainer itogContainer() {
+    return (net.rujel.eduresults.ItogContainer)storedValueForKey(ITOG_CONTAINER_KEY);
   }
 
-  public void setAutoItog(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, AUTO_ITOG_KEY);
+  public void setItogContainer(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, ITOG_CONTAINER_KEY);
   }
   
 }

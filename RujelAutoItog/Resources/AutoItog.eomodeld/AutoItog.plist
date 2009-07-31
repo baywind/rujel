@@ -32,11 +32,18 @@
             name = fireTime; 
             prototypeName = time; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = N; 
+            columnName = "LIST_NAME"; 
+            name = listName; 
+            prototypeName = word; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (calculatorName, containerID, fireDate, fireTime, flags); 
+    attributesUsedForLocking = (calculatorName, containerID, fireDate, fireTime, flags, listName); 
     className = "net.rujel.autoitog.AutoItog"; 
-    classProperties = (borderSet, calculatorName, fireDate, fireTime, flags, itogContainer); 
+    classProperties = (borderSet, calculatorName, fireDate, fireTime, flags, itogContainer, listName); 
     externalName = AUTOITOG; 
     fetchSpecificationDictionary = {}; 
     name = AutoItog; 

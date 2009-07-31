@@ -30,13 +30,24 @@
 package net.rujel.autoitog;
 
 import java.util.Calendar;
+import java.util.Date;
 
+import net.rujel.eduresults.ItogContainer;
 import net.rujel.interfaces.EOInitialiser;
+import net.rujel.interfaces.EduCourse;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOObjectNotAvailableException;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
+	
+	public static final NSArray sorter = new NSArray( new EOSortOrdering[] {
+		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
+		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending),
+		EOSortOrdering.sortOrderingWithKey(ITOG_CONTAINER_KEY,EOSortOrdering.CompareAscending)
+		});
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship("ItogRelated","course",false,"courseID","EduCourse");
@@ -55,15 +66,19 @@ public class AutoItog extends _AutoItog {
 		setFireTime(date);
 	}
 	
-	public NSTimestamp fireDateTime() {
+	public static NSTimestamp combineDateAndTime(Date date, Date time) {
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(fireDate());
+		cal.setTime(date);
 		int year = cal.get(Calendar.YEAR);
 		int day = cal.get(Calendar.DAY_OF_YEAR);
-		cal.setTime(fireTime());
+		cal.setTime(time);
 		cal.set(Calendar.YEAR, year);
 		cal.set(Calendar.DAY_OF_YEAR, day);
-		NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
+		return new NSTimestamp(cal.getTimeInMillis());
+	}
+	
+	public NSTimestamp fireDateTime() {
+		NSTimestamp date = combineDateAndTime(fireDate(), fireTime());
 		return date;
 	}
 	
@@ -73,5 +88,43 @@ public class AutoItog extends _AutoItog {
 			return true;
 		return false;
     }
+    
+    public static AutoItog forListName(String listName, ItogContainer container) {
+    	EOEditingContext ec = container.editingContext();
+    	NSDictionary values = new NSDictionary(new Object[] {listName,container},
+    			new String[] {LIST_NAME_KEY,ITOG_CONTAINER_KEY});
+    	try {
+		   	return (AutoItog)EOUtilities.objectMatchingValues(ec, ENTITY_NAME, values);
+		} catch (EOObjectNotAvailableException e) {
+			return null;
+		}
+     }
+    
+	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
+		
+		public int compareAscending(Object left, Object right)  {
+			if(!(left instanceof AutoItog))
+				return NSComparator.OrderedAscending;
+			AutoItog l = (AutoItog)left;
+			if(!(right instanceof AutoItog))
+				return NSComparator.OrderedDescending;
+			AutoItog r = (AutoItog)right;
+			int result = compareValues(l.fireDateTime(), r.fireDateTime(),
+					EOSortOrdering.CompareAscending);
+			if(result == NSComparator.OrderedSame)
+			result = compareValues(l.itogContainer(),r.itogContainer(),
+					EOSortOrdering.CompareAscending);
+			return result;
+		}
 
+		public int compareCaseInsensitiveAscending(Object left, Object right)  {
+			return compareAscending(left, right) ;
+		}
+		public int compareDescending(Object left, Object right)  {
+			return compareAscending(right, left) ;
+		}
+		public int compareCaseInsensitiveDescending(Object left, Object right)  {
+			return compareAscending(right, left) ;
+		}
+	}
 }
