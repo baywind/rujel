@@ -31,6 +31,7 @@ package net.rujel.autoitog;
 
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.*;
 import net.rujel.reusables.*;
 
@@ -79,7 +80,7 @@ public class AutoItogModule {
 		} else if("extItog".equals(obj)) {
 			return extItog(ctx);
 		} else if("statCourseReport".equals(obj)) {
-			return statCourseReport(ctx);
+//			return statCourseReport(ctx);
 		}
 		return null;
 	}
@@ -108,12 +109,7 @@ public class AutoItogModule {
 					if(fire.getTime() - System.currentTimeMillis() < 10000) {
 						automateItog(ai);
 					} else {
-						TimerTask task = new TimerTask() {
-							public void run() {
-								automateItog(ai);
-							}
-						};
-						timer.schedule(task,fire);
+						timer.schedule(new AutoItogAutomator(ai,false),fire);
 					}
 					alreadyScheduled.addObject(ai);
 				}
@@ -136,16 +132,15 @@ public class AutoItogModule {
 				CourseTimeout cto = (CourseTimeout) enu.nextElement();
 				if(itog != cto.itogContainer()) {
 					if(timeouts.count() > 0)
-						scheduleTimeoutsForItog(timeouts, itog, alreadyScheduled);
+						scheduleTimeoutsForItog(timeouts, itog, alreadyScheduled,timer);
 					timeouts.removeAllObjects();
 				}
 				itog = cto.itogContainer();
 				timeouts.addObject(cto);
 			}
 			if(timeouts.count() > 0)
-				scheduleTimeoutsForItog(timeouts, itog, alreadyScheduled);
+				scheduleTimeoutsForItog(timeouts, itog, alreadyScheduled,timer);
 		}
-		// TODO
 		// Timed out prognoses automation
 		qual = Various.getEOInQualifier(Prognosis.AUTO_ITOG_KEY, alreadyScheduled);
 		qual = new EONotQualifier(qual);
@@ -167,11 +162,21 @@ public class AutoItogModule {
 		found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
 			Enumeration enu = found.objectEnumerator();
+			AutoItog ai = null;
 			while (enu.hasMoreElements()) {
 				Prognosis pr = (Prognosis) enu.nextElement();
-				AutoItog ai = pr.autoItog();
+				if(ai == pr.autoItog())
+					continue;
+				ai = pr.autoItog();
+				if(alreadyScheduled.containsObject(ai))
+					continue;
+				alreadyScheduled.addObject(ai);
+				NSTimestamp fire = ai.fireDateTime();
+				if(fire.getTime() - System.currentTimeMillis() < 10000)
+					automateTimedOutPrognoses(ai);
+				else
+					timer.schedule(new AutoItogAutomator(ai,true), ai.fireDateTime());
 			}
-			automateTimedOutPrognoses(ec,found);
 		}
 		/*} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error while converting prognoses to ItogMarks",e);*/
@@ -181,8 +186,34 @@ public class AutoItogModule {
 		logger.log(WOLogLevel.FINE,"AutoItog completed");		return null;
 	}
 	protected static void scheduleTimeoutsForItog(NSArray timeouts,ItogContainer itog,
-			NSMutableArray alreadyScheduled) {
-		// TODO
+			NSMutableArray alreadyScheduled, Timer timer) {
+		EOEditingContext ec = itog.editingContext();
+		NSArray ais = EOUtilities.objectsMatchingKeyAndValue(ec,
+				AutoItog.ENTITY_NAME, AutoItog.ITOG_CONTAINER_KEY, itog);
+		if(ais == null)
+			return;
+		NSMutableArray toGigs = new NSMutableArray();
+		Enumeration enu = timeouts.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			CourseTimeout cto = (CourseTimeout) enu.nextElement();
+			toGigs.addObject(ec.globalIDForObject(cto));
+		}
+		enu = ais.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			AutoItog autoItog = (AutoItog) enu.nextElement();
+			NSTimestamp fire = autoItog.fireDateTime();
+			if(fire.getTime() - System.currentTimeMillis() < 10000) {
+				Enumeration ctos = timeouts.objectEnumerator();
+				while (ctos.hasMoreElements()) {
+					CourseTimeout cto = (CourseTimeout) ctos.nextElement();
+					automateCourseTimeout(cto, autoItog);
+				}
+			} else {
+				timer.schedule(new CourseTimeoutsAutomator(autoItog,toGigs),
+						autoItog.fireDateTime());
+			}
+			
+		}
 	}
 	
 	public static NSKeyValueCoding notesAddOns(WOContext ctx) {
@@ -346,46 +377,58 @@ public class AutoItogModule {
 		logger.log(WOLogLevel.INFO, text.toString());
 	}
 	
-	protected static void automateTimedOutPrognoses(EOEditingContext ec, NSArray prognoses) {
-		logger.log(WOLogLevel.INFO,"Automating timed out prognoses: " + prognoses.count());
+	protected static class AutoItogAutomator extends TimerTask {
+		protected EOGlobalID gid;
+		boolean skip;
+		public AutoItogAutomator(AutoItog autoItog,boolean onlyTimeout) {
+			super();
+			gid = autoItog.editingContext().globalIDForObject(autoItog);
+			skip = onlyTimeout;
+		}
+		public void run() {
+			EOEditingContext ec = new EOEditingContext();
+			ec.lock();
+			try {
+				AutoItog autoItog = (AutoItog)ec.objectForGlobalID(gid);
+				if(!skip)
+					automateItog(autoItog);
+				automateTimedOutPrognoses(autoItog);
+			} finally {
+				ec.unlock();
+			}
+		}
+	}
+	
+	protected static void automateTimedOutPrognoses(AutoItog autoItog) {
+		EOEditingContext ec = autoItog.editingContext();
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier(Prognosis.FIRE_DATE_KEY,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,new NSTimestamp());
+		quals[1] = new EOKeyValueQualifier(Prognosis.AUTO_ITOG_KEY,
+				EOQualifier.QualifierOperatorEqual,autoItog);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(Prognosis.ENTITY_NAME,quals[0],null);
+		NSArray prognoses = ec.objectsWithFetchSpecification(fs);
+		
+		logger.log(WOLogLevel.INFO,"Automating timed out prognoses: " + prognoses.count(),
+				autoItog);
 		StringBuffer buf = new StringBuffer("Timed out prognoses:\n");
-		EOSortOrdering so = new EOSortOrdering ("eduPeriod.eduYear", EOSortOrdering.CompareAscending);
-		NSMutableArray sorter = new NSMutableArray(so);
-		so = new EOSortOrdering ("eduPeriod.countInYear", EOSortOrdering.CompareDescending);
-		sorter.addObject(so);
-		so = new EOSortOrdering ("eduPeriod.begin", EOSortOrdering.CompareAscending);
-		sorter.addObject(so);
-		so = new EOSortOrdering ("eduCourse.eduGroup", EOSortOrdering.CompareAscending);
-		sorter.addObject(so);
-//		so = new EOSortOrdering ("eduCourse.cycle", EOSortOrdering.CompareAscending);
-//		sorter.addObject(so);
-		so = new EOSortOrdering ("eduCourse", EOSortOrdering.CompareAscending);
-		sorter.addObject(so);
-		prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, sorter);
-//		int last = 0;
-		AutoItog period = null;
-		//EduGroup group = null;
-		//EduCycle cycle = null;
+		buf.append(autoItog.itogContainer().name()).append(' ');
+		buf.append(MyUtility.presentEduYear(autoItog.itogContainer().eduYear()));
+		if(prognoses.count() > 1) {
+			NSArray sorter = new NSArray(new EOSortOrdering ("course", 
+					EOSortOrdering.CompareAscending));
+			prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, sorter);
+		}
 		EduCourse course = null;
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
 		boolean overwrite = SettingsReader.boolForKeyPath("edu.overwriteItogsScheduled", false);
 		int inCourse = 0;
 		for (int i = 0; i < prognoses.count(); i++) {
 			Prognosis prognos = (Prognosis)prognoses.objectAtIndex(i);
-			if(prognos.autoItog() != period) {
-				if(course != null) {
-					savePrognoses(ec, course, period, buf);
-					buf.append("-- ").append(inCourse).append(" --\n");
-				}
-				period = prognos.autoItog();
-				buf.append("\n-- ").append(period.itogContainer().name()).append(' ');
-				buf.append(MyUtility.presentEduYear(period.itogContainer().eduYear()));
-				buf.append('\n').append('\n');
-				course = null;
-			}
 			if(prognos.course() != course) {
 				if(course != null) {
-					savePrognoses(ec, course, period, buf);
+					savePrognoses(ec, course, autoItog, buf);
 					buf.append("-- ").append(inCourse).append(" --\n");
 				}
 				course = prognos.course();
@@ -414,12 +457,12 @@ public class AutoItogModule {
 			}
 		}
 		if(course != null)
-			savePrognoses(ec, course, period, buf);
+			savePrognoses(ec, course, autoItog, buf);
 		message(buf);
 	}
 	
 	private static void savePrognoses(EOEditingContext ec, EduCourse course, 
-			AutoItog period, StringBuffer buf) {
+			AutoItog autoItog, StringBuffer buf) {
 		try {
 			ec.saveChanges();
 		}  catch (Exception ex) {
@@ -428,30 +471,53 @@ public class AutoItogModule {
 			buf.append("Failed to save timed out prognoses");
 			ec.revert();
 		}
-		ModuleInit.prepareStats(course, period.itogContainer(), true);
+		ModuleInit.prepareStats(course, autoItog.itogContainer(), true);
 	}
 
 	//protected static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
-	protected static void automateCourseTimeouts(NSArray timeouts,AutoItog autoItog) {
-		EOEditingContext ec = new EOEditingContext();
-		ec.lock();
-		try {
-			Enumeration enu = timeouts.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				EOGlobalID gid = (EOGlobalID) enu.nextElement();
-				CourseTimeout cto = (CourseTimeout)ec.objectForGlobalID(gid);
-				automateCourseTimeout(cto,autoItog);
+	protected static class CourseTimeoutsAutomator extends TimerTask {
+		protected EOGlobalID aiGID;
+		protected NSArray timeouts;
+		public CourseTimeoutsAutomator(AutoItog autoItog,NSArray courseTimeouts) {
+			super();
+			EOEditingContext ec = autoItog.editingContext();
+			aiGID = ec.globalIDForObject(autoItog);
+			Object obj = courseTimeouts.objectAtIndex(0);
+			if(obj instanceof EOGlobalID) {
+				timeouts = courseTimeouts;
+			} else {
+				NSMutableArray toGigs = new NSMutableArray();
+				Enumeration enu = courseTimeouts.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					CourseTimeout cto = (CourseTimeout) enu.nextElement();
+					toGigs.addObject(ec.globalIDForObject(cto));
+				}
+				timeouts = toGigs;
 			}
-		} finally {
-			ec.unlock();
+		}
+		public void run() {
+			EOEditingContext ec = new EOEditingContext();
+			ec.lock();
+			try {
+				AutoItog autoItog = (AutoItog)ec.objectForGlobalID(aiGID);
+				Enumeration enu = timeouts.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOGlobalID gid = (EOGlobalID) enu.nextElement();
+					CourseTimeout cto = (CourseTimeout)ec.objectForGlobalID(gid);
+					automateCourseTimeout(cto,autoItog);
+				}
+				automateTimedOutPrognoses(autoItog);
+			} finally {
+				ec.unlock();
+			}
 		}
 	}
 	
 	protected static void automateCourseTimeout(CourseTimeout cto,AutoItog autoItog) {
 		//EOEditingContext ec = cto.editingContext();
-		ItogContainer period = cto.itogContainer();
-		NSMutableSet toProcess = new NSMutableSet(cto.relatedCourses());
+		ItogContainer container = cto.itogContainer();
+//		NSMutableSet toProcess = new NSMutableSet(cto.relatedCourses());
 		StringBuffer buf = new StringBuffer("Automating CourseTimeout: ");
 		buf.append(cto.itogContainer().name()).append(':');
 		
@@ -473,11 +539,12 @@ public class AutoItogModule {
 		buf.append(")\n");
 
 //		toProcess.intersectSet(new NSSet(courses));
-		Enumeration enu = toProcess.objectEnumerator();
+		Enumeration enu = cto.relatedCourses().objectEnumerator();
+			//toProcess.objectEnumerator();
 cycleCourses:
 		while (enu.hasMoreElements()) {
 			EduCourse cur = (EduCourse) enu.nextElement();
-			if(cto != CourseTimeout.getTimeoutForCourseAndPeriod(cur, period)) {
+			if(cto != CourseTimeout.getTimeoutForCourseAndPeriod(cur, container)) {
 				continue cycleCourses;
 			}
 			cto.namedFlags().setFlagForKey(true, "passed");
@@ -486,36 +553,55 @@ cycleCourses:
 		message(buf);
 	}
 	
-	protected static void automateItog(AutoItog period) {
-		EOEditingContext ec = period.editingContext();
-		
+	protected static void automateItog(AutoItog autoItog) {
+		EOEditingContext ec = autoItog.editingContext();
+		ItogContainer container = autoItog.itogContainer();
 		StringBuffer buf = new StringBuffer("Automating end of EduPeriod");
-		buf.append(period.itogContainer().name()).append('\n');
+		buf.append(container.name()).append('\n');
 
-		NSArray courseTimeouts = EOUtilities.objectsMatchingKeyAndValue(ec,"CourseTimeout","autoItog",period);
+		NSArray courseTimeouts = EOUtilities.objectsMatchingKeyAndValue(ec,
+				CourseTimeout.ENTITY_NAME,CourseTimeout.ITOG_CONTAINER_KEY,container);
 		
+		SettingsBase base = SettingsBase.baseForKey(ItogMark.MARK_KEY, ec, false);
+		NSArray courses = base.coursesForSetting(autoItog.listName(), 
+				null, container.eduYear());
 		Enumeration courseEnum = courses.objectEnumerator();
+		FieldPosition pos = new FieldPosition(DateFormat.DATE_FIELD);
+		String timeoutTitle = (String)WOApplication.application()
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout");
+		String upTo = (String)WOApplication.application()
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.upTo");
 cycleCourses:
 		while (courseEnum.hasMoreElements()) {
 			EduCourse course = (EduCourse)courseEnum.nextElement();
-			NSArray tmpArray = null;//PeriodType.periodTypesForCourse(course);
-			/*if(!tmpArray.containsObject(period.periodType()))
-				continue cycleCourses;*/
-			NSDictionary dict = new NSDictionary (new Object[] {course,period},
-					new String[] {"eduCourse","eduPeriod"});
-			tmpArray = EOUtilities.objectsMatchingValues(course.editingContext(), "CourseTimeout", dict);
-			if(tmpArray == null || tmpArray.count() == 0) {
-				EOQualifier qual = CourseTimeout.qualifierForCourseAndPeriod(course,period);
-				tmpArray = EOQualifier.filteredArrayWithQualifier(courseTimeouts,qual);
-			}
-			if(tmpArray != null && tmpArray.count() > 0) {
-				logger.logp(WOLogLevel.INFO,AutoItogModule.class.getName(),"automateItogForPeriod","Itog timed out for course",course);
+			CourseTimeout ct = CourseTimeout.getTimeoutForCourseAndPeriod(course, container);
+			if(ct != null) {
+				if(ct.namedFlags().flagForKey("negative")) {
+					logger.log(WOLogLevel.INFO,
+							"Course should have been already automated",course);
+					continue cycleCourses;
+				}
+				logger.log(WOLogLevel.INFO,"Itog timed out for course",course);
+				// add ItogComment about timeout
+				Enumeration enu = course.groupList().objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Student student = (Student) enu.nextElement();
+					EOEnterpriseObject commentEO = ItogMark.getItogComment(course.cycle(),
+							container, student, true);
+					Timeout timeout = StudentTimeout.timeoutForStudentAndCourse(
+							student, course, container);
+					timeout = Timeout.Utility.chooseTimeout((StudentTimeout)timeout, ct);
+					StringBuffer comment = new StringBuffer();
+					comment.append(upTo).append(' ');
+					MyUtility.dateFormat().format(timeout.fireDate(), comment, pos);
+					buf.append(" : <em>").append(timeout.reason()).append("</em>");
+					ItogMark.setCommentForKey(commentEO, comment.toString(), timeoutTitle);
+				}
 				continue cycleCourses;
 			}
 			//single timouts are checked inside convertPrognosesForCourseAndPeriod()
-			Prognosis.convertPrognoses(course,period,period.fireDate(),buf);
+			Prognosis.convertPrognoses(course,autoItog,autoItog.fireDate(),buf);
 		}
-		
 		message(buf);
 	}
 
@@ -584,15 +670,15 @@ cycleCourses:
 			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, tmp);
 		}
 
-		AutoItog period = null;
+		ItogContainer container = null;
 		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary byCycle = new NSMutableDictionary();
 		while (enu.hasMoreElements()) {
 			CourseTimeout cto = (CourseTimeout) enu.nextElement();
-			if(period != cto.autoItog()) {
-				if(period != null)
+			if(container != cto.itogContainer()) {
+				if(container != null)
 					append(byCycle, result);
-				period = cto.autoItog();
+				container = cto.itogContainer();
 			}
 			EduCourse course = cto.course();
 			if(course != null) {
@@ -652,7 +738,9 @@ cycleCourses:
 		}
 	}
 	
-	public static Object statCourseReport(WOContext ctx) {
+	// TODO : stats support for prognoses
+	
+/*	public static Object statCourseReport(WOContext ctx) {
 		EOEditingContext ec = null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");
@@ -710,5 +798,5 @@ cycleCourses:
 			sort++;
 		}
 		return result;
-	}
+	}*/
 }

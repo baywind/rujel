@@ -111,7 +111,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 		return (course() == null);
 	}
 	
-	public static NSArray timeoutsForCourseAndPeriod(Student student,EduCourse course,ItogContainer period) {
+	public static NSArray timeoutsForCourse(Student student,EduCourse course,ItogContainer container) {
 		EOQualifier qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,NullValue);
 		NSMutableArray quals = new NSMutableArray(qual);
 		if(course != null) {
@@ -121,7 +121,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 			quals.removeAllObjects();
 			quals.addObject(qual);
 		}
-		qual = new EOKeyValueQualifier(ITOG_CONTAINER_KEY,EOQualifier.QualifierOperatorEqual,period);
+		qual = new EOKeyValueQualifier(ITOG_CONTAINER_KEY,EOQualifier.QualifierOperatorEqual,container);
 		quals.addObject(qual);
 		if(student == null)
 			qual = Various.getEOInQualifier("student",course.eduGroup().list());
@@ -136,10 +136,10 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 		return new PerPersonLink.Dictionary(result);*/
 	}
 	
-	public static StudentTimeout timeoutForStudentCourseAndPeriod(Student student,EduCourse course,ItogContainer period) {
-		if(student == null || course == null || period == null)
+	public static StudentTimeout timeoutForStudentAndCourse(Student student,EduCourse course,ItogContainer container) {
+		if(student == null || course == null || container == null)
 			throw new IllegalArgumentException("Non null arguments required");
-		NSArray timeouts = timeoutsForCourseAndPeriod(student,course, period);
+		NSArray timeouts = timeoutsForCourse(student,course, container);
 		if(timeouts == null || timeouts.count() == 0) {
 			return null;
 		}

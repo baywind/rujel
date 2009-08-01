@@ -36,6 +36,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Teacher;
+import net.rujel.reusables.Various;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
@@ -47,10 +48,14 @@ public class SettingsBase extends _SettingsBase {
 	protected static final String[] keys = new String[] {"grade","eduGroup","cycle","teacher"};
 	
 	public static void init() {
-		EOInitialiser.initialiseRelationship("SettingByCourse","course",false,"courseID","EduCourse");
-		EOInitialiser.initialiseRelationship("SettingByCourse","cycle",false,"cycleID","EduCycle");
-		EOInitialiser.initialiseRelationship("SettingByCourse","eduGroup",false,"groupID","EduGroup");
-		EOInitialiser.initialiseRelationship("SettingByCourse","teacher",false,"teacherID","Teacher");
+		EOInitialiser.initialiseRelationship("SettingByCourse",
+				"course",false,"courseID","EduCourse");
+		EOInitialiser.initialiseRelationship("SettingByCourse",
+				"cycle",false,"cycleID","EduCycle");
+		EOInitialiser.initialiseRelationship("SettingByCourse",
+				"eduGroup",false,"groupID","EduGroup");
+		EOInitialiser.initialiseRelationship("SettingByCourse",
+				"teacher",false,"teacherID","Teacher");
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -247,6 +252,58 @@ public class SettingsBase extends _SettingsBase {
 		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
 	}
 	
+	public static EOQualifier byCourseQualifier(EOEnterpriseObject byCourse) {
+		if(!byCourse.entityName().equals("SettingByCourse"))
+			return null;
+		if(byCourse.valueForKey("course") != null)
+			return EOUtilities.qualifierForEnterpriseObject(byCourse.editingContext(),
+					byCourse);
+		NSMutableArray quals = new NSMutableArray();
+		Object param = byCourse.valueForKey("eduGroup"); 
+		if(param != null)
+			quals.addObject(new EOKeyValueQualifier("eduGroup",
+					EOQualifier.QualifierOperatorEqual,param));
+		param = byCourse.valueForKey("cycle"); 
+		if(param != null)
+			quals.addObject(new EOKeyValueQualifier("cycle",
+					EOQualifier.QualifierOperatorEqual,param));
+		param = byCourse.valueForKey("grade"); 
+		if(param != null && quals.count() == 0) {
+			NSArray cycles = EduCycle.Lister.cyclesForGrade((Integer)param,
+					byCourse.editingContext());
+			quals.addObject(Various.getEOInQualifier("cycle", cycles));
+		}
+		param = byCourse.valueForKey("teacher"); 
+		if(param != null || quals.count() == 0) {
+			quals.addObject(new EOKeyValueQualifier("teacher",
+					EOQualifier.QualifierOperatorEqual,param));
+		}
+		param = byCourse.valueForKey("eduYear"); 
+		if(param != null)
+			quals.addObject(new EOKeyValueQualifier("eduYear",
+					EOQualifier.QualifierOperatorEqual,param));
+		return new EOAndQualifier(quals);
+	}
+	
+	public NSArray coursesForSetting(String text, Integer numeric, Integer eduYear) {
+		NSArray allCourses = EOUtilities.objectsMatchingKeyAndValue(editingContext(),
+				EduCourse.entityName, "eduYear", eduYear);
+		if(allCourses == null || allCourses.count() == 0)
+			return null;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = allCourses.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduCourse course = (EduCourse) enu.nextElement();
+			EOEnterpriseObject setting = forCourse(course);
+			if(numeric != null && !numeric.equals(setting.valueForKey(NUMERIC_VALUE_KEY)))
+				continue;
+			if(text != null && !text.equals(setting.valueForKey(TEXT_VALUE_KEY)))
+				continue;
+			result.addObject(course);
+		}
+		return result;
+	}
+	
 	public static class Comparator extends NSComparator {
 		public int compare(Object arg0, Object arg1) throws ComparisonException {
 			if(arg0 == null && arg1 == null)
@@ -317,7 +374,6 @@ public class SettingsBase extends _SettingsBase {
 				else
 					return OrderedAscending;
 			}
-		}
-		
+		}		
 	}
 }

@@ -92,4 +92,8 @@ public abstract class Calculator {
 	public NSArray reliesOn() {
 		return reliesOn;
 	}
+	
+	public String reliesOnEntity() {
+		return "Work";
+	}
 }

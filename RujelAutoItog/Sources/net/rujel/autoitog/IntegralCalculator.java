@@ -42,7 +42,7 @@ public class IntegralCalculator extends Calculator {
 
 	public Prognosis calculateForStudent(Student student, EduCourse course,
 			AutoItog period) {
-		NSArray<Work> works = works(course, period);
+		NSArray works = period.relatedForCourse(course);//works(course, period);
 		double weightSum = 0;
 		double integralSum = 0;
 		int count = 0;

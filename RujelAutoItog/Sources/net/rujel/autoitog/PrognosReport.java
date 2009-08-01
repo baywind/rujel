@@ -100,34 +100,17 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 					} else if (eduper.end().compareTo(
 							studentTimeout.eduPeriod().end()) < 0) {
 						studentTimeout = StudentTimeout
-								.timeoutForStudentCourseAndPeriod(student,
+								.timeoutForStudentAndCourse(student,
 										course, eduper);
 					}
 				}
 				CourseTimeout courseTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(course, eduper);
 				if(studentTimeout != null || courseTimeout != null) {
-					Timeout timeout = studentTimeout;
-					if(courseTimeout != null) {
-						if(timeout == null) {
-							timeout = courseTimeout;
-						} else {
-							NSTimestamp fireDate = (progn == null)?null:progn.fireDate();
-							if(fireDate == null)
-								fireDate = Prognosis.chooseDate(studentTimeout, courseTimeout);
-							if(!fireDate.equals(studentTimeout.dueDate())) {
-								if(fireDate.equals(courseTimeout.dueDate()))
-									timeout = courseTimeout;
-								else {
-									Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
-											"No matching timeout for prognosis fire date",progn);
-								}
-							}
-						}
-					}
+					Timeout timeout = Timeout.Utility.chooseTimeout(studentTimeout, courseTimeout);
 					if(dict == null)
 						dict = new NSMutableDictionary();
 					dict.takeValueForKey(timeout.reason(), "reason");
-					String dateStr = MyUtility.dateFormat().format(timeout.dueDate());
+					String dateStr = MyUtility.dateFormat().format(timeout.fireDate());
 					dict.setObjectForKey(dateStr, "timeout");
 				}
 			}

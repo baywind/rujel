@@ -32,9 +32,7 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
-import com.webobjects.foundation.NSMutableDictionary;
 
 import net.rujel.reusables.*;
 
@@ -122,7 +120,7 @@ public class Bonus extends _Bonus {
     	}
     }
     
-	public NSMutableDictionary extItog() {
+/*	public NSMutableDictionary extItog() {
 		NSMutableDictionary result = new NSMutableDictionary(prognosis().autoItog(),
 				Prognosis.AUTO_ITOG_KEY);
 		result.takeValueForKey(prognosis().course().cycle(), "cycle");
@@ -133,5 +131,5 @@ public class Bonus extends _Bonus {
 		buf.append(": <em>").append(reason()).append("</em>");
 		result.takeValueForKey(buf.toString(), "text");
 		return result;
-	}
+	}*/
 }

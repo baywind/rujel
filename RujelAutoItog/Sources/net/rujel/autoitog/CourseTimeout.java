@@ -133,10 +133,10 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     	setFlags(flags.toInteger());
     }
 
-    public static CourseTimeout getTimeoutForCourseAndPeriod(EduCourse course, ItogContainer period) {
-    	if(course == null || period == null)
+    public static CourseTimeout getTimeoutForCourseAndPeriod(EduCourse course, ItogContainer container) {
+    	if(course == null || container == null)
     		return null;
-    	NSDictionary dict = new NSDictionary (new Object[] {course,period},
+    	NSDictionary dict = new NSDictionary (new Object[] {course,container},
     			new String[] {"course",ITOG_CONTAINER_KEY});
 		NSArray timeouts = EOUtilities.objectsMatchingValues(course.editingContext(), ENTITY_NAME, dict);
 		if(timeouts.count() > 0) {
@@ -145,7 +145,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 			}
 			return (CourseTimeout)timeouts.objectAtIndex(0);
 		}
-		timeouts = CourseTimeout.timeoutsForCourseAndPeriod(course,period);
+		timeouts = CourseTimeout.timeoutsForCourseAndPeriod(course,container);
 		if(timeouts == null || timeouts.count() == 0) {
 			return null;
 		}
@@ -244,13 +244,13 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
     	return result;
 	}
 
-	public static NSArray timeoutsForCourseAndPeriod(EduCourse course, ItogContainer period) {
-		EOQualifier qual = qualifierForCourseAndPeriod(course,period);
+	public static NSArray timeoutsForCourseAndPeriod(EduCourse course, ItogContainer container) {
+		EOQualifier qual = qualifierForCourseAndPeriod(course,container);
 		EOFetchSpecification fs = new EOFetchSpecification("CourseTimeout",qual,null);
 		return course.editingContext().objectsWithFetchSpecification(fs);
 	}
 	
-	public static EOQualifier qualifierForCourseAndPeriod(EduCourse course, ItogContainer period) {
+	public static EOQualifier qualifierForCourseAndPeriod(EduCourse course, ItogContainer container) {
 		EOQualifier qual = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual , null);
 		NSMutableArray allQuals = new NSMutableArray(qual);
 		NSMutableArray quals = new NSMutableArray();
@@ -277,10 +277,10 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		qual = new EOOrQualifier(quals);
 		
 		// and AutoItog
-		if(period != null) {
+		if(container != null) {
 			allQuals.removeAllObjects();
 			allQuals.addObject(qual);
-			qual = new EOKeyValueQualifier(ITOG_CONTAINER_KEY, EOQualifier.QualifierOperatorEqual , period);
+			qual = new EOKeyValueQualifier(ITOG_CONTAINER_KEY, EOQualifier.QualifierOperatorEqual , container);
 			allQuals.addObject(qual);
 			qual = new EOAndQualifier(allQuals);
 		}

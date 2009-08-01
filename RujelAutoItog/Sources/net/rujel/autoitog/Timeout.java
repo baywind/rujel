@@ -81,5 +81,44 @@ public interface Timeout extends EOEnterpriseObject {
     			prognoses.valueForKey("updateFireDate");
     		}
     	}
+    	
+    	public static NSTimestamp chooseDate(StudentTimeout studentTimeout,
+    			CourseTimeout courseTimeout) {
+    		Timeout timeout = chooseTimeout(studentTimeout, courseTimeout); 
+    		return (timeout==null)?null:timeout.fireDate();
+    	}
+
+    	public static Timeout chooseTimeout(StudentTimeout studentTimeout,
+    			CourseTimeout courseTimeout) {
+    		if(studentTimeout == null)
+    			return courseTimeout;
+    		else if(courseTimeout == null)
+    			return studentTimeout;
+    		if(studentTimeout.course() != null)
+    			return studentTimeout;
+    		long stDate = studentTimeout.fireDate().getTime();
+    		long crDate = courseTimeout.fireDate().getTime();
+    		if(courseTimeout.namedFlags().flagForKey("negative")) {
+    			if(studentTimeout.namedFlags().flagForKey("negative")) {
+    				if(stDate > crDate) {
+    					return courseTimeout;
+    				} else {
+    					return studentTimeout;
+    				}
+    			}
+    		} else {
+    			if(!studentTimeout.namedFlags().flagForKey("negative")) {
+    				if(stDate > crDate) {
+    					return studentTimeout;
+    				} else {
+    					return courseTimeout;
+    				}
+    			}
+    		}
+    		if(courseTimeout.namedFlags().flagForKey("priority") && 
+    				!studentTimeout.namedFlags().flagForKey("priority"))
+    			return courseTimeout;
+    		return studentTimeout;
+    	}
     }
 }

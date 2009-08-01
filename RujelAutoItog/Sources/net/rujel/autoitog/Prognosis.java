@@ -41,6 +41,8 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
 import java.math.*;
+import java.text.DateFormat;
+import java.text.FieldPosition;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -189,7 +191,7 @@ public class Prognosis extends _Prognosis {
 	protected transient Object _timeout;
 	public StudentTimeout getStudentTimeout() {
 		if(_timeout == null) {
-			_timeout = StudentTimeout.timeoutForStudentCourseAndPeriod(
+			_timeout = StudentTimeout.timeoutForStudentAndCourse(
 					student(), course(), autoItog().itogContainer());
 			if(_timeout == null)
 				_timeout = NullValue;
@@ -218,51 +220,15 @@ public class Prognosis extends _Prognosis {
 		if(fireDate() == null && !valueChanged() && relatedItog() != null) {
 			return null;
 		}
-		NSTimestamp result = null;
 		StudentTimeout studentTimeout = getStudentTimeout();
-		if(courseTimeout != null) {
-			if(studentTimeout != null)
-				result = chooseDate(studentTimeout, courseTimeout);
-			else
-				result = courseTimeout.fireDate();
-		} else {
-			if(studentTimeout != null)
-				result = studentTimeout.fireDate();
-			else
-				result = autoItog().fireDate();
+		NSTimestamp result = Timeout.Utility.chooseDate(studentTimeout, courseTimeout);
+		if(result == null) {
+			result = autoItog().fireDate();
 		}
 		setFireDate(result);
 		return result;
 	}
-	
-	public static NSTimestamp chooseDate(StudentTimeout studentTimeout,
-			CourseTimeout courseTimeout) {
-		NSTimestamp stDate = studentTimeout.fireDate();
-		NSTimestamp crDate = courseTimeout.fireDate();
-		if(courseTimeout.namedFlags().flagForKey("negative")) {
-			if(studentTimeout.namedFlags().flagForKey("negative")) {
-				if(stDate.compare(crDate) > 0) {
-					return crDate;
-				} else {
-					return stDate;
-				}
-			}
-		} else {
-			if(!studentTimeout.namedFlags().flagForKey("negative")) {
-				if(stDate.compare(crDate) > 0) {
-					return stDate;
-				} else {
-					return crDate;
-				}
-			}
-		}
-		if(studentTimeout.course() != null)
-			return stDate;
-		if(courseTimeout.namedFlags().flagForKey("priority") && 
-				!studentTimeout.namedFlags().flagForKey("priority"))
-			return crDate;
-		return stDate;
-	}
+
 	
 	public void setLaterFireDate(NSTimestamp newDate) {
 		if(fireDate() != null && newDate.compare(fireDate()) > 0)
@@ -384,6 +350,10 @@ public class Prognosis extends _Prognosis {
 		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
 				relatedItog().setMark(bonus.mark());
+				String bonusTitle = (String)WOApplication.application()
+					.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.markHasBonus");
+//				StringBuilder buf = new StringBuilder();
+				relatedItog().comments().takeValueForKey(bonus.reason(), bonusTitle);
 				report("Bonus is applied",this, buf);
 			} else {
 				report("Bonus not applied",this, buf);
@@ -405,8 +375,8 @@ public class Prognosis extends _Prognosis {
 		return relatedItog();
 	}
 	
-	public static void convertPrognoses(EduCourse course, AutoItog period, Date scheduled) {
-		convertPrognoses(course, period, scheduled, null);
+	public static void convertPrognoses(EduCourse course, AutoItog itog, Date scheduled) {
+		convertPrognoses(course, itog, scheduled, null);
 	}
 	
 	
@@ -420,8 +390,8 @@ public class Prognosis extends _Prognosis {
 		buf.append(Person.Utility.fullName(course.teacher().person(), false, 2, 1, 0));
 		buf.append('\n');
 		
-		NSArray prognoses = EOUtilities.objectsWithQualifierFormat(ec,
-				"Prognosis","autoItog = %@ AND course = %@ AND fireDate <= %@",args);
+		NSArray prognoses = EOUtilities.objectsWithQualifierFormat(ec,Prognosis.ENTITY_NAME,
+				"autoItog = %@ AND course = %@",args);
 		if(prognoses == null || prognoses.count() == 0) {
 			buf.append("No prognoses found for course.\n");
 			if(buffer == null) {
@@ -436,6 +406,11 @@ public class Prognosis extends _Prognosis {
 		boolean overwrite = (scheduled == null || SettingsReader.boolForKeyPath(
 				"edu.overwriteItogsScheduled", false));
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
+		FieldPosition pos = new FieldPosition(DateFormat.DATE_FIELD);
+		String timeoutTitle = (String)WOApplication.application()
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout");
+		String upTo = (String)WOApplication.application()
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.upTo");
 cycleStudents:
 			while (penu.hasMoreElements()) {
 				Prognosis prognos = (Prognosis)penu.nextElement();
@@ -443,14 +418,23 @@ cycleStudents:
 				if(idx >= 0) {
 					students.removeObjectAtIndex(idx);
 				}
-				// check timeout
 				if(prognos.fireDate() == null) {
 					report("Prognosis is already fired", prognos, buf);
 					continue cycleStudents;
 				}
+				// check timeout
 				if(scheduled != null && scheduled.compareTo(prognos.fireDate()) < 0) {
+					// add ItogComment about timeout
 					report("Prognosis is timed out", prognos, buf);
-					//continue cycleStudents;
+					EOEnterpriseObject commentEO = ItogMark.getItogComment(course.cycle(),
+							itog.itogContainer(), prognos.student(), true);
+					Timeout timeout = prognos.getStudentTimeout();
+					StringBuffer comment = new StringBuffer();
+					comment.append(upTo).append(' ');
+					MyUtility.dateFormat().format(timeout.fireDate(), comment, pos);
+					buf.append(" : <em>").append(timeout.reason()).append("</em>");
+					ItogMark.setCommentForKey(commentEO, comment.toString(), timeoutTitle);
+					continue cycleStudents;
 				}
 				if(idx < 0) {
 					args = new NSArray(new Object[] {itog,prognos.student()});
@@ -523,7 +507,7 @@ cycleStudents:
 				itogs = ItogMark.getItogMarks(course.cycle(), itog.itogContainer(), null, ec);
 				itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
 				grouping.takeValueForKey(itogs, "array");
-//				NSDictionary stats = ModuleInit.statCourse(course, period);
+//				NSDictionary stats = ModuleInit.statCourse(course, itog.itogContainer());
 //				grouping.takeValueForKey(stats, "dict");
 				try {
 					ec.saveChanges();

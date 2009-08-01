@@ -31,10 +31,16 @@ package net.rujel.autoitog;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.logging.Logger;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
+import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
@@ -42,6 +48,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
+	protected static Logger logger = Logger.getLogger("rujel.autoitog");
 	
 	public static final NSArray sorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
@@ -51,6 +58,7 @@ public class AutoItog extends _AutoItog {
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship("ItogRelated","course",false,"courseID","EduCourse");
+		ComparisonSupport.setSupportForClass(new ComparisonSupport(), AutoItog.class);
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -84,24 +92,84 @@ public class AutoItog extends _AutoItog {
 	
     public boolean noCalculator() {
     	String calcName = calculatorName();
-		if(calcName == null || calcName.length() == 0 || calcName.equalsIgnoreCase("none"))
-			return true;
-		return false;
+    	if(calcName == null || calcName.length() == 0 || calcName.equalsIgnoreCase("none"))
+    		return true;
+    	return false;
     }
-    
+
     public static AutoItog forListName(String listName, ItogContainer container) {
     	EOEditingContext ec = container.editingContext();
     	NSDictionary values = new NSDictionary(new Object[] {listName,container},
     			new String[] {LIST_NAME_KEY,ITOG_CONTAINER_KEY});
     	try {
-		   	return (AutoItog)EOUtilities.objectMatchingValues(ec, ENTITY_NAME, values);
-		} catch (EOObjectNotAvailableException e) {
-			return null;
-		}
-     }
+    		return (AutoItog)EOUtilities.objectMatchingValues(ec, ENTITY_NAME, values);
+    	} catch (EOObjectNotAvailableException e) {
+    		return null;
+    	}
+    }
     
-	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
-		
+    public static NSArray currentAutoItogsForCourse(EduCourse course,NSTimestamp date) {
+    	EOEditingContext ec = course.editingContext();
+    	String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
+    	EOQualifier[] quals = new EOQualifier[2];
+    	quals[0] = new EOKeyValueQualifier(LIST_NAME_KEY,
+    			EOQualifier.QualifierOperatorEqual,listName);
+    	quals[1] = new EOKeyValueQualifier(FIRE_DATE_KEY,
+    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],sorter);
+    	NSArray found = ec.objectsWithFetchSpecification(fs);
+    	if(found == null || found.count() == 0)
+    		return null;
+    	Enumeration enu = found.objectEnumerator();
+    	NSMutableArray result = new NSMutableArray();
+    	NSMutableSet types = new NSMutableSet();
+    	while (enu.hasMoreElements()) {
+			AutoItog ai = (AutoItog) enu.nextElement();
+			if(ai.fireDateTime().getTime() < System.currentTimeMillis())
+				continue;
+			ItogType type = ai.itogContainer().itogType();
+			if(types.containsObject(type))
+				continue;
+			types.addObject(type);
+			result.addObject(ai);
+		}
+    	return result;
+    }
+
+    protected Calculator _calculator;
+    public Calculator calculator() {
+    	if(_calculator == null) {
+    		_calculator = Calculator.calculatorForName(calculatorName());
+    	}
+    	return _calculator;
+    }
+
+    public NSArray relatedForCourse(EduCourse course) {
+    	NSDictionary values = new NSDictionary(new Object[] {this,course},
+    			new String[] {"autoItog","course"});
+    	EOEditingContext ec = editingContext();
+    	NSArray found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
+    	if(found == null || found.count() == 0)
+    		return null;
+    	NSMutableArray related = new NSMutableArray();
+    	String entName = calculator().reliesOnEntity();
+    	Enumeration enu = found.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+			EOEnterpriseObject ir = (EOEnterpriseObject) enu.nextElement();
+			Integer relKey = (Integer)ir.valueForKey("relKey");
+			try {
+				related.addObject(EOUtilities.objectWithPrimaryKeyValue(ec, entName, relKey));
+			} catch (RuntimeException e) {
+				logger.log(WOLogLevel.WARNING,"Could not get related object: " + entName +
+						':' + relKey,new Object[] {this,e});
+			}
+		}
+    	return related.immutableClone();
+    }
+
+    public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
+
 		public int compareAscending(Object left, Object right)  {
 			if(!(left instanceof AutoItog))
 				return NSComparator.OrderedAscending;
