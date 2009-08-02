@@ -35,10 +35,8 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
-import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
-import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
 public abstract class Calculator {
@@ -64,15 +62,6 @@ public abstract class Calculator {
 		}
 		//return BachalaureatCalculator.sharedInstance;
 	}
-	
-	protected static NSArray marksForStudentAndWorks(Student student, NSArray works) {
-		NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("work",works));
-		quals.addObject(new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student));
-		
-		EOFetchSpecification fs = new EOFetchSpecification("Mark",new EOAndQualifier(quals),null);
-		fs.setRefreshesRefetchedObjects(true);
-		return student.editingContext().objectsWithFetchSpecification(fs);
-	}
 
 	public abstract Prognosis calculateForStudent(Student student, EduCourse course, AutoItog itog);
 
@@ -88,12 +77,10 @@ public abstract class Calculator {
 		return new PerPersonLink.Dictionary(result);
 	}
 	
-	protected static final NSArray reliesOn = new NSArray(new String[] {"Work","Mark"});
-	public NSArray reliesOn() {
-		return reliesOn;
-	}
+	public abstract NSArray reliesOn();
 	
-	public String reliesOnEntity() {
-		return "Work";
-	}
+	public abstract String reliesOnEntity();
+	
+	public abstract NSArray collectRelated(EduCourse course, AutoItog autoItog,
+			boolean checkWeight);
 }

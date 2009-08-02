@@ -41,6 +41,7 @@ import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
+@Deprecated
 public class PrognosUsage extends _PrognosUsage
 {
 	public static final NSArray prognosUsageFlagNames = new NSArray(new String[]

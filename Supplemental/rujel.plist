@@ -764,7 +764,7 @@
 		<key>autogenerateEduPeriods</key>
 		<string>true</string>
 		<key>newYearMonth</key>
-		<string>7</string>
+		<string>8</string>
 		<key>overwriteItogsScheduled</key>
 		<string>false</string>
 		<key>weightToMax</key>

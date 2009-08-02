@@ -38,35 +38,39 @@ import net.rujel.criterial.Mark;
 import net.rujel.criterial.Work;
 import net.rujel.interfaces.*;
 
-public class IntegralCalculator extends Calculator {
+public class IntegralCalculator extends WorkCalculator {
 
 	public Prognosis calculateForStudent(Student student, EduCourse course,
 			AutoItog period) {
 		NSArray works = period.relatedForCourse(course);//works(course, period);
+		if(works == null || works.count() == 0)
+			works = period.calculator().collectRelated(course, period, true);
 		double weightSum = 0;
 		double integralSum = 0;
 		int count = 0;
 		int complete = 0;
-		Enumeration<Work> enu = works.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			Work work = (Work) enu.nextElement();
-			if(BigDecimal.ZERO.compareTo(work.weight()) == 0)
-				continue;
-			BigDecimal integral = work.integralForStudent(student);
-			if(integral == null && work.type().intValue() == Work.OPTIONAL)
-				continue;
-			double weight = work.weight().doubleValue();
-			weightSum += weight;
-			if(integral != null) {
-				integralSum += (weight * integral.doubleValue());
-				Mark[] marks = work.forPersonLink(student);
-				for (int i = 0; i < marks.length; i++) {
-					count++;
-					if(marks[i] != null)
-						complete++;
+		if (works != null && works.count() > 0) {
+			Enumeration<Work> enu = works.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Work work = (Work) enu.nextElement();
+				if (BigDecimal.ZERO.compareTo(work.weight()) == 0)
+					continue;
+				BigDecimal integral = work.integralForStudent(student);
+				if (integral == null && work.type().intValue() == Work.OPTIONAL)
+					continue;
+				double weight = work.weight().doubleValue();
+				weightSum += weight;
+				if (integral != null) {
+					integralSum += (weight * integral.doubleValue());
+					Mark[] marks = work.forPersonLink(student);
+					for (int i = 0; i < marks.length; i++) {
+						count++;
+						if (marks[i] != null)
+							complete++;
+					}
+				} else {
+					count += work.criterMask().count();
 				}
-			} else {
-				count += work.criterMask().count();
 			}
 		}
 		double integral = integralSum / weightSum;

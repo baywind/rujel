@@ -40,7 +40,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
 import net.rujel.auth.AccessHandler;
-import net.rujel.auth.UseAccess;
+import net.rujel.auth.ReadAccess;
 import net.rujel.auth.UserPresentation;
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.*;
@@ -54,12 +54,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 
 	protected EduCourse _course;
 	protected NSArray _periods;
-	protected NSMutableDictionary _usagesForPerTypes;
 	protected NSMutableDictionary _prognosesMatrix;
-	public EduPeriod periodItem;
+	public AutoItog periodItem;
 	protected Student _student;
 	protected NSDictionary _prognosesForStudent;
-	//protected EduPeriod _forcedPeriod;
 	protected NSMutableDictionary _courseTimeouts;
 
 	public PrognosesAddOn(WOSession ses) {
@@ -77,7 +75,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		else {
 			try {
 				int lvl = user.accessLevel("Prognosis");
-				_access = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
+				_access = new ImmutableNamedFlags(lvl,ReadAccess.accessKeys);
 			}  catch (AccessHandler.UnlistedModuleException e) {
 				_access = DegenerateFlags.ALL_TRUE;
 			}
@@ -92,7 +90,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		else {
 			try {
 				int lvl = user.accessLevel("StudentTimeout");
-				_accessTimeout = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
+				_accessTimeout = new ImmutableNamedFlags(lvl,ReadAccess.accessKeys);
 			}  catch (AccessHandler.UnlistedModuleException e) {
 				_accessTimeout = DegenerateFlags.ALL_TRUE;
 			}
@@ -106,7 +104,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		else {
 			try {
 				int lvl = user.accessLevel("CourseTimeout");
-				_accessCourseTimeout = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
+				_accessCourseTimeout = new ImmutableNamedFlags(lvl,ReadAccess.accessKeys);
 			}  catch (AccessHandler.UnlistedModuleException e) {
 				_accessCourseTimeout = DegenerateFlags.ALL_TRUE;
 			}
@@ -120,8 +118,6 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		_course = null;
 		_prognosesMatrix = null;
 		_courseTimeouts = null;
-		//_forcedPeriod = null;
-		_usagesForPerTypes = null;
 		_student = null;
 		_prognosesForStudent = null;
 		_timeout = null;
@@ -138,7 +134,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 
 	public void setCourse(EduCourse newCourse, NSTimestamp date) {
 		if(newCourse == _course) {
-			listPeriodsForDate(date);
+			_periods = AutoItog.currentAutoItogsForCourse(_course, date);
 			return;
 		}
 		reset();
@@ -146,47 +142,18 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			return;
 		}
 		_course = newCourse;
-/*		if(_forcedPeriod != null) {
-			_forcedPeriod = (EduPeriod)EOUtilities.localInstanceOfObject(
-					_course.editingContext(), _forcedPeriod);
-		}
-*/		NSArray pertypes = PeriodType.periodTypesForCourse(_course);
-		NSMutableArray result = new NSMutableArray();
-		_usagesForPerTypes = new NSMutableDictionary();
-		_courseTimeouts = new NSMutableDictionary();
-		Enumeration enu = pertypes.objectEnumerator();
+		_periods = AutoItog.currentAutoItogsForCourse(_course, date);
+		Enumeration enu = _periods.objectEnumerator();
 		while (enu.hasMoreElements()) {
-			PeriodType type = (PeriodType) enu.nextElement();
-			PrognosUsage usage = PrognosUsage.prognosUsage(_course, type);
-			if(usage == null || !usage.namedFlags().flagForKey("active"))
-				continue;
-			_usagesForPerTypes.setObjectForKey(usage, type);
-			EduPeriod eduPeriod = type.currentPeriod(date);
-			if(eduPeriod == null)
-				continue;
-			result.addObject(eduPeriod);
-			CourseTimeout co = CourseTimeout.getTimeoutForCourseAndPeriod(_course, eduPeriod);
-			_courseTimeouts.setObjectForKey((co==null)?NSKeyValueCoding.NullValue:co, eduPeriod);
+			AutoItog ai = (AutoItog) enu.nextElement();
+			CourseTimeout co = CourseTimeout.getTimeoutForCourseAndPeriod(_course, 
+					ai.itogContainer());
+			_courseTimeouts.setObjectForKey((co==null)?NSKeyValueCoding.NullValue:
+							co, ai.itogContainer());
 		}
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduPeriod.sorter);
-		_periods = result.immutableClone();
 		currDate = date;
 	}
 
-/*	public void setEduPeriod(Period period) {
-		if(period instanceof EduPeriod) {
-			if(_course != null)
-				_forcedPeriod = (EduPeriod)EOUtilities.localInstanceOfObject(_course.editingContext(), (EduPeriod)period);
-			else
-				_forcedPeriod = (EduPeriod)period;
-		} else {
-			_forcedPeriod = null;
-			if(period != null && _course != null && _periods != null) {
-				listPeriodsForDate(new NSTimestamp(period.end()));
-			}
-		}
-	}
-*/
 	public NSArray periods() {
 		//if(_forcedPeriod == null)
 			return _periods;
@@ -194,50 +161,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		//	return new NSArray(_forcedPeriod);
 	}
 
-	public PrognosUsage usage() {
-		if(_usagesForPerTypes == null || periodItem == null)
-			return null;
-		return (PrognosUsage)_usagesForPerTypes.objectForKey(periodItem.periodType());
-	}
-
 	protected NSTimestamp currDate;
-	protected void listPeriodsForDate(NSTimestamp date) {
-		if(date.equals(currDate))
-			return;
-		NSMutableArray result = new NSMutableArray();
-		boolean justUpdate = (_periods != null && 
-				_periods.count() == _usagesForPerTypes.count());
-
-		Enumeration enu = (justUpdate)?_periods.objectEnumerator()
-				:_usagesForPerTypes.keyEnumerator();
-		PeriodType type = null;
-		while (enu.hasMoreElements()) {
-			EduPeriod eduPeriod = (justUpdate)?(EduPeriod)enu.nextElement():null;
-			if(!justUpdate || !eduPeriod.contains(date)) {
-				type = (justUpdate)?eduPeriod.periodType()
-						:(PeriodType)enu.nextElement();
-				eduPeriod = type.currentPeriod(date);
-				if(eduPeriod == null)
-					continue;
-				CourseTimeout co = CourseTimeout.getTimeoutForCourseAndPeriod(_course, eduPeriod);
-				_courseTimeouts.setObjectForKey((co==null)?NSKeyValueCoding.NullValue:co, eduPeriod);
-			}
-			result.addObject(eduPeriod);
-		}
-		if(type == null)
-			return;
-		periodItem = null;
-		_prognosesMatrix = null;
-		//_courseTimeouts = null;
-		_student = null;
-		_prognosesForStudent = null;
-		_timeout = null;
-		_prognosis = null;
-
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduPeriod.sorter);
-		_periods = result.immutableClone();
-		currDate = date;
-	}
 
 	protected Prognosis _prognosis;
 	public Prognosis prognosis() {
@@ -253,21 +177,17 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			_prognosesMatrix = new NSMutableDictionary();
 			Enumeration enu = _periods.objectEnumerator();
 			while (enu.hasMoreElements()) {
-				EduPeriod eduPeriod = (EduPeriod) enu.nextElement();
+				AutoItog eduPeriod = (AutoItog) enu.nextElement();
 				EOEditingContext ec = _course.editingContext();
-				PrognosUsage usage = (PrognosUsage)_usagesForPerTypes.objectForKey(eduPeriod.periodType());
-				if(usage == null)
-					continue;
 				NSDictionary dict = new NSDictionary(
 						new Object[] {_course,eduPeriod},
-						new String[] {"eduCourse","eduPeriod"});
+						new String[] {"eduCourse","autoItog"});
 				NSArray prognoses = EOUtilities.objectsMatchingValues(ec, "Prognosis", dict);
 				if(prognoses == null || prognoses.count() == 0)
 					continue;
 				Enumeration penu = prognoses.objectEnumerator();
 				while (penu.hasMoreElements()) {
 					Prognosis cpr = (Prognosis) penu.nextElement();
-					cpr._setPrognosUsage(usage);
 					Student student = cpr.student();
 					NSMutableDictionary forStudent = (NSMutableDictionary)
 					_prognosesMatrix.objectForKey(student);
@@ -286,18 +206,6 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(_prognosis != null)
 				return _prognosis;
 		} // _prognosesMatrix == null
-		
-/*		if(periodItem == _forcedPeriod && !_periods.contains(_forcedPeriod)) {
-			PerPersonLink forPeriod = (PerPersonLink)_prognosesMatrix.objectForKey(_forcedPeriod);
-			if(forPeriod == null) {
-				forPeriod = Prognosis.prognosesForCourseAndPeriod(_course, _forcedPeriod);
-				if(forPeriod != null)
-					_prognosesMatrix.setObjectForKey(forPeriod, _forcedPeriod);
-			}
-			_prognosis = (forPeriod==null)?null:(Prognosis)forPeriod.forPersonLink(_student);
-			return _prognosis;
-		}
-*/
 		_prognosesForStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
 		if(_prognosesForStudent == null)
 			_prognosesForStudent = NSDictionary.EmptyDictionary;
@@ -312,11 +220,11 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		_prognosis = prognosis;
 		if(_prognosesMatrix == null)
 			return;
-		if(prognosis != null && !_periods.contains(prognosis.eduPeriod())) {
-			PerPersonLink forPeriod = (PerPersonLink) _prognosesMatrix.objectForKey(prognosis.eduPeriod());
+		if(prognosis != null && !_periods.contains(prognosis.autoItog())) {
+			PerPersonLink forPeriod = (PerPersonLink) _prognosesMatrix.objectForKey(prognosis.autoItog());
 			if(forPeriod == null || forPeriod.forPersonLink(prognosis.student()) == prognosis)
 				return;
-			_prognosesMatrix.removeObjectForKey(prognosis.eduPeriod());
+			_prognosesMatrix.removeObjectForKey(prognosis.autoItog());
 			return;
 		}
 		NSMutableDictionary forStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
@@ -331,10 +239,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(forStudent != null) {
 				forStudent.removeObjectForKey(periodItem);
 			}
-/*			if (_forcedPeriod != null) {
-				_prognosesMatrix.removeObjectForKey(_forcedPeriod);
-			}
-*/		}
+		}
 	}
 	
 	public void setStudent(Student student) {
@@ -363,7 +268,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		timeOuts = !timeOuts;
 	}
 
-	public void setPeriodItem(EduPeriod period) {
+	public void setPeriodItem(AutoItog period) {
 		_prognosis = null;
 		_timeout = null;
 		inTimeout = false;
@@ -375,19 +280,14 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	public boolean showTimeout() {
 		if(!timeOuts)
 			return false;
-		/*		if(!accessTimeout().flagForKey("read"))
-			return false;*/
-		PrognosUsage usage = usage();
-		if(usage == null)
-			return false;
-		inTimeout = (!usage.namedFlags().flagForKey("denyTimeout"));
+		inTimeout = (periodItem.namedFlags().flagForKey("denyTimeout"));
 		return inTimeout;
 	}
 
 	public CourseTimeout courseTimeout() {
 		Object result = _courseTimeouts.objectForKey(periodItem);
 		if(result==null) { // && _forcedPeriod != null) {
-			result = CourseTimeout.getTimeoutForCourseAndPeriod(_course, periodItem);
+			result = CourseTimeout.getTimeoutForCourseAndPeriod(_course, periodItem.itogContainer());
 			if(result==null)
 				result = NSKeyValueCoding.NullValue;
 			_courseTimeouts.setObjectForKey(result, periodItem);
@@ -397,14 +297,15 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 
 	public void setCourseTimeout(CourseTimeout timeout) {
 		if(timeout==null) {
-			Enumeration enu = (periodItem == null)?_courseTimeouts.keyEnumerator():new NSArray(periodItem).objectEnumerator();
+			Enumeration enu = (periodItem == null)?_courseTimeouts.keyEnumerator():
+				new NSArray(periodItem.itogContainer()).objectEnumerator();
 			while (enu.hasMoreElements()) {
-				EduPeriod eduPeriod = (EduPeriod) enu.nextElement();
-				CourseTimeout co = CourseTimeout.getTimeoutForCourseAndPeriod(_course, eduPeriod);
+				ItogContainer eduPeriod = (ItogContainer) enu.nextElement();
+				CourseTimeout co = CourseTimeout.getTimeoutForCourseAndPeriod(_course,eduPeriod);
 				_courseTimeouts.setObjectForKey((co==null)?NSKeyValueCoding.NullValue:co, eduPeriod);
 			}
 		} else {
-			_courseTimeouts.setObjectForKey(timeout, timeout.eduPeriod());
+			_courseTimeouts.setObjectForKey(timeout, timeout.itogContainer());
 		}
 	}
 
@@ -468,11 +369,11 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		if(prognosis()==null)
 			return null;
 		NSTimestamp fireDate = prognosis().fireDate();
-		if(fireDate == null || fireDate.equals(periodItem.end()))
+		if(fireDate == null || fireDate.equals(periodItem.fireDate()))
 			return null;
 		CourseTimeout courseTimeout = courseTimeout();
 		String result = MyUtility.dateFormat().format(fireDate);
-		if(courseTimeout != null && fireDate.equals(courseTimeout.dueDate())) {
+		if(courseTimeout != null && fireDate.equals(courseTimeout.fireDate())) {
 			result = "<span class=\"dimtext\">" + result + "</span>";
 		}
 		return result;
@@ -480,10 +381,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 
 	public void calculate() {
 		EOEditingContext ec = _course.editingContext();
-		PrognosUsage usage = usage();
-		if(usage == null)
-			return;
-		Calculator calc = usage.calculator();
+		Calculator calc = periodItem.calculator();
 		if(calc == null)
 			return;
 		try {
@@ -492,7 +390,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			boolean um = (_prognosesMatrix!=null && _periods.containsObject(periodItem));
 			Enumeration enu = _course.groupList().objectEnumerator();
 			boolean ifArchive = (SettingsReader.boolForKeyPath("markarchive.Prognosis", false)
-					&& usage.namedFlags().flagForKey("manual"));
+					&& periodItem.namedFlags().flagForKey("manual"));
 			while (enu.hasMoreElements()) {
 				Student student = (Student) enu.nextElement();
 				NSMutableDictionary forStudent = (um)?(NSMutableDictionary)_prognosesMatrix.objectForKey(student):null;
@@ -501,7 +399,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 					//if(prognosis.fireDate() != null && prognosis.valueChanged())
 						prognosis.updateFireDate(courseTimeout());
 					if(ifArchive)
-						AutoItogModule.archivePrognosisChange(prognosis, usage);
+						AutoItogModule.archivePrognosisChange(prognosis);
 					if(um){
 						if(forStudent == null) {
 							forStudent = new NSMutableDictionary(prognosis,periodItem);
@@ -519,7 +417,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(!um && _prognosesMatrix != null && prognoses != null) {
 				_prognosesMatrix.setObjectForKey(prognoses, periodItem);
 			}
-			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(_course, periodItem);
+			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(_course,
+					periodItem.itogContainer());
 			if(grouping != null) {
 //				NSDictionary stats = PrognosesAddOn.statCourse(_course, prognoses.allValues());
 //				grouping.takeValueForKey(stats, "dict");
@@ -536,7 +435,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		ec.unlock();
 	}
 	
-	public static NSDictionary statCourse(EduCourse course, EduPeriod period) {
+	public static NSDictionary statCourse(EduCourse course, AutoItog period) {
 		NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period);
 		if(prognoses == null || prognoses.count() == 0)
 			return NSDictionary.EmptyDictionary;
@@ -577,7 +476,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		return result;
 	}
 	
-	public static EOEnterpriseObject getStatsGrouping (EduCourse course, EduPeriod period) {
+	public static EOEnterpriseObject getStatsGrouping (EduCourse course, ItogContainer period) {
 		EOEnterpriseObject grouping = null;
 		try {
 			Class descClass = Class.forName("net.rujel.stats.Description");

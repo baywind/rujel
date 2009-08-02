@@ -30,7 +30,6 @@
 package net.rujel.autoitog;
 
 import net.rujel.criterial.*;
-import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.interfaces.Student;
@@ -43,7 +42,7 @@ import com.webobjects.eocontrol.*;
 import java.math.*;
 import java.util.Enumeration;
 
-public class BachalaureatCalculator extends Calculator {
+public class BachalaureatCalculator extends WorkCalculator {
 	public static final BachalaureatCalculator sharedInstance = new BachalaureatCalculator();
 	
 //	protected Student _student;
@@ -80,7 +79,7 @@ public class BachalaureatCalculator extends Calculator {
 				continue;
 			if(critWeight != null && critWeight.intValue() == 0)
 				continue;
-			EOEnterpriseObject crit = mark.criterion();
+			Integer crit = mark.criterion();
 			if(crit == null)
 				continue;
 			if(mark.work().type().intValue() == Work.OPTIONAL) {
@@ -264,13 +263,13 @@ public class BachalaureatCalculator extends Calculator {
 	}*/
 	
 	
-	public PerPersonLink calculatePrognoses(EduCourse course, EduPeriod period) {
+	public PerPersonLink calculatePrognoses(EduCourse course, AutoItog period) {
 			//return prognosesForCourseAndPeriod(course,period);
 		//NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
 		//dict.setObjectForKey(course,"eduCourse");
 		EOEditingContext ec = course.editingContext();
 		
-		NSArray works = works(course, period);
+		NSArray works = period.relatedForCourse(course);//works(course, period);
 		if(works.count() == 0) {
 			return null;
 		}
@@ -356,13 +355,13 @@ public class BachalaureatCalculator extends Calculator {
 		//return progn;
 	}
 
-	public Prognosis calculateForStudent(Student student, EduCourse course, EduPeriod period) {
+	public Prognosis calculateForStudent(Student student, EduCourse course, AutoItog period) {
 /*		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
 		dict.setObjectForKey(course,"eduCourse");
 		dict.setObjectForKey(student,"student");*/
 		EOEditingContext ec = course.editingContext();
 		
-		NSArray works = works(course, period);
+		NSArray works = period.relatedForCourse(course);//works(course, period);
 		if(works.count() == 0) {
 			return null;
 		}
@@ -386,4 +385,5 @@ public class BachalaureatCalculator extends Calculator {
 		initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
 		return progn;
 	}
+
 }

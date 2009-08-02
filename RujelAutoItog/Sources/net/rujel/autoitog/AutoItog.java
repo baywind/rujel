@@ -40,6 +40,8 @@ import net.rujel.eduresults.ItogMark;
 import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
@@ -49,6 +51,8 @@ import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
 	protected static Logger logger = Logger.getLogger("rujel.autoitog");
+	public static final NSArray flagNames = new NSArray(new String[]
+	               {"active","manual","noTimeouts"});
 	
 	public static final NSArray sorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
@@ -136,6 +140,25 @@ public class AutoItog extends _AutoItog {
 		}
     	return result;
     }
+    
+    private NamedFlags _flags;
+    public NamedFlags namedFlags() {
+    	if(_flags==null) {
+    		_flags = new NamedFlags(flags().intValue(),flagNames);
+    		try{
+    		_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
+    		} catch (Exception e) {
+    			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
+						"Could not get syncMethod for AutoItog flags",e);
+			}
+    	}
+    	return _flags;
+    }
+
+    public void setNamedFlags(NamedFlags flags) {
+    	_flags = flags;
+    	setFlags(flags.toInteger());
+    }
 
     protected Calculator _calculator;
     public Calculator calculator() {
@@ -166,6 +189,13 @@ public class AutoItog extends _AutoItog {
 			}
 		}
     	return related.immutableClone();
+    }
+    
+    public boolean evening() {
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTime(fireTime());
+    	int eveningHour = SettingsReader.intForKeyPath("edu.eveningHour", 17);
+    	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
     }
 
     public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
