@@ -235,7 +235,7 @@ public class SettingsBase extends _SettingsBase {
 	public static int numericSettingForCourse(String key, EduCourse course, 
 			EOEditingContext ec, int defaultValue) {
 		EOEnterpriseObject eo = settingForCourse(key, course, ec);
-		if (eo==null)
+		if (eo==null || eo.valueForKey(NUMERIC_VALUE_KEY) == null)
 			return defaultValue;
 		return ((Integer)eo.valueForKey(NUMERIC_VALUE_KEY)).intValue();
 	}

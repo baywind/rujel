@@ -5,8 +5,8 @@ create database RujelStatic default character set utf8;
 create table RujelStatic.BASE_COURSE select * from BaseJournal.BASE_COURSE;
 alter table RujelStatic.BASE_COURSE
   MODIFY COLUMN `TEACHER` mediumint,
-  MODIFY COLUMN `EDU_YEAR` smallint NOT NULL;
-  ADD COLUMN `FLAGS` tinyint NOT NULL
+  MODIFY COLUMN `EDU_YEAR` smallint NOT NULL,
+  ADD COLUMN `FLAGS` tinyint NOT NULL,
   ADD PRIMARY KEY (`CR_ID`);
 
 create table RujelStatic.PRIMITIVE_EDU_CYCLE select * from BaseJournal.PRIMITIVE_EDU_CYCLE;
@@ -116,15 +116,15 @@ create table RujelYear2008.WORK_NOTE select * from Criterial.WORK_NOTE
   where WORK in (select W_ID FROM RujelYear2008.`WORK`);
 alter table RujelYear2008.WORK_NOTE ADD PRIMARY KEY (`WORK`,`STUDENT`);
 
-insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`NUM_VALUE`) values (1,'CriteriaSet',1);
+insert into RujelStatic.SETTINGS_BASE (`S_ID`,`SETTING_KEY`,`NUM_VALUE`) values (1,'CriteriaSet',1);
 
 create table RujelStatic.BORDER select * from Criterial.BORDER;
-alter table RujelStatic.BORDER 
-  DROP COLUMN `UPTO`,
-  ADD PRIMARY KEY (`B_ID`);
+alter table RujelStatic.BORDER ADD PRIMARY KEY (`B_ID`);
 
 create table RujelStatic.BORDER_SET select * from Criterial.BORDER_SET;
-alter table RujelStatic.BORDER_SET ADD PRIMARY KEY (`BS_ID`);
+alter table RujelStatic.BORDER_SET
+  DROP COLUMN `UPTO`,
+  ADD PRIMARY KEY (`BS_ID`);
 
 create table RujelStatic.CRIT_SET select * from Criterial.CRIT_SET;
 alter table RujelStatic.CRIT_SET ADD PRIMARY KEY (`CS_ID`);
@@ -168,7 +168,7 @@ create table RujelStatic.ITOG_COMMENT (
   PRIMARY KEY (`CONTAINER`,`CYCLE`,`STUDENT`)
 );
 
-insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 
+insert into RujelStatic.SETTINGS_BASE (`S_ID`,`SETTING_KEY`,`TEXT_VALUE`) 
 	values (2,'ItogType','Базовый');
 
 insert into RujelStatic.SETTING_BY_COURSE (SC_ID, SETTINGS, COURSE, EDU_GROUP, EDU_YEAR, TEXT_VALUE)
@@ -263,18 +263,18 @@ create table RujelYear2007.PERIOD_LIST (
   PL_ID smallint NOT NULL,
   PERIOD smallint NOT NULL,
   LIST_NAME varchar(28) NOT NULL,
-  PRIMARY KEY (`L_ID`)
+  PRIMARY KEY (`PL_ID`)
 );
 
 create table RujelYear2008.PERIOD_LIST (
   PL_ID smallint NOT NULL,
   PERIOD smallint NOT NULL,
   LIST_NAME varchar(28) NOT NULL,
-  PRIMARY KEY (`L_ID`)
+  PRIMARY KEY (`PL_ID`)
 );
 
-insert into RujelStatic.SETTINGS_BASE (`S_ID`,`KEY`,`TEXT_VALUE`) 
-	values (3,'EduPeriod','Базовый');
+insert into RujelStatic.SETTINGS_BASE (`S_ID`,`SETTING_KEY`,`TEXT_VALUE`) 
+  values (3,'EduPeriod','Базовый');
 
 insert into RujelYear2007.PERIOD_LIST (PL_ID,PERIOD,LIST_NAME)
 select ID_PER, ID_PER,'Базовый' FROM EduResults.EDU_PERIOD where PER_TYPE = 3 AND EDU_YEAR = 2007;

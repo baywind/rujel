@@ -108,6 +108,7 @@ TotalField : WOTextField {
   value = totalHours;
   numberformat = "0";
   maxlength = 3;
+  disabled = session.readAccess._edit.PlanDetail;
   style = "width:3ex;float:left;text-align:center;";
   onchange = "checkChanges(this);";
   onkeypress = "return isNumberInput(event,false);";
@@ -116,6 +117,7 @@ TotalField : WOTextField {
 WeeklyField : WOTextField {
   value = weeklyHours;
   maxlength = 2;
+  disabled = session.readAccess._edit.PlanDetail;
   style = "width:1.6ex;float:right;text-align:center;";
   onchange = "checkChanges(this);";
   onkeypress = "return isNumberInput(event,false);";
