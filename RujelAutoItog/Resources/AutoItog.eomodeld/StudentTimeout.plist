@@ -21,7 +21,7 @@
     attributesUsedForLocking = (studentID, reason, flags, courseID, fireDate, itogID); 
     className = "net.rujel.autoitog.StudentTimeout"; 
     classProperties = (fireDate, flags, itogContainer, reason); 
-    externalName = TIMEOUT; 
+    externalName = "STUDENT_TIMEOUT"; 
     fetchSpecificationDictionary = {}; 
     name = StudentTimeout; 
     primaryKeyAttributes = (tID); 

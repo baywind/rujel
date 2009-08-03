@@ -375,3 +375,168 @@ update RujelStatic.HOLIDAY_TYPE set BEGIN_MONTH = BEGIN_MONTH + if(BEGIN_MONTH <
 
 insert into RujelYear2008.HOLIDAY (H_ID, TYPE, BEGIN, END)
   select R_ID, R_ID, BEGIN, END from Curriculum.reason where FLAGS = 1 and BEGIN != '2008-09-01';
+
+-- AutoItog
+
+CREATE TABLE  `RujelYear2007`.`AUTOITOG` (
+  `AI_ID` smallint NOT NULL,
+  `LIST_NAME` varchar(28) NOT NULL,
+  `ITOG_CONTANER` smallint NOT NULL,
+  `FIRE_DATE` date NOT NULL,
+  `FIRE_TIME` time DEFAULT NULL,
+  `CALCULATOR_NAME` varchar(255),
+  `BORDER_SET` smallint,
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`AI_ID`)
+);
+
+CREATE TABLE  `RujelYear2007`.`BONUS` (
+  `B_ID` mediumint NOT NULL,
+  `VALUE` decimal(4,4) NOT NULL,
+  `MARK` varchar(5) NOT NULL,
+  `REASON` varchar(255),
+  PRIMARY KEY (`B_ID`)
+);
+
+CREATE TABLE `RujelYear2007`.`COURSE_TIMEOUT` (
+  `CT_ID` mediumint NOT NULL,
+  `ITOG` smallint NOT NULL,
+  `COURSE` int,
+  `EDU_GROUP` int,
+  `CYCLE` mediumint,
+  `TEACHER` int,
+  `FIRE_DATE` date NOT NULL,
+  `REASON` varchar(255),
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`CT_ID`)
+ );
+
+CREATE TABLE  `RujelYear2007`.`ITOG_RELATED` (
+  `R_ID` int NOT NULL,
+  `COURSE` int NOT NULL,
+  `ITOG` smallint NOT NULL,
+  `REL_KEY` int NOT NULL,
+  PRIMARY KEY (`R_ID`)
+);
+
+CREATE TABLE `RujelYear2007`.`PROGNOSIS` (
+  `ITOG` smallint NOT NULL,
+  `COURSE` int NOT NULL,
+  `STUDENT` int NOT NULL,
+  `MARK` varchar(5),
+  `VALUE` decimal(5,4) NOT NULL,
+  `COMPLETE` decimal(5,4) NOT NULL,
+  `FIRE_DATE` date,
+  `BONUS` mediumint,
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`ITOG`,`COURSE`,`STUDENT`)
+);
+
+CREATE TABLE `RujelYear2007`.`STUDENT_TIMEOUT` (
+  `T_ID` mediumint NOT NULL,
+  `ITOG` smallint NOT NULL,
+  `STUDENT` int NOT NULL,
+  `COURSE` int,
+  `FIRE_DATE` date NOT NULL,
+  `REASON` varchar(255),
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`T_ID`)
+);
+
+
+CREATE TABLE  `RujelYear2008`.`AUTOITOG` (
+  `AI_ID` smallint NOT NULL,
+  `LIST_NAME` varchar(28) NOT NULL,
+  `ITOG_CONTANER` smallint NOT NULL,
+  `FIRE_DATE` date NOT NULL,
+  `FIRE_TIME` time DEFAULT NULL,
+  `CALCULATOR_NAME` varchar(255),
+  `BORDER_SET` smallint,
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`AI_ID`)
+);
+
+CREATE TABLE  `RujelYear2008`.`BONUS` (
+  `B_ID` mediumint NOT NULL,
+  `VALUE` decimal(4,4) NOT NULL,
+  `MARK` varchar(5) NOT NULL,
+  `REASON` varchar(255),
+  PRIMARY KEY (`B_ID`)
+);
+
+CREATE TABLE `RujelYear2008`.`COURSE_TIMEOUT` (
+  `CT_ID` mediumint NOT NULL,
+  `ITOG` smallint NOT NULL,
+  `COURSE` int,
+  `EDU_GROUP` int,
+  `CYCLE` mediumint,
+  `TEACHER` int,
+  `FIRE_DATE` date NOT NULL,
+  `REASON` varchar(255),
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`CT_ID`)
+ );
+
+CREATE TABLE  `RujelYear2008`.`ITOG_RELATED` (
+  `R_ID` int NOT NULL,
+  `COURSE` int NOT NULL,
+  `ITOG` smallint NOT NULL,
+  `REL_KEY` int NOT NULL,
+  PRIMARY KEY (`R_ID`)
+);
+
+CREATE TABLE `RujelYear2008`.`PROGNOSIS` (
+  `ITOG` smallint NOT NULL,
+  `COURSE` int NOT NULL,
+  `STUDENT` int NOT NULL,
+  `MARK` varchar(5),
+  `VALUE` decimal(5,4) NOT NULL,
+  `COMPLETE` decimal(5,4) NOT NULL,
+  `FIRE_DATE` date,
+  `BONUS` mediumint,
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`ITOG`,`COURSE`,`STUDENT`)
+);
+
+CREATE TABLE `RujelYear2008`.`STUDENT_TIMEOUT` (
+  `T_ID` mediumint NOT NULL,
+  `ITOG` smallint NOT NULL,
+  `STUDENT` int NOT NULL,
+  `COURSE` int,
+  `FIRE_DATE` date NOT NULL,
+  `REASON` varchar(255),
+  `FLAGS` tinyint NOT NULL,
+  PRIMARY KEY (`T_ID`)
+);
+
+
+create table RujelYear2007.MARK_ARCHIVE select * from MarkArchive.MARK_ARCHIVE;
+alter table RujelYear2007.MARK_ARCHIVE ADD PRIMARY KEY (`ID`);
+
+create table RujelYear2007.USED_ENTITY select * from MarkArchive.USED_ENTITY;
+alter table RujelYear2007.USED_ENTITY ADD PRIMARY KEY (`ENT_ID`);
+
+create table RujelYear2008.MARK_ARCHIVE select * from MarkArchive.MARK_ARCHIVE;
+alter table RujelYear2008.MARK_ARCHIVE ADD PRIMARY KEY (`ID`);
+
+create table RujelYear2008.USED_ENTITY select * from MarkArchive.USED_ENTITY;
+alter table RujelYear2008.USED_ENTITY ADD PRIMARY KEY (`ENT_ID`);
+
+
+create table RujelYear2007.DESCRIPTION select * from Stats.DESCRIPTION;
+alter table RujelYear2007.DESCRIPTION ADD PRIMARY KEY (`D_ID`);
+
+create table RujelYear2007.GROUPING select * from Stats.GROUPING;
+alter table RujelYear2007.GROUPING ADD PRIMARY KEY (`G_ID`);
+
+create table RujelYear2007.ENTRY select * from Stats.ENTRY;
+alter table RujelYear2007.ENTRY ADD PRIMARY KEY (`E_ID`);
+
+create table RujelYear2008.DESCRIPTION select * from Stats.DESCRIPTION;
+alter table RujelYear2008.DESCRIPTION ADD PRIMARY KEY (`D_ID`);
+
+create table RujelYear2008.GROUPING select * from Stats.GROUPING;
+alter table RujelYear2008.GROUPING ADD PRIMARY KEY (`G_ID`);
+
+create table RujelYear2008.ENTRY select * from Stats.ENTRY;
+alter table RujelYear2008.ENTRY ADD PRIMARY KEY (`E_ID`);

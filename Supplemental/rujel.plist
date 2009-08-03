@@ -624,16 +624,6 @@
 			<key>dbName</key>
 			<string>DemoSho</string>
 		</dict>
-		<key>AccessStore</key>
-		<dict>
-			<key>skip</key>
-			<string>true</string>
-		</dict>
-		<key>PrimitiveTeachers</key>
-		<dict>
-			<key>skip</key>
-			<string>true</string>
-		</dict>
 		<key>AutoItog</key>
 		<dict>
 			<key>dbName</key>
@@ -681,12 +671,15 @@
 			<key>dbName</key>
 			<string>RujelStatic</string>
 		</dict>
-		<key>_MarkArchive</key>
+		<key>MarkArchive</key>
 		<dict>
-			<key>untagged</key>
-			<string>MarkArchive</string>
 			<key>dbName</key>
-			<string>MarkArchive%s</string>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>Stats</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
 		</dict>
 		<key>serverURL</key>
 		<string>jdbc:mysql://127.0.0.1</string>

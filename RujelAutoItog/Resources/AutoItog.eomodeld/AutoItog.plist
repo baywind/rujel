@@ -2,7 +2,7 @@
     attributes = (
         {
             allowsNull = Y; 
-            columnName = "BSET_ID"; 
+            columnName = "BORDER_SET"; 
             name = bSetID; 
             prototypeName = short; 
         }, 
