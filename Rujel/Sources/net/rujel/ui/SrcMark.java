@@ -438,8 +438,8 @@ public class SrcMark extends WOComponent {
 					NSNotificationCenter.defaultCenter().postNotification(net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey("user"),new NSDictionary(aCourse,"EO"));
 				} else { //log change
 					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
-					if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
-						level = WOLogLevel.OWNED_EDITING;
+//					if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
+//						level = WOLogLevel.OWNED_EDITING;
 					logger.logp(level,"SrcMark","save","Saved changes in course",new Object[] {session(),aCourse});
 				}
 			} catch (NSValidation.ValidationException vex) {
@@ -465,11 +465,21 @@ public class SrcMark extends WOComponent {
 
     public WOComponent delete() {
 		ec.lock();
+		session().setObjectForKey(aCourse, "deleteCourse");
+		NSArray modules = (NSArray)session().valueForKeyPath("modules.deleteCourse");
+		if(modules != null && modules.count() > 0) {
+			logger.log(WOLogLevel.INFO,"Could not delete EduCourse",
+					new Object[] {session(),aCourse,modules});
+			session().removeObjectForKey("deleteCourse");
+			ec.unlock();
+			return null;
+		}
+		session().removeObjectForKey("deleteCourse");
 		WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 		if(aCourse.lessons().count() > 0)
 			level = WOLogLevel.MASS_EDITING;
-		else if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
-			level = WOLogLevel.OWNED_EDITING;
+//		else if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
+//			level = WOLogLevel.OWNED_EDITING;
  		try {
 			//EOGlobalID id = ec.globalIDForObject(aCourse);
 			if(newCourse)

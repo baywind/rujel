@@ -49,6 +49,7 @@
             ownsDestination = Y; 
         }, 
         {
+            deleteRule = EODeleteRuleDeny; 
             destination = BaseLesson; 
             isToMany = Y; 
             joinSemantic = EOInnerJoin; 

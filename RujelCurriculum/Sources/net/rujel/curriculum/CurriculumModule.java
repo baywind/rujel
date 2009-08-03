@@ -34,6 +34,7 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
@@ -68,6 +69,8 @@ public class CurriculumModule {
 		} else if(obj.equals("courseComplete")) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.courseComplete");
+		} else if("deleteCourse".equals(obj)) {
+			return deleteCourse(ctx);
 		}
 		return null;
 	}
@@ -197,5 +200,18 @@ public class CurriculumModule {
 		};
 		MyUtility.scheduleTaskOnTime(task,checkTime);
 		return null;
+	}
+
+	public static Object deleteCourse(WOContext ctx) {
+		EduCourse course = (EduCourse)ctx.session().objectForKey("deleteCourse");
+		EOEditingContext ec = course.editingContext();
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue
+					(ec, Variation.ENTITY_NAME, "course", course);
+		if(list == null || list.count() == 0)
+			return null;
+		String message = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.messages.courseHasVariations");
+		ctx.session().takeValueForKey(message, "message");
+		return message;
 	}
 }

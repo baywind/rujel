@@ -81,6 +81,8 @@
 		<string>В работе есть оценки по отсутствующим критериям:</string>
 		<key>noCriteriaWithCriteria</key>
 		<string>В работе должны быть либо критериальные оценки либо без критериев, но не одновременно.</string>
+		<key>courseHasWorks</key>
+		<string>В этом курсе описаны работы</string>
 	</dict>
 	<key>worksTab</key>
 	<dict>

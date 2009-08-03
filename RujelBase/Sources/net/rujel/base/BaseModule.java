@@ -29,6 +29,7 @@
 
 package net.rujel.base;
 
+import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.PlistReader;
 
 import com.webobjects.appserver.WOApplication;
@@ -51,11 +52,23 @@ public class BaseModule {
 			NSDictionary reportSettings = (NSDictionary)WOApplication.application().
 					valueForKeyPath("strings.RujelBase_Base.reportSettings");
 			return PlistReader.cloneDictionary(reportSettings, true);
+		} else if("deleteCourse".equals(obj)) {
+			return deleteCourse(ctx);
 		}
 		return null;
 	}
 
 	public static void init() {
 		;
+	}
+	
+	public static Object deleteCourse(WOContext ctx) {
+		EduCourse course = (EduCourse)ctx.session().objectForKey("deleteCourse");
+		if(course.lessons() == null || course.lessons().count() == 0)
+			return null;
+		String message = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelBase_Base.courseHasLessons");
+		ctx.session().takeValueForKey(message, "message");
+		return message;
 	}
 }

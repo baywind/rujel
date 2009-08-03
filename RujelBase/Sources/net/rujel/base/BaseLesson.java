@@ -260,6 +260,8 @@ public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme
 	}
 	
 	public NSTimestamp validateDate(Object aDate) throws NSValidation.ValidationException {
+		if(course() == null)
+			return null;
 		return MyUtility.validateDateInEduYear(aDate,course().eduYear(),DATE_KEY);
 	}
 }

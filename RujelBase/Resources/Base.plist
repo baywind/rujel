@@ -89,6 +89,8 @@
 	<string>Указанная дата не попадает в текущий диапазон. &lt;br/&gt; Перейдите на соответствующую закладку (справа) и попробуйте еще раз.</string>
 	<key>notInEduYear</key>
 	<string>Указанная дата не попадает в учебный год</string>
+	<key>courseHasLessons</key>
+	<string>В этом курсе описаны уроки</string>
 	<key>Ticker</key>
 	<dict>
 		<key>selection</key>

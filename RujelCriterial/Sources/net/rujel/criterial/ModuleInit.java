@@ -89,6 +89,8 @@ public class ModuleInit {
 		} else if ("courseComplete".equals(obj)) {
 			return WOApplication.application().
 					valueForKeyPath("strings.RujelCriterial_Strings.courseComplete");
+		} else if("deleteCourse".equals(obj)) {
+			return deleteCourse(ctx);
 		}
 		return null;
 	}
@@ -327,5 +329,17 @@ public class ModuleInit {
 		tab.takeValueForKey(found, "list");
 		return result;
 	}
-}
 
+	public static Object deleteCourse(WOContext ctx) {
+		EduCourse course = (EduCourse)ctx.session().objectForKey("deleteCourse");
+		EOEditingContext ec = course.editingContext();
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue
+					(ec, Work.ENTITY_NAME, "course", course);
+		if(list == null || list.count() == 0)
+			return null;
+		String message = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelCriterial_Strings.messages.courseHasWorks");
+		ctx.session().takeValueForKey(message, "message");
+		return message;
+	}
+}

@@ -66,7 +66,8 @@ TeacherCell : OnClickContainer {
   elementName = "td";
   invokeAction = selectTeacher;
   onclick = session.ajaxPopup;
-  disabled = session.readAccess._edit.EduCourse;
+  disabled = courseAccess._edit;
+  title = rowItem.course.comment;
 }
 
 Teacher : WOString {

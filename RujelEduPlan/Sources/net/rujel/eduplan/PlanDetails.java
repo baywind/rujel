@@ -32,10 +32,8 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
-import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduGroup;
-import net.rujel.interfaces.Person;
-import net.rujel.interfaces.Teacher;
+import net.rujel.interfaces.*;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -525,6 +523,14 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		return Person.Utility.fullName(teacher, true, 2, 1, 1);
 	}
 	
+	public NamedFlags courseAccess() {
+		if(rowItem == null || rowItem.valueForKey("course") == null)
+			return (NamedFlags)session().valueForKeyPath(
+					"readAccess.FLAGS." + EduCourse.entityName);
+		else
+			return (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.rowItem.course");
+	}
+	
 	public WOActionResults selectTeacher() {
 		WOComponent selector = pageWithName("SelectorPopup");
 		selector.takeValueForKey(context().page(), "returnPage");
@@ -544,7 +550,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			dict.takeValueForKeyPath(null, "presenterBindings.forcedList");
 		}
 		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
-		dict.takeValueForKeyPath(Boolean.TRUE, "presenterBindings.allowDelete");
+		dict.takeValueForKeyPath(courseAccess().valueForKey("delete"),
+				"presenterBindings.allowDelete");
 		selector.takeValueForKey(dict, "dict");
 		return selector;
 	}
@@ -554,35 +561,55 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		protected EOEditingContext ec;
 		protected PlanCycle cycle;
 		protected WOSession ses;
-		
-	public TeacherGetter (NSMutableDictionary rowItem, EOEditingContext editingContext, 
-			PlanCycle eduCycle, WOSession session) {
-		super();
-		row = rowItem;
-		ec = editingContext;
-		cycle = eduCycle;
-		ses = session;
-	}
-		
-	public void setTeacher(Object teacher) {
-		ec.lock();
-		try {
-			EduCourse course = (EduCourse)row.valueForKey("course");
-			String message = null;
-			if(course == null) {
-				course = (EduCourse)EOUtilities.createAndInsertInstance(ec,
-						EduCourse.entityName);
-				course.takeValueForKey(ses.valueForKey("eduYear"), "eduYear");
-				course.addObjectToBothSidesOfRelationshipWithKey(cycle, "cycle");
-				course.takeValueForKey(row.valueForKey("eduGroup"), "eduGroup");
-				if(teacher instanceof Teacher)
-					course.setTeacher((Teacher)teacher);
-				message = "Created EduCourse";
-				row.takeValueForKey(course, "course");
-				row.takeValueForKey("green", "styleClass");
-			} else {
-				if(teacher == null) {
-					ec.deleteObject(course);
+
+		public TeacherGetter (NSMutableDictionary rowItem, EOEditingContext editingContext, 
+				PlanCycle eduCycle, WOSession session) {
+			super();
+			row = rowItem;
+			ec = editingContext;
+			cycle = eduCycle;
+			ses = session;
+		}
+
+		public void setTeacher(Object teacher) {
+			ec.lock();
+			try {
+				EduCourse course = (EduCourse)row.valueForKey("course");
+				String message = null;
+				if(course == null) {
+					course = (EduCourse)EOUtilities.createAndInsertInstance(ec,
+							EduCourse.entityName);
+					course.takeValueForKey(ses.valueForKey("eduYear"), "eduYear");
+					course.addObjectToBothSidesOfRelationshipWithKey(cycle, "cycle");
+					course.takeValueForKey(row.valueForKey("eduGroup"), "eduGroup");
+					if(teacher instanceof Teacher)
+						course.setTeacher((Teacher)teacher);
+					message = "Created EduCourse";
+				} else {
+					if(teacher == null) {
+						ses.setObjectForKey(course, "deleteCourse");
+						NSArray modules = (NSArray)ses.valueForKeyPath("modules.deleteCourse");
+						if(modules != null && modules.count() > 0) {
+							EduPlan.logger.log(WOLogLevel.INFO,"Could not delete EduCourse",
+									new Object[] {ses,course,modules});
+							ses.removeObjectForKey("deleteCourse");
+							return;
+						}
+						ses.removeObjectForKey("deleteCourse");
+						ec.deleteObject(course);
+						message = "Deleted EduCourse: " + ec.globalIDForObject(course);
+					} else {
+						if(teacher == NullValue)
+							teacher = null;
+						course.takeValueForKey(teacher, "teacher");
+						message = "Changed teacher on EduCourse";
+					}
+				}
+				ec.saveChanges();
+				if(row.valueForKey("course") != course) {
+					row.takeValueForKey(course, "course");
+					row.takeValueForKey("green", "styleClass");
+				} else if(teacher == null) {
 					NSDictionary details = (NSDictionary)row.valueForKey("details");
 					if(details != null) {
 						Enumeration enu = details.objectEnumerator();
@@ -593,41 +620,33 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 						row.removeObjectForKey("details");
 					}
 					row.removeObjectForKey("course");
-					message = "Deleted EduCourse: " + ec.globalIDForObject(course);
 					row.takeValueForKey("grey", "styleClass");
-				} else {
-					if(teacher == NullValue)
-						teacher = null;
-					course.takeValueForKey(teacher, "teacher");
-					message = "Changed teacher on EduCourse";
 				}
+				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING, message, new Object[]
+				                                                   {ses, course, teacher});
+			} catch (Exception e) {
+				EduPlan.logger.log(WOLogLevel.INFO,"Error saving EduCourse",
+						new Object[] {ses,e});
+				ses.takeValueForKey(e.getMessage(), "message");
+				ec.revert();
+			} finally {
+				ec.unlock();
 			}
-			ec.saveChanges();
-			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING, message, new Object[]
-			                               {ses, course, teacher});
-		} catch (Exception e) {
-			EduPlan.logger.log(WOLogLevel.INFO,"Error saving EduCourse",
-					new Object[] {ses,e});
-			ses.takeValueForKey(e.getMessage(), "message");
-//			ec.revert();
-		} finally {
-			ec.unlock();
 		}
-	}
 	}
 	public void reset() {
 		super.reset();
 		listNames = null;
-        ec = (EOEditingContext)context().page().valueForKey("ec");
-        periodsForList = new NSMutableDictionary();
+		ec = (EOEditingContext)context().page().valueForKey("ec");
+		periodsForList = new NSMutableDictionary();
 		subjects = null;
 		selection = null;
 		cycles = null;
 		listNames = null;
 		listDict = null;
 	}
-	
+
 	public boolean synchronizesVariablesWithBindings() {
-        return false;
+		return false;
 	}
 }
