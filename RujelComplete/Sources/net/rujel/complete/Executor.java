@@ -104,7 +104,7 @@ public class Executor implements Runnable {
 //    		copyResource(folder,"styles.css");
     		return folder;
 		} catch (Exception e) {
-			logger.log(WOLogLevel.WARNING,"Could not get copleteFolder for year " + year,e);
+			logger.log(WOLogLevel.WARNING,"Could not get completeFolder for year " + year,e);
 		}
     	return null;
     }
