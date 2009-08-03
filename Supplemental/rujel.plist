@@ -738,8 +738,6 @@
 		<string>11</string>
 		<key>disableAutoItog</key>
 		<string>true</string>
-		<key>autoItogLagDays</key>
-		<string>-1</string>
 		<key>disablePlanFactCheck</key>
 		<string>true</string>
 		<key>planFactLagDays</key>
@@ -754,25 +752,10 @@
 		<string>/Users/gena/Sites/students</string>
 		<key>coursesCompleteDir</key>
 		<string>/Users/gena/Sites/courses</string>
-		<key>autogenerateEduPeriods</key>
-		<string>true</string>
 		<key>newYearMonth</key>
 		<string>8</string>
 		<key>overwriteItogsScheduled</key>
 		<string>false</string>
-		<key>weightToMax</key>
-		<string>true</string>
-		<key>presenters</key>
-		<dict>
-			<key>workIntegral</key>
-			<string>%</string>
-			<key>integralColor</key>
-			<string>color</string>
-			<key>weightless</key>
-			<string>none#</string>
-			<key>weightlessColor</key>
-			<string>none</string>
-		</dict>
 	</dict>
 	<key>mail</key>
 	<dict>
