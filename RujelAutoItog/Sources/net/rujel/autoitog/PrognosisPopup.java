@@ -33,7 +33,6 @@ import java.math.BigDecimal;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -54,7 +53,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public PrognosesAddOn addOn;
     public EduCourse course;
     public Student student;
-    public EduPeriod eduPeriod;
+    public AutoItog eduPeriod;
     public WOComponent returnPage;
     
     public String mark;
@@ -76,12 +75,12 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	addOn.setCourse(course);
     	addOn.setStudent(student);
     	addOn.setPeriodItem(eduPeriod);
-    	calculation = (addOn.usage().calculator() != null);
+    	calculation = (eduPeriod.calculator() != null);
     	flags = new NamedFlags(Prognosis.flagNames);
        	ifArchive = (SettingsReader.boolForKeyPath("markarchive.Prognosis", false) &&
-       			addOn.usage().namedFlags().flagForKey("manual"));
+       			eduPeriod.namedFlags().flagForKey("manual"));
     	if(prognosis == null)  {
-    		Calculator calc = addOn.usage().calculator();
+    		Calculator calc = eduPeriod.calculator();
     		if(calc != null) {
     			EOEditingContext ec = course.editingContext();
     			ec.lock();
@@ -115,7 +114,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 			flags.setFlags(prognosis.flags().intValue());
 			mark= prognosis.mark();
 			addOn.setPrognosis(prognosis);
-			if(addOn.usage().calculator() != null) {
+			if(eduPeriod.calculator() != null) {
 				Bonus bonus = prognosis.bonus();
 				if(bonus != null)
 					bonusText = bonus.reason();
@@ -165,12 +164,11 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     			if(prognosis == null) {
     				prognosis = (Prognosis)EOUtilities.createAndInsertInstance(ec, "Prognosis");
        				prognosis.setStudent(student);
-       				prognosis.setEduCourse(course);
-       				prognosis.setEduPeriod(eduPeriod);
-       				prognosis._setPrognosUsage(addOn.usage());
+       				prognosis.setCourse(course);
+       				prognosis.setAutoItog(eduPeriod);
        				prognosis.updateFireDate();
      			}
-    			if(!mark.equals(prognosis.mark()) && addOn.usage().namedFlags().flagForKey("manual")) {
+    			if(!mark.equals(prognosis.mark()) && eduPeriod.namedFlags().flagForKey("manual")) {
     				prognosis.setMark(mark);
     			}
 	    		Bonus bonus = prognosis.bonus();
@@ -178,7 +176,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    	if(hasBonus) {
     	    		if(bonus == null) {
     	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
-    	    			bonus.initBonus(prognosis, true);
+//    	    			bonus.initBonus(prognosis, true);
     	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding bonus to prognosis",args);
     	    		} else if(!bonus.submitted()) {
     	    			bonus.calculateValue(prognosis, true);
@@ -195,7 +193,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    	if(bonusText != null) {
     	    		if(bonus == null) {
     	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
-    	    			bonus.initBonus(prognosis, false);
+//    	    			bonus.initBonus(prognosis, false);
     	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Requesting bonus for prognosis",args);
     	    		}
     	    		bonus.setReason(bonusText);
@@ -230,7 +228,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     					archive.takeValueForKey(changeReason, "reason");
         				ec.saveChanges();
     				}
-					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod);
+					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod.itogContainer());
 					if(grouping != null) {
 						NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
 								course, eduPeriod);

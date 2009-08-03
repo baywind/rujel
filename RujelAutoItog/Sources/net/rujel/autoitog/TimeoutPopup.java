@@ -30,7 +30,6 @@
 package net.rujel.autoitog;
 
 import net.rujel.reusables.*;
-import net.rujel.eduresults.EduPeriod;
 import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
@@ -47,7 +46,7 @@ public class TimeoutPopup extends WOComponent {
 
 	public PrognosesAddOn addOn;
 	public EduCourse course;
-	public EduPeriod eduPeriod;
+	public AutoItog eduPeriod;
 	public Timeout timeout;
 	public Prognosis prognosis;
 //	public Student student;
@@ -83,7 +82,7 @@ public class TimeoutPopup extends WOComponent {
 					if(course != null) {
 						prognosis = Prognosis.getPrognosis(
 								((StudentTimeout)timeout).student(), course, 
-								timeout.eduPeriod(), false);
+								eduPeriod, false);
 					} else {
 						NSArray prognoses = timeout.relatedPrognoses();
 						if(prognoses != null && prognoses.count() > 0)
@@ -91,22 +90,22 @@ public class TimeoutPopup extends WOComponent {
 					}
 				}
 				if(course == null && prognosis != null)
-					course = prognosis.eduCourse();
+					course = prognosis.course();
 			} else {
 				toClass = "CourseTimeout";
 			}
 		}
 		NamedFlags access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." + toClass);
 		if(timeout != null) {
-			eduPeriod = timeout.eduPeriod();
-			forCourse = (timeout.eduCourse() != null);
+//			eduPeriod = timeout.eduPeriod();
+			forCourse = (timeout.course() != null);
 			if(timeout instanceof CourseTimeout) {
 				CourseTimeout cto = (CourseTimeout)timeout;
 				forTeacher = (cto.teacher() != null);
 				forCycle = (cto.cycle() != null);
 				forEduGroup = (cto.eduGroup() != null);
 			}
-			dueDate = timeout.dueDate();
+			dueDate = timeout.fireDate();
 			reason = timeout.reason();
 			flags.setFlags(timeout.flags().intValue());
 			readOnly = !access.flagForKey("edit");
@@ -115,11 +114,11 @@ public class TimeoutPopup extends WOComponent {
 		}
 	}
 	
-	public void setEduPeriod(EduPeriod period) {
+	public void setEduPeriod(AutoItog period) {
 		eduPeriod = period;
 		if(dueDate == null) {
 			GregorianCalendar cal = new GregorianCalendar();
-			cal.setTime(eduPeriod.end());
+			cal.setTime(eduPeriod.fireDate());
 			cal.add(GregorianCalendar.DATE,7);
 			dueDate = new NSTimestamp(cal.getTime());
 		}
@@ -151,27 +150,27 @@ public class TimeoutPopup extends WOComponent {
 					//prognosis.removeObjectFromBothSidesOfRelationshipWithKey(timeout,(forCourse)?"timeout":"generalTimeout");
 					ec.deleteObject(timeout);
 				} else {
-					if(timeout == null || (forCourse && timeout.eduCourse() == null)) {
+					if(timeout == null || (forCourse && timeout.course() == null)) {
 						String entity = (prognosis==null)?"CourseTimeout":"StudentTimeout";
-						if(timeout == null || !timeout.dueDate().equals(dueDate)) {
+						if(timeout == null || !timeout.fireDate().equals(dueDate)) {
 							timeout = (Timeout)EOUtilities.createAndInsertInstance(ec, entity);
 							timeout.takeValueForKey(eduPeriod, "eduPeriod");
 							related = null;
 						}
-						timeout.setEduCourse((forCourse)?course:null);
+						timeout.setCourse((forCourse)?course:null);
 						if(prognosis != null) {
 							timeout.takeValueForKey(prognosis.student(),"student");
 							//prognosis.addObjectToPropertyWithKey(timeout,(forCourse)?"timeout":"generalTimeout");
 						}
 					} else	if(!forCourse) {
-						timeout.setEduCourse(null);
+						timeout.setCourse(null);
 						/*
 						if(prognosis != null && timeout.eduCourse() != null) {
 							prognosis.removeObjectFromBothSidesOfRelationshipWithKey(timeout, "timeout");
 							prognosis.addObjectToPropertyWithKey(timeout,"generalTimeout");
 						}*/
 					}
-					timeout.setDueDate(dueDate);
+					timeout.setFireDate(dueDate);
 					timeout.setReason(reason);
 					timeout.namedFlags().setFlags(flags.intValue());
 					if(prognosis == null) {

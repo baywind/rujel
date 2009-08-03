@@ -37,6 +37,7 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
+@Deprecated
 public abstract class _PrognosUsage extends EOGenericRecord {
 	public static final String ENTITY_NAME = "PrognosUsage";
 
@@ -81,9 +82,9 @@ public abstract class _PrognosUsage extends EOGenericRecord {
     	takeStoredValueForKey(value, BORDER_SET_KEY);
   }
   
-  public net.rujel.eduresults.PeriodType periodType() {
-    return (net.rujel.eduresults.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
-  }
+//  public net.rujel.eduresults.PeriodType periodType() {
+//    return (net.rujel.eduresults.PeriodType)storedValueForKey(PERIOD_TYPE_KEY);
+//  }
 
   public void setPeriodType(EOEnterpriseObject value) {
     	takeStoredValueForKey(value, PERIOD_TYPE_KEY);

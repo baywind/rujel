@@ -36,7 +36,8 @@ import com.webobjects.eocontrol.*;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
-import net.rujel.eduresults.PeriodType;
+import net.rujel.eduresults.ItogType;
+//import net.rujel.eduresults.PeriodType;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
@@ -149,7 +150,7 @@ public class PrognosUsage extends _PrognosUsage
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     }
 */
-	public static PrognosUsage prognosUsage(EduCourse course, PeriodType perType) {
+	public static PrognosUsage prognosUsage(EduCourse course, ItogType perType) {
 		EOQualifier qual1 = new EOKeyValueQualifier("periodType",EOQualifier.QualifierOperatorEqual,perType);
 		EOQualifier qual2 = new EOKeyValueQualifier("eduCourse",EOQualifier.QualifierOperatorEqual,course);
 		NSMutableArray quals = new NSMutableArray(new EOQualifier[] {qual1,qual2});
