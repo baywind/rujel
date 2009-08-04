@@ -764,7 +764,7 @@
 		<key>coursesCompleteDir</key>
 		<string>/Users/gena/Sites/courses</string>
 		<key>newYearMonth</key>
-		<string>8</string>
+		<string>6</string>
 		<key>overwriteItogsScheduled</key>
 		<string>false</string>
 	</dict>
@@ -852,10 +852,10 @@
 		<string>/cgi-bin/WebObjects/Rujel.woa</string>
 		<key>redirectTimeout</key>
 		<string>10</string>
+		<key>_localisationFolder</key>
+		<string>LOCALROOT/Library/WebObjects/Configuration/Localisations/testLocale</string>
 		<key>defaultLocalisation</key>
 		<string>Русский</string>
-		<key>localisationFolder</key>
-		<string>LOCALROOT/Library/WebObjects/Configuration/Localisations/testLocale</string>
 		<key>localisations</key>
 		<dict>
 			<key>Украинский</key>

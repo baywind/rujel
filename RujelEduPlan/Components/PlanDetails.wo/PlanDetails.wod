@@ -211,3 +211,27 @@ CycleTailCell : WOGenericContainer {
   rowspan = cycleItem.courses.count;
   class = "grey";
 }
+
+ListTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.properties.listName;
+  escapeHTML = false;
+}
+
+HoursTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.properties.hours;
+  escapeHTML = false;
+}
+
+WeekDaysCell : WOGenericContainer {
+  elementName = "div";
+  style = "color:#666666;white-space:nowrap;min-width:3em;";
+  title = application.strings.RujelEduPlan_EduPlan.EduPeriod.weeksDays;
+}
+
+ShowHelp : OnClickContainer {
+  elementName = "div";
+  onclick = session.ajaxPopup;
+  invokeAction = help;
+  class = "button";
+  style = "padding:3px 8px;color:33cc33;";
+}

@@ -1,5 +1,5 @@
 Wrapper : PageWrapper {
-	title = application.strings.RujelEduPlan_EduPlan.GlobalPlan;
+	title = application.strings.RujelEduPlan_EduPlan.EduPlan;
 	resourcesFramework = currTab.resourcesFramework;
 	cssResource = currTab.cssResource;
 	hasChanges = ec.hasChanges;

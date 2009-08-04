@@ -29,8 +29,6 @@
 
 package net.rujel.curriculum;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Enumeration;
@@ -39,20 +37,12 @@ import java.util.logging.Logger;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
-import net.rujel.reusables.DisplayAny;
-import net.rujel.reusables.SessionedEditingContext;
-import net.rujel.reusables.SettingsReader;
-import net.rujel.reusables.Various;
-import net.rujel.reusables.WOLogLevel;
+import net.rujel.reusables.*;
 import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
 import net.rujel.interfaces.Teacher;
@@ -87,24 +77,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     public Curriculum(WOContext context) {
         super(context);
         try {
-			InputStream pstream = null;
-        	File folder = (File)session().valueForKeyPath("strings.@localisationFolder");
-        	if(folder != null) {
-        		File file = new File(folder,"RujelCurriculum_Overview.plist");
-        		if(file.exists() && file.length() > 0)
-        			pstream = new FileInputStream(file);
-        	}
-        	if(pstream == null)
-			pstream = application().resourceManager()
-					.inputStreamForResourceNamed("Overview.plist",
-							"RujelCurriculum", null);
+			InputStream pstream = (InputStream)session().valueForKeyPath(
+        			"strings.@RujelCurriculum_Overview.plist");
 			NSData pdata = new NSData(pstream, pstream.available());
 			plist = (NSDictionary)NSPropertyListSerialization.propertyListFromData(
 								pdata, "utf8");
 		} catch (Exception e) {
-			Object[] args = new Object[] {session(),e};
-			logger.log(WOLogLevel.WARNING,
-					"Error reading Overview.pist",args);
+			throw new NSForwardException(e,"Error reading Overview.pist");
 		}
 		ec = new SessionedEditingContext(session());
 		

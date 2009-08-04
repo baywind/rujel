@@ -29,6 +29,7 @@
 
 package net.rujel.eduplan;
 
+import java.io.InputStream;
 import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
@@ -78,7 +79,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void selectEduGroup() {
-		setSelection(rowItem.valueForKeyPath("course.eduGroup"));
+		setSelection(rowItem.valueForKey("eduGroup"));
 	}
 	
 	public NSArray subjects() {
@@ -99,6 +100,10 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setSelection(Object sel) {
+		if(listNames == null)
+			listNames = new NSMutableArray();
+		else
+			listNames.removeAllObjects();
 		ec.lock();
 		try {
 			if(ec.hasChanges())
@@ -130,10 +135,6 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			NSMutableArray cycleDicts = new NSMutableArray();
 			NSMutableDictionary values = new NSMutableDictionary(eduYear,"eduYear");
 			Enumeration enu = cycles.objectEnumerator();
-			if(listNames == null)
-				listNames = new NSMutableArray();
-			else
-				listNames.removeAllObjects();
 			while (enu.hasMoreElements()) {
 				PlanCycle cycle = (PlanCycle) enu.nextElement();
 				values.takeValueForKey(cycle, "cycle");
@@ -163,6 +164,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		} catch (Exception e) {
 			EduPlan.logger.log(WOLogLevel.WARNING,"Error preparing details list",
 					new Object[] {session(),e});
+			cycles = null;
 		} finally {
 			ec.unlock();
 		}
@@ -199,10 +201,10 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		int days = ((Integer)listSetting.valueForKey("days")).intValue();
 		int week = ((Integer)listSetting.valueForKey("week")).intValue();
 		int hours = ((Integer)course.valueForKeyPath("cycle.hours")).intValue();
-		int weekly = hours/weeks;
-		int extra = hours%weeks;
+		int weekly = (weeks==0)?0:hours/weeks;
+		int extra = (weeks==0)?hours:hours%weeks;
 		String indication = "grey";
-		if(extra > weekly) {
+		if(extra > weekly && weeks > 0) {
 			weekly++;
 			indication = "highlight2";
 		} else if(extra > 0) {
@@ -529,6 +531,22 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 					"readAccess.FLAGS." + EduCourse.entityName);
 		else
 			return (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.rowItem.course");
+	}
+	
+	public WOActionResults help() {
+		WOResponse response = application().createResponseInContext(context());
+        try {
+			InputStream stream = (InputStream)session().valueForKeyPath(
+				"strings.@RujelEduPlan_DetailsHelp.html");
+			response.setContentStream(stream, 1024, (long)stream.available());
+			return response;
+		} catch (Exception e) {
+			Object[] args = new Object[] {session(),e};
+			EduPlan.logger.log(WOLogLevel.WARNING,
+					"Error reading DetailsHelp.html",args);
+			session().takeValueForKey(e.getMessage(), "message");
+		}
+		return null;
 	}
 	
 	public WOActionResults selectTeacher() {

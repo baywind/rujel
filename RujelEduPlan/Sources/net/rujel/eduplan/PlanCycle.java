@@ -389,6 +389,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		int[] weeksAndDays = weeksAndDays(eduYear);
 		int[] weeklyHours = new int[2]; 
 		int hours = hours().intValue();
+		if(weeksAndDays[0] == 0)
+			return new int[] {0, hours};
 		weeklyHours[0] = hours / weeksAndDays[0];
 		weeklyHours[1] = hours % weeksAndDays[0];
 		if(weeklyHours[1] > weeklyHours[0]) {

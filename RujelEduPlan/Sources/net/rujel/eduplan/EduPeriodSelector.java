@@ -79,6 +79,9 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 				begin = ((EduPeriod)_currPeriod).begin();
 				end = ((EduPeriod)_currPeriod).end();
 			}
+		} else if ((_currPeriod instanceof EduPeriod) &&
+				((EduPeriod)_currPeriod).editingContext() == null) {
+			_currPeriod = NullValue;
 		}
 		return (_currPeriod == NullValue)?null:(EduPeriod)_currPeriod;
 	}
@@ -156,6 +159,8 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 				_currPeriod = per;
 			else
 				ec.revert();
+//			if(currPeriod() != null && currPeriod().editingContext() == null)
+//				_currPeriod = NullValue;
 		} finally {
 			ec.unlock();
 		}

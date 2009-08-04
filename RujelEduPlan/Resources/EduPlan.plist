@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>EduPlan</key>
+	<string>Учебный план </string>
 	<key>showAll</key>
 	<string>Добавить предметы</string>
 	<key>hideUnused</key>
@@ -37,13 +39,9 @@
 		<key>listName</key>
 		<string>График</string>
 		<key>plan</key>
-		<string>по плану</string>
+		<string>План</string>
 		<key>total</key>
-		<string>сумма</string>
-		<key>weeklyHours</key>
-		<string>учебных часов за учебный цикл (неделю)</string>
-		<key>totalHours</key>
-		<string>всего учебных часов за весь период</string>
+		<string>Сумма</string>
 	</dict>
 	<key>EduPeriod</key>
 	<dict>
@@ -60,10 +58,8 @@
 		<key>fullName</key>
 		<string>Полное название</string>
 		<key>weeksDays</key>
-		<string>недель (дней)</string>
+		<string>циклов (дней)</string>
 	</dict>
-	<key>EduPlan</key>
-	<string>Учебный план </string>
 	<key>SetupPeriods</key>
 	<dict>
 		<key>title</key>

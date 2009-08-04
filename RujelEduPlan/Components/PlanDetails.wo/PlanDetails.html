@@ -1,3 +1,5 @@
+<div style = "position:absolute;right:0px;padding:4px;">
+	<webobject name = "ShowHelp">?</webobject></div>
 <table class = "backfield1" cellspacing = "0" style = "padding: 0px 1em;"><tr valign = "top">
 	<webobject name = "ShowEduGroup"><td style = "min-width:5em;">
 		<webobject name = "ClassListing"></webobject></td></webobject>
@@ -7,22 +9,23 @@
 	</webobject></tbody></table></td>
 	</webobject><td class = "selectionBorder" style = "border-style:none none none solid;">
 	<webobject name = "Form"><table cellpadding = "3"><thead>
-	<tr><th><webobject name = "CycleHead"/></th><webobject name = "ShowSubjects">
-		<th><webobject name="EduGroupLabel"></webobject></th></webobject>
-		<th><webobject name="TeacherLabel"/></th>
+	<tr><webobject name = "ShowSubjects"><td/></webobject><th colspan = "2" align = "right">
+		<webobject name = "ListTitle"/>:</th>
 		<webobject name = "ListsRepetition"><webobject name = "ListCell">
 			<webobject name = "ListName"/></webobject>
-		</webobject><th><webobject name = "TotalLabel"/></th>
-		<th><webobject name = "PlanLabel"/></th></tr>
-	<tr><td style = "border-top:2px solid #cccccc;"></td>
-	<webobject name = "ShowSubjects"><td style = "border-top:2px solid #cccccc;"></td>
-	</webobject><td style = "border-top:2px solid #cccccc;"></td><webobject name = "ListsRepetition">
-	<webobject name = "PeriodsRepetition"><th align = "center" class = "grey">
-		<div style = "width:4ex;"><webobject name = "PeriodTitle"/></div>
-		<div style = "color:#666666;white-space:nowrap;min-width:3em;">
-		<webobject name = "PerWeeksDays"/></div></th></webobject></webobject>
-		<td style = "border-top:2px solid #cccccc;"></td>
-		<td style = "border-top:2px solid #cccccc;"></td></tr>
+		</webobject><td colspan = "2" /></tr>
+	<tr class = "female" valign = "middle"><th style = "min-width:3ex;"></th>
+		<webobject name = "ShowSubjects"><th><webobject name="EduGroupLabel"/></th>
+		</webobject><th><webobject name="TeacherLabel"/></th>
+		<webobject name = "ListsRepetition"><webobject name = "PeriodsRepetition">
+		<th align = "center"><div style = "width:4ex;"><webobject name = "PeriodTitle"/></div>
+		<webobject name = "WeekDaysCell">
+			<webobject name = "PerWeeksDays"/></webobject>
+		</th></webobject></webobject>
+		<th><div><webobject name = "TotalLabel"/></div><div style = "font-weight:normal;">
+			(<webobject name = "HoursTitle"/>)</div></th>
+		<th><div><webobject name = "PlanLabel"/></div><div style = "font-weight:normal;">
+			(<webobject name = "HoursTitle"/>)</div></th></tr>
 	</thead><tbody><webobject name = "CyclesRepetition"><webobject name = "Courses">
 	<webobject name = "CourseRow"><webobject name = "FirstCourse">
 		<webobject name = "CycleHeadCell"><webobject name = "CycleTitle"/></webobject>

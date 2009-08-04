@@ -120,7 +120,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 	}
 
     public void setWeekDays(Integer wd) {
-    	if(wd == null)
+    	if(wd == null || wd.intValue() <= 0)
     		weekDays = 7;
     	else
     		weekDays = wd.intValue();
@@ -301,4 +301,14 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		}
 	}
 
+	public void reset() {
+		super.reset();
+		currPeriod = null;
+		perList = null;
+		extraLists = null;
+		item = null;
+		details = null;
+		listName = null;
+		weekDays = 7;
+	}
 }

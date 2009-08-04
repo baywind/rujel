@@ -86,7 +86,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     					}
     					message.append(subject.subject());
     				}
-    				returnPage.takeValueForKey(subject, "forced");
+//    				returnPage.takeValueForKey(subject, "forced");
         			Object[] args = new Object[] {session(),subject};
     				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
     			}
