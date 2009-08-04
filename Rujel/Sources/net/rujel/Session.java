@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 
 public class Session extends WOSession {
 	private UserPresentation user = null;
+	protected StringStorage _strings;
 	protected Logger logger = Logger.getLogger("rujel");
 	protected NSDictionary clientIdentity;
 
@@ -52,6 +53,7 @@ public class Session extends WOSession {
 		//logger.log(WOLogLevel.SESSION,"Session created",this);
         
 		setDefaultEditingContext(new SessionedEditingContext(this));
+		_strings = (StringStorage)WOApplication.application().valueForKey("strings");
    }
 	
 	protected SessionedEditingContext _defaultEC;
@@ -412,5 +414,9 @@ public class Session extends WOSession {
 			_modules = new ModulesInitialiser(this);
 		}
 		return _modules;
+	}
+	
+	public NSKeyValueCoding strings() {
+		return _strings;
 	}
 }

@@ -852,6 +852,19 @@
 		<string>/cgi-bin/WebObjects/Rujel.woa</string>
 		<key>redirectTimeout</key>
 		<string>10</string>
+		<key>defaultLocalisation</key>
+		<string>Русский</string>
+		<key>localisationFolder</key>
+		<string>LOCALROOT/Library/WebObjects/Configuration/Localisations/testLocale</string>
+		<key>localisations</key>
+		<dict>
+			<key>Украинский</key>
+			<string></string>
+			<key>Белорусский</key>
+			<string></string>
+			<key>English</key>
+			<string></string>
+		</dict>
 	</dict>
 </dict>
 </plist>

@@ -17,6 +17,8 @@ WOSessionLongTimeOut=3600
 WOSessionShortTimeOut=300
 #WOAllowsConcurrentRequestHandling=false
 
+ApplicationName=Rujel
+
 #Settings.className = net.rujel.reusables.PrefsReader
 #PrefsReader.nodePath = /ru/edu/ms45
 

@@ -44,7 +44,7 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 public class Application extends UTF8Application {
-	private StringStorage _strings = new StringStorage(application().resourceManager());
+	protected StringStorage _strings;
 	protected static Logger logger = Logger.getLogger("rujel");
 	protected Timer timer;
 	
@@ -64,7 +64,19 @@ public class Application extends UTF8Application {
 		if(propertiesPath != null) {
 			LogInitialiser.initLogging(null, propertiesPath, logger);
 		}
-		
+		propertiesPath = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
+		if(propertiesPath != null) {
+			_strings = new StringStorage(propertiesPath,null);
+		} else {
+			propertiesPath = SettingsReader.stringForKeyPath("ui.defaultLocalisation", null);
+			if(propertiesPath != null)
+				propertiesPath = SettingsReader.stringForKeyPath(
+						"ui.localisations." + propertiesPath, null);
+			if(propertiesPath == null)
+				_strings = StringStorage.appStringStorage;
+			else
+				_strings = new StringStorage(propertiesPath,null);
+		}
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
 			NSTimestamp today = null;

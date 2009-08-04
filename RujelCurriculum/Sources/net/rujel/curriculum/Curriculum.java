@@ -29,6 +29,8 @@
 
 package net.rujel.curriculum;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Enumeration;
@@ -85,7 +87,15 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     public Curriculum(WOContext context) {
         super(context);
         try {
-			InputStream pstream = application().resourceManager()
+			InputStream pstream = null;
+        	File folder = (File)session().valueForKeyPath("strings.@localisationFolder");
+        	if(folder != null) {
+        		File file = new File(folder,"RujelCurriculum_Overview.plist");
+        		if(file.exists() && file.length() > 0)
+        			pstream = new FileInputStream(file);
+        	}
+        	if(pstream == null)
+			pstream = application().resourceManager()
 					.inputStreamForResourceNamed("Overview.plist",
 							"RujelCurriculum", null);
 			NSData pdata = new NSData(pstream, pstream.available());

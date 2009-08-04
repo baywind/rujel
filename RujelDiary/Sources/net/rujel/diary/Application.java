@@ -45,7 +45,7 @@ import com.webobjects.foundation.NSMutableDictionary;
 
 public class Application extends UTF8Application {
 	protected static Logger logger = Logger.getLogger("rujel");
-	protected StringStorage _strings = new StringStorage(resourceManager());;
+	protected StringStorage _strings;
 
 	public NSMutableDictionary<Number, NSArray> groupsForYear 
 			= new NSMutableDictionary<Number, NSArray>();
@@ -68,7 +68,19 @@ public class Application extends UTF8Application {
 		if(propertiesPath != null) {
 			LogInitialiser.initLogging(null, propertiesPath, logger);
 		}
-		
+		propertiesPath = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
+		if(propertiesPath != null) {
+			_strings = new StringStorage(propertiesPath,null);
+		} else {
+			propertiesPath = SettingsReader.stringForKeyPath("ui.defaultLocalisation", null);
+			if(propertiesPath != null)
+				propertiesPath = SettingsReader.stringForKeyPath(
+						"ui.localisations." + propertiesPath, null);
+			if(propertiesPath == null)
+				_strings = StringStorage.appStringStorage;
+			else
+				_strings = new StringStorage(propertiesPath,null);
+		}		
 		//EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		DataBaseConnector.makeConnections();
 

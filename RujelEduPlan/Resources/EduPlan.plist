@@ -40,6 +40,10 @@
 		<string>по плану</string>
 		<key>total</key>
 		<string>сумма</string>
+		<key>weeklyHours</key>
+		<string>учебных часов за учебный цикл (неделю)</string>
+		<key>totalHours</key>
+		<string>всего учебных часов за весь период</string>
 	</dict>
 	<key>EduPeriod</key>
 	<dict>
