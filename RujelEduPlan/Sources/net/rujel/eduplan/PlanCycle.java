@@ -400,56 +400,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return weeklyHours;
 	}
 	
-/*	
-	public static int planLessonsInPeriod(EduPeriod period, int planHours, NSTimestamp toDate) {
-		long millis = period.end().getTime();
-		if(toDate != null && toDate.getTime() < millis)
-			millis = toDate.getTime();
-		else 
-			toDate = null;
-		millis = millis - period.begin().getTime();
-		if(millis < 0)
-			return 0;
-		int weeks = (int) (millis/MyUtility.weekMillis);
-		millis = millis%MyUtility.weekMillis;
-		if(toDate == null && millis > MyUtility.dayMillis)
-			weeks++;
-		return weeks*planHours;
-	}
-	
-	public static int wholeYearPlanLessons(EduCourse course, PeriodType perType, NSTimestamp toDate) {
-		if(perType == null) {
-			NSArray types = PeriodType.periodTypesForCourse(course);
-			if(types == null || types.count() == 0)
-				return 0;
-			perType = (PeriodType)types.objectAtIndex(0);
-		}
-		EOQualifier[] quals = new EOQualifier[2];
-		quals[0] = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
-				EOQualifier.QualifierOperatorEqual, course.eduYear());
-		quals[1] = new EOKeyValueQualifier(EduPeriod.PERIOD_TYPE_KEY,
-				EOQualifier.QualifierOperatorEqual,perType);
-		EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,
-				new EOAndQualifier(new NSArray(quals)),MyUtility.numSorter);
-		NSArray periods = course.editingContext().objectsWithFetchSpecification(fs);
-		if(periods == null || periods.count() == 0)
-			return 0;
-		int result = 0;
-		Enumeration<EduPeriod> enu = periods.objectEnumerator();
-		int days = 0;
-		while (enu.hasMoreElements()) {
-			EduPeriod period = (EduPeriod) enu.nextElement();
-			if(toDate != null && toDate.compare(period.begin()) < 0)
-				break;
-			int hours = planHoursForCourseAndPeriod(course, period);
-			if(hours == 0)
-				continue;
-			days += period.daysInPeriod(toDate);
-			int weeks = days / 7;
-			days = days%7;			
-			result += weeks*hours;
-		}
-		return result;
-	}
-	*/
+	  public void setSubjectEO(EOEnterpriseObject value) {
+		  super.setSubjectEO(value);
+		  setSubject((value==null)?null:(String)value.valueForKey(Subject.SUBJECT_KEY));
+	  }
 }

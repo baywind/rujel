@@ -62,7 +62,7 @@ public class ItogType extends _ItogType {
 	
 	public static NSArray typesForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
-		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
+		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
 		return typesForList(listName, ec);
 	}
 	public static NSArray typesForList(String listName, EOEditingContext ec) {
@@ -73,7 +73,7 @@ public class ItogType extends _ItogType {
 		EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",qual,sorter);
 		NSArray list = ec.objectsWithFetchSpecification(fs);
 		if(list == null || list.count() == 0) {
-			listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, null, ec);
 			qual = new EOKeyValueQualifier("listName",
 					EOQualifier.QualifierOperatorEqual,listName);
 			fs.setQualifier(qual);

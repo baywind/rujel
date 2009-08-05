@@ -71,6 +71,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
      
     public WOComponent save() {
     	if(ec.hasChanges()) {
+    		ec.lock();
      		try {
     			if(subject.subject() == null) {
     				ec.revert();
@@ -96,6 +97,8 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     			String message = (String)application().
     			valueForKeyPath("strings.Strings.messages.error") + "<br/>" + ex.toString();
     			session().takeValueForKey(message, "message");
+			} finally {
+				ec.unlock();
 			}
     	}
     	returnPage.ensureAwakeInContext(context());
