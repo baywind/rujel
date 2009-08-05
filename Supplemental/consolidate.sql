@@ -169,7 +169,7 @@ create table RujelStatic.ITOG_COMMENT (
 );
 
 insert into RujelStatic.SETTINGS_BASE (`S_ID`,`SETTING_KEY`,`TEXT_VALUE`) 
-	values (2,'ItogType','Базовый');
+  values (2,'ItogMark','Базовый');
 
 insert into RujelStatic.SETTING_BY_COURSE (SC_ID, SETTINGS, COURSE, EDU_GROUP, EDU_YEAR, TEXT_VALUE)
 select PKEY - 2 , 2, EDU_COURSE, EDU_GROUP, EDU_YEAR, 'Семестры' from EduResults.PERTYPE_USAGE where PERTYPE_ID = 2;
