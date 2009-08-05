@@ -31,6 +31,7 @@ package net.rujel.diary;
 
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.WOApplication;
@@ -38,10 +39,13 @@ import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequestHandler;
 import com.webobjects.appserver.WOResponse;
+import com.webobjects.eocontrol.EOObjectStore;
+import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.eocontrol.EOSharedEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSTimestamp;
 
 public class Application extends UTF8Application {
 	protected static Logger logger = Logger.getLogger("rujel");
@@ -82,7 +86,12 @@ public class Application extends UTF8Application {
 				_strings = new StringStorage(propertiesPath,null);
 		}		
 		//EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
-		DataBaseConnector.makeConnections();
+		_year = MyUtility.eduYearForDate(today());
+		DataBaseConnector.makeConnections(
+				EOObjectStoreCoordinator.defaultCoordinator(), _year.toString());
+		
+		ecForYear.takeValueForKey(EOSharedEditingContext.defaultSharedEditingContext(),
+				_year.toString());
 
 		net.rujel.interfaces.EOInitialiser.initAll();
 		SettingsReader node = SettingsReader.settingsForPath("modules",true);
@@ -94,6 +103,34 @@ public class Application extends UTF8Application {
 		}*/
 		
 		logger.logp(WOLogLevel.INFO,"Application","<init>","RujelMarkbook started " + webserverConnectURL());
+	}
+	
+	protected Integer _year;
+	public Integer year() {
+		return _year;
+	}
+	
+	protected Object _today;
+	public NSTimestamp today() {
+		if(_today == NullValue)
+			return new NSTimestamp();
+		if(_today == null) {
+			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
+			if(defaultDate == null) {
+				_today = NullValue;
+				return new NSTimestamp();
+			} else {
+				try {
+					_today = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING, "Failed parsing default date " + 
+							defaultDate + ". Using today.",e);
+					_today = NullValue;
+					return new NSTimestamp();
+				}
+			}
+		}
+		return (NSTimestamp)_today;
 	}
 	
 	public NSKeyValueCoding strings() {
@@ -141,4 +178,24 @@ public class Application extends UTF8Application {
 		}
 			
 	}
+
+	public NSKeyValueCoding ecForYear = new NSKeyValueCoding() {
+		private NSMutableDictionary ecDict = new NSMutableDictionary();
+
+		public void takeValueForKey(Object value, String key) {
+			ecDict.takeValueForKey(value, key);
+		}
+
+		public Object valueForKey(String key) {
+			EOSharedEditingContext ec = (EOSharedEditingContext)ecDict.valueForKey(key);
+			if(ec != null)
+				return ec;
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(key);
+			if(os == null)
+				return null;
+			ec = new EOSharedEditingContext(os);
+			ecDict.takeValueForKey(ec, key);
+			return ec;
+		}
+	};
 }

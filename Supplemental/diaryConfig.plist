@@ -4,7 +4,9 @@
 <dict>
 	<key>schoolNumber</key>
 	<string>0</string>
-	<key>dbConnection</key>
+	<key>loggingProperties</key>
+	<string>LOCALROOT/Library/WebObjects/Configuration/diaryLog.properties</string>
+	<key>dbConnectionOld</key>
 	<dict>
 		<key>VseobuchSimple</key>
 		<dict>
@@ -12,16 +14,6 @@
 			<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
 			<key>dbName</key>
 			<string>DemoSho</string>
-		</dict>
-		<key>AccessStore</key>
-		<dict>
-			<key>skip</key>
-			<string>true</string>
-		</dict>
-		<key>PrimitiveTeachers</key>
-		<dict>
-			<key>skip</key>
-			<string>true</string>
 		</dict>
 		<key>serverURL</key>
 		<string>jdbc:mysql://127.0.0.1</string>
@@ -31,6 +23,83 @@
 		<string>rujel</string>
 		<key>password</key>
 		<string></string>
+	</dict>
+	<key>dbConnection</key>
+	<dict>
+		<key>VseobuchSimple</key>
+		<dict>
+			<key>_URL</key>
+			<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
+			<key>dbName</key>
+			<string>DemoSho</string>
+		</dict>
+		<key>AutoItog</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>BaseYearly</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>BaseStatic</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
+		</dict>
+		<key>Criterial</key>
+		<dict>
+			<key>_untagged</key>
+			<string>Criterial</string>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>CriterialStatic</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
+		</dict>
+		<key>Curriculum</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>EduPlanModel</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
+		</dict>
+		<key>EduPlanYearly</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>EduResults</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
+		</dict>
+		<key>MarkArchive</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>Stats</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
+		<key>serverURL</key>
+		<string>jdbc:mysql://127.0.0.1</string>
+		<key>urlSuffix</key>
+		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
+		<key>username</key>
+		<string>rujel</string>
+		<key>password</key>
+		<string></string>
+		<key>yearTag</key>
+		<string>true</string>
 	</dict>
 	<key>interfaces</key>
 	<dict>
@@ -90,8 +159,8 @@
 		<string>dd.MM.yyyy</string>
 		<key>shortDateFormat</key>
 		<string>dd.MM</string>
-		<key>defaultDate</key>
-		<string>26.02.2009</string>
+		<key>_defaultDate</key>
+		<string>26.04.2009</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>
 	</dict>

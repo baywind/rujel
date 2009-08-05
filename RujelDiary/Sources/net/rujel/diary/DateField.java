@@ -66,7 +66,7 @@ public class DateField extends com.webobjects.appserver.WOComponent {
 				base = req.stringFormValueForKey(base);
 				date = (NSTimestamp)MyUtility.dateFormat().parseObject(base, new ParsePosition(0));
 				if(date == null)
-					date = new NSTimestamp();
+					date = (NSTimestamp)application().valueForKey("today");
 				Integer shift = (Integer)valueForBinding("shift");
 				if(shift != null)
 					date = date.timestampByAddingGregorianUnits(0, 0, shift.intValue(), 0, 0, 0);

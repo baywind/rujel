@@ -42,7 +42,7 @@ import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOKeyGlobalID;
-import com.webobjects.eocontrol.EOSharedEditingContext;
+//import com.webobjects.eocontrol.EOSharedEditingContext;
 import com.webobjects.foundation.*;
 
 public class Main extends WOComponent {
@@ -77,6 +77,16 @@ public class Main extends WOComponent {
 		String dateString = req.stringFormValueForKey("date");
 		date = (NSTimestamp)MyUtility.dateFormat().parseObject(
 				dateString, new java.text.ParsePosition(0));
+		Integer year = (date == null)?(Integer)application().valueForKey("year"):
+			MyUtility.eduYearForDate(date);
+		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(
+				"ecForYear." + year.toString());
+		if(ec == null) {
+			year = (Integer)application().valueForKey("year");
+			date = (NSTimestamp)application().valueForKey("today");
+			ec = (EOEditingContext)application().valueForKeyPath(
+					"ecForYear." + year.toString());
+		}
 		groupList = groupListForDate(date);
 		/*	
 		sinceString = req.stringFormValueForKey("since");
@@ -124,7 +134,6 @@ public class Main extends WOComponent {
 
 		//courses
 		if(currGr != null) {
-			EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
 			String tmp = req.stringFormValueForKey("courses");
 			if(tmp != null) {
 				String[] cids = tmp.split(";");
@@ -144,9 +153,8 @@ public class Main extends WOComponent {
 			}
 			if(courses == null) {
 				try {
-					EduGroup eduGroup = (EduGroup) EOUtilities
-					.objectWithPrimaryKeyValue(ec, EduGroup.entityName,
-							currGr);
+					EduGroup eduGroup = (EduGroup) EOUtilities.objectWithPrimaryKeyValue(
+						ec, EduGroup.entityName,currGr);
 //					if(grName == null)
 //						grName = eduGroup.name();
 					courses = EOUtilities.objectsMatchingKeyAndValue(ec,
@@ -168,17 +176,19 @@ public class Main extends WOComponent {
 	}
 	
 	protected NSArray groupListForDate(NSTimestamp aDate) {
-		Integer year = (aDate == null)?new Integer(0):MyUtility.eduYearForDate(aDate);
+		Integer year = (aDate == null)?(Integer)application().valueForKey("year"):
+			MyUtility.eduYearForDate(aDate);
 		NSMutableDictionary<Number, NSArray> groupsForYear = 
 			(NSMutableDictionary<Number, NSArray>)valueForKeyPath("application.groupsForYear");
 		NSArray result = groupsForYear.objectForKey(year);
 		if(result != null)
 			return result;
-		if(aDate == null) {
-			result = groupListForDate(new NSTimestamp());
+		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(
+				"ecForYear." + year.toString());
+		if(aDate == null || ec == null) {
+			result = groupListForDate((NSTimestamp)application().valueForKey("today"));
 		} else {
-			NSArray groups = EduGroup.Lister.listGroups(aDate, 
-					EOSharedEditingContext.defaultSharedEditingContext());
+			NSArray groups = EduGroup.Lister.listGroups(aDate,ec);
 			if(groups == null || groups.count() == 0) {
 				result = NSArray.EmptyArray;
 			} else {

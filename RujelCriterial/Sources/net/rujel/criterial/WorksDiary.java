@@ -119,7 +119,10 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,qual,null);
 		fs.setRefreshesRefetchedObjects(true);
-		EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
+		Integer year = (date == null)?(Integer)application().valueForKey("year"):
+			MyUtility.eduYearForDate(date);
+		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(
+				"ecForYear." + year.toString());
 		NSArray list = ec.objectsWithFetchSpecification(fs);
 		if(list != null && list.count() > 0) {
 			NSArray sorter = (NSArray)tab.valueForKey("order");
