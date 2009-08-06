@@ -86,7 +86,7 @@ public class VOStudent extends _VOStudent implements Student, Person
 		return this;
 	}
 	
-	public void setPerson(Person pers) {
+	public void setPerson(EOEnterpriseObject pers) {
 		if(pers != this)
 			throw new UnsupportedOperationException("Person attribute can't be changed as it should always return this");
 	}

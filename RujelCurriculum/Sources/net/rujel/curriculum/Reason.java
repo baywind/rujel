@@ -113,9 +113,9 @@ public class Reason extends _Reason {
     }
     
     public void setNamedFlags(NamedFlags flags) {
-    	_flags = flags;
     	if(flags != null)
     		setFlags(flags.toInteger());
+    	_flags = flags;
     }
     
     public void setFlags(Integer value) {

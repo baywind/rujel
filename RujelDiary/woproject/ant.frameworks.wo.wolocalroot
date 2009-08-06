@@ -3,8 +3,8 @@ Library/Frameworks/Reusables.framework
 Library/Frameworks/RujelBase.framework
 Library/Frameworks/RujelCriterial.framework
 Library/Frameworks/RujelEduPlan.framework
-Library/Frameworks/RujelEduResults.framework
 Library/Frameworks/RujelInterfaces.framework
+Library/Frameworks/RujelVseLists.framework
 Library/Frameworks/RujelVseobuch.framework
 Library/Java/Extensions/mysql-connector-java-5.1.6-bin.jar
 Library/Frameworks/Reusables.framework

@@ -29,8 +29,44 @@
 
 package net.rujel.interfaces;
 
+import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.foundation.NSKeyValueCoding;
+
 public interface PersonLink {
 
 	public Person person();
 
+	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
+		public int compareAscending(Object left, Object right) {
+			try {
+				Person leftPerson = (Person)NSKeyValueCoding.Utility.
+									valueForKey(left, "person");
+				Person rightPerson = (Person)NSKeyValueCoding.Utility.
+									valueForKey(right, "person");
+				return compareValues(leftPerson, rightPerson,EOSortOrdering.CompareAscending);
+			} catch (Exception e) {
+				return super.compareAscending(left, right);
+			}
+		}
+		
+		public int compareCaseInsensitiveAscending(Object left, Object right) {
+			try {
+				Person leftPerson = (Person)NSKeyValueCoding.Utility.
+									valueForKey(left, "person");
+				Person rightPerson = (Person)NSKeyValueCoding.Utility.
+									valueForKey(right, "person");
+				return compareValues(leftPerson, rightPerson,
+						EOSortOrdering.CompareCaseInsensitiveAscending);
+			} catch (Exception e) {
+				return super.compareCaseInsensitiveAscending(left, right);
+			}
+		}
+		
+		public int compareDescending(Object left, Object right) {
+			return compareAscending(right, left);
+		}
+		public int compareCaseInsensitiveDescending(Object left, Object right) {
+			return compareCaseInsensitiveAscending(right, left);
+		}
+	}
 }

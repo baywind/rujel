@@ -709,13 +709,13 @@
 		<key>EduCycle</key>
 		<string>net.rujel.eduplan.PlanCycle</string>
 		<key>EduGroup</key>
-		<string>net.rujel.vseobuch.VOClass</string>
+		<string>net.rujel.vselists.VseEduGroup</string>
 		<key>EduLesson</key>
 		<string>net.rujel.base.BaseLesson</string>
 		<key>Student</key>
-		<string>net.rujel.vseobuch.VOStudent</string>
+		<string>net.rujel.vselists.VseStudent</string>
 		<key>Teacher</key>
-		<string>net.rujel.vseobuch.VOTeacher</string>
+		<string>net.rujel.vselists.VseTeacher</string>
 	</dict>
 	<key>modules</key>
 	<dict>
