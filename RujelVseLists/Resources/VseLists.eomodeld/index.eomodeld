@@ -2,7 +2,7 @@
     EOModelVersion = "2.1"; 
     adaptorName = JDBC; 
     connectionDictionary = {
-        URL = "jdbc:mysql://localhost/VseLists??capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull"; 
+        URL = "jdbc:mysql://localhost/VseLists?capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull"; 
         username = rujel; 
     }; 
     entities = (
@@ -19,7 +19,7 @@
                 Default = {
                     adaptorName = JDBC; 
                     connectionDictionary = {
-                        URL = "jdbc:mysql://localhost/VseLists??capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull"; 
+                        URL = "jdbc:mysql://localhost/VseLists?capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull"; 
                         username = rujel; 
                     }; 
                 }; 

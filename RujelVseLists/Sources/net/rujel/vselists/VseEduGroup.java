@@ -36,12 +36,14 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.PersonLink;
+import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eocontrol.*;
 
@@ -158,7 +160,9 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	public String name() {
-		return title() + ' ' + grade();
+		StringBuilder buf = new StringBuilder();
+		buf.append(grade()).append(' ').append(title());
+		return buf.toString();
 	}
 
 	public Integer eduYear() {
@@ -198,5 +202,25 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		since = 0;
 		to = Long.MAX_VALUE;
 		_flags = null;
+	}
+
+	public static NSArray listGroups(NSTimestamp date, EOEditingContext ec) {
+		Integer year = MyUtility.eduYearForDate(date);
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier(FIRST_YEAR_KEY,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,year);
+		quals[1] = new EOKeyValueQualifier(LAST_YEAR_KEY,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,year);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
+		NSArray result = ec.objectsWithFetchSpecification(fs);
+		if(result == null || result.count() <= 1)
+			return result;
+		try {
+			result = result.sortedArrayUsingComparator(AdaptingComparator.sharedInstance);
+		} catch (ComparisonException e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 }

@@ -32,6 +32,11 @@ package net.rujel.interfaces;
 import java.util.Calendar;
 import java.util.Date;
 
+import net.rujel.reusables.Various;
+
+import com.webobjects.eoaccess.EOEntity;
+import com.webobjects.eoaccess.EOModelGroup;
+import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
@@ -83,12 +88,6 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			if(sb.length() > 0) sb.append(' ');
 			sb.append(pers.secondName().charAt(0)).append('.');
 			return sb.toString();
-			/*
-			char fn = (pers.firstName() != null)?pers.firstName().charAt(0):'?';
-			if(pers.secondName() != null)
-				return new String (new char[] {fn,'.',' ',pers.secondName().charAt(0),'.'});
-			else
-				return new String (new char[] {fn,'.'}); */
 		}
 		
 		public static String composeName(Person pers, int firstNameDisplay,int secondNameDisplay) {
@@ -112,18 +111,6 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 				buf.append(first);
 				break;
 			}
-			/*
-			if(firstNameDisplay == 1) {
-				if(first != null)
-					first = new String(new char[]{first.charAt(0),'.'});
-				else
-					first = "?.";
-			} 
-			else {
-				if(firstNameDisplay < 1)
-					first = null;
-			} */
-			
 			String second = pers.secondName();
 			if(secondNameDisplay < 1 || second == null) return buf.toString();
 			
@@ -145,7 +132,6 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 				return null;
 			Person pers = (person instanceof Person)?(Person)person:person.person();
 			if(lastNameDisplay < 1) return composeName(pers,firstNameDisplay,secondNameDisplay);
-			
 			String last = pers.lastName();
 			if(last == null) last = "???";
 			if(lastNameDisplay == 1)
@@ -198,36 +184,52 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 														names[0] + "*"));
 				quals.addObject(new EOKeyValueQualifier("firstName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
 														names[0] + "*"));
-				return new com.webobjects.eocontrol.EOOrQualifier(quals);
+				return new EOOrQualifier(quals);
 				
 			case 2:
 				quals.addObject(personQualifier(names[0],names[1],null));
 				quals.addObject(personQualifier(names[1],names[0],null));
 				quals.addObject(personQualifier(null,names[0],names[1]));
-				return new com.webobjects.eocontrol.EOOrQualifier(quals);
+				return new EOOrQualifier(quals);
 				
 			case 3:
 				quals.addObject(personQualifier(names[0],names[1],names[2]));
 				quals.addObject(personQualifier(names[2],names[0],names[1]));
-				return new com.webobjects.eocontrol.EOOrQualifier(quals);				
+				return new EOOrQualifier(quals);				
 
 			default:
 				return null;
 			}
 		}
 		
-		public static NSArray search(EOEditingContext ec,String entity,String last,String first,String second) {
-			EOFetchSpecification fspec = new EOFetchSpecification(entity,personQualifier(last,first,second),sorter);
-			return ec.objectsWithFetchSpecification(fspec);
-		}
+//		public static NSArray search(EOEditingContext ec,String entity, String personEntity, String last,String first,String second) {
+//			EOFetchSpecification fspec = new EOFetchSpecification(entity,personQualifier(last,first,second),sorter);
+//			return ec.objectsWithFetchSpecification(fspec);
+//		}
 
-		public static NSArray search(EOEditingContext ec,String entity,String searchString) {
+		public static NSArray search(EOEditingContext ec,String entity, String searchString) {
 			EOQualifier qual = Person.Utility.fullNameQualifier(searchString);
 			if(qual == null)
 				return null;
-
-			EOFetchSpecification fspec = new EOFetchSpecification(entity,qual,sorter);
-			return ec.objectsWithFetchSpecification(fspec);		
+			return search(ec, qual, entity);
+		}
+		
+		public static NSArray search(EOEditingContext ec, EOQualifier qual, String entity) {
+			EOModelGroup mg = EOModelGroup.defaultGroup();
+			EOEntity ent = mg.entityNamed(entity);
+			EORelationship rel = ent.relationshipNamed("person");
+			boolean same = rel.destinationEntity().equals(ent);
+			String personEntity = (same)?entity:rel.destinationEntity().name();
+			EOFetchSpecification fspec = new EOFetchSpecification(personEntity,qual,
+					(same)?sorter:null);
+			NSArray list = ec.objectsWithFetchSpecification(fspec);
+			if(same || list == null || list.count() == 0)
+				return list;
+			qual = Various.getEOInQualifier("person", list);
+			fspec.setEntityName(entity);
+			fspec.setQualifier(qual);
+			fspec.setSortOrderings(sorter);
+			return ec.objectsWithFetchSpecification(fspec);
 		}
 		
 		public static int calculateAge(Date birth, Date day) {

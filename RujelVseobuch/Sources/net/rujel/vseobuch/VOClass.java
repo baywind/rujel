@@ -30,8 +30,10 @@
 package net.rujel.vseobuch;
 
 import net.rujel.interfaces.*;
+import net.rujel.reusables.AdaptingComparator;
 
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
@@ -107,13 +109,14 @@ public class VOClass extends _VOClass implements EduGroup
 	
 	public static NSArray listGroups(NSTimestamp date, EOEditingContext ec) {
 		Integer year = net.rujel.base.MyUtility.eduYearForDate(date);
-/*		EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
-		EOQualifier qual = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,year);
-		EOFetchSpecification fspec = new EOFetchSpecification("VOClass",qual,sorter);
-		return ec.objectsWithFetchSpecification(fspec);*/
-		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec,"VOClass","eduYear",year);
-		return EOSortOrdering.sortedArrayUsingKeyOrderArray(list,sorter);
-/*		NSDictionary dict = new NSDictionary(year,"year");
-        return EOUtilities.objectsWithFetchSpecificationAndBindings(ec,"VOClass","AllClassesInYear",dict);*/
+		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ec,"VOClass","eduYear",year);
+		if(result == null || result.count() <= 1)
+			return result;
+		try {
+			result = result.sortedArrayUsingComparator(AdaptingComparator.sharedInstance);
+		} catch (ComparisonException e) {
+			e.printStackTrace();
+		}
+		return result;
     }
 }

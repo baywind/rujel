@@ -178,7 +178,8 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		}
 		if(item == selection)
 			return "selection";
-		Boolean sex = (Boolean)NSKeyValueCoding.Utility.valueForKey(item, "sex");
+		Boolean sex = (Boolean)NSKeyValueCodingAdditions.Utility.
+						valueForKeyPath(item, "person.sex");
 		if(sex == null)
 			return "grey";
 		

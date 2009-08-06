@@ -2,21 +2,21 @@
     attributes = (
         {
             allowsNull = Y; 
-            columnName = ENTER; 
+            columnName = "ENTER_DT"; 
             name = enter; 
             prototypeName = date; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
             allowsNull = N; 
-            columnName = GROUP; 
+            columnName = "EDU_GROUP"; 
             name = groupID; 
             prototypeName = "int_3"; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
             allowsNull = Y; 
-            columnName = LEAVE; 
+            columnName = "LEAVE_DT"; 
             name = leave; 
             prototypeName = date; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 

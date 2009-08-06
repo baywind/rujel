@@ -197,8 +197,7 @@ public class PersListing extends WOComponent {
 			canCreate = false;
 			return;
 		}
-		EOFetchSpecification fspec = new EOFetchSpecification(entity(),qual,Person.sorter);
-		found = ec.objectsWithFetchSpecification(fspec);
+		found = Person.Utility.search(ec, qual, entity());
 		//		found = Person.Utility.search(ec,entity(),lastName,firstName,secondName);
 		canCreate = (access != null && access.flagForKey("create"));
 		if(found.count() < 1) {

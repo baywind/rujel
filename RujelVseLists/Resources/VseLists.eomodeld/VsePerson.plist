@@ -29,7 +29,7 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
         {
-            columnName = secondName; 
+            columnName = "SECOND_NAME"; 
             name = secondName; 
             prototypeName = word; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
