@@ -96,19 +96,19 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     public NSMutableArray lists() {
     	if(_lists == null) {
     		_lists = new NSMutableArray(base().textValue());
-    		if(byCourse == null || byCourse.count() == 0)
-    			return _lists;
-    		Enumeration enu = byCourse.objectEnumerator();
-    		while (enu.hasMoreElements()) {
-				EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
-				String listName = (String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-				if(!_lists.containsObject(listName))
-					_lists.addObject(listName);
-			}
+    		if(byCourse != null && byCourse.count() > 0) {
+    			Enumeration enu = byCourse.objectEnumerator();
+    			while (enu.hasMoreElements()) {
+    				EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
+    				String listName = (String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+    				if(!_lists.containsObject(listName))
+    					_lists.addObject(listName);
+    			}
+    		}
     		NSArray extraLists = (NSArray)valueForBinding("extraLists");
     		if(extraLists != null && extraLists.count() > 0) {
     			String listKey = (String)valueForBinding("listKey");
-    			enu = extraLists.objectEnumerator();
+    			Enumeration enu = extraLists.objectEnumerator();
     			while (enu.hasMoreElements()) {
 					Object listName = enu.nextElement();
 					if(listKey == null && listName instanceof NSKeyValueCoding)
