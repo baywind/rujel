@@ -285,6 +285,11 @@
 			<key>Timeout</key>
 			<dict>
 				<key>root</key>
+				<string>0</string>
+			</dict>
+			<key>TimeoutNorm</key>
+			<dict>
+				<key>root</key>
 				<string>1023</string>
 				<key>zavuch</key>
 				<string>15</string>
@@ -326,6 +331,11 @@
 			<key>VOTeacher</key>
 			<dict>
 				<key>root</key>
+				<string>0</string>
+			</dict>
+			<key>_VOTeacher</key>
+			<dict>
+				<key>root</key>
 				<string>1017</string>
 				<key>zav_kaf</key>
 				<string>1</string>
@@ -333,6 +343,23 @@
 				<string>1</string>
 				<key>teacher</key>
 				<string>1</string>
+			</dict>
+			<key>VOList</key>
+			<dict>
+				<key>root</key>
+				<string>0</string>
+			</dict>
+			<key>_VOList</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+			<key>VsePerson</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
 			</dict>
 			<key>Work</key>
 			<dict>
@@ -443,13 +470,6 @@
 				<string>15</string>
 				<key>zav_kaf</key>
 				<string>3</string>
-				<key>teacher</key>
-				<string>1</string>
-			</dict>
-			<key>VOList</key>
-			<dict>
-				<key>root</key>
-				<string>1023</string>
 				<key>teacher</key>
 				<string>1</string>
 			</dict>
@@ -646,11 +666,20 @@
 		<dict>
 			<key>_URL</key>
 			<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
+			<key>skip</key>
+			<string>true</string>
 			<key>dbName</key>
 			<string>DemoSho</string>
 		</dict>
+		<key>VseLists</key>
+		<dict>
+			<key>skip</key>
+			<string>false</string>
+		</dict>
 		<key>AutoItog</key>
 		<dict>
+			<key>skip</key>
+			<string>true</string>
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
@@ -707,7 +736,7 @@
 			<string>RujelYear%s</string>
 		</dict>
 		<key>serverURL</key>
-		<string>jdbc:mysql://127.0.0.1</string>
+		<string>jdbc:mysql://127.0.0.1/</string>
 		<key>urlSuffix</key>
 		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
 		<key>username</key>
