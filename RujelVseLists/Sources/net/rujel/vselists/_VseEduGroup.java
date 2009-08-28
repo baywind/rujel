@@ -41,6 +41,7 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 	public static final String ENTITY_NAME = "VseEduGroup";
 
 	// Attributes
+	public static final String ABS_START_KEY = "absStart";
 	public static final String FIRST_YEAR_KEY = "firstYear";
 	public static final String FLAGS_KEY = "flags";
 	public static final String LAST_YEAR_KEY = "lastYear";
@@ -49,6 +50,14 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 
 	// Relationships
 	public static final String LISTS_KEY = "lists";
+
+  public Integer absStart() {
+    return (Integer) storedValueForKey(ABS_START_KEY);
+  }
+
+  public void setAbsStart(Integer value) {
+    takeStoredValueForKey(value, ABS_START_KEY);
+  }
 
   public Integer firstYear() {
     return (Integer) storedValueForKey(FIRST_YEAR_KEY);

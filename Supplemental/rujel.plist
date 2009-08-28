@@ -521,6 +521,17 @@
 				<key>any</key>
 				<string>1</string>
 			</dict>
+			<key>ListsEditor</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>teacher</key>
+				<string>1</string>
+				<key>tutor</key>
+				<string>7</string>
+			</dict>
 			<key>login</key>
 			<dict>
 				<key>root</key>
@@ -782,6 +793,8 @@
 		<key>net.rujel.stats.StatsModule</key>
 		<string>true</string>
 		<key>net.rujel.complete.CompleteModule</key>
+		<string>true</string>
+		<key>net.rujel.vselists.ListsEditor</key>
 		<string>true</string>
 	</dict>
 	<key>edu</key>

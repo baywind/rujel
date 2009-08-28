@@ -41,9 +41,45 @@ public abstract class _VseTeacher extends EOGenericRecord {
 	public static final String ENTITY_NAME = "VseTeacher";
 
 	// Attributes
+	public static final String DELO_KEY = "delo";
+	public static final String ENTER_KEY = "enter";
+	public static final String LEAVE_KEY = "leave";
+	public static final String POSITION_KEY = "position";
 
 	// Relationships
 	public static final String PERSON_KEY = "person";
+
+  public String delo() {
+    return (String) storedValueForKey(DELO_KEY);
+  }
+
+  public void setDelo(String value) {
+    takeStoredValueForKey(value, DELO_KEY);
+  }
+
+  public NSTimestamp enter() {
+    return (NSTimestamp) storedValueForKey(ENTER_KEY);
+  }
+
+  public void setEnter(NSTimestamp value) {
+    takeStoredValueForKey(value, ENTER_KEY);
+  }
+
+  public NSTimestamp leave() {
+    return (NSTimestamp) storedValueForKey(LEAVE_KEY);
+  }
+
+  public void setLeave(NSTimestamp value) {
+    takeStoredValueForKey(value, LEAVE_KEY);
+  }
+
+  public String position() {
+    return (String) storedValueForKey(POSITION_KEY);
+  }
+
+  public void setPosition(String value) {
+    takeStoredValueForKey(value, POSITION_KEY);
+  }
 
   public net.rujel.vselists.VsePerson person() {
     return (net.rujel.vselists.VsePerson)storedValueForKey(PERSON_KEY);

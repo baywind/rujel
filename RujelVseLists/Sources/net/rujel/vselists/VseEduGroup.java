@@ -59,12 +59,17 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		super.awakeFromInsertion(ec);
 		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
 		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
-		setStartGrade(new Integer(minGrade));
 		Integer year = MyUtility.eduYearForDate(date());
 		setFirstYear(year);
+		setStartGrade(new Integer(minGrade));
 		year = new Integer(year.intValue() + maxGrade - minGrade);
 		setLastYear(year);
 		setFlags(new Integer(0));
+	}
+	
+	public void setStartGrade(Integer startGrade) {
+		super.setStartGrade(startGrade);
+		setAbsStart(new Integer(firstYear().intValue() - startGrade.intValue()));
 	}
 
 	protected NSTimestamp date() {

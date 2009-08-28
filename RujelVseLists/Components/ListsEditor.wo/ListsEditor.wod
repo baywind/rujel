@@ -1,0 +1,40 @@
+PageWrapper : PageWrapper {
+  title = session.strings.RujelVseLists_VseStrings.title;
+}
+
+Title : WOString {
+  value = session.strings.RujelVseLists_VseStrings.title;
+  valueWhenEmpty = "Lists";
+  escapeHTML = false;
+}
+
+ClassListing : ClassListing {
+  editingContext = ec;
+  selection = group;
+  width = "100%";
+}
+
+PersonSelector : PersonSelector {
+  list = list;
+  nameFormat = "220+";
+}
+
+AddClass : OnClickContainer {
+  elementName = "div";
+  onclick = session.ajaxPopup;
+  invokeAction = createGroup;
+  class = "green";
+  style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;margin:4px;";
+  hide = session.readAccess._create.VseEduGroup;
+}
+
+EditGroup : OnClickContainer {
+  elementName = "th";
+  onclick = session.ajaxPopup;
+  invokeAction = editGroup;
+  disabled = session.readAccess._edit.group;
+}
+
+GroupTitle : WOString {
+  value = group.name;
+}

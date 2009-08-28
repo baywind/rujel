@@ -74,7 +74,8 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		selection = valueForBinding("selection");
 		if(editingContext == null) {
 			editingContext = (EOEditingContext)valueForBinding("editingContext");
-			populate();
+			dict = populate(editingContext,session());
+			subjects = (NSArray)dict.removeObjectForKey("subjects");
 		}
 	}
 	
@@ -82,13 +83,13 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
         return false;
 	}
 
-	public void populate() {
-		dict = new NSMutableDictionary();
-		Integer eduYear = (Integer)session().valueForKey("eduYear");
+	public static NSMutableDictionary populate(EOEditingContext ec, WOSession ses) {
+		NSMutableDictionary dict = new NSMutableDictionary();
+		Integer eduYear = (Integer)ses.valueForKey("eduYear");
 		NSArray allCourses = EOUtilities.objectsMatchingKeyAndValue
-					(editingContext, EduCourse.entityName, "eduYear", eduYear);
+					(ec, EduCourse.entityName, "eduYear", eduYear);
 		if(allCourses == null || allCourses.count() == 0)
-			return;
+			return dict;
 		NSMutableSet all = new NSMutableSet();
 		NSMutableSet subjectSet = new NSMutableSet();
 		// collecting teachers on subjects
@@ -124,7 +125,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			dict.setObjectForKey(sorted, subject);
 		}
 		NSComparator comparator = NSComparator.AscendingStringComparator;
-		subjects = subjectSet.allObjects();
+		NSArray subjects = subjectSet.allObjects();
 		try {
 			if (smartEduPlan) {
 				Class compClass = Class.forName("net.rujel.eduplan.SubjectComparator");
@@ -133,12 +134,14 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			}
 			subjects = subjects.sortedArrayUsingComparator(comparator);
 		} catch (Exception e) {
-			Object[] args = new Object[] {session(),e};
+			Object[] args = new Object[] {ses,e};
 			logger.log(WOLogLevel.WARNING,"Error sorting subjects list",args);
 		}
 		if(smartEduPlan) {
 			subjects = (NSArray)subjects.valueForKey("subject");
 		}
+		dict.takeValueForKey(subjects,"subjects");
+		return dict;
 	}
 	
 	public WOActionResults search() {

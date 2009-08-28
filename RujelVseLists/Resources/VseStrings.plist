@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>Списки</string>
+	<key>delo</key>
+	<string>личное дело</string>
+	<key>enter</key>
+	<string>пришел</string>
+	<key>leave</key>
+	<string>ушел</string>
+	<key>VseGroupInspector</key>
+	<dict>
+		<key>title</key>
+		<string>Класс</string>
+		<key>new</key>
+		<string>Новый</string>
+		<key>firstYear</key>
+		<string>сформирован в</string>
+		<key>lastYear</key>
+		<string>расформирован в</string>
+		<key>eduYear</key>
+		<string>учебном году</string>
+		<key>as</key>
+		<string>как</string>
+	</dict>
+	<key>listRegime</key>
+	<dict>
+		<key>title</key>
+		<string>Списки</string>
+		<key>component</key>
+		<string>ListsEditor</string>
+		<key>group</key>
+		<string>other</string>
+		<key>sort</key>
+		<string>20</string>
+	</dict>
+</dict>
+</plist>

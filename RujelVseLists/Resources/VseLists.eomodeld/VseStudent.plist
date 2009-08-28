@@ -1,6 +1,26 @@
 {
     attributes = (
         {
+            columnName = DELO; 
+            name = delo; 
+            prototypeName = word; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "ENTER_DT"; 
+            name = enter; 
+            prototypeName = date; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "LEAVE_DT"; 
+            name = leave; 
+            prototypeName = date; 
+            userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
+        }, 
+        {
             allowsNull = N; 
             columnName = PERSON; 
             name = personID; 
@@ -15,9 +35,9 @@
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }
     ); 
-    attributesUsedForLocking = (personID); 
+    attributesUsedForLocking = (delo, enter, leave, personID); 
     className = "net.rujel.vselists.VseStudent"; 
-    classProperties = (lists, person); 
+    classProperties = (delo, enter, leave, lists, person); 
     externalName = STUDENT; 
     fetchSpecificationDictionary = {}; 
     name = VseStudent; 
