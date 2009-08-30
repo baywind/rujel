@@ -47,7 +47,6 @@ public class PersListing extends WOComponent {
 	private int secondNameDisplay = 2;
 //	protected String entity;
 	protected NamedFlags access;
-	protected NSDictionary strings = (NSDictionary)application().valueForKeyPath("strings.Strings");
 	public static final NSArray accessKeys = new NSArray(new Object[] {
 		"search", "create", "edit","delete"});
 	private NSArray found;
@@ -59,7 +58,7 @@ public class PersListing extends WOComponent {
     public String searchMessage;
     public boolean canCreate = false;
 //	public NSMutableDictionary newPerson;
-	private Person onEdit;
+//	private Person onEdit;
     public int index;
 /*	public String lastName;
 	public String firstName;
@@ -181,30 +180,27 @@ public class PersListing extends WOComponent {
 	}
 
 	public void search() {
-		if (canCreate) {
-			searchMessage = (String)strings.valueForKeyPath("messages.createNew") + "?";
-			return;
-		} else {
-			searchMessage = null;
-		}
 		EOQualifier qual = Person.Utility.fullNameQualifier(searchString);
+		NSKeyValueCodingAdditions strings = (NSKeyValueCodingAdditions)
+						session().valueForKey("strings");
 		if(qual == null) {
-			String noMore = (String)application().valueForKeyPath(
-					"strings.RujelBase_Base.notMoreXwords"); 
-			searchMessage = (String)strings.valueForKeyPath("messages.illegalFormat")
-				+ (String)strings.valueForKeyPath("dataTypes.ofRequest") + ". "
-				+ String.format(noMore,3) + ".";
+			String noMore = (String)strings.valueForKeyPath(
+					"RujelBase_Base.notMoreXwords");
+			StringBuilder buf = new StringBuilder();
+			buf.append(strings.valueForKeyPath("Strings.messages.illegalFormat"));
+			buf.append(' ');
+			buf.append(strings.valueForKeyPath("Reusables_Stings.dataTypes.ofRequest"));
+			buf.append(' ');
+			buf.append(String.format(noMore,3));
+			searchMessage = buf.toString();
 			canCreate = false;
 			return;
 		}
 		found = Person.Utility.search(ec, qual, entity());
-		//		found = Person.Utility.search(ec,entity(),lastName,firstName,secondName);
 		canCreate = (access != null && access.flagForKey("create"));
 		if(found.count() < 1) {
-			searchMessage = (String)strings.valueForKeyPath("messages.nothingFound");
-			if(canCreate)
-				searchMessage = searchMessage	+ ".<br/>" + 
-				   (String)strings.valueForKeyPath("messages.createNew") + "?";
+			searchMessage = (String)session().valueForKeyPath(
+					"strings.Strings.messages.nothingFound");
 			return;
 		}
 		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
@@ -243,11 +239,11 @@ public class PersListing extends WOComponent {
 	}
 	
 	public WOActionResults select() {
-		if(onEdit != null) {
+/*		if(onEdit != null) {
 			if(session().valueForKey("message") != null)
 				return null;
 			onEdit = null;
-		}
+		}*/
 		selection = (PersonLink)personList().objectAtIndex(index);
 		canCreate = false;
 		searchString = null;
@@ -279,7 +275,7 @@ public class PersListing extends WOComponent {
 			canCreate = false;
 		searchString = newSearchString;
 	}
-	
+/*	
     public WOComponent edit() {
 		selection = null;
 		setValueForBinding(selection,"selection");
@@ -290,7 +286,7 @@ public class PersListing extends WOComponent {
 	public boolean onEdit() {
 		return (item.equals(onEdit));
 	}
-	
+*/	
 	protected String _entity;
 	protected String entity() {
 		if(_entity != null)
@@ -327,13 +323,13 @@ public class PersListing extends WOComponent {
 	}
 	
     public WOComponent create() {
-		searchMessage = null;
-        canCreate = false;
+//		searchMessage = null;
+//		canCreate = false;
 		selection = null;
 		setValueForBinding(selection,"selection");
 //		newPerson = new NSMutableDictionary();
 //		newPerson.takeValueForKey(searchString,"lastName");
-		onEdit = (Person)EOUtilities.createAndInsertInstance(ec,entity());
+		Person onEdit = (Person)EOUtilities.createAndInsertInstance(ec,entity());
 		String[] names = Person.Utility.splitNames(searchString);
 		if(names != null) {
 			if(names.length > 0)
@@ -343,9 +339,26 @@ public class PersListing extends WOComponent {
 			if(names.length > 2)
 				onEdit.setSecondName(names[2]);
 		}
-		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
-		fullList.addObject(onEdit);
-        return null;
+//		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
+//		fullList.addObject(onEdit);
+		WOComponent returnPage = context().page();
+		WOComponent popup = pageWithName("SelectorPopup");
+		if(returnPage instanceof SelectorPopup) {
+			SelectorPopup sp = (SelectorPopup)returnPage;
+			popup.takeValueForKey(sp.returnPage, "returnPage");
+			popup.takeValueForKey(sp.resultPath, "resultPath");
+			popup.takeValueForKey(sp.resultGetter, "resultGetter");
+			popup.reset();
+		} else {
+			popup.takeValueForKey(returnPage, "returnPage");
+		}
+		NSDictionary dict = (NSDictionary) session().valueForKeyPath(
+					"strings.RujelBase_Base.newPerson");
+//		dict = PlistReader.cloneDictionary(dict, true);
+//		dict.takeValueForKeyPath(null, "presenterBindings.")
+		popup.takeValueForKey(onEdit, "value");
+		popup.takeValueForKey(dict, "dict");
+		return popup;
     }
 
     public void undo() {
@@ -360,13 +373,13 @@ public class PersListing extends WOComponent {
 			NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
 			fullList.removeObject(item);
 		}
-		onEdit = null;
+//		onEdit = null;
 	}
 
 	public void delete() {
 		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
 		fullList.removeObject(item);
-		onEdit = null;
+//		onEdit = null;
 	}
 	
 	public String act() {

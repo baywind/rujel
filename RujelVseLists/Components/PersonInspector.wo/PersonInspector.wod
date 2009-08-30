@@ -31,3 +31,26 @@ Component : WOSwitchComponent {
   person = person;
   dict = currUsage;
 }
+
+Form : WOForm {
+  class = "selectionBorder backfield1";
+  style = "border-style:solid none none;";
+  multipleSubmit = true;
+}
+
+Save: WOSubmitButton {
+	action = save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
+}
+
+ResetButton: WOResetButton {
+	value = application.strings.Reusables_Strings.uiElements.Cancel;
+	onclick = "closePopup();";
+}
+HasSelection : WOConditional {
+  condition = currUsage.component;
+}
+
+ShowButtons : WOConditional {
+  condition = currUsage.showButtons;
+}

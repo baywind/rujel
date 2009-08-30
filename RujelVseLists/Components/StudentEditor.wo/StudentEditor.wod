@@ -24,6 +24,7 @@ Enter : WOTextField {
   value = student.enter;
   size = 10;
   maxlength = 10;
+  dateformat = application.prefs.ui.dateFormat;
   onkeypress = "return isNumberInput(event,true);";
   disabled = ^dict.access._edit;
 }
@@ -37,6 +38,7 @@ Leave : WOTextField {
   value = student.leave;
   size = 10;
   maxlength = 10;
+  dateformat = application.prefs.ui.dateFormat;
   onkeypress = "return isNumberInput(event,true);";
   disabled = ^dict.access._edit;
 }

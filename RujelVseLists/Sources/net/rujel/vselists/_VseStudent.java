@@ -41,6 +41,7 @@ public abstract class _VseStudent extends EOGenericRecord {
 	public static final String ENTITY_NAME = "VseStudent";
 
 	// Attributes
+	public static final String ABS_GRADE_KEY = "absGrade";
 	public static final String DELO_KEY = "delo";
 	public static final String ENTER_KEY = "enter";
 	public static final String LEAVE_KEY = "leave";
@@ -48,6 +49,14 @@ public abstract class _VseStudent extends EOGenericRecord {
 	// Relationships
 	public static final String LISTS_KEY = "lists";
 	public static final String PERSON_KEY = "person";
+
+  public Integer absGrade() {
+    return (Integer) storedValueForKey(ABS_GRADE_KEY);
+  }
+
+  public void setAbsGrade(Integer value) {
+    takeStoredValueForKey(value, ABS_GRADE_KEY);
+  }
 
   public String delo() {
     return (String) storedValueForKey(DELO_KEY);

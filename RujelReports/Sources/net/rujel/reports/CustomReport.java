@@ -163,8 +163,8 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     		fs.setPrefetchingRelationshipKeyPaths(args);
     	fullList = ec.objectsWithFetchSpecification(fs);
     	if(fullList == null || fullList.count() == 0) {
-    		session().takeValueForKey(application().valueForKeyPath(
-    				"strings.RujelReports_Reports.CustomReport.nothingFound"), "message");
+    		session().takeValueForKey(session().valueForKeyPath(
+    				"strings.Strings.messages.nothingFound"), "message");
     	} else {
     		setupDisplay();
         	logger.log(WOLogLevel.MASS_READING,"Generating report '" + 

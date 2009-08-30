@@ -1,10 +1,24 @@
 <webobject name = "PageWrapper">
 <h1><webobject name = "Title"/></h1>
 <table align = "center">
-<tr valign = "top"><td style = "min-width:5em;"><webobject name = "ClassListing"/>
+<tr valign = "top"><td  class = "backfield2" style = "min-width:5em;">
+		<webobject name = "ClassListing"/>
 		<webobject name = "AddClass">+</webobject></td>
-	<td><table>
-		<tr><webobject name = "EditGroup"><webobject name = "GroupTitle"/></webobject>
-	<webobject name = "PersonSelector"></webobject></table></td>
+	<td class = "backfield1"><webobject name = "Form"><table>
+	<thead>
+		<tr><webobject name = "EditGroup"><webobject name = "GroupTitle"/></webobject></tr>
+		<tr><th><webobject name = "LastNameTitle"/> <webobject name = "FirstNameTitle"/></th>
+			<th><webobject name = "EnterTitle"/></th>
+			<th><webobject name = "LeaveTitle"/></th></tr>
+	</thead><tbody><webobject name = "PersonSelector"><webobject name = "Row">
+		<webobject name = "NameCell"><webobject name = "Name"/></webobject>
+		<td><webobject name = "Enter"/></td>
+		<td><webobject name = "Leave"/></td>
+	</webobject></webobject></tbody></table>
+	<webobject name = "AddPerson">+</webobject><webobject name = "CanChange">
+	<div style = "text-align:right;"><webobject name = "Save"/>
+		<webobject name = "ResetButton"/></div></webobject></webobject>
+	</td>
+	</td>
 </table>
 </webobject>

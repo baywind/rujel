@@ -48,7 +48,6 @@ import com.webobjects.appserver.WOSession;
 import com.webobjects.eocontrol.*;
 
 public class VseEduGroup extends _VseEduGroup implements EduGroup {
-
 	
 	public static void init() {
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
@@ -105,6 +104,14 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	protected long since;
 	protected long to = Long.MAX_VALUE;
 	public NSArray list() {
+		NSArray list = vseList();
+		if(list != null && list.count() > 0)
+			list = (NSArray)list.valueForKey("student");
+		return list;
+	}
+	protected static final NSArray listSorter = new NSArray(
+			new EOSortOrdering("student",EOSortOrdering.CompareAscending));
+	public NSArray vseList() {
 		NSTimestamp date = date();
 		long now = date.getTime();
 		if(_list != null && now > since && now < to)
@@ -150,8 +157,10 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 					since = cal.getTimeInMillis();
 				}
 			}
-			result.addObject(l.valueForKey("student"));
+			result.addObject(l);
 		}
+		if(result.count() > 1)
+			EOSortOrdering.sortArrayUsingKeyOrderArray(result, listSorter);
 		_list = result.immutableClone();
 		return _list;
 	}

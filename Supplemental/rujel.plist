@@ -360,6 +360,56 @@
 			<dict>
 				<key>root</key>
 				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>zav_kaf</key>
+				<string>7</string>
+				<key>tutor</key>
+				<string>7</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+			<key>VseTeacher</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>zav_kaf</key>
+				<string>7</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+			<key>VseStudent</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>tutor</key>
+				<string>7</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+			<key>VseList</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>tutor</key>
+				<string>7</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+			<key>VseEduGroup</key>
+			<dict>
+				<key>root</key>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>teacher</key>
+				<string>1</string>
 			</dict>
 			<key>Work</key>
 			<dict>

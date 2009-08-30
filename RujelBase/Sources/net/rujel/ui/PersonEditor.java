@@ -55,6 +55,7 @@ public class PersonEditor extends WOComponent {
 				ec.saveChanges();
 			} catch (EOValidation.ValidationException vex) {
 				session().takeValueForKey(vex.getMessage(),"message");
+				ec.revert();
 			}
 		}
         return (WOActionResults)valueForBinding("saveAction");

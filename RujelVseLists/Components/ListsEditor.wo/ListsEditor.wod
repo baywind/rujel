@@ -14,9 +14,9 @@ ClassListing : ClassListing {
   width = "100%";
 }
 
-PersonSelector : PersonSelector {
+PersonSelector : WORepetition {
   list = list;
-  nameFormat = "220+";
+  item = item;
 }
 
 AddClass : OnClickContainer {
@@ -33,8 +33,94 @@ EditGroup : OnClickContainer {
   onclick = session.ajaxPopup;
   invokeAction = editGroup;
   disabled = session.readAccess._edit.group;
+  colspan = 4;
 }
 
 GroupTitle : WOString {
   value = group.name;
+}
+
+Name : PersonDisplay {
+  person = item.student;
+  last = 2;
+  first = 2;
+  second = 0;
+}
+
+Enter : WOTextField {
+  value = item.enter;
+  dateformat = application.prefs.ui.dateFormat;
+  onkeypress = "return isNumberInput(event,true);";
+  style = "text-align:center;";
+  size = 10;
+  maxlength = 10;
+  disabled = access._edit;
+}
+
+Leave : WOTextField {
+  value = item.leave;
+  dateformat = application.prefs.ui.dateFormat;
+  onkeypress = "return isNumberInput(event,true);";
+  style = "text-align:center;";
+  size = 10;
+  maxlength = 10;
+  disabled = access._edit;
+}
+
+LastNameTitle : WOString {
+  value = session.strings.RujelInterfaces_Names.Person.lastName;
+  escapeHTML = false;
+}
+
+FirstNameTitle : WOString {
+  value = session.strings.RujelInterfaces_Names.Person.firstName;
+  escapeHTML = false;
+}
+
+EnterTitle : WOString {
+  value = session.strings.RujelVseLists_VseStrings.enter;
+  escapeHTML = false;
+}
+
+LeaveTitle : WOString {
+  value = session.strings.RujelVseLists_VseStrings.leave;
+  escapeHTML = false;
+}
+
+Row : WOGenericContainer {
+  elementName = "tr";
+  class = rowClass;
+}
+
+NameCell : OnClickContainer {
+  elementName = "td";
+  onclick = session.ajaxPopup;
+  invokeAction = editPerson;
+  align = "left";
+}
+
+AddPerson : OnClickContainer {
+  elementName = "div";
+  onclick = session.ajaxPopup;
+  invokeAction = addPerson;
+  class = "green";
+  style = "float:left;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;margin:4px;";
+  hide = hideAddButton;
+}
+
+Form : WOForm {
+}
+
+Save: WOSubmitButton {
+	action = save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
+}
+
+ResetButton: WOResetButton {
+	value = application.strings.Reusables_Strings.uiElements.Cancel;
+	onclick = "closePopup();";
+}
+
+CanChange : WOConditional {
+  condition = access.edit;
 }

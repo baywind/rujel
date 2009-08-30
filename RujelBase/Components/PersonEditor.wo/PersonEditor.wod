@@ -108,7 +108,8 @@ BirthDateLabel: WOString {
 
 BirthDate: WOTextField {
 	value = person.birthDate;
-	dateformat = "%d.%m.%Y";
+	dateformat = application.prefs.ui.dateFormat;
+	onkeypress = "return isNumberInput(event,true);";
 	size = 10;
 	maxlength = 10;
 }

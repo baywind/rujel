@@ -59,17 +59,37 @@ public class SelectorPopup extends com.webobjects.appserver.WOComponent {
 			dict.takeValueForKey(Boolean.TRUE, "invokeAction");
 		WOActionResults result = super.invokeAction(aRequest, aContext);
 		if(result == null || result == returnPage) {
-			result = returnPage;
-			returnPage.ensureAwakeInContext(context());
-			if(resultGetter == null)
-				returnPage.takeValueForKeyPath(value, resultPath);
-			else
-				NSKeyValueCodingAdditions.Utility.takeValueForKeyPath(
-						resultGetter, value, resultPath);
+			result = returnAction();
 		} else {
 			;
 		}
 		return result;
 	}
+	
+	public WOActionResults returnAction() {
+		returnPage.ensureAwakeInContext(context());
+		if(resultGetter == null)
+			returnPage.takeValueForKeyPath(value, resultPath);
+		else
+			NSKeyValueCodingAdditions.Utility.takeValueForKeyPath(
+					resultGetter, value, resultPath);
+		return returnPage;
+	}
+	
+	public void cancel() {
+		value = null;
+	}
 
+	public String onCancel() {
+		String set = (String)dict.valueForKey("onCancel");
+		if(set == null)
+			return "closePopup();";
+		if(set.equals("ajaxPopup")) {
+			 return "ajaxPopupAction('" + context().componentActionURL() + "');";
+		}
+		if(set.indexOf('(') < 0)
+			return (String)session().valueForKey(set);
+		return set;
+	}
+	
 }

@@ -36,6 +36,7 @@ import net.rujel.interfaces.Student;
 import net.rujel.reusables.SessionedEditingContext;
 
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSTimestamp;
@@ -51,6 +52,7 @@ public class VseStudent extends _VseStudent implements Student {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+		setAbsGrade(new Integer(0));
 	}
 
 	protected NSTimestamp date() {
@@ -81,5 +83,34 @@ public class VseStudent extends _VseStudent implements Student {
 			lists = EOSortOrdering.sortedArrayUsingKeyOrderArray(lists, flagsSorter);
 		}
 		return (EduGroup)((EOEnterpriseObject)lists.objectAtIndex(0)).valueForKey("eduGroup");		
+	}
+	
+	public static VseStudent studentForPerson(VsePerson person, NSTimestamp date) {
+		EOEditingContext ec = person.editingContext();
+		NSArray students = EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME,
+				PERSON_KEY, person);
+		if(students == null || students.count() == 0)
+			return null;
+		if(date != null) {
+			NSArray args = new NSArray(new Object[] {date,date});
+			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+					"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
+			students = EOQualifier.filteredArrayWithQualifier(students, qual);
+			if(students == null || students.count() == 0)
+				return null;
+		}
+		return (VseStudent)students.objectAtIndex(0);
+	}
+
+	public static VseStudent studentForPerson(VsePerson person, NSTimestamp date,
+			boolean create) {
+		VseStudent student = studentForPerson(person, date);
+		if(create && student == null) {
+			EOEditingContext ec = person.editingContext();
+			student = (VseStudent)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+			student.addObjectToBothSidesOfRelationshipWithKey(person, PERSON_KEY);
+			student.setEnter(date);
+		}
+		return student;
 	}
 }
