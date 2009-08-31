@@ -314,6 +314,12 @@ public class Session extends WOSession {
 		String result = "ajaxPopupAction('" + href + "',event);";
 		return result;
 	}
+
+	public String ajaxPopupNoPos() {
+		String href = context().componentActionURL();
+		String result = "ajaxPopupAction('" + href + "');";
+		return result;
+	}
 	
 	public String tryLoad() {
 		String href = context().componentActionURL();

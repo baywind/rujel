@@ -20,7 +20,7 @@ PersonDisplay : PersonDisplay {
 Tabs : Tabs {
   currTab = currUsage;
   tablist = usages;
-  onClick = session.ajaxPopup;
+  onClick = session.ajaxPopupNoPos;
   titleAttribute = "title";
   idAttribute = "entity";
   hoverAttribute = "hover";

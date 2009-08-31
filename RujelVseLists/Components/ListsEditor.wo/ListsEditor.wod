@@ -8,6 +8,15 @@ Title : WOString {
   escapeHTML = false;
 }
 
+Modes: Tabs {
+	currTab = mode;
+	tablist = session.strings.RujelVseLists_VseStrings.editorTabs;
+	selectAction = switchMode;
+	onClick = session.tryLoad;
+	vertical = false;
+	numeric = true;
+}
+
 ClassListing : ClassListing {
   editingContext = ec;
   selection = group;
@@ -41,7 +50,7 @@ GroupTitle : WOString {
 }
 
 Name : PersonDisplay {
-  person = item.student;
+  person = plink;
   last = 2;
   first = 2;
   second = 0;
@@ -123,4 +132,19 @@ ResetButton: WOResetButton {
 
 CanChange : WOConditional {
   condition = access.edit;
+}
+
+Categories : Tabs {
+  currTab = selection;
+  tablist = categories;
+  vertical = true;
+}
+
+ShowClasses : WOConditional {
+  condition = mode;
+  negate = true;
+}
+
+HasGroup : WOConditional {
+  condition = group;
 }

@@ -6,6 +6,8 @@
 	<string>Списки</string>
 	<key>delo</key>
 	<string>личное дело</string>
+	<key>position</key>
+	<string>должность</string>
 	<key>enter</key>
 	<string>пришел</string>
 	<key>leave</key>
@@ -27,6 +29,11 @@
 		<key>as</key>
 		<string>как</string>
 	</dict>
+	<key>editorTabs</key>
+	<array>
+		<string>Ученики</string>
+		<string>Учителя</string>
+	</array>
 	<key>listRegime</key>
 	<dict>
 		<key>title</key>
@@ -109,7 +116,20 @@
 			<key>showButtons</key>
 			<true/>
 			<key>sort</key>
-			<string>20</string>
+			<string>22</string>
+		</dict>
+		<key>Teacher</key>
+		<dict>
+			<key>entity</key>
+			<string>VseTeacher</string>
+			<key>component</key>
+			<string>TeacherEditor</string>
+			<key>title</key>
+			<string>Учитель</string>
+			<key>showButtons</key>
+			<true/>
+			<key>sort</key>
+			<string>21</string>
 		</dict>
 	</dict>
 </dict>

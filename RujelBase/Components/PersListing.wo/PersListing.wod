@@ -154,7 +154,7 @@ CanCreate : WOConditional {
 CreateLink : OnClickContainer {
   elementName = "span";
   invokeAction = create;
-  onclick = session.ajaxPopup;
+  onclick = session.ajaxPopupNoPos;
   class = "button";
   style = "color:#003300;";
 }

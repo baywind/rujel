@@ -557,8 +557,8 @@ public class SrcMark extends WOComponent {
 	}
 	
 	public String itemToString() {
-		if(item instanceof Person) {
-			return Person.Utility.fullName((Person)item,true,2,1,1);
+		if(item instanceof PersonLink) {
+			return Person.Utility.fullName((PersonLink)item,true,2,1,1);
 		}
 		return item.toString();
 	}

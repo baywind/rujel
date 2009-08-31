@@ -39,7 +39,8 @@ SaveButton: WOSubmitButton {
 }
 
 CanDelete: WOConditional {
-	condition = session.readAccess._delete.person;
+	realcondition = session.readAccess._delete.person;
+	condition = true;
 	negate = true;
 }
 

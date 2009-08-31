@@ -76,8 +76,9 @@ public class SelectorPopup extends com.webobjects.appserver.WOComponent {
 		return returnPage;
 	}
 	
-	public void cancel() {
+	public WOActionResults cancel() {
 		value = null;
+		return returnPage;
 	}
 
 	public String onCancel() {
