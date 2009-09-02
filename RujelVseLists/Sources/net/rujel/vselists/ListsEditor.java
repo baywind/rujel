@@ -3,12 +3,12 @@ package net.rujel.vselists;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.WOLogLevel;
-import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -45,7 +45,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     public NSKeyValueCodingAdditions item;
     public NamedFlags access;
     public NSArray list;
-	public Integer mode = new Integer(0);
+	public Integer mode;
 	public NSMutableDictionary agregate;
 	public NSArray categories;
 	public Object selection;
@@ -53,14 +53,18 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     public ListsEditor(WOContext context) {
         super(context);
     	ec = new SessionedEditingContext(context.session());
+        switchMode();
     }
     
     public void toggleAll() {
     	showAll = !showAll;
-    	if(selection instanceof VseEduGroup)
+    	if(selection instanceof VseEduGroup) {
     		setGroup(group());
-    	else
-    		setSelection(selection);
+    	} else {
+    		Object tmpSelection = selection;
+    		switchMode();
+    		setSelection(tmpSelection);
+    	}
     }
     
     public void switchMode() {
@@ -68,16 +72,19 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     		mode = new Integer(0);
     	selection = null;
     	list = NSArray.EmptyArray;
+    	NSTimestamp date = null;
+    	if(!showAll)
+    		date = (NSTimestamp)session().valueForKey("today");
     	if(mode.intValue() > 0) {
-    		agregate = TeacherSelector.populate(ec, session());
-    		categories = (NSArray)agregate.removeObjectForKey("subjects");
+//    		agregate = TeacherSelector.populate(ec, session());
+//    		categories = (NSArray)agregate.removeObjectForKey("subjects");
+    		agregate = VseTeacher.teachersAgregate(ec, date);
         	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseTeacher");
     	} else {
-    		agregate = null;
-    		categories = null;
-        	access = null;
-    		// TODO: agregate dangling students
+    		agregate = VseStudent.studentsAgregate(ec, date);
+        	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseStudent");
     	}
+		categories = (NSArray)agregate.removeObjectForKey("list");
     }
     
     public void setSelection(Object sel) {
@@ -176,7 +183,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			return;
 		}
 		person = (VsePerson)EOUtilities.localInstanceOfObject(ec, person);
-		if (student) {
+		if (group() != null) {
 			Enumeration enu = group().vseList().objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject vl = (EOEnterpriseObject) enu.nextElement();
@@ -190,21 +197,66 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		ec.lock();
 		try {
 			NSTimestamp date = (NSTimestamp)session().valueForKey("today");
+			PersonLink pl = null;
 			if (student) {
 				VseStudent aStudent = VseStudent.studentForPerson(person, date, true);
-				aStudent.setAbsGrade(group().absStart());
-				EOEnterpriseObject newEntry = EOUtilities.createAndInsertInstance(
-						ec, "VseList");
-				newEntry.addObjectToBothSidesOfRelationshipWithKey(group(), "eduGroup");
-				newEntry.addObjectToBothSidesOfRelationshipWithKey(aStudent, "student");
-				newEntry.takeValueForKey(date, "enter");
+				pl = aStudent;
+				if (selection instanceof VseEduGroup) {
+					aStudent.setAbsGrade(group().absStart());
+					EOEnterpriseObject newEntry = EOUtilities
+							.createAndInsertInstance(ec, "VseList");
+					newEntry.addObjectToBothSidesOfRelationshipWithKey(group(),
+							"eduGroup");
+					newEntry.addObjectToBothSidesOfRelationshipWithKey(
+							aStudent, "student");
+					newEntry.takeValueForKey(date, "enter");
+				} else {
+					Integer grade = aStudent.absGrade();
+					if(grade == null || grade.intValue() <= 0) {
+						grade = (Integer)selection;
+						if(grade.intValue() > 0) {
+							Integer year = MyUtility.eduYearForDate(date);
+							grade = new Integer(year.intValue() - grade.intValue());
+						}
+						aStudent.setAbsGrade(grade);
+					}
+				}
 			} else {
-				VseTeacher teacher = VseTeacher.teacherForPerson(person, date, true);
-				list = list.arrayByAddingObject(teacher);
+				pl = VseTeacher.teacherForPerson(person, date, true);
 			}
 			ec.saveChanges();
 			logger.log(WOLogLevel.UNOWNED_EDITING, "Added person to group",
 					new Object[] {session(),person,selection});
+			if(student) {
+				if(group() != null) {
+					NSMutableArray byGrade = (NSMutableArray)
+								agregate.objectForKey(group().grade());
+					if(byGrade != null)
+						byGrade.removeObject(pl);
+					list = list.arrayByAddingObject(pl);
+				} else {
+					VseEduGroup gr = ((VseStudent)pl).recentMainEduGroup();
+					if(gr != null) {
+						setGroup(gr);
+					} else {
+						Integer grade = ((VseStudent)pl).currGrade();
+						if(grade.equals(selection) && !list.containsObject(pl))
+							((NSMutableArray)list).addObject(pl);
+						else
+							setSelection(grade);
+					}
+				}
+			} else {
+				String letter = person.lastName().substring(0,1);
+				list = (NSArray)agregate.valueForKey(letter);
+				if(list == null) {
+					list = new NSMutableArray(pl);
+					agregate.takeValueForKey(list, letter);
+				} else {
+					((NSMutableArray)list).addObject(pl);
+				}
+				selection = letter;
+			}
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING, "Error adding person to group",
 					new Object[] {session(),person,selection,e});
@@ -213,7 +265,6 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		} finally {
 			ec.unlock();
 		}
-		
 	}
 	
 	public void save() {

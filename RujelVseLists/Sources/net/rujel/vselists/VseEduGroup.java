@@ -164,6 +164,21 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		_list = result.immutableClone();
 		return _list;
 	}
+	
+	public void setLists(NSArray value) {
+		_list = null;
+		super.setLists(value);
+	}
+
+	public void addToLists(EOEnterpriseObject object) {
+		_list = null;
+		super.addToLists(object);
+	}
+
+	public void removeFromLists(EOEnterpriseObject object) {
+		_list = null;
+		super.removeFromLists(object);
+	}
 
 	public int count() {
 		return list().count();

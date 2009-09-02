@@ -577,10 +577,12 @@
 				<string>1023</string>
 				<key>zavuch</key>
 				<string>15</string>
-				<key>teacher</key>
-				<string>1</string>
+				<key>zav_kaf</key>
+				<string>7</string>
 				<key>tutor</key>
 				<string>7</string>
+				<key>teacher</key>
+				<string>1</string>
 			</dict>
 			<key>login</key>
 			<dict>

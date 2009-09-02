@@ -29,17 +29,24 @@
 
 package net.rujel.vselists;
 
-import net.rujel.interfaces.EduGroup;
+import java.util.Enumeration;
+
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSComparator;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 
 public class VseStudent extends _VseStudent implements Student {
 
@@ -67,8 +74,8 @@ public class VseStudent extends _VseStudent implements Student {
 	}
 
 	protected static final NSArray flagsSorter = new NSArray(
-			new EOSortOrdering(VseEduGroup.FLAGS_KEY,EOSortOrdering.CompareAscending));
-	public EduGroup recentMainEduGroup() {
+			new EOSortOrdering("eduGroup.flags",EOSortOrdering.CompareAscending));
+	public VseEduGroup recentMainEduGroup() {
 		NSArray lists = lists();
 		if(lists == null || lists.count() == 0)
 			return null;
@@ -82,7 +89,8 @@ public class VseStudent extends _VseStudent implements Student {
 		if(lists.count() > 1) {
 			lists = EOSortOrdering.sortedArrayUsingKeyOrderArray(lists, flagsSorter);
 		}
-		return (EduGroup)((EOEnterpriseObject)lists.objectAtIndex(0)).valueForKey("eduGroup");		
+		return (VseEduGroup)((EOEnterpriseObject)lists.objectAtIndex(0))
+				.valueForKey("eduGroup");		
 	}
 	
 	public static VseStudent studentForPerson(VsePerson person, NSTimestamp date) {
@@ -113,4 +121,67 @@ public class VseStudent extends _VseStudent implements Student {
 		}
 		return student;
 	}
+	
+	public int currGrade() {
+		Integer absGrade = absGrade();
+		if(absGrade == null || absGrade.intValue() == 0)
+			return 0;
+		Integer year = MyUtility.eduYearForDate(date());
+		if(year == null)
+			return -1;
+		return year.intValue() - absGrade.intValue();
+	}
+	
+	public static NSMutableDictionary studentsAgregate(
+			EOEditingContext ec, NSTimestamp date) {
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,null,null);
+		fs.setRefreshesRefetchedObjects(true);
+		fs.setPrefetchingRelationshipKeyPaths(new NSArray("person"));
+		if(date != null) {
+			NSArray args = new NSArray(new Object[] {date,date});
+			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+					"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
+			fs.setQualifier(qual);
+		}
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		NSMutableDictionary agregate = new NSMutableDictionary();
+		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
+		NSMutableArray keys = new NSMutableArray();
+		for (int i = SettingsReader.intForKeyPath("edu.minGrade", 1); i <= maxGrade; i++) {
+			Integer grade = new Integer(i);
+			keys.addObject(grade);
+			agregate.setObjectForKey(new NSMutableArray(), grade);
+		}
+		if(list == null || list.count() == 0)
+			return agregate;
+		Enumeration enu = list.objectEnumerator();
+		NSArray aSorter = new NSArray(new EOSortOrdering
+				("person",EOSortOrdering.CompareAscending));
+		while (enu.hasMoreElements()) {
+			VseStudent st = (VseStudent) enu.nextElement();
+			if(st.recentMainEduGroup() != null)
+				continue;
+			Integer grade = new Integer(st.currGrade());
+			NSMutableArray byGrade = (NSMutableArray)agregate.objectForKey(grade);
+			if(byGrade == null) {
+				byGrade = new NSMutableArray(st);
+				agregate.setObjectForKey(byGrade, grade);
+//				if(!keys.containsObject(grade))
+					keys.addObject(grade);
+			} else {
+				byGrade.addObject(st);
+				EOSortOrdering.sortArrayUsingKeyOrderArray(byGrade, aSorter);
+			}
+		}
+		if (agregate.count() > 0) {
+			try {
+				keys.sortUsingComparator(NSComparator.AscendingNumberComparator);
+			} catch (ComparisonException e) {
+				e.printStackTrace();
+			}
+			agregate.takeValueForKey(keys, "list");
+		}
+		return agregate;
+	}
+
 }

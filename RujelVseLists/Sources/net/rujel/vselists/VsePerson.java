@@ -29,9 +29,17 @@
 
 package net.rujel.vselists;
 
+import java.util.Enumeration;
+
 import net.rujel.interfaces.Person;
+import net.rujel.interfaces.PersonLink;
 
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSComparator;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 
 public class VsePerson extends _VsePerson implements Person {
 
@@ -53,5 +61,40 @@ public class VsePerson extends _VsePerson implements Person {
 	public void setPerson(EOEnterpriseObject pers) {
 		if(pers != this)
 			throw new UnsupportedOperationException("Person attribute can't be changed as it should always return this");
+	}
+	
+	public static NSMutableDictionary agregateByLetter(NSArray list) {
+		if(list == null)
+			return null;
+		NSMutableDictionary agregate = new NSMutableDictionary();
+		NSArray aSorter = new NSArray(new EOSortOrdering
+				("person",EOSortOrdering.CompareAscending));
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			PersonLink plink = (PersonLink) enu.nextElement();
+			String ln = plink.person().lastName();
+			String letter = (ln==null)?"?":ln.substring(0,1);
+			NSMutableArray byLetter = (NSMutableArray)agregate.valueForKey(letter);
+			if(byLetter == null) {
+				byLetter = new NSMutableArray(plink);
+				agregate.takeValueForKey(byLetter, letter);
+			} else {
+				byLetter.addObject(plink);
+				EOSortOrdering.sortArrayUsingKeyOrderArray(byLetter, aSorter);
+			}
+		}
+		if (agregate.count() > 0) {
+			aSorter = agregate.allKeys();
+			if (aSorter.count() > 1) {
+				try {
+					aSorter = aSorter.sortedArrayUsingComparator(
+							NSComparator.AscendingStringComparator);
+				} catch (ComparisonException e) {
+					e.printStackTrace();
+				}
+			}
+			agregate.takeValueForKey(aSorter, "list");
+		}
+		return agregate;
 	}
 }

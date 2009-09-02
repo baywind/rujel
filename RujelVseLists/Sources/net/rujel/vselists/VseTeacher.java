@@ -31,9 +31,11 @@ package net.rujel.vselists;
 
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.interfaces.Person;
@@ -76,4 +78,22 @@ public class VseTeacher extends _VseTeacher implements Teacher{
 			teacher.setEnter(date);
 		}
 		return teacher;
-	}}
+	}
+	
+	public static NSMutableDictionary teachersAgregate(
+									EOEditingContext ec, NSTimestamp date) {
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,null,null);
+		fs.setRefreshesRefetchedObjects(true);
+		fs.setPrefetchingRelationshipKeyPaths(new NSArray("person"));
+		if(date != null) {
+			NSArray args = new NSArray(new Object[] {date,date});
+			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
+					"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
+			fs.setQualifier(qual);
+		}
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null)
+			list = NSArray.EmptyArray;
+		return VsePerson.agregateByLetter(list);
+	}
+}
