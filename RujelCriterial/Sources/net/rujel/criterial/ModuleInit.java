@@ -261,7 +261,8 @@ public class ModuleInit {
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
-		}NSArray diaryTabs = (NSArray)WOApplication.application().
+		}
+		NSArray diaryTabs = (NSArray)WOApplication.application().
 				valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
 		NSArray result = PlistReader.cloneArray(diaryTabs, true);
 		String regime = req.stringFormValueForKey("regime");
