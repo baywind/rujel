@@ -106,5 +106,14 @@
 		<string>н/а</string>
 		<string>осв</string>
 	</array>
+	<key>planTab</key>
+	<dict>
+		<key>component</key>
+		<string>SetupItogs</string>
+		<key>title</key>
+		<string>Итоговое Оценивание</string>
+		<key>sort</key>
+		<string>60</string>
+	</dict>
 </dict>
 </plist>

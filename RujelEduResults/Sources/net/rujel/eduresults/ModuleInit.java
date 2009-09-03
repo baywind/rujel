@@ -60,6 +60,9 @@ public class ModuleInit {
 			return studentReporter(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
+		} else if("planTabs".equals(obj)) {
+			return WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.planTab");
 		}
 		return null;
 	}

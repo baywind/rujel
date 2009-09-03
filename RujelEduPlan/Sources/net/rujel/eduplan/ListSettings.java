@@ -105,9 +105,12 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     					_lists.addObject(listName);
     			}
     		}
+    		String listKey = (String)valueForBinding("currList");
+    		if(listKey != null && !_lists.containsObject(listKey))
+    			_lists.addObject(listKey);
     		NSArray extraLists = (NSArray)valueForBinding("extraLists");
     		if(extraLists != null && extraLists.count() > 0) {
-    			String listKey = (String)valueForBinding("listKey");
+    			listKey = (String)valueForBinding("listKey");
     			Enumeration enu = extraLists.objectEnumerator();
     			while (enu.hasMoreElements()) {
 					Object listName = enu.nextElement();

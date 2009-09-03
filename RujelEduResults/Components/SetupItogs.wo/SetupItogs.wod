@@ -1,0 +1,47 @@
+ListSettings : ListSettings {
+  ec = ec;
+  key = "ItogMark";
+  currList = listName;
+  extraLists = extraLists;
+  access = session.readAccess.FLAGS.PeriodList;
+}
+
+AllTypes : WORepetition {
+  list = allTypes;
+  item = item;
+}
+
+Form : WOForm {
+}
+
+Active : WOCheckBox {
+  checked = active;
+  disabled = session.readAccess._edit.ItogTypeList;
+}
+
+TypeName : WOString {
+  value = item.name;
+}
+
+TypeTitle : WOString {
+  value = item.title;
+}
+
+InYearCount : WOString {
+  value = item.inYearCount;
+}
+
+AddType : OnClickContainer {
+  elementName = "td";
+  onclick = session.ajaxPopup;
+  invokeAction = addType;
+  class = "green";
+  style = "padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
+  hide = session.readAccess._create.ItogType;
+}
+
+Save: WOSubmitButton {
+  action = saveList;
+  value = application.strings.Reusables_Strings.uiElements.Save;
+  disabled = session.readAccess._edit.ItogTypeList;
+}
