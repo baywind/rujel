@@ -63,6 +63,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 	public SetupPeriods(WOContext context) {
         super(context);
         setEc((EOEditingContext)context.page().valueForKey("ec"));
+		context().page().takeValueForKey(this, "toReset");
     }
 	
 	public void setEc(EOEditingContext newEc) {
@@ -310,5 +311,6 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		details = null;
 		listName = null;
 		weekDays = 7;
+        setEc((EOEditingContext)context().page().valueForKey("ec"));
 	}
 }

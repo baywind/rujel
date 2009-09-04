@@ -60,7 +60,9 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 		try {
 			if(toReset != null) {
 				toReset.reset();
-				toReset = null;
+				String tmp = toReset.name();
+				if(!tmp.endsWith((String)currTab.valueForKey("component")))
+					toReset = null;
 			}
 			if(ec.hasChanges())
 				ec.revert();

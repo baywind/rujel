@@ -6,7 +6,18 @@
 	<tr><td colspan = "2"><webobject name = "Save"/></td>
 		<webobject name = "AddType">+</webobject></tr>
 	</tfoot><tbody><webobject name = "AllTypes">
-	<tr><td><webobject name = "Active"/></td>
-		<td><webobject name = "TypeName"/> (<webobject name = "TypeTitle"/>)</td>
+	<tr class = "ungerade"><td><webobject name = "Active"/></td>
+		<webobject name = "SelectType"><webobject name = "TypeName"/>
+			(<webobject name = "TypeTitle"/>)</webobject>
 		<td><webobject name = "InYearCount"/></td>
-	</tr></webobject></tbody></table></webobject></td></webobject>
+	</tr></webobject></tbody></table></webobject></td>
+	<td rowspan = "2" class = "backfield2">
+		<webobject name = "HasSelection"><webobject name = "ItogTypeEditor"/></webobject>
+		<table><thead><tr>
+		</tr></thead>
+		<tbody><webobject name = "Itogs">
+		<tr class = "gerade"><td><webobject name = "ItogName"/></td></tr>
+		</webobject></tbody>
+		</table>
+	</td>
+	</webobject>

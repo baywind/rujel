@@ -68,6 +68,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
         super(context);
         ec = (EOEditingContext)context.page().valueForKey("ec");
         periodsForList = new NSMutableDictionary();
+		context().page().takeValueForKey(this, "toReset");
     }
 	
 	public void select() {
@@ -84,7 +85,6 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	
 	public NSArray subjects() {
 		if(subjects == null) {
-			context().page().takeValueForKey(this, "toReset");
 			Integer eduYear = (Integer)session().valueForKey("eduYear");
 	        subjects = PlanCycle.subjectsForYear(ec, eduYear.intValue());
 		}

@@ -40,7 +40,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.FieldPosition;
@@ -50,7 +49,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
-import java.util.GregorianCalendar;
 
 public class AutoItogModule {
 	protected static Logger logger = Logger.getLogger("rujel.autoitog");

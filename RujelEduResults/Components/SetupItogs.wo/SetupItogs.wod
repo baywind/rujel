@@ -45,3 +45,27 @@ Save: WOSubmitButton {
   value = application.strings.Reusables_Strings.uiElements.Save;
   disabled = session.readAccess._edit.ItogTypeList;
 }
+
+HasSelection : WOConditional {
+  condition = currType;
+}
+
+ItogTypeEditor : ItogTypeEditor {
+  currType = currType;
+  ec = ec;
+}
+
+SelectType : OnClickContainer {
+  elementName = "td";
+  onclick = session.checkRun;
+  invokeAction = selectType;
+}
+
+Itogs : WORepetition {
+  list = itogsList;
+  item = item;
+}
+
+ItogName : WOString {
+  value = item.name;
+}

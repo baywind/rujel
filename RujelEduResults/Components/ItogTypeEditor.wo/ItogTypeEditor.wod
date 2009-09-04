@@ -1,0 +1,41 @@
+Form : WOForm {
+}
+
+NameTitle : WOString {
+  value = session.strings.RujelEduResults_EduResults.properties.ItogType.name;
+  escapeHTML = false;
+}
+
+NameField : WOTextField {
+  value = itogName;
+  size = 20;
+  maxlength = 28;
+}
+
+TitleTitle : WOString {
+  value = session.strings.RujelEduResults_EduResults.properties.ItogType.title;
+  escapeHTML = false;
+}
+
+TitleField : WOTextField {
+  value = itogTitle;
+  size = 5;
+  maxlength = 5;
+}
+
+CountTitle : WOString {
+  value = session.strings.RujelEduResults_EduResults.properties.ItogType.inYearCount;
+  escapeHTML = false;
+}
+
+CountField : WOTextField {
+  value = itogCount;
+  size = 3;
+  maxlength = 2;
+  numberformat = "0";
+}
+
+Save: WOSubmitButton {
+	action = saveType;
+	value = application.strings.Reusables_Strings.uiElements.Save;
+}
