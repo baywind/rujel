@@ -1,4 +1,5 @@
 Form : WOForm {
+  class = ^class;
 }
 
 NameTitle : WOString {
@@ -21,6 +22,7 @@ TitleField : WOTextField {
   value = itogTitle;
   size = 5;
   maxlength = 5;
+  style = "text-align:center;";
 }
 
 CountTitle : WOString {
@@ -33,9 +35,21 @@ CountField : WOTextField {
   size = 3;
   maxlength = 2;
   numberformat = "0";
+  style = "text-align:center;";
 }
 
 Save: WOSubmitButton {
 	action = saveType;
 	value = application.strings.Reusables_Strings.uiElements.Save;
+}
+CanDelete : WOConditional {
+  condition = canDelete;
+}
+
+Delete : WOGenericElement {
+  elementName = "input";
+  type = "button";
+  value = application.strings.Reusables_Strings.uiElements.Delete;
+  onclick = session.confirmMessage;
+  invokeAction = delete;
 }

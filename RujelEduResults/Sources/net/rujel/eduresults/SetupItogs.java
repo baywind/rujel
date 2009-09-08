@@ -17,6 +17,7 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
@@ -77,13 +78,28 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		if(listName != null) {
 			NSArray used = EOUtilities.objectsMatchingKeyAndValue(ec, 
 					"ItogTypeList", "listName", listName);
-			if(used == null || used.count() == 0)
+			if(used == null || used.count() == 0) {
 				activeTypes.removeAllObjects();
-			else
+				itogsList = null;
+			} else {
 				activeTypes.setArray((NSArray)used.valueForKey("itogType"));
+				allItogs();
+			}
 		}
 		currType = null;
-		itogsList = null;
+	}
+	
+	protected void allItogs() {
+		EOSortOrdering.sortArrayUsingKeyOrderArray(activeTypes,
+				ModulesInitialiser.sorter);
+		NSMutableArray allItogs = new NSMutableArray();
+		Enumeration enu = activeTypes.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			ItogType type = (ItogType) enu.nextElement();
+			Integer eduYear = (Integer)session().valueForKey("eduYear");
+			allItogs.addObjectsFromArray(type.itogsInYear(eduYear));
+		}
+		itogsList = allItogs;
 	}
 	
 	public boolean active() {
@@ -135,6 +151,10 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 				}
 			}
 			ec.saveChanges();
+			allTypes = EOSortOrdering.sortedArrayUsingKeyOrderArray(allTypes,
+					ModulesInitialiser.sorter);
+			if(currType == null)
+				allItogs();
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error saving changes in list " + listName,e);
 			session().takeValueForKey(e.getMessage(), "message");
@@ -147,7 +167,12 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public WOActionResults selectType() {
-		setCurrType((ItogType)item);
+		if(currType != item) {
+			setCurrType((ItogType)item);
+		} else {
+			currType = null;
+			allItogs();
+		}
 		return null;
 	}
 	
@@ -155,7 +180,12 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		currType = type;
 		ec.lock();
 		try {
-		if(allTypes.containsObject(type)) {
+		if(type == null) {
+			EOFetchSpecification fs = new EOFetchSpecification(ItogType.ENTITY_NAME,
+					null, ModulesInitialiser.sorter);
+			allTypes = ec.objectsWithFetchSpecification(fs);
+			setListName(listName);
+		} else if(allTypes.containsObject(type)) {
 			EOQualifier[] quals = new EOQualifier[2];
 			quals[0] = new EOKeyValueQualifier(ItogContainer.ITOG_TYPE_KEY,
 					EOQualifier.QualifierOperatorEqual,currType);
@@ -198,6 +228,134 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		selector.takeValueForKey(dict, "dict");
 		return selector;
 	}
+	
+	public String styleClass() {
+		if(item instanceof ItogType) {
+			if(item == currType)
+				return "selection";
+			else
+				return "ungerade";
+		} else if(item instanceof ItogContainer) {
+			return "gerade";
+		} else
+			return null;
+	}
+	
+	public WOActionResults generateItogs() {
+		ec.lock();
+		Integer eduYear = (Integer)session().valueForKey("eduYear");
+		try {
+			currType.generateItogsInYear(eduYear);
+			ec.saveChanges();
+			itogsList = currType.itogsInYear(eduYear);
+			logger.log(WOLogLevel.COREDATA_EDITING, "Generated itogs for type in year "
+					+ eduYear, new Object[] {session(),currType});
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error generating itogs for type in year "
+					+ eduYear, new Object[] {session(),currType,e});
+			session().takeValueForKey(e.getMessage(), "message");
+			ec.revert();
+		} finally {
+			ec.unlock();
+		}
+		return null;
+	}
+	
+	public WOActionResults addItogToType() {
+		ec.lock();
+		Integer eduYear = (Integer)session().valueForKey("eduYear");
+		try {
+			Integer num = new Integer(1);
+			itogsList = currType.itogsInYear(eduYear);
+			if(itogsList != null && itogsList.count() > 0) {
+				ItogContainer ic = (ItogContainer)itogsList.lastObject();
+				num = new Integer(ic.num() + 1);
+			}
+			ItogContainer ic = (ItogContainer)EOUtilities.createAndInsertInstance(ec,
+					ItogContainer.ENTITY_NAME);
+			ic.addObjectToBothSidesOfRelationshipWithKey(currType,
+					ItogContainer.ITOG_TYPE_KEY);
+			ic.setNum(num);
+			ic.setEduYear(eduYear);
+			ec.saveChanges();
+			if(itogsList == null)
+				itogsList = new NSArray(ic);
+			else
+				itogsList = itogsList.arrayByAddingObject(ic);
+			logger.log(WOLogLevel.COREDATA_EDITING, "Added itog container",
+					new Object[] {session(),ic});
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error adding itog to type in year " + eduYear,
+					new Object[] {session(),currType,e});
+			session().takeValueForKey(e.getMessage(), "message");
+			ec.revert();
+		} finally {
+			ec.unlock();
+		}
+		return null;
+	}
+	
+	public WOActionResults prepareItog() {
+		if(currType == null)
+			return null;
+		if(currType.inYearCount().intValue() > 0)
+			return generateItogs();
+		else
+			return addItogToType();
+	}
+	
+	public String prepareTitle() {
+		if(currType == null)
+			return null;
+		if(currType.inYearCount().intValue() > 0)
+			return (String)session().valueForKeyPath(
+					"strings.RujelEduResults_EduResults.generateItogs");
+		else
+			return (String)session().valueForKeyPath(
+					"strings.RujelEduResults_EduResults.addItog");
+	}
+	
+	public Boolean cantPrepare() {
+		if(currType == null)
+			return Boolean.TRUE;
+		if(itogsList != null && currType.inYearCount().intValue() > 0
+				&& itogsList.count() >= currType.inYearCount().intValue())
+			return Boolean.TRUE;
+		return (Boolean)session().valueForKeyPath("readAccess._create.ItogContainer");
+	}
+	
+	public String typeId () {
+		if(item == currType)
+			return "currType";
+		return null;
+	}
+	
+	public WOActionResults deleteContainer() {
+		ec.lock();
+		StringBuilder desc = new StringBuilder();
+		ItogContainer itog = (ItogContainer)item;
+		desc.append(itog.name()).append(' ').append('(');
+		desc.append(MyUtility.presentEduYear(itog.eduYear())).append(')');
+		try {
+			ec.deleteObject(itog);
+			ec.saveChanges();
+			if(!(itogsList instanceof NSMutableArray)) {
+				itogsList = itogsList.mutableClone();
+			}
+			((NSMutableArray)itogsList).removeIdenticalObject(itog);
+			logger.log(WOLogLevel.COREDATA_EDITING, "Deleted itog container "
+					+ desc, new Object[] {session(),currType});
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error deleting itog container "
+					+ desc, new Object[] {session(),currType,e});
+			session().takeValueForKey(e.getMessage(), "message");
+			ec.revert();
+		} finally {
+			ec.unlock();
+		}
+		return null;
+	}
+
 	
 	public boolean synchronizesVariablesWithBindings() {
         return false;

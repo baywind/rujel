@@ -73,17 +73,27 @@ public class ItogContainer extends _ItogContainer {
 	}
 	
 	public String title() {
-		if(num() > 0) {
-			return Various.makeRoman(num().intValue()) + ' ' + itogType().title();
+		ItogType type = itogType();
+		int count = type.inYearCount().intValue();
+		int num = num().intValue();
+		if(count > 1) {
+			return Various.makeRoman(num) + ' ' + type.title();
+		} else if(count == 0 && num > 0) {
+			return type.title() + ' ' + Integer.toString(num);			
 		}
-		return itogType().title();
+		return type.title();
 	}
 	
 	public String name() {
-		if(num() > 0) {
-			return Various.makeRoman(num().intValue()) + ' ' + itogType().name();
+		ItogType type = itogType();
+		int count = type.inYearCount().intValue();
+		int num = num().intValue();
+		if(count > 1) {
+			return Various.makeRoman(num) + ' ' + type.name();
+		} else if(count == 0 && num > 0) {
+			return type.name() + ' ' + Integer.toString(num);			
 		}
-		return itogType().name();
+		return type.name();
 	}
 	
 	public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {

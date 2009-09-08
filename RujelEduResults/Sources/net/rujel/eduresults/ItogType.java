@@ -60,6 +60,47 @@ public class ItogType extends _ItogType {
 		return result;
 	}
 	
+	public NSArray generateItogsInYear(Integer eduYear) {
+		NSDictionary qual = new NSDictionary(new Object[] {
+				eduYear, this}, new Object []
+				{ItogContainer.EDU_YEAR_KEY, ItogContainer.ITOG_TYPE_KEY});
+		NSArray ready = EOUtilities.objectsMatchingValues(editingContext(),
+				ItogContainer.ENTITY_NAME, qual);
+		if(inYearCount().intValue() <= 1) {
+			if(ready != null && ready.count() > 0)
+				return ready;
+			ItogContainer result = (ItogContainer)EOUtilities.createAndInsertInstance(
+					editingContext(),ItogContainer.ENTITY_NAME);
+			result.addObjectToBothSidesOfRelationshipWithKey(this,
+					ItogContainer.ITOG_TYPE_KEY);
+			result.setNum(new Integer(1));
+			result.setEduYear(eduYear);
+			return new NSArray(result);
+		}
+		ItogContainer[] result = new ItogContainer[inYearCount().intValue()];
+		if(ready != null && ready.count() > 0) {
+			Enumeration enu = ready.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				ItogContainer ic = (ItogContainer) enu.nextElement();
+				int idx = ic.num().intValue() -1;
+				if(idx > 0 && idx < result.length)
+					result[idx] = ic;
+			}
+		}
+		EOEditingContext ec = editingContext();
+		for (int i = 0; i < result.length; i++) {
+			if(result[i] == null) {
+				result[i] = (ItogContainer)EOUtilities.createAndInsertInstance(ec,
+						ItogContainer.ENTITY_NAME);
+				result[i].addObjectToBothSidesOfRelationshipWithKey(this,
+						ItogContainer.ITOG_TYPE_KEY);
+				result[i].setNum(new Integer(i + 1));
+				result[i].setEduYear(eduYear);
+			}
+		}
+		return new NSArray(result);
+	}
+	
 	public static NSArray typesForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
@@ -96,4 +137,5 @@ public class ItogType extends _ItogType {
 		}
 		return result;
 	}
+	
 }

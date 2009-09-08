@@ -6,6 +6,12 @@
 	<string>Все предметы</string>
 	<key>comments</key>
 	<string>Примечания</string>
+	<key>thisYear</key>
+	<string>В этом году</string>
+	<key>generateItogs</key>
+	<string>Заготовить итоговые</string>
+	<key>addItog</key>
+	<string>Добавить итог</string>
 	<key>itogAddOn</key>
 	<dict>
 		<key>activeComponent</key>
@@ -115,6 +121,10 @@
 	</array>
 	<key>planTab</key>
 	<dict>
+		<key>resourcesFramework</key>
+		<string>RujelBase</string>
+		<key>scriptResource</key>
+		<string>sorting.js</string>
 		<key>component</key>
 		<string>SetupItogs</string>
 		<key>title</key>

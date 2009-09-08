@@ -19,6 +19,11 @@ Active : WOCheckBox {
   disabled = session.readAccess._edit.ItogTypeList;
 }
 
+TypesTitle : WOString {
+  value = session.strings.RujelEduResults_EduResults.properties.ItogType.this;
+  escapeHTML = false;
+}
+
 TypeName : WOString {
   value = item.name;
 }
@@ -29,6 +34,7 @@ TypeTitle : WOString {
 
 InYearCount : WOString {
   value = item.inYearCount;
+  numberformat = "#;*;(#)";
 }
 
 AddType : OnClickContainer {
@@ -43,7 +49,7 @@ AddType : OnClickContainer {
 Save: WOSubmitButton {
   action = saveList;
   value = application.strings.Reusables_Strings.uiElements.Save;
-  disabled = session.readAccess._edit.ItogTypeList;
+  onclick = "try{enumerate(get(this,'table',0),'numerate',1);}catch(e){alert(e);}";
 }
 
 HasSelection : WOConditional {
@@ -53,6 +59,7 @@ HasSelection : WOConditional {
 ItogTypeEditor : ItogTypeEditor {
   currType = currType;
   ec = ec;
+  class = "grey";
 }
 
 SelectType : OnClickContainer {
@@ -68,4 +75,92 @@ Itogs : WORepetition {
 
 ItogName : WOString {
   value = item.name;
+}
+
+TypeRow : WOGenericContainer {
+  elementName = "tr";
+  class = styleClass;
+  id = typeId;
+}
+
+MoveUp: WOImage {
+	filename = "up.png";
+	framework ="RujelBase";
+	align = "center";
+	valign = "top";
+	onclick="up(get(this,'tr',0));";
+	style = "cursor:pointer;";
+}
+MoveDown: WOImage {
+	align = "center";
+	filename = "down.png";
+	framework ="RujelBase";
+	onclick= "down(get(this,'tr',0));";
+	style = "cursor:pointer;";
+}
+SortField : WOTextField {
+  value = item.sort;
+  style = "display:none;";
+  numberformat = "0";
+  class = "numerate";
+}
+
+CurrUp : WOImage {
+	filename = "up.png";
+	framework ="RujelBase";
+	align = "center";
+	valign = "top";
+	onclick="up(document.getElementById('currType'));";
+	style = "cursor:pointer;";
+}
+
+CurrDown : WOImage {
+	align = "center";
+	filename = "down.png";
+	framework ="RujelBase";
+	onclick= "down(document.getElementById('currType'));";
+	style = "cursor:pointer;";
+}
+
+ThisYearTitle : WOString {
+  value = session.strings.RujelEduResults_EduResults.thisYear;
+  escapeHTML = false;
+}
+
+Span : OnClickContainer {
+  elementName = "span";
+  class = "button";
+  onclick = session.checkRun;
+  invokeAction = prepareItog;
+}
+
+PrepareTitle : WOString {
+  value = prepareTitle;
+  escapeHTML = false;
+}
+
+CanPrepare : WOConditional {
+  condition = cantPrepare;
+  negate = true;
+}
+
+DeleteContainer : OnClickContainer {
+  elementName = "span";
+  invokeAction = deleteContainer;
+  hide = session.readAccess._delete.item;
+  style = "float:right;margin:3px;";
+  title = application.strings.Reusables_Strings.uiElements.Delete;
+  onclick = session.confirmMessage;
+}
+
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  height = 12;
+  width = 12;
+  alt = application.strings.Reusables_Strings.uiElements.Delete;
+}
+
+CanSort : WOConditional {
+  condition = session.readAccess.edit.ItogTypeList;
 }

@@ -342,7 +342,7 @@ public class Session extends WOSession {
 		return "return (tryLoad(false) && confirm('" + msg + "'));";
 */	
 		String href = context().componentActionURL();
-		return "if(confirmAction(this.value,event) && tryLoad())window.location = '" + href +"';";
+		return "if(confirmAction(null,event) && tryLoad())window.location = '" + href +"';";
     }
 	public static final NSArray defaultAccessKeys = new NSArray(new Object[] {
 		"read","create","edit","delete"});
