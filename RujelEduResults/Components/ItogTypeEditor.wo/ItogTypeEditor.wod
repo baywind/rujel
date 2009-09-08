@@ -11,6 +11,7 @@ NameField : WOTextField {
   value = itogName;
   size = 20;
   maxlength = 28;
+  disabled = cantEdit;
 }
 
 TitleTitle : WOString {
@@ -23,6 +24,7 @@ TitleField : WOTextField {
   size = 5;
   maxlength = 5;
   style = "text-align:center;";
+  disabled = cantEdit;
 }
 
 CountTitle : WOString {
@@ -36,6 +38,7 @@ CountField : WOTextField {
   maxlength = 2;
   numberformat = "0";
   style = "text-align:center;";
+  disabled = cantEdit;
 }
 
 Save: WOSubmitButton {
@@ -52,4 +55,9 @@ Delete : WOGenericElement {
   value = application.strings.Reusables_Strings.uiElements.Delete;
   onclick = session.confirmMessage;
   invokeAction = delete;
+}
+
+CanEdit : WOConditional {
+  condition = cantEdit;
+  negate = true;
 }

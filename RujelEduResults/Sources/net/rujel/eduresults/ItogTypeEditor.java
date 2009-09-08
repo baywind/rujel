@@ -18,6 +18,7 @@ public class ItogTypeEditor extends com.webobjects.appserver.WOComponent {
 	public String itogTitle;
 	public Integer itogCount;
 	public boolean canDelete;
+	public Boolean cantEdit;
 
 	public ItogTypeEditor(WOContext context) {
         super(context);
@@ -31,6 +32,7 @@ public class ItogTypeEditor extends com.webobjects.appserver.WOComponent {
 			itogTitle = null;
 			itogCount = null;
 			canDelete = false;
+			cantEdit = (Boolean)session().valueForKeyPath("readAccess._create.ItogType");
 		} else {
 			itogName = currType.name();
 			itogTitle = currType.title();
@@ -41,6 +43,7 @@ public class ItogTypeEditor extends com.webobjects.appserver.WOComponent {
 			NSArray types = EOUtilities.objectsMatchingKeyAndValue(ec,
 					ItogContainer.ENTITY_NAME, ItogContainer.ITOG_TYPE_KEY, type);
 			canDelete = (types == null || types.count() == 0);
+			cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.currType");
 		}
 		super.appendToResponse(aResponse, aContext);
 	}
