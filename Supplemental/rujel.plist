@@ -956,30 +956,6 @@
 		<key>Reason</key>
 		<string>true</string>
 	</dict>
-	<key>schedule</key>
-	<dict>
-		<key>DAILY</key>
-		<dict>
-			<key>time</key>
-			<string>16:49</string>
-		</dict>
-		<key>MONTHLY</key>
-		<dict/>
-		<key>WEEKLY</key>
-		<dict>
-			<key>day</key>
-			<string>5</string>
-			<key>time</key>
-			<string>00:48</string>
-		</dict>
-		<key>other</key>
-		<dict>
-			<key>day</key>
-			<string>0</string>
-			<key>time</key>
-			<string>00:44</string>
-		</dict>
-	</dict>
 	<key>ui</key>
 	<dict>
 		<key>allowTimeMachine</key>
