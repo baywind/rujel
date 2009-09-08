@@ -181,6 +181,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		}
 
 		NSMutableDictionary result = new NSMutableDictionary();
+		result.takeValueForKey(new Integer(active), "state");
 		result.takeValueForKey(new Integer(plan), "plan");
 		result.takeValueForKey(new Integer(maxDev), "maxDeviation");
 		result.takeValueForKey(new Integer(extraDays), "extraDays");

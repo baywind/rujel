@@ -123,7 +123,9 @@ public class Reprimand extends _Reprimand {
 					}
 				}
 				NSDictionary planFact = VariationsPlugin.planFact(course, now);
-				Integer day = (Integer) planFact.valueForKey("extraDays");
+				Integer day = (Integer) planFact.valueForKey("state");
+				if(day == null || day.intValue() == 0)
+					day = (Integer) planFact.valueForKey("extraDays");
 				if (norm) {
 					dayForListName.setObjectForKey(day, listName);
 				}
