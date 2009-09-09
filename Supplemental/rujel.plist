@@ -936,6 +936,10 @@
 		<string>true</string>
 		<key>writeFileDir</key>
 		<string>/Users/Shared/test</string>
+		<key>broadcastWeekday</key>
+		<string>6</string>
+		<key>broadcastTime</key>
+		<string>5:30</string>
 	</dict>
 	<key>markarchive</key>
 	<dict>

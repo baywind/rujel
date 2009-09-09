@@ -288,7 +288,13 @@ public class MarkArchive extends _MarkArchive
 				takeValueForKey(zero, keys[i]);
 				logger.log(WOLogLevel.FINE,"Archiving " + 
 						usedEntity.valueForKey("usedEntity") + ": null value for key " + key,
-						identifierDict);
+						new Object[] {identifierDict,usedEntity});
+				if(usedEntity.editingContext().globalIDForObject(usedEntity).isTemporary()) {
+					usedEntity.takeStoredValueForKey(null, keys[i]);
+					logger.log(WOLogLevel.COREDATA_EDITING,
+							"Removing key '" + key + "' from entity description '" + 
+							usedEntity.valueForKey("usedEntity") + '\'',usedEntity);
+				}
 			} else if(value instanceof Number) {
 				takeValueForKey(value, keys[i]);
 			} else if(value instanceof EOEnterpriseObject) {

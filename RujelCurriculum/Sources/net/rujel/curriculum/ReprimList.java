@@ -119,10 +119,14 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     }
     
     public void save() {
+    	if(text == null && ident == null)
+    		return;
     	EOEditingContext ec = course.editingContext();
 		String usr = (String)session().valueForKeyPath("user.present");
 		String addInfo = null;
-    	if(ident == null) {
+		ec.lock();
+		try {
+			if(ident == null) {
     		item = (Reprimand)EOUtilities.createAndInsertInstance(ec, Reprimand.ENTITY_NAME);
     		item.setAuthor(usr);
     		item.addObjectToBothSidesOfRelationshipWithKey(course, "course");
@@ -130,7 +134,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     	} else {
     		item = (Reprimand)EOUtilities.objectWithPrimaryKeyValue(
     				ec, Reprimand.ENTITY_NAME, ident);
-    		if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay)
+    		if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay/2)
     			addInfo = MyUtility.dateFormat().format(new NSTimestamp());
     		if(usr != null && !usr.equals(item.author())) {
     			if(addInfo == null) {
@@ -143,23 +147,32 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     			text = text + " (" + addInfo + ')';
     		addInfo = item.content();
     	}
-		item.setContent(text);
-		text = (ident == null)?"Creating new Reprimand":
-								"Editing Reprimand";
-    	try {
-    		item.editingContext().saveChanges();
+    	if(text == null) {
+    		if(Various.boolForObject(session().valueForKeyPath(
+    				"readAccess._delete.item")))
+    		return;
+    		ec.deleteObject(item);
+    		logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting Reprimand",(addInfo==null)?
+    				new Object[] {session(),item}:new Object[] {session(),item,addInfo});
+    	} else {
+    		item.setContent(text);
+    		text = (ident == null)?"Creating new Reprimand":
+    									"Editing Reprimand";
+    	}
+    		ec.saveChanges();
+    		if(text != null)
     		logger.log(WOLogLevel.UNOWNED_EDITING,text,(addInfo==null)?
     				new Object[] {session(),item}:new Object[] {session(),item,addInfo});
     	} catch (Exception e) {
     		logger.log(WOLogLevel.WARNING,"Error " + text, new Object[] {
     				session(),(ident == null)?course:item, e});
-    		item.editingContext().revert();
+    		ec.revert();
+		} finally {
+			ec.unlock();
 		}
     	if(ident == null) {
-    		if(!(list instanceof NSMutableArray)) {
-    			list = list.mutableClone();
-    		}
-			((NSMutableArray)list).insertObjectAtIndex(item, 0);
+    		list = null;
+    		setCourse(course);
     	}
 		item = null;
 		text = null;
@@ -184,7 +197,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     	if(Various.boolForObject(session().valueForKeyPath("readAccess._create.item")) || 
     			Various.boolForObject(session().valueForKeyPath("readAccess._edit.item")))
     		return null;
-    	if(item == null)
+    	if(item == null || item.editingContext() == null)
     		return null;
     	EOGlobalID gid = item.editingContext().globalIDForObject(item);
     	if(gid.isTemporary())

@@ -189,7 +189,7 @@ public class PersListing extends WOComponent {
 			StringBuilder buf = new StringBuilder();
 			buf.append(strings.valueForKeyPath("Strings.messages.illegalFormat"));
 			buf.append(' ');
-			buf.append(strings.valueForKeyPath("Reusables_Stings.dataTypes.ofRequest"));
+			buf.append(strings.valueForKeyPath("Reusables_Strings.dataTypes.ofRequest"));
 			buf.append(' ');
 			buf.append(String.format(noMore,3));
 			searchMessage = buf.toString();
