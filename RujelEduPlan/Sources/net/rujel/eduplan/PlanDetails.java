@@ -66,9 +66,9 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	
 	public PlanDetails(WOContext context) {
         super(context);
-        ec = (EOEditingContext)context.page().valueForKey("ec");
+//		ec = (EOEditingContext)context.page().valueForKey("ec");
         periodsForList = new NSMutableDictionary();
-		context().page().takeValueForKey(this, "toReset");
+//		context().page().takeValueForKey(this, "toReset");
     }
 	
 	public void select() {
@@ -652,16 +652,19 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			}
 		}
 	}
-	public void reset() {
-		super.reset();
-		listNames = null;
-		ec = (EOEditingContext)context().page().valueForKey("ec");
-		periodsForList = new NSMutableDictionary();
-		subjects = null;
-		selection = null;
-		cycles = null;
-		listNames = null;
-		listDict = null;
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		if(Various.boolForObject(valueForBinding("shouldReset"))) {
+			listNames = null;
+			ec = (EOEditingContext)context().page().valueForKey("ec");
+			periodsForList = new NSMutableDictionary();
+			subjects = null;
+			selection = null;
+			cycles = null;
+			listNames = null;
+			listDict = null;
+			setValueForBinding(Boolean.FALSE, "shouldReset");
+		}
+		super.appendToResponse(aResponse, aContext);
 	}
 
 	public boolean synchronizesVariablesWithBindings() {

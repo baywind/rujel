@@ -7,6 +7,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -34,14 +35,27 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	public Object item;
 	public ItogType currType;
 	public NSArray itogsList;
+	public NSArray extensions;
 
 	public SetupItogs(WOContext context) {
         super(context);
-        setEc((EOEditingContext)context.page().valueForKey("ec"));
-		context().page().takeValueForKey(this, "toReset");
+//		setEc((EOEditingContext)context.page().valueForKey("ec"));
+//		context().page().takeValueForKey(this, "toReset");
     }
 
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		if(Various.boolForObject(valueForBinding("shouldReset"))) {
+			currType = null;
+			itogsList = null;
+			activeTypes.removeAllObjects();
+			setEc((EOEditingContext)context().page().valueForKey("ec"));
+			setValueForBinding(Boolean.FALSE, "shouldReset");
+		}
+		super.appendToResponse(aResponse, aContext);
+	}
+
 	public void setEc(EOEditingContext newEc) {
+		extensions = (NSArray)session().valueForKeyPath("modules.itogExtensions");
 		ec = newEc;
 		ec.lock();
 		try {
@@ -180,32 +194,35 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		currType = type;
 		ec.lock();
 		try {
-		if(type == null) {
-			EOFetchSpecification fs = new EOFetchSpecification(ItogType.ENTITY_NAME,
-					null, ModulesInitialiser.sorter);
-			allTypes = ec.objectsWithFetchSpecification(fs);
-			setListName(listName);
-		} else if(allTypes.containsObject(type)) {
-			EOQualifier[] quals = new EOQualifier[2];
-			quals[0] = new EOKeyValueQualifier(ItogContainer.ITOG_TYPE_KEY,
-					EOQualifier.QualifierOperatorEqual,currType);
-			quals[1] = new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
-			quals[0] = new EOAndQualifier(new NSArray(quals));
-			EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,
-					quals[0], MyUtility.numSorter);
-			itogsList = ec.objectsWithFetchSpecification(fs);
-		} else {
-			allTypes = allTypes.arrayByAddingObject(type);
-			itogsList = NSArray.EmptyArray;
-			EOEnterpriseObject tl = EOUtilities.createAndInsertInstance(ec, "ItogTypeList");
-			tl.takeValueForKey(listName, "listName");
-			tl.addObjectToBothSidesOfRelationshipWithKey(type, "itogType");
-			activeTypes.addObject(type);
-			ec.saveChanges();
-		}
-		}catch (Exception e) {
-			// TODO: handle exception
+			if(type == null) {
+				EOFetchSpecification fs = new EOFetchSpecification(ItogType.ENTITY_NAME,
+						null, ModulesInitialiser.sorter);
+				allTypes = ec.objectsWithFetchSpecification(fs);
+				setListName(listName);
+			} else if(allTypes.containsObject(type)) {
+				EOQualifier[] quals = new EOQualifier[2];
+				quals[0] = new EOKeyValueQualifier(ItogContainer.ITOG_TYPE_KEY,
+						EOQualifier.QualifierOperatorEqual,currType);
+				quals[1] = new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
+						EOQualifier.QualifierOperatorEqual,
+						session().valueForKey("eduYear"));
+				quals[0] = new EOAndQualifier(new NSArray(quals));
+				EOFetchSpecification fs = new EOFetchSpecification(
+						ItogContainer.ENTITY_NAME, quals[0], MyUtility.numSorter);
+				itogsList = ec.objectsWithFetchSpecification(fs);
+			} else {
+				allTypes = allTypes.arrayByAddingObject(type);
+				itogsList = NSArray.EmptyArray;
+				EOEnterpriseObject tl = EOUtilities.createAndInsertInstance(ec,
+						"ItogTypeList");
+				tl.takeValueForKey(listName, "listName");
+				tl.addObjectToBothSidesOfRelationshipWithKey(type, "itogType");
+				activeTypes.addObject(type);
+				ec.saveChanges();
+			}
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING, "Error adding ItogType",
+					new Object[] {session(),type,e});
 		} finally {
 			ec.unlock();
 		}
@@ -359,13 +376,5 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	
 	public boolean synchronizesVariablesWithBindings() {
         return false;
-	}
-	
-	public void reset() {
-		super.reset();
-		currType = null;
-		itogsList = null;
-        activeTypes.removeAllObjects();
-        setEc((EOEditingContext)context().page().valueForKey("ec"));
 	}
 }

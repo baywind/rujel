@@ -344,7 +344,10 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 	
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object ln = valueForBinding("listName");
-    	if((ln==null)?listName!=null:!ln.equals(listName)) {
+    	boolean reset = ((ln==null)?listName!=null:!ln.equals(listName));
+    	if(!reset)
+    		reset = Various.boolForObject(valueForBinding("shouldReset"));
+    	if(reset) {
     		listName = (String)ln;
     		_list = null;
     		_newDict = null;

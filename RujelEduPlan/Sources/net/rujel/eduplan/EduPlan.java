@@ -46,7 +46,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 	public NSArray tablist;
 	public NSKeyValueCoding currTab;
 	public EOEditingContext ec;
-	public WOComponent toReset;
+//	public WOComponent toReset;
+	public Boolean shouldReset;
 		
     public EduPlan(WOContext context) {
         super(context);
@@ -55,21 +56,23 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
         currTab = (NSKeyValueCoding)tablist.objectAtIndex(0);
     }
     
-    public void revertEc() {
+    public WOActionResults revertEc() {
 		ec.lock();
 		try {
-			if(toReset != null) {
+/*			if(toReset != null) {
 				toReset.reset();
 				String tmp = toReset.name();
 				if(!tmp.endsWith((String)currTab.valueForKey("component")))
 					toReset = null;
-			}
+			}*/
 			if(ec.hasChanges())
 				ec.revert();
+			shouldReset = Boolean.TRUE;
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			ec.unlock();
 		}
+		return this;
     }
 }

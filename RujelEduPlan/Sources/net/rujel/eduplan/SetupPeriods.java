@@ -33,6 +33,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -62,8 +63,8 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
     
 	public SetupPeriods(WOContext context) {
         super(context);
-        setEc((EOEditingContext)context.page().valueForKey("ec"));
-		context().page().takeValueForKey(this, "toReset");
+//        setEc((EOEditingContext)context.page().valueForKey("ec"));
+//		context().page().takeValueForKey(this, "toReset");
     }
 	
 	public void setEc(EOEditingContext newEc) {
@@ -302,15 +303,20 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		}
 	}
 
-	public void reset() {
-		super.reset();
-		currPeriod = null;
-		perList = null;
-		extraLists = null;
-		item = null;
-		details = null;
-		listName = null;
-		weekDays = 7;
-        setEc((EOEditingContext)context().page().valueForKey("ec"));
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		boolean reset = Various.boolForObject(valueForBinding("shouldReset")); 
+		if(reset) {
+			currPeriod = null;
+			perList = null;
+			extraLists = null;
+			item = null;
+			details = null;
+			listName = null;
+			weekDays = 7;
+	        setEc((EOEditingContext)context().page().valueForKey("ec"));
+		}
+		super.appendToResponse(aResponse, aContext);
+		if(reset)
+			setValueForBinding(Boolean.FALSE, "shouldReset");
 	}
 }
