@@ -66,3 +66,14 @@ IsAdded : WOString {
   valueWhenEmpty = "added";
   escapeHTML = false;
 }
+
+JoinContainer : OnClickContainer {
+  elementName = "td";
+  onclick = session.ajaxPopup;
+  invokeAction = addJoin;
+}
+
+JoinTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.titles.joint;
+  escapeHTML = false;
+}

@@ -778,7 +778,7 @@
 		<key>AutoItog</key>
 		<dict>
 			<key>skip</key>
-			<string>false</string>
+			<string>true</string>
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
@@ -867,7 +867,7 @@
 		<key>net.rujel.eduplan.PlanCycle</key>
 		<string>true</string>
 		<key>net.rujel.autoitog.AutoItogModule</key>
-		<string>true</string>
+		<string>false</string>
 		<key>net.rujel.contacts.EMailBroadcast</key>
 		<string>true</string>
 		<key>net.rujel.criterial.ModuleInit</key>

@@ -64,6 +64,8 @@ public class Substitute extends _Substitute implements Reason.Event {
 		rel.setDeleteRule(EOClassDescription.DeleteRuleCascade);	
 		rel.setIsMandatory(false);
 		ent.addRelationship(rel);
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"fromLesson",false,"fromID","EduLesson")
+			.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		EOInitialiser.initialiseRelationship("Substitute","teacher",false,"teacherID","Teacher")
 			.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		//EOInitialiser.initialiseRelationship("Substitute","eduCourse",false,"courseID","EduCourse").
@@ -88,6 +90,16 @@ public class Substitute extends _Substitute implements Reason.Event {
 	
 	public void setLesson(EduLesson aValue) {
 		takeStoredValueForKey(aValue, "lesson");
+		if(aValue != null)
+			setDate(aValue.date());
+	}
+
+	public EduLesson fromLesson() {
+		return (EduLesson)storedValueForKey("fromLesson");
+	}
+	
+	public void setFromLesson(EduLesson aValue) {
+		takeStoredValueForKey(aValue, "fromLesson");
 		if(aValue != null)
 			setDate(aValue.date());
 	}

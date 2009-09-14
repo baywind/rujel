@@ -33,6 +33,7 @@ import net.rujel.interfaces.*;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
@@ -49,6 +50,7 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     public NSArray subsList;
     public Substitute substitute;
     public Boolean cantCreate;
+    public NSArray joins;
     
 /*    public NSKeyValueCoding dict() {
     	if(_dict == null)
@@ -65,7 +67,17 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     	}
     	return subsList;
     }
-    
+
+    public NSArray joins() {
+    	if(joins == null) {
+       		EduLesson lesson = (EduLesson)valueForBinding("lesson");
+     		joins = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
+    				Substitute.ENTITY_NAME, "fromLesson",this);
+     		if(joins == null)
+     			joins = NSArray.EmptyArray;
+    	}
+    	return joins;
+    }
 /*    public EduCourse eduCourse() {
     	if(_course == null) {
     		EduLesson lesson = (EduLesson)valueForBinding("lesson");
@@ -123,7 +135,7 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		subsList = null;
 		cantCreate = null;
 		_variation = null;
-		
+		joins = null;
 	}
 	
 	public Boolean cantEdit() {
@@ -134,12 +146,25 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 	}
 
 	public WOActionResults edit() {
-		WOComponent editor = pageWithName("EditSubstitute");
+		String pageName = "EditSubstitute";
+		if(joins != null && joins.count() > 0 &&
+				(substitute == null || joins.containsObject(substitute)))
+				pageName = "EditJoin";
+		WOComponent editor = pageWithName(pageName);
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(valueForBinding("lesson"), "lesson");	
 		editor.takeValueForKey(substitute, "substitute");
 		return editor;
 	}
+	
+	public WOActionResults addJoin() {
+		WOComponent editor = pageWithName("EditJoin");
+		editor.takeValueForKey(context().page(), "returnPage");
+		editor.takeValueForKey(valueForBinding("lesson"), "lesson");	
+		editor.takeValueForKey(substitute, "substitute");
+		return editor;
+	}
+
 /*	
 	public String cellClass() {
 		if(substitute == null)

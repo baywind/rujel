@@ -97,7 +97,6 @@ public class EMailBroadcast implements Runnable{
 	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter,
 			EOEditingContext ec) {
 		//EOEditingContext ec = period.editingContext();//new EOEditingContext();
-		logger.log(WOLogLevel.INFO,"Starting mailing for period",period);
 	/*	
 		long timeout = 0;
 		try {
@@ -164,7 +163,7 @@ public class EMailBroadcast implements Runnable{
 			}
 			
 		} //end period selection
-		
+		logger.log(WOLogLevel.INFO,"Starting mailing for period",period);		
 		//cycle groups and send mails
 		
 		Enumeration eduGroups = EduGroup.Lister.listGroups(moment,ec).objectEnumerator();
