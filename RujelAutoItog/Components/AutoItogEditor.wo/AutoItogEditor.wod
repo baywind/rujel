@@ -1,0 +1,19 @@
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  align = "right";
+  height = 10;
+  width = 10;
+  onclick = "closePopup();";
+  style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
+}
+
+AutoItogTitle : WOString {
+  value = session.strings.RujelAutoItog_AutoItog.properties.AutoItog.this;
+  escapeHTML = "false";
+  valueWhenEmpty = "AutoItog";
+}
+
+ItogName : WOString {
+  value = itog.name;
+}

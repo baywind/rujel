@@ -51,7 +51,7 @@ import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 
 public class AutoItogModule {
-	protected static Logger logger = Logger.getLogger("rujel.autoitog");
+	public static final Logger logger = Logger.getLogger("rujel.autoitog");
 	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -72,8 +72,12 @@ public class AutoItogModule {
 						objectForKey("reportForStudent");
 			return PrognosReport.reportForStudent(settings);
 		} else if("reportSettingsForStudent".equals(obj)) {
-			NSDictionary reportSettings = (NSDictionary)WOApplication.application().
+			NSDictionary reportSettings = (NSDictionary)ctx.session().
 						valueForKeyPath("strings.RujelAutoItog_AutoItog.reportSettings");
+			return PlistReader.cloneDictionary(reportSettings, true);
+		} else if("itogExtensions".equals(obj)) {
+			NSDictionary reportSettings = (NSDictionary)ctx.session().
+				valueForKeyPath("strings.RujelAutoItog_AutoItog.itogExtension");
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if("extItog".equals(obj)) {
 			return extItog(ctx);

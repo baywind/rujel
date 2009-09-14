@@ -50,7 +50,6 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
-	protected static Logger logger = Logger.getLogger("rujel.autoitog");
 	public static final NSArray flagNames = new NSArray(new String[]
 	               {"active","manual","noTimeouts"});
 	
@@ -184,8 +183,9 @@ public class AutoItog extends _AutoItog {
 			try {
 				related.addObject(EOUtilities.objectWithPrimaryKeyValue(ec, entName, relKey));
 			} catch (RuntimeException e) {
-				logger.log(WOLogLevel.WARNING,"Could not get related object: " + entName +
-						':' + relKey,new Object[] {this,e});
+				AutoItogModule.logger.log(WOLogLevel.WARNING,
+						"Could not get related object: " + entName + ':' + relKey
+						,new Object[] {this,e});
 			}
 		}
     	return related.immutableClone();

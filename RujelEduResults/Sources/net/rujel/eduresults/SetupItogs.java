@@ -36,6 +36,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	public ItogType currType;
 	public NSArray itogsList;
 	public NSArray extensions;
+	public Object extItem;
 
 	public SetupItogs(WOContext context) {
         super(context);
