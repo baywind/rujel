@@ -668,4 +668,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		exportPage.takeValueForKey('\'' + entityName + "'yyMMdd", "filenameFormatter");
 		return exportPage;
 	}
+
+	public String title() {
+		return (String)plist.valueForKey("title");
+	}
 }

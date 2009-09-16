@@ -1,20 +1,21 @@
 <div class="backfield1" id="ajaxPopup">
 <webobject name = "Cross"/>
-<table><thead>
-<tr><th colspan = "2"><webobject name = "EditJoinTitle"/></th></tr>
+<table border = "1"><thead>
+<tr><th colspan = "2" style = "border:none;padding:1ex;font-size:larger;">
+	<webobject name = "EditJoinTitle"/></th></tr>
 <tr><th><webobject name = "CourseTitle"/></th>
 	<th><webobject name = "LessonTitle"/> <webobject name = "Date"/></th></tr>
 </thead><tbody>
-<tr><td><table>
+<tr><td valign = "top"><table cellpadding = "2">
 		<tbody><webobject name = "Courses">
-			<td><webobject name = "CourseGroup"/></td>
-			<td><webobject name = "CourseTeacher"/></td>
+			<td style = "white-space:nowrap;"><webobject name = "CourseGroup"/></td>
+			<td style = "white-space:nowrap;"><webobject name = "CourseTeacher"/></td>
 			<td style = "font-style:italic;"><webobject name = "CourseComment"/></td>
-		</webobject></tbody>
+		</webobject></tbody></table>
 	</td>
-	<td><webobject name = "Lessons"/>
+	<td valign = "top"><webobject name = "CourseSelected"><webobject name = "Lessons"/>
 		<webobject name = "NewLessonBox"><webobject name = "GenerateLesson"/></webobject>
-		</td></tr><webobject name = "LessonChosen">
+		</webobject></td></tr><webobject name = "LessonChosen">
 	<tr><td colspan = "2"><webobject name="Form">
 	<div><webobject name = "ReasonSelector"/></div>
 	<div style = "padding:3pt;border-top:#666 double;">

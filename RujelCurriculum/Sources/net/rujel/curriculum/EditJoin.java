@@ -34,7 +34,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
     public EduLesson selLesson;
 	public Reason reason;
 	public Boolean cantEdit = Boolean.TRUE;
-	public Boolean newLesson;
+	public boolean newLesson = false;
 	
 	public void setLesson(EduLesson l) {
 		lesson = l;
@@ -44,7 +44,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 				course.cycle());
 		quals[1] = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,
 				course.eduYear());
-		quals[1] = new EOKeyValueQualifier("teacher",EOQualifier.QualifierOperatorNotEqual,
+		quals[2] = new EOKeyValueQualifier("teacher",EOQualifier.QualifierOperatorNotEqual,
 				course.teacher());
 		quals[0] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,
@@ -75,7 +75,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			lessons = null;
 			return this;
 		}
-		if(selLesson.course() != selCourse)
+		if(selLesson != null && selLesson.course() != selCourse)
 			selLesson = null;
 		NSTimestamp date = null;
 		if(lesson != null)
@@ -83,28 +83,34 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		else if(selLesson != null)
 			date = selLesson.date();
 		EOQualifier[] quals = new EOQualifier[2];
-		quals[0] = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorNotEqual,
+		quals[0] = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,
 				selCourse);
-		quals[1] = new EOKeyValueQualifier("date",EOQualifier.QualifierOperatorNotEqual,
+		quals[1] = new EOKeyValueQualifier("date",EOQualifier.QualifierOperatorEqual,
 				date);
 		quals[0] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
 				quals[0],EduLesson.sorter);
 		lessons = selCourse.editingContext().objectsWithFetchSpecification(fs);
-		newLesson = Boolean.FALSE;
+		newLesson = false;
 		return this;
 	}
 	
+	public void setSelLesson(EduLesson l) {
+		selLesson = l;
+		newLesson = false;
+	}
+
 	public WOActionResults toggleNewLesson() {
-		if(selLesson == null) {
-			if(selCourse == null)
-				newLesson = Boolean.FALSE;
-			else
-				newLesson = Boolean.TRUE;
-		}  else {
-			newLesson = Boolean.TRUE;
-		}
+		selLesson = null;
+		newLesson = !newLesson;
 		return this;
+	}
+
+	public String newLessonClass() {
+		if(newLesson)
+			return "selection";
+		else
+			return "orange";
 	}
 
 	public WOActionResults save() {
@@ -174,7 +180,8 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 							buf.append(" / ");
 						buf.append(theme);
 					}
-					sub.setFactor(factor);
+					if(sub.factor().compareTo(BigDecimal.ONE) < 0)
+						sub.setFactor(factor);
 				}
 				selLesson.setTheme(buf.toString());
 			}

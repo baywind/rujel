@@ -127,7 +127,9 @@ public class PersListing extends WOComponent {
 		if(request != null) {
 			performSearchRequest(request);
 		} else {
-			syncSelection();
+			selection = (PersonLink) EOUtilities.localInstanceOfObject (ec,
+					(EOEnterpriseObject)valueForBinding("selection"));
+//			syncSelection();
 		}
 		if(selection == null && Various.boolForObject(valueForBinding("showPopup"))) {
 			selection = defaultSelectionValue();
@@ -140,8 +142,11 @@ public class PersListing extends WOComponent {
 	
 	public void takeValuesFromRequest(WORequest aRequest,WOContext aContext) {
 		super.takeValuesFromRequest(aRequest,aContext);
-		if(!Various.boolForObject(valueForBinding("showPopup")))
-			syncSelection();
+		if(!Various.boolForObject(valueForBinding("showPopup"))) {
+			selection = (PersonLink) EOUtilities.localInstanceOfObject (ec,
+					(EOEnterpriseObject)valueForBinding("selection"));
+//			syncSelection();
+		}
 	}
 	
 	protected void performSearchRequest(String request) {
@@ -160,12 +165,12 @@ public class PersListing extends WOComponent {
 		selection = (PersonLink)found.objectAtIndex(0);
 		setValueForBinding(selection,"selection");
 		
-		setValueForBinding(Person.Utility.fullName(selection.person(),true,2,2,2),"searchRequest");
+		setValueForBinding(Person.Utility.fullName(selection,true,2,2,2),"searchRequest");
 		valueForBinding("selectAction");
 		
 	}
 	
-	protected void syncSelection () {
+/*	protected void syncSelection () {
 		EOEnterpriseObject sel = EOUtilities.localInstanceOfObject (ec,
 				(EOEnterpriseObject)valueForBinding("selection"));
 		if(sel == null || sel instanceof Person)
@@ -177,7 +182,7 @@ public class PersListing extends WOComponent {
 				throw new IllegalArgumentException(
 						"Selection binding should be of class Person or PersonLink");
 		}
-	}
+	}*/
 
 	public void search() {
 		EOQualifier qual = Person.Utility.fullNameQualifier(searchString);

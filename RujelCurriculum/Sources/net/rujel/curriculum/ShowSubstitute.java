@@ -72,11 +72,48 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     	if(joins == null) {
        		EduLesson lesson = (EduLesson)valueForBinding("lesson");
      		joins = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
-    				Substitute.ENTITY_NAME, "fromLesson",this);
+    				Substitute.ENTITY_NAME, "fromLesson",lesson);
      		if(joins == null)
      			joins = NSArray.EmptyArray;
     	}
     	return joins;
+    }
+    
+    public Boolean canAdd() {
+    	if(cantCreate().booleanValue())
+    		return Boolean.FALSE;
+    	if(subsList().count() > 0 || joins().count() > 0)
+    		return Boolean.TRUE;
+		return Boolean.FALSE;
+    }
+    
+    public String descJoin() {
+    	EduCourse course = (EduCourse)valueForKeyPath("substitute.lesson.course");
+    	if(course == null)
+    		return null;
+    	StringBuilder buf = new StringBuilder("<span style = \"white-space:nowrap;\">");
+    	buf.append(course.eduGroup().name()).append("</span> ");
+    	if(course.teacher() == null)
+    		buf.append(session().valueForKeyPath("strings.RujelBase_Base.vacant"));
+    	else {
+    		buf.append("<span style = \"white-space:nowrap;\">");
+    		buf.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+    		buf.append("</span>");
+    	}
+    	return buf.toString();
+    }
+    
+    public WOActionResults openJointLesson() {
+    	EduCourse course = (EduCourse)valueForKeyPath("substitute.lesson.course");
+    	if(course == null)
+    		return null;
+		WOComponent nextPage = pageWithName("LessonNoteEditor");
+		nextPage.takeValueForKey(substitute.lesson(),"currLesson");
+		nextPage.takeValueForKey(course,"course");
+		nextPage.takeValueForKey(nextPage.valueForKey("currLesson"),"selector");
+		session().takeValueForKey(context().page(),"pushComponent");
+		return nextPage;
+
     }
 /*    public EduCourse eduCourse() {
     	if(_course == null) {
@@ -95,6 +132,11 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     public boolean show() {
     	return (!cantCreate().booleanValue() || subsList().count() > 0 || variation() != null ||
     			Various.boolForObject(session().valueForKeyPath("readAccess.create.Variation")));
+    }
+    
+    public boolean empty() {
+    	return ((joins() == null || joins().count() == 0) &&
+    			(subsList() == null || subsList().count() == 0));
     }
     
    /*
@@ -147,12 +189,13 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 
 	public WOActionResults edit() {
 		String pageName = "EditSubstitute";
-		if(joins != null && joins.count() > 0 &&
-				(substitute == null || joins.containsObject(substitute)))
+		Object lesson = valueForBinding("lesson");
+		if(joins() != null && joins().count() > 0 &&
+				(substitute == null || substitute.fromLesson() == lesson))
 				pageName = "EditJoin";
 		WOComponent editor = pageWithName(pageName);
 		editor.takeValueForKey(context().page(), "returnPage");
-		editor.takeValueForKey(valueForBinding("lesson"), "lesson");	
+		editor.takeValueForKey(lesson, "lesson");	
 		editor.takeValueForKey(substitute, "substitute");
 		return editor;
 	}

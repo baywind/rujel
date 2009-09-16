@@ -27,7 +27,7 @@ LessonTitle : WOString {
 
 Date : WOString {
   value = lesson.date;
-  dateformat = application.prefs.ui.shortDateFormat;
+  dateformat = application.prefs.ui.dateFormat;
 }
 
 Courses : DynamicTableRow {
@@ -37,6 +37,7 @@ Courses : DynamicTableRow {
   switchParam = item.eduGroup;
   selection = selCourse;
   selectAction = selectCourse;
+  onClick = session.ajaxPopupNoPos;
 }
 
 CourseGroup : WOString {
@@ -44,10 +45,11 @@ CourseGroup : WOString {
 }
 
 CourseTeacher : PersonDisplay {
-  value = item.teacher;
+  person = item.teacher;
   last = 2;
   first = 1;
   second = 1;
+  valueWhenEmpty = "???";
 }
 
 CourseComment : WOString {
@@ -55,7 +57,7 @@ CourseComment : WOString {
 }
 
 ReasonSelector : ReasonSelector {
-  course = lesson.course;
+  course = selCourse;
   date = lesson.date;
   reason = reason;
   readOnly = cantEdit;
@@ -68,7 +70,6 @@ Lessons : Tabs {
   onClick = session.ajaxPopupNoPos;
   vertical = true;
   titleAttribute = "theme";
-  selectAction = toggleNewLesson;
 }
 
 LessonChosen : WOConditional {
@@ -80,6 +81,7 @@ NewLessonBox : OnClickContainer {
   elementName = "div";
   onclick = session.ajaxPopupNoPos;
   invokeAction = toggleNewLesson;
+  class = newLessonClass;
 }
 
 GenerateLesson : WOString {
@@ -110,4 +112,9 @@ DeleteButton: WOGenericElement {
 	onclick = session.confirmMessage;
 	elementName = "input";
 	type = "button";
+}
+
+
+CourseSelected : WOConditional {
+  condition = selCourse;
 }
