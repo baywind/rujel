@@ -6,35 +6,26 @@
 	<string>0</string>
 	<key>loggingProperties</key>
 	<string>LOCALROOT/Library/WebObjects/Configuration/diaryLog.properties</string>
-	<key>dbConnectionOld</key>
-	<dict>
-		<key>VseobuchSimple</key>
-		<dict>
-			<key>_URL</key>
-			<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
-			<key>dbName</key>
-			<string>DemoSho</string>
-		</dict>
-		<key>serverURL</key>
-		<string>jdbc:mysql://127.0.0.1</string>
-		<key>urlSuffix</key>
-		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
-		<key>username</key>
-		<string>rujel</string>
-		<key>password</key>
-		<string></string>
-	</dict>
 	<key>dbConnection</key>
 	<dict>
 		<key>VseobuchSimple</key>
 		<dict>
 			<key>_URL</key>
 			<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
+			<key>skip</key>
+			<string>true</string>
 			<key>dbName</key>
 			<string>DemoSho</string>
 		</dict>
+		<key>VseLists</key>
+		<dict>
+			<key>skip</key>
+			<string>false</string>
+		</dict>
 		<key>AutoItog</key>
 		<dict>
+			<key>skip</key>
+			<string>true</string>
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
@@ -91,7 +82,7 @@
 			<string>RujelYear%s</string>
 		</dict>
 		<key>serverURL</key>
-		<string>jdbc:mysql://127.0.0.1</string>
+		<string>jdbc:mysql://127.0.0.1/</string>
 		<key>urlSuffix</key>
 		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
 		<key>username</key>
@@ -108,13 +99,13 @@
 		<key>EduCycle</key>
 		<string>net.rujel.eduplan.PlanCycle</string>
 		<key>EduGroup</key>
-		<string>net.rujel.vseobuch.VOClass</string>
+		<string>net.rujel.vselists.VseEduGroup</string>
 		<key>EduLesson</key>
 		<string>net.rujel.base.BaseLesson</string>
 		<key>Student</key>
-		<string>net.rujel.vseobuch.VOStudent</string>
+		<string>net.rujel.vselists.VseStudent</string>
 		<key>Teacher</key>
-		<string>net.rujel.vseobuch.VOTeacher</string>
+		<string>net.rujel.vselists.VseTeacher</string>
 	</dict>
 	<key>modules</key>
 	<dict>
@@ -159,7 +150,7 @@
 		<string>dd.MM.yyyy</string>
 		<key>shortDateFormat</key>
 		<string>dd.MM</string>
-		<key>_defaultDate</key>
+		<key>defaultDate</key>
 		<string>26.04.2009</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>

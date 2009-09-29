@@ -205,7 +205,7 @@ public class SettingsBase extends _SettingsBase {
 			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
 					ENTITY_NAME, KEY_KEY, key);
 			return sb.forCourse(course);
-		} catch (Exception e) {
+		} catch (EOObjectNotAvailableException e) {
 			return null;
 		}
 	}

@@ -224,7 +224,7 @@
 				<key>zav_kaf</key>
 				<string>31</string>
 				<key>zavuch</key>
-				<string>1</string>
+				<string>15</string>
 				<key>teacher</key>
 				<string>15</string>
 			</dict>
@@ -468,6 +468,8 @@
 				<string>15</string>
 				<key>zav_kaf</key>
 				<string>15</string>
+				<key>teacher</key>
+				<string>3</string>
 				<key>any</key>
 				<string>1</string>
 			</dict>
@@ -778,7 +780,7 @@
 		<key>AutoItog</key>
 		<dict>
 			<key>skip</key>
-			<string>true</string>
+			<string>false</string>
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
@@ -834,16 +836,28 @@
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
-		<key>serverURL</key>
+		<key>serverURL_MySQL</key>
 		<string>jdbc:mysql://127.0.0.1/</string>
-		<key>urlSuffix</key>
+		<key>serverURL</key>
+		<string>jdbc:firebirdsql://localhost/Users/gena/Documents/WOProj/SQL/firebird</string>
+		<key>urlSuffix_MySQL</key>
 		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
-		<key>username</key>
+		<key>urlSuffix</key>
+		<string>?lc_ctype=UNICODE_FSS</string>
+		<key>driver</key>
+		<string>org.firebirdsql.jdbc.FBDriver</string>
+		<key>username_MySQL</key>
 		<string>rujel</string>
-		<key>password</key>
+		<key>username</key>
+		<string>sysdba</string>
+		<key>password_MySQL</key>
 		<string></string>
+		<key>password</key>
+		<string>masterkey</string>
 		<key>yearTag</key>
 		<string>true</string>
+		<key>prototypes</key>
+		<string>Firebird</string>
 	</dict>
 	<key>interfaces</key>
 	<dict>
@@ -971,7 +985,7 @@
 		<key>shortDateFormat</key>
 		<string>dd.MM</string>
 		<key>defaultDate</key>
-		<string>08.04.2009</string>
+		<string>26.04.2009</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>
 		<key>_logoutScreen</key>
