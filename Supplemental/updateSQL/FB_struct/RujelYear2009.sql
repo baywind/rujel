@@ -140,6 +140,7 @@ CREATE TABLE CR_WORK (
   WORK_THEME varchar(255),
   LOAD_TIME smallint NOT NULL,
   TASK_LINK int,
+  WORK_FLAGS smallint NOT NULL,
   PRIMARY KEY (W_ID)
 );
 

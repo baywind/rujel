@@ -382,7 +382,7 @@ public class MarksPresenter extends NotePresenter {
 
     public String integralColor() {
     	if(student() == null)
-    		return null;
+    		lesson().color();
     	if(activeCriterion() != null) return null;
     	if(hasBinding("data"))
     		return null;
@@ -451,13 +451,13 @@ public class MarksPresenter extends NotePresenter {
 			return false;
 		return isSelected();
 	}
-	*/
 	
 	public String tdStyle() {
 		if(student() == null && lesson()!= null)
 			return lesson().styleClass();
 		return null;
 	}
+	*/
 	
 	public int len() {
 		int len = super.len();

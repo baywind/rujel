@@ -29,7 +29,9 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
+import net.rujel.reusables.ModulesInitialiser;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -41,6 +43,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 
 	public WOComponent returnPage;
 	public Work work;
+	public NSArray types;
+	public Object item;
 	
 	public Integer hours;
 	public Integer minutes;
@@ -62,17 +66,17 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		if(hrs > 0)
     			hours = new Integer(hrs);
     	}
+    	EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
+    			EOQualifier.QualifierOperatorLessThan,new Integer(64));
+    	EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
+    			ModulesInitialiser.sorter);
+    	types = newWork.editingContext().objectsWithFetchSpecification(fs);
     }
 
     public String lessonTitle() {
     	return NotePresenter.titleForLesson(work);
     }
-    
-    public NSArray types() {
-    	critIdx = -1;
-    	return Work.workTypes();
-    }
-    
+        
     public WOActionResults save() {
     	int load = 0;
     	if(hours != null)
@@ -212,6 +216,20 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(count != null && critIdx < count.intValue())
     		return "return isNumberInput(event);";
     	return "return addCriterion(event);";
+    }
+    
+    public String onClick() {
+    	Object crit = criterMax();
+    	if(critIdx >= 0 && crit == null)
+    		crit = valueForKeyPath("critItem.dfltMax");
+    	if(crit == null && critIdx < 0)
+    		crit = SettingsBase.stringSettingForCourse(CriteriaSet.ENTITY_NAME,
+    				work.course(), work.editingContext());
+    	if(crit == null)
+        	return "select();";
+    	StringBuilder buf = new StringBuilder("if(!value){value=(");
+    	buf.append(crit).append(");blockCriters(event);}select();");
+    	return buf.toString();
     }
 
     protected EOEnterpriseObject itemMask() {

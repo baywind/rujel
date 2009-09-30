@@ -30,7 +30,6 @@
 package net.rujel.ui;
 
 import java.util.Date;
-import java.util.Enumeration;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
@@ -177,7 +176,12 @@ public class WorkList extends LessonList {
 	
 	public String rowClass() {
 		if(lessonItem == valueForBinding("currLesson")) return "selection";
-		return work().styleClass();
+		return null; //work().styleClass();
+	}
+	
+	public String rowColor() {
+		if(lessonItem == valueForBinding("currLesson")) return null;
+		return work().color();
 	}
 	/*
 	public boolean wide() {

@@ -71,14 +71,18 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
     public String rowClass() {
     	if(workItem == valueForBinding("currLesson"))
     		return "selection";
-    	return workItem.styleClass();
+    	return null;//workItem.styleClass();
     }
     
 	public String rowStyle() {
+		StringBuilder result = new StringBuilder();
+		if(workItem != valueForBinding("currLesson")) {
+			result.append("background-color:").append(workItem.color()).append(';');
+		}
 	   	EduLesson lesson = (EduLesson)valueForBinding("lesson");
 	    if(lesson.date().equals(workItem.date()))
-	    	return "font-weight:bold;";
-		return null;
+	    	result.append("font-weight:bold;");
+		return (result.length() == 0)?null:result.toString();
 	}
     
     public WOActionResults inspectorPopup() {
@@ -96,7 +100,7 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
         	NSTimestamp date = lesson.date();
         	((Work)currLesson).setDate(date);
         	((Work)currLesson).setAnnounce(date);
-        	((Work)currLesson).setType(new Integer(Work.CLASSWORK));
+//        	((Work)currLesson).setType(new Integer(Work.CLASSWORK));
         	EOEnterpriseObject course = EOUtilities.localInstanceOfObject(tmpEc, lesson.course());
         	((Work)currLesson).setNumber(new Integer(0));
         	currLesson.addObjectToBothSidesOfRelationshipWithKey(course, "course");

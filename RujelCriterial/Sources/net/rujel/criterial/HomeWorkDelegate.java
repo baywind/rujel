@@ -41,10 +41,12 @@ import com.webobjects.foundation.*;
 import net.rujel.base.MyUtility;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.WOLogLevel;
 
 public class HomeWorkDelegate extends TaskDelegate {
+	
 	public String homeTaskForLesson(EduLesson lesson) {
 		Work work = homeWorkForLesson(lesson, false);
 		if(work == null)
@@ -97,25 +99,60 @@ public class HomeWorkDelegate extends TaskDelegate {
 		EOQualifier qual = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual,lesson.course());
 		NSMutableArray quals = new NSMutableArray(qual);
-		qual = new EOKeyValueQualifier("type",
-				EOQualifier.QualifierOperatorEqual,new Integer(Work.HOMEWORK));
+		qual = new EOKeyValueQualifier(Work.FLAGS_KEY,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, new Integer(16));
 		quals.addObject(qual);
 		NSTimestamp date = lesson.date();
-		qual = new EOKeyValueQualifier("announce",
+		qual = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
 				EOQualifier.QualifierOperatorEqual,date);
 		quals.addObject(qual);
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,EduLesson.sorter);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found != null && found.count() > 0)
-			return (Work)found.objectAtIndex(0);
+		if(found != null && found.count() > 0) {
+			Work work = (Work)found.objectAtIndex(0);
+			if(found.count() > 1) {
+				for (int i = 0; i < found.count(); i++) {
+					work = (Work)found.objectAtIndex(i);
+					if(work.namedFlags().flagForKey("fixHometask"))
+						break;
+					work = null;
+				}
+				if(work == null)
+					work = (Work)found.objectAtIndex(0);
+			}
+			return work;
+		}
 		if(!create)
 			return null;
 		Work result = (Work)EOUtilities.createAndInsertInstance(ec, "Work");
 		result.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
 		result.setAnnounce(date);
 		result.setDate(date.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0));
-		result.setType(new Integer(Work.HOMEWORK));
+		fs.setEntityName("WorkType");
+		qual = EOQualifier.qualifierWithQualifierFormat(
+				"dfltFlags >= 16 and dfltFlags < 64", null);
+		fs.setQualifier(qual);
+		fs.setSortOrderings(ModulesInitialiser.sorter);
+		found = ec.objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
+			if(found.count() > 1) {
+				for (int i = 0; i < found.count(); i++) {
+					type = (EOEnterpriseObject)found.objectAtIndex(i);
+					Integer flags = (Integer) type.valueForKey("dfltFlags"); 
+					if((flags.intValue() & 4) == 4)
+						break;
+					else
+						type = null;
+				}
+				if(type == null)
+					type = (EOEnterpriseObject)found.objectAtIndex(0);
+			}
+			result.setWorkType(type);
+		} else {
+			result.namedFlags().setFlagForKey(true, "hometask");
+		}
 		MyUtility.setNumberToNewLesson(result);
 		//result.setNumber(new Integer(0));
 		return result;

@@ -66,7 +66,7 @@ public class ModuleInit {
 		if(obj == null || obj.equals("init")) {
 			init();
 //		} else if("init2".equals(obj)) {
-			Work.initTypes();
+//			Work.initTypes();
 		} else if("presentTabs".equals(obj)) {
 			NSDictionary worksTab = (NSDictionary)WOApplication.application().
 				valueForKeyPath("strings.RujelCriterial_Strings.worksTab");
@@ -118,12 +118,6 @@ public class ModuleInit {
 	public static NSKeyValueCoding extendLesson(WOContext ctx) {
 		EduLesson lesson = (EduLesson)ctx.session().objectForKey("currentLesson");
 		EOEditingContext ec = lesson.editingContext();
-		EOSortOrdering so = new EOSortOrdering("type",EOSortOrdering.CompareAscending);
-		NSMutableArray sorter = new NSMutableArray(so);
-		so = new EOSortOrdering("announce",EOSortOrdering.CompareDescending);
-		sorter.addObject(so);
-		so = new EOSortOrdering("date",EOSortOrdering.CompareAscending);
-		sorter.addObject(so);
 		EOQualifier qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,lesson.course());
 		NSMutableArray quals = new NSMutableArray(qual);
 		NSTimestamp date = lesson.date();
@@ -132,10 +126,17 @@ public class ModuleInit {
 		qual = new EOKeyValueQualifier("announce",EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
 		quals.addObject(qual);
 		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,sorter);
+		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,null);
 		NSArray related = ec.objectsWithFetchSpecification(fs);
-		/*if(related == null || related.count() == 0)
-			return null;*/
+		if(related != null && related.count() > 1) {
+			EOSortOrdering so = new EOSortOrdering("workType.sort",EOSortOrdering.CompareAscending);
+			NSMutableArray sorter = new NSMutableArray(so);
+			so = new EOSortOrdering("announce",EOSortOrdering.CompareDescending);
+			sorter.addObject(so);
+			so = new EOSortOrdering("date",EOSortOrdering.CompareAscending);
+			sorter.addObject(so);
+			related = EOSortOrdering.sortedArrayUsingKeyOrderArray(related, sorter);
+		}
 		NSMutableDictionary result = new NSMutableDictionary("05", "sort");
 		result.takeValueForKey(related,"works");
 		result.takeValueForKey("WorksOnDate", "component");

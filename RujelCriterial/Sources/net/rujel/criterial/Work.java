@@ -40,7 +40,6 @@ import net.rujel.interfaces.*;
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
-import com.webobjects.appserver.WOSession;
 import com.webobjects.appserver.WOApplication;
 import java.math.*;
 import java.util.Enumeration;
@@ -58,13 +57,13 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		super.setWeight(BigDecimal.ZERO);
 		Integer zero = new Integer(0);
 		setLoad(zero);
-		setType(zero);
+		setFlags(zero);
 		setAnnounce(new NSTimestamp());
 	}
 	
 	public FractionPresenter integralPresenter() {
 		if(_integralPresenter == null) {
-			boolean weightless = (weight().compareTo(BigDecimal.ZERO) == 0);
+			boolean weightless = !hasWeight();//(weight().compareTo(BigDecimal.ZERO) == 0);
 			String key = (weightless)?"presenters.weightless":"presenters.workIntegral";
 			EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
 			EOEnterpriseObject setting = SettingsBase.settingForCourse(key, course(), ec);
@@ -545,7 +544,8 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		return BaseLesson.noteForStudent(this, student);
 	}
 	public EOEnterpriseObject _newNote() {
-		EOEnterpriseObject note = EOUtilities.createAndInsertInstance(editingContext(),"WorkNote");
+		EOEnterpriseObject note = EOUtilities.createAndInsertInstance(
+				editingContext(),"WorkNote");
 		note.addObjectToBothSidesOfRelationshipWithKey(this, "work");
 		return note;
 	}
@@ -601,9 +601,9 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			throw new NSValidation.ValidationException(message);
 		}
 		NSArray criterMask = criterMask();
-		boolean hasWeight = (BigDecimal.ZERO.compareTo(weight()) != 0);
+//		boolean hasWeight = (BigDecimal.ZERO.compareTo(weight()) != 0);
 		if(criterMask == null || criterMask.count() == 0) {
-			if(hasWeight) {
+			if(hasWeight()) {
 				String message = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelCriterial_Strings.messages.critersRequired");
 				throw new NSValidation.ValidationException(message);
@@ -671,13 +671,15 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		}
 	}
 	
-	public AccessSchemeAssistant assistantForAttribute(String attribute, NSArray useAccessKeys) {
+	public AccessSchemeAssistant assistantForAttribute(
+			String attribute, NSArray useAccessKeys) {
 		return null;
 	}
 	
 	public NamedFlags accessForAttribute (String attribute, NSArray useAccessKeys) {
 		if(editingContext() == null) return DegenerateFlags.ALL_FALSE;
-		UserPresentation user = (UserPresentation)valueForKeyPath("editingContext.session.user");
+		UserPresentation user = (UserPresentation)valueForKeyPath(
+				"editingContext.session.user");
 		if(user == null)
 			throw new IllegalStateException ("Can't get user to determine access");
 		if(useAccessKeys == null) useAccessKeys = UseAccess.accessKeys;
@@ -697,6 +699,10 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 //					new Object[] {valueForKeyPath("editingContext.session"),request});
 			return  null;
 		}
+	}
+	
+	public boolean hasWeight() {
+		return (super.weight().compareTo(BigDecimal.ZERO) != 0);
 	}
 	
 	public void setWeight(BigDecimal aValue) {
@@ -719,13 +725,43 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		return weight;
 	}
 	
+
+	public static final NSArray flagNames = new NSArray (new String[] {
+		"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","","unused"});
+
+	private NamedFlags _flags;
+    public NamedFlags namedFlags() {
+    	if(_flags==null) {
+    		_flags = new NamedFlags(flags().intValue(),flagNames);
+    		try{
+    			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
+    					NamedFlags.class));
+    		} catch (Exception e) {
+    			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+						"Could not get syncMethod for Work flags",e);
+			}
+    	}
+    	return _flags;
+    }
+    
+    public void setNamedFlags(NamedFlags flags) {
+    	if(flags != null)
+    		setFlags(flags.toInteger());
+    	_flags = flags;
+    }
+    
+    public void setFlags(Integer value) {
+    	_flags = null;
+    	super.setFlags(value);
+    }
+/*
 	public static final int CLASSWORK = 0;
 	public static final int HOMEWORK = 1;
 	public static final int PROJECT = 2;
 	public static final int OPTIONAL = 3;
 	protected static NSArray workTypes = new NSArray (
 			new String[] {"classwork","homework","project","optional"});
-	
+
 	public static NSArray workTypes() {
 		return workTypes;
 	}
@@ -756,8 +792,28 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			value = 0;
 		setType(new Integer(value));
 	}
-	
-	public String presentLoad() {
+	*/
+
+	public void setWorkType(EOEnterpriseObject workType) {
+		EOEnterpriseObject prevType = workType();
+		if(workType == prevType)
+			return;
+		if(prevType != null) {
+			Integer useCount = (Integer)prevType.valueForKey("useCount");
+			useCount = new Integer(useCount.intValue() -1);
+			prevType.takeValueForKey(useCount, "useCount");
+		}
+		super.setWorkType(workType);
+		if(workType != null) {
+			Integer useCount = (Integer)workType.valueForKey("useCount");
+			useCount = new Integer(useCount.intValue() +1);
+			workType.takeValueForKey(useCount, "useCount");
+			setFlags((Integer)workType.valueForKey("dfltFlags"));
+			setWeight((BigDecimal)workType.valueForKey("dfltWeight"));
+		}
+	}
+    
+    public String presentLoad() {
 		if(load() == null)
 			return null;
 		int minutes = load().intValue();
@@ -772,7 +828,22 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		result.append(minutes);
 		return result.toString();
 	}
-	
+
+    public String color() {
+    	String result = null;
+    	if(hasWeight()) {
+    		result = (String)valueForKeyPath("workType.colorWeight");
+    		if(result == null)
+    			return "#ff9966";
+    	} else {
+    		result = (String)valueForKeyPath("workType.colorNoWeight");
+    		if(result == null)
+    			return "#ffcc66";
+    	}
+    	return result;
+    }
+    
+	/*
 	public String styleClass() {
 		if(type() == null)
 			return null;
@@ -794,5 +865,5 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		default:
 			return null;
 		}
-	}
+	}*/
 }

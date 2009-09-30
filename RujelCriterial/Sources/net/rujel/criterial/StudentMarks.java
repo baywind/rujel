@@ -132,8 +132,11 @@ public class StudentMarks extends WOComponent {
 							EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO));
 				}
 				if(options.flagForKey("marked")) {
-					quals.addObject(new EOKeyValueQualifier(Work.TYPE_KEY,
-							EOQualifier.QualifierOperatorNotEqual,new Integer(Work.OPTIONAL)));
+					
+					quals.addObject(EOQualifier.qualifierWithQualifierFormat(
+							"flags >= 24 OR (flags >= 8 and flags < 16) ", null));
+//							new EOKeyValueQualifier(Work.TYPE_KEY,
+//							EOQualifier.QualifierOperatorNotEqual,new Integer(Work.OPTIONAL)));
 				}
 			}
 			
@@ -145,8 +148,10 @@ public class StudentMarks extends WOComponent {
 				allWorks[i] = works.mutableClone();
 				
 				if(!(options.flagForKey("all") || options.flagForKey("marked"))) {
-					EOQualifier q = new EOKeyValueQualifier(Work.TYPE_KEY,
-							EOQualifier.QualifierOperatorEqual,new Integer(Work.OPTIONAL));
+					EOQualifier q =EOQualifier.qualifierWithQualifierFormat(
+							"flags < 8 OR (flags >= 16 and flags < 24) ", null);
+//						new EOKeyValueQualifier(Work.TYPE_KEY,
+//							EOQualifier.QualifierOperatorEqual,new Integer(Work.OPTIONAL));
 					NSArray optional = EOQualifier.filteredArrayWithQualifier(works, q);
 					if(optional != null && optional.count() > 0) {
 						Enumeration enu = optional.objectEnumerator();

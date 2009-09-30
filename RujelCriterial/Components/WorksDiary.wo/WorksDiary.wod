@@ -24,7 +24,7 @@ ListRepetition : WORepetition {
 ItemRow : WOGenericContainer {
 	elementName = "tr";
 	class = item.styleClass;
-	title = item.workType;
+	title = item.workType.typeName;
 }
 
 Label : WOString {

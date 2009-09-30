@@ -44,7 +44,6 @@ public abstract class _BorderSet extends EOGenericRecord {
 	public static final String EXCLUDE_KEY = "exclude";
 	public static final String FORMAT_STRING_KEY = "formatString";
 	public static final String TITLE_KEY = "title";
-	public static final String UPTO_KEY = "upto";
 	public static final String USE_CLASS_KEY = "useClass";
 	public static final String ZERO_VALUE_KEY = "zeroValue";
 
@@ -73,14 +72,6 @@ public abstract class _BorderSet extends EOGenericRecord {
 
   public void setTitle(String value) {
     takeStoredValueForKey(value, TITLE_KEY);
-  }
-
-  public NSTimestamp upto() {
-    return (NSTimestamp) storedValueForKey(UPTO_KEY);
-  }
-
-  public void setUpto(NSTimestamp value) {
-    takeStoredValueForKey(value, UPTO_KEY);
   }
 
   public String useClass() {

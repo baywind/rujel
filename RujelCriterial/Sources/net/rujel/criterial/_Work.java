@@ -43,12 +43,12 @@ public abstract class _Work extends EOGenericRecord {
 	// Attributes
 	public static final String ANNOUNCE_KEY = "announce";
 	public static final String DATE_KEY = "date";
+	public static final String FLAGS_KEY = "flags";
 	public static final String LOAD_KEY = "load";
 	public static final String NUMBER_KEY = "number";
 	public static final String TASK_ID_KEY = "taskID";
 	public static final String THEME_KEY = "theme";
 	public static final String TITLE_KEY = "title";
-	public static final String TYPE_KEY = "type";
 	public static final String WEIGHT_KEY = "weight";
 
 	// Relationships
@@ -56,6 +56,7 @@ public abstract class _Work extends EOGenericRecord {
 	public static final String MARKS_KEY = "marks";
 	public static final String NOTES_KEY = "notes";
 	public static final String TASK_TEXT_KEY = "taskText";
+	public static final String WORK_TYPE_KEY = "workType";
 
   public NSTimestamp announce() {
     return (NSTimestamp) storedValueForKey(ANNOUNCE_KEY);
@@ -71,6 +72,14 @@ public abstract class _Work extends EOGenericRecord {
 
   public void setDate(NSTimestamp value) {
     takeStoredValueForKey(value, DATE_KEY);
+  }
+
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
+  }
+
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
   }
 
   public Integer load() {
@@ -113,14 +122,6 @@ public abstract class _Work extends EOGenericRecord {
     takeStoredValueForKey(value, TITLE_KEY);
   }
 
-  public Integer type() {
-    return (Integer) storedValueForKey(TYPE_KEY);
-  }
-
-  public void setType(Integer value) {
-    takeStoredValueForKey(value, TYPE_KEY);
-  }
-
   public BigDecimal weight() {
     return (BigDecimal) storedValueForKey(WEIGHT_KEY);
   }
@@ -135,6 +136,14 @@ public abstract class _Work extends EOGenericRecord {
 
   public void setTaskText(EOEnterpriseObject value) {
     	takeStoredValueForKey(value, TASK_TEXT_KEY);
+  }
+  
+  public EOGenericRecord workType() {
+    return (EOGenericRecord)storedValueForKey(WORK_TYPE_KEY);
+  }
+
+  public void setWorkType(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, WORK_TYPE_KEY);
   }
   
   public NSArray criterMask() {
