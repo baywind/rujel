@@ -49,6 +49,7 @@ public abstract class _BaseCourse extends EOGenericRecord {
 	public static final String AUDIENCE_KEY = "audience";
 	public static final String LESSONS_KEY = "lessons";
 	public static final String LESSON_TABS_KEY = "lessonTabs";
+	public static final String TEACHER_CHANGES_KEY = "teacherChanges";
 
   public String comment() {
     return (String) storedValueForKey(COMMENT_KEY);
@@ -120,6 +121,22 @@ public abstract class _BaseCourse extends EOGenericRecord {
 
   public void removeFromLessonTabs(EOEnterpriseObject object) {
     excludeObjectFromPropertyWithKey(object, LESSON_TABS_KEY);
+  }
+
+  public NSArray teacherChanges() {
+    return (NSArray)storedValueForKey(TEACHER_CHANGES_KEY);
+  }
+ 
+  public void setTeacherChanges(NSArray value) {
+    takeStoredValueForKey(value, TEACHER_CHANGES_KEY);
+  }
+  
+  public void addToTeacherChanges(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, TEACHER_CHANGES_KEY);
+  }
+
+  public void removeFromTeacherChanges(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, TEACHER_CHANGES_KEY);
   }
 
 }

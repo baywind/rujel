@@ -137,7 +137,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     			reason.setReason(reasonText);
     		hasChanges = (hasChanges || (reason.namedFlags().flagForKey("forTeacher")^(relation==1)));
     		if(hasChanges) {
-    			reason.setTeacher((relation==1)?course().teacher():null);
+    			reason.setTeacher((relation==1)?course().teacher(date()):null);
     			reason.namedFlags().setFlagForKey((relation==1), "forTeacher");
     		}
     		hasChanges = (hasChanges || (reason.namedFlags().flagForKey("forEduGroup")^(relation==2)));
@@ -194,6 +194,10 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		_course = (EduCourse)valueForBinding("course");
     	}
     	return _course;
+    }
+    
+    public Teacher teacher() {
+    	return course().teacher(date());
     }
     
     public NSTimestamp date() {

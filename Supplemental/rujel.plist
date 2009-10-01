@@ -836,28 +836,28 @@
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
-		<key>serverURL_MySQL</key>
-		<string>jdbc:mysql://127.0.0.1/</string>
 		<key>serverURL</key>
+		<string>jdbc:mysql://127.0.0.1/</string>
+		<key>serverURL_Firebird</key>
 		<string>jdbc:firebirdsql://localhost/Users/gena/Documents/WOProj/SQL/firebird</string>
-		<key>urlSuffix_MySQL</key>
-		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
 		<key>urlSuffix</key>
+		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
+		<key>urlSuffix_Firebird</key>
 		<string>?lc_ctype=UNICODE_FSS</string>
-		<key>driver</key>
+		<key>driver_Firebird</key>
 		<string>org.firebirdsql.jdbc.FBDriver</string>
-		<key>username_MySQL</key>
-		<string>rujel</string>
 		<key>username</key>
+		<string>rujel</string>
+		<key>username_Firebird</key>
 		<string>sysdba</string>
-		<key>password_MySQL</key>
-		<string></string>
 		<key>password</key>
+		<string></string>
+		<key>password_Firebird</key>
 		<string>masterkey</string>
 		<key>yearTag</key>
 		<string>true</string>
 		<key>prototypes</key>
-		<string>Firebird</string>
+		<string>MySQL</string>
 	</dict>
 	<key>interfaces</key>
 	<dict>

@@ -37,6 +37,7 @@ import com.webobjects.appserver.WOMessage;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 {
@@ -51,6 +52,7 @@ public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 		EOInitialiser.initialiseRelationship("BaseCourse","cycle",false,"cycleID","EduCycle");
 		
 		EOInitialiser.initialiseRelationship("CourseAudience","student",false,"studentID","Student");
+		EOInitialiser.initialiseRelationship("TeacherChange","teacher",false,"teacherID","Teacher");
 
 		/*
 		EORelationship subgroupRelationship = new EORelationship();
@@ -96,6 +98,44 @@ public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 		if(newTeacher != null && newTeacher.editingContext() != editingContext())
 			newTeacher = (Teacher)EOUtilities.localInstanceOfObject(editingContext(),newTeacher);
 		takeStoredValueForKey(newTeacher, "teacher");
+	}
+	
+	public Teacher teacher(NSTimestamp onDate) {
+		EOEnterpriseObject tc = teacherChange(onDate);
+		if(tc == null)
+			return teacher();
+		return (Teacher)tc.valueForKey("teacher");
+	}
+	
+	public EOEnterpriseObject teacherChange(NSTimestamp onDate) {
+		return teacherChange(onDate,null);
+	}
+	public EOEnterpriseObject teacherChange(NSTimestamp onDate, NSTimestamp[] dates) {
+		if(onDate == null || flags().intValue() == 0 || teacherChanges().count() == 0) {
+			if(dates != null) {
+				dates[0] = null;
+				dates[1] = null;
+			}
+			return null;
+		}
+		EOEnterpriseObject result = null;
+		Enumeration enu = teacherChanges().objectEnumerator();
+		if(dates == null)
+			dates = new NSTimestamp[2];
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject tc = (EOEnterpriseObject) enu.nextElement();
+			NSTimestamp date = (NSTimestamp)tc.valueForKey("date");
+			if(date.compare(onDate) <= 0) {
+				if(dates[0] == null || dates[0].compare(date) < 0)
+					dates[0] = date;
+				continue;
+			}
+			if(dates[1] != null && dates[1].compare(date) < 0)
+				continue;
+			dates[1] = date;
+			result = tc;
+		}
+		return result;
 	}
 	
 	public EduGroup eduGroup() {
@@ -372,5 +412,34 @@ public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 		result.append(" <span style = \"font-style:italic;\">(");
 		result.append(WOMessage.stringByEscapingHTMLString(comment())).append(")</span>");
 		return result.toString();
+	}
+
+	public static final NSArray flagNames = new NSArray (new String[] 
+	                                   {"teacherChanged","mixedGroup"});
+
+	private NamedFlags _flags;
+	public NamedFlags namedFlags() {
+		if(_flags==null) {
+			_flags = new NamedFlags(flags().intValue(),flagNames);
+			try{
+				_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
+						NamedFlags.class));
+			} catch (Exception e) {
+				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+						"Could not get syncMethod for Work flags",e);
+			}
+		}
+		return _flags;
+	}
+
+	public void setNamedFlags(NamedFlags flags) {
+		if(flags != null)
+			setFlags(flags.toInteger());
+		_flags = flags;
+	}
+
+	public void setFlags(Integer value) {
+		_flags = null;
+		super.setFlags(value);
 	}
 }

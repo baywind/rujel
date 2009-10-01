@@ -31,6 +31,7 @@ package net.rujel.interfaces;
 
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSTimestamp;
 
 public interface EduCourse extends com.webobjects.eocontrol.EOEnterpriseObject {
 	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath("interfaces.EduCourse",null);
@@ -48,6 +49,7 @@ public interface EduCourse extends com.webobjects.eocontrol.EOEnterpriseObject {
 	
 	public Teacher teacher();
 	public void setTeacher(Teacher newTeacher);
+	public Teacher teacher(NSTimestamp onDate);
 	
 	public EduGroup eduGroup();
 	public void setEduGroup(EduGroup newEduGroup);

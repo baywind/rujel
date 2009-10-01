@@ -93,11 +93,12 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     		return null;
     	StringBuilder buf = new StringBuilder("<span style = \"white-space:nowrap;\">");
     	buf.append(course.eduGroup().name()).append("</span> ");
-    	if(course.teacher() == null)
+    	Teacher teacher = course.teacher(substitute.date());
+    	if(teacher == null)
     		buf.append(session().valueForKeyPath("strings.RujelBase_Base.vacant"));
     	else {
     		buf.append("<span style = \"white-space:nowrap;\">");
-    		buf.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+    		buf.append(Person.Utility.fullName(teacher, true, 2, 1, 1));
     		buf.append("</span>");
     	}
     	return buf.toString();

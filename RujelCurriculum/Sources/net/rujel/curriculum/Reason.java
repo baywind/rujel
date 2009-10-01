@@ -164,7 +164,7 @@ public class Reason extends _Reason {
     }
 	
 	public static NSArray reasons (NSTimestamp date, EduCourse course) {
-		Props props = new Props(course);
+		Props props = new Props(course,date);
 		props.begin = date;
 		props.end = date;
 		return reasons(props);
@@ -178,8 +178,9 @@ public class Reason extends _Reason {
 		while (enu.hasMoreElements()) {
 			Event event = (Event) enu.nextElement();
 			EduCourse course = event.course();
+			NSTimestamp date = event.date();
 			if(props == null) {
-				props = new Props(course);
+				props = new Props(course,date);
 			} else {
 				if(props.ec != event.editingContext())
 					throw new IllegalArgumentException(
@@ -192,7 +193,6 @@ public class Reason extends _Reason {
 				if(props.teacher != null && course.teacher() != props.teacher())
 					props.teacher = null;
 			}
-			NSTimestamp date = event.date();
 			if(props.begin == null || props.begin.compare(date) > 0)
 				props.begin = date;
 			if(props.end == null || props.end.compare(date) < 0)
@@ -286,7 +286,7 @@ public class Reason extends _Reason {
 			while (enu.hasMoreElements()) {
 				Substitute sub = (Substitute) enu.nextElement();
 				EduCourse course = sub.lesson().course();
-				if(checkTeacher && (teacher != course.teacher())) {
+				if(checkTeacher && (teacher != course.teacher(sub.date()))) {
 					String message = (String)WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
 					throw new NSValidation.ValidationException(message,teacher,"teacher");
@@ -310,7 +310,7 @@ public class Reason extends _Reason {
 			while (enu.hasMoreElements()) {
 				Variation var = (Variation) enu.nextElement();
 				EduCourse course = var.course();
-				if(checkTeacher && (teacher != course.teacher())) {
+				if(checkTeacher && (teacher != course.teacher(var.date()))) {
 					String message = (String)WOApplication.application().valueForKeyPath(
 							"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
 					throw new NSValidation.ValidationException(message,teacher,"teacher");
@@ -354,12 +354,12 @@ public class Reason extends _Reason {
 			super();
 		}
 		
-		public Props(EduCourse course) {
+		public Props(EduCourse course, NSTimestamp onDate) {
 			super();
 			ec = course.editingContext();
 			school = course.cycle().school();
 			eduGroup = course.eduGroup();
-			teacher = course.teacher();
+			teacher = course.teacher(onDate);
 			if(teacher == null)
 				teacher = NullValue;
 		}

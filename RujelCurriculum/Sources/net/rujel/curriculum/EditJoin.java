@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
@@ -67,6 +68,13 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			reason = sub.reason();
     		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
 		}
+	}
+	
+	public Teacher itemTeacher() {
+		if(item instanceof EduCourse) {
+			return ((EduCourse)item).teacher(lesson.date());
+		}
+		return null;
 	}
 	
 	public WOActionResults selectCourse() {
