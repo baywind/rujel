@@ -425,8 +425,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 				_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
 						NamedFlags.class));
 			} catch (Exception e) {
-				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-						"Could not get syncMethod for Work flags",e);
+				Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
+						"Could not get syncMethod for BaseCourse flags",e);
 			}
 		}
 		return _flags;

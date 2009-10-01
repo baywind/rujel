@@ -377,7 +377,7 @@ public class StudentMarks extends WOComponent {
 			} // prepare criter list
 			curr.takeValueForKey(dateFormat.format(currWork.announce()),"announce");
 			curr.takeValueForKey(dateFormat.format(currWork.date()),"date");
-			curr.takeValueForKey(currWork.workType(), "type");
+			curr.takeValueForKey(currWork.valueForKeyPath("workType.typeName"), "type");
 			String theme = currWork.theme();
 			if(theme == null) {
 				theme = "- - -";
