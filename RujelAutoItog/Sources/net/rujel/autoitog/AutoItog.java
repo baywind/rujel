@@ -51,30 +51,34 @@ import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
 	public static final NSArray flagNames = new NSArray(new String[]
-	               {"active","manual","noTimeouts"});
+	               {"noTimeouts","manual","inactive"});
 	
 	public static final NSArray sorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
 		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending),
-		EOSortOrdering.sortOrderingWithKey(ITOG_CONTAINER_KEY,EOSortOrdering.CompareAscending)
+		EOSortOrdering.sortOrderingWithKey(ITOG_CONTAINER_KEY,
+				EOSortOrdering.CompareAscending)
 		});
 
 	public static void init() {
-		EOInitialiser.initialiseRelationship("ItogRelated","course",false,"courseID","EduCourse");
+		EOInitialiser.initialiseRelationship("ItogRelated","course",false,
+				"courseID","EduCourse");
 		ComparisonSupport.setSupportForClass(new ComparisonSupport(), AutoItog.class);
 	}
 
-	public void awakeFromInsertion(EOEditingContext ec) {
-		super.awakeFromInsertion(ec);
-		setFlags(new Integer(0));
+	public static NSTimestamp defaultFireDateTime() {
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.HOUR_OF_DAY, 4);
-		cal.set(Calendar.MINUTE, 20);
-		cal.set(Calendar.DAY_OF_MONTH, 27);
+		cal.set(Calendar.MINUTE, 30);
 		cal.add(Calendar.MONTH, 2);
-		NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
-		setFireTime(date);
-		setFireTime(date);
+		cal.set(Calendar.DAY_OF_MONTH, 1);
+		return new NSTimestamp(cal.getTimeInMillis());
+	}
+	
+	public void awakeFromInsertion(EOEditingContext ec) {
+		super.awakeFromInsertion(ec);
+		setFlags(new Integer(2));
+		setFireDateTime(defaultFireDateTime());
 	}
 	
 	public static NSTimestamp combineDateAndTime(Date date, Date time) {
@@ -86,6 +90,11 @@ public class AutoItog extends _AutoItog {
 		cal.set(Calendar.YEAR, year);
 		cal.set(Calendar.DAY_OF_YEAR, day);
 		return new NSTimestamp(cal.getTimeInMillis());
+	}
+	
+	public void setFireDateTime(NSTimestamp dateTime) {
+		setFireDate(dateTime);
+		setFireTime(dateTime);
 	}
 	
 	public NSTimestamp fireDateTime() {
@@ -145,7 +154,8 @@ public class AutoItog extends _AutoItog {
     	if(_flags==null) {
     		_flags = new NamedFlags(flags().intValue(),flagNames);
     		try{
-    		_flags.setSyncParams(this, getClass().getMethod("setNamedFlags", NamedFlags.class));
+    			_flags.setSyncParams(this, getClass().getMethod(
+    					"setNamedFlags", NamedFlags.class));
     		} catch (Exception e) {
     			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
 						"Could not get syncMethod for AutoItog flags",e);

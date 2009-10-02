@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 
 import net.rujel.criterial.BorderSet;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
@@ -20,14 +21,18 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 	public String listName;
 	
 	public NSArray bsets;
+	public NSArray calculators;
 	public Object item;
 	public NSDictionary calc;
 	public String fireDate;
 	public String fireTime;
 	public BorderSet borderSet;
+	public NamedFlags namedFlags;
 	
     public AutoItogEditor(WOContext context) {
         super(context);
+        calculators = (NSArray)context.session().valueForKeyPath(
+						"strings.RujelAutoItog_AutoItog.calculators");
     }
     
     public void setItog(ItogContainer itogContainer) {
@@ -38,23 +43,25 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     
     public void setAutoItog(AutoItog ai) {
     	autoItog = ai;
+    	if(ai == null)
+    		return;
     	listName = ai.listName();
 		String pattern = autoItog.calculatorName();
 		if(pattern != null) { // resolve className to readable title
-			NSArray calculators = (NSArray)session().valueForKeyPath(
-				"strings.RujelAutoItog_AutoItog.calculators");
 			for (int i = 0; i < calculators.count(); i++) {
 				calc = (NSDictionary)calculators.objectAtIndex(i);
 				if(pattern.equals(calc.valueForKey("className"))) {
 					break;
 				}
+				calc = null;
 			}
 		}
-		pattern = SettingsReader.stringForKeyPath("ui.shortDateFormat","MMM-dd");
+		pattern = SettingsReader.stringForKeyPath("ui.shortDateFormat","MM-dd");
 		SimpleDateFormat format = new SimpleDateFormat(pattern);
 		fireDate = format.format(ai.fireDate());
 		format = new SimpleDateFormat("HH:mm");
 		fireTime = format.format(ai.fireTime());
 		borderSet = ai.borderSet();
+		namedFlags = ai.namedFlags();
     }
 }
