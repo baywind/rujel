@@ -259,7 +259,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		return "return tryLoad(true);";
 	}
 
-	public static WOActionResults selectorPopup(WOComponent returnPage, 
+	public static WOComponent selectorPopup(WOComponent returnPage, 
 			String resultPath, EOEditingContext ec) {
 		WOComponent selector = returnPage.pageWithName("SelectorPopup");
 		selector.takeValueForKey(returnPage, "returnPage");

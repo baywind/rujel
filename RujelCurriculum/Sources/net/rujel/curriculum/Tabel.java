@@ -483,7 +483,9 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     }
     
 	public WOActionResults selectTeacher() {
-		return TeacherSelector.selectorPopup(this, "currTeacher", ec);
+		WOComponent selector = TeacherSelector.selectorPopup(this, "currTeacher", ec);
+		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.hideVacant");
+		return selector;
 	}
 	
 	public String value() {
