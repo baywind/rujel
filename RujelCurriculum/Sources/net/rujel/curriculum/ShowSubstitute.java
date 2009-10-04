@@ -180,34 +180,46 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		_variation = null;
 		joins = null;
 	}
-	
+	/*
 	public Boolean cantEdit() {
 		if(substitute == null)
 			return (Boolean)session().valueForKeyPath("readAccess._create.Substitute");
 		else
 			return (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
-	}
+	} */
 
 	public WOActionResults edit() {
-		String pageName = "EditSubstitute";
+		String pageName = "SubsTypeSelector";
 		Object lesson = valueForBinding("lesson");
-		if(joins() != null && joins().count() > 0 &&
-				(substitute == null || substitute.fromLesson() == lesson))
-				pageName = "EditJoin";
+		if(substitute != null) {
+//			if((substitute.fromLesson() == lesson))
+//				pageName = "EditJoin";
+//			else
+				pageName = "EditSubstitute";
+		} else if(joins() != null && joins().count() > 0) {
+			pageName = "EditJoin";
+		} else if(subsList() != null && subsList().count() > 0) {
+			pageName = "EditSubstitute";
+		}
 		WOComponent editor = pageWithName(pageName);
 		editor.takeValueForKey(context().page(), "returnPage");
-		editor.takeValueForKey(lesson, "lesson");	
-		editor.takeValueForKey(substitute, "substitute");
+		editor.takeValueForKey(lesson, "lesson");
+		if(substitute != null)
+			editor.takeValueForKey(substitute, "substitute");
+		if(substitute == null && pageName.equals("EditSubstitute")) {
+			Substitute sub = (Substitute) subsList().objectAtIndex(0);
+			if(sub.fromLesson() != null)
+				editor.takeValueForKey(new Integer(1), "idx");
+		}
 		return editor;
 	}
-	
+	/*
 	public WOActionResults addJoin() {
-		WOComponent editor = pageWithName("EditJoin");
+		WOComponent editor = pageWithName("SubsTypeSelector");
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(valueForBinding("lesson"), "lesson");	
-		editor.takeValueForKey(substitute, "substitute");
 		return editor;
-	}
+	}*/
 
 /*	
 	public String cellClass() {

@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
@@ -14,6 +15,8 @@ import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.webobjects.foundation.NSValidation;
 
@@ -26,7 +29,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
     
     public WOComponent returnPage;
     public EduLesson lesson;
-    public Substitute substitute;
+//    public Substitute substitute;
 
     public NSArray courses;
     public NSArray lessons;
@@ -34,7 +37,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
     public EduCourse selCourse;
     public EduLesson selLesson;
 	public Reason reason;
-	public Boolean cantEdit = Boolean.TRUE;
+//	public Boolean cantEdit = Boolean.TRUE;
 	public boolean newLesson = false;
 	
 	public void setLesson(EduLesson l) {
@@ -53,11 +56,11 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		courses = lesson.editingContext().objectsWithFetchSpecification(fs);
 		if(courses != null && courses.count() > 1)
 		courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);
-		String path = "readAccess." + 
-				((substitute==null)?"_create.S":"_edit.s") +"ubstitute";
-		cantEdit = (Boolean)session().valueForKeyPath(path);
+//		String path = "readAccess." + 
+//				((substitute==null)?"_create.S":"_edit.s") +"ubstitute";
+//		cantEdit = (Boolean)session().valueForKeyPath(path);
 	}
-	
+	/*
 	public void setSubstitute(Substitute sub) {
 		substitute = sub;
 		if(sub != null) {
@@ -68,7 +71,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			reason = sub.reason();
     		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
 		}
-	}
+	}*/
 	
 	public Teacher itemTeacher() {
 		if(item instanceof EduCourse) {
@@ -99,18 +102,84 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
 				quals[0],EduLesson.sorter);
 		lessons = selCourse.editingContext().objectsWithFetchSpecification(fs);
-		newLesson = false;
+		if (lessons == null || lessons.count() == 0) {
+			newLesson = true;
+			lessons = null;
+		} else {
+			NSMutableArray list = new NSMutableArray();
+			Enumeration enu = lessons.objectEnumerator();
+			EduCourse course = lesson.course();
+			lessons:
+			while (enu.hasMoreElements()) {
+				EduLesson l = (EduLesson) enu.nextElement();
+				NSArray subs = (NSArray)l.valueForKey("substitutes");
+				if(subs == null || subs.count() == 0)
+					continue;
+				StringBuilder buf = new StringBuilder();
+				Enumeration sEnu = subs.objectEnumerator();
+				Reason reas = null;
+				while (sEnu.hasMoreElements()) {
+					Substitute s = (Substitute) sEnu.nextElement();
+					EduLesson from = s.fromLesson();
+					if(from == lesson) {
+						newLesson = false;
+						lessons = null;
+						return this;
+					}
+					EduCourse fromCourse = from.course();
+					if(from == null || s.teacher() == course.teacher() ||
+							fromCourse.cycle() != course.cycle())
+						continue lessons;
+					if(buf.length() > 0)
+						buf.append(" & ");
+					if(fromCourse.eduGroup() != course.eduGroup())
+						buf.append(fromCourse.eduGroup().name()).append(" : ");
+					if(s.teacher() == null) {
+						buf.append(session().valueForKeyPath(
+								"strings.RujelBase_Base.vacant"));
+					} else {
+						buf.append(Person.Utility.fullName(s.teacher(), true, 2, 1, 1));
+					}
+					reas = s.reason();
+				} // substitutes
+				NSDictionary dict = new NSDictionary(new Object[] {l,buf.toString(),reas},
+												new String[] {"lesson","desc","reason"}); 
+				list.addObject(dict);
+				buf.delete(0, buf.length());
+			} // lessons
+			newLesson = (list.count() == 0);
+			if(newLesson) {
+				lessons = null;
+			} else {
+				lessons = list; //.immutableClone();
+			}
+			reason = null;
+		}
 		return this;
 	}
 	
-	public void setSelLesson(EduLesson l) {
-		selLesson = l;
+	public NSDictionary selLesson() {
+		if(selLesson == null)
+			return null;
+		return new NSDictionary(selLesson,"lesson");
+	}
+	
+	public void setSelLesson(Object l) {
+		if(l instanceof EduLesson) {
+			selLesson = (EduLesson)l;
+		} else if(l instanceof NSDictionary) {
+			selLesson = (EduLesson)((NSDictionary)l).valueForKey("lesson");
+			reason = (Reason)((NSDictionary)l).valueForKey("reason");
+		} else {
+			selLesson = null;
+		}
 		newLesson = false;
 	}
 
 	public WOActionResults toggleNewLesson() {
 		selLesson = null;
 		newLesson = !newLesson;
+		reason = null;
 		return this;
 	}
 
@@ -129,7 +198,8 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			Enumeration enu = others.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Substitute sub = (Substitute) enu.nextElement();
-				if(sub != substitute && sub.teacher() == lesson.course().teacher()) {
+//				if(sub != substitute && sub.teacher() == lesson.course().teacher()) {
+				if(sub.teacher() == lesson.course().teacher()) {
 					reason = null;
 					session().takeValueForKey(application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.duplicateTeacher"), 
@@ -148,12 +218,12 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		}
 		String action = "saved";
 		ec.lock();
-		if(substitute == null) {
-			substitute = (Substitute)EOUtilities.createAndInsertInstance(ec,
+//		if(substitute == null) {
+			Substitute substitute = (Substitute)EOUtilities.createAndInsertInstance(ec,
 					Substitute.ENTITY_NAME);
 			substitute.addObjectToBothSidesOfRelationshipWithKey(lesson, "fromLesson");
 			action = "created";
-		}
+//		}
 		if(selLesson == null) {
 			selLesson = (EduLesson) EOUtilities.createAndInsertInstance(ec,
 					EduLesson.entityName);
@@ -197,7 +267,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		substitute.setFactor(factor);
 		return done(action);
 	}
-	
+	/*
 	public WOActionResults delete() {
 		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
@@ -206,7 +276,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			ec.deleteObject(substitute);
 		}
 		return done("deleted");
-	}
+	} */
 	
 	protected WOActionResults done(String action) {
 		EOEditingContext ec = lesson.editingContext();

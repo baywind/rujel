@@ -212,6 +212,7 @@ public class PersListing extends WOComponent {
 		NSMutableArray tmp = found.mutableClone();
 		tmp.removeObjectsInArray(fullList);
 		fullList.addObjectsFromArray(tmp);
+		searchMessage = null;
 	}
 	
 	public String style() {

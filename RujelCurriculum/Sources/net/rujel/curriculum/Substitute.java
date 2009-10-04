@@ -131,9 +131,10 @@ public class Substitute extends _Substitute implements Reason.Event {
 	}
 	
 	public String title() {
-		if(factor() == null)
-			return "?";
-		if(factor().compareTo(BigDecimal.ONE) < 0)
+//		if(factor() == null)
+//			return "?";
+//		if(factor().compareTo(BigDecimal.ONE) < 0)
+		if(fromLesson() != null)
 			return (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.Substitute.Join");
 		return (String)WOApplication.application().valueForKeyPath(
