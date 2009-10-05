@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
@@ -126,8 +127,10 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 						lessons = null;
 						return this;
 					}
+					if(from == null)
+						continue lessons;
 					EduCourse fromCourse = from.course();
-					if(from == null || s.teacher() == course.teacher() ||
+					if(s.teacher() == course.teacher() ||
 							fromCourse.cycle() != course.cycle())
 						continue lessons;
 					if(buf.length() > 0)
@@ -230,9 +233,10 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			selLesson.addObjectToBothSidesOfRelationshipWithKey(selCourse, "course");
 			selLesson.setDate(lesson.date());
 			selLesson.setTheme(lesson.theme());
-			Integer num = (Integer)selCourse.valueForKeyPath("lessons.@max.number");
-			num = new Integer(num.intValue() +1); 
-			selLesson.setNumber(num);
+			MyUtility.setNumberToNewLesson(selLesson);
+//			Integer num = (Integer)selCourse.valueForKeyPath("lessons.@max.number");
+//			num = new Integer(num.intValue() +1); 
+//			selLesson.setNumber(num);
 		}
 		substitute.addObjectToBothSidesOfRelationshipWithKey(selLesson, "lesson");
 		substitute.addObjectToBothSidesOfRelationshipWithKey(
