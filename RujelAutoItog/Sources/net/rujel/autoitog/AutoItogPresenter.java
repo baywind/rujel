@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.reusables.ExtDynamicElement;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.foundation.NSArray;
@@ -24,21 +25,27 @@ public class AutoItogPresenter extends ExtDynamicElement {
 					"strings.RujelAutoItog_AutoItog.properties.AutoItog.this"));
 			return;
 		}
-		aResponse.appendContentString("<span onclick = \"ajaxPopupAction('");
-		aResponse.appendContentString(aContext.componentActionURL());
-		aResponse.appendContentString(
-				"',event);\" onmouseover = \"dim(this);\" onmouseout = \"unDim(this)\"");
-		aResponse.appendContentCharacter('>');
 		String listName = (String)valueForBinding("listName", aContext);
 		AutoItog autoItog = AutoItog.forListName(listName, itog);
+		aResponse.appendContentString("<span");
+		if(autoItog != null || Various.boolForObject(aContext.session().valueForKeyPath(
+				"readAccess.create.AutoItog"))) {
+			aResponse.appendContentString(" onclick = \"ajaxPopupAction('");
+			aResponse.appendContentString(aContext.componentActionURL());
+			aResponse.appendContentString(
+				"',event);\" onmouseover = \"dim(this);\" onmouseout = \"unDim(this)\"");
+		}
 		if(autoItog == null) {
+			aResponse.appendContentString(" style = \"font-style:italic;\"");
+			aResponse.appendContentCharacter('>');
 			aResponse.appendContentString((String)aContext.session().valueForKeyPath(
 					"strings.RujelAutoItog_AutoItog.none"));
-			return;
+//			return;
 		} else {
-			boolean disabled = (!autoItog.namedFlags().flagForKey("active"));
+			boolean disabled = (autoItog.namedFlags().flagForKey("inactive"));
 			if(disabled)
 				aResponse.appendContentString(" class = \"dimtext\"");
+			aResponse.appendContentCharacter('>');
 			String pattern = SettingsReader.stringForKeyPath("ui.shortDateFormat","MMM-dd");
 			SimpleDateFormat format = new SimpleDateFormat(pattern);
 			aResponse.appendContentString(format.format(autoItog.fireDate()));
@@ -80,9 +87,9 @@ public class AutoItogPresenter extends ExtDynamicElement {
 		String listName = (String)valueForBinding("listName", aContext);
 		popup.takeValueForKey(listName, "listName");
 		AutoItog autoItog = AutoItog.forListName(listName, itog);
-		if(autoItog != null) {
+//		if(autoItog != null) {
 			popup.takeValueForKey(autoItog, "autoItog");
-		}
+//		}
 		return popup;
 	}
 }
