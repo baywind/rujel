@@ -37,7 +37,6 @@ import java.util.logging.Logger;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
-import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
@@ -53,12 +52,15 @@ public class AutoItog extends _AutoItog {
 	public static final NSArray flagNames = new NSArray(new String[]
 	               {"noTimeouts","manual","inactive"});
 	
-	public static final NSArray sorter = new NSArray( new EOSortOrdering[] {
+	public static final NSArray dateTimeSorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
-		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending),
-		EOSortOrdering.sortOrderingWithKey(ITOG_CONTAINER_KEY,
-				EOSortOrdering.CompareAscending)
+		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending)
 		});
+	public static final NSArray typeSorter = new NSArray( new EOSortOrdering[] {
+			EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
+			EOSortOrdering.sortOrderingWithKey(ITOG_CONTAINER_KEY,
+					EOSortOrdering.CompareAscending)
+			});
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship("ItogRelated","course",false,
@@ -123,25 +125,61 @@ public class AutoItog extends _AutoItog {
     public static NSArray currentAutoItogsForCourse(EduCourse course,NSTimestamp date) {
     	EOEditingContext ec = course.editingContext();
     	String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
-    	EOQualifier[] quals = new EOQualifier[2];
+    	EOQualifier[] quals = new EOQualifier[3];
     	quals[0] = new EOKeyValueQualifier(LIST_NAME_KEY,
     			EOQualifier.QualifierOperatorEqual,listName);
     	quals[1] = new EOKeyValueQualifier(FIRE_DATE_KEY,
     			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
+    	quals[2] = new EOKeyValueQualifier(FLAGS_KEY,
+    			EOQualifier.QualifierOperatorLessThan, new Integer(4));
     	quals[0] = new EOAndQualifier(new NSArray(quals));
-    	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],sorter);
+    	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
     	NSArray found = ec.objectsWithFetchSpecification(fs);
-    	if(found == null || found.count() == 0)
-    		return null;
-    	Enumeration enu = found.objectEnumerator();
-    	NSMutableArray result = new NSMutableArray();
+    	NSMutableArray result = (found==null)?new NSMutableArray():found.mutableClone();    	
+    	quals[0] = CourseTimeout.qualifierForCourseAndPeriod(course, null);
+    	quals[2] = null; 
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	fs.setEntityName(CourseTimeout.ENTITY_NAME);
+    	fs.setQualifier(quals[0]);
+    	fs.setSortOrderings(null);
+    	found = ec.objectsWithFetchSpecification(fs);
     	NSMutableSet types = new NSMutableSet();
+    	if(found != null && found.count() > 0) {
+    		Enumeration enu = found.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+				CourseTimeout cto = (CourseTimeout) enu.nextElement();
+				ItogContainer itog = cto.itogContainer();
+				if(types.containsObject(itog))
+					continue;
+				EOQualifier.filterArrayWithQualifier(result, new EOKeyValueQualifier(
+						ITOG_CONTAINER_KEY, EOQualifier.QualifierOperatorNotEqual,itog));
+				result.addObject(CourseTimeout.getTimeoutForCourseAndPeriod(course, itog));
+			}
+    		types.removeAllObjects();
+     	}
+    	if (result.count() > 1) {
+     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, typeSorter);
+		}
+    	Enumeration enu = result.objectEnumerator();
+    	result.removeAllObjects();// = new NSMutableArray();
     	while (enu.hasMoreElements()) {
-			AutoItog ai = (AutoItog) enu.nextElement();
-			if(ai.fireDateTime().getTime() < System.currentTimeMillis())
-				continue;
-			ItogType type = ai.itogContainer().itogType();
+    		EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+			Object type = obj.valueForKeyPath("itogContainer.itogType");
 			if(types.containsObject(type))
+				continue;
+			
+			AutoItog ai = null;
+			if(obj instanceof AutoItog) {
+				ai = (AutoItog)obj;
+			} else {
+				ItogContainer itog = (ItogContainer)obj.valueForKey(ITOG_CONTAINER_KEY);
+				ai = forListName(listName, itog);
+			}
+			if(ai.namedFlags().flagForKey("inactive"))
+				continue;
+			NSTimestamp fire = (NSTimestamp)obj.valueForKey(FIRE_DATE_KEY);
+			fire = combineDateAndTime(fire, ai.fireTime());
+			if(fire.compare(date) < 0)
 				continue;
 			types.addObject(type);
 			result.addObject(ai);
@@ -177,13 +215,18 @@ public class AutoItog extends _AutoItog {
     	return _calculator;
     }
 
-    public NSArray relatedForCourse(EduCourse course) {
+    public NSArray relKeysForCourse(EduCourse course) {
     	NSDictionary values = new NSDictionary(new Object[] {this,course},
     			new String[] {"autoItog","course"});
-    	EOEditingContext ec = editingContext();
-    	NSArray found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
-    	if(found == null || found.count() == 0)
-    		return null;
+    	NSArray found = EOUtilities.objectsMatchingValues(editingContext(), 
+    			"ItogRelated", values);
+    	return found;
+    }
+    public NSArray relatedForCourse(EduCourse course) {
+    	NSArray found = relKeysForCourse(course);
+    	if(found == null || found.count() == 0) {
+    		return calculator().collectRelated(course, this);
+    	}
     	NSMutableArray related = new NSMutableArray();
     	String entName = calculator().reliesOnEntity();
     	Enumeration enu = found.objectEnumerator();
@@ -191,7 +234,8 @@ public class AutoItog extends _AutoItog {
 			EOEnterpriseObject ir = (EOEnterpriseObject) enu.nextElement();
 			Integer relKey = (Integer)ir.valueForKey("relKey");
 			try {
-				related.addObject(EOUtilities.objectWithPrimaryKeyValue(ec, entName, relKey));
+				related.addObject(EOUtilities.objectWithPrimaryKeyValue(
+						editingContext(), entName, relKey));
 			} catch (RuntimeException e) {
 				AutoItogModule.logger.log(WOLogLevel.WARNING,
 						"Could not get related object: " + entName + ':' + relKey
@@ -206,6 +250,15 @@ public class AutoItog extends _AutoItog {
     	cal.setTime(fireTime());
     	int eveningHour = SettingsReader.intForKeyPath("edu.eveningHour", 17);
     	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
+    }
+    
+    public NSTimestamp fireDateForCourse(EduCourse course) {
+    	CourseTimeout cto = CourseTimeout.getTimeoutForCourseAndPeriod(
+    			course, itogContainer());
+    	if(cto == null)
+    		return fireDate();
+    	else
+    		return cto.fireDate();
     }
 
     public static class ComparisonSupport extends EOSortOrdering.ComparisonSupport {
@@ -235,4 +288,67 @@ public class AutoItog extends _AutoItog {
 			return compareAscending(right, left) ;
 		}
 	}
+    
+    public static NSArray relatedToObject(Object object, EduCourse course) {
+    	EOEditingContext ec = course.editingContext();
+    	String listName = SettingsBase.stringSettingForCourse(
+    			ItogMark.ENTITY_NAME, course, ec);
+    	EOQualifier[] quals = new EOQualifier[2];
+    	quals[0] = new EOKeyValueQualifier(LIST_NAME_KEY,
+    			EOQualifier.QualifierOperatorEqual,listName);
+    	quals[1] = new EOKeyValueQualifier(FLAGS_KEY,
+    			EOQualifier.QualifierOperatorLessThan, new Integer(4));
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
+    	NSArray found = ec.objectsWithFetchSpecification(fs);
+//    	NSArray all = EOUtilities.objectsMatchingKeyAndValue(ec,
+//    			ENTITY_NAME, listName, LIST_NAME_KEY);
+    	if(found == null || found.count() == 0)
+    		return null;
+    	Enumeration enu = found.objectEnumerator();
+    	Integer eduYear = course.eduYear();
+    	NSMutableDictionary forCalc = new NSMutableDictionary();
+    	NSMutableArray result = new NSMutableArray();
+    	while (enu.hasMoreElements()) {
+			AutoItog ai = (AutoItog) enu.nextElement();
+			if(ai.noCalculator() || !eduYear.equals(ai.itogContainer().eduYear()))
+				continue;
+			String calc = ai.calculatorName();
+			Integer relKey = (Integer)forCalc.objectForKey(calc);
+			if(relKey == null) {
+				relKey = ai.calculator().relKeyForObject(object);
+				if(relKey == null)
+					relKey = new Integer(0);
+				forCalc.setObjectForKey(relKey, calc);
+			}
+			if(relKey.intValue() == 0)
+				continue;
+			NSDictionary values = new NSDictionary(new Object[] {course,ai,relKey},
+					new String[] {"course","autoItog","relKey"});
+			found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
+			if(found != null && found.count() > 0)
+				result.addObject(ai);
+		} // all AIs
+    	if(result.count() > 1) {
+    		EOSortOrdering.sortArrayUsingKeyOrderArray(result, typeSorter);
+    	}
+    	return result;
+    }
+    
+    public void addRelatedObject(Object object, EduCourse course) {
+    	Integer relKey = calculator().relKeyForObject(object);
+    	if(relKey == null)
+    		throw new IllegalArgumentException(
+    				"Provided object is not supported by defined calculator");
+		NSDictionary values = new NSDictionary(new Object[] {course,this,relKey},
+				new String[] {"course","autoItog","relKey"});
+		EOEditingContext ec = course.editingContext();
+		NSArray found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
+		if(found == null || found.count() == 0) {
+			EOEnterpriseObject rel = EOUtilities.createAndInsertInstance(ec, "ItogRelated");
+			rel.addObjectToBothSidesOfRelationshipWithKey(this, "autoItog");
+			rel.addObjectToBothSidesOfRelationshipWithKey(course, "course");
+			rel.takeValueForKey(relKey, "relKey");
+		}
+    }
 }

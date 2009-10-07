@@ -77,10 +77,11 @@ public abstract class Calculator {
 		return new PerPersonLink.Dictionary(result);
 	}
 	
-	public abstract NSArray reliesOn();
+//	public abstract NSArray reliesOn();
 	
 	public abstract String reliesOnEntity();
 	
-	public abstract NSArray collectRelated(EduCourse course, AutoItog autoItog,
-			boolean checkWeight);
+	public abstract NSArray collectRelated(EduCourse course, AutoItog autoItog);
+	
+	public abstract Integer relKeyForObject(Object object);
 }

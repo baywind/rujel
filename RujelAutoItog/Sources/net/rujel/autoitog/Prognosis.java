@@ -34,6 +34,7 @@ import net.rujel.interfaces.*;
 import net.rujel.eduresults.*;
 import net.rujel.base.MyUtility;
 import net.rujel.criterial.BorderSet;
+import net.rujel.criterial.FractionPresenter;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
@@ -96,8 +97,8 @@ public class Prognosis extends _Prognosis {
     }
     
     public void setValue(BigDecimal aValue) {
-    	if(aValue != null && aValue.equals(value()))
-    		return;
+//    	if(aValue != null && aValue.equals(value()))
+//    		return;
     	super.setValue(aValue);
     	//_bonus = null;
     	if(aValue == null)
@@ -119,9 +120,9 @@ public class Prognosis extends _Prognosis {
     public String markFromValue() {
     	if(value() == null)
     		return null;
-    	BorderSet presenter = autoItog().borderSet();
+    	FractionPresenter presenter = autoItog().borderSet();
     	if(presenter == null)
-    		return null;
+    		presenter = FractionPresenter.PERCENTAGE;
     	return presenter.presentFraction(value());
     }
     

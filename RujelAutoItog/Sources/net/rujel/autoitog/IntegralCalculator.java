@@ -44,7 +44,8 @@ public class IntegralCalculator extends WorkCalculator {
 			AutoItog period) {
 		NSArray works = period.relatedForCourse(course);//works(course, period);
 		if(works == null || works.count() == 0)
-			works = period.calculator().collectRelated(course, period, true);
+			works = period.relatedForCourse(course);
+		//.calculator().collectRelated(course, period, true);
 		double weightSum = 0;
 		double integralSum = 0;
 		int count = 0;

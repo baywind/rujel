@@ -293,12 +293,16 @@
 				<key>root</key>
 				<string>0</string>
 			</dict>
-			<key>Prognosis</key>
+			<key>AutoItog</key>
 			<dict>
 				<key>root</key>
-				<string>0</string>
+				<string>1023</string>
+				<key>zavuch</key>
+				<string>15</string>
+				<key>any</key>
+				<string>1</string>
 			</dict>
-			<key>PrognosisNorm</key>
+			<key>Prognosis</key>
 			<dict>
 				<key>root</key>
 				<string>1023</string>
@@ -881,7 +885,7 @@
 		<key>net.rujel.eduplan.PlanCycle</key>
 		<string>true</string>
 		<key>net.rujel.autoitog.AutoItogModule</key>
-		<string>false</string>
+		<string>true</string>
 		<key>net.rujel.contacts.EMailBroadcast</key>
 		<string>true</string>
 		<key>net.rujel.criterial.ModuleInit</key>

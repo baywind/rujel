@@ -73,17 +73,19 @@ public class BachalaureatCalculator extends WorkCalculator {
 		Enumeration en = allMarks.objectEnumerator();
 		while (en.hasMoreElements()) {
 			Mark mark = (Mark)en.nextElement();
-			BigDecimal weightValue = mark.work().weight();
-			Integer critWeight = (Integer)mark.valueForKeyPath("criterMask.weight");
+			Work work = mark.work();
+			BigDecimal weightValue = work.weight();
+			Integer crit = mark.criterion();
+			EOEnterpriseObject mask = work.getCriterMask(crit);
+			Integer critWeight = (Integer)mask.valueForKeyPath("weight");
 			if(weightValue == null || weightValue.compareTo(BigDecimal.ZERO) == 0)
 				continue;
 			if(critWeight != null && critWeight.intValue() == 0)
 				continue;
-			Integer crit = mark.criterion();
 			if(crit == null)
 				continue;
-			if(!mark.work().namedFlags().flagForKey("compulsory")) {
-				optWorks.addObject(mark.work());
+			if(!work.namedFlags().flagForKey("compulsory")) {
+				optWorks.addObject(work);
 			}
 			BigDecimal[] agregator = (BigDecimal[])dict.objectForKey(crit);
 			if(agregator == null) {
@@ -92,7 +94,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			}
 			//double weight = weightValue.doubleValue();
 			Number value = mark.value();
-			Number max = (Number)mark.valueForKeyPath("criterMask.max");
+			Number max = (Number)mask.valueForKeyPath("max");
 			if(value == null || max == null)
 				continue;
 			agregator[WEIGHT] = agregator[WEIGHT].add(weightValue);
@@ -126,7 +128,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			Enumeration masks = work.criterMask().objectEnumerator();
 			while(masks.hasMoreElements()) { //criters
 				EOEnterpriseObject currMask = (EOEnterpriseObject)masks.nextElement();
-				EOEnterpriseObject crit = (EOEnterpriseObject)currMask.valueForKey("criterion");
+				Integer crit = (Integer)currMask.valueForKey("criterion");
 
 				BigDecimal[] agregator = (BigDecimal[])dict.objectForKey(crit);
 				if(agregator == null) {
@@ -186,7 +188,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 		NSDictionary optWorks = (NSDictionary)agregatedMarks.valueForKey("optionalWorks");
 		Enumeration enu = agregatedMarks.keyEnumerator();
 		while (enu.hasMoreElements()) {
-			EOEnterpriseObject crit = (EOEnterpriseObject)enu.nextElement();
+			Object crit = enu.nextElement();
 			BigDecimal[] wagr = (BigDecimal[])agregatedWorks.objectForKey(crit);
 			BigDecimal[] optAgr = (optWorks == null)?null:(BigDecimal[])optWorks.objectForKey(crit);
 			if(wagr == null || BigDecimal.ZERO.compareTo(wagr[WEIGHT]) == 0 || BigDecimal.ZERO.compareTo(wagr[MAX]) == 0) {
@@ -221,7 +223,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 		boolean equals = true;
 		Enumeration enu = agregatedWorks.keyEnumerator();
 		while (enu.hasMoreElements()) {
-			EOEnterpriseObject crit = (EOEnterpriseObject)enu.nextElement();
+			Object crit = enu.nextElement();
 			BigDecimal[] wagr = (BigDecimal[])agregatedWorks.objectForKey(crit);
 			BigDecimal val = (wagr==null)?null:wagr[WEIGHT];
 			if(val != null) {

@@ -60,7 +60,7 @@ public class AutoItogModule {
 			StudentTimeout.init();
 			CourseTimeout.init();
 		} else if("scheduleTask".equals(obj)) {
-			return scheduleTask(ctx);
+//			scheduleTask(ctx);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
 		} else if("objectSaved".equals(obj)) {
@@ -220,6 +220,8 @@ public class AutoItogModule {
 	
 	public static NSKeyValueCoding notesAddOns(WOContext ctx) {
 		WOSession ses = ctx.session();
+		if(Various.boolForObject(ses.valueForKeyPath("readAccess._read.Prognosis")))
+			return null;
 		String key = "AutoItog.PrognosesAddOn";
 		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey(key);
 		if(addOn == null) {
@@ -246,30 +248,40 @@ public class AutoItogModule {
 			date = (NSTimestamp)ses.objectForKey("recentDate");
 		if(date == null)
 			return null;
+		EOEditingContext ec = course.editingContext();
 		Student student = (Student)dict.valueForKey("student");
 		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey("AutoItog.PrognosesAddOn");;
 		if(student == null && addOn != null) {
 			addOn.setCourse(course, date);
 		}
 		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", false);
-		NSArray pertypes = AutoItog.currentAutoItogsForCourse(course, date);
+		NSArray pertypes = AutoItog.relatedToObject(dict, course);
+		boolean newObj = (pertypes == null || pertypes.count() == 0);
+		if(newObj)
+			pertypes = AutoItog.currentAutoItogsForCourse(course, date);
 		Enumeration enu = pertypes.objectEnumerator();
+		try {
 		while (enu.hasMoreElements()) {
-			AutoItog eduPeriod = (AutoItog) enu.nextElement();
-			if(eduPeriod.calculator() == null || !eduPeriod.namedFlags().flagForKey("active"))
-				continue;
-			if(!eduPeriod.calculator().reliesOn().contains(dict.valueForKey("entityName")))
-				continue;
-			if(eduPeriod == null)
-				continue;
-			boolean ifArchive = (canArchive && eduPeriod.namedFlags().flagForKey("manual"));
+			AutoItog ai = (AutoItog) enu.nextElement();
+			if(newObj) {
+				if(ai.calculator() == null || ai.namedFlags().flagForKey("inactive"))
+					continue;
+				if(ai.calculator().relKeyForObject(dict) == null)
+					//reliesOn().contains(dict.valueForKey("entityName")))
+					continue;
+				ai.calculator().collectRelated(course, ai);
+				ec.saveChanges();
+			}
+			boolean ifArchive = (canArchive && ai.namedFlags().flagForKey("manual"));
 			if(student == null) {
 				if(addOn != null) {
-					addOn.setPeriodItem(eduPeriod);
+					addOn.setPeriodItem(ai);
 					addOn.calculate();
 				} else {
-					PerPersonLink prognoses = eduPeriod.calculator().calculatePrognoses(course, eduPeriod);
-					CourseTimeout ct = CourseTimeout.getTimeoutForCourseAndPeriod(course, eduPeriod.itogContainer());
+					PerPersonLink prognoses = ai.calculator().calculatePrognoses(
+							course, ai);
+					CourseTimeout ct = CourseTimeout.getTimeoutForCourseAndPeriod(
+							course, ai.itogContainer());
 					Enumeration prenu = prognoses.allValues().objectEnumerator();
 					while (prenu.hasMoreElements()) {
 						Prognosis progn = (Prognosis) prenu.nextElement();
@@ -278,27 +290,31 @@ public class AutoItogModule {
 							archivePrognosisChange(progn);
 						}
 					}
-					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod.itogContainer());
+					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(
+							course, ai.itogContainer());
 					if(grouping != null) {
-//						NSDictionary stats = PrognosesAddOn.statCourse(course, prognoses.allValues());
+//						NSDictionary stats = PrognosesAddOn.statCourse(
+//							course, prognoses.allValues());
 //						grouping.takeValueForKey(stats, "dict");
 						NSArray list = MyUtility.filterByGroup(prognoses.allValues(),
 								"student", course.groupList(), true);
 						grouping.takeValueForKey(list, "array");
 					}
 				}
-			} else {
-				Prognosis progn = eduPeriod.calculator().calculateForStudent(student, course, eduPeriod);
+			} else { // specific student
+				Prognosis progn = ai.calculator().calculateForStudent(student, course, ai);
 				if(progn != null) {
 					progn.updateFireDate();
 					if(ifArchive) {
 						archivePrognosisChange(progn);
 					}
 				}
-				EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod.itogContainer());
+				EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(
+						course, ai.itogContainer());
 				if(grouping != null) {
-					NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
-							course, eduPeriod);
+					NSArray args = new NSArray(new Object[] {ai,course});
+					NSArray prognoses = EOUtilities.objectsWithQualifierFormat(
+							ec,"Prognosis","autoItog = %@ AND course = %@",args);
 					prognoses = MyUtility.filterByGroup(prognoses, "student", 
 							course.groupList(), true);
 					grouping.takeValueForKey(prognoses, "array");
@@ -309,13 +325,11 @@ public class AutoItogModule {
 					addOn.reset();
 			}
 		} // pertypes.objectEnumerator();
-		if(course.editingContext().hasChanges()) {
-			try {
-				course.editingContext().saveChanges();
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Could not save prognoses update",e);
-				ses.takeValueForKey(e.getMessage(), "message");
-			}
+		if(ec.hasChanges()) 
+			ec.saveChanges();
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Could not save prognoses update",e);
+			ses.takeValueForKey(e.getMessage(), "message");
 		}
 		return null;
 	}

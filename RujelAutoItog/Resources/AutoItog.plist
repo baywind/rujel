@@ -185,7 +185,7 @@
 			<key>description</key>
 			<string>усреднение интегральных оценок по работам</string>
 			<key>className</key>
-			<string>net.rujel.autoitog.BachalaureatCalculator</string>
+			<string>net.rujel.autoitog.IntegralCalculator</string>
 		</dict>
 		<dict>
 			<key>title</key>
