@@ -313,9 +313,11 @@ public class MarksPresenter extends NotePresenter {
     }*/
 
 	protected FractionPresenter colorPresenter() {
+		if(lesson() == null)
+			return FractionPresenter.NONE;
 		FractionPresenter result = null;
 		String key = "integralColor";
-		if(lesson() != null && BigDecimal.ZERO.compareTo(lesson().weight()) == 0)
+		if(BigDecimal.ZERO.compareTo(lesson().weight()) == 0)
 			key = "weightlessColor";
 		NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding("presenterCache");
 		if(presenterCache != null) {
@@ -323,10 +325,11 @@ public class MarksPresenter extends NotePresenter {
 			if(result != null)
 				return result;
 		}
-		EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
-		EduCourse course = (lesson() == null)?null:lesson().course();
+		EOEditingContext ec = lesson().editingContext(); 
+			//EOSharedEditingContext.defaultSharedEditingContext();
 		String key2 = "presenters." + key;
-		EOEnterpriseObject setting = SettingsBase.settingForCourse(key2, course, ec);
+		EOEnterpriseObject setting = SettingsBase.settingForCourse(key2,
+				lesson().course(), ec);
 		if(setting != null) {
 			Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
 			key2 = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);

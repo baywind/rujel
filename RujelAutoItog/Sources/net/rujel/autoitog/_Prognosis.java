@@ -48,8 +48,8 @@ public abstract class _Prognosis extends EOGenericRecord {
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String AUTO_ITOG_KEY = "autoItog";
 	public static final String BONUS_KEY = "bonus";
+	public static final String ITOG_CONTAINER_KEY = "itogContainer";
 
   public BigDecimal complete() {
     return (BigDecimal) storedValueForKey(COMPLETE_KEY);
@@ -91,20 +91,20 @@ public abstract class _Prognosis extends EOGenericRecord {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public net.rujel.autoitog.AutoItog autoItog() {
-    return (net.rujel.autoitog.AutoItog)storedValueForKey(AUTO_ITOG_KEY);
-  }
-
-  public void setAutoItog(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, AUTO_ITOG_KEY);
-  }
-  
   public net.rujel.autoitog.Bonus bonus() {
     return (net.rujel.autoitog.Bonus)storedValueForKey(BONUS_KEY);
   }
 
   public void setBonus(EOEnterpriseObject value) {
     	takeStoredValueForKey(value, BONUS_KEY);
+  }
+  
+  public net.rujel.eduresults.ItogContainer itogContainer() {
+    return (net.rujel.eduresults.ItogContainer)storedValueForKey(ITOG_CONTAINER_KEY);
+  }
+
+  public void setItogContainer(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, ITOG_CONTAINER_KEY);
   }
   
 }

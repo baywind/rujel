@@ -62,6 +62,8 @@
 				<string>разрешить ввод вручную</string>
 				<key>inactive</key>
 				<string>деактивировать</string>
+				<key>hideInReport</key>
+				<string>не показывать в распечатке</string>
 			</dict>
 		</dict>
 		<key>Prognosis</key>

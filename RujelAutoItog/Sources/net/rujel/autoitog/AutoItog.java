@@ -50,7 +50,7 @@ import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
 	public static final NSArray flagNames = new NSArray(new String[]
-	               {"noTimeouts","manual","inactive"});
+	               {"noTimeouts","manual","-4-","hideInReport","-16-","inactive"});
 	
 	public static final NSArray dateTimeSorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
@@ -131,7 +131,7 @@ public class AutoItog extends _AutoItog {
     	quals[1] = new EOKeyValueQualifier(FIRE_DATE_KEY,
     			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
     	quals[2] = new EOKeyValueQualifier(FLAGS_KEY,
-    			EOQualifier.QualifierOperatorLessThan, new Integer(4));
+    			EOQualifier.QualifierOperatorLessThan, new Integer(32));
     	quals[0] = new EOAndQualifier(new NSArray(quals));
     	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
     	NSArray found = ec.objectsWithFetchSpecification(fs);
@@ -297,7 +297,7 @@ public class AutoItog extends _AutoItog {
     	quals[0] = new EOKeyValueQualifier(LIST_NAME_KEY,
     			EOQualifier.QualifierOperatorEqual,listName);
     	quals[1] = new EOKeyValueQualifier(FLAGS_KEY,
-    			EOQualifier.QualifierOperatorLessThan, new Integer(4));
+    			EOQualifier.QualifierOperatorLessThan, new Integer(32));
     	quals[0] = new EOAndQualifier(new NSArray(quals));
     	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
     	NSArray found = ec.objectsWithFetchSpecification(fs);

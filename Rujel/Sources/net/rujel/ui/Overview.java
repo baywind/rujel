@@ -122,6 +122,7 @@ public class Overview extends WOComponent {
 		cal.set(GregorianCalendar.SECOND, 0);
 		cal.set(GregorianCalendar.MILLISECOND, 0);
 		to = new NSTimestamp(cal.getTime());
+		session().setObjectForKey(to, "recentDate");
 		cal.add(GregorianCalendar.DATE, -7);
 		since = new NSTimestamp(cal.getTime());//to.timestampByAddingGregorianUnits(0, 0, -7, 0, 0, 0);
 		int mode = (access().flagForKey("students") && !access().flagForKey("subjects"))?1:0;

@@ -75,7 +75,8 @@ public class IntegralCalculator extends WorkCalculator {
 			}
 		}
 		double integral = integralSum / weightSum;
-		Prognosis progn = Prognosis.getPrognosis(student, course, period, (count > 0));
+		Prognosis progn = Prognosis.getPrognosis(student, course,
+				period.itogContainer(), (count > 0));
 		if(count == 0) {
 			if(progn != null)
 				progn.editingContext().deleteObject(progn);

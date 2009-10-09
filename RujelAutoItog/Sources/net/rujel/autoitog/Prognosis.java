@@ -33,7 +33,7 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.eduresults.*;
 import net.rujel.base.MyUtility;
-import net.rujel.criterial.BorderSet;
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.FractionPresenter;
 
 import com.webobjects.foundation.*;
@@ -130,10 +130,25 @@ public class Prognosis extends _Prognosis {
 		super.setMark(markFromValue());
     }
 
+    protected Object _autoItog;
+    public AutoItog autoItog() {
+    	if(_autoItog == null) {
+        	String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME,
+        			course(), editingContext());
+        	_autoItog = AutoItog.forListName(listName, itogContainer());
+        	if(_autoItog == null)
+        		_autoItog = NullValue;
+    	}
+    	return (_autoItog == NullValue)?null:(AutoItog)_autoItog;
+    }
+    
     public void setAutoItog(AutoItog itog) {
-    	super.setAutoItog(itog);
-    	if(itog != null && fireDate() == null)
-    		setFireDate(itog.fireDate());
+    	if(_autoItog != itog && itog != null) {
+    		setItogContainer(itog.itogContainer());
+    		if(itog != null && fireDate() == null)
+    			setFireDate(itog.fireDate());
+    	}
+    	_autoItog = itog;
     }
     
     private NamedFlags _flags;
@@ -172,13 +187,14 @@ public class Prognosis extends _Prognosis {
 		_flags = null;
 		//_bonus = null;
 		//_calc = null;
+		_autoItog = null;
 		_relatedItog = null;
 	}
 	
 	protected Object _relatedItog;
 	public ItogMark relatedItog() {
 		if(_relatedItog == null) {
-			_relatedItog = ItogMark.getItogMark(course().cycle(),autoItog().itogContainer(),
+			_relatedItog = ItogMark.getItogMark(course().cycle(),itogContainer(),
 					student(),editingContext());
 			if(_relatedItog == null)
 				_relatedItog = NullValue;
@@ -193,7 +209,7 @@ public class Prognosis extends _Prognosis {
 	public StudentTimeout getStudentTimeout() {
 		if(_timeout == null) {
 			_timeout = StudentTimeout.timeoutForStudentAndCourse(
-					student(), course(), autoItog().itogContainer());
+					student(), course(), itogContainer());
 			if(_timeout == null)
 				_timeout = NullValue;
 		}
@@ -205,7 +221,7 @@ public class Prognosis extends _Prognosis {
 	
 	public NSTimestamp updateFireDate() {
 		CourseTimeout courseTimeout = CourseTimeout.getTimeoutForCourseAndPeriod(
-				course(), autoItog().itogContainer());
+				course(), itogContainer());
 		return updateFireDate(courseTimeout);
 	}
 
@@ -237,14 +253,14 @@ public class Prognosis extends _Prognosis {
 	}
 
 	public static Prognosis getPrognosis(
-			Student student, EduCourse course, AutoItog itog, boolean create) {
+			Student student, EduCourse course, ItogContainer itog, boolean create) {
 		EOEditingContext ec = course.editingContext();
 		if(course == null || itog == null || student == null)
 			throw new IllegalArgumentException("All arguments are required");
 		EOQualifier qual = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual, course);
 		NSMutableArray quals = new NSMutableArray(qual);
-		qual = new EOKeyValueQualifier(Prognosis.AUTO_ITOG_KEY,
+		qual = new EOKeyValueQualifier(Prognosis.ITOG_CONTAINER_KEY,
 				EOQualifier.QualifierOperatorEqual, itog);
 		quals.addObject(qual);
 		qual = new EOKeyValueQualifier("student",
@@ -258,7 +274,8 @@ public class Prognosis extends _Prognosis {
 				return null;
 			Prognosis progn = (Prognosis)EOUtilities.createAndInsertInstance(ec,"Prognosis");
 			progn.addObjectToBothSidesOfRelationshipWithKey(course, "course");
-			progn.addObjectToBothSidesOfRelationshipWithKey(itog, Prognosis.AUTO_ITOG_KEY);
+			progn.addObjectToBothSidesOfRelationshipWithKey(itog, 
+					Prognosis.ITOG_CONTAINER_KEY);
 			progn.addObjectToBothSidesOfRelationshipWithKey(student, "student");
 			return progn;
 		} else {
@@ -277,17 +294,33 @@ public class Prognosis extends _Prognosis {
 	@Deprecated
 	public static PerPersonLink prognosesForCourseAndPeriod(
 			EduCourse course, AutoItog period) {
-		NSArray found = prognosesArrayForCourseAndPeriod(course, period);
+		NSArray found = prognosesArrayForCourseAndPeriod(course, period.itogContainer(), true);
 		NSDictionary result = new NSDictionary(found,(NSArray)found.valueForKey("student"));
 		return new PerPersonLink.Dictionary(result);
 	}
 	
-	@Deprecated
 	public static NSArray prognosesArrayForCourseAndPeriod(
-								EduCourse course, AutoItog period) {
+							EduCourse course, AutoItog autoItog) {
+		NSArray args = new NSArray(new Object[] {autoItog.itogContainer(),course});
+		NSArray found = EOUtilities.objectsWithQualifierFormat(course.editingContext(),
+				"Prognosis","itogContainer = %@ AND course = %@",args);
+		if(found.count() > 0)
+			found.takeValueForKey(autoItog, "autoItog");
+		return found;
+	}
+	
+	public static NSArray prognosesArrayForCourseAndPeriod(
+								EduCourse course, ItogContainer period, boolean init) {
 		NSArray args = new NSArray(new Object[] {period,course});
-		NSArray found = EOUtilities.objectsWithQualifierFormat(
-				course.editingContext(),"Prognosis","autoItog = %@ AND course = %@",args);
+		NSArray found = EOUtilities.objectsWithQualifierFormat(course.editingContext(),
+				"Prognosis","itogContainer = %@ AND course = %@",args);
+		if(found.count() > 0) {
+        	String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME,
+        			course, course.editingContext());
+        	AutoItog ai = AutoItog.forListName(listName, period);
+        	if(ai != null)
+        		found.takeValueForKey(ai, "autoItog");
+		}
 		return found;
 	}
 	
@@ -311,7 +344,7 @@ public class Prognosis extends _Prognosis {
 
 	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite, StringBuffer buf) {
 		//ItogMark itog = null;
-		ItogContainer container = autoItog().itogContainer();
+		ItogContainer container = itogContainer();
 		if(itogs != null) {
 			_relatedItog = ItogMark.getItogMark(course().cycle(),container,
 					student(),itogs);
@@ -376,23 +409,24 @@ public class Prognosis extends _Prognosis {
 		return relatedItog();
 	}
 	
-	public static void convertPrognoses(EduCourse course, AutoItog itog, Date scheduled) {
+	public static void convertPrognoses(EduCourse course, ItogContainer itog, Date scheduled) {
 		convertPrognoses(course, itog, scheduled, null);
 	}
 	
 	
-	public static void convertPrognoses(EduCourse course, AutoItog itog,
+	public static void convertPrognoses(EduCourse course, ItogContainer itog,
 			 Date scheduled, StringBuffer buffer) {
 		EOEditingContext ec = course.editingContext();
-		NSArray args = new NSArray(new Object[] {itog,course,scheduled});
+//		NSArray args = new NSArray(new Object[] {itog,course,scheduled});
 		StringBuffer buf = (buffer == null)?new StringBuffer():buffer;
 		buf.append(course.eduGroup().name()).append(" : ");
 		buf.append(course.cycle().subject()).append(" - ");
 		buf.append(Person.Utility.fullName(course.teacher().person(), false, 2, 1, 0));
 		buf.append('\n');
 		
-		NSArray prognoses = EOUtilities.objectsWithQualifierFormat(ec,Prognosis.ENTITY_NAME,
-				"autoItog = %@ AND course = %@",args);
+		NSArray prognoses = prognosesArrayForCourseAndPeriod(course, itog, true);
+//			EOUtilities.objectsWithQualifierFormat(ec,Prognosis.ENTITY_NAME,
+//				"autoItog = %@ AND course = %@",args);
 		if(prognoses == null || prognoses.count() == 0) {
 			buf.append("No prognoses found for course.\n");
 			if(buffer == null) {
@@ -403,7 +437,7 @@ public class Prognosis extends _Prognosis {
 		NSMutableArray students = course.groupList().mutableClone();
 		
 		Enumeration penu = prognoses.objectEnumerator();
-		NSArray itogs = ItogMark.getItogMarks(course.cycle(),itog.itogContainer(),null,ec);
+		NSArray itogs = ItogMark.getItogMarks(course.cycle(),itog,null,ec);
 		boolean overwrite = (scheduled == null || SettingsReader.boolForKeyPath(
 				"edu.overwriteItogsScheduled", false));
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
@@ -428,7 +462,7 @@ cycleStudents:
 					// add ItogComment about timeout
 					report("Prognosis is timed out", prognos, buf);
 					EOEnterpriseObject commentEO = ItogMark.getItogComment(course.cycle(),
-							itog.itogContainer(), prognos.student(), true);
+							itog, prognos.student(), true);
 					Timeout timeout = prognos.getStudentTimeout();
 					StringBuffer comment = new StringBuffer();
 					comment.append(upTo).append(' ');
@@ -438,10 +472,10 @@ cycleStudents:
 					continue cycleStudents;
 				}
 				if(idx < 0) {
-					args = new NSArray(new Object[] {itog,prognos.student()});
+					NSArray args = new NSArray(new Object[] {itog,prognos.student()});
 					NSArray found = EOUtilities.objectsWithQualifierFormat(
 							course.editingContext(),"Prognosis",
-							"autoItog = %@ AND student = %@",args);
+							"itogContainer = %@ AND student = %@",args);
 					EOQualifier qual = new EOKeyValueQualifier("course.cycle",
 							EOQualifier.QualifierOperatorEqual,course.cycle());
 					found = EOQualifier.filteredArrayWithQualifier(found, qual);
@@ -503,9 +537,9 @@ cycleStudents:
 				ec.revert();
 			}
 			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(
-					course, itog.itogContainer());
+					course, itog);
 			if(grouping != null) {
-				itogs = ItogMark.getItogMarks(course.cycle(), itog.itogContainer(), null, ec);
+				itogs = ItogMark.getItogMarks(course.cycle(), itog, null, ec);
 				itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
 				grouping.takeValueForKey(itogs, "array");
 //				NSDictionary stats = ModuleInit.statCourse(course, itog.itogContainer());

@@ -294,7 +294,8 @@ public class BachalaureatCalculator extends WorkCalculator {
 			NSDictionary agregatedMarks = agregateMarks(allMarks);
 			
 			//dict.setObjectForKey(student,"student");
-			Prognosis progn = Prognosis.getPrognosis(student, course, period, !noWorks);
+			Prognosis progn = Prognosis.getPrognosis(student, course, 
+					period.itogContainer(), !noWorks);
 			if(noWorks) {
 				if(progn != null) {
 					ec.deleteObject(progn);
@@ -378,7 +379,8 @@ public class BachalaureatCalculator extends WorkCalculator {
 		NSDictionary agregatedMarks = agregateMarks(allMarks);
 		
 		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
-		Prognosis progn = Prognosis.getPrognosis(student, course, period, !noWorks);
+		Prognosis progn = Prognosis.getPrognosis(student, course, 
+				period.itogContainer(), !noWorks);
 		if(noWorks) {
 			if(progn != null)
 				ec.deleteObject(progn);

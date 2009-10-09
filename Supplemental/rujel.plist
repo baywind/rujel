@@ -325,11 +325,6 @@
 			<key>Timeout</key>
 			<dict>
 				<key>root</key>
-				<string>0</string>
-			</dict>
-			<key>TimeoutNorm</key>
-			<dict>
-				<key>root</key>
 				<string>1023</string>
 				<key>zavuch</key>
 				<string>15</string>
@@ -341,11 +336,6 @@
 			<key>CourseTimeout</key>
 			<dict>
 				<key>root</key>
-				<string>0</string>
-			</dict>
-			<key>CourseTimeoutNorm</key>
-			<dict>
-				<key>root</key>
 				<string>1023</string>
 				<key>zavuch</key>
 				<string>15</string>
@@ -353,11 +343,6 @@
 				<string>1</string>
 			</dict>
 			<key>StudentTimeout</key>
-			<dict>
-				<key>root</key>
-				<string>0</string>
-			</dict>
-			<key>StudentTimeoutNorm</key>
 			<dict>
 				<key>root</key>
 				<string>1023</string>

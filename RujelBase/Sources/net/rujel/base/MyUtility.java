@@ -247,7 +247,7 @@ public class MyUtility {
 			result.addObject(obj);
 			total--;
 		}
-		if(total > 0)
+		if(addTotal && total > 0)
 			result.addObject(new Integer(total));
 		return result;
 	}

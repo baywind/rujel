@@ -82,7 +82,7 @@ public class TimeoutPopup extends WOComponent {
 					if(course != null) {
 						prognosis = Prognosis.getPrognosis(
 								((StudentTimeout)timeout).student(), course, 
-								eduPeriod, false);
+								eduPeriod.itogContainer(), false);
 					} else {
 						NSArray prognoses = timeout.relatedPrognoses();
 						if(prognoses != null && prognoses.count() > 0)

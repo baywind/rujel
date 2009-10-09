@@ -93,6 +93,16 @@ NoTimeoutTitle : WOString {
   escapeHTML = false;
 }
 
+HideBox : WOCheckBox {
+  checked = namedFlags.hideInReport;
+  disabled = cantChange;
+}
+
+HideTitle : WOString {
+  value = session.strings.RujelAutoItog_AutoItog.properties.AutoItog.flags.hideInReport;
+  escapeHTML = false;
+}
+
 DeactivateBox : WOCheckBox {
   checked = namedFlags.inactive;
   disabled = cantChange;

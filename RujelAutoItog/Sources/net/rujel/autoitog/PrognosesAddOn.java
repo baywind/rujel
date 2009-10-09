@@ -35,7 +35,6 @@ import java.util.logging.Logger;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOSession;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -139,8 +138,14 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		if(newCourse == null) {
 			return;
 		}
-		if(_periods == null || !date.equals(currDate))
+		if(_periods == null || !date.equals(currDate)) {
 			_periods = AutoItog.currentAutoItogsForCourse(_course, date);
+			_prognosesMatrix = null;
+			_prognosesForStudent = null;
+//			_prognosis = null;
+			_courseTimeouts = new NSMutableDictionary();
+//			_timeout =null;
+		}
 		currDate = date;
 		if(_periods == null)
 			return;
@@ -160,6 +165,13 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		//else
 		//	return new NSArray(_forcedPeriod);
 	}
+	
+	public void setPeriods(NSArray periods) {
+		if(periods == null || periods.count() == 0 || !periods.equals(_periods)) {
+			reset();
+			_periods = periods;
+		}
+	}
 
 	protected NSTimestamp currDate;
 
@@ -170,7 +182,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		if(_prognosis != null)
 			return _prognosis;
 		if(_prognosesForStudent != null) {
-			_prognosis = (Prognosis)_prognosesForStudent.objectForKey(periodItem);
+			_prognosis = (Prognosis)_prognosesForStudent.objectForKey(
+					periodItem.itogContainer());
 			return _prognosis;
 		}
 		if(_prognosesMatrix == null) {
@@ -178,11 +191,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			Enumeration enu = _periods.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				AutoItog eduPeriod = (AutoItog) enu.nextElement();
-				EOEditingContext ec = _course.editingContext();
-				NSDictionary dict = new NSDictionary(
-						new Object[] {_course,eduPeriod},
-						new String[] {"course","autoItog"});
-				NSArray prognoses = EOUtilities.objectsMatchingValues(ec, "Prognosis", dict);
+				NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
+						_course, eduPeriod);
 				if(prognoses == null || prognoses.count() == 0)
 					continue;
 				Enumeration penu = prognoses.objectEnumerator();
@@ -192,10 +202,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 					NSMutableDictionary forStudent = (NSMutableDictionary)
 					_prognosesMatrix.objectForKey(student);
 					if(forStudent == null) {
-						forStudent = new NSMutableDictionary(cpr,eduPeriod);
+						forStudent = new NSMutableDictionary(cpr,eduPeriod.itogContainer());
 						_prognosesMatrix.setObjectForKey(forStudent, student);
 					} else {
-						forStudent.setObjectForKey(cpr, eduPeriod);
+						forStudent.setObjectForKey(cpr, eduPeriod.itogContainer());
 					}
 					if(student == _student && eduPeriod == periodItem) {
 						_prognosis = cpr;
@@ -209,7 +219,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		_prognosesForStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
 		if(_prognosesForStudent == null)
 			_prognosesForStudent = NSDictionary.EmptyDictionary;
-		_prognosis = (Prognosis)_prognosesForStudent.objectForKey(periodItem);
+		_prognosis = (Prognosis)_prognosesForStudent.objectForKey(
+				periodItem.itogContainer());
 
 		return _prognosis;
 	}
@@ -222,24 +233,29 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			return;
 		if(prognosis != null && !_periods.contains(prognosis.autoItog())) {
 			PerPersonLink forPeriod = (PerPersonLink)
-					_prognosesMatrix.objectForKey(prognosis.autoItog());
+					_prognosesMatrix.objectForKey(prognosis.itogContainer());
 			if(forPeriod == null ||
 			 		forPeriod.forPersonLink(prognosis.student()) == prognosis)
 				return;
-			_prognosesMatrix.removeObjectForKey(prognosis.autoItog());
+			_prognosesMatrix.removeObjectForKey(prognosis.itogContainer());
 			return;
 		}
+		if(prognosis != null)
+			_student = prognosis.student();
 		NSMutableDictionary forStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
 		if(prognosis != null) {
+			if(periodItem == null ||
+					periodItem.itogContainer() != prognosis.itogContainer())
+			periodItem = prognosis.autoItog();
 			if(forStudent == null) {
-				forStudent = new NSMutableDictionary(prognosis,periodItem);
+				forStudent = new NSMutableDictionary(prognosis,periodItem.itogContainer());
 				_prognosesMatrix.setObjectForKey(forStudent, _student);
 			} else {
-				forStudent.setObjectForKey(prognosis, periodItem);
+				forStudent.setObjectForKey(prognosis, periodItem.itogContainer());
 			}
 		} else {
-			if(forStudent != null) {
-				forStudent.removeObjectForKey(periodItem);
+			if(periodItem != null && forStudent != null) {
+				forStudent.removeObjectForKey(periodItem.itogContainer());
 			}
 		}
 	}
@@ -410,15 +426,17 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 						AutoItogModule.archivePrognosisChange(prognosis);
 					if(um){
 						if(forStudent == null) {
-							forStudent = new NSMutableDictionary(prognosis,periodItem);
+							forStudent = new NSMutableDictionary(prognosis,
+									periodItem.itogContainer());
 							_prognosesMatrix.setObjectForKey(forStudent, student);
 						} else {
-							forStudent.setObjectForKey(prognosis, periodItem);
+							forStudent.setObjectForKey(prognosis, 
+									periodItem.itogContainer());
 						}
 					}
 				} else {
 					if(um && forStudent != null) {
-						forStudent.removeObjectForKey(periodItem);
+						forStudent.removeObjectForKey(periodItem.itogContainer());
 					}
 				}
 			}
@@ -444,11 +462,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		ec.unlock();
 	}
 	
-	public static NSDictionary statCourse(EduCourse course, AutoItog period) {
-		NSArray prognoses = new NSArray(new Object[] {period,course});
-		prognoses = EOUtilities.objectsWithQualifierFormat(course.editingContext(),
-				"Prognosis","autoItog = %@ AND course = %@",prognoses);
-//		NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period);
+/*	public static NSDictionary statCourse(EduCourse course, ItogContainer period) {
+		NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period, false);
 		if(prognoses == null || prognoses.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(prognoses.count() > 1) {
@@ -488,7 +503,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			keys.addObject("");
 		}
 		return result;
-	}
+	}*/
 	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course,
 			ItogContainer period) {

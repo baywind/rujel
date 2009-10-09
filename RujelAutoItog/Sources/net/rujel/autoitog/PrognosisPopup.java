@@ -161,16 +161,20 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     				ec.deleteObject(prognosis);
     			prognosis = null;
     		} else {
-    			if(prognosis == null) {
+    			if(mark == null) {
+    				prognosis = eduPeriod.calculator().calculateForStudent(student, course, eduPeriod);
+    				changeReason = eduPeriod.calculatorName();
+    			} else if(prognosis == null) {
     				prognosis = (Prognosis)EOUtilities.createAndInsertInstance(ec, "Prognosis");
        				prognosis.setStudent(student);
        				prognosis.setCourse(course);
        				prognosis.setAutoItog(eduPeriod);
-       				prognosis.updateFireDate();
      			}
-    			if(!mark.equals(prognosis.mark()) && eduPeriod.namedFlags().flagForKey("manual")) {
+    			if(mark != null && !mark.equals(prognosis.mark()) &&
+    					eduPeriod.namedFlags().flagForKey("manual")) {
     				prognosis.setMark(mark);
     			}
+   				prognosis.updateFireDate();
 	    		Bonus bonus = prognosis.bonus();
     	    	Object[] args = new Object[] {session(),bonus,prognosis};
     	    	if(hasBonus) {
@@ -194,6 +198,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    		if(bonus == null) {
     	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
 //    	    			bonus.initBonus(prognosis, false);
+    	    			prognosis.addObjectToBothSidesOfRelationshipWithKey(bonus, 
+    	    					Prognosis.BONUS_KEY);
+    	    			Bonus.calculateBonus(prognosis, bonus, false);
     	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Requesting bonus for prognosis",args);
     	    		}
     	    		bonus.setReason(bonusText);
@@ -231,7 +238,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod.itogContainer());
 					if(grouping != null) {
 						NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
-								course, eduPeriod);
+								course, eduPeriod.itogContainer(),false);
 						//NSDictionary stats = PrognosesAddOn.statCourse(course, eduPeriod);
 						prognoses = MyUtility.filterByGroup(prognoses, "student", 
 								course.groupList(), true);
