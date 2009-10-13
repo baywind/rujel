@@ -197,12 +197,13 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = lesson.editingContext(); 
 		NSArray others = (selLesson == null)?null:
 			(NSArray)selLesson.valueForKey("substitutes");
+		Teacher teacher = lesson.course().teacher();
 		if(others != null && others.count() > 0) {
 			Enumeration enu = others.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Substitute sub = (Substitute) enu.nextElement();
 //				if(sub != substitute && sub.teacher() == lesson.course().teacher()) {
-				if(sub.teacher() == lesson.course().teacher()) {
+				if(sub.teacher() == teacher) {
 					reason = null;
 					session().takeValueForKey(application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.duplicateTeacher"), 
@@ -239,8 +240,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 //			selLesson.setNumber(num);
 		}
 		substitute.addObjectToBothSidesOfRelationshipWithKey(selLesson, "lesson");
-		substitute.addObjectToBothSidesOfRelationshipWithKey(
-				lesson.course().teacher(),"teacher");
+		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
 		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
 		BigDecimal factor = new BigDecimal(SettingsReader.stringForKeyPath(
 				"edu.joinFactor", "0.5"));
@@ -262,13 +262,31 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 							buf.append(" / ");
 						buf.append(theme);
 					}
-					if(sub.factor().compareTo(BigDecimal.ONE) < 0)
+					if(sub.fromLesson() != null)
 						sub.setFactor(factor);
 				}
 				selLesson.setTheme(buf.toString());
 			}
 		}
 		substitute.setFactor(factor);
+		others =  EOUtilities.objectsMatchingKeyAndValue(ec, 
+				Substitute.ENTITY_NAME, "fromLesson",lesson);
+		if(others != null) {
+			if(!others.containsObject(substitute))
+				others = others.arrayByAddingObject(substitute);
+			int div = others.count();
+			if(div > 1) {
+				factor = new BigDecimal(SettingsReader.stringForKeyPath(
+						"edu.joinFactor", "0.5"));
+				factor = factor.divide(new BigDecimal(div), 2,BigDecimal.ROUND_HALF_UP);
+				Enumeration enu = others.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Substitute join = (Substitute) enu.nextElement();
+					if(factor.compareTo(join.factor()) < 0)
+						join.setFactor(factor);
+				}
+			}
+		}
 		return done(action);
 	}
 	/*

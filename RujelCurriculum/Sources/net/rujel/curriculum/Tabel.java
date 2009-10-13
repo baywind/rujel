@@ -10,7 +10,6 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
-import net.rujel.reusables.Counter;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Export;
@@ -136,12 +135,11 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 					Substitute sub = (Substitute) sEnu.nextElement();
 					Teacher teacher = sub.teacher();
 					addHoursToKey(byTeacher, sub.factor(), cal, teacher);
-					Counter sCnt = (Counter)subsByTeacher.objectForKey(teacher);
-					if(sCnt == null) {
-						sCnt = new Counter(1);
-						subsByTeacher.setObjectForKey(sCnt, teacher);
+					BigDecimal bySub = (BigDecimal)subsByTeacher.objectForKey(teacher);
+					if(bySub == null) {
+						subsByTeacher.setObjectForKey(sub.factor(), teacher);
 					} else {
-						sCnt.raise();
+						subsByTeacher.setObjectForKey(bySub.add(sub.factor()), teacher);
 					}
 				}
 			} else {
@@ -172,7 +170,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		exportPage.addValue(application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.total"));
 		exportPage.addValue(application().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.titles.substitutes"));
+				"strings.RujelCurriculum_Curriculum.Tabel.bySubs"));
 		exportPage.endRow();
     	
     	NSNumberFormatter formatter = new NSNumberFormatter();

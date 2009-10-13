@@ -109,7 +109,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     }
     
     protected void populateFrom() {
-    	fromLesson = null;
+//    	fromLesson = null;
     	if(teacher == null) {
     		message = "<div style = \"font-size:larger;color:#ff6600;\">" +
     			session().valueForKeyPath(
@@ -142,6 +142,9 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 				session().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.messages.noLessonsForTeacher") +
 				"</div>";
+    	} else if(fromLesson == null) {
+    		message = "<strong>" + session().valueForKeyPath(
+			"strings.RujelCurriculum_Curriculum.titles.chooseLesson") + "</strong>";
     	} else {
     		message = null;
     	}
@@ -222,13 +225,11 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		} else {
     			idx = 0;
     		}
-			populateFrom();
     		fromLesson = sub.fromLesson();
-    		// TODO: think on more specific access reading
-    		String obj = (context().page() == this)?"substitute":"Substitute";
-    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit." + obj);
+			populateFrom();
+    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
     		cantSelect = cantEdit;
-    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete." + obj);
+    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.substitute");
     		if(others == null)
     			others = new NSArray(substitute);
     		else if(!others.containsObject(substitute))
@@ -245,6 +246,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     	if(cantEdit.booleanValue())
     		return this;
     	fromLesson = item;
+    	message = null;
 //    	cantEdit = Boolean.FALSE;
     	idx = 1;
     	return this;
@@ -262,6 +264,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 //        	if(fromLesson == null || fromList == null || !fromList.contains(fromLesson))
 //        		cantEdit = Boolean.TRUE;
 //    	}
+    	fromLesson = null;
 		populateFrom();
     }
     
@@ -314,16 +317,36 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			Enumeration enu = others.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Substitute sub = (Substitute) enu.nextElement();
-				if(sub.fromLesson() == null)
+				if(sub.fromLesson() == null) {
 					sub.setFactor(subFactor);
-				else
-					sub.setFactor(joinFactor);
+				} else {
+					if(joinFactor.compareTo(sub.factor()) < 0)
+						sub.setFactor(joinFactor);
+				}
 			}
 		}
-		if(idx > 0)
-			substitute.setFactor(joinFactor);
-		else
+		if(idx > 0) {
+			NSArray joins = EOUtilities.objectsMatchingKeyAndValue(ec, 
+					Substitute.ENTITY_NAME, "fromLesson",fromLesson);
+			if(!joins.containsObject(substitute))
+				joins = joins.arrayByAddingObject(substitute);
+			if(joins != null && joins.count() > 1) {
+				BigDecimal factor = new BigDecimal(SettingsReader.stringForKeyPath(
+						"edu.joinFactor", "0.5"));
+				factor = factor.divide(new BigDecimal(joins.count()),
+						2,BigDecimal.ROUND_HALF_UP);
+				Enumeration enu = joins.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Substitute join = (Substitute) enu.nextElement();
+					if(factor.compareTo(join.factor()) < 0)
+						join.setFactor(factor);
+				}
+			} else {
+				substitute.setFactor(joinFactor);
+			}
+		} else {
 			substitute.setFactor(subFactor);
+		}
 		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
 		return done(action);
 	}
@@ -334,22 +357,24 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		if(substitute != null && substitute.editingContext() != null) {
 			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting substitute",substitute);
 			if(others != null && others.count() > 1) {
-				BigDecimal subFactor = BigDecimal.ONE;
-				BigDecimal joinFactor = new BigDecimal(SettingsReader.stringForKeyPath(
-						"edu.joinFactor", "0.5"));
-				if(others.count() > 2) {
-					subFactor = subFactor.divide(new BigDecimal(others.count() -1),
-						2,BigDecimal.ROUND_HALF_UP);
-					joinFactor = joinFactor.divide(new BigDecimal(others.count() -1),
-							2,BigDecimal.ROUND_HALF_UP);
-				}
 				Enumeration enu = others.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					Substitute sub = (Substitute) enu.nextElement();
-					if(sub.fromLesson() == null)
-						sub.setFactor(subFactor);
-					else
-						sub.setFactor(joinFactor);
+					if(sub == substitute)
+						continue;
+					sub.updateFactor(sub.countRelated(null, substitute));
+				}
+			}
+			if(fromLesson != null) {
+				NSArray joins = (NSArray)fromLesson.valueForKey("joins");
+				if(joins != null && joins.count() > 1) {
+					Enumeration enu = joins.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						Substitute join = (Substitute) enu.nextElement();
+						if(join == substitute)
+							continue;
+						join.updateFactor(join.countRelated(null, substitute));
+					}
 				}
 			}
 			ec.deleteObject(substitute);

@@ -52,10 +52,7 @@ public class Substitute extends _Substitute implements Reason.Event {
 		EORelationship rel = EOInitialiser.initialiseRelationship(
 				ENTITY_NAME,"lesson",false,"lessonID","EduLesson").anyInverseRelationship();
 		EOEntity ent = rel.entity();
-		//EOEntity dest = rel.destinationEntity();
-		//NSArray joins = rel.joins();
 		ent.removeRelationship(rel);
-		//rel = new EORelationship();
 		rel.setName("substitutes");
 		rel.setToMany(true);
 		//rel.addJoin((EOJoin)joins.objectAtIndex(0));
@@ -64,8 +61,18 @@ public class Substitute extends _Substitute implements Reason.Event {
 		rel.setDeleteRule(EOClassDescription.DeleteRuleCascade);	
 		rel.setIsMandatory(false);
 		ent.addRelationship(rel);
-		EOInitialiser.initialiseRelationship(ENTITY_NAME,"fromLesson",false,"fromID","EduLesson")
-			.anyInverseRelationship().setPropagatesPrimaryKey(true);
+		rel = EOInitialiser.initialiseRelationship(ENTITY_NAME,"fromLesson",false,"fromID","EduLesson")
+			.anyInverseRelationship();
+		ent = rel.entity();
+		ent.removeRelationship(rel);
+		rel.setName("joins");
+		rel.setToMany(true);
+		rel.setPropagatesPrimaryKey(true);
+		rel.setOwnsDestination(true);
+		rel.setDeleteRule(EOClassDescription.DeleteRuleNullify);
+		rel.setIsMandatory(false);
+		ent.addRelationship(rel);
+		
 		EOInitialiser.initialiseRelationship("Substitute","teacher",false,"teacherID","Teacher")
 			.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		//EOInitialiser.initialiseRelationship("Substitute","eduCourse",false,"courseID","EduCourse").
@@ -139,6 +146,39 @@ public class Substitute extends _Substitute implements Reason.Event {
 					"strings.RujelCurriculum_Curriculum.Substitute.Join");
 		return (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Substitute.Substitute");
+	}
+	
+	public int countRelated(Substitute ensure, Substitute omit) {
+		int to = 0;
+		NSArray other = (NSArray)lesson().valueForKey("substitutes");
+		if(other != null) {
+			to = other.count();
+			if(ensure != null && !other.containsObject(ensure) &&
+					ensure.lesson() == lesson())
+				to++;
+			if(omit != null && other.containsObject(omit))
+				to--;
+		}
+		int from = 0;
+		other = (NSArray)valueForKeyPath("fromLesson.joins");
+		if(other != null) {
+			from = other.count();
+			if(ensure != null && !other.containsObject(ensure) && 
+					ensure.fromLesson() == fromLesson())
+				from++;
+			if(omit != null && other.containsObject(omit))
+				from--;
+		}
+		return Math.max(to, from);
+	}
+	
+	public BigDecimal updateFactor(int relatedCount) {
+		BigDecimal factor = (fromLesson() == null)?BigDecimal.ONE:
+			new BigDecimal(SettingsReader.stringForKeyPath("edu.joinFactor", "0.5"));
+		if(relatedCount > 1)
+			factor = factor.divide(new BigDecimal(relatedCount), 2,BigDecimal.ROUND_HALF_UP);
+		setFactor(factor);
+		return factor;
 	}
 
 	public static int checkSubstitutes(NSArray subs) {
