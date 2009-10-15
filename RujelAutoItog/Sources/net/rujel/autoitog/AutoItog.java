@@ -56,11 +56,8 @@ public class AutoItog extends _AutoItog {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
 		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending)
 		});
-	public static final NSArray typeSorter = new NSArray( new EOSortOrdering[] {
-			EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
-			EOSortOrdering.sortOrderingWithKey(ITOG_CONTAINER_KEY,
-					EOSortOrdering.CompareAscending)
-			});
+	public static final NSArray typeSorter = new NSArray(
+			new EOSortOrdering(ITOG_CONTAINER_KEY,EOSortOrdering.CompareAscending));
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship("ItogRelated","course",false,

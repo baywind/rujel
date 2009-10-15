@@ -298,7 +298,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	public boolean showTimeout() {
 		if(!timeOuts)
 			return false;
-		inTimeout = (periodItem.namedFlags().flagForKey("noTimeouts"));
+		inTimeout = (!periodItem.namedFlags().flagForKey("noTimeouts"));
 		return inTimeout;
 	}
 

@@ -102,7 +102,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
     	EduCourse c = course();
     	NSDictionary dict = new NSMutableDictionary(
     			new Object[] {student(),itogContainer()},
-    			new String[] {"student","autoItog.itogContainer"});
+    			new String[] {"student","itogContainer"});
     		dict.takeValueForKey(c, "course");
     	return EOUtilities.objectsMatchingValues(editingContext(), Prognosis.ENTITY_NAME, dict);
     }

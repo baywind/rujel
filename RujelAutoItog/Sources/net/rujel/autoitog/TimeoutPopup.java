@@ -30,6 +30,9 @@
 package net.rujel.autoitog;
 
 import net.rujel.reusables.*;
+import net.rujel.base.SettingsBase;
+import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
@@ -37,7 +40,6 @@ import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 
@@ -46,7 +48,7 @@ public class TimeoutPopup extends WOComponent {
 
 	public PrognosesAddOn addOn;
 	public EduCourse course;
-	public AutoItog eduPeriod;
+	public ItogContainer eduPeriod;
 	public Timeout timeout;
 	public Prognosis prognosis;
 //	public Student student;
@@ -69,7 +71,23 @@ public class TimeoutPopup extends WOComponent {
     public TimeoutPopup(WOContext context) {
         super(context);
     }
-	
+
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(dueDate == null) {
+    		if(addOn != null && addOn.periodItem != null &&
+    				addOn.periodItem.itogContainer() == eduPeriod) {
+    			dueDate = addOn.periodItem.fireDate();
+    		} else {
+    			String listName = SettingsBase.stringSettingForCourse(
+    					ItogMark.CONTAINER_KEY, course, course.editingContext());
+    			AutoItog ai = AutoItog.forListName(listName, eduPeriod);
+    			dueDate = ai.fireDate();
+    		}
+			dueDate = dueDate.timestampByAddingGregorianUnits(0, 0, 7, 0, 0, 0);
+    	}
+    	super.appendToResponse(aResponse, aContext);
+    }
+    
 	public void setTimeout (Timeout value) {
 		timeout = value;
 		String toClass = null;
@@ -82,7 +100,7 @@ public class TimeoutPopup extends WOComponent {
 					if(course != null) {
 						prognosis = Prognosis.getPrognosis(
 								((StudentTimeout)timeout).student(), course, 
-								eduPeriod.itogContainer(), false);
+								eduPeriod, false);
 					} else {
 						NSArray prognoses = timeout.relatedPrognoses();
 						if(prognoses != null && prognoses.count() > 0)
@@ -114,13 +132,13 @@ public class TimeoutPopup extends WOComponent {
 		}
 	}
 	
-	public void setEduPeriod(AutoItog period) {
-		eduPeriod = period;
-		if(dueDate == null) {
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.setTime(eduPeriod.fireDate());
-			cal.add(GregorianCalendar.DATE,7);
-			dueDate = new NSTimestamp(cal.getTime());
+	public void setEduPeriod(Object period) {
+		if(period instanceof ItogContainer) {
+			eduPeriod = (ItogContainer)period;
+		} else if (period instanceof AutoItog) {
+			eduPeriod = ((AutoItog)period).itogContainer();
+			dueDate = ((AutoItog)period).fireDate();
+			dueDate = dueDate.timestampByAddingGregorianUnits(0, 0, 7, 0, 0, 0);
 		}
 	}
 
@@ -154,7 +172,8 @@ public class TimeoutPopup extends WOComponent {
 						String entity = (prognosis==null)?"CourseTimeout":"StudentTimeout";
 						if(timeout == null || !timeout.fireDate().equals(dueDate)) {
 							timeout = (Timeout)EOUtilities.createAndInsertInstance(ec, entity);
-							timeout.takeValueForKey(eduPeriod, "eduPeriod");
+							timeout.addObjectToBothSidesOfRelationshipWithKey(
+									eduPeriod, "itogContainer");
 							related = null;
 						}
 						timeout.setCourse((forCourse)?course:null);
