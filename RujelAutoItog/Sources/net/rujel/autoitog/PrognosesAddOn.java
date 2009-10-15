@@ -462,7 +462,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		ec.unlock();
 	}
 	
-/*	public static NSDictionary statCourse(EduCourse course, ItogContainer period) {
+	public static NSDictionary statCourse(EduCourse course, ItogContainer period) {
 		NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period, false);
 		if(prognoses == null || prognoses.count() == 0)
 			return NSDictionary.EmptyDictionary;
@@ -503,7 +503,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			keys.addObject("");
 		}
 		return result;
-	}*/
+	}
 	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course,
 			ItogContainer period) {

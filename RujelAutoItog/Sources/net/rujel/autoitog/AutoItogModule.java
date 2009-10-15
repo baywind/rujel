@@ -44,6 +44,7 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -82,7 +83,7 @@ public class AutoItogModule {
 		} else if("extItog".equals(obj)) {
 			return extItog(ctx);
 		} else if("statCourseReport".equals(obj)) {
-//			return statCourseReport(ctx);
+			return statCourseReport(ctx);
 		}
 		return null;
 	}
@@ -756,55 +757,69 @@ cycleCourses:
 		}
 	}
 	
-	// TODO : stats support for prognoses
-	
-/*	public static Object statCourseReport(WOContext ctx) {
+	public static Object statCourseReport(WOContext ctx) {
 		EOEditingContext ec = null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");
 		} catch (Exception e) {
 			ec = new SessionedEditingContext(ctx.session());
 		}
-		NSArray list = new NSArray(ctx.session().valueForKey("eduYear"));
-		list = EOUtilities.objectsWithQualifierFormat(ec, PrognosUsage.ENTITY_NAME, 
-				"(eduYear = %d OR eduYear = 0)", list);
-			//PeriodType.allPeriodTypes(ec, (Integer)ctx.session().valueForKey("eduYear"));
+		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
+		NSArray list = null;
+		try {
+			EduCourse course = (EduCourse)ctx.page().valueForKey("course");
+			list = AutoItog.currentAutoItogsForCourse(course, date);
+		} catch (Exception e) {
+	    	String listName = SettingsBase.stringSettingForCourse(
+	    			ItogMark.ENTITY_NAME, null, ec);
+	    	EOQualifier[] quals = new EOQualifier[3];
+	    	quals[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
+	    			EOQualifier.QualifierOperatorEqual,listName);
+	    	quals[1] = new EOKeyValueQualifier(AutoItog.FIRE_DATE_KEY,
+	    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
+	    	quals[2] = new EOKeyValueQualifier(AutoItog.FLAGS_KEY,
+	    			EOQualifier.QualifierOperatorLessThan, new Integer(32));
+	    	quals[0] = new EOAndQualifier(new NSArray(quals));
+	    	EOFetchSpecification fs = new EOFetchSpecification(
+	    			AutoItog.ENTITY_NAME,quals[0],null);
+	    	list = ec.objectsWithFetchSpecification(fs);
+	    	if(list != null && list.count() > 1) {
+	    		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list,
+	    				AutoItog.typeSorter);
+	    		NSMutableSet types = new NSMutableSet();
+	    		NSMutableArray result = new NSMutableArray();
+	    		Enumeration enu = list.objectEnumerator();
+	    		while (enu.hasMoreElements()) {
+					AutoItog ai = (AutoItog) enu.nextElement();
+					if(!types.containsObject(ai.itogContainer().itogType())) {
+						types.addObject(ai.itogContainer().itogType());
+						result.addObject(ai);
+					}
+				}
+	    		list = result;
+	    	}
+		}
 		if(list == null || list.count() == 0)
 			return null;
 		Enumeration enu = list.objectEnumerator();
-		NSMutableArray result = new NSMutableArray();
-		while (enu.hasMoreElements()) {
-			PrognosUsage pu = (PrognosUsage) enu.nextElement();
-			if(!pu.namedFlags().flagForKey("active"))
-				continue;
-			if(!result.containsObject(pu.periodType()))
-				result.addObject(pu.periodType());
-		}
-		if(result.count() == 0)
-			return null;
-		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(result, PeriodType.sorter);
-		result.removeAllObjects();
-		enu = list.objectEnumerator();
-//		Object[] params = new Object[] 
-//		              {Prognosis.ENTITY_NAME, Prognosis.MARK_KEY,".",EduPeriod.ENTITY_NAME};
 		NSMutableDictionary template = new NSMutableDictionary(Prognosis.ENTITY_NAME,"entName");
 		template.setObjectForKey(Prognosis.MARK_KEY, "statField");
 		template.setObjectForKey(ModuleInit.marksPreset(),"keys");
 		try {
 			Method method = PrognosesAddOn.class.getMethod("statCourse",
-					EduCourse.class, EduPeriod.class);
+					EduCourse.class, ItogContainer.class);
 			template.setObjectForKey(method,"ifEmpty");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		NSTimestamp today = (NSTimestamp)ctx.session().valueForKey("today");
 		String title = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelAutoItog_AutoItog.prognoses");
 		int sort = 50;
+		NSMutableArray result = new NSMutableArray();
 		while (enu.hasMoreElements()) {
-			PeriodType perType = (PeriodType) enu.nextElement();
-			EduPeriod period = perType.currentPeriod(today);
+			AutoItog perType = (AutoItog) enu.nextElement();
+			ItogContainer period = perType.itogContainer();
 			if(period == null)
 				continue;
 			NSMutableDictionary dict = template.mutableClone();
@@ -816,5 +831,5 @@ cycleCourses:
 			sort++;
 		}
 		return result;
-	}*/
+	}
 }

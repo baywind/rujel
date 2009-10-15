@@ -314,7 +314,7 @@ public class Prognosis extends _Prognosis {
 		NSArray args = new NSArray(new Object[] {period,course});
 		NSArray found = EOUtilities.objectsWithQualifierFormat(course.editingContext(),
 				"Prognosis","itogContainer = %@ AND course = %@",args);
-		if(found.count() > 0) {
+		if(init && found.count() > 0) {
         	String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME,
         			course, course.editingContext());
         	AutoItog ai = AutoItog.forListName(listName, period);
