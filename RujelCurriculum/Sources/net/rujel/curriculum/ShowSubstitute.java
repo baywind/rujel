@@ -33,7 +33,6 @@ import net.rujel.interfaces.*;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
@@ -71,8 +70,9 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     public NSArray joins() {
     	if(joins == null) {
        		EduLesson lesson = (EduLesson)valueForBinding("lesson");
-     		joins = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
-    				Substitute.ENTITY_NAME, "fromLesson",lesson);
+//     		joins = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
+//    				Substitute.ENTITY_NAME, "fromLesson",lesson);
+       		joins = (NSArray)lesson.valueForKey("joins");
      		if(joins == null)
      			joins = NSArray.EmptyArray;
     	}

@@ -119,6 +119,8 @@ public abstract class WorkCalculator extends Calculator {
 		NSMutableArray result = new NSMutableArray();
 		while (enu.hasMoreElements()) {
 			Work work = (Work) enu.nextElement();
+			if(work.marks() == null || work.marks().count() == 0)
+				continue;
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(work);
 			Object key = gid.keyValues()[0];
 			if(mentioned != null && mentioned.containsObject(key))
@@ -142,6 +144,8 @@ public abstract class WorkCalculator extends Calculator {
 	}
 	
 	public Integer relKeyForObject(Object object) {
+		if(object instanceof Integer)
+			return (Integer)object;
 		Work work = null;
 		if (object instanceof Work) {
 			work = (Work) object;
@@ -150,10 +154,18 @@ public abstract class WorkCalculator extends Calculator {
 		} else if(object instanceof NSDictionary) {
 			NSDictionary dict = (NSDictionary)object;
 			EduLesson lesson = (EduLesson)dict.valueForKey("lesson");
-			if(lesson instanceof Work)
+			if(lesson instanceof Work) {
 				work = (Work)lesson;
-			else
+			} else if(lesson == null) {
+				String entityName = (String)dict.valueForKey("entityName");
+				if(!Work.ENTITY_NAME.equals(entityName))
+					return null;
+				NSDictionary pKey = (NSDictionary)dict.valueForKey("pKey");
+				return (pKey == null)?null:
+					(Integer)pKey.allValues().objectAtIndex(0);
+			} else {
 				return null;
+			}
 		} else {
 			return null;
 		}

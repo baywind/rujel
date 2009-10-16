@@ -130,6 +130,8 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 					if(from == null)
 						continue lessons;
 					EduCourse fromCourse = from.course();
+					if(fromCourse == null)
+						continue;
 					if(s.teacher() == course.teacher() ||
 							fromCourse.cycle() != course.cycle())
 						continue lessons;
@@ -269,8 +271,9 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		substitute.setFactor(factor);
-		others =  EOUtilities.objectsMatchingKeyAndValue(ec, 
-				Substitute.ENTITY_NAME, "fromLesson",lesson);
+		others = (NSArray)lesson.valueForKey("joins");
+//			EOUtilities.objectsMatchingKeyAndValue(ec, 
+//				Substitute.ENTITY_NAME, "fromLesson",lesson);
 		if(others != null) {
 			if(!others.containsObject(substitute))
 				others = others.arrayByAddingObject(substitute);

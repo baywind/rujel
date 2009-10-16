@@ -45,6 +45,7 @@ import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
+
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
@@ -326,8 +327,9 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		if(idx > 0) {
-			NSArray joins = EOUtilities.objectsMatchingKeyAndValue(ec, 
-					Substitute.ENTITY_NAME, "fromLesson",fromLesson);
+			NSArray joins = (NSArray)fromLesson.valueForKey("joins"); 
+//				EOUtilities.objectsMatchingKeyAndValue(ec, 
+//					Substitute.ENTITY_NAME, "fromLesson",fromLesson);
 			if(!joins.containsObject(substitute))
 				joins = joins.arrayByAddingObject(substitute);
 			if(joins != null && joins.count() > 1) {

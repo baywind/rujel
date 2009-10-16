@@ -385,7 +385,7 @@ public class MarksPresenter extends NotePresenter {
 
     public String integralColor() {
     	if(student() == null)
-    		lesson().color();
+    		return (String)valueForKeyPath("lesson.color");
     	if(activeCriterion() != null) return null;
     	if(hasBinding("data"))
     		return null;

@@ -30,6 +30,7 @@
 package net.rujel.autoitog;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Enumeration;
 
 import com.webobjects.foundation.NSArray;
@@ -43,8 +44,6 @@ public class IntegralCalculator extends WorkCalculator {
 	public Prognosis calculateForStudent(Student student, EduCourse course,
 			AutoItog period) {
 		NSArray works = period.relatedForCourse(course);//works(course, period);
-		if(works == null || works.count() == 0)
-			works = period.relatedForCourse(course);
 		//.calculator().collectRelated(course, period, true);
 		double weightSum = 0;
 		double integralSum = 0;
@@ -82,11 +81,12 @@ public class IntegralCalculator extends WorkCalculator {
 				progn.editingContext().deleteObject(progn);
 			return null;
 		}
-		long rounded = (long)(integral*10000);
-		BigDecimal value = BigDecimal.valueOf(rounded,4);//new BigDecimal(integral,new MathContext(4));
+		MathContext mc = new MathContext(4);
+//		long rounded = (long)(integral*10000);
+		BigDecimal value = new BigDecimal(integral,mc);
 		progn.setValue(value);
-		rounded = ((long)complete*10000)/count;
-		value = BigDecimal.valueOf(rounded,4);//new BigDecimal(integral,new MathContext(4));
+//		rounded = ((long)complete*10000)/count;
+		value = new BigDecimal((double)complete/count,mc); //BigDecimal.valueOf(rounded,4);
 		if(progn.complete() == null || progn.complete().compareTo(value) != 0) {
 			progn.setComplete(value);
 		}		

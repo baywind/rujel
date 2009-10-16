@@ -259,20 +259,30 @@ public class AutoItogModule {
 		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", false);
 		NSArray autoItogs = AutoItog.relatedToObject(dict, course);
 		boolean newObj = (autoItogs == null || autoItogs.count() == 0);
-		if(newObj)
+		if(newObj) {
+			NSArray marks = (NSArray)dict.valueForKeyPath("lesson.marks");
+			if(marks == null || marks.count() == 0)
+				return null;
 			autoItogs = AutoItog.currentAutoItogsForCourse(course, date);
+		}
 		Enumeration enu = autoItogs.objectEnumerator();
 		try {
 		while (enu.hasMoreElements()) {
 			AutoItog ai = (AutoItog) enu.nextElement();
+			if(ai.calculator() == null || ai.namedFlags().flagForKey("inactive"))
+				continue;
+			Integer relKey = ai.calculator().relKeyForObject(dict);
+			if(relKey == null)
+				continue;
 			if(newObj) {
-				if(ai.calculator() == null || ai.namedFlags().flagForKey("inactive"))
-					continue;
-				if(ai.calculator().relKeyForObject(dict) == null)
-					//reliesOn().contains(dict.valueForKey("entityName")))
-					continue;
+				if(ai.relKeysForCourse(course).count() != 0) {
+					if(ai.addRelatedObject(relKey, course))
+						ec.saveChanges();
+				}
 //				ai.calculator().collectRelated(course, ai);
-//				ec.saveChanges();
+			} else if (student == null &&  dict.valueForKey("lesson") == null) {
+				if(ai.removeRelatedObject(relKey, course))
+					ec.saveChanges();
 			}
 			boolean ifArchive = (canArchive && ai.namedFlags().flagForKey("manual"));
 			if(student == null) {

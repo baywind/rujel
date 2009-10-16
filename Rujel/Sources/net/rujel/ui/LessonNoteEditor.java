@@ -455,6 +455,8 @@ public class LessonNoteEditor extends WOComponent {
 				if(currLesson() != null) {
 					dict.takeValueForKey(currLesson().entityName(), "entityName");
 					dict.takeValueForKey(currLesson().date(), "date");
+					dict.takeValueForKey(EOUtilities.
+							primaryKeyForObject(ec, currLesson()), "pKey");
 				} else {
 					String entityName = (String)valueForKeyPath("present.entityName");
 					if(entityName == null)
@@ -733,7 +735,14 @@ public class LessonNoteEditor extends WOComponent {
 		} else {
 			tab = BaseTab.tabForLesson(lesson, true);
 		}
-		tmpEc.saveChanges();
+		try {
+			tmpEc.saveChanges();
+		} catch (RuntimeException e) {
+			logger.log(WOLogLevel.WARNING,"Error splitting tab", new Object[]
+			                            {session(),lesson,e});
+			session().takeValueForKey(e.getMessage(), "message");
+			tmpEc.revert();
+		}
 		_currTab = null;
 		refresh();
 	}

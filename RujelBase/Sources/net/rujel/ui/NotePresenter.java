@@ -222,6 +222,8 @@ public class NotePresenter extends WOComponent {
 			_archive = (EOEnterpriseObject)valueForBinding("archive");
 		if(_archive == null) {
 			EOEditingContext ec = lesson().editingContext();
+			if(ec == null)
+				return;
 			_archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 			_archive.takeValueForKey(identifierDictionary(), "identifierDictionary");
 			if(hasBinding("archive"))
