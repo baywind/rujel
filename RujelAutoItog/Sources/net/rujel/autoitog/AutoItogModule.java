@@ -260,9 +260,9 @@ public class AutoItogModule {
 		NSArray autoItogs = AutoItog.relatedToObject(dict, course);
 		boolean newObj = (autoItogs == null || autoItogs.count() == 0);
 		if(newObj) {
-			NSArray marks = (NSArray)dict.valueForKeyPath("lesson.marks");
-			if(marks == null || marks.count() == 0)
-				return null;
+//			NSArray marks = (NSArray)dict.valueForKeyPath("lesson.marks");
+//			if(marks == null || marks.count() == 0)
+//				return null;
 			autoItogs = AutoItog.currentAutoItogsForCourse(course, date);
 		}
 		Enumeration enu = autoItogs.objectEnumerator();
@@ -276,6 +276,8 @@ public class AutoItogModule {
 				continue;
 			if(newObj) {
 				if(ai.relKeysForCourse(course).count() != 0) {
+					if(ai.calculator().skipAutoAdd(relKey, ec))
+						continue;
 					if(ai.addRelatedObject(relKey, course))
 						ec.saveChanges();
 				}

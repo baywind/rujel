@@ -30,7 +30,6 @@
 package net.rujel.autoitog;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.Enumeration;
 
 import com.webobjects.foundation.NSArray;
@@ -81,15 +80,16 @@ public class IntegralCalculator extends WorkCalculator {
 				progn.editingContext().deleteObject(progn);
 			return null;
 		}
-		MathContext mc = new MathContext(4);
 //		long rounded = (long)(integral*10000);
-		BigDecimal value = new BigDecimal(integral,mc);
+		BigDecimal value = new BigDecimal(integral);
+		value = value.setScale(4,BigDecimal.ROUND_HALF_UP);
 		progn.setValue(value);
 //		rounded = ((long)complete*10000)/count;
-		value = new BigDecimal((double)complete/count,mc); //BigDecimal.valueOf(rounded,4);
+		value = new BigDecimal((double)complete/count); //BigDecimal.valueOf(rounded,4);
+		value = value.setScale(4,BigDecimal.ROUND_HALF_UP);
 		if(progn.complete() == null || progn.complete().compareTo(value) != 0) {
 			progn.setComplete(value);
-		}		
+		}
 		return progn;
 	}
 

@@ -27,9 +27,9 @@ public abstract class WorkCalculator extends Calculator {
 		super();
 	}
 
-	public NSArray reliesOn() {
+/*	public NSArray reliesOn() {
 		return reliesOn;
-	}
+	}*/
 
 	public String reliesOnEntity() {
 		return "Work";
@@ -178,5 +178,20 @@ public abstract class WorkCalculator extends Calculator {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+	
+	public boolean skipAutoAdd(Integer relKey, EOEditingContext ec) {
+		if(relKey == null || ec == null)
+			return true;
+		try {
+			Work work = (Work)EOUtilities.objectWithPrimaryKeyValue(ec,
+					Work.ENTITY_NAME, relKey);
+			if(work.marks().count() == 0 ||
+					work.weight().compareTo(BigDecimal.ZERO) == 0)
+				return true;
+		} catch (Exception e) {
+			return true;
+		}
+		return false;
 	}
 }

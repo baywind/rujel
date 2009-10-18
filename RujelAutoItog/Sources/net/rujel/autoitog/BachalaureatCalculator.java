@@ -346,8 +346,9 @@ public class BachalaureatCalculator extends WorkCalculator {
 		}*/
 		//calculator.updatePrognosis(progn,agregatedMarks,agregatedWorks);
 		double integral = getIntegral(agregatedMarks,agregatedWorks);
-		long rounded = (long)(integral*10000);
-		BigDecimal value = BigDecimal.valueOf(rounded,4);//new BigDecimal(integral,new MathContext(4));
+//		long rounded = (long)(integral*10000);
+		BigDecimal value = new BigDecimal(integral);
+		value = value.setScale(4,BigDecimal.ROUND_HALF_UP);
 		//if(progn.value() == null || progn.value().compareTo(value) != 0) {
 		progn.setValue(value);
 		//}

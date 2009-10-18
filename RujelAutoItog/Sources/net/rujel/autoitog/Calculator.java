@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.WOLogLevel;
 
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.*;
 
 public abstract class Calculator {
@@ -84,4 +85,6 @@ public abstract class Calculator {
 	public abstract NSArray collectRelated(EduCourse course, AutoItog autoItog);
 	
 	public abstract Integer relKeyForObject(Object object);
+	
+	public abstract boolean skipAutoAdd(Integer relKey, EOEditingContext ec);
 }
