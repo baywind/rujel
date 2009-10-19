@@ -119,6 +119,7 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,qual,null);
 		fs.setRefreshesRefetchedObjects(true);
+//		fs.setPrefetchingRelationshipKeyPaths(new NSArray(Work.TASK_TEXT_KEY));
 		Integer year = (date == null)?(Integer)application().valueForKey("year"):
 			MyUtility.eduYearForDate(date);
 		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(
@@ -180,6 +181,9 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 						}
 						sectionList.addObject(work);
 					}
+					EOEnterpriseObject task = work.taskText();
+					if(task != null)
+						ec.refaultObject(task);
 				} // agregate works into sections
 			}
 		}
