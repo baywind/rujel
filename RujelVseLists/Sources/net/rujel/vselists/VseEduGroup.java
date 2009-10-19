@@ -66,10 +66,10 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		setFlags(new Integer(0));
 	}
 	
-	public void setStartGrade(Integer startGrade) {
+/*	public void setStartGrade(Integer startGrade) {
 		super.setStartGrade(startGrade);
 		setAbsStart(new Integer(firstYear().intValue() - startGrade.intValue()));
-	}
+	}*/
 
 	protected NSTimestamp date() {
 		NSTimestamp date = null;
