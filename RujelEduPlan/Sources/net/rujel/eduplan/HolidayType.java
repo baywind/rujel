@@ -29,6 +29,7 @@
 
 package net.rujel.eduplan;
 
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
@@ -88,7 +89,11 @@ public class HolidayType extends _HolidayType {
 			year++;
 		}
 		int day =  aDay.intValue();
-		return new NSTimestamp(year,month,day,0,0,0,TimeZone.getDefault());
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.YEAR, year);
+		cal.set(Calendar.MONDAY, month);
+		cal.set(Calendar.DATE, day);
+		return new NSTimestamp(cal.getTimeInMillis());
 	}
 	
 	public Holiday makeHoliday(Integer eduYear, String listName) {

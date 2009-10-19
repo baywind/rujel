@@ -114,8 +114,9 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     }
     
     public WOActionResults save() {
-    	if(add())
-    		return null;
+//    	if(add())
+//    		return null;
+    	add();
     	EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
     	ec.lock();
     	try {
@@ -141,15 +142,20 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     }
     
     public void select() {
-    	Holiday curr = (Holiday)item;
-    	int idx = _list.indexOfIdenticalObject(curr);
-		NSMutableDictionary holiday = new NSMutableDictionary(curr,Holiday.ENTITY_NAME);
-		holiday.takeValueForKey(curr.holidayType(),Holiday.HOLIDAY_TYPE_KEY);
-		holiday.takeValueForKey(curr.begin(),Holiday.BEGIN_KEY);
-		holiday.takeValueForKey(curr.end(),Holiday.END_KEY);
-		holiday.takeValueForKey(curr.days(),"days");
-		_list.replaceObjectAtIndex(holiday, idx);
-		selected = true;
+    	if(item instanceof Holiday) {
+    		Holiday curr = (Holiday)item;
+    		int idx = _list.indexOfIdenticalObject(curr);
+    		NSMutableDictionary holiday = new NSMutableDictionary(curr,Holiday.ENTITY_NAME);
+    		holiday.takeValueForKey(curr.holidayType(),Holiday.HOLIDAY_TYPE_KEY);
+    		holiday.takeValueForKey(curr.begin(),Holiday.BEGIN_KEY);
+    		holiday.takeValueForKey(curr.end(),Holiday.END_KEY);
+    		holiday.takeValueForKey(curr.days(),"days");
+    		_list.replaceObjectAtIndex(holiday, idx);
+    		selected = true;
+    	} else {
+			HolidayType type = (HolidayType) item.valueForKey(Holiday.HOLIDAY_TYPE_KEY);
+    		item.takeValueForKey(type.name(),HolidayType.NAME_KEY);
+    	}
     }
     
     protected void convert(EOEditingContext ec) {
@@ -173,8 +179,14 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 			NSTimestamp end = (NSTimestamp)dict.valueForKey(Holiday.END_KEY);
 			if(begin == null || end == null)
 				disabled = true;
+			HolidayType type = (HolidayType) dict.valueForKey(Holiday.HOLIDAY_TYPE_KEY);
+			if(type != null) {
+				String name = (String) dict.valueForKey("name");
+				if (name != null)
+					type.setName(name);
+				dict.takeValueForKey(null,"name");
+			}
 			if(disabled) {
-				HolidayType type = (HolidayType)dict.valueForKey(Holiday.HOLIDAY_TYPE_KEY);
 				begin = HolidayType.dateFromPreset(year, type.beginMonth(), type.beginDay());
 				dict.takeValueForKey(begin, Holiday.BEGIN_KEY);
 				end = HolidayType.dateFromPreset(year, type.endMonth(), type.endDay());
@@ -215,20 +227,18 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 									exHd.addObjectToBothSidesOfRelationshipWithKey(
 											type, Holiday.HOLIDAY_TYPE_KEY);
 									exHd.setBegin(hd.begin());
-									exHd.setBegin(hd.end());
+									exHd.setEnd(hd.end());
 									exHd.setListName(otherList);
 								}
 							}
 						}
-					}
+					} // local delete (creating for other ListNames)
 					dict.takeValueForKey(null, Holiday.ENTITY_NAME);
 					dict.takeValueForKey(null, HolidayType.NAME_KEY);
-				}
+				}// deleting Holiday
 				continue;
-			}
+			} // disabled
 			if (hd == null) {
-				HolidayType type = (HolidayType) dict
-						.valueForKey(Holiday.HOLIDAY_TYPE_KEY);
 				if (type == null) {
 					String name = (String) dict.valueForKey("name");
 					if (name == null)
@@ -236,25 +246,27 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 					type = (HolidayType) EOUtilities.createAndInsertInstance(
 							ec, HolidayType.ENTITY_NAME);
 					type.setName(name);
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(begin);
-					int month = cal.get(Calendar.MONTH);
-					month += 12 * (cal.get(Calendar.YEAR) - year.intValue());
-					type.setBeginMonth(new Integer(month));
-					type.setBeginDay(new Integer(cal.get(Calendar.DAY_OF_MONTH)));
-					cal.setTime(end);
-					month = cal.get(Calendar.MONTH);
-					month += 12 * (cal.get(Calendar.YEAR) - year.intValue());
-					type.setEndMonth(new Integer(month));
-					type.setEndDay(new Integer(cal.get(Calendar.DAY_OF_MONTH)));
-				}
+				} // type == null (creating new)
 				hd = (Holiday) EOUtilities.createAndInsertInstance(ec,Holiday.ENTITY_NAME);
 				hd.addObjectToBothSidesOfRelationshipWithKey(type, Holiday.HOLIDAY_TYPE_KEY);
 				if(notGlobal())
 					hd.setListName(listName);
-			}
+			}// hd == null (creating new)
 			hd.setBegin(MyUtility.validateDateInEduYear(begin, year, "begin"));
 			hd.setEnd(MyUtility.validateDateInEduYear(end, year, "end"));
+			// update type
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(begin);
+			int month = cal.get(Calendar.MONTH);
+			month += 12 * (cal.get(Calendar.YEAR) - year.intValue());
+			type.setBeginMonth(new Integer(month));
+			type.setBeginDay(new Integer(cal.get(Calendar.DAY_OF_MONTH)));
+			cal.setTime(end);
+			month = cal.get(Calendar.MONTH);
+			month += 12 * (cal.get(Calendar.YEAR) - year.intValue());
+			type.setEndMonth(new Integer(month));
+			type.setEndDay(new Integer(cal.get(Calendar.DAY_OF_MONTH)));
+			
 			totalDays += hd.days();
 			list[i] = hd;
 		}
@@ -293,7 +305,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 		totalDays = 0;
 		NSArray types = EOUtilities.objectsForEntityNamed(ec, HolidayType.ENTITY_NAME);
 		if(types == null || types.count() == 0)
-			return null;
+			return new NSMutableArray();
 		Integer year = (Integer)session().valueForKey("eduYear");
 //		String listName = (String)valueForBinding("listName");
 		Enumeration enu = types.objectEnumerator();
@@ -340,6 +352,24 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 		holiday.takeValueForKey(end, Holiday.END_KEY);
 		holiday.takeValueForKey(MyUtility.countDays(begin, end), "days");
 		return holiday;
+	}
+	
+	public String crossStyle() {
+		if(item == null)
+			return null;
+		if(Various.boolForObject(item.valueForKey("disabled")))
+			return "display:none;";
+		else
+			return null;
+	}
+	
+	public String plusStyle() {
+		if(item == null)
+			return null;
+		if(Various.boolForObject(item.valueForKey("disabled")))
+			return "color:#009900;";
+		else
+			return "color:#009900;display:none;";
 	}
 	
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
