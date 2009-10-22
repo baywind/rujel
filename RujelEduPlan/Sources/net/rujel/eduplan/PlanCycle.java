@@ -129,7 +129,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 		Integer zero = new Integer(0);
-		setHours(zero);
+		setTotalHours(zero);
+		setWeeklyHours(zero);
 		setLevel(zero);
 		setGrade(zero);
 		setYear(zero);
@@ -371,24 +372,36 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 
 	public int[] weeksAndDays(Integer eduYear) {
 		EOEditingContext ec = editingContext();
+		int days = 0;
+		int weekDays = 7;
 		EOEnterpriseObject setting = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
 				this, eduYear, ec);
-		String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-//		setting = SettingsBase.settingForValue("weekDays", this, eduYear, ec);
-		Integer wd = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-		int weekDays = (wd==null)?7:wd.intValue();
-		int days = EduPeriod.daysForList(listName, ec);
-		return new int[] {days/weekDays,days%weekDays};
+		if(setting != null) {
+			String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+			days = EduPeriod.daysForList(listName, ec);
+			Integer h = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+			if(h != null)
+				weekDays = h.intValue();
+		}
+		if(days <= 0) {
+			setting = SettingsBase.settingForValue("defaultWeeks", this, eduYear, ec);
+			if(setting == null) {
+				days = 34;
+			} else {
+				Integer h = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				days = (h==null)?34:h.intValue();
+			}
+			return new int[] {days,0,7};
+		} else {
+			return new int[] {days/weekDays,days%weekDays,weekDays};
+		}
 	}
 	
-	public int weekly() {
-		return weeklyHours(null)[0];
-	}
 	
 	public int[] weeklyHours(Integer eduYear) {
 		int[] weeksAndDays = weeksAndDays(eduYear);
 		int[] weeklyHours = new int[2]; 
-		int hours = hours().intValue();
+		int hours = totalHours().intValue();
 		if(weeksAndDays[0] == 0)
 			return new int[] {0, hours};
 		weeklyHours[0] = hours / weeksAndDays[0];
@@ -399,9 +412,38 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		return weeklyHours;
 	}
+
+	public Integer weekly() {
+		Integer w = weeklyHours();
+		if(w != null && w.intValue() > 0)
+			return w;
+		return new Integer(weeklyHours(null)[0]);
+	}
 	
-	  public void setSubjectEO(EOEnterpriseObject value) {
-		  super.setSubjectEO(value);
-		  setSubject((value==null)?null:(String)value.valueForKey(Subject.SUBJECT_KEY));
-	  }
+	public boolean calculatedTotal() {
+		Integer t = totalHours();
+		return (t == null || t.intValue() <= 0);
+	}
+
+	public Integer hours() {
+		Integer h = totalHours();
+		if(h != null && h.intValue() > 0)
+			return h;
+		h = weeklyHours();
+		if(h == null || h.intValue() <= 0)
+			return new Integer(0);
+		int count = h.intValue();
+		int[] wd = weeksAndDays(null);
+		if(count > 1) {
+			count = wd[0]*count + count*wd[1]/wd[2];
+		} else {
+			count = wd[0];
+		}
+		return new Integer(count);
+	}
+	
+	public void setSubjectEO(EOEnterpriseObject value) {
+		super.setSubjectEO(value);
+		setSubject((value==null)?null:(String)value.valueForKey(Subject.SUBJECT_KEY));
+	}
 }

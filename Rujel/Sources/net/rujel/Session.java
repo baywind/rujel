@@ -398,8 +398,7 @@ public class Session extends WOSession {
 	}
 	
 	public WOComponent pullComponent() {
-		WOComponent result = (WOComponent)pathStack.lastObject();
-		pathStack.removeObjectAtIndex(pathStack.count() - 1);
+		WOComponent result = (WOComponent)pathStack.removeLastObject();
 		result.ensureAwakeInContext(context());
 		return result;
 	}

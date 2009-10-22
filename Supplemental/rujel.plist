@@ -924,13 +924,13 @@
 		<key>secure</key>
 		<string>true</string>
 		<key>smtpUser</key>
-		<string>genkush@rujel.net</string>
+		<string>fake@rujel.net</string>
 		<key>smtpPassword</key>
 		<string></string>
 		<key>mailFrom</key>
-		<string>&quot;RUJEL&quot;&lt;genkush@rujel.net&gt;</string>
+		<string>&quot;RUJEL&quot;&lt;fake@rujel.net&gt;</string>
 		<key>replyTo</key>
-		<string>ask@rujel.net</string>
+		<string>rujel@rujel.net</string>
 		<key>messageLag</key>
 		<string>5000</string>
 		<key>messageFilePath</key>

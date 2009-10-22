@@ -42,10 +42,11 @@ public abstract class _PlanCycle extends EOGenericRecord {
 
 	// Attributes
 	public static final String GRADE_KEY = "grade";
-	public static final String HOURS_KEY = "hours";
 	public static final String LEVEL_KEY = "level";
 	public static final String SCHOOL_KEY = "school";
 	public static final String SUBJECT_KEY = "subject";
+	public static final String TOTAL_HOURS_KEY = "totalHours";
+	public static final String WEEKLY_HOURS_KEY = "weeklyHours";
 	public static final String YEAR_KEY = "year";
 
 	// Relationships
@@ -57,14 +58,6 @@ public abstract class _PlanCycle extends EOGenericRecord {
 
   public void setGrade(Integer value) {
     takeStoredValueForKey(value, GRADE_KEY);
-  }
-
-  public Integer hours() {
-    return (Integer) storedValueForKey(HOURS_KEY);
-  }
-
-  public void setHours(Integer value) {
-    takeStoredValueForKey(value, HOURS_KEY);
   }
 
   public Integer level() {
@@ -89,6 +82,22 @@ public abstract class _PlanCycle extends EOGenericRecord {
 
   public void setSubject(String value) {
     takeStoredValueForKey(value, SUBJECT_KEY);
+  }
+
+  public Integer totalHours() {
+    return (Integer) storedValueForKey(TOTAL_HOURS_KEY);
+  }
+
+  public void setTotalHours(Integer value) {
+    takeStoredValueForKey(value, TOTAL_HOURS_KEY);
+  }
+
+  public Integer weeklyHours() {
+    return (Integer) storedValueForKey(WEEKLY_HOURS_KEY);
+  }
+
+  public void setWeeklyHours(Integer value) {
+    takeStoredValueForKey(value, WEEKLY_HOURS_KEY);
   }
 
   public Integer year() {

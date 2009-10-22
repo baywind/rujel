@@ -644,7 +644,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			Enumeration en = _oddMarksIndex.keyEnumerator();
 			StringBuilder buf = new StringBuilder();
 			buf.append(WOApplication.application().valueForKeyPath(
-			"strings.RujelCriterial_Strings.messages.oddCriteria"));
+				"strings.RujelCriterial_Strings.messages.oddCriteria"));
 			while (en.hasMoreElements()) {
 				Integer criterion = (Integer) en.nextElement();
 				buf.append(' ').append('\'').append(criterName(criterion)).append('\'');
@@ -668,6 +668,19 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 					throw new NSValidation.ValidationException(message);
 				}
 			}
+		}
+		// TODO: remove this debug;
+		if(workType() == null) {
+			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+					"Work not initialised with type", new Object[]
+					      {this,snapshot(),new NSValidation.ValidationException("")});
+			EOFetchSpecification fs = new EOFetchSpecification("WorkType",
+					null,ModulesInitialiser.sorter);
+			fs.setFetchLimit(1);
+			NSArray list = editingContext().objectsWithFetchSpecification(fs);
+			if(list == null || list.count() == 0)
+				throw new IllegalStateException("No work types defined");
+			setWorkType((EOEnterpriseObject)list.objectAtIndex(0));
 		}
 	}
 	
@@ -810,6 +823,11 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			workType.takeValueForKey(useCount, "useCount");
 			setFlags((Integer)workType.valueForKey("dfltFlags"));
 			setWeight((BigDecimal)workType.valueForKey("dfltWeight"));
+		} else {
+			//TODO: remove this debug
+			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+					"Settings workType to NULL",new Object[]
+			{this,snapshot(),new IllegalArgumentException("Null workType")});
 		}
 	}
     

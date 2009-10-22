@@ -56,6 +56,16 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
         currTab = (NSKeyValueCoding)tablist.objectAtIndex(0);
     }
     
+    public String title() {
+    	String title = (String)valueForKeyPath("currTab.titie");
+    	if(title == null)
+    		title = (String)session().valueForKeyPath(
+    				"strings.RujelEduPlan_EduPlan.EduPlan");
+    	if(title == null)
+    		title = "Edu plan";
+    	return title;
+    }
+
     public WOActionResults revertEc() {
 		ec.lock();
 		try {

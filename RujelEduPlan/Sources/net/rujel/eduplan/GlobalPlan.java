@@ -30,6 +30,8 @@
 package net.rujel.eduplan;
 
 
+import java.text.DecimalFormat;
+
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.*;
 
@@ -51,19 +53,16 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	
 	public GlobalPlan(WOContext context) {
         super(context);
-        ec = (EOEditingContext)context.page().valueForKey("ec");
-        //new SessionedEditingContext(context.session());
-        Number eduYear = (Number)context().session().valueForKey("eduYear");
-        grades = prepareGrades(ec,eduYear.intValue());
         editable = access().flagForKey("edit");
         if(editable)
         	session().savePageInPermanentCache(this);
+        showTotal = SettingsReader.intForKeyPath("edu.totalPlan", 0);
     }
 	
     public boolean synchronizesVariablesWithBindings() {
         return false;
 	}
-
+    
     public static NSArray prepareGrades(EOEditingContext ec, int eduYear) {
 		NSMutableArray specGroups = null;
 		if(eduYear > 0) {
@@ -124,24 +123,29 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public NSArray cyclesBySubj;
 	public Object gradeItem;
 	public boolean editable = true;
-
-	public NSArray subjects() {
-		/*NSArray result = EOUtilities.objectsForEntityNamed(ec, "Subject");
-		NSComparator comparator = new SubjectComparator();
-		try {
-			if(result instanceof NSMutableArray) {
-				((NSMutableArray)result).sortUsingComparator(comparator);
-			} else {
-				result = result.sortedArrayUsingComparator(comparator);
-			}
-		} catch (Exception e) {
-			;
-		}
-		return result;*/
-	  	EOFetchSpecification fs = new EOFetchSpecification("Subject",null,Subject.sorter);
-	  	return ec.objectsWithFetchSpecification(fs);
-	}
+	public int showTotal;
+	public NSArray subjects;
 	
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
+//			NSMutableArray stack = (NSMutableArray)aContext.session().valueForKey(
+//					"pathStack");
+//			if(stack != null && stack.lastObject() instanceof GlobalPlan)
+//				stack.removeLastObject();
+	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
+	        Number eduYear = (Number)context().session().valueForKey("eduYear");
+	        grades = prepareGrades(ec,eduYear.intValue());
+		  	EOFetchSpecification fs = new EOFetchSpecification("Subject",null,Subject.sorter);
+		  	subjects = ec.objectsWithFetchSpecification(fs);
+		  	cyclesBySubj = null;
+		  	subjectItem = null;
+		  	forcedSubjects = null;
+			setValueForBinding(Boolean.FALSE, "shouldReset");
+		}
+	  	geradeArea = false;
+		super.appendToResponse(aResponse, aContext);
+	}
+
 	public void setSubjectItem(Subject item) {
 		if(item == subjectItem)
 			return;
@@ -225,15 +229,42 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			}
 		}
 	}
-		
-	public Integer planHours() {
+	
+	protected static DecimalFormat fmt = new DecimalFormat("0.0#");
+	public String planHours() {
 		if(currCycle == null)
 			return null;
-		return currCycle.hours();
+		if (showTotal > 0) {
+			if(currCycle.calculatedTotal()) {
+				StringBuilder buf = new StringBuilder(5);
+				buf.append(' ').append(currCycle.hours()).append(' ');
+				return buf.toString();
+			} else {
+				return currCycle.hours().toString();
+			}
+		} else {
+			if(currCycle.calculatedTotal()) {
+				return currCycle.weekly().toString();
+			} else {
+				Integer total = (Integer)session().valueForKey("eduYear"); 
+				int[] wd = currCycle.weeksAndDays(total);
+				total = currCycle.hours();
+				double hours = total.doubleValue();
+				double weeks = (double)wd[0] + (double)wd[1]/wd[2];
+				hours = hours/weeks;
+				return fmt.format(hours);
+			}
+		}
 	}
 	
-	public void setPlanHours(Integer hours) {
-		if(hours != null) {
+	public void setPlanHours(String aHours) {
+		if(aHours != null) {
+			Integer hours;
+			try {
+				hours = Integer.decode(aHours);
+			} catch (NumberFormatException e) {
+				return;
+			}
 			if(currCycle == null) { //create or resurrect
 				NSMutableDictionary args = 
 					new NSMutableDictionary(subjectItem,PlanCycle.SUBJECT_EO_KEY);
@@ -259,14 +290,20 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					currCycle = (PlanCycle)EOUtilities.createAndInsertInstance(ec, "PlanCycle");
 					currCycle.takeValuesFromDictionary(args);					
 				}
-				currCycle.setEduYear(null);
+				currCycle.setYear(null);
 				cyclesBySubj = cyclesBySubj.arrayByAddingObject(currCycle);
 			}
-			currCycle.setHours(hours);
+			if(showTotal > 0) {
+				currCycle.setTotalHours(hours);
+				currCycle.setWeeklyHours(new Integer(0));
+			} else {
+				currCycle.setWeeklyHours(hours);
+				currCycle.setTotalHours(new Integer(0));
+			}
 		} else { // hours == null
 			if(currCycle != null) {
 				Integer eduYear = (Integer)session().valueForKey("eduYear");
-				currCycle.setYear((eduYear%100) -1);
+				currCycle.setYear((eduYear.intValue()%100) -1);
 				NSMutableArray tmp = (cyclesBySubj instanceof NSMutableArray)?
 						(NSMutableArray)cyclesBySubj:cyclesBySubj.mutableClone();
 				tmp.removeObject(currCycle);
@@ -339,8 +376,23 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		if(area != null) {
 			result = "border-top:#ffcc66 solid 2px;";
 		}
+		if(!editable && currCycle != null && 
+				(showTotal == 0 ^ currCycle.calculatedTotal())) {
+			if(result == null)
+				result = "color:#999999;";
+			else
+				result = result + "color:#999999;";
+		}
 	//if(currCycle != null && (gradeItem instanceof EduGroup) && currCycle.specClass() == null)
 		return result;
+	}
+	
+	public String fieldStyle() {
+		if(currCycle == null)
+			return null;
+		if(showTotal == 0 ^ currCycle.calculatedTotal())
+			return "style = \"color:#999999;\" onfocus = \"style.color='#000000';\" onblur = \"if(value==defaultValue)style.color='#999999';\"";
+		return null;
 	}
 	
 	public WOComponent editSubject() {
@@ -392,7 +444,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public int colspan() {
-		return (grades.count() + 3); 
+		return (grades.count() + 4); 
 	}
 	
 	public String toggleAllTitle() {
@@ -407,5 +459,17 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				result = "Show all";
 		}
 		return result;
+	}
+	
+	public WOActionResults details() {
+		NSMutableDictionary dict = new NSMutableDictionary("PlanDetails","component");
+		dict.takeValueForKey(session().valueForKeyPath(
+				"strings.RujelEduPlan_EduPlan.PlanDetails"),"title");
+		dict.takeValueForKey(subjectItem, "selection");
+		dict.takeValueForKey(new Integer(showTotal), "showTotal");
+//		parent().takeValueForKey(dict, "currTab");
+		setValueForBinding(dict, "dict");
+//		session().takeValueForKey(context().page(), "pushComponent");
+		return performParentAction("revertEc");
 	}
 }

@@ -31,7 +31,6 @@ package net.rujel.eduplan;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;

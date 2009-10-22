@@ -34,6 +34,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
+import net.rujel.reusables.Counter;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
@@ -56,18 +57,19 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
  	public Object item;
  	public Object selection;
  	public NSMutableArray listNames;
- 	protected NSMutableDictionary periodsForList;
+ 	public NSMutableDictionary periodsForList;
  	public NSMutableDictionary cycleItem;
  	public NSMutableDictionary rowItem;
  	public String listItem;
  	public NSMutableDictionary listDict;
  	public EOEnterpriseObject pdItem;
  	public Integer courseIndex;
-	
+	public int showTotal;
+ 	
 	public PlanDetails(WOContext context) {
         super(context);
 //		ec = (EOEditingContext)context.page().valueForKey("ec");
-        periodsForList = new NSMutableDictionary();
+        periodsForList = new NSMutableDictionary(new Counter(),"periodsCounter");
 //		context().page().takeValueForKey(this, "toReset");
     }
 	
@@ -197,23 +199,39 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		NSMutableDictionary listSetting = observeValue(course,null);
 		NSMutableDictionary result = new NSMutableDictionary(listSetting, "listSetting");
 		result.takeValueForKey(course.valueForKey("eduGroup"), "eduGroup");
-		int weeks = ((Integer)listSetting.valueForKey("weeks")).intValue();
+		boolean calculatedTotal = Various.boolForObject(course.valueForKeyPath(
+				"cycle.calculatedTotal"));
+		int weekly = 0;
+		int total = 0;
+//		String indication = "grey";
+		result.takeValueForKey("grey", "defaultIndication");
+		if(calculatedTotal) {
+			weekly = ((Integer)course.valueForKeyPath("cycle.weekly")).intValue();
+		} else {
+			Integer hours = (Integer)course.valueForKeyPath("cycle.hours");
+			total = hours.intValue();
+			result.takeValueForKey(hours,"planTotal");
+			int weeks = ((Integer)listSetting.valueForKey("weeks")).intValue();
+			if(weeks > 0)
+				weekly = total/weeks;
+			int extra = (weeks==0)?total : total%weeks;
+			if(extra > weekly && weeks > 0) {
+				weekly++;
+//				indication = "highlight2";
+				result.takeValueForKey("highlight2", "defaultIndication");
+			} else if(extra > 0) {
+				Integer extraDays = (Integer)listSetting.valueForKey("extraDays");
+				if(extra > extraDays.intValue())
+//					indication = "warning";
+					result.takeValueForKey("warning", "defaultIndication");
+			}
+		}
 		int days = ((Integer)listSetting.valueForKey("days")).intValue();
 		int week = ((Integer)listSetting.valueForKey("week")).intValue();
-		int hours = ((Integer)course.valueForKeyPath("cycle.hours")).intValue();
-		int weekly = (weeks==0)?0:hours/weeks;
-		int extra = (weeks==0)?hours:hours%weeks;
-		String indication = "grey";
-		if(extra > weekly && weeks > 0) {
-			weekly++;
-			indication = "highlight2";
-		} else if(extra > 0) {
-			Integer extraDays = (Integer)listSetting.valueForKey("extraDays");
-			if(extra > extraDays.intValue())
-				indication = "warning";
-		}
-		int total = weekly * days / week;
-		result.takeValueForKey(indication, "indication");
+		total = weekly * days / week;
+		result.takeValueForKey(new Integer(total), "defaultTotal");
+		if(calculatedTotal)
+			result.takeValueForKey(new Integer(total), "planTotal");
 		result.takeValueForKey(new Integer(weekly), "weekly");
 		if(course instanceof EduCourse) {
 			result.takeValueForKey(course,"course");
@@ -222,22 +240,34 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			if(details != null && details.count() > 0) {
 				NSMutableDictionary detailsDict = new NSMutableDictionary();
 				Enumeration enu = details.objectEnumerator();
+//				int planTotal = total;
 //				total = 0;
 				while (enu.hasMoreElements()) {
 					EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
-					detailsDict.setObjectForKey(detail,detail.valueForKey("eduPeriod"));
-//					int dHours = ((Integer)detail.valueForKey("hours")).intValue();
-//					total += dHours;
+					EduPeriod per = (EduPeriod)detail.valueForKey("eduPeriod");
+					detailsDict.setObjectForKey(detail,per);
+					int dHours = ((Integer)detail.valueForKey("hours")).intValue();
+					if(dHours > 0) {
+//						total += dHours;
+					} else {
+						calculatedTotal = true;
+						dHours = ((Integer)detail.valueForKey("weekly")).intValue();
+//						int days = ((Integer)listSetting.objectForKey(per)).intValue();
+//						total += dHours * days / week;
+					}
 				}
 				result.takeValueForKey(detailsDict, "details");
+				if(!calculatedTotal)
+					weekly = 0;
+//				if(total - planTotal > weekly)
+//					indication = "highlight2";
+//				else if(planTotal - total > weekly)
+//					indication = "warning";
 			}
 			result.takeValueForKey("green", "styleClass");
 		} else {
 			result.takeValueForKey("grey", "styleClass");
 		}
-		result.takeValueForKey(new Integer(total), "total");
-//		extra = hours - total;
-//		result.takeValueForKey(new Integer(extra), "extra");
 		return result;
 	}
 	
@@ -254,11 +284,21 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			dict.takeValueForKey(week, "week");
 			NSArray periods = EduPeriod.periodsInList(listName, ec);
 			dict.takeValueForKey(periods, "periods");
-			int days = EduPeriod.daysForList(listName, null, periods);
+//			int days = EduPeriod.daysForList(listName, null, periods);
+			int days = 0;
+			Enumeration enu = periods.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EduPeriod per = (EduPeriod) enu.nextElement();
+				int pDays = per.daysInPeriod(null, listName);
+				dict.setObjectForKey(new Integer(pDays), per);
+				days += pDays; 
+			}
 			dict.takeValueForKey(new Integer(days), "days");
 			dict.takeValueForKey(new Integer(days/week), "weeks");
 			dict.takeValueForKey(new Integer(days%week), "extraDays");
 			periodsForList.takeValueForKey(dict, listName);
+			periodsForList.takeValueForKeyPath(new Integer(periods.count()),
+					"periodsCounter.add");
 			listNames.addObject(listName);
 		} else if(!listNames.containsObject(listName)) {
 			listNames.addObject(listName);
@@ -290,7 +330,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		item = periodItem;
 		pdItem = null;
 		if(periodItem != null) {
-			perDays = periodItem.daysInPeriod(null, listItem);
+			perDays = ((Integer)listDict.objectForKey(periodItem)).intValue();
+			//periodItem.daysInPeriod(null, listItem);
 			if(rowItem != null) {
 				NSDictionary details = (NSDictionary)rowItem.valueForKey("details");
 				if(details != null)
@@ -329,15 +370,17 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			else
 				return null;
 		}
-		Integer week = (Integer)listDict.valueForKeyPath("week");
-		int weeks = perDays / week.intValue();
 		Integer weekly = (Integer)pdItem.valueForKey("weekly");
 		if(weekly == null)
 			return "orange";
-		int total = weeks * weekly.intValue();
 		Integer hours = (Integer)pdItem.valueForKey("hours");
 		if(hours == null)
 			return "orange";
+		if(hours.intValue() <= 0)
+			return null;
+		Integer week = (Integer)listDict.valueForKeyPath("week");
+		int weeks = perDays / week.intValue();
+		int total = weeks * weekly.intValue();
 		if (hours.intValue() - total > weekly.intValue())
 			return "warning";
 		if (total > hours.intValue())
@@ -345,6 +388,19 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 
+	public String weeklyStyle() {
+		StringBuilder buf = new StringBuilder("style = \"text-align:center;float:right;");
+		if(showTotal > 0)
+			buf.append("width:1.6ex;");
+		else
+			buf.append("width:1em;");
+		if(pdItem == null)
+			buf.append("color:#999999;\" onfocus = \"style.color='#000000';\" onblur = \"if(value==defaultValue)style.color='#999999';\"");
+		else
+			buf.append('"');
+		return buf.toString();
+	}
+	
 	public String weeklyHours() {
 		if(pdItem != null)
 			return pdItem.valueForKey("weekly").toString();
@@ -360,9 +416,10 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	public void setWeeklyHours(String weeklyHours) {
 		NSMutableDictionary details = (NSMutableDictionary)rowItem.valueForKey("details");
 		if(pdItem != null) {
+			Integer hours = (Integer)pdItem.valueForKey("hours");
 			if(weeklyHours == null) {
 				boolean isNew = ec.globalIDForObject(pdItem).isTemporary();
-				if(pdItem.valueForKey("hours") == null) {
+				if(showTotal == 0 || hours == null || hours.intValue() <= 0) {
 					ec.deleteObject(pdItem);
 					details.removeObjectForKey(periodItem());
 					pdItem = null;
@@ -373,9 +430,9 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			} else {
 				Integer weekly = new Integer(weeklyHours);
 				pdItem.takeValueForKey(weekly, "weekly");
-				if(pdItem.valueForKey("hours") == null) {
+				if(hours == null || hours.intValue() <= 0) {
 					Integer week = (Integer)listDict.valueForKeyPath("week");
-					int total = weekly.intValue() * perDays / week;
+					int total = - weekly.intValue() * perDays / week;
 					pdItem.takeValueForKey(new Integer(total), "hours");
 				}
 			}
@@ -396,25 +453,44 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			Integer weekly = new Integer(weeklyHours);
 			pdItem.takeStoredValueForKey(weekly, "weekly");
 			Integer week = (Integer)listDict.valueForKeyPath("week");
-			int total = weekly.intValue() * perDays / week;
+			int total = -weekly.intValue() * perDays / week.intValue();
 			pdItem.takeValueForKey(new Integer(total), "hours");
 		}
 	}
 
+	public String totalStyle() {
+		StringBuilder buf = new StringBuilder("style = \"width:3ex;float:left;text-align:center;");
+		if(pdItem == null) {
+			buf.append('"');
+		} else {
+			Integer hours = (Integer)pdItem.valueForKey("hours");
+			if(hours == null || hours.intValue() <= 0)
+				buf.append("color:#cccccc;\" onfocus = \"style.color='#000000';\" onblur = \"if(value==defaultValue)style.color='#cccccc';\"");
+			else
+				buf.append('"');
+		}
+		return buf.toString();
+	}
+	
 	public Integer totalHours() {
-		if(pdItem != null)
-			return (Integer)pdItem.valueForKey("hours");
-		return null;
+		if(pdItem == null)
+			return null;
+		Integer hours = (Integer)pdItem.valueForKey("hours");
+		if(hours != null && hours.intValue() > 0)
+			return hours;
+		Integer week = (Integer)listDict.valueForKeyPath("week");
+		Integer weekly = (Integer)pdItem.valueForKey("weekly");
+		return new Integer (weekly.intValue()*perDays/week.intValue());
 	}
 
 	public void setTotalHours(Integer totalHours) {
 		if(pdItem != null) {
-//			boolean isNew = ec.globalIDForObject(pdItem).isTemporary();
-//			if(totalHours != null || !isNew)
-			if(totalHours == null || !totalHours.equals(pdItem.valueForKey("hours")))
-				pdItem.takeValueForKey(totalHours, "hours");
-			if(totalHours == null)
-				pdItem.takeValueForKey(new Integer(0), "weekly");
+			if(totalHours == null) {
+				totalHours = new Integer(0);
+			} else if (totalHours.equals(totalHours())) {
+				return;
+			}
+			pdItem.takeValueForKey(totalHours, "hours");
 			return;
 		} else if(totalHours == null)
 			return;
@@ -442,7 +518,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			if(pdItem != null)
 				return pdItem;
 			pdItem = EOUtilities.createAndInsertInstance(ec, "PlanDetail");
-			pdItem.takeValueForKey(periodItem(), "eduPeriod");
+			pdItem.addObjectToBothSidesOfRelationshipWithKey(periodItem(), "eduPeriod");
 			pdItem.takeValueForKey(course, "course");
 			details.setObjectForKey(pdItem, periodItem());
 		} else {
@@ -457,7 +533,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 				pd.takeValueForKey(per, "eduPeriod");
 				pd.takeValueForKey(course, "course");
 				pd.takeValueForKey(weekly, "weekly");
-				int total = weekly.intValue() * per.daysInPeriod(null, listItem) / week;
+				int days = ((Integer)listDict.objectForKey(per)).intValue();
+				int total = -weekly.intValue() * days / week.intValue();
 				pd.takeValueForKey(new Integer(total), "hours");
 				details.setObjectForKey(pd, per);
 				if(per == item)
@@ -467,31 +544,62 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		return pdItem;
 	}
 	
-	public String totalCell() {
-		NSDictionary details = (NSDictionary)rowItem.valueForKey("details");
-		StringBuilder buf = new StringBuilder("<td class=\"");
+	public void setRowItem(NSMutableDictionary row) {
+		rowItem = row;
+		if(row == null)
+			return;
+		if(rowItem.valueForKey("showTotal") != null)
+			return;
+		NSDictionary details = (NSDictionary)row.valueForKey("details");
 		if(details == null) {
-			buf.append(rowItem.valueForKey("indication")).append('"').append('>');
-			buf.append(rowItem.valueForKey("total"));
-		} else {
-			int total = 0;
-			Enumeration enu = details.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
-				int dHours = ((Integer)detail.valueForKey("hours")).intValue();
-				total += dHours;
-			}
-			int plan = ((Integer)cycleItem.valueForKeyPath("cycle.hours")).intValue();
-			if(total > plan)
-				buf.append("highlight2");
-			else if(total < plan)
-				buf.append("warning");
-			else
-				buf.append("green");
-			buf.append('"').append('>').append(total);
+			row.takeValueForKey(row.valueForKey("defaultTotal"),"total");
+			row.takeValueForKey(row.valueForKey("defaultIndication"),"indication");
+			row.takeValueForKey(Boolean.TRUE, "noDetails");
+			return;
 		}
-		buf.append("</td>");
-		return buf.toString();
+		row.takeValueForKey(session().valueForKeyPath(
+				"readAccess._delete.PlanDetail"), "noDetails");
+		NSDictionary listSetting = (NSDictionary)row.valueForKey("listSetting");
+		int total = 0;
+		int min = 0;
+		int cap = 0;
+		Enumeration enu = details.objectEnumerator();
+		int week = ((Integer)listSetting.valueForKey("week")).intValue();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
+			int dHours = ((Integer)detail.valueForKey("hours")).intValue();
+			if(dHours > 0) {
+				total += dHours;
+				min += dHours;
+			} else {
+				dHours = ((Integer)detail.valueForKey("weekly")).intValue();
+				int days = ((Integer)listSetting.objectForKey(
+						detail.valueForKey("eduPeriod"))).intValue();
+				total += dHours * days / week;
+				min += (days / week) * dHours;
+				if(days % week > 0)
+					cap += dHours;
+			}
+		}
+		row.takeValueForKey(new Integer(total),"total");
+		int minPlan = 0;
+		int planCap = 0;
+		PlanCycle cycle = (PlanCycle) cycleItem.valueForKey("cycle");
+		if(cycle.calculatedTotal()) {
+			planCap = cycle.weekly().intValue();
+			int weeks = ((Integer)listSetting.valueForKey("weeks")).intValue();
+			minPlan = weeks * planCap;
+			if(!Various.boolForObject(listSetting.valueForKey("extraDays")))
+				planCap = 0;
+		} else {
+			minPlan = cycle.hours().intValue();
+		}
+		if(min > minPlan + planCap)
+			row.takeValueForKey("highlight2","indication");
+		else if(min + cap < minPlan)
+			row.takeValueForKey("warning","indication");
+		else
+			row.takeValueForKey("green","indication");
 	}
 
 	public void save() {
@@ -652,16 +760,48 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			}
 		}
 	}
+
+	public void deleteDetails() {
+		if(rowItem == null)
+			return;
+		NSDictionary details = (NSDictionary)rowItem.valueForKey("details");
+		if(details == null)
+			return;
+		Enumeration enu = details.objectEnumerator();
+		ec.lock();
+		try {
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject pd = (EOEnterpriseObject) enu.nextElement();
+				ec.deleteObject(pd);
+			}
+			ec.saveChanges();
+			rowItem.removeObjectForKey("details");
+		} catch (Exception e) {
+			ec.revert();
+			EduPlan.logger.log(WOLogLevel.WARNING,"Error deleting plan details",
+					new Object[] {session(),rowItem,e});
+		} finally {
+			ec.unlock();
+		}
+	}
+
+	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(Various.boolForObject(valueForBinding("shouldReset"))) {
-			listNames = null;
 			ec = (EOEditingContext)context().page().valueForKey("ec");
-			periodsForList = new NSMutableDictionary();
+			periodsForList = new NSMutableDictionary(new Counter(),"periodsCounter");
 			subjects = null;
-			selection = null;
-			cycles = null;
 			listNames = null;
 			listDict = null;
+			NSDictionary dict = (NSDictionary)valueForBinding("dict");
+			if(dict == null) {
+				selection = null;
+				cycles = null;
+				showTotal = 0;
+			} else {
+				showTotal = ((Integer)dict.valueForKey("showTotal")).intValue();
+				setSelection(dict.valueForKey("selection"));
+			}
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 		}
 		super.appendToResponse(aResponse, aContext);

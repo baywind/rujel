@@ -112,10 +112,10 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 		curSource = newSource;
 		NSMutableDictionary values = new NSMutableDictionary(
 				session().valueForKey("eduYear"),"eduYear");
-		if (curSource instanceof Teacher) {
-			values.takeValueForKey(curSource, "teacher");
-		} else if(curSource instanceof EduGroup) {
+		if(curSource instanceof EduGroup) {
 			values.takeValueForKey(curSource, "eduGroup");
+		} else {
+			values.takeValueForKey(curSource, "teacher");
 		}
 		courses = EOUtilities.objectsMatchingValues(ec, EduCourse.entityName, values);
 		if(courses != null && courses.count() > 1) {

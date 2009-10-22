@@ -84,7 +84,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
 //    						"Deleting SubjetArea: " + oldName,session());    	    				
     			} else {
     				session().takeValueForKey(
-    						valueForKeyPath("strings.RujelEduPlan_EduPlan.cantDeleteArea"),
+    						valueForKeyPath("strings.RujelEduPlan_EduPlan.messages.cantDeleteArea"),
     				"message");
     				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,
     						"Denied attempt to delete Area containing Subjects",args);
