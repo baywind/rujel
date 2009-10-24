@@ -96,8 +96,8 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     }
     
     public WOActionResults updateDate() {
-    	if(!MyUtility.eduYearForDate(date).equals(course.eduYear()))
-    		date = null;
+    	if(date == null || !MyUtility.eduYearForDate(date).equals(course.eduYear()))
+    		date = (NSTimestamp)session().valueForKey("today");
     	if(reason != null) {
     		if(date == null || date.compareTo(reason.begin()) < 0 || 
     				(reason.end() != null && date.compareTo(reason.end()) > 0))

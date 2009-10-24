@@ -170,7 +170,12 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			weeks = days/weekDays;
 			extraDays = days%weekDays;
 			PlanCycle cl = (PlanCycle)course.cycle();
-			maxDev = cl.weeklyHours(course.eduYear())[0];
+//			if(cl.calculatedTotal()) {
+//				maxDev = cl.weeklyHours().intValue();
+//			} else {
+//				maxDev = cl.weeklyHours(course.eduYear())[0];
+//			}
+			maxDev = cl.weekly();
 			if(active < 3) {
 				plan = weeks*maxDev;
 				if(active == 0 && !exclude)
