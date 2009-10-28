@@ -115,7 +115,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 				}
 				byItog.setObjectForKey(ai, eduper);
 			}
-			if(ai.flags().intValue() >= 8)
+			if(ai.flags().intValue() >= 16) // check disabled
 				continue;
 			NSMutableDictionary dict = new NSMutableDictionary(eduper,"itog");
 			dict.takeValueForKey(progn.mark(),"mark");

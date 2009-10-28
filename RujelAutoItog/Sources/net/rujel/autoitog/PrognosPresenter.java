@@ -141,6 +141,15 @@ public class PrognosPresenter extends AddOnPresenter {
 		return popup;
 	}
 
+	public WOActionResults inspectPrognosis() {
+		WOComponent popup = pageWithName("PrognosisInspector");
+		popup.takeValueForKey(context().page(),"returnPage");
+		popup.takeValueForKey(currAddOn().periodItem,"autoItog");
+		popup.takeValueForKey(currAddOn(),"addOn");
+		popup.takeValueForKey(course(),"course");
+		return popup;
+	}
+
 	public WOActionResults editTimeout() {
 		if(currAddOn().timeout() == null && !access().flagForKey("create")) {
 			String message = (String)valueForKeyPath("application.strings.Strings.messages.noAccess");

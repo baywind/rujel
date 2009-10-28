@@ -50,7 +50,7 @@ import com.webobjects.eocontrol.*;
 
 public class AutoItog extends _AutoItog {
 	public static final NSArray flagNames = new NSArray(new String[]
-	               {"noTimeouts","manual","-4-","hideInReport","-16-","inactive"});
+	               {"noTimeouts","manual","runningTotal","-8-","hideInReport","inactive"});
 	
 	public static final NSArray dateTimeSorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
@@ -233,10 +233,12 @@ public class AutoItog extends _AutoItog {
 	    			ec.lock();
 					AutoItog ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, this);
 					course = (EduCourse)EOUtilities.localInstanceOfObject(ec, course);
-					result = calculator().collectRelated(course, ai);
+					result = calculator().collectRelated(course, ai, 
+							!namedFlags().flagForKey("runningTotal"),true);
 				} else {
 	    			ec.lock();
-					result = calculator().collectRelated(course, this);
+					result = calculator().collectRelated(course, this, 
+							!namedFlags().flagForKey("runningTotal"),true);
 				}
 				ec.saveChanges();
 				if(cache)

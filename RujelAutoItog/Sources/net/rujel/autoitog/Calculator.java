@@ -82,9 +82,12 @@ public abstract class Calculator {
 	
 	public abstract String reliesOnEntity();
 	
-	public abstract NSArray collectRelated(EduCourse course, AutoItog autoItog);
+	public abstract NSArray collectRelated(EduCourse course, AutoItog autoItog,
+			boolean omitMentioned, boolean prepareEc);
 	
 	public abstract Integer relKeyForObject(Object object);
 	
 	public abstract boolean skipAutoAdd(Integer relKey, EOEditingContext ec);
+	
+	public abstract NSMutableDictionary describeObject(Object object);
 }

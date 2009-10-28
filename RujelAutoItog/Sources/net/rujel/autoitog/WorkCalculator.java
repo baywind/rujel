@@ -3,6 +3,7 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.criterial.Mark;
 import net.rujel.criterial.Work;
 import net.rujel.eduresults.ItogContainer;
@@ -18,6 +19,7 @@ import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSTimestamp;
 
 public abstract class WorkCalculator extends Calculator {
 
@@ -44,14 +46,20 @@ public abstract class WorkCalculator extends Calculator {
 		return student.editingContext().objectsWithFetchSpecification(fs);
 	}
 	
-	public NSArray collectRelated(EduCourse course, AutoItog autoItog) {
+	public NSArray collectRelated(EduCourse course, AutoItog autoItog, 
+			boolean omitMentioned, boolean prepareEc) {
 		if(!autoItog.calculatorName().equals(this.getClass().getName()))
 			throw new IllegalStateException("Should be applied to AutoItog related to this Calculator");
 		EOEditingContext ec = autoItog.editingContext();
+		NSTimestamp fireDate = autoItog.fireDate();
+		CourseTimeout cto = CourseTimeout.getTimeoutForCourseAndPeriod(course, 
+				autoItog.itogContainer());
+		if(cto != null)
+			fireDate = cto.fireDate();
 		EOQualifier[] quals = new EOQualifier[2];
 		quals[0] = new EOKeyValueQualifier(Work.DATE_KEY,(autoItog.evening())?
 				EOQualifier.QualifierOperatorLessThanOrEqualTo:
-					EOQualifier.QualifierOperatorLessThan,autoItog.fireDate());
+					EOQualifier.QualifierOperatorLessThan,fireDate);
 		quals[1] = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual,course);
 //		if(checkWeight) {
@@ -66,25 +74,28 @@ public abstract class WorkCalculator extends Calculator {
 		NSArray works = ec.objectsWithFetchSpecification(fs);
 		if(works == null || works.count() == 0)
 			return null;
-		NSArray aiList = EOUtilities.objectsMatchingKeyAndValue(ec,
-				AutoItog.ENTITY_NAME, AutoItog.LIST_NAME_KEY, autoItog.listName());
-		NSMutableArray mentioned = new NSMutableArray();
-		if(aiList != null && aiList.count() > 0) {
-			Enumeration enu = aiList.objectEnumerator();
-			ItogContainer itog = autoItog.itogContainer();
-			ItogType type = itog.itogType();
-			Integer eduYear = itog.eduYear();
-			while (enu.hasMoreElements()) {
-				AutoItog ai = (AutoItog) enu.nextElement();
-				if(ai == autoItog || ai.itogContainer().itogType() != type 
-						|| !ai.itogContainer().eduYear().equals(eduYear))
-					continue;
-				if(!getClass().getName().equals(ai.calculatorName()) && 
-						!ai.calculator().reliesOnEntity().equals(reliesOnEntity()))
-					continue;
-				NSArray found = ai.relKeysForCourse(course);
-				if(found != null && found.count() > 0)
-				mentioned.addObjectsFromArray((NSArray)found.valueForKey("relKey"));
+		NSMutableArray mentioned = null;
+		if(omitMentioned) {
+			mentioned = new NSMutableArray();
+			NSArray aiList = EOUtilities.objectsMatchingKeyAndValue(ec,
+					AutoItog.ENTITY_NAME, AutoItog.LIST_NAME_KEY, autoItog.listName());
+			if(aiList != null && aiList.count() > 0) {
+				Enumeration enu = aiList.objectEnumerator();
+				ItogContainer itog = autoItog.itogContainer();
+				ItogType type = itog.itogType();
+				Integer eduYear = itog.eduYear();
+				while (enu.hasMoreElements()) {
+					AutoItog ai = (AutoItog) enu.nextElement();
+					if(ai == autoItog || ai.itogContainer().itogType() != type 
+							|| !ai.itogContainer().eduYear().equals(eduYear))
+						continue;
+					if(!getClass().getName().equals(ai.calculatorName()) && 
+							!ai.calculator().reliesOnEntity().equals(reliesOnEntity()))
+						continue;
+					NSArray found = ai.relKeysForCourse(course);
+					if(found != null && found.count() > 0)
+						mentioned.addObjectsFromArray((NSArray)found.valueForKey("relKey"));
+				}
 			}
 		}
 			/*
@@ -111,10 +122,13 @@ public abstract class WorkCalculator extends Calculator {
 		quals[0] = new EOAndQualifier(allQuals);
 		fs.setEntityName("ItogRelated");
 		fs.setQualifier(quals[0]);
-		NSArray already = ec.objectsWithFetchSpecification(fs);
 		NSMutableDictionary forNum = null;
-		if(already != null && already.count() > 0)
-			forNum = new NSMutableDictionary(already,(NSArray)already.valueForKey("relKey"));
+		if(prepareEc) {
+			NSArray already = ec.objectsWithFetchSpecification(fs);
+			if(already != null && already.count() > 0)
+				forNum = new NSMutableDictionary(already,
+						(NSArray)already.valueForKey("relKey"));
+		}
 		Enumeration enu = works.objectEnumerator();
 		NSMutableArray result = new NSMutableArray();
 		while (enu.hasMoreElements()) {
@@ -123,9 +137,11 @@ public abstract class WorkCalculator extends Calculator {
 				continue;
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(work);
 			Object key = gid.keyValues()[0];
-			if(mentioned != null && mentioned.containsObject(key))
+			if(omitMentioned && mentioned.containsObject(key))
 				continue;
 			result.addObject(work);
+			if(!prepareEc)
+				continue;
 			if(forNum == null || forNum.removeObjectForKey(key) == null) {
 				EOEnterpriseObject ir = EOUtilities.createAndInsertInstance(ec, "ItogRelated");
 				ir.addObjectToBothSidesOfRelationshipWithKey(autoItog, "autoItog");
@@ -133,7 +149,7 @@ public abstract class WorkCalculator extends Calculator {
 				ir.takeValueForKey(key, "relKey");
 			}
 		}
-		if(forNum != null && forNum.count() > 0) {
+		if(prepareEc && forNum != null && forNum.count() > 0) {
 			enu = forNum.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject ir = (EOEnterpriseObject) enu.nextElement();
@@ -193,5 +209,42 @@ public abstract class WorkCalculator extends Calculator {
 			return true;
 		}
 		return false;
+	}
+
+	public NSMutableDictionary describeObject(Object object) {
+		if(object == null)
+			return null;
+		Work work = null;
+		if(object instanceof Work) {
+			work = (Work)object;
+		} else if (object instanceof Mark) {
+			work = ((Mark)object).work();
+		} else if(object instanceof NSDictionary) {
+			NSDictionary dict = (NSDictionary)object;
+			EduLesson lesson = (EduLesson)dict.valueForKey("lesson");
+			if(lesson instanceof Work) {
+				work = (Work)lesson;
+			} else if(lesson == null) {
+				String entityName = (String)dict.valueForKey("entityName");
+				if(!Work.ENTITY_NAME.equals(entityName))
+					return null;
+				NSDictionary pKey = (NSDictionary)dict.valueForKey("pKey");
+				work = (Work)EOUtilities.objectWithPrimaryKey(
+						new EOEditingContext(), entityName, pKey);
+			}
+		} else if (object instanceof Integer) {
+			work = (Work)EOUtilities.objectWithPrimaryKeyValue(
+					new EOEditingContext(), Work.ENTITY_NAME, object);
+		} else {
+			return null;
+		}
+		String title = work.title();
+		if(title == null)
+			title = MyUtility.dateFormat().format(work.date());
+		NSMutableDictionary result = new NSMutableDictionary(title,"title");
+		result.takeValueForKey(work.theme(), "description");
+		result.takeValueForKey(work.color(), "color");
+		result.takeValueForKey(work.valueForKeyPath("workType.typeName"), "hover");
+		return result;
 	}
 }
