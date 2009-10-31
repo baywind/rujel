@@ -205,7 +205,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 	public Integer idx;
 	public Object item;
 	
-	protected static String timeoutUpTo;
+/*	protected static String timeoutUpTo;
 	public String timeoutUpTo() {
 		if(timeoutUpTo == null) {
 			timeoutUpTo = (String)session()
@@ -215,7 +215,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		}
 		//NSDictionary dict = (NSDictionary)valueForBinding("value");
 		return timeoutUpTo;
-	}
+	}*/
 	
 	public String prognosTitle() {
 		if(idx == null || idx.intValue() > 0)

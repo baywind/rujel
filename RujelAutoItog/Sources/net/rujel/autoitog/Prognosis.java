@@ -42,15 +42,13 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
 import java.math.*;
-import java.text.DateFormat;
-import java.text.FieldPosition;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class Prognosis extends _Prognosis {
     public static final NSArray flagNames = new NSArray(new String[]
-                                                       {"disable","keep","keepBonus"});
+                   {"-1-","keep","keepBonus","-8-","-16-","-32-","disable"});
 	protected static Logger logger = Logger.getLogger("rujel.autoitog");
 	
     public Prognosis() {
@@ -145,7 +143,7 @@ public class Prognosis extends _Prognosis {
     public void setAutoItog(AutoItog itog) {
     	if(_autoItog != itog && itog != null) {
     		setItogContainer(itog.itogContainer());
-    		if(itog != null && fireDate() == null)
+    		if(itog != null && editingContext().globalIDForObject(this).isTemporary())
     			setFireDate(itog.fireDate());
     	}
     	_autoItog = itog;
@@ -361,6 +359,7 @@ public class Prognosis extends _Prognosis {
 		}
 
 		setFireDate(null);
+		boolean unchanged = false;
 		if(_relatedItog == null) {
 			_relatedItog = EOUtilities.createAndInsertInstance(editingContext(),"ItogMark");
 			relatedItog().addObjectToBothSidesOfRelationshipWithKey(
@@ -373,39 +372,48 @@ public class Prognosis extends _Prognosis {
 				BigDecimal value = relatedItog().value();
 				boolean flag = (value != null && !value.equals(this.value()));
 				relatedItog().readFlags().setFlagForKey(flag,"constituents");
-				return null;
+				return relatedItog();
 			}
 			if(!this.mark().equals(relatedItog().mark()))
 				relatedItog().readFlags().setFlagForKey(true,"changed");
+			else
+				unchanged = true;
 		}
 		relatedItog().setValue(value());
-		relatedItog().setMark((mark() == null)?" ":mark());
+		if(!unchanged)
+			relatedItog().setMark((mark() == null)?" ":mark());
 		Bonus bonus = bonus();
+		String bonusTitle = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelAutoItog_AutoItog.ui.markHasBonus");
 		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
 				relatedItog().setMark(bonus.mark());
-				String bonusTitle = (String)WOApplication.application()
-					.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.markHasBonus");
 //				StringBuilder buf = new StringBuilder();
 				relatedItog().comments().takeValueForKey(bonus.reason(), bonusTitle);
 				report("Bonus is applied",this, buf);
 			} else {
-				report("Bonus not applied",this, buf);
+				report("Bonus NOT applied",this, buf);
+				relatedItog().comments().takeValueForKey(null, bonusTitle);
 				/*
     			removeObjectFromBothSidesOfRelationshipWithKey(bonus, "bonus");
     			removeObjectFromBothSidesOfRelationshipWithKey(bonus.cycle(), "cycle");
     			editingContext().deleteObject(bonus);*/
 			}
-			buf.append(bonus.reason()).append(" : ").append(mark());
-			buf.append(" -> ").append(bonus.mark()).append('\n');
+			if(buf != null) {
+				buf.append(bonus.reason()).append(" : ").append(mark());
+				buf.append(" -> ").append(bonus.mark()).append('\n');
+			}
+		} else {
+			relatedItog().comments().takeValueForKey(null, bonusTitle);
 		}
 		String markFromValue = markFromValue();
+		if(unchanged && buf != null)
+			buf.append((char)0);
 		
 		boolean flag = (markFromValue == null || !relatedItog().mark().equals(markFromValue));	
     	relatedItog().readFlags().setFlagForKey(flag,"forced");
 		relatedItog().readFlags().setFlagForKey(false,"constituents");
 		relatedItog().readFlags().setFlagForKey(!isComplete(),"incomplete");
-
 		return relatedItog();
 	}
 	
@@ -434,6 +442,7 @@ public class Prognosis extends _Prognosis {
 			}
 			return;
 		}
+		CourseTimeout cto = CourseTimeout.getTimeoutForCourseAndPeriod(course, itog);
 		NSMutableArray students = course.groupList().mutableClone();
 		
 		Enumeration penu = prognoses.objectEnumerator();
@@ -441,11 +450,6 @@ public class Prognosis extends _Prognosis {
 		boolean overwrite = (scheduled == null || SettingsReader.boolForKeyPath(
 				"edu.overwriteItogsScheduled", false));
 		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
-		FieldPosition pos = new FieldPosition(DateFormat.DATE_FIELD);
-		String timeoutTitle = (String)WOApplication.application()
-				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout");
-		String upTo = (String)WOApplication.application()
-				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.upTo");
 cycleStudents:
 			while (penu.hasMoreElements()) {
 				Prognosis prognos = (Prognosis)penu.nextElement();
@@ -454,27 +458,25 @@ cycleStudents:
 					students.removeObjectAtIndex(idx);
 				}
 				if(prognos.fireDate() == null) {
-					report("Prognosis is already fired", prognos, buf);
+//					report("Prognosis is already fired", prognos, buf);
 					continue cycleStudents;
 				}
 				// check timeout
+	    		Timeout timeout = Timeout.Utility.chooseTimeout(
+	    				prognos.getStudentTimeout(), cto);
+				EOEnterpriseObject commentEO = ItogMark.getItogComment(course.cycle(),
+						itog, prognos.student(), (timeout != null));
+				if(commentEO != null)
+					Timeout.Utility.setTimeoutComment(commentEO, timeout);
 				if(scheduled != null && scheduled.compareTo(prognos.fireDate()) < 0) {
 					// add ItogComment about timeout
 					report("Prognosis is timed out", prognos, buf);
-					EOEnterpriseObject commentEO = ItogMark.getItogComment(course.cycle(),
-							itog, prognos.student(), true);
-					Timeout timeout = prognos.getStudentTimeout();
-					StringBuffer comment = new StringBuffer();
-					comment.append(upTo).append(' ');
-					MyUtility.dateFormat().format(timeout.fireDate(), comment, pos);
-					buf.append(" : <em>").append(timeout.reason()).append("</em>");
-					ItogMark.setCommentForKey(commentEO, comment.toString(), timeoutTitle);
 					continue cycleStudents;
 				}
 				if(idx < 0) {
 					NSArray args = new NSArray(new Object[] {itog,prognos.student()});
 					NSArray found = EOUtilities.objectsWithQualifierFormat(
-							course.editingContext(),"Prognosis",
+							course.editingContext(),ENTITY_NAME,
 							"itogContainer = %@ AND student = %@",args);
 					EOQualifier qual = new EOKeyValueQualifier("course.cycle",
 							EOQualifier.QualifierOperatorEqual,course.cycle());
@@ -483,6 +485,8 @@ cycleStudents:
 						Enumeration enu = found.objectEnumerator();
 						while (enu.hasMoreElements()) {
 							Prognosis crp = (Prognosis) enu.nextElement();
+							if(crp == prognos)
+								continue;
 							if(crp.course().groupList().contains(crp.student())) {
 								report(
 "Skipping prognosis for student not in group - found another prognosis", prognos, buf);
@@ -497,15 +501,16 @@ cycleStudents:
 					report("Setting mark to student not in group", prognos, buf);
 				}
 				ItogMark itogMark = prognos.convertToItogMark(itogs,overwrite, buf);
-				if(itogMark != null && (overwrite || !itogs.containsObject(itogMark))) {
+				if(buf.charAt(buf.length() -1) != 0 &&
+						itogMark != null && (overwrite || !itogs.containsObject(itogMark))) {
 					itogMark.readFlags().setFlagForKey(scheduled == null,"manual");
 					if(enableArchive) {
 						EOEnterpriseObject archive = EOUtilities.
 										createAndInsertInstance(ec,"MarkArchive");
 						archive.takeValueForKey(itogMark, "object");
 						if(scheduled != null) {
-							logger.log(WOLogLevel.INFO,"AutoItog", new Object[] {
-								itogMark,Thread.currentThread(),new Exception("AutoItog")});
+//							logger.log(WOLogLevel.INFO,"AutoItog", new Object[] {
+//								itogMark,Thread.currentThread(),new Exception("AutoItog")});
 							archive.takeValueForKey("scheduled", "wosid");
 							archive.takeValueForKey("AutoItog", "user");
 						} else if(!(ec instanceof SessionedEditingContext)) {
@@ -514,6 +519,8 @@ cycleStudents:
 						}
 					}
 				}
+				if(buf.charAt(buf.length() -1) == 0)
+					buf.deleteCharAt(buf.length() -1);
 			} // cycleStudents
 		if(students.count() > 0) {
 			Enumeration enu = students.objectEnumerator();

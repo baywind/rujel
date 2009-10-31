@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 
 import com.webobjects.eocontrol.*;
 
+import net.rujel.criterial.BorderSet;
 import net.rujel.reusables.*;
 
 public class Bonus extends _Bonus {
@@ -96,8 +97,10 @@ public class Bonus extends _Bonus {
     
     public static BigDecimal calculateBonus(Prognosis prognosis,Bonus toUpdate,boolean setValue) {
     	try {
-    		EOEnterpriseObject border = prognosis.autoItog().borderSet().
-    					borderForFraction(prognosis.value(), true); 
+    		BorderSet bSet = (BorderSet) prognosis.autoItog().borderSet();
+    		if(bSet == null)
+    			return null;
+    		EOEnterpriseObject border = bSet.borderForFraction(prognosis.value(), true); 
     		if(border == null)
     			return null;
     		BigDecimal topValue = (BigDecimal)border.valueForKey("least");

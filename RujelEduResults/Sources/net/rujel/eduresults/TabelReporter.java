@@ -159,11 +159,11 @@ public class TabelReporter extends WOComponent {
 			enu = allMarks.objectEnumerator();
 			int i = 1;
 			while (enu.hasMoreElements()) {
-				EOEnterpriseObject comment = (EduCycle) enu.nextElement();
+				EOEnterpriseObject comment = (EOEnterpriseObject) enu.nextElement();
 				item = ItogMark.commentsDict(comment);
 				if(eduYear == null && item.valueForKey(ItogMark.MANUAL)==null)
 					continue;
-				String alias = '*' + Integer.toString(1 + i);
+				String alias = '*' + Integer.toString(i);
 				i++;
 				item.takeValueForKey(alias, "alias");
 				EduCycle cycle = (EduCycle)comment.valueForKey(ItogMark.CYCLE_KEY);
@@ -299,9 +299,11 @@ public class TabelReporter extends WOComponent {
 		Enumeration enu = ((NSDictionary)item).keyEnumerator();
 		while (enu.hasMoreElements()) {
 			String key = (String) enu.nextElement();
-			if(key.equals(ItogMark.MANUAL) || key.equals(ItogMark.CONTAINER_KEY) ||
-					key.equals("subject"))
+			if(key.equals("alias") || key.equals(ItogMark.MANUAL) ||
+					key.equals(ItogMark.CONTAINER_KEY) || key.equals("subject"))
 			continue;
+			if(buf.length() > 0)
+				buf.append(";<br/>\n");
 			comment = (String)item.valueForKey(key);
 			buf.append("<strong>").append(key);
 				buf.append(":</strong> ").append(comment);

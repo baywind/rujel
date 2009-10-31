@@ -184,8 +184,13 @@ public class ItogMark extends _ItogMark
 					return;
 				comments.takeValueForKey(value, key);
 				if(comments.count() > 0) {
-					if(commentEO() == null)
-						_commentEO = getItogComment(cycle(), container(), student(), true);
+					if(commentEO() == null) {
+						if(value != null)
+							_commentEO = getItogComment(cycle(),
+									container(), student(), true);
+						else
+							return;
+					}
 					commentEO().takeValueForKey(NSPropertyListSerialization.
 									stringFromPropertyList(comments), "comment");
 				} else if(commentEO() != null) {

@@ -287,7 +287,7 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		return qual;
 	}
 	
-	public NSMutableDictionary extItog(EduCycle cycle) {
+/*	public NSMutableDictionary extItog(EduCycle cycle) {
 		NSMutableDictionary result = new NSMutableDictionary(itogContainer(),ITOG_CONTAINER_KEY);
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout"));
@@ -308,5 +308,5 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		result.takeValueForKey(buf.toString(), "text");
 		result.takeValueForKey(cycle, "cycle");
 		return result;
-	}
+	}*/
 }

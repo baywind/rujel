@@ -30,11 +30,17 @@
 package net.rujel.autoitog;
 
 
+import java.text.DateFormat;
+import java.text.FieldPosition;
+
+import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 
 public interface Timeout extends EOEnterpriseObject {
@@ -44,7 +50,13 @@ public interface Timeout extends EOEnterpriseObject {
 	public static final NSArray flagNames = new NSArray(new String[]
 	               {"-1-","negative","priority","-8-","-16-","-32-","passed"});
 
-    public EduCourse course();
+	public static final String timeoutTitle = (String)WOApplication.application()
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.generalTimeout");
+	public static final String negativeTitle = (String)WOApplication.application()
+				.valueForKeyPath("strings.RujelAutoItog_AutoItog.ui.negativeTimeout");
+	
+
+	public EduCourse course();
 	
     public void setCourse(EduCourse aValue);
 
@@ -119,6 +131,40 @@ public interface Timeout extends EOEnterpriseObject {
     				!studentTimeout.namedFlags().flagForKey("priority"))
     			return courseTimeout;
     		return studentTimeout;
+    	}
+    	
+    	private static FieldPosition pos = new FieldPosition(DateFormat.DATE_FIELD);
+    	public static String presentTimeout(Timeout timeout) {
+			StringBuffer buf = new StringBuffer();
+//			buf.append(upTo).append(' ');
+			MyUtility.dateFormat().format(timeout.fireDate(), buf, pos);
+			buf.append(" : <em>").append(timeout.reason()).append("</em>");
+			return buf.toString();
+    	}
+    	
+    	public static void setTimeoutComment(EOEnterpriseObject cmntEO, Timeout timeout) {
+			NSMutableDictionary dict = ItogMark.commentsDict(cmntEO);
+			boolean changed = false;
+			if(timeout == null) {
+				changed = ((dict.removeObjectForKey(timeoutTitle) != null) || 
+							(dict.removeObjectForKey(negativeTitle) != null));
+			} else {
+				String comment = Timeout.Utility.presentTimeout(timeout);
+				if(timeout.namedFlags().flagForKey("negative")) {
+					changed = (dict.removeObjectForKey(timeoutTitle) != null ||
+							!comment.equals(dict.objectForKey(negativeTitle)));
+					if(changed)
+						dict.setObjectForKey(comment, negativeTitle);
+				} else {
+					changed = (dict.removeObjectForKey(negativeTitle) != null ||
+							!comment.equals(dict.objectForKey(timeoutTitle)));
+					if(changed)
+						dict.setObjectForKey(comment, timeoutTitle);
+				}
+			}
+			if(changed)
+				cmntEO.takeValueForKey(NSPropertyListSerialization.
+						stringFromPropertyList(dict), "comment");
     	}
     }
 }

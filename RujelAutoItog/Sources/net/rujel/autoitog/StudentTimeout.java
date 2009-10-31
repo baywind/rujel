@@ -182,7 +182,7 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 		return (StudentTimeout)found.objectAtIndex(0);		
 	}
 
-	public NSMutableDictionary extItog() {
+/*	public NSMutableDictionary extItog() {
 		NSMutableDictionary result = new NSMutableDictionary(itogContainer(),ITOG_CONTAINER_KEY);
 		result.takeValueForKey(valueForKeyPath("course.cycle"), "cycle");
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
@@ -195,5 +195,5 @@ public class StudentTimeout extends _StudentTimeout implements Timeout
 		buf.append(" : <em>").append(reason()).append("</em>");
 		result.takeValueForKey(buf.toString(), "text");
 		return result;
-	}
+	}*/
 }
