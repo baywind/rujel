@@ -233,6 +233,8 @@ public class AutoItog extends _AutoItog {
 	    			ec.lock();
 					AutoItog ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, this);
 					course = (EduCourse)EOUtilities.localInstanceOfObject(ec, course);
+//					NSDictionary snapshot = snapshot();
+//					ai.updateFromSnapshot(snapshot);
 					result = calculator().collectRelated(course, ai, 
 							!namedFlags().flagForKey("runningTotal"),true);
 				} else {

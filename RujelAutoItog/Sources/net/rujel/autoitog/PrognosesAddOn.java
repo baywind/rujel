@@ -420,6 +420,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 				Prognosis prognosis = (prognoses==null)?null:
 					(Prognosis)prognoses.forPersonLink(student);
 				if(prognosis != null) {
+					if(prognosis.fireDate() == null)
+						prognosis.setFireDate(periodItem.fireDate());
 					//if(prognosis.fireDate() != null && prognosis.valueChanged())
 						prognosis.updateFireDate(courseTimeout());
 					if(ifArchive)

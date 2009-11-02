@@ -79,7 +79,7 @@ public class TimeoutPopup extends WOComponent {
     			dueDate = addOn.periodItem.fireDate();
     		} else {
     			String listName = SettingsBase.stringSettingForCourse(
-    					ItogMark.CONTAINER_KEY, course, course.editingContext());
+    					ItogMark.ENTITY_NAME, course, course.editingContext());
     			AutoItog ai = AutoItog.forListName(listName, eduPeriod);
     			dueDate = ai.fireDate();
     		}
@@ -197,6 +197,10 @@ public class TimeoutPopup extends WOComponent {
 						timeout.takeValueForKey((forCycle)?course.cycle():null,"cycle");
 						timeout.takeValueForKey((forEduGroup)?course.eduGroup():null,"eduGroup");
 					}
+	    			String listName = SettingsBase.stringSettingForCourse(
+	    					ItogMark.ENTITY_NAME, course, ec);
+	    			AutoItog ai = AutoItog.forListName(listName, eduPeriod);
+					dueDate = AutoItog.combineDateAndTime(dueDate, ai.fireTime());
 				}
 						//NSArray params = new NSArray(new Object[] 
 						//							 {timeout.valueForKey("eduPeriod"),timeout.valueForKey("student")});

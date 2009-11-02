@@ -41,6 +41,7 @@ import com.webobjects.eoaccess.*;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 
@@ -56,6 +57,8 @@ public class ItogPopup extends WOComponent {
 	public WOComponent returnPage;
 	public String changeReason;
 	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
+	public EOEnterpriseObject commentEO;
+	public NSDictionary comments;
 
 	public ItogPopup(WOContext context) {
 		super(context);       
@@ -98,6 +101,29 @@ public class ItogPopup extends WOComponent {
 	public WOComponent save() {
 		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
+		EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
+			(EduCourse)addOn.valueForKey("eduCourse");
+		EOEditingContext ec = (eduCourse==null)?itog.editingContext():eduCourse.editingContext();
+		if(commentEO != null || (comments != null && comments.count() != 0)) {
+			ec.lock();
+			try {
+				if(commentEO == null)
+					commentEO = ItogMark.getItogComment(eduCourse.cycle(),
+							itogContainer, student, true);
+				String comment = (String)comments.valueForKey(ItogMark.MANUAL);
+				comments = ItogMark.setCommentForKey(commentEO, comment, ItogMark.MANUAL);
+				if(comments.count() == 0)
+					commentEO = null;
+				if(ec.hasChanges())
+					ec.saveChanges();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Error saving ItogComment",
+						new Object[] {session(),commentEO});
+			} finally {
+				ec.unlock();
+			}
+			
+		}
 		if(itog == null && mark == null)
 			return returnPage;
 		if(mark == null)
@@ -110,9 +136,6 @@ public class ItogPopup extends WOComponent {
 		boolean newItog = (itog == null);
 		boolean same = (!newItog && mark.equals(itog.mark()));
 		if(newItog || !same || itog.readFlags().flagForKey("constituents")) {
-			EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
-				(EduCourse)addOn.valueForKey("eduCourse");
-			EOEditingContext ec = (eduCourse==null)?itog.editingContext():eduCourse.editingContext();
 			ec.lock();
 			EOEnterpriseObject prognosis = null;
 			try {
@@ -266,4 +289,42 @@ public class ItogPopup extends WOComponent {
 			return null;
 		return "showObj('itogChangeReason');form.changeReason.onkeypress();fitWindow();";
 	}
+	
+	public NSDictionary comments() {
+		if(comments == null) {
+			EduCycle cycle = null;
+			if(itog != null) {
+				cycle = itog.cycle();
+			} else {
+				EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
+				cycle = eduCourse.cycle();
+			}
+			commentEO = ItogMark.getItogComment(cycle, itogContainer, student, false);
+			if(commentEO == null) {
+				comments = new NSMutableDictionary();
+			} else {
+				comments = ItogMark.commentsDict(commentEO);
+			}
+		}
+		return comments;
+	}
+	
+	public String otherComments() {
+		if(comments().count() == 0)
+			return null;
+		StringBuilder buf = new StringBuilder();
+		Enumeration enu = comments().keyEnumerator();
+		while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			if(key.equals("alias") || key.equals(ItogMark.MANUAL) ||
+					key.equals(ItogMark.CONTAINER_KEY) || key.equals("subject"))
+			continue;
+			String comment = (String)comments().valueForKey(key);
+			buf.append("<strong>").append(key);
+			buf.append(":</strong> ").append(comment);
+			buf.append("<br/>\n");
+		}
+		return buf.toString();
+	}
+
 }

@@ -48,7 +48,7 @@ public abstract class WorkCalculator extends Calculator {
 	
 	public NSArray collectRelated(EduCourse course, AutoItog autoItog, 
 			boolean omitMentioned, boolean prepareEc) {
-		if(!autoItog.calculatorName().equals(this.getClass().getName()))
+		if(!this.getClass().getName().equals(autoItog.calculatorName()))
 			throw new IllegalStateException("Should be applied to AutoItog related to this Calculator");
 		EOEditingContext ec = autoItog.editingContext();
 		NSTimestamp fireDate = autoItog.fireDate();

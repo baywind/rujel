@@ -4,11 +4,16 @@ import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.BorderSet;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
+import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.PerPersonLink;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
@@ -131,6 +136,20 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     			}
     		}
     		ec.saveChanges();
+    		SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
+    		NSArray courses = base.coursesForSetting(listName, null, itog.eduYear());
+    		Enumeration enu = courses.objectEnumerator();
+    		Calculator calculator = autoItog.calculator();
+    		while (enu.hasMoreElements()) {
+				EduCourse course = (EduCourse) enu.nextElement();
+				PerPersonLink prppl = calculator.calculatePrognoses(course, autoItog);
+				if(prppl == null || prppl.count() == 0)
+					continue;
+				CourseTimeout cto = CourseTimeout.
+						getTimeoutForCourseAndPeriod(course, itog);
+				prppl.allValues().takeValueForKey(cto, "updateWithCourseTimeout");
+	    		ec.saveChanges();
+			}
     		logger.log(WOLogLevel.COREDATA_EDITING, "Saved AutoItog", 
     				new Object[] {session(),autoItog});
     	} catch (Exception e) {

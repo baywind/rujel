@@ -77,7 +77,7 @@ public interface Timeout extends EOEnterpriseObject {
     public NSArray relatedPrognoses();
     
     public static class Utility {
-    	public static void setFireDate(Timeout timeout, NSTimestamp date) {
+/*    	public static void setFireDate(Timeout timeout, NSTimestamp date) {
     		NSArray prognoses = timeout.relatedPrognoses();
     		if(date == null || timeout.fireDate() == null) {
     			prognoses.valueForKey("updateFireDate");
@@ -93,7 +93,7 @@ public interface Timeout extends EOEnterpriseObject {
     			prognoses.valueForKey("updateFireDate");
     		}
     	}
-    	
+ */   	
     	public static NSTimestamp chooseDate(StudentTimeout studentTimeout,
     			CourseTimeout courseTimeout) {
     		Timeout timeout = chooseTimeout(studentTimeout, courseTimeout); 

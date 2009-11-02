@@ -292,9 +292,10 @@ public class TabelReporter extends WOComponent {
 		StringBuilder buf = new StringBuilder();
 		String comment = (String)item.valueForKey(ItogMark.MANUAL);
 		if(comment != null) {
-			buf.append("<strong>").append(application().valueForKeyPath(
+			buf.append("<div style = \"margin-bottom:3px;\"><strong>");
+			buf.append(application().valueForKeyPath(
 					"strings.Reusables_Strings.dataTypes.comment"));
-			buf.append(":</strong> ").append(comment);
+			buf.append(":</strong> ").append(comment).append("</div>\n");
 		}
 		Enumeration enu = ((NSDictionary)item).keyEnumerator();
 		while (enu.hasMoreElements()) {
@@ -302,11 +303,10 @@ public class TabelReporter extends WOComponent {
 			if(key.equals("alias") || key.equals(ItogMark.MANUAL) ||
 					key.equals(ItogMark.CONTAINER_KEY) || key.equals("subject"))
 			continue;
-			if(buf.length() > 0)
-				buf.append(";<br/>\n");
+				buf.append("<div style = \"margin-bottom:3px;\">");
 			comment = (String)item.valueForKey(key);
 			buf.append("<strong>").append(key);
-				buf.append(":</strong> ").append(comment);
+				buf.append(":</strong> ").append(comment).append("</div>\n");
 		}
 		return buf.toString();
 	}

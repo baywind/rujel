@@ -245,11 +245,11 @@ public class Prognosis extends _Prognosis {
 	}
 
 	
-	public void setLaterFireDate(NSTimestamp newDate) {
+/*	public void setLaterFireDate(NSTimestamp newDate) {
 		if(fireDate() != null && newDate.compare(fireDate()) > 0)
 			setFireDate(newDate);
 	}
-
+*/
 	public static Prognosis getPrognosis(
 			Student student, EduCourse course, ItogContainer itog, boolean create) {
 		EOEditingContext ec = course.editingContext();

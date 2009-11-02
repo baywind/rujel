@@ -182,7 +182,7 @@ public class AutoItogModule {
 				if(fire.getTime() - System.currentTimeMillis() < 10000)
 					automateTimedOutPrognoses(ai);
 				else
-					timer.schedule(new AutoItogAutomator(ai,true), ai.fireDateTime());
+					timer.schedule(new AutoItogAutomator(ai,true), fire);
 			}
 		}
 		/*} catch (Exception e) {
@@ -202,14 +202,17 @@ public class AutoItogModule {
 			return;
 		NSMutableArray toGigs = new NSMutableArray();
 		Enumeration enu = timeouts.objectEnumerator();
+		NSTimestamp date = null;
 		while (enu.hasMoreElements()) {
 			CourseTimeout cto = (CourseTimeout) enu.nextElement();
+			if(date == null || date.compare(cto.fireDate()) < 0)
+				date = cto.fireDate();
 			toGigs.addObject(ec.globalIDForObject(cto));
 		}
 		enu = ais.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			AutoItog autoItog = (AutoItog) enu.nextElement();
-			NSTimestamp fire = autoItog.fireDateTime();
+			NSTimestamp fire = AutoItog.combineDateAndTime(date, autoItog.fireDateTime());
 			if(fire.getTime() - System.currentTimeMillis() < 10000) {
 				Enumeration ctos = timeouts.objectEnumerator();
 				while (ctos.hasMoreElements()) {
@@ -218,7 +221,7 @@ public class AutoItogModule {
 				}
 			} else {
 				timer.schedule(new CourseTimeoutsAutomator(autoItog,toGigs),
-						autoItog.fireDateTime());
+						fire);
 			}
 			if(!alreadyScheduled.containsObject(autoItog))
 				alreadyScheduled.addObject(autoItog);
@@ -486,7 +489,8 @@ public class AutoItogModule {
 				buf.append(course.eduGroup().name()).append(" : ");
 				buf.append(course.cycle().subject());
 				if(course.comment() != null)
-				buf.append(':').append('\n');
+					buf.append(':');
+				buf.append('\n');
 				cto = CourseTimeout.getTimeoutForCourseAndPeriod(course,
 						itog.itogContainer());
 			} else if(inCourse < 0) {

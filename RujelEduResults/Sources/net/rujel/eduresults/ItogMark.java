@@ -330,15 +330,20 @@ public class ItogMark extends _ItogMark
 					dictionaryForString(string).mutableClone();
 	}
 	
-	public static void setCommentForKey(EOEnterpriseObject commentEO,
+	public static NSMutableDictionary setCommentForKey(EOEnterpriseObject commentEO,
 			String comment, String key) {
 		NSMutableDictionary dict = commentsDict(commentEO);
 		String stored = (String)dict.valueForKey(key);
 		if(stored == null || !stored.equals(comment)) {
 			dict.takeValueForKey(comment, key);
-			commentEO.takeValueForKey(NSPropertyListSerialization.
+			if(dict.count() == 0) {
+				commentEO.editingContext().deleteObject(commentEO);
+			} else {
+				commentEO.takeValueForKey(NSPropertyListSerialization.
 					stringFromPropertyList(dict), "comment");
+			}
 		}
+		return dict;
 	}
 
 	public static ItogMark getItogMark(EduCycle cycle,
