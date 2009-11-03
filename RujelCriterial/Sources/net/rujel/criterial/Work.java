@@ -59,6 +59,16 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		setLoad(zero);
 		setFlags(zero);
 		setAnnounce(new NSTimestamp());
+		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
+				EOQualifier.QualifierOperatorLessThan, new Integer(16));
+		EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
+				ModulesInitialiser.sorter);
+		fs.setFetchLimit(1);
+		NSArray found = ctx.objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
+			setWorkType(type);
+		}
 	}
 	
 	public FractionPresenter integralPresenter() {
@@ -524,6 +534,16 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	}
 	public void setCourse(EduCourse newCourse) {
 		takeStoredValueForKey(newCourse,"course");
+		if(newCourse != null &&(workType() == null || course() == null)) {
+			EOEditingContext ec = editingContext();
+			EOEnterpriseObject type = SettingsBase.settingForCourse("defaultWorkType",
+					newCourse, ec);
+			if(type != null) {
+				Integer typeID = (Integer)type.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				type = EOUtilities.objectWithPrimaryKeyValue(ec, "WorkType", typeID);
+				setWorkType(type);
+			}
+		}
 	}
 	
 
@@ -826,7 +846,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		} else {
 			//TODO: remove this debug
 			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-					"Settings workType to NULL",new Object[]
+					"Setting workType to NULL",new Object[]
 			{this,snapshot(),new IllegalArgumentException("Null workType")});
 		}
 	}

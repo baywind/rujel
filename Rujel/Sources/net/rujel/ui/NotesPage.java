@@ -191,7 +191,7 @@ public class NotesPage extends WOComponent {
 		return String.valueOf(idx.intValue() + 1);
 	}
 	
-	public void selectLesson() {
+	public WOActionResults selectLesson() {
 		_currLesson = lessonItem;
 		if(lessonItem instanceof EOEnterpriseObject) {
 			EOEditingContext ec = ((EOEnterpriseObject)lessonItem).editingContext();
@@ -204,8 +204,13 @@ public class NotesPage extends WOComponent {
 		}
 			setValueForBinding(_currLesson,"currLesson");
 		//selectStudent = studentItem;
-		if(hasBinding("selectStudent"))
-			setValueForBinding(studentItem,"selectStudent");
+		if(hasBinding("selectStudent")) {
+			if(studentItem == null)
+				setValueForBinding(_currLesson,"selectStudent");
+			else
+				setValueForBinding(studentItem,"selectStudent");
+		}
+		return context().page();
     }
 	
 	public WOActionResults studentSelection() {

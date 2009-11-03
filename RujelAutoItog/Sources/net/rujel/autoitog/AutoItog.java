@@ -226,9 +226,9 @@ public class AutoItog extends _AutoItog {
     	if(found == null || found.count() == 0) {
     		NSArray result = null;
     		EOEditingContext ec = editingContext();
-				boolean cache = ec.hasChanges();
-	    		try {
-				if(cache) {
+    		boolean cache = ec.hasChanges();
+    		try {
+    			if(cache) {
 					ec = new EOEditingContext();
 	    			ec.lock();
 					AutoItog ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, this);
