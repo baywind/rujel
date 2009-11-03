@@ -42,7 +42,7 @@ import com.webobjects.eoaccess.EOUtilities;
 public class ItogMark extends _ItogMark
 {
 	public static NSArray flagKeys = new NSArray(new Object[] 
-	                            {"changed","forced","incomplete","manual","constituents"});
+	          {"changed","forced","incomplete","manual","constituents","flagged"});
 	public static final String STUDENT_KEY = "student";
 	public static final String CYCLE_KEY = "cycle";
 	
@@ -203,6 +203,11 @@ public class ItogMark extends _ItogMark
 	
 	public String comment() {
 		return (String)comments().valueForKey(MANUAL);
+	}
+	
+	public void setCommentEO(EOEnterpriseObject commentEO) {
+		_commentEO = commentEO;
+		_comments = null;
 	}
 
 /*	public String commentForKey(String key) {

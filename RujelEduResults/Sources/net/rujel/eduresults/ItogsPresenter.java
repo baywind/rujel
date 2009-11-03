@@ -170,6 +170,17 @@ public class ItogsPresenter extends WOComponent {
 		return _arr[periods().indexOfIdenticalObject(periodItem)];
 	}
 	
+	public String star() {
+		EOEnterpriseObject commentEO = ItogMark.getItogComment(
+				course().cycle(), periodItem, student(), false);
+		if(commentEO == null)
+			return null;
+		NSDictionary dict = ItogMark.commentsDict(commentEO);
+		if(dict.valueForKey(ItogMark.MANUAL) == null)
+			return null;
+		return "<sup style=\"font-size:smaller;\">*</sup>";
+	}
+	
 	public String periodTitle() {
 		if(periodItem.num() > 0) {
 			return Various.makeRoman(periodItem.num().intValue()) + 
@@ -207,6 +218,8 @@ public class ItogsPresenter extends WOComponent {
 				_styleClass = "ungerade";
 			_pertype = periodItem.itogType();
 		}
+		if(Various.boolForObject(valueForKeyPath("itog.readFlags.flagged")))
+			return "orange";
 		return _styleClass;
     }
 }

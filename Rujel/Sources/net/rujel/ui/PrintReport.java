@@ -86,7 +86,8 @@ public class PrintReport extends WOComponent {
 				result.append(application().valueForKeyPath("strings.Strings.PrintReport.marks"));
 			}
 		}
-		if(period != null && period instanceof NSKeyValueCoding) {
+		if(period != null && period instanceof NSKeyValueCoding && 
+				!Various.boolForObject(reporter.valueForKey("hideDates"))) {
 			value = (String)((NSKeyValueCoding)period).valueForKey("name");
 			if(result.length() > 0)
 				result.append(" : ");

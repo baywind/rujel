@@ -87,6 +87,16 @@ public class ItogPopup extends WOComponent {
 	public void setFlagStatus(boolean status) {
 		itog.readFlags().setFlagForKey(status,item);
 	}
+	
+	public Boolean flagDisabled() {
+		if(item == null)
+			return null;
+		if(item.equals("flagged")) {
+			return (Boolean)access().valueForKey("_edit");
+		} else {
+			return Boolean.TRUE;
+		}
+	}
 
 	public String flagName() {
 		return (String)flagNames.valueForKey(item.toString());
@@ -116,6 +126,9 @@ public class ItogPopup extends WOComponent {
 					commentEO = null;
 				if(ec.hasChanges())
 					ec.saveChanges();
+				if(itog != null) {
+					itog.takeValueForKey(commentEO, "commentEO");
+				}
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Error saving ItogComment",
 						new Object[] {session(),commentEO});
@@ -209,8 +222,20 @@ public class ItogPopup extends WOComponent {
 					ModuleInit.prepareStats(eduCourse, itogContainer,true);
 				}
 			} catch (Exception ex) {
-				logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save itog",new Object[] {session(),itog,ex});
+				logger.log(WOLogLevel.WARNING,"Failed to save itog",
+						new Object[] {session(),itog,ex});
 				session().takeValueForKey(ex.getMessage(),"message");
+			} finally {
+				ec.unlock();
+			}
+		} else if(ec.hasChanges()) {
+			ec.lock();
+			try {
+				ec.saveChanges();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING, "Failed to save",
+						new Object[] {session(),itog,e});
+				session().takeValueForKey(e.getMessage(),"message");
 			} finally {
 				ec.unlock();
 			}
