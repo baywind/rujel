@@ -75,7 +75,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		if(_integralPresenter == null) {
 			boolean weightless = !hasWeight();//(weight().compareTo(BigDecimal.ZERO) == 0);
 			String key = (weightless)?"presenters.weightless":"presenters.workIntegral";
-			EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
+			EOEditingContext ec = editingContext();
 			EOEnterpriseObject setting = SettingsBase.settingForCourse(key, course(), ec);
 			if(setting != null) {
 				Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
@@ -688,19 +688,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 					throw new NSValidation.ValidationException(message);
 				}
 			}
-		}
-		// TODO: remove this debug;
-		if(workType() == null) {
-			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-					"Work not initialised with type", new Object[]
-					      {this,snapshot(),new NSValidation.ValidationException("")});
-			EOFetchSpecification fs = new EOFetchSpecification("WorkType",
-					null,ModulesInitialiser.sorter);
-			fs.setFetchLimit(1);
-			NSArray list = editingContext().objectsWithFetchSpecification(fs);
-			if(list == null || list.count() == 0)
-				throw new IllegalStateException("No work types defined");
-			setWorkType((EOEnterpriseObject)list.objectAtIndex(0));
 		}
 	}
 	

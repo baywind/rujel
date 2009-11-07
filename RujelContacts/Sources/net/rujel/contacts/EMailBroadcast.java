@@ -31,6 +31,7 @@ package net.rujel.contacts;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
+import net.rujel.auth.UserPresentation.DummyUser;
 import net.rujel.base.MyUtility;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
@@ -111,6 +112,7 @@ public class EMailBroadcast implements Runnable{
 		ERMailDeliveryHTML mail = new ERMailDeliveryHTML ();*/
 		WOContext ctx = MyUtility.dummyContext(null);
 		WOSession ses = ctx.session();
+		ses.takeValueForKey(period.end(), "today");
 		if(ec == null) {
 			ec = new SessionedEditingContext(ses);
 		}
@@ -355,6 +357,7 @@ st:			while (stEnu.hasMoreElements()) {
 		if(students == null || students.count() == 0)
 			return;
 
+		Period period = (Period)params.valueForKey("period");
 		WOContext ctx = (WOContext)params.valueForKey("ctx");
 		if(ctx == null) {
 			if(ctx == null)
@@ -362,13 +365,15 @@ st:			while (stEnu.hasMoreElements()) {
 //			ctx = context;
 			if(ses == null) {
 				ses = ctx.session();
+				ses.takeValueForKey(period.end(), "today");
 //				ses.takeValueForKey(Boolean.TRUE,"dummyUser");
 			}
 		}
 		
 		if(ec==null)
 			ec = (EOEditingContext)params.valueForKey("editingContext");
-		if(ec==null) {
+		if(ec==null || !(ec instanceof SessionedEditingContext) ||
+				!(((SessionedEditingContext)ec).session().valueForKey("user") instanceof DummyUser)) {
 			ec = new SessionedEditingContext(ctx.session());//((EOEnterpriseObject)students.objectAtIndex(0)).editingContext();
 		}
 		
@@ -377,7 +382,6 @@ st:			while (stEnu.hasMoreElements()) {
 		students = EOUtilities.localInstancesOfObjects(ec,students);
 		existingCourses = EOUtilities.localInstancesOfObjects(ec,existingCourses);
 
-		Period period = (Period)params.valueForKey("period");
 		if(period instanceof EOEnterpriseObject) {
 			period = (Period)EOUtilities.localInstanceOfObject(ec,(EOEnterpriseObject)period);
 		}

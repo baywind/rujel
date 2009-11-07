@@ -144,7 +144,8 @@ public class CurriculumModule {
 				title.append(Person.Utility.fullName(sub.teacher(), true, 2, 1, 1));
 				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
 					if(ec == null)
-						ec = new EOEditingContext();
+						ec = new EOEditingContext(lesson.
+								editingContext().parentObjectStore());
 					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
 					sub.setDate(lesson.date());
 					Logger.getLogger("rujel.curriculum").log(WOLogLevel.OWNED_EDITING,

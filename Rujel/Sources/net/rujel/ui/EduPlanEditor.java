@@ -85,8 +85,6 @@ public class EduPlanEditor extends WOComponent {
 		
 		ec = new SessionedEditingContext(session());
 		ec.lock();
-		ec.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
-		
 		EOFetchSpecification fspec = new EOFetchSpecification(EduCycle.entityName,null,gradeSorter);
 		fspec.setRawRowKeyPaths(attribList);
 		fspec.setUsesDistinct(true);

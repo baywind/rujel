@@ -84,7 +84,6 @@ public class SrcMark extends WOComponent {
         super(context);
 		ec = new SessionedEditingContext(session());
 		ec.lock();
-		ec.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
 		UserPresentation user = (UserPresentation)session().valueForKey("user");
 		try {
 			int acc = user.accessLevel(EduCourse.entityName);

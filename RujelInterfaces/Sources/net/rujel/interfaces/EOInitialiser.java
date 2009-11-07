@@ -37,12 +37,12 @@ import net.rujel.reusables.SettingsReader;
 
 public class EOInitialiser {
 	protected static Logger logger = Logger.getLogger("EOInitialiser");
-	public static final String ENTITY = "UsedEOEntity";
-	public static final String PKEY = "PrimaryKeyAttribute";
-	//	public static final String TOMANY = "isToMany";
+//	public static final String ENTITY = "UsedEOEntity";
+//	public static final String PKEY = "PrimaryKeyAttribute";
+//	public static final String TOMANY = "isToMany";
 	
 	public static final SettingsReader intefacesPrefs = SettingsReader.settingsForPath("interfaces",true);
-	protected static final EOModelGroup mg = EOModelGroup.defaultGroup(); //EOUtilities.modelGroup(EOSharedEditingContext.defaultSharedEditingContext()); //
+	protected static final EOModelGroup mg = EOModelGroup.defaultGroup();
 	
 	
 	public static final EORelationship initialiseRelationship (String sourceEntityName, 

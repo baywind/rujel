@@ -113,7 +113,6 @@ public class Overview extends WOComponent {
         super(context);
 		ec = new SessionedEditingContext(session());
 		ec.lock();
-		ec.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
 		ec.unlock();
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.setTime((NSTimestamp)session().valueForKey("today"));

@@ -65,23 +65,29 @@ public class Executor implements Runnable {
 	public static void exec(Executor ex) {
 		if(ex.ctx == null)
 			throw new IllegalStateException("Executor was not properly initialsed");
-		ex.ctx.session().defaultEditingContext().unlock();
-		Thread t = new Thread(ex,"EMailBroadcast");
+		MultiECLockManager lm = ((MultiECLockManager.Session)ex.ctx.session())
+							.ecLockManager();
+//		ex.ctx.session().defaultEditingContext().unlock();
+		lm.unlock();
+		Thread t = new Thread(ex,"Complete");
 		t.setPriority(Thread.MIN_PRIORITY + 1);
 		t.start();
 	}
 
 	public void run() {
+		MultiECLockManager lm = ((MultiECLockManager.Session)ctx.session()).ecLockManager();
+		lm.lock();
 		try {
-			ctx.session().defaultEditingContext().lock();
+//			ctx.session().defaultEditingContext().lock();
 			if(studentsFolder != null)
 				StudentCatalog.prepareStudents(studentsFolder, ctx, writeReports);
 			if(coursesFolder != null)
 				CoursesCatalog.prepareCourses(coursesFolder, ctx, writeReports);
+			lm.unlock();
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING,"Error in Complete",new Object[] {ctx.session(),e});
 		} finally {
-			ctx.session().defaultEditingContext().unlock();
+//			ctx.session().defaultEditingContext().unlock();
 			ctx.session().terminate();
 		}
 	}

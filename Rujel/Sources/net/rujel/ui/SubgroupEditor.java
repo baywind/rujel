@@ -31,8 +31,6 @@ package net.rujel.ui;
 
 import net.rujel.interfaces.*;
 import net.rujel.base.*;
-import net.rujel.auth.*;
-//import net.rujel.reusables.NamedFlags;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -45,15 +43,10 @@ public class SubgroupEditor extends WOComponent {
     public BaseCourse course;
     public Student studentItem;
 	private NSMutableSet subgroup;
-	//protected EOEditingContext ec;
 	public NSArray studentsList;
 	
     public SubgroupEditor(WOContext context) {
         super(context);
-		/*ec = new net.rujel.core.SessionedEditingContext(session());
-		ec.lock();
-		ec.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
-		ec.unlock();*/
     }
 	
 	public void setCourse(BaseCourse aCourse) {
@@ -62,13 +55,8 @@ public class SubgroupEditor extends WOComponent {
 			return;
 		}
 		course = aCourse;
-		
-		//		EduGroup eg = (EduGroup)EOUtilities.localInstanceOfObject(course.editingContext(),course.eduGroup());
 		studentsList = course.eduGroup().list();
 		subgroup = new NSMutableSet(course.groupList());
-		/*		if(course.subgroup() != null && course.subgroup().count() > 0)
-			else
-			subgroup = new NSMutableSet(studentsList); */
 	}
 	
     public boolean isInSubgroup() {
@@ -95,8 +83,8 @@ public class SubgroupEditor extends WOComponent {
 			WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 			try {
 				ec.saveChanges();
-				if(course instanceof UseAccess && ((UseAccess)course).isOwned())
-					level = WOLogLevel.OWNED_EDITING;
+//				if(course instanceof UseAccess && ((UseAccess)course).isOwned())
+//					level = WOLogLevel.OWNED_EDITING;
 				logger.logp(level,"SubgroupEditor","save","Subgroup changes saved",new Object[] {session(),course});
 				session().takeValueForKey(Boolean.TRUE,"prolong");
 				nextPage = (WOComponent)session().valueForKey("pullComponent");
@@ -143,24 +131,9 @@ public class SubgroupEditor extends WOComponent {
 			sb.append("gerade");
 		}
 		sb.append("','grey");
-		/*if(isInSubgroup())
-			sb.append("Dim");*/
 		sb.append("');");
 		return sb.toString();
     }
-	/*
-	 public WOComponent returnPage;
-	 
-	 public WOActionResults back() {
-		 WOComponent nextPage = returnPage;
-		 if(nextPage == null)
-			 nextPage = (WOComponent)session().objectForKey("SrcCourseComponent");
-		 if(nextPage == null)
-			 nextPage = pageWithName("SrcMark");
-		 else
-			 nextPage.ensureAwakeInContext(context());
-		 return nextPage;
-	 } */
 	
     public String title() {
         return (String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduCourse.subgroup");

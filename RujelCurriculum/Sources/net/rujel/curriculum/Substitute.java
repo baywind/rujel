@@ -192,7 +192,8 @@ public class Substitute extends _Substitute implements Reason.Event {
 					NSTimestamp date = (NSTimestamp)substitute.valueForKeyPath("lesson.date");
 					if(date != null && !date.equals(substitute.date())) {
 						if(ec == null) {
-							ec = new EOEditingContext();
+							ec = new EOEditingContext(substitute.
+									editingContext().parentObjectStore());
 							ec.lock();
 						}
 						substitute = (Substitute)EOUtilities.localInstanceOfObject(ec, substitute);

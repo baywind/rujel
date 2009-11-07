@@ -81,7 +81,6 @@ public class Contacts extends WOComponent {
 				_access = DegenerateFlags.ALL_TRUE;
 		}*/
 		_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Contacts");
-		ec.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
 		ec.unlock();
 		contypes = EOUtilities.objectsForEntityNamed(ec,"ConType");
 		

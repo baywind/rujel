@@ -72,7 +72,6 @@ public class HomeWorkDelegate extends TaskDelegate {
     	nextPage.takeValueForKey(context.page(), "returnPage");
 	   	EOEditingContext tmpEc = new SessionedEditingContext(
 	   			lesson.editingContext(),context.session());
-    	tmpEc.setSharedEditingContext(EOSharedEditingContext.defaultSharedEditingContext());
     	tmpEc.lock();
     	lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
     	nextPage.takeValueForKey(tmpEc, "tmpEC");

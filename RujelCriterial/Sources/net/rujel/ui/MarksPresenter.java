@@ -326,7 +326,6 @@ public class MarksPresenter extends NotePresenter {
 				return result;
 		}
 		EOEditingContext ec = lesson().editingContext(); 
-			//EOSharedEditingContext.defaultSharedEditingContext();
 		String key2 = "presenters." + key;
 		EOEnterpriseObject setting = SettingsBase.settingForCourse(key2,
 				lesson().course(), ec);

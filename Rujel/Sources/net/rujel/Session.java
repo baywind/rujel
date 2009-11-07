@@ -41,19 +41,21 @@ import com.webobjects.eoaccess.EOUtilities;
 
 import java.util.logging.Logger;
 
-public class Session extends WOSession {
+public class Session extends WOSession implements MultiECLockManager.Session {
 	private UserPresentation user = null;
 	protected StringStorage _strings;
 	protected Logger logger = Logger.getLogger("rujel");
 	protected NSDictionary clientIdentity;
+	protected MultiECLockManager ecLockManager;
 
 	protected NSTimestamp today;// = new NSTimestamp();
 	public Session() {
         super();
 		//logger.log(WOLogLevel.SESSION,"Session created",this);
         
-		setDefaultEditingContext(new SessionedEditingContext(this));
 		_strings = (StringStorage)WOApplication.application().valueForKey("strings");
+		ecLockManager = new MultiECLockManager();
+		
    }
 	
 	protected SessionedEditingContext _defaultEC;
@@ -67,15 +69,21 @@ public class Session extends WOSession {
 				if(_defaultEC != null)
 					_defaultEC.unlock();
 				_defaultEC = new SessionedEditingContext(os,this);
-				_defaultEC.lock();
+//				_defaultEC.lock();
 			}
+			ecLockManager.registerEditingContext(_defaultEC);
 		} else if (_defaultEC == null) {
 			_defaultEC = new SessionedEditingContext(os,this);
-			_defaultEC.lock();
+//			_defaultEC.lock();
+			ecLockManager.registerEditingContext(_defaultEC);
 		}
 		return _defaultEC;
 	}
     
+	public MultiECLockManager ecLockManager() {
+		return ecLockManager;
+	}
+	
 	protected ReadAccess _readAccess;
 	
 	public ReadAccess readAccess() {
@@ -109,13 +117,16 @@ public class Session extends WOSession {
 				clientIdentity = curr;
 			}
 		}
-		if(_defaultEC != null)
-			_defaultEC.lock();
+		ecLockManager.lock();
+//		if(_defaultEC != null)
+//			_defaultEC.lock();
 	}
 	
 	public void sleep() {
-		if(_defaultEC != null)
-			_defaultEC.unlock();
+		if(!isTerminating())
+			ecLockManager.unlock();
+//		if(_defaultEC != null)
+//			_defaultEC.unlock();
 	}
 	
 	public void setUser(UserPresentation aUser) {
@@ -410,6 +421,7 @@ public class Session extends WOSession {
 	public void */
 	public void terminate() {
 		logger.log(WOLogLevel.SESSION,"Session terminated",this);
+		ecLockManager.fullyUnlock();
 		super.terminate();
 	}
 		

@@ -229,13 +229,22 @@ public class ModuleInit {
 		result.takeValueForKey(found, "results");
 		return result;
 		
-	}*/
+	}
 	
 	public NSArray diary (WOContext ctx) {
 		WORequest req = ctx.request();
-		EOEditingContext ec = EOSharedEditingContext.defaultSharedEditingContext();
+		NSTimestamp to = null;
+		String tmp = req.stringFormValueForKey("date");
+		NSTimestamp date = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
+				tmp, new java.text.ParsePosition(0));
+		if(date == null)
+			date = new NSTimestamp();
+		else
+			to = date;
+		EOEditingContext ec = (EOEditingContext)WOApplication.application().valueForKeyPath(
+				"ecForYear." + MyUtility.eduYearForDate(date));
 		NSArray courses = null;
-		String tmp = req.stringFormValueForKey("courses");
+		tmp = req.stringFormValueForKey("courses");
 		if(tmp != null) {
 			String[] cids = tmp.split(";");
 			EduCourse[] crs = new EduCourse[cids.length];
@@ -283,16 +292,8 @@ public class ModuleInit {
 
 		tab.takeValueForKey("true", "selected");
 		NSTimestamp since = null;
-		NSTimestamp to = null;
 		NSArray sorter = null;
 		
-		tmp = req.stringFormValueForKey("date");
-		NSTimestamp date = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
-				tmp, new java.text.ParsePosition(0));
-		if(date == null)
-			date = new NSTimestamp();
-		else
-			to = date;
 		if(Various.boolForObject(tab.valueForKey("period"))) {
 			tmp = req.stringFormValueForKey("since");
 			since = (tmp == null)?null:(NSTimestamp)MyUtility.dateFormat().parseObject(
@@ -331,6 +332,7 @@ public class ModuleInit {
 		tab.takeValueForKey(found, "list");
 		return result;
 	}
+	*/
 
 	public static Object deleteCourse(WOContext ctx) {
 		EduCourse course = (EduCourse)ctx.session().objectForKey("deleteCourse");

@@ -65,7 +65,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	public String subject;
 	public String text;
 	public boolean attach = false;
-	protected EOEditingContext ec;
+	public EOEditingContext ec;
 	
     public void setDict(NSDictionary aDict) {
 		dict = aDict;

@@ -161,8 +161,9 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		} catch (Exception e) {
 			;
 		}
-		if(ec == null)
-			ec = EOSharedEditingContext.defaultSharedEditingContext();
+		if(ec == null) {
+			ec = (EOEditingContext)ctx.session().defaultEditingContext();
+		}
 		return periodsInYear(eduYear, ec);
 	}
 	

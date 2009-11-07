@@ -1,4 +1,4 @@
-// PrognosisPopup.java
+// PrognosisPopup.java: Class file for WO Component 'PrognosisPopup'
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir

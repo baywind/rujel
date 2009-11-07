@@ -42,7 +42,6 @@ import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOKeyGlobalID;
-//import com.webobjects.eocontrol.EOSharedEditingContext;
 import com.webobjects.foundation.*;
 
 public class Main extends WOComponent {
