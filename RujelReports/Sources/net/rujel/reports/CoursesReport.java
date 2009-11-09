@@ -31,7 +31,6 @@ package net.rujel.reports;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
-import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.*;

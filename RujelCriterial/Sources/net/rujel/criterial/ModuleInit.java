@@ -31,17 +31,13 @@ package net.rujel.criterial;
 
 import java.math.BigDecimal;
 import java.util.Enumeration;
-import java.util.Calendar;
 import java.util.logging.Logger;
 
 import net.rujel.base.BaseLesson;
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.PlistReader;
-import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.eoaccess.EOJoin;
@@ -51,7 +47,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
-import com.webobjects.appserver.WORequest;
 
 public class ModuleInit {
 
