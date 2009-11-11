@@ -34,6 +34,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -293,7 +294,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		end = begin;
     		_newDict.takeValueForKey(end,Holiday.END_KEY);
     	}
-		_newDict.takeValueForKey(MyUtility.countDays(begin, end), "days");
+		_newDict.takeValueForKey(EOPeriod.Utility.countDays(begin, end), "days");
     	list().addObject(_newDict);
     	EOSortOrdering.sortArrayUsingKeyOrderArray(_list, Holiday.sorter);
     	_newDict = null;
@@ -350,7 +351,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 		holiday.takeValueForKey(begin, Holiday.BEGIN_KEY);
 		NSTimestamp end = HolidayType.dateFromPreset(year, type.endMonth(), type.endDay());
 		holiday.takeValueForKey(end, Holiday.END_KEY);
-		holiday.takeValueForKey(MyUtility.countDays(begin, end), "days");
+		holiday.takeValueForKey(EOPeriod.Utility.countDays(begin, end), "days");
 		return holiday;
 	}
 	

@@ -32,7 +32,6 @@ package net.rujel.eduplan;
 import java.util.Date;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EOPeriod;
 
 import com.webobjects.foundation.*;
@@ -54,7 +53,7 @@ public class Holiday extends _Holiday implements EOPeriod {
 	}
 	
 	public int days() {
-		return MyUtility.countDays(begin(), end());
+		return EOPeriod.Utility.countDays(begin(), end());
 	}
 	
 	public static NSArray holidaysInDates(NSTimestamp since, NSTimestamp to, 
@@ -81,6 +80,9 @@ public class Holiday extends _Holiday implements EOPeriod {
 	public static int freeDaysInDates(NSTimestamp since, NSTimestamp to, 
 			EOEditingContext ec, String listName) {
 		NSArray list = holidaysInDates(since, to, ec, listName);
+		return freeDaysInDates(since, to, list);
+	}
+	public static int freeDaysInDates(NSTimestamp since, NSTimestamp to, NSArray list) {
 		if(list == null || list.count() == 0)
 			return 0;
 		Enumeration enu = list.objectEnumerator();
@@ -93,8 +95,8 @@ public class Holiday extends _Holiday implements EOPeriod {
 			NSTimestamp end = hd.end();
 			if(end.compare(to) > 0)
 				end = to;
-			days += MyUtility.countDays(begin, end);*/
-			days += EduPeriod.intersect(since, to, hd);
+			days += EOPeriod.Utility.countDays(begin, end);*/
+			days += EOPeriod.Utility.intersect(since, to, hd);
 			if(hd.end().compare(to) > 0)
 				break;
 			since = hd.end().timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
@@ -103,10 +105,7 @@ public class Holiday extends _Holiday implements EOPeriod {
 	}
 
 	public boolean contains(Date date) {
-		if (date.compareTo(begin()) >= 0 && date.compareTo(end()) <= 0)
-			return true;
-		
-		return false;
+		return EOPeriod.Utility.contains(this, date);
 	}
 
 	public String name() {

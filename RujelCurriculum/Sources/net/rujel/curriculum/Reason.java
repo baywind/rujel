@@ -37,6 +37,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+import net.rujel.eduplan.Holiday;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -95,7 +96,7 @@ public class Reason extends _Reason {
 	}
 	
 	public static NSArray flagNames = new NSArray(new String[] {
-			"-1-","-2-","-4","-8-","forEduGroup","forTeacher"});
+			"external","forSkip","forAdd","-8-","forEduGroup","forTeacher"});
 
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {
@@ -158,6 +159,8 @@ public class Reason extends _Reason {
 	}
 	
     public String styleClass() {
+    	if(flags().intValue() == 1)
+    		return "grey";
     	if(unverified())
     		return "ungerade";
     	return "gerade";
@@ -269,6 +272,28 @@ public class Reason extends _Reason {
 		return found;
 	}
 	
+	public static Reason reasonForHoliday(Holiday holiday, boolean create) {
+		if(holiday == null)
+			return null;
+		EOEditingContext ec = holiday.editingContext();
+		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(holiday);
+		String key = gid.keyValues()[0].toString();
+		NSDictionary values = new NSDictionary( new Object[] {key, new Integer(1)},
+				new String[] {VERIFICATION_KEY,FLAGS_KEY});
+		NSArray found = EOUtilities.objectsMatchingValues(ec, ENTITY_NAME, values);
+		if(found.count() > 0) {
+			return (Reason)found.objectAtIndex(0);
+		}
+		if(!create)
+			return null;
+		Reason result = (Reason)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+		result.takeValuesFromDictionary(values);
+		result.setBegin(holiday.begin());
+		result.setEnd(holiday.end());
+		result.setReason(holiday.name());
+		return result;
+	}
+
 	public void validateForSave() {
 		super.validateForSave();
 		if(end() != null && end().compare(begin()) < 0) {

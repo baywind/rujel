@@ -64,7 +64,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	 */
 	
 	public boolean contains(Date date) {
-		return (date.compareTo(begin()) >= 0 && date.compareTo(end()) <= 0);
+		return EOPeriod.Utility.contains(this, date);
 	}
 	
 	public void validateForSave() throws NSValidation.ValidationException {
@@ -214,7 +214,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		result += cal.get(Calendar.MONTH)*100;
 		result += cal.get(Calendar.DAY_OF_MONTH);
 		result = (result+1)*1000;
-		result -= MyUtility.countDays(begin(), end());
+		result -= EOPeriod.Utility.countDays(begin(), end());
 		return result;
 	}
 	
@@ -237,7 +237,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 			if(toDate.compare(end) < 0)
 				end = toDate;
 		}
-		int days = MyUtility.countDays(begin, end);
+		int days = EOPeriod.Utility.countDays(begin, end);
 		if(listName == null) {
 			NSArray list = EOUtilities.objectsMatchingKeyAndValue(editingContext(), 
 					"PeriodList", "period", this);
@@ -249,22 +249,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		days -= Holiday.freeDaysInDates(begin, end, editingContext(), listName);
 		return days;
 	}
-	
-	public static int intersect (NSTimestamp since, NSTimestamp to, EOPeriod per) {
-		NSTimestamp begin = per.begin();
-		if(begin.compare(since) < 0)
-			begin = since;
-		NSTimestamp end = per.end();
-		if(end.compare(to) > 0)
-			end = to;
-		if(begin.compare(end) > 0)
-			return 0;
-		int result = MyUtility.countDays(begin, end);
-//		if(result < 0)
-//			result = 0;
-		return result;
-	}
-	
+		
 	public static int verifyList(NSArray list) {
 		if(list == null || list.count() < 2)
 			return 0;
@@ -275,7 +260,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		while (enu.hasMoreElements()) {
 			EOPeriod per = (EOPeriod) enu.nextElement();
 			if(lastEnd != null && lastEnd.compare(per.begin()) >= 0)
-				result += MyUtility.countDays(per.begin(), lastEnd);
+				result += EOPeriod.Utility.countDays(per.begin(), lastEnd);
 			lastEnd = per.end();
 		}
 		return result;

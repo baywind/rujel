@@ -117,6 +117,8 @@ public class Variation extends _Variation implements Reason.Event {
 	}*/
 	
     public String valueStyle() {
+    	if(reason().flags().intValue() == 1)
+    		return "text-align:center;color:#333333;";
     	if(value().intValue() > 0) {
     		return "font-weight:bold;text-align:left;color:#009933;";
     	}

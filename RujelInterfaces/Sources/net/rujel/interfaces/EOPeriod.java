@@ -29,6 +29,9 @@
 
 package net.rujel.interfaces;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
@@ -71,4 +74,62 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 		}
 	}
 
+	
+	public static class Utility {
+		public static boolean contains(EOPeriod period, Date date) {
+			boolean begin = period.begin().compareTo(date) <= 0;
+			boolean end = period.end().compareTo(date) >= 0;
+			if(begin && end)
+				return true;
+			Calendar cal = Calendar.getInstance();
+			if(!begin) {
+				cal.setTime(period.begin());
+				cal.set(Calendar.HOUR_OF_DAY, 0);
+				cal.set(Calendar.MINUTE, 0);
+				cal.set(Calendar.SECOND, 0);
+				cal.set(Calendar.MILLISECOND, 0);
+				begin = cal.getTimeInMillis() < date.getTime();
+			}
+			if(!begin)
+				return false;
+			if(!end) {
+				cal.setTime(period.end());
+				cal.set(Calendar.HOUR_OF_DAY, 23);
+				cal.set(Calendar.MINUTE, 59);
+				cal.set(Calendar.SECOND, 59);
+				cal.set(Calendar.MILLISECOND, 999);
+				end = cal.getTimeInMillis() > date.getTime();
+			}
+			return begin && end;
+		}
+		
+		public static int countDays(Date begin, Date end) {
+			Calendar cal1 = Calendar.getInstance();
+			cal1.setTime(begin);
+			Calendar cal2 = Calendar.getInstance();
+			cal2.setTime(end);
+			int days = cal2.get(Calendar.DAY_OF_YEAR) - cal1.get(Calendar.DAY_OF_YEAR);
+			while (cal1.get(Calendar.YEAR) < cal2.get(Calendar.YEAR)) {
+				days += cal1.getActualMaximum(Calendar.DAY_OF_YEAR);
+				cal1.add(Calendar.YEAR, 1);
+			}
+			return days +1;
+		}
+
+		public static int intersect (NSTimestamp since, NSTimestamp to, EOPeriod per) {
+			NSTimestamp begin = per.begin();
+			if(begin.compare(since) < 0)
+				begin = since;
+			NSTimestamp end = per.end();
+			if(end.compare(to) > 0)
+				end = to;
+			if(begin.compare(end) > 0)
+				return 0;
+			int result = countDays(begin, end);
+//			if(result < 0)
+//				result = 0;
+			return result;
+		}
+
+	}
 }

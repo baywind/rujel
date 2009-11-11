@@ -365,7 +365,10 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		if (course.cycle() instanceof PlanCycle) {
 			PlanCycle cycle = (PlanCycle) course.cycle();
-			return cycle.weeklyHours(period.eduYear())[0];
+			Integer w = cycle.weeklyHours();
+			if(w == null)
+				w = cycle.weeklyHours(period.eduYear())[0];
+			return w;
 		}
 		return 0;
 	}

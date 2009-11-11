@@ -267,20 +267,7 @@ public class MyUtility {
 		context.generateCompleteURLs();
 		return context;
 	}
-	
-	public static int countDays(Date begin, Date end) {
-		Calendar cal1 = Calendar.getInstance();
-		cal1.setTime(begin);
-		Calendar cal2 = Calendar.getInstance();
-		cal2.setTime(end);
-		int days = cal2.get(Calendar.DAY_OF_YEAR) - cal1.get(Calendar.DAY_OF_YEAR);
-		while (cal1.get(Calendar.YEAR) < cal2.get(Calendar.YEAR)) {
-			days += cal1.getActualMaximum(Calendar.DAY_OF_YEAR);
-			cal1.add(Calendar.YEAR, 1);
-		}
-		return days +1;
-	}
-	
+		
 	public static void scheduleTaskOnTime(TimerTask task, String time) {
 		Timer timer = (Timer)WOApplication.application().valueForKey("timer");
 		if(timer == null)
