@@ -80,6 +80,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     				StringBuffer message = new StringBuffer("Subject ");
     				if(oldName == null) {
     					message.append("created: ");
+    					returnPage.takeValueForKey(Boolean.TRUE, "shouldReset");
     				} else {
     					message.append("changed: ");
     					if(!oldName.equals(subject.subject())) {

@@ -135,7 +135,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
 	        Number eduYear = (Number)context().session().valueForKey("eduYear");
 	        grades = prepareGrades(ec,eduYear.intValue());
-		  	EOFetchSpecification fs = new EOFetchSpecification("Subject",null,Subject.sorter);
+		  	EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME
+		  			,null,Subject.sorter);
 		  	subjects = ec.objectsWithFetchSpecification(fs);
 		  	cyclesBySubj = null;
 		  	subjectItem = null;
