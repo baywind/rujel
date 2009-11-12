@@ -329,14 +329,6 @@ st:			while (stEnu.hasMoreElements()) {
 		queue.removeAllObjects();
 		idx = 0;
 		queue = null;*/
-			if(ses != null) {
-				Object user = ses.valueForKey("user");
-				if(user == null || user.toString().startsWith("DummyUser")) {
-					//logger.log(WOLogLevel.SESSION, "Terminating Dummy mailing session", ses);
-					ses.terminate();
-				}
-				ses = null;
-			}
 		} catch (Throwable ex) {
 			logger.log(WOLogLevel.WARNING,"Error in mail broadcasting",ex);
 			queue = null;
@@ -345,6 +337,14 @@ st:			while (stEnu.hasMoreElements()) {
 			Thread t = new Thread(new EMailBroadcast(),"EMailBroadcast");
 			t.setPriority(Thread.MIN_PRIORITY + 1);
 			t.start();*/
+		}
+		if(ses != null) {
+			Object user = ses.valueForKey("user");
+			if(user == null || user.toString().startsWith("DummyUser")) {
+				//logger.log(WOLogLevel.SESSION, "Terminating Dummy mailing session", ses);
+				ses.terminate();
+			}
+			ses = null;
 		}
 	}
 	
@@ -365,7 +365,13 @@ st:			while (stEnu.hasMoreElements()) {
 //			ctx = context;
 			if(ses == null) {
 				ses = ctx.session();
-				ses.takeValueForKey(period.end(), "today");
+				NSTimestamp date = (NSTimestamp)params.valueForKey("date");
+				if(date == null)
+					date = (NSTimestamp)params.valueForKey("to");
+				if(date == null && period != null)
+					new NSTimestamp(period.end());
+				if(date != null)
+					ses.takeValueForKey(date, "today");
 //				ses.takeValueForKey(Boolean.TRUE,"dummyUser");
 			}
 		}
