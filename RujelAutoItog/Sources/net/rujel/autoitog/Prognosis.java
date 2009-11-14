@@ -142,7 +142,8 @@ public class Prognosis extends _Prognosis {
     
     public void setAutoItog(AutoItog itog) {
     	if(_autoItog != itog && itog != null) {
-    		setItogContainer(itog.itogContainer());
+    		if(itogContainer() != itog.itogContainer())
+    			setItogContainer(itog.itogContainer());
     		if(itog != null && editingContext().globalIDForObject(this).isTemporary())
     			setFireDate(itog.fireDate());
     	}
@@ -600,5 +601,4 @@ cycleStudents:
 		}
 		return result;
 	}
-
 }
