@@ -35,6 +35,7 @@ import java.util.Date;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSLocking;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.reusables.Period;
@@ -78,7 +79,11 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 	public static class Utility {
 		public static boolean contains(EOPeriod period, Date date) {
 			boolean begin = period.begin().compareTo(date) <= 0;
+			if(!begin && period.begin().getTime() - date.getTime() > NSLocking.OneDay)
+				return false;
 			boolean end = period.end().compareTo(date) >= 0;
+			if(!end && date.getTime() - period.end().getTime() > NSLocking.OneDay)
+				return false;
 			if(begin && end)
 				return true;
 			Calendar cal = Calendar.getInstance();

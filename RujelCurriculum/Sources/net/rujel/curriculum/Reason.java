@@ -276,12 +276,12 @@ public class Reason extends _Reason {
 		if(holiday == null)
 			return null;
 		EOEditingContext ec = holiday.editingContext();
-		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(holiday);
-		String key = gid.keyValues()[0].toString();
+//		EOGlobalID gid = ec.globalIDForObject(holiday);
+		String key = WOLogFormatter.formatEO(holiday);
 		NSDictionary values = new NSDictionary( new Object[] {key, new Integer(1)},
 				new String[] {VERIFICATION_KEY,FLAGS_KEY});
 		NSArray found = EOUtilities.objectsMatchingValues(ec, ENTITY_NAME, values);
-		if(found.count() > 0) {
+		if(found != null && found.count() > 0) {
 			return (Reason)found.objectAtIndex(0);
 		}
 		if(!create)

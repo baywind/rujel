@@ -228,9 +228,9 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		}
     		fromLesson = sub.fromLesson();
 			populateFrom();
-    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.substitute");
+    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.Substitute");
     		cantSelect = cantEdit;
-    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.substitute");
+    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.Substitute");
     		if(others == null)
     			others = new NSArray(substitute);
     		else if(!others.containsObject(substitute))

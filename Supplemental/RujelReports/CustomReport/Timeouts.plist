@@ -13,16 +13,14 @@
 		<dict>
 			<key>title</key>
 			<string>Период</string>
-			<key>active</key>
-			<true/>
 			<key>attribute</key>
-			<string>eduPeriod</string>
+			<string>itogContainer</string>
 			<key>select</key>
 			<dict>
 				<key>className</key>
-				<string>net.rujel.eduresults.EduPeriod</string>
+				<string>net.rujel.eduresults.ItogContainer</string>
 				<key>methodName</key>
-				<string>periodsInYear</string>
+				<string>itogsInYear</string>
 				<key>cacheResult</key>
 				<true/>
 				<key>paramClasses</key>
@@ -36,33 +34,16 @@
 					<string>^editingContext</string>
 				</array>
 			</dict>
-			<key>defaultValue</key>
-			<dict>
-				<key>className</key>
-				<string>net.rujel.eduresults.EduPeriod</string>
-				<key>methodName</key>
-				<string>defaultCurrentPeriod</string>
-				<key>cacheResult</key>
-				<true/>
-				<key>paramClasses</key>
-				<array>
-					<string>com.webobjects.foundation.NSTimestamp</string>
-					<string>com.webobjects.eocontrol.EOEditingContext</string>
-				</array>
-				<key>paramValues</key>
-				<array>
-					<string>$session.today</string>
-					<string>^editingContext</string>
-				</array>
-			</dict>
 			<key>displayString</key>
 			<string>.title</string>
 		</dict>
 		<dict>
 			<key>title</key>
 			<string>Дата</string>
+			<key>active</key>
+			<true/>
 			<key>attribute</key>
-			<string>dueDate</string>
+			<string>fireDate</string>
 			<key>formatter</key>
 			<string>date</string>
 			<key>fieldSize</key>

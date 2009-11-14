@@ -292,9 +292,10 @@ public class MyUtility {
 			}
 		}
 		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.HOUR, hour);
+		cal.set(Calendar.HOUR_OF_DAY, hour);
 		cal.set(Calendar.MINUTE, minute);
 		cal.set(Calendar.SECOND, idx);
+//		NSTimestamp moment = new NSTimestamp(cal.getTimeInMillis());
 		if(System.currentTimeMillis() < cal.getTimeInMillis())
 			timer.schedule(task, cal.getTime());
 	}

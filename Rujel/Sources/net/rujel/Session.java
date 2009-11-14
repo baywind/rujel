@@ -125,6 +125,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	public void sleep() {
 		if(!isTerminating())
 			ecLockManager.unlock();
+		super.sleep();
 //		if(_defaultEC != null)
 //			_defaultEC.unlock();
 	}

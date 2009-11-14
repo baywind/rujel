@@ -17,25 +17,6 @@
 			<true/>
 			<key>attribute</key>
 			<string>itogContainer</string>
-			<key>selectOld</key>
-			<dict>
-				<key>className</key>
-				<string>net.rujel.eduresults.EduPeriod</string>
-				<key>methodName</key>
-				<string>periodsInYear</string>
-				<key>cacheResult</key>
-				<true/>
-				<key>paramClasses</key>
-				<array>
-					<string>java.lang.Number</string>
-					<string>com.webobjects.eocontrol.EOEditingContext</string>
-				</array>
-				<key>paramValues</key>
-				<array>
-					<string>$session.eduYear</string>
-					<string>^editingContext</string>
-				</array>
-			</dict>
 			<key>select</key>
 			<dict>
 				<key>className</key>
