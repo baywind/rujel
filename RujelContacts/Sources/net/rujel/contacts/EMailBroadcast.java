@@ -33,6 +33,7 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.auth.UserPresentation.DummyUser;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
 //import er.javamail.*;
@@ -68,7 +69,7 @@ public class EMailBroadcast implements Runnable{
 			String time = SettingsReader.stringForKeyPath("mail.broadcastTime", "5:30");
 			TimerTask task = new TimerTask() {
 				public void run() {
-					broadcastMarksForPeriod(null, null, null);
+					broadcastMarksForPeriod(null, null);
 				}
 			};
 			MyUtility.scheduleTaskOnTime(task, time);
@@ -95,28 +96,9 @@ public class EMailBroadcast implements Runnable{
 		return null;
 	}
 	
-	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter,
-			EOEditingContext ec) {
-		//EOEditingContext ec = period.editingContext();//new EOEditingContext();
-	/*	
-		long timeout = 0;
-		try {
-			String lag = SettingsReader.stringForKeyPath("mail.messageLag",null);
-			if(lag != null)
-				timeout = Long.parseLong(lag);
-		} catch (Exception ex) {
-			logger.log(WOLogLevel.INFO,"Failed to define message lag",ex);
-			timeout = 0;
-		}
-		
-		ERMailDeliveryHTML mail = new ERMailDeliveryHTML ();*/
-		WOContext ctx = MyUtility.dummyContext(null);
-		WOSession ses = ctx.session();
-		ses.takeValueForKey(period.end(), "today");
-		if(ec == null) {
-			ec = new SessionedEditingContext(ses);
-		}
-		ec.lock();
+	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter) {
+//		WOContext ctx = MyUtility.dummyContext(null);
+//		WOSession ses = ctx.session();
 
 		NSTimestamp moment = null;
 		if(period == null) {
@@ -128,37 +110,37 @@ public class EMailBroadcast implements Runnable{
 			else
 				moment = new NSTimestamp(fin);
 		}
-		Number eduYear = MyUtility.eduYearForDate(moment);
-
-		// select period 
-		
-//		Period defaultPeriod = null;
-//		NSMutableDictionary periodsByGroup = null;
+		Integer eduYear = MyUtility.eduYearForDate(moment);
+		EOEditingContext ec = null;
+		if(period instanceof EOEnterpriseObject) {
+			ec = ((EOEnterpriseObject)period).editingContext();
+		} else if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
+			ec = new EOEditingContext(os);
+		} else {
+			ec = new EOEditingContext();
+		}
+		/*
+		ses.takeValueForKey(moment, "today");
+		if(ec == null) {
+			ec = ses.defaultEditingContext();
+		}*/
+		ec.lock();
+		try {
+			SettingsBase listBase = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+			NSMutableDictionary periodsByList = null;
 		if(period == null) {
-			period = EduPeriod.getCurrentPeriod(moment, null, ec);
+			String listName = listBase.textValue();
+			period = EduPeriod.getCurrentPeriod(moment, listName, ec);
+			if(listBase.byCourse() != null && listBase.byCourse().count() > 0) {
 			if(period == null) {
-				ec.unlock();
+				periodsByList = new NSMutableDictionary(NSKeyValueCoding.NullValue,listName);
+			} else {
+				periodsByList = new NSMutableDictionary(period,listName);
+			}
+			} else if (period == null) {
 				return;
-//				defaultPeriod = new Period.ByDates(MyUtility.yearStart(eduYear.intValue()),moment);
-			}/*
-			NSArray typeUsage = EOUtilities.objectsWithQualifierFormat(ec,"PeriodTypeUsage", "(eduYear = %d OR eduYear = 0) AND eduGroup != nil AND course = nil",new NSArray(eduYear));
-			if(typeUsage != null && typeUsage.count() > 0) {
-				typeUsage = PeriodType.filterTypeUsageArray(typeUsage,eduYear);
-				periodsByGroup = new NSMutableDictionary();
-				Enumeration enu = typeUsage.objectEnumerator();
-				while (enu.hasMoreElements()) {
-					EOEnterpriseObject cur = (EOEnterpriseObject)enu.nextElement();
-					EduGroup gr = (EduGroup)cur.valueForKey("eduGroup");
-					PeriodType pt = (PeriodType)cur.valueForKey("periodType");
-					EduPeriod per = (EduPeriod)periodsByGroup.objectForKey(gr);
-					if(per != null) {
-						if(per.periodType().inYearCount().intValue() > pt.inYearCount().intValue())
-							continue;
-					}
-					per = pt.currentPeriod(moment);
-					periodsByGroup.setObjectForKey(per,gr);
-				}
-			}*/
+			}
 		} else { // period != null
 			if(period instanceof EOEnterpriseObject) {
 				period = (Period)EOUtilities.localInstanceOfObject(ec,(EOEnterpriseObject)period);
@@ -175,92 +157,57 @@ public class EMailBroadcast implements Runnable{
 		
 		if(reporter == null)
 				reporter = (NSDictionary)app.valueForKeyPath("strings.Strings.Overview.defaultReporter");
-		ec.unlock();
+//		ec.unlock();
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
-			ec.lock();
+//			ec.lock();
 			NSArray students = eduGroup.list();
 			if(students == null || students.count() == 0)
 				continue gr;
-			/*
-			PerPersonLink contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
-			if(contacts == null)
-				continue gr;*/
 			dict.setObjectForKey(eduGroup,"eduGroup");
 			NSArray existingCourses = EOUtilities.objectsMatchingValues(ec,EduCourse.entityName,dict);
-			
-/*			if(defaultPeriod != null) {
-				if(periodsByGroup != null) {
-					period = (Period)periodsByGroup.objectForKey(eduGroup);
-				}
-				if(period == null) {
-					period = defaultPeriod;
-				}
-			}*/
-//			broadcastMarksToList(students,period,reporter,eduGroup.name(),existingCourses,ctx);
+			if(existingCourses == null || existingCourses.count() == 0)
+				continue gr;
 			NSMutableDictionary params = new NSMutableDictionary();
 			params.takeValueForKey(students,"students");
-			params.takeValueForKey(period,"period");
+			params.takeValueForKey(existingCourses,"courses");
+			if(periodsByList != null) {
+				EOEnterpriseObject bc = listBase.forValue(eduGroup, eduYear);
+				String listName = (bc == null)?null:
+					(String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				if(listName != null) {
+					Object per = periodsByList.objectForKey(listName);
+					if(per == null) {
+						per = EduPeriod.getCurrentPeriod(moment, listName, ec);
+						if(per == null)
+							per = NSKeyValueCoding.NullValue;
+						periodsByList.setObjectForKey(per, listName);
+					}
+					if(per == NSKeyValueCoding.NullValue)
+						continue gr;
+					params.takeValueForKey(per,"period");
+				} else {
+					params.takeValueForKey(period,"period");
+				}
+			} else {
+				params.takeValueForKey(period,"period");
+			}
 			params.takeValueForKey(reporter,"reporter");
 			params.takeValueForKey(eduGroup.name(),"groupName");
-			params.takeValueForKey(existingCourses,"courses");
-			params.takeValueForKey(ctx,"ctx");
 			params.takeValueForKey("Finished mailing for eduGroup","logMessage");
 			params.takeValueForKey(eduGroup,"logParam");
-			params.takeValueForKey(ec,"editingContext");
-			params.takeValueForKey(ses,"tmpsession");
-			ec.unlock();
+//			params.takeValueForKey(ctx,"ctx");
+//			params.takeValueForKey(ec,"editingContext");
+//			params.takeValueForKey(ses,"tmpsession");
+//			ses.sleep();
 			broadcastMarks(params);
-			/*
-			Enumeration stEnu = students.objectEnumerator();
-st:			while (stEnu.hasMoreElements()) {
-				long startTime = System.currentTimeMillis();
-				Student student = (Student)stEnu.nextElement();
-				NSArray stContacts = (NSArray)contacts.forPersonLink(student);
-				if(stContacts == null || stContacts.count() == 0)
-					continue st;
-				stContacts = EMailUtiliser.toAdressesFromContacts(stContacts,false);
-				if(stContacts == null || stContacts.count() == 0)
-					continue st;
-				//mail.setHiddenPlainTextContent(text);
-				
-				//prepare HTML page for email
-				WOComponent reportPage = app.pageWithName("PrintReport",ctx);
-				reportPage.takeValueForKey(reporter,"reporter");
-				reportPage.takeValueForKey(existingCourses,"courses");
-				reportPage.takeValueForKey(new NSArray(student),"students");
-				reportPage.takeValueForKey(period,"period");
-				int mailsCount = 0;
-				synchronized (mail) {
-					mail.newMail();
-					try {
-						mail.setComponent(reportPage);
-						String subj = "RUJEL: " + eduGroup.name() + " : " + Person.Utility.fullName(student.person(),true,2,2,0) + " - " + reportPage.valueForKey("title");
-						mail.setSubject(subj);	
-						mailsCount = EMailUtiliser.sendToContactList(mail,stContacts);					
-						logger.finer("Mail sent \"" + subj + '"');
-					} catch (Exception ex) {
-						logger.log(WOLogLevel.WARNING,"Failed to send email for student",new Object[] {student,ex});
-					}
-					
-					if(timeout > 0 && mailsCount > 0) {
-						long fin = startTime + timeout;
-						long towait = fin - System.currentTimeMillis();
-						while(towait > 0) {
-							try {
-								logger.finest("Waiting timeout " + towait);
-								mail.wait(towait);
-							} catch (Exception ex) {
-								logger.logp(WOLogLevel.FINER,EMailBroadcast.class.getName(),"broadcastMarksForPeriod","Interrupted timeout between mails",ex);
-							}
-							towait = fin - System.currentTimeMillis();
-						}
-					}
-				}
-			} // Student
-			
-			logger.log(WOLogLevel.FINE,"Finished mailing for eduGroup",eduGroup);*/
 		} // EduGroup
+		} catch (Exception ex) {
+			logger.log(WOLogLevel.WARNING,"Error broadcasting mail for period",
+					new Object[] {period,ex});
+		} finally {
+			ec.unlock();
+		}
 		logger.log(WOLogLevel.INFO,"Mailing queued",period);
 	}
 	
@@ -313,9 +260,10 @@ st:			while (stEnu.hasMoreElements()) {
 		try {
 			//int tasksLeft = queue.count() - idx;
 			NSDictionary params = nextTask();
-			if(params != null) {
+			/*if(params != null) {
 				ses = (WOSession)params.valueForKey("tmpsession");
-			}
+				ses.awake();
+			}*/
 			while(params != null) {
 				//NSDictionary params = (NSDictionary)queue.objectAtIndex(idx);
 				doBroadcast(params);
@@ -339,6 +287,7 @@ st:			while (stEnu.hasMoreElements()) {
 			t.start();*/
 		}
 		if(ses != null) {
+//			ses.sleep();
 			Object user = ses.valueForKey("user");
 			if(user == null || user.toString().startsWith("DummyUser")) {
 				//logger.log(WOLogLevel.SESSION, "Terminating Dummy mailing session", ses);
@@ -360,9 +309,9 @@ st:			while (stEnu.hasMoreElements()) {
 		Period period = (Period)params.valueForKey("period");
 		WOContext ctx = (WOContext)params.valueForKey("ctx");
 		if(ctx == null) {
-			if(ctx == null)
+			if(ctx == null) {
 				ctx = MyUtility.dummyContext(ses);
-//			ctx = context;
+			}
 			if(ses == null) {
 				ses = ctx.session();
 				NSTimestamp date = (NSTimestamp)params.valueForKey("date");
@@ -373,6 +322,8 @@ st:			while (stEnu.hasMoreElements()) {
 				if(date != null)
 					ses.takeValueForKey(date, "today");
 //				ses.takeValueForKey(Boolean.TRUE,"dummyUser");
+			} else {
+				ctx._setSession(ses);
 			}
 		}
 		
@@ -383,7 +334,7 @@ st:			while (stEnu.hasMoreElements()) {
 			ec = new SessionedEditingContext(ctx.session());//((EOEnterpriseObject)students.objectAtIndex(0)).editingContext();
 		}
 		
-		ec.lock();
+//		ec.lock();
 		
 		students = EOUtilities.localInstancesOfObjects(ec,students);
 		existingCourses = EOUtilities.localInstancesOfObjects(ec,existingCourses);
@@ -393,7 +344,8 @@ st:			while (stEnu.hasMoreElements()) {
 		}
 		PerPersonLink contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
 		if(contacts == null) {
-			ec.unlock();
+//			ec.unlock();
+//			ses.sleep();
 			return;
 		}
 		
@@ -515,7 +467,8 @@ st:		while (stEnu.hasMoreElements()) {
 		Object logParam = params.valueForKey("logParam");
 		if(logMessage != null)
 			logger.log(WOLogLevel.FINE,logMessage,logParam);
-		ec.unlock();
+//		ec.unlock();
+//		ses.sleep();
 	}
 
 	protected NSArray contactsInSet(NSArray contacts, NSSet set) {
