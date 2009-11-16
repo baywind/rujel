@@ -138,7 +138,12 @@ public interface Timeout extends EOEnterpriseObject {
 			StringBuffer buf = new StringBuffer();
 //			buf.append(upTo).append(' ');
 			MyUtility.dateFormat().format(timeout.fireDate(), buf, pos);
-			buf.append(" : <em>").append(timeout.reason()).append("</em>");
+			buf.append(" : <em>").append(timeout.reason());
+			if(timeout instanceof CourseTimeout) {
+				buf.append(' ').append('(');
+				((CourseTimeout)timeout).presentBinding(buf).append(')');
+			}
+			buf.append("</em>");
 			return buf.toString();
     	}
     	

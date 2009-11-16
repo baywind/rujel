@@ -55,7 +55,8 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
         super(context);
     }
     
-	public static NSDictionary reportForStudent(NSDictionary settings) {
+	public static NSDictionary reportForStudent(WOSession session) {
+		NSDictionary settings = (NSDictionary)session.objectForKey("reportForStudent");
 		NamedFlags options = (NamedFlags)settings.valueForKey("autoitog");	
 		if(options == null)
 			return null;
@@ -66,11 +67,11 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
 				.valueForKeyPath("strings.RujelAutoItog_AutoItog.prognosReport")).mutableClone();
 //		ItogContainer eduper = null;
-		NSTimestamp date = (NSTimestamp)settings.valueForKey("to");
-		if(date == null) {
-			Period period = (Period)settings.valueForKey("period");
-			if(period != null)
-			date = new NSTimestamp(period.end());
+		NSTimestamp date = (NSTimestamp)session.valueForKey("today");
+		Period period = (Period)settings.valueForKey("period");
+		if(period != null && !period.contains(date)) {
+			long millis = period.end().getTime()/2 + period.begin().getTime()/2;
+			date = new NSTimestamp(millis);
 		}
 		EOQualifier[] qual = new EOQualifier[2];
 		qual[0] = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
@@ -128,7 +129,13 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 				if(studentTimeout != null || courseTimeout != null) {
 					Timeout timeout = Timeout.Utility.chooseTimeout(
 							studentTimeout, courseTimeout);
-					dict.takeValueForKey(timeout.reason(), "reason");
+					String title = (timeout.namedFlags().flagForKey("negative"))?
+							Timeout.negativeTitle:Timeout.timeoutTitle;
+					dict.takeValueForKey(title, "timeoutTitle");
+					title = timeout.reason();
+					if(timeout == courseTimeout)
+						title = title + " (" + courseTimeout.presentBinding() + ')';
+					dict.takeValueForKey(title, "reason");
 					String dateStr = MyUtility.dateFormat().format(timeout.fireDate());
 					dict.setObjectForKey(dateStr, "timeout");
 				}

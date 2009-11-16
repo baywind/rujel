@@ -68,9 +68,7 @@ public class AutoItogModule {
 		} else if("printStudentResults".equals(obj)) {
 			return printStudentResults(ctx);
 		} else if("reportForStudent".equals(obj)) {
-			NSDictionary settings = (NSDictionary)ctx.session().
-						objectForKey("reportForStudent");
-			return PrognosReport.reportForStudent(settings);
+			return PrognosReport.reportForStudent(ctx.session());
 		} else if("reportSettingsForStudent".equals(obj)) {
 			NSDictionary reportSettings = (NSDictionary)ctx.session().
 						valueForKeyPath("strings.RujelAutoItog_AutoItog.reportSettings");

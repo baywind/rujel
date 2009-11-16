@@ -282,6 +282,37 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
 		return qual;
 	}
 	
+	public String presentBinding() {
+		StringBuffer buf = new StringBuffer();
+		presentBinding(buf);
+		return buf.toString();
+	}
+	
+	public StringBuffer presentBinding(StringBuffer buf) {
+		EduGroup group = eduGroup();
+		EduCycle cycle = cycle();
+		Teacher teacher = teacher();
+		EduCourse course = course();
+		if(course != null) {
+			group = course.eduGroup();
+			cycle = course.cycle();
+			teacher = course.teacher();
+		}
+		if(group != null)
+			buf.append(group.name());
+		if(cycle != null) {
+			if(buf.length() > 0)
+				buf.append(" : ");
+			buf.append(cycle.subject());
+		}
+		if(teacher != null) {
+			if(buf.length() > 0)
+				buf.append(" : ");
+			buf.append(Person.Utility.fullName(teacher, false, 2, 1, 1));
+		}
+		return buf;
+	}
+	
 /*	public NSMutableDictionary extItog(EduCycle cycle) {
 		NSMutableDictionary result = new NSMutableDictionary(itogContainer(),ITOG_CONTAINER_KEY);
 		StringBuffer buf = new StringBuffer((String)WOApplication.application()
