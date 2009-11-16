@@ -106,7 +106,7 @@
 			<key>in</key>
 			<dict>
 				<key>relationship</key>
-				<string>eduCourse</string>
+				<string>course</string>
 				<key>args</key>
 				<array>
 					<string>.eduPeriod.eduYear</string>
@@ -394,7 +394,7 @@
 			<key>title</key>
 			<string>Предмет</string>
 			<key>keyPath</key>
-			<string>eduCourse.cycle.subjectEO</string>
+			<string>course.cycle.subjectEO</string>
 			<key>titlePath</key>
 			<string>subject</string>
 			<key>comparison</key>
@@ -412,7 +412,7 @@
 			<key>pageParams</key>
 			<dict>
 				<key>course</key>
-				<string>$itemRow.eduCourse</string>
+				<string>$itemRow.course</string>
 			</dict>
 		</dict>
 		<dict>
@@ -421,7 +421,7 @@
 			<key>short</key>
 			<string> . </string>
 			<key>keyPath</key>
-			<string>eduCourse</string>
+			<string>course</string>
 			<key>titlePath</key>
 			<string>comment</string>
 			<key>active</key>
@@ -435,7 +435,7 @@
 			<key>title</key>
 			<string>Учитель</string>
 			<key>keyPath</key>
-			<string>eduCourse.teacher</string>
+			<string>course.teacher</string>
 			<key>style</key>
 			<string>white-space:nowrap;</string>
 			<key>presenter</key>
@@ -466,7 +466,7 @@
 			<key>style</key>
 			<string>text-align:center;font-weight:bold;padding:0px 4px;</string>
 			<key>keyPath</key>
-			<string>dueDate</string>
+			<string>fireDate</string>
 			<key>presenterBindings</key>
 			<dict>
 				<key>dateformat</key>
