@@ -52,6 +52,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		super();
 	}
 
+	protected static EOGlobalID defaultType;
 	public void awakeFromInsertion(EOEditingContext ctx) {
 		super.awakeFromInsertion(ctx);
 		super.setWeight(BigDecimal.ZERO);
@@ -59,15 +60,20 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		setLoad(zero);
 		setFlags(zero);
 		setAnnounce(new NSTimestamp());
-		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
-				EOQualifier.QualifierOperatorLessThan, new Integer(16));
-		EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
-				ModulesInitialiser.sorter);
-		fs.setFetchLimit(1);
-		NSArray found = ctx.objectsWithFetchSpecification(fs);
-		if(found != null && found.count() > 0) {
-			EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
-			setWorkType(type);
+		if(defaultType == null) {
+			EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
+					EOQualifier.QualifierOperatorLessThan, new Integer(16));
+			EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
+					ModulesInitialiser.sorter);
+			fs.setFetchLimit(1);
+			NSArray found = ctx.objectsWithFetchSpecification(fs);
+			if(found != null && found.count() > 0) {
+				EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
+				setWorkType(type);
+				defaultType = ctx.globalIDForObject(type);
+			}
+		} else {
+			setWorkType(ctx.faultForGlobalID(defaultType, ctx));
 		}
 	}
 	
@@ -747,7 +753,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	
 
 	public static final NSArray flagNames = new NSArray (new String[] {
-		"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","","unused"});
+		"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","-32-","unused"});
 
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {
@@ -774,45 +780,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
     	_flags = null;
     	super.setFlags(value);
     }
-/*
-	public static final int CLASSWORK = 0;
-	public static final int HOMEWORK = 1;
-	public static final int PROJECT = 2;
-	public static final int OPTIONAL = 3;
-	protected static NSArray workTypes = new NSArray (
-			new String[] {"classwork","homework","project","optional"});
-
-	public static NSArray workTypes() {
-		return workTypes;
-	}
-	
-	public static void initTypes() {
-		NSDictionary types = (NSDictionary)WOApplication.application().valueForKeyPath(
-				"strings.RujelCriterial_Strings.workTypes");
-		if(types == null || types.count() == 0)
-			return;
-		NSMutableArray result = new NSMutableArray();
-		Enumeration enu = workTypes.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			String type = (String) enu.nextElement();
-			String value = (String)types.objectForKey(type);
-			result.addObject((value == null)?type:value);
-		}
-		workTypes = result.immutableClone();
-	}
-	
-	public String workType() {
-		return (String)workTypes.objectAtIndex(type().intValue());
-	}
-	public void setWorkType(String workType) {
-		int value = 0;
-		if(workType != null)
-			value = workTypes.indexOfObject(workType);
-		if(value < 0)
-			value = 0;
-		setType(new Integer(value));
-	}
-	*/
 
 	public void setWorkType(EOEnterpriseObject workType) {
 		EOEnterpriseObject prevType = workType();
@@ -830,11 +797,11 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			workType.takeValueForKey(useCount, "useCount");
 			setFlags((Integer)workType.valueForKey("dfltFlags"));
 			setWeight((BigDecimal)workType.valueForKey("dfltWeight"));
-		} else {
+/*		} else {
 			//TODO: remove this debug
 			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
 					"Setting workType to NULL",new Object[]
-			{this,snapshot(),new IllegalArgumentException("Null workType")});
+			{this,snapshot(),new IllegalArgumentException("Null workType")});*/
 		}
 	}
     
@@ -867,28 +834,4 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
     	}
     	return result;
     }
-    
-	/*
-	public String styleClass() {
-		if(type() == null)
-			return null;
-		switch (type().intValue()) {
-		case CLASSWORK:
-			if(weight() != null && weight().compareTo(BigDecimal.ZERO) != 0)
-				return "classWeight";
-			else
-				return "classPlain";
-		case HOMEWORK:
-			if(weight() != null && weight().compareTo(BigDecimal.ZERO) != 0)
-				return "homeWeight";
-			else
-				return "homework";
-		case PROJECT:
-			return "project";
-		case OPTIONAL:
-			return "optional";
-		default:
-			return null;
-		}
-	}*/
 }

@@ -29,9 +29,12 @@
 
 package net.rujel.ui;
 
+import java.util.logging.Logger;
+
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -122,8 +125,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	returnPage.ensureAwakeInContext(context());
     	WOActionResults result = null;
     	try {
+    		if(work.workType() == null) {
+    			work.setWorkType((EOEnterpriseObject)types.objectAtIndex(0));
+    			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+    					"Autosetting workType",new Object[] {session(),work});
+    		}
     		if(tmpEC != null) {
-    			tmpEC.lock();
+//    			tmpEC.lock();
     			tmpEC.saveChanges();
         		/*if(shouldNullify)
         			work.nullify();
@@ -140,10 +148,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     				("strings.RujelCriterial_Strings.messages.notSaved"), "message");
     	} catch (Exception e) {
     		session().takeValueForKey(e.getMessage(), "message");
-    	} finally {
+/*    	} finally {
     		if(tmpEC != null)
     			tmpEC.unlock();
-    		//ec.unlock();    		
+    		//ec.unlock();    	*/	
     	}
     	if(result == null)
     		result = returnPage;
