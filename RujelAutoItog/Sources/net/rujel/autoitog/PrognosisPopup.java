@@ -62,7 +62,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public String bonusPercent;
     public String bonusText;
     public boolean hasBonus;
-    public boolean editBonusText;
+    public boolean noEditBonusText;
  	public boolean ifArchive;
  	public String changeReason;
     
@@ -121,11 +121,13 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 				BigDecimal bonusValue = (bonus == null)?Bonus.calculateBonus(prognosis,null,false)
 						:bonus.calculateValue(prognosis, false);
 				hasBonus = (bonus != null && 
-						bonus.value().compareTo(bonusValue) == 0);
+						bonus.value().compareTo(bonusValue) >= 0);
+				NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
+				if(!((bonus == null)?accessBonus.flagForKey("create"):accessBonus.flagForKey("read")))
+					bonusValue = null;
 				bonusPercent = (bonusValue == null)?null:fractionToPercent(bonusValue);
 				//String param = (hasBonus)?"Bonus":"BonusText";
-				NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
-				editBonusText = accessBonus.flagForKey(
+				noEditBonusText = !accessBonus.flagForKey(
 						(bonus != null && bonus.submitted())?"edit":"create");
 			}
 		}
