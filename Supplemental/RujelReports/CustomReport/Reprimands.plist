@@ -294,7 +294,7 @@
 			<key>comparison</key>
 			<string>CompareAscending</string>
 			<key>active</key>
-			<false/>
+			<true/>
 			<key>sort</key>
 			<string>50</string>
 			<key>onclick</key>
@@ -329,7 +329,12 @@
 			<key>title</key>
 			<string>Текст замечания</string>
 			<key>keyPath</key>
-			<string>content</string>
+			<string>formattedContent</string>
+			<key>presenterBindings</key>
+			<dict>
+				<key>escapeHTML</key>
+				<false/>
+			</dict>
 			<key>active</key>
 			<true/>
 			<key>onclick</key>
