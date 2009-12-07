@@ -123,18 +123,21 @@ public class Reprimand extends _Reprimand {
 			}
 			SettingsBase listSettings = SettingsBase.baseForKey(
 					EduPeriod.ENTITY_NAME, ec, false);
+			SettingsBase devForRpr = SettingsBase.baseForKey(
+					"deviationForReprimand", ec, false);
+
 			SettingsBase requireVerification = SettingsBase.baseForKey(
 					"ignoreUnverifiedReasons",ec,false);
 			FieldPosition fp = new FieldPosition(DateFormat.DATE_FIELD);
 			NSArray weekdays = (NSArray)WOApplication.application().valueForKeyPath(
 					"strings.Reusables_Strings.presets.weekdayShort");
 			Enumeration enu = list.objectEnumerator();
-			int year = cal.get(Calendar.YEAR);
 			while (enu.hasMoreElements()) {
 				EduCourse course = (EduCourse) enu.nextElement();
 				NSArray lessons = course.lessons();
 				if(lessons == null || lessons.count() == 0)
 					continue;
+				cal.setTime(now);
 				if(weekStart != null) {
 					EOEnterpriseObject bc = weekStart.forCourse(course);
 					Integer num = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
@@ -144,7 +147,6 @@ public class Reprimand extends _Reprimand {
 						continue;
 				}
 				EOEnterpriseObject setting = listSettings.forCourse(course);
-				
 				String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 				Integer weekDays = (Integer)setting.valueForKey(
 						SettingsBase.NUMERIC_VALUE_KEY);
@@ -152,110 +154,10 @@ public class Reprimand extends _Reprimand {
 				
 				NSDictionary dict = (NSDictionary)byListName.objectForKey(listName);
 				if(dict == null) {
-					dict = new NSMutableDictionary();
-					byListName.setObjectForKey(dict, listName);
-					cal.setTime(now);
-					cal.add(Calendar.DATE, -week);
-					NSTimestamp prevDate = new NSTimestamp(cal.getTimeInMillis());
-					dict.takeValueForKey(
-							new Integer(cal.get(Calendar.DAY_OF_YEAR)), "refDay");
-					if(year > 2000 && year != cal.get(Calendar.YEAR)) {
-						year = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
-						dict.takeValueForKey(new Integer(year), "year");
-					}
-					EduPeriod eduPeriod = EduPeriod.getCurrentPeriod(prevDate,listName,ec);
-					if(eduPeriod == null) {
-						eduPeriod = EduPeriod.getCurrentPeriod(now, listName, ec);
-						if(eduPeriod != null && 
-							now.getTime() - eduPeriod.begin().getTime() > NSLocking.OneDay) {
-//							EOGlobalID gid = ec.globalIDForObject(eduPeriod);
-							String key = WOLogFormatter.formatEO(eduPeriod);
-							NSDictionary values = new NSDictionary(
-									new Object[] {key, new Integer(1)},
-							new String[] {Reason.VERIFICATION_KEY,Reason.FLAGS_KEY});
-							NSArray found = EOUtilities.objectsMatchingValues(ec, Reason.ENTITY_NAME, values);
-							if(found == null || found.count() == 0) {
-								Reason result = (Reason)EOUtilities.createAndInsertInstance(
-										ec, Reason.ENTITY_NAME);
-								result.takeValuesFromDictionary(values);
-								result.setBegin(prevDate);
-								result.setEnd(eduPeriod.begin());
-								result.setReason((String)WOApplication.application().
-										valueForKeyPath(
-								"strings.RujelCurriculum_Curriculum.titles.periodStart") +
-								' ' + eduPeriod.name());
-								ec.saveChanges();
-							}
-							dict.takeValueForKey(Boolean.TRUE, "periodEdge");
-						}
+					dict = prepareDict(now, listName, ec, week, testDay);
+					if(dict == null)
 						continue;
-					} else if (now.getTime() - eduPeriod.end().getTime() > NSLocking.OneDay) {
-						dict.takeValueForKey(Boolean.TRUE, "periodEdge");
-					}
-					dict.takeValueForKey(eduPeriod, "eduPeriod");
-					EOQualifier[] quals = new  EOQualifier[3];
-					quals[0] = new EOKeyValueQualifier("date",
-							EOQualifier.QualifierOperatorLessThan,now);
-					quals[1] = new EOKeyValueQualifier("date",
-							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,prevDate);
-					dict.takeValueForKey(quals, "weekQualifier");
-					NSArray holidays = Holiday.holidaysInDates(prevDate, now,ec,listName);
-					if(holidays == null) {
-						holidays = NSArray.EmptyArray;
-					} else  {
-						NSTimestamp day = prevDate;
-						for (int i = 0; i < holidays.count(); i++) {
-						Holiday hd = (Holiday)holidays.objectAtIndex(i);
-						if(hd.begin().getTime() > day.getTime())
-							break;
-						day = hd.end();
-						}
-						if(day.getTime() >= now.getTime() - NSLocking.OneDay) {
-							// whole week in holidays
-							dict.takeValueForKey(null, "eduPeriod");
-							continue;
-						}
-					}
-					dict.takeValueForKey(holidays, "holidays");
-					NSTimestamp prevStart = prevDate;
-					do {
-						if(holidays != null && holidays.count() > 0) {
-							Holiday hd = (Holiday)holidays.objectAtIndex(0);
-							if (prevStart.after(hd.begin())) {
-								cal.setTime(hd.begin());
-							} else {
-								cal.setTime(prevStart);
-							}
-							while (cal.get(Calendar.DAY_OF_WEEK) != testDay)
-								cal.add(Calendar.DATE, -1);
-							prevDate = new NSTimestamp(cal.getTimeInMillis());
-						}
-						prevStart = prevDate.timestampByAddingGregorianUnits(
-								0, 0,-week, 0, 0, 0);
-						holidays = Holiday.holidaysInDates(
-								prevStart, prevDate, ec, listName);
-					} while (holidays != null && holidays.count() > 0);
-					eduPeriod = EduPeriod.getCurrentPeriod(prevStart, listName, ec);
-					if(eduPeriod == null)
-						prevStart = null;
-					if(prevStart != null) {
-						quals = new  EOQualifier[3];
-						quals[0] = new EOKeyValueQualifier("date",
-								EOQualifier.QualifierOperatorLessThan,prevDate);
-						quals[1] = new EOKeyValueQualifier("date",EOQualifier.
-								QualifierOperatorGreaterThanOrEqualTo,prevStart);
-						dict.takeValueForKey(quals, "prevQualifier");
-						Long prevDiff = new Long(now.getTime() - prevDate.getTime());
-						dict.takeValueForKey(prevDiff, "prevDiff");
-						cal.setTime(prevStart);
-						dict.takeValueForKey(
-								new Integer(cal.get(Calendar.DAY_OF_YEAR)), "prevRef");						
-						if(year > 2000 && year != cal.get(Calendar.YEAR)) {
-							year = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
-							dict.takeValueForKey(new Integer(year), "year");
-						}
-					}
-//					dict.takeValueForKey(prevDate, "prevDate");
+					byListName.setObjectForKey(dict, listName);
 				} // init dict by listName
 				EduPeriod eduPeriod = (EduPeriod)dict.valueForKey("eduPeriod");
 				if(eduPeriod == null)
@@ -263,6 +165,15 @@ public class Reprimand extends _Reprimand {
 				int plan = PlanCycle.planHoursForCourseAndPeriod(course, eduPeriod);
 				if(plan == 0)
 					continue;
+				int minDev = 1;
+				if(devForRpr != null) {
+					Integer num = (Integer)devForRpr.forCourse(course).
+									valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+					if(num != null)
+						minDev = num.intValue();
+					if(minDev < 0)
+						continue;
+				}
 				boolean verifiedOnly = (requireVerification != null &&
 						Various.boolForObject(requireVerification.forCourse(course)
 								.valueForKey(SettingsBase.NUMERIC_VALUE_KEY)));
@@ -290,81 +201,37 @@ public class Reprimand extends _Reprimand {
 //						Various.boolForObject(dict.valueForKey("periodEdge"))) {
 					int[] currWeek = new int[week];
 					int ref = ((Integer)dict.valueForKey("refDay")).intValue();
-					if(lessons != null && lessons.count() > 0) {
-						Enumeration lenu = lessons.objectEnumerator();
-						while (lenu.hasMoreElements()) {
-							EduLesson lesson = (EduLesson) lenu.nextElement();
-							cal.setTime(lesson.date());
-							int idx = cal.get(Calendar.DAY_OF_YEAR) - ref;
-							if(idx < 0)
-								idx += year;
-							currWeek[idx]++;
-						}
-					} // place lessons to currWeek
-					if(variations != null && variations.count() > 0) {
-						Enumeration venu = variations.objectEnumerator();
-						while (venu.hasMoreElements()) {
-							Variation var = (Variation) venu.nextElement();
-							if(verifiedOnly && var.reason().unverified())
-								continue;
-							cal.setTime(var.date());
-							int idx = cal.get(Calendar.DAY_OF_YEAR) - ref;
-							if(idx < 0)
-								idx += year;
-							currWeek[idx] -= var.value().intValue();
-						}
-					} // place variations to currWeek
+					putLessons(lessons, ref, currWeek, 1);
+					putVariations(variations, ref, currWeek, verifiedOnly, 1);
 					
 					// compare to previous week
 					quals = (EOQualifier[])dict.valueForKey("prevQualifier");
 					StringBuffer buf = new StringBuffer();
 					Integer singleDev = new Integer(0);
 					if(quals != null) {
-					ref = ((Integer)dict.valueForKey("prevRef")).intValue();
-					
-					quals[2] = new EOKeyValueQualifier("course",
-							EOQualifier.QualifierOperatorEqual,course);
-					quals[2] = new EOAndQualifier(new NSArray(quals));
-					fs.setQualifier(quals[2]);
-					NSArray prevVariations = ec.objectsWithFetchSpecification(fs);
-					fs.setEntityName(EduLesson.entityName);
-					NSArray prevLessons = ec.objectsWithFetchSpecification(fs);
-					if(prevVariations != null && prevVariations.count() > 0) {
-						Enumeration venu = prevVariations.objectEnumerator();
-						while (venu.hasMoreElements()) {
-							Variation var = (Variation) venu.nextElement();
-							if(verifiedOnly && var.reason().unverified())
-								continue;
-							cal.setTime(var.date());
-							int idx = cal.get(Calendar.DAY_OF_YEAR) - ref;
-							if(idx < 0)
-								idx += year;
-							int value = var.value().intValue();
-							currWeek[idx] += value;
-						}
-					}
-					if(prevLessons != null && prevLessons.count() > 0) {
-						Enumeration lenu = prevLessons.objectEnumerator();
-						while (lenu.hasMoreElements()) {
-							EduLesson lesson = (EduLesson) lenu.nextElement();
-							cal.setTime(lesson.date());
-							int idx = cal.get(Calendar.DAY_OF_YEAR) - ref;
-							if(idx < 0)
-								idx += year;
-							currWeek[idx]--;
-						}
-					}
-					cal.setTime(eduPeriod.end());
-					cal.set(Calendar.HOUR_OF_DAY, 23);
-					cal.set(Calendar.MINUTE, 59);
-					cal.set(Calendar.SECOND, 59);
-					cal.set(Calendar.MILLISECOND, 999);
-					long periodEnd = cal.getTimeInMillis();
-					cal.setTime(now);
-					cal.add(Calendar.DATE, -week);
-					int autoVars = 0;
-					Reason periodEndReason = null;
-					NSArray holidays = (NSArray) dict.valueForKey("holidays");
+						ref = ((Integer)dict.valueForKey("prevRef")).intValue();
+
+						quals[2] = new EOKeyValueQualifier("course",
+								EOQualifier.QualifierOperatorEqual,course);
+						quals[2] = new EOAndQualifier(new NSArray(quals));
+						fs.setQualifier(quals[2]);
+						NSArray prevVariations = ec.objectsWithFetchSpecification(fs);
+						fs.setEntityName(EduLesson.entityName);
+						NSArray prevLessons = ec.objectsWithFetchSpecification(fs);
+						putVariations(prevVariations, ref, currWeek, verifiedOnly, -1);
+						putLessons(prevLessons, ref, currWeek, -1);
+
+						cal.setTime(eduPeriod.end());
+						cal.set(Calendar.HOUR_OF_DAY, 23);
+						cal.set(Calendar.MINUTE, 59);
+						cal.set(Calendar.SECOND, 59);
+						cal.set(Calendar.MILLISECOND, 999);
+						long periodEnd = cal.getTimeInMillis();
+						cal.setTime(now);
+						cal.add(Calendar.DATE, -week);
+						int autoVars = 0;
+						Reason periodEndReason = null;
+						NSArray holidays = (NSArray) dict.valueForKey("holidays");
 					for (int i = 0; i < currWeek.length; i++) {
 						NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
 						if(currWeek[i] < 0) {
@@ -457,9 +324,10 @@ public class Reprimand extends _Reprimand {
 					plan -= autoVars;
 					}
 //				} // processing holidays
-				if(plan == fact)
-					continue;
 				int deviation = fact - plan;
+				if((deviation == 0 && buf.length() == 0)
+						|| Math.abs(deviation) < minDev)
+					continue;
 				Reprimand rpr = (Reprimand) EOUtilities
 						.createAndInsertInstance(ec, ENTITY_NAME);
 				rpr.setCourse(course);
@@ -555,6 +423,189 @@ public class Reprimand extends _Reprimand {
 		} finally {
 			ec.unlock();
 		}
+	}
+
+	protected static Reason createPeriodStartReason(
+			EduPeriod eduPeriod, NSTimestamp prevDate) {
+		String key = WOLogFormatter.formatEO(eduPeriod);
+		NSDictionary values = new NSDictionary(
+				new Object[] {key, new Integer(1)},
+				new String[] {Reason.VERIFICATION_KEY,Reason.FLAGS_KEY});
+		EOEditingContext ec = eduPeriod.editingContext();
+		NSArray found = EOUtilities.objectsMatchingValues(ec, Reason.ENTITY_NAME, values);
+		if(found != null && found.count() > 0)
+			return (Reason)found.objectAtIndex(0);
+
+		Reason result = (Reason)EOUtilities.createAndInsertInstance(
+				ec, Reason.ENTITY_NAME);
+		result.takeValuesFromDictionary(values);
+		result.setBegin(prevDate);
+		result.setEnd(eduPeriod.begin());
+		result.setReason((String)WOApplication.application().
+				valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.titles.periodStart") +
+						' ' + eduPeriod.name());
+		ec.saveChanges();
+		return result;
+	}
+
+	public static NSDictionary prepareDict(NSTimestamp now, String listName,
+			EOEditingContext ec, int week, int testDay) {
+		Calendar cal = Calendar.getInstance();
+		NSMutableDictionary dict = new NSMutableDictionary();
+		cal.setTime(now);
+		if(cal.get(Calendar.DAY_OF_WEEK) != testDay)
+			return null;
+		cal.add(Calendar.DATE, -week);
+		NSTimestamp prevDate = new NSTimestamp(cal.getTimeInMillis());
+		dict.takeValueForKey(
+				new Integer(cal.get(Calendar.DAY_OF_YEAR)), "refDay");
+		EduPeriod eduPeriod = EduPeriod.getCurrentPeriod(prevDate,listName,ec);
+		if(eduPeriod == null) {
+			eduPeriod = EduPeriod.getCurrentPeriod(now, listName, ec);
+			if(eduPeriod != null && 
+					now.getTime() - eduPeriod.begin().getTime() > NSLocking.OneDay) {
+//				EOGlobalID gid = ec.globalIDForObject(eduPeriod);
+				createPeriodStartReason(eduPeriod, prevDate);
+				dict.takeValueForKey(Boolean.TRUE, "periodEdge");
+			}
+			return dict;
+		} else if (now.getTime() - eduPeriod.end().getTime() > NSLocking.OneDay) {
+			dict.takeValueForKey(Boolean.TRUE, "periodEdge");
+		}
+		dict.takeValueForKey(eduPeriod, "eduPeriod");
+		EOQualifier[] quals = new  EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorLessThan,now);
+		quals[1] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,prevDate);
+		dict.takeValueForKey(quals, "weekQualifier");
+		NSArray holidays = Holiday.holidaysInDates(prevDate, now,ec,listName);
+		if(holidays == null) {
+			holidays = NSArray.EmptyArray;
+		} else  {
+			NSTimestamp day = prevDate;
+			for (int i = 0; i < holidays.count(); i++) {
+				Holiday hd = (Holiday)holidays.objectAtIndex(i);
+				if(hd.begin().getTime() > day.getTime())
+					break;
+				day = hd.end();
+			}
+			if(day.getTime() >= now.getTime() - NSLocking.OneDay) {
+				// whole week in holidays
+				dict.takeValueForKey(null, "eduPeriod");
+				return dict;
+			}
+		}
+		dict.takeValueForKey(holidays, "holidays");
+		NSTimestamp prevStart = prevDate;
+		do {
+			prevDate = prevStart;
+			prevStart = prevDate.timestampByAddingGregorianUnits(
+					0, 0,-week, 0, 0, 0);
+			holidays = Holiday.holidaysInDates(
+					prevStart, prevDate, ec, listName);
+		} while (holidays != null && holidays.count() > 0);
+		eduPeriod = EduPeriod.getCurrentPeriod(prevStart, listName, ec);
+		if(eduPeriod == null)
+			prevStart = null;
+		if(prevStart != null) {
+			quals = new  EOQualifier[3];
+			quals[0] = new EOKeyValueQualifier("date",
+					EOQualifier.QualifierOperatorLessThan,prevDate);
+			quals[1] = new EOKeyValueQualifier("date",EOQualifier.
+					QualifierOperatorGreaterThanOrEqualTo,prevStart);
+			dict.takeValueForKey(quals, "prevQualifier");
+//			Long prevDiff = new Long(now.getTime() - prevDate.getTime());
+//			dict.takeValueForKey(prevDiff, "prevDiff");
+			cal.setTime(prevStart);
+			dict.takeValueForKey(
+					new Integer(cal.get(Calendar.DAY_OF_YEAR)), "prevRef");						
+		}
+		return dict;
+	}
+	
+	public static int[] currWeek(EduCourse course,NSDictionary dict, NSArray lessons,
+			NSArray variations, int week, int year, boolean verifiedOnly) {
+		int[] currWeek = new int[week];
+		int ref = ((Integer)dict.valueForKey("refDay")).intValue();
+		putLessons(lessons, ref, currWeek, 1);
+		putVariations(variations, ref, currWeek, verifiedOnly, 1);
+		
+		// compare to previous week
+		EOQualifier[] quals = (EOQualifier[])dict.valueForKey("prevQualifier");
+		if(quals != null) {
+			ref = ((Integer)dict.valueForKey("prevRef")).intValue();
+
+			quals[2] = new EOKeyValueQualifier("course",
+					EOQualifier.QualifierOperatorEqual,course);
+			quals[2] = new EOAndQualifier(new NSArray(quals));
+			EOFetchSpecification fs = new EOFetchSpecification(
+					Variation.ENTITY_NAME, quals[2], MyUtility.dateSorter);
+			EOEditingContext ec = course.editingContext();
+			NSArray prevVariations = ec.objectsWithFetchSpecification(fs);
+			fs.setEntityName(EduLesson.entityName);
+			NSArray prevLessons = ec.objectsWithFetchSpecification(fs);
+			putVariations(prevVariations, ref, currWeek, verifiedOnly, -1);
+			putLessons(prevLessons, ref, currWeek, -1);
+		}
+		return currWeek;
+	}
+
+	public static int putLessons(NSArray lessons, int ref, int[] currWeek, int factor) {
+		if(lessons == null || lessons.count() == 0)
+			return 0;
+		Enumeration lenu = lessons.objectEnumerator();
+		Calendar cal = Calendar.getInstance();
+		int year = 0;
+		int sum = 0;
+		while (lenu.hasMoreElements()) {
+			EduLesson lesson = (EduLesson) lenu.nextElement();
+			cal.setTime(lesson.date());
+			int idx = cal.get(Calendar.DAY_OF_YEAR) - ref;
+			if(idx < 0) {
+				if(year == 0) {
+					cal.add(Calendar.YEAR, -1);
+					year = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+				}
+				idx += year;
+			}
+			if(idx >= currWeek.length)
+				continue;
+			currWeek[idx] += factor;
+			sum += factor;
+		}
+		return sum;
+	}
+
+	public static int putVariations(NSArray variations, int ref, int[] currWeek, 
+			boolean verifiedOnly, int factor) {
+		if(variations == null || variations.count() == 0)
+			return 0;
+		Calendar cal = Calendar.getInstance();
+		int year = 0;
+		Enumeration venu = variations.objectEnumerator();
+		int sum = 0;
+		while (venu.hasMoreElements()) {
+			Variation var = (Variation) venu.nextElement();
+			if(verifiedOnly && var.reason().unverified())
+				continue;
+			cal.setTime(var.date());
+			int idx = cal.get(Calendar.DAY_OF_YEAR) - ref;
+			if(idx < 0) {
+				if(year == 0) {
+					cal.add(Calendar.YEAR, -1);
+					year = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+				}
+				idx += year;
+			}
+			int value = var.value().intValue();
+			if(idx >= currWeek.length)
+				continue;
+			currWeek[idx] -= value * factor;
+			sum -= value * factor;
+		}
+		return sum;
 	}
 	
 	public String formattedContent() {

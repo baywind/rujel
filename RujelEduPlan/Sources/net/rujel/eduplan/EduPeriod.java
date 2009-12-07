@@ -276,11 +276,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		result[1] = days%weekDays;
 		return result;
 	}*/
-	
-	public static int daysForList(String listName, EOEditingContext ec) {
-		return daysForList(listName, null, ec);
-	}
-	
+		
 	public static int daysForList(String listName, NSTimestamp date, EOEditingContext ec) {
 		NSArray periods = periodsInList(listName, ec);
 		if(periods == null || periods.count() == 0)

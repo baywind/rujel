@@ -193,6 +193,8 @@
 		<string>Начало периода</string>
 		<key>periodEnd</key>
 		<string>Конец периода</string>
+		<key>suggest</key>
+		<string>Предлагаемые поправки</string>
 	</dict>
 	<key>regimes</key>
 	<array>

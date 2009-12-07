@@ -348,7 +348,33 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 
 	}
-	
+
+	public static int planHoursForCourseAndDate(EduCourse course, NSTimestamp date) {
+		EOEditingContext ec = course.editingContext();
+		NSArray planDetails = (date == null)?null:EOUtilities.objectsMatchingKeyAndValue(
+				ec,"PlanDetail","course", course);
+		if(planDetails != null && planDetails.count() > 0) {
+			Enumeration enu = planDetails.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject pd = (EOEnterpriseObject) enu.nextElement();
+				EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
+				if(per.contains(date)) {
+					Number hours = (Number)pd.valueForKey("hours");
+					return hours.intValue();
+				}
+			}
+			return 0;
+		}
+		if (course.cycle() instanceof PlanCycle) {
+			PlanCycle cycle = (PlanCycle) course.cycle();
+			Integer w = cycle.weeklyHours();
+			if(w == null)
+				w = cycle.weeklyHours(MyUtility.eduYearForDate(date))[0];
+			return w;
+		}
+		return 0;
+	}
+
 	public static int planHoursForCourseAndPeriod(EduCourse course, EduPeriod period) {
 		EOEditingContext ec = course.editingContext();
 		NSArray planDetails = (period == null)?null:EOUtilities.objectsMatchingKeyAndValue(
@@ -381,7 +407,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 				this, eduYear, ec);
 		if(setting != null) {
 			String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-			days = EduPeriod.daysForList(listName, ec);
+			days = EduPeriod.daysForList(listName, null, ec);
 			Integer h = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
 			if(h != null)
 				weekDays = h.intValue();

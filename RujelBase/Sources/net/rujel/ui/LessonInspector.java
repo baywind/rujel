@@ -39,8 +39,9 @@ import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSTimestamp;
 
 public class LessonInspector extends com.webobjects.appserver.WOComponent {
-	public String newDate;
+	public String newTitle;
 	public String newTheme;
+	public NSTimestamp newDate;
 	
 	public WOComponent returnPage;
 	//protected EOEditingContext ec;
@@ -48,42 +49,42 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     public LessonInspector(WOContext context) {
         super(context);
     }
-    
+    /*
     public void setReturnPage(WOComponent page) {
     	returnPage = page;
     	//ec = (EOEditingContext)page.valueForKey("ec");
-    	newDate = MyUtility.dateFormat().format(session().valueForKey("today"));
-    }
-    
+    	newTitle = MyUtility.dateFormat().format(session().valueForKey("today"));
+    } */
+
     public WOActionResults save() {
 		returnPage.ensureAwakeInContext(context());
-    	if(newDate == null || newTheme == null) {
+    	if(newTitle == null || newTheme == null) {
     		appendMessage("strings.RujelBase_Base.dateAndThemeRequired");
     		return returnPage;
     	}
     	Date date = (Date)MyUtility.dateFormat().parseObject(
-				newDate, new java.text.ParsePosition(0));
+				newTitle, new java.text.ParsePosition(0));
 		returnPage.valueForKey("addLesson");
 		EduLesson lesson = (EduLesson)returnPage.valueForKey("currLesson");
 		lesson.setTheme(newTheme);
-    	if(date == null) {
-    		lesson.setTitle(newDate);
-    	} else {
-    		NSTimestamp aDate = (date instanceof NSTimestamp)?
+    	if(date != null) {
+    		newDate = (date instanceof NSTimestamp)?
     				(NSTimestamp)date:new NSTimestamp(date);
-    		lesson.setDate(aDate);
-    		MyUtility.setNumberToNewLesson(lesson);
-    		EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
-    		if(limits != null && !limits.evaluateWithObject(lesson)) {
-    			session().setObjectForKey(this, "LessonInspector");
-    			lesson.editingContext().revert();
-    			returnPage.takeValueForKey(null, "currPerPersonLink");
-    			returnPage.valueForKey("refresh");
-    			appendMessage("strings.RujelBase_Base.notInTab");
-    			return returnPage;
-    		}
+    		newTitle = null;
+    		lesson.setDate(newDate);
     	}
-//    	Object oldMessage = session().valueForKey("message");
+		lesson.setTitle(newTitle);
+		MyUtility.setNumberToNewLesson(lesson);
+		EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
+		if(limits != null && !limits.evaluateWithObject(lesson)) {
+			session().setObjectForKey(this, "LessonInspector");
+			lesson.editingContext().revert();
+			returnPage.takeValueForKey(null, "currPerPersonLink");
+			returnPage.valueForKey("refresh");
+			appendMessage("strings.RujelBase_Base.notInTab");
+			return returnPage;
+		}
+//		Object oldMessage = session().valueForKey("message");
 //    	session().setObjectForKey(lesson.date(), "recentDate");
     	returnPage.valueForKey("save");
 /*    	Object newMessage = session().valueForKey("message");

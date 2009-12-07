@@ -305,6 +305,33 @@ public class LessonList extends WOComponent {
 			popup = pageWithName("LessonInspector");
 		}
 		popup.takeValueForKey(context().page(), "returnPage");
+		session().setObjectForKey(valueForBinding("course"), "assumeNextLesson");
+		NSArray ls = (NSArray)session().valueForKeyPath("modules.assumeNextLesson");
+		session().removeObjectForKey("assumeNextLesson");
+		NSTimestamp date = null;
+		String title = null;
+		if(ls != null && ls.count() > 0) {
+			Enumeration en = ls.objectEnumerator();
+			String theme = null;
+			while (en.hasMoreElements() && 
+					(date == null || theme == null || title == null)) {
+				NSKeyValueCoding la = (NSKeyValueCoding) en.nextElement();
+				if(date == null)
+					date = (NSTimestamp)la.valueForKey("date");
+				if(title == null)
+					title = (String)la.valueForKey("theme");
+				if(title == null)
+					title = (String)la.valueForKey("title");
+			}
+			if(theme != null)
+				popup.takeValueForKey(theme, "newTheme");
+		}
+		if(date == null)
+			date = (NSTimestamp)session().valueForKey("today");
+		popup.takeValueForKey(date, "newDate");
+		if(title == null)
+			title = MyUtility.dateFormat().format(date);
+		popup.takeValueForKey(title, "newTitle");
 		return popup;
 	}
 	

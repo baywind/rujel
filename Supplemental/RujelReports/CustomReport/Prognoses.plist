@@ -272,6 +272,14 @@
 		</dict>
 		<dict>
 			<key>title</key>
+			<string>Бонус</string>
+			<key>comment</key>
+			<string>у прогноза есть бонус</string>
+			<key>qualifierFormat</key>
+			<string>bonus != nil</string>
+		</dict>
+		<dict>
+			<key>title</key>
 			<string>Флаги</string>
 			<key>comment</key>
 			<string>у прогноза есть флаги</string>
@@ -348,7 +356,7 @@
 			<key>pageParams</key>
 			<dict>
 				<key>course</key>
-				<string>$itemRow.eduCourse</string>
+				<string>$itemRow.course</string>
 			</dict>
 		</dict>
 		<dict>

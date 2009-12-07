@@ -92,7 +92,7 @@ public class Bonus extends _Bonus {
     }
     
     public boolean submitted() {
-    	return (value().compareTo(calculateValue(prognosis(), false)) == 0);
+    	return (value().compareTo(calculateValue(prognosis(), false)) >= 0);
     }
     
     public static BigDecimal calculateBonus(Prognosis prognosis,Bonus toUpdate,boolean setValue) {
