@@ -752,13 +752,10 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	}
 	
 
-	public static final NSArray flagNames = new NSArray (new String[] {
-		"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","-32-","unused"});
-
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {
     	if(_flags==null) {
-    		_flags = new NamedFlags(flags().intValue(),flagNames);
+    		_flags = new NamedFlags(flags().intValue(),WorkType.flagNames);
     		try{
     			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
     					NamedFlags.class));
@@ -772,7 +769,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
     
     public void setNamedFlags(NamedFlags flags) {
     	if(flags != null)
-    		setFlags(flags.toInteger());
+    		super.setFlags(flags.toInteger());
     	_flags = flags;
     }
     

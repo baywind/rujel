@@ -12,7 +12,7 @@
         {className = EOGenericRecord; name = Criterion; }, 
         {className = "net.rujel.criterial.Indexer"; name = Indexer; }, 
         {className = EOGenericRecord; name = IndexRow; }, 
-        {className = EOGenericRecord; name = WorkType; }
+        {className = "net.rujel.criterial.WorkType"; name = WorkType; }
     ); 
     userInfo = {
         "_EntityModeler" = {
