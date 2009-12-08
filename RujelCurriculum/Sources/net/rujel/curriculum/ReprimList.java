@@ -39,8 +39,11 @@ import net.rujel.reusables.WOLogLevel;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.eocontrol.EOKeyGlobalID;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 
@@ -64,18 +67,19 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
 		super(context);
 	}
 
-	public void setCourse(EduCourse eduCourse) {
-		course = eduCourse;
-		if(list != null)
-			return;
-		list = EOUtilities.objectsMatchingKeyAndValue(course.editingContext(),
-				Reprimand.ENTITY_NAME, "course", course);
-		if(list != null && list.count() > 1) {
-			EOSortOrdering so = new EOSortOrdering(Reprimand.RAISED_KEY, 
-					EOSortOrdering.CompareDescending);
-			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, new NSArray(so));
+	public NSArray list() {
+		if(list==null) {
+			EOQualifier qual = new EOKeyValueQualifier("course",
+					EOQualifier.QualifierOperatorEqual,course);
+			NSArray so = new NSArray(new EOSortOrdering(Reprimand.RAISED_KEY, 
+					EOSortOrdering.CompareDescending));
+			EOFetchSpecification fs = new EOFetchSpecification(Reprimand.ENTITY_NAME,qual,so);
+			list = course.editingContext().objectsWithFetchSpecification(fs);
+			if(list == null)
+				list = NSArray.EmptyArray;
 		}
-    }
+		return list;
+	}
 
 	public String styleClass() {
 		if(item.relief() == null)
@@ -127,58 +131,57 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
 		ec.lock();
 		try {
 			if(ident == null) {
-    		item = (Reprimand)EOUtilities.createAndInsertInstance(ec, Reprimand.ENTITY_NAME);
-    		item.setAuthor(usr);
-    		item.addObjectToBothSidesOfRelationshipWithKey(course, "course");
-    		changed = true;
-    	} else {
-    		item = (Reprimand)EOUtilities.objectWithPrimaryKeyValue(
-    				ec, Reprimand.ENTITY_NAME, ident);
-    		if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay/2)
-    			addInfo = MyUtility.dateFormat().format(new NSTimestamp());
-    		if(usr != null && !usr.equals(item.author())) {
-    			if(addInfo == null) {
-    				addInfo = usr;
-    			} else {
-    				addInfo = usr + " - " + addInfo;
-    			}
-    		}
-    		if(addInfo != null)
-    			text = text + " (" + addInfo + ')';
-    		addInfo = item.content();
-    	}
-    	if(text == null) {
-    		if(Various.boolForObject(session().valueForKeyPath(
-    				"readAccess._delete.item")))
-    		return;
-    		ec.deleteObject(item);
-    		logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting Reprimand",(addInfo==null)?
-    				new Object[] {session(),item}:new Object[] {session(),item,addInfo});
-    	} else {
-    		item.setContent(text);
-    		text = (ident == null)?"Creating new Reprimand":
-    									"Editing Reprimand";
-    	}
-    		ec.saveChanges();
-    		if(text != null)
-    		logger.log(WOLogLevel.UNOWNED_EDITING,text,(addInfo==null)?
-    				new Object[] {session(),item}:new Object[] {session(),item,addInfo});
-    	} catch (Exception e) {
-    		logger.log(WOLogLevel.WARNING,"Error " + text, new Object[] {
-    				session(),(ident == null)?course:item, e});
-    		ec.revert();
+				item = (Reprimand)EOUtilities.createAndInsertInstance(ec, Reprimand.ENTITY_NAME);
+				item.setAuthor(usr);
+				item.addObjectToBothSidesOfRelationshipWithKey(course, "course");
+				item.setContent(text);
+				changed = true;
+				text = "Creating new Reprimand";
+				list = null;
+			} else {
+				item = (Reprimand)EOUtilities.objectWithPrimaryKeyValue(
+						ec, Reprimand.ENTITY_NAME, ident);
+				if(text == null) {
+					if(Various.boolForObject(session().valueForKeyPath(
+							"readAccess._delete.item")))
+						return;
+					logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting Reprimand",(addInfo==null)?
+							new Object[] {session(),item}:new Object[] {session(),item,addInfo});
+					ec.deleteObject(item);
+					list = null;
+				} else {
+					if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay/2)
+						addInfo = MyUtility.dateFormat().format(new NSTimestamp());
+					if(usr != null && !usr.equals(item.author())) {
+						if(addInfo == null) {
+							addInfo = usr;
+						} else {
+							addInfo = usr + " - " + addInfo;
+						}
+					}
+					if(addInfo != null)
+						text = text + "\n(" + addInfo + ')';
+					addInfo = item.content();
+					item.setContent(text);
+					text = "Editing Reprimand";
+				}
+			}
+			ec.saveChanges();
+			if(text != null)
+				logger.log(WOLogLevel.UNOWNED_EDITING,text,(addInfo==null)?
+						new Object[] {session(),item}:new Object[] {session(),item,addInfo});
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error " + text, new Object[] {
+					session(),(ident == null)?course:item, e});
+			ec.revert();
 		} finally {
 			ec.unlock();
 		}
-    	if(ident == null) {
-    		list = null;
-    		setCourse(course);
-    	}
 		item = null;
 		text = null;
 		ident = null;
     }
-    
+
     public String relievOnClick() {
     	if(Various.boolForObject(session().valueForKeyPath("readAccess._delete.item")))
     		return "closePopup();";
@@ -192,7 +195,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     	buf.append("',document.getElementById('ajaxPopup'));");
     	return buf.toString();
     }
-    
+
     public String editOnClick() {
     	if(Various.boolForObject(session().valueForKeyPath("readAccess._create.item")) || 
     			Various.boolForObject(session().valueForKeyPath("readAccess._edit.item")))
@@ -204,17 +207,17 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     		return null;
     	Object key = ((EOKeyGlobalID)gid).keyValues()[0];
     	StringBuilder buf = new StringBuilder("editReprimand(this,");
-       	buf.append(key);
-       	buf.append(')');
+    	buf.append(key);
+    	buf.append(')');
     	return buf.toString();   	
     }
-    
+
     public String closeOnClick() {
     	if(changed)
     		return (String)session().valueForKey("tryLoad");
     	return "closePopup();";
     }
-    
+
     public WOActionResults closePopup() {
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
