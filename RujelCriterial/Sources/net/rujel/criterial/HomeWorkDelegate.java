@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
@@ -95,18 +96,17 @@ public class HomeWorkDelegate extends TaskDelegate {
 			if(!create)
 				return null;
 		}
-		EOQualifier qual = new EOKeyValueQualifier("course",
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual,lesson.course());
-		NSMutableArray quals = new NSMutableArray(qual);
-		qual = new EOKeyValueQualifier(Work.FLAGS_KEY,
+		quals[1] = new EOKeyValueQualifier(Work.FLAGS_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, new Integer(16));
-		quals.addObject(qual);
 		NSTimestamp date = lesson.date();
-		qual = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
+		quals[2] = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
 				EOQualifier.QualifierOperatorEqual,date);
-		quals.addObject(qual);
-		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,EduLesson.sorter);
+		quals[2] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
+				quals[2],EduLesson.sorter);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
 			Work work = (Work)found.objectAtIndex(0);
@@ -124,15 +124,38 @@ public class HomeWorkDelegate extends TaskDelegate {
 		}
 		if(!create)
 			return null;
-		Work result = (Work)EOUtilities.createAndInsertInstance(ec, "Work");
+		Work result = (Work)EOUtilities.createAndInsertInstance(ec, Work.ENTITY_NAME);
 		result.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
 		result.setAnnounce(date);
-		result.setDate(date.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0));
-		fs.setEntityName("WorkType");
-		qual = EOQualifier.qualifierWithQualifierFormat(
+		quals[1] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorGreaterThan,date);
+		quals[2] = null;
+		quals[2] = new EOAndQualifier(new NSArray(quals));
+		fs = new EOFetchSpecification(EduLesson.entityName,quals[2],EduLesson.sorter);
+		found = ec.objectsWithFetchSpecification(fs);
+		date = date.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
+		if(found != null && found.count() > 0) {
+			date = ((EduLesson)found.objectAtIndex(0)).date();
+		} else  if (ec instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)ec).session();
+			ses.setObjectForKey(lesson.course(), "assumeNextLesson");
+			found = (NSArray)ses.valueForKeyPath("modules.assumeNextLesson");
+			ses.removeObjectForKey("assumeNextLesson");
+			if(found != null && found.count() > 0) {
+				for (int i = 0; i < found.count(); i++) {
+					NSKeyValueCoding dict = (NSKeyValueCoding)found.objectAtIndex(i);
+					NSTimestamp assume = (NSTimestamp)dict.valueForKey("date");
+					if(assume != null) {
+						date = assume;
+						break;
+					}
+				}
+			}
+		}
+		result.setDate(date);
+		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
 				"dfltFlags >= 16 and dfltFlags < 64", null);
-		fs.setQualifier(qual);
-		fs.setSortOrderings(ModulesInitialiser.sorter);
+		fs = new EOFetchSpecification("WorkType",qual,ModulesInitialiser.sorter);
 		found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
 			EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
