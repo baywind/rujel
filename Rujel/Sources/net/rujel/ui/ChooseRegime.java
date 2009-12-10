@@ -135,6 +135,7 @@ public class ChooseRegime extends WOComponent {
     public WOActionResults changeDate() {
     	Number currYear = (Number)session().valueForKey("eduYear");
     	if(returnPage == null || currYear.intValue() != eduYear.intValue()) {
+    		srcMark = null;
     		returnPage = chooseJournal();
     		returnPage.takeValueForKey(null, "currClass");
     		WOActionResults result = (WOActionResults)returnPage.valueForKey("selectClass");

@@ -288,24 +288,29 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		if(day == null) {
 			day = new NSTimestamp();
 		}
-		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
-			Integer year = MyUtility.eduYearForDate(day);
-			EOObjectStore os = DataBaseConnector.objectStoreForTag(year.toString());
-			if(os == null) {
-				String msg = (String)WOApplication.application().valueForKeyPath(
-				"strings.Strings.messages.unavailableYearlyDb");
-				msg = String.format(msg, MyUtility.presentEduYear(year.intValue()));
-				setMessage(msg);
-				return;
-			}
-			setObjectForKey(os, "objectStore");
-			if(persList != null && persList.count() > 0) {
-				persList.removeAllObjects();
-			}
-//			if(defaultEditingContext().rootObjectStore() != os) {
+		Integer year = MyUtility.eduYearForDate(day);
+		if(!year.equals(eduYear())) {
+			logger.log(WOLogLevel.INFO,"Switching eduYear to " + year);
+			if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+				EOObjectStore os = DataBaseConnector.objectStoreForTag(year.toString());
+				if(os == null) {
+					String msg = (String)WOApplication.application().valueForKeyPath(
+					"strings.Strings.messages.unavailableYearlyDb");
+					msg = String.format(msg, MyUtility.presentEduYear(year.intValue()));
+					setMessage(msg);
+					logger.log(WOLogLevel.INFO,msg);
+					return;
+				}
+				setObjectForKey(os, "objectStore");
+				if(persList != null && persList.count() > 0) {
+					persList.removeAllObjects();
+				}
+				pathStack.removeAllObjects();
+//				if(defaultEditingContext().rootObjectStore() != os) {
 //				defaultEditingContext().unlock();
 //				setDefaultEditingContext(new SessionedEditingContext(os,this));
-//			}
+//				}
+			}
 		}
 		today = day;
 	}

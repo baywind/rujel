@@ -176,8 +176,8 @@ public class EduPlanEditor extends WOComponent {
 					NSNotificationCenter.defaultCenter().postNotification(net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey("user"),new NSDictionary(currCycle,"EO"));
 				} else { //log change
 					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
-					if(currCycle instanceof UseAccess && ((UseAccess)currCycle).isOwned())
-						level = WOLogLevel.OWNED_EDITING;
+//					if(currCycle instanceof UseAccess && ((UseAccess)currCycle).isOwned())
+//						level = WOLogLevel.OWNED_EDITING;
 					logger.logp(level,"EduPlanEditor","save","Saved changes in cycle",new Object[] {session(),currCycle});
 				}
 				currCycle = null;

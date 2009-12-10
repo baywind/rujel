@@ -373,8 +373,8 @@ public class LessonNoteEditor extends WOComponent {
 								net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey(
 										"user"),new NSDictionary(currPerPersonLink,"EO"));
 					} else {
-						if(currPerPersonLink instanceof UseAccess && 
-								((UseAccess)currPerPersonLink).isOwned())
+//						if(currPerPersonLink instanceof UseAccess && 
+//								((UseAccess)currPerPersonLink).isOwned())
 							level = WOLogLevel.OWNED_EDITING;
 						if(changes.count() > 0)
 							logger.log(level,"Lesson changed: " + changes,

@@ -91,6 +91,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	WORequest req = context().request();
     	NSNumberFormatter frmt = new NSNumberFormatter("0");
     	Number critCount = req.numericFormValueForKey("critCount", frmt);
+    	if(critCount == null)
+    		critCount = new Integer(0);
     	EOEditingContext ec = work.editingContext();
     	for (int i = 0; i <= critCount.intValue(); i++) {
     		Integer criterion = new Integer(i);

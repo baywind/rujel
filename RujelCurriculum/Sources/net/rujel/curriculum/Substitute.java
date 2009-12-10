@@ -68,7 +68,7 @@ public class Substitute extends _Substitute implements Reason.Event {
 		rel.setName("joins");
 		rel.setToMany(true);
 		rel.setPropagatesPrimaryKey(true);
-		rel.setOwnsDestination(true);
+//		rel.setOwnsDestination(false);
 		rel.setDeleteRule(EOClassDescription.DeleteRuleNullify);
 		rel.setIsMandatory(false);
 		ent.addRelationship(rel);
