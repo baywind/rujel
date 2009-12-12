@@ -77,6 +77,16 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		}
 	}
 	
+	public void awakeFromFetch(EOEditingContext ec) {
+		super.awakeFromFetch(ec);
+		NSDictionary snapshot = ec.committedSnapshotForObject(this);
+		if(snapshot == null || snapshot.count() == 0) {
+			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+					"Empty snapshot for fetched object",
+					new Object[] {this, new IllegalStateException()});
+		}
+	}
+	
 	public FractionPresenter integralPresenter() {
 		if(_integralPresenter == null) {
 			boolean weightless = !hasWeight();//(weight().compareTo(BigDecimal.ZERO) == 0);
