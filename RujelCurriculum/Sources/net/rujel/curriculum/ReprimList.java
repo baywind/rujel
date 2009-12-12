@@ -31,7 +31,6 @@ package net.rujel.curriculum;
 
 import java.util.logging.Logger;
 
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -127,7 +126,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     		return;
     	EOEditingContext ec = course.editingContext();
 		String usr = (String)session().valueForKeyPath("user.present");
-		String addInfo = null;
+//		String addInfo = null;
 		ec.lock();
 		try {
 			if(ident == null) {
@@ -145,31 +144,27 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
 					if(Various.boolForObject(session().valueForKeyPath(
 							"readAccess._delete.item")))
 						return;
-					logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting Reprimand",(addInfo==null)?
-							new Object[] {session(),item}:new Object[] {session(),item,addInfo});
+					logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting Reprimand",
+							new Object[] {session(),item});
 					ec.deleteObject(item);
 					list = null;
 				} else {
-					if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay/2)
-						addInfo = MyUtility.dateFormat().format(new NSTimestamp());
-					if(usr != null && !usr.equals(item.author())) {
-						if(addInfo == null) {
-							addInfo = usr;
-						} else {
-							addInfo = usr + " - " + addInfo;
-						}
+//					if(System.currentTimeMillis() - item.raised().getTime() > NSLocking.OneDay/2)
+//						addInfo = MyUtility.dateFormat().format(new NSTimestamp());
+					if(usr != null && !item.author().contains(usr)) {
+						item.setAuthor(item.author() + ", " + usr);
 					}
-					if(addInfo != null)
-						text = text + "\n(" + addInfo + ')';
-					addInfo = item.content();
+//					if(addInfo != null)
+//						text = text + "\n(" + addInfo + ')';
+//					addInfo = item.content();
 					item.setContent(text);
 					text = "Editing Reprimand";
 				}
 			}
 			ec.saveChanges();
 			if(text != null)
-				logger.log(WOLogLevel.UNOWNED_EDITING,text,(addInfo==null)?
-						new Object[] {session(),item}:new Object[] {session(),item,addInfo});
+				logger.log(WOLogLevel.UNOWNED_EDITING,text,
+						new Object[] {session(),item});
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error " + text, new Object[] {
 					session(),(ident == null)?course:item, e});

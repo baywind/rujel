@@ -29,8 +29,8 @@
 
 package net.rujel.curriculum;
 
-import java.text.DateFormat;
 import java.text.FieldPosition;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -128,7 +128,7 @@ public class Reprimand extends _Reprimand {
 
 			SettingsBase requireVerification = SettingsBase.baseForKey(
 					"ignoreUnverifiedReasons",ec,false);
-			FieldPosition fp = new FieldPosition(DateFormat.DATE_FIELD);
+			FieldPosition fp = new FieldPosition(SimpleDateFormat.DATE_FIELD);
 			NSArray weekdays = (NSArray)WOApplication.application().valueForKeyPath(
 					"strings.Reusables_Strings.presets.weekdayShort");
 			Enumeration enu = list.objectEnumerator();
@@ -207,7 +207,7 @@ public class Reprimand extends _Reprimand {
 					// compare to previous week
 					quals = (EOQualifier[])dict.valueForKey("prevQualifier");
 					StringBuffer buf = new StringBuffer();
-					Integer singleDev = new Integer(0);
+					int deviation = fact - plan;
 					if(quals != null) {
 						ref = ((Integer)dict.valueForKey("prevRef")).intValue();
 
@@ -286,6 +286,7 @@ public class Reprimand extends _Reprimand {
 								var.setDate(date);
 								var.setValue(new Integer(currWeek[i]));
 								autoVars -= currWeek[i];
+								currWeek[i] = 0;
 							}// period end variation
 						}
 						if(currWeek[i] != 0) {
@@ -294,17 +295,12 @@ public class Reprimand extends _Reprimand {
 							if(currWeek[i] > 0)
 								buf.append('+');
 							buf.append(currWeek[i]);
+							deviation -= currWeek[i];
 							buf.append(" : ");
 							buf.append(weekdays.objectAtIndex(
 									cal.get(Calendar.DAY_OF_WEEK) -1));
 							buf.append(',').append(' ');
 							MyUtility.dateFormat().format(date, buf, fp);
-							if(singleDev != null) {
-								if(singleDev.intValue() == 0)
-									singleDev = new Integer(currWeek[i]);
-								else
-									singleDev = null;
-							}
 						}
 						if (ec.hasChanges())
 							ec.saveChanges();
@@ -322,27 +318,23 @@ public class Reprimand extends _Reprimand {
 						}
 					}*/
 					plan -= autoVars;
+					deviation += autoVars;
 					}
 //				} // processing holidays
-				int deviation = fact - plan;
 				if((deviation == 0 && buf.length() == 0)
-						|| Math.abs(deviation) < minDev)
+						|| Math.abs(plan - fact) < minDev)
 					continue;
 				Reprimand rpr = (Reprimand) EOUtilities
 						.createAndInsertInstance(ec, ENTITY_NAME);
 				rpr.setCourse(course);
-				if(buf.length() > 0) {
-					if(singleDev == null || singleDev.intValue() != deviation) {
-						buf.append("\n").append(WOApplication.application().valueForKeyPath(
-						"strings.Reusables_Strings.dataTypes.total")).append(" : ");
-						if(deviation > 0)
-							buf.append('+');
-						buf.append(deviation);
-					}
-				} else {
+				if(deviation != 0){
+					if(buf.length() > 0)
+						buf.append("\n");
 					if(deviation > 0)
 						buf.append('+');
 					buf.append(deviation);
+					buf.append(" : ");
+					buf.append(dict.valueForKey("weekString"));
 				}
 				rpr.setContent(buf.toString());
 				rpr.setAuthor("AutoCheck");
@@ -458,6 +450,18 @@ public class Reprimand extends _Reprimand {
 			return null;
 		cal.add(Calendar.DATE, -week);
 		NSTimestamp prevDate = new NSTimestamp(cal.getTimeInMillis());
+		if(true) {
+			StringBuffer buf = new StringBuffer(15);
+			buf.append('[');
+			FieldPosition fp = new FieldPosition(SimpleDateFormat.DATE_FIELD);
+			SimpleDateFormat fmt = new SimpleDateFormat(SettingsReader.stringForKeyPath(
+					"ui.shortDateFormat","MM-dd"));
+			fmt.format(prevDate, buf, fp);
+			buf.append(" - ");
+			fmt.format(now.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0), buf, fp);
+			buf.append(']');
+			dict.takeValueForKey(buf.toString(),"weekString");
+		}
 		dict.takeValueForKey(
 				new Integer(cal.get(Calendar.DAY_OF_YEAR)), "refDay");
 		EduPeriod eduPeriod = EduPeriod.getCurrentPeriod(prevDate,listName,ec);
