@@ -757,14 +757,14 @@
 			<key>_URL</key>
 			<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
 			<key>skip</key>
-			<string>false</string>
+			<string>true</string>
 			<key>dbName</key>
 			<string>shobase4</string>
 		</dict>
 		<key>VseLists</key>
 		<dict>
 			<key>skip</key>
-			<string>true</string>
+			<string>false</string>
 		</dict>
 		<key>AutoItog</key>
 		<dict>
@@ -857,11 +857,11 @@
 		<key>EduLesson</key>
 		<string>net.rujel.base.BaseLesson</string>
 		<key>EduGroup</key>
-		<string>net.rujel.vseobuch.VOClass</string>
+		<string>net.rujel.vselists.VseEduGroup</string>
 		<key>Student</key>
-		<string>net.rujel.vseobuch.VOStudent</string>
+		<string>net.rujel.vselists.VseStudent</string>
 		<key>Teacher</key>
-		<string>net.rujel.vseobuch.VOTeacher</string>
+		<string>net.rujel.vselists.VseTeacher</string>
 	</dict>
 	<key>modules</key>
 	<dict>
@@ -886,7 +886,7 @@
 		<key>net.rujel.complete.CompleteModule</key>
 		<string>true</string>
 		<key>net.rujel.vselists.ListsEditor</key>
-		<string>false</string>
+		<string>true</string>
 	</dict>
 	<key>edu</key>
 	<dict>

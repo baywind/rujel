@@ -36,10 +36,8 @@ import net.rujel.interfaces.PersonLink;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSComparator.ComparisonException;
 
 public class VsePerson extends _VsePerson implements Person {
 
@@ -82,18 +80,6 @@ public class VsePerson extends _VsePerson implements Person {
 				byLetter.addObject(plink);
 				EOSortOrdering.sortArrayUsingKeyOrderArray(byLetter, aSorter);
 			}
-		}
-		if (agregate.count() > 0) {
-			aSorter = agregate.allKeys();
-			if (aSorter.count() > 1) {
-				try {
-					aSorter = aSorter.sortedArrayUsingComparator(
-							NSComparator.AscendingStringComparator);
-				} catch (ComparisonException e) {
-					e.printStackTrace();
-				}
-			}
-			agregate.takeValueForKey(aSorter, "list");
 		}
 		return agregate;
 	}

@@ -35,21 +35,20 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
+import net.rujel.reusables.Counter;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
-import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSComparator;
-import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSTimestamp;
-import com.webobjects.foundation.NSComparator.ComparisonException;
+import com.webobjects.foundation.*;
 
 public class VseStudent extends _VseStudent implements Student {
 
+	public static final EOQualifier notInGroup = new EOKeyValueQualifier(
+			"recentMainEduGroup",EOQualifier.QualifierOperatorEqual,NullValue);
+	
 	public static void init() {
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new Person.ComparisonSupport(), VsePerson.class);
@@ -131,7 +130,7 @@ public class VseStudent extends _VseStudent implements Student {
 			return -1;
 		return year.intValue() - absGrade.intValue();
 	}
-	
+	/*
 	public static NSMutableDictionary studentsAgregate(
 			EOEditingContext ec, NSTimestamp date) {
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,null,null);
@@ -152,6 +151,7 @@ public class VseStudent extends _VseStudent implements Student {
 			keys.addObject(grade);
 			agregate.setObjectForKey(new NSMutableArray(), grade);
 		}
+		agregate.takeValueForKey(keys, "list");
 		if(list == null || list.count() == 0)
 			return agregate;
 		Enumeration enu = list.objectEnumerator();
@@ -182,6 +182,114 @@ public class VseStudent extends _VseStudent implements Student {
 			agregate.takeValueForKey(keys, "list");
 		}
 		return agregate;
+	} */
+	
+	public static NSArray agregatedList(EOEditingContext ec, NSTimestamp date) {
+		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
+		NSMutableArray result = new NSMutableArray();
+		NSArray groups = VseEduGroup.listGroups(date, ec);
+		Enumeration grenu = groups.objectEnumerator();
+		VseEduGroup grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
+		int eduYear = MyUtility.eduYearForDate(date).intValue();
+		EOQualifier quals[] = new EOQualifier[2];
+		NSArray args = new NSArray(new Object[] {date,date});
+		quals[0] = EOQualifier.qualifierWithQualifierFormat(
+				"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,null,null);
+		fs.setRefreshesRefetchedObjects(true);
+		for (int i = SettingsReader.intForKeyPath("edu.minGrade", 1); i <= maxGrade; i++) {
+			while(grp != null && grp.grade().intValue() < i) {
+				result.addObject(grp);
+				grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
+			}
+			NSMutableDictionary dict = dict(Integer.toString(i), 
+					new Integer(eduYear - i), quals);
+			result.addObject(dict);
+			fs.setQualifier(quals[1]);
+			NSArray list = ec.objectsWithFetchSpecification(fs);
+			if(list == null || list.count() == 0)
+				continue;
+			Enumeration enu = list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				VseStudent st = (VseStudent) enu.nextElement();
+				if(st.recentMainEduGroup() == null) {
+					dict.valueForKeyPath("allCount.raise");
+					if(quals[0].evaluateWithObject(st))
+						dict.valueForKeyPath("currCount.raise");
+//					break;
+				}
+			}
+		} // list all grades
+		while(grp != null && grp.grade().intValue() == maxGrade ) {
+			result.addObject(grp);
+			grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
+		}
+		quals[1] = new EOKeyValueQualifier(ABS_GRADE_KEY,
+				EOQualifier.QualifierOperatorLessThan,new Integer(eduYear - maxGrade));
+		fs.setQualifier(quals[1]);
+		EOSortOrdering so = new EOSortOrdering(ABS_GRADE_KEY,EOSortOrdering.CompareAscending);
+		args = new NSArray(so);
+		fs.setSortOrderings(args);
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		NSMutableDictionary currdict = null;
+		if(list != null && list.count() > 0) {
+			Enumeration stenu = list.objectEnumerator();
+			eduYear = eduYear + maxGrade;
+			while (stenu.hasMoreElements()) {
+				VseStudent st = (VseStudent) stenu.nextElement();
+				if(st.absGrade().intValue() > eduYear) {
+					eduYear = st.absGrade().intValue();
+					while(grp != null && grp.absStart().intValue() < eduYear) {
+						NSMutableDictionary dict = dict(
+								grp.grade().toString(), grp.absStart(), quals) ;
+						result.addObject(dict);
+						int absStart = grp.absStart().intValue();
+						while(grp != null && grp.absStart().intValue() == absStart ) {
+							result.addObject(grp);
+							grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
+						}
+					}
+					currdict = dict(
+							Integer.toString(st.currGrade()), st.absGrade(),quals);
+//					currdict.takeValueForKey(Boolean.TRUE, "hide");
+					result.addObject(currdict);
+					while(grp != null && grp.absStart().intValue() == eduYear ) {
+						result.addObject(grp);
+						grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
+//						currdict.takeValueForKey(Boolean.FALSE, "hide");
+					}
+				} // next grade
+				if(st.recentMainEduGroup() == null) {
+//						currdict.takeValueForKey(Boolean.FALSE, "hide");
+					currdict.valueForKeyPath("allCount.raise");
+					if(quals[0].evaluateWithObject(st))
+						currdict.valueForKeyPath("currCount.raise");
+				}
+			}
+		}
+		while(grp != null) {
+			NSMutableDictionary dict = dict(
+					grp.grade().toString(), grp.absStart(), quals) ;
+			result.addObject(dict);
+			int absStart = grp.absStart().intValue();
+			while(grp != null && grp.absStart().intValue() == absStart ) {
+				result.addObject(grp);
+				grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
+			}
+		}
+		return result;
 	}
 
+	private static NSMutableDictionary dict(String name,Integer absGrade,EOQualifier[] quals) {
+		NSMutableDictionary dict = new NSMutableDictionary(name,"name");
+		dict.takeValueForKey("grey","styleClass");
+		quals[1] = new EOKeyValueQualifier(ABS_GRADE_KEY,
+				EOQualifier.QualifierOperatorEqual,absGrade);
+//		dict.takeValueForKey(quals[1], "allQual");
+//		quals[1] = new EOAndQualifier(new NSArray(quals));
+		dict.takeValueForKey(quals[1], "qualifier");
+		dict.takeValueForKey(new Counter(), "allCount");
+		dict.takeValueForKey(new Counter(), "currCount");
+		return dict;
+	}
 }

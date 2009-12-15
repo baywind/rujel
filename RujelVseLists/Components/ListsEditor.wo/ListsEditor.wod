@@ -17,12 +17,6 @@ Modes: Tabs {
 	numeric = true;
 }
 
-ClassListing : ClassListing {
-  editingContext = ec;
-  selection = group;
-  width = "100%";
-}
-
 PersonSelector : WORepetition {
   list = list;
   item = item;
@@ -34,7 +28,7 @@ AddClass : OnClickContainer {
   invokeAction = createGroup;
   class = "green";
   style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;margin:4px;";
-  hide = session.readAccess._create.VseEduGroup;
+  hide = cantAddClass;
 }
 
 EditGroup : OnClickContainer {
@@ -135,15 +129,9 @@ CanChange : WOConditional {
   condition = access.edit;
 }
 
-Categories : Tabs {
-  currTab = selection;
-  tablist = categories;
-  vertical = true;
-}
-
-ShowClasses : WOConditional {
-  condition = mode;
-  negate = true;
+Categories : WORepetition {
+  list = categories;
+  item = item;
 }
 
 HasGroup : WOConditional {
@@ -167,4 +155,39 @@ ShowAllToggle : OnClickContainer {
   elementName = "span";
   onclick = session.checkRun;
   invokeAction = toggleAll;
+}
+
+CategoryRow : OnClickContainer {
+  elementName = "tr";
+  invokeAction = select;
+  onclick = session.tryLoad;
+  class = listClass;
+  hide = hideRow;
+}
+
+IsGroup : WOConditional {
+  condition = item.startGrade;
+}
+
+GroupGrade : WOString {
+  value = item.grade;
+  numberformat = "0";
+}
+
+GroupCatTitle : WOString {
+  value = item.title;
+}
+
+IsDict : WOConditional {
+  condition = item.editingContext;
+  negate = true;
+}
+
+DictName : WOString {
+  value = item.name;
+}
+
+DictCount : WOString {
+  value = count;
+  numberformat = "0";
 }
