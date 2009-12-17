@@ -413,7 +413,7 @@ st:		while (stEnu.hasMoreElements()) {
 					if(groupName != null) {
 						subject.append(groupName).append(" : ");
 					}
-					subject.append(Person.Utility.fullName(student.person(),true,2,2,0));
+					subject.append(Person.Utility.fullName(student,true,2,2,0));
 					String subj = (String)params.valueForKey("subject");
 					if(subj != null && subj.length() > 0)
 						subject.append(" : ").append(subj);
@@ -437,8 +437,7 @@ st:		while (stEnu.hasMoreElements()) {
 					if(callerSession != null) {
 						StringBuffer message = new StringBuffer((String)WOApplication.application().
 								valueForKeyPath("strings.RujelContacts_Contacts.failedMailing"));
-						message.append(student.person().firstName());
-						message.append(' ').append(student.person().lastName());
+						message.append(Person.Utility.fullName(student, false, 2, 2, 0));
 						callerSession.takeValueForKey(message.toString(), "message");
 					}
 				}

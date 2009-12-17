@@ -70,11 +70,9 @@ public class PersonDisplay extends ExtDynamicElement {
     		//aResponse.appendContentString("?");
     		return;
     	}
-       	Person person = null;
-    	if(tmp instanceof Person) {
-    		person = (Person)tmp;
-    	} else if (tmp instanceof PersonLink) {
-    		person = ((PersonLink)tmp).person();
+       	PersonLink plink = null;
+    	if (tmp instanceof PersonLink) {
+    		plink = (PersonLink)tmp;
     	} else {
     		aResponse.appendContentString("!???!");
     		return;
@@ -102,7 +100,11 @@ public class PersonDisplay extends ExtDynamicElement {
     			startWithLast = (((Number)tmp).intValue() != 0);
     		}
     	}
-    	
+    	aResponse.appendContentString(Person.Utility.fullName(plink, startWithLast,
+    			nameMode(valueForBinding("last",aContext), 3),
+    			nameMode(valueForBinding("first",aContext), 1),
+    			nameMode(valueForBinding("second",aContext), 0)));
+    	/*
     	if(startWithLast) {
         	tmp = valueForBinding("last",aContext);
         	if(tmp == null)
@@ -118,10 +120,10 @@ public class PersonDisplay extends ExtDynamicElement {
         	if(tmp == null)
         		tmp = new Integer(3);
         	appendName(aResponse, person.lastName(), tmp, false);
-    	}
-       	
+    	} */
+    	Person person = plink.person();
     	tmp = valueForBinding("birthdayFormat",aContext);
-    	if(tmp != null && person.birthDate() != null) {
+    	if(person != null && tmp != null && person.birthDate() != null) {
     		aResponse.appendContentCharacter(' ');
     		Format format = null;
     		if(tmp instanceof Format) {
@@ -137,6 +139,24 @@ public class PersonDisplay extends ExtDynamicElement {
      		aResponse.appendContentString("</span>");
      }
     
+	protected int nameMode(Object type,int dflt) {
+		if(type == null)
+			return dflt;
+    	int mode = 0;
+    	if (type instanceof Number) {
+			mode = ((Number)type).intValue();
+		} else if(type instanceof CharSequence) {
+			try {
+				mode = Integer.valueOf(type.toString());
+			} catch (Exception e) {
+				mode = ((CharSequence)type).length();
+			}
+		} else {
+			mode = 1;
+		}
+    	return mode;
+	}
+	/*
     protected void appendName(WOResponse aResponse, String name, Object type, boolean addSpace) {
     	if(type == null)
     		return;
@@ -168,5 +188,5 @@ public class PersonDisplay extends ExtDynamicElement {
     	}
     	if(addSpace)
     		aResponse.appendContentCharacter(' ');
-    }
+    } */
 }

@@ -43,6 +43,8 @@ public class PersonSelector extends WOComponent {
 	public String rowStyle() {
 		PersonLink curr = (PersonLink)valueForBinding("selectedItem");
 		if(curr == item) return "selection";
+		if(item.person() == null)
+			return "grey";
 		Boolean sex = item.person().sex();
 		if(sex == null) return "grey";
 		return (sex.booleanValue())?"male":"female";
@@ -75,7 +77,7 @@ public class PersonSelector extends WOComponent {
 			char c = nameFormat.charAt(nameFormat.length() - 1);
 			startWithLastName = (c != '-');
 		}
-		return Person.Utility.fullName(item.person(),startWithLastName,ln,fn,sn);
+		return Person.Utility.fullName(item,startWithLastName,ln,fn,sn);
 	}
 	
 	public boolean checked() {

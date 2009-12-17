@@ -92,7 +92,7 @@ public class VseStudent extends _VseStudent implements Student {
 				.valueForKey("eduGroup");		
 	}
 	
-	public static VseStudent studentForPerson(VsePerson person, NSTimestamp date) {
+	public static VseStudent studentForPerson(Person person, NSTimestamp date) {
 		EOEditingContext ec = person.editingContext();
 		NSArray students = EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME,
 				PERSON_KEY, person);
@@ -109,7 +109,7 @@ public class VseStudent extends _VseStudent implements Student {
 		return (VseStudent)students.objectAtIndex(0);
 	}
 
-	public static VseStudent studentForPerson(VsePerson person, NSTimestamp date,
+	public static VseStudent studentForPerson(Person person, NSTimestamp date,
 			boolean create) {
 		VseStudent student = studentForPerson(person, date);
 		if(create && student == null) {
@@ -283,6 +283,7 @@ public class VseStudent extends _VseStudent implements Student {
 	private static NSMutableDictionary dict(String name,Integer absGrade,EOQualifier[] quals) {
 		NSMutableDictionary dict = new NSMutableDictionary(name,"name");
 		dict.takeValueForKey("grey","styleClass");
+		dict.takeValueForKey(absGrade, "absGrade");
 		quals[1] = new EOKeyValueQualifier(ABS_GRADE_KEY,
 				EOQualifier.QualifierOperatorEqual,absGrade);
 //		dict.takeValueForKey(quals[1], "allQual");

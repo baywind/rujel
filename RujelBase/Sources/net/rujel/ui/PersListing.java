@@ -185,23 +185,15 @@ public class PersListing extends WOComponent {
 	}*/
 
 	public void search() {
-		EOQualifier qual = Person.Utility.fullNameQualifier(searchString);
-		NSKeyValueCodingAdditions strings = (NSKeyValueCodingAdditions)
-						session().valueForKey("strings");
-		if(qual == null) {
-			String noMore = (String)strings.valueForKeyPath(
-					"RujelBase_Base.notMoreXwords");
-			StringBuilder buf = new StringBuilder();
-			buf.append(strings.valueForKeyPath("Strings.messages.illegalFormat"));
-			buf.append(' ');
-			buf.append(strings.valueForKeyPath("Reusables_Strings.dataTypes.ofRequest"));
-			buf.append(' ');
-			buf.append(String.format(noMore,3));
-			searchMessage = buf.toString();
+		try {
+			found = Person.Utility.search(ec, entity(), searchString);
+			if((found == null || found.count() == 0) && alterEntity() != null)
+				found = Person.Utility.search(ec, alterEntity(), searchString);
+		} catch (Exception e) {
+			searchMessage = e.getMessage();
 			canCreate = false;
 			return;
 		}
-		found = Person.Utility.search(ec, qual, entity());
 		canCreate = (access != null && access.flagForKey("create"));
 		if(found.count() < 1) {
 			searchMessage = (String)session().valueForKeyPath(
@@ -212,6 +204,8 @@ public class PersListing extends WOComponent {
 		NSMutableArray tmp = found.mutableClone();
 		tmp.removeObjectsInArray(fullList);
 		fullList.addObjectsFromArray(tmp);
+		if(fullList.count() > 1)
+			EOSortOrdering.sortArrayUsingKeyOrderArray(fullList, Person.sorter);
 		searchMessage = null;
 	}
 	
@@ -298,34 +292,47 @@ public class PersListing extends WOComponent {
 		if(_entity != null)
 			return _entity;
 		String entityName = (String)valueForBinding("entity");
+		_entity = resolveEntity(entityName,ec);
+		return _entity;
+	}
+	
+	protected String _alterEntity;
+	protected String alterEntity() {
+		if(_alterEntity == null) {
+			String entityName = (String)valueForBinding("alterEntity");
+			_alterEntity = resolveEntity(entityName,ec);
+			if(_alterEntity == null)
+				_alterEntity = "";
+		}
+		return (_alterEntity.length() == 0)?null:_alterEntity;
+	}	
+	
+	protected static String resolveEntity(String entityName, EOEditingContext ec) {
 		if(entityName == null)
 			return null;
 		try {
 			EOEntity entity = EOUtilities.entityNamed(ec,entityName);
 			if(entity != null) {
-				_entity = entityName;
 				return entityName;
 			}
 		} catch (EOObjectNotAvailableException naex) {
-			entityName = SettingsReader.stringForKeyPath("interfaces." + entityName,null);
-			//interfaces.get(entityName,null);
-			int dot = entityName.lastIndexOf('.');
-			if(dot > 0) {
-				entityName = entityName.substring(dot + 1);
-			}
-			if(entityName == null)
-				return null;
-			try {
-				EOEntity entity = EOUtilities.entityNamed(ec,entityName);
-				if(entity != null) {
-					_entity = entityName;
-					return entityName;
-				}
-			} catch (EOObjectNotAvailableException naex2) {
-				return null;
-			}
 		}
-		return _entity;
+		entityName = SettingsReader.stringForKeyPath("interfaces." + entityName,null);
+		int dot = entityName.lastIndexOf('.');
+		if(dot > 0) {
+			entityName = entityName.substring(dot + 1);
+		}
+//		return resolveEntity(entityName);
+		if(entityName == null)
+			return null;
+		try {
+			EOEntity entity = EOUtilities.entityNamed(ec,entityName);
+			if(entity != null) {
+				return entityName;
+			}
+		} catch (EOObjectNotAvailableException naex2) {
+		}
+		return null;
 	}
 	
     public WOComponent create() {
@@ -333,20 +340,7 @@ public class PersListing extends WOComponent {
 //		canCreate = false;
 		selection = null;
 		setValueForBinding(selection,"selection");
-//		newPerson = new NSMutableDictionary();
-//		newPerson.takeValueForKey(searchString,"lastName");
-		Person onEdit = (Person)EOUtilities.createAndInsertInstance(ec,entity());
-		String[] names = Person.Utility.splitNames(searchString);
-		if(names != null) {
-			if(names.length > 0)
-				onEdit.setLastName(names[0]);
-			if(names.length > 1)
-				onEdit.setFirstName(names[1]);
-			if(names.length > 2)
-				onEdit.setSecondName(names[2]);
-		}
-//		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
-//		fullList.addObject(onEdit);
+		PersonLink onEdit = Person.Utility.create(ec, entity(), searchString);
 		WOComponent returnPage = context().page();
 		WOComponent popup = pageWithName("SelectorPopup");
 		if(returnPage instanceof SelectorPopup) {
@@ -412,7 +406,8 @@ public class PersListing extends WOComponent {
 			Enumeration enu = personList.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject pers = (EOEnterpriseObject) enu.nextElement();
-				if(entity().equals(pers.entityName()) && !result.contains(pers))
+				if(!result.contains(pers) && (entity().equals(pers.entityName())
+						|| pers.entityName().equals(alterEntity())))
 					result.addObject(pers);
 			}
 		}

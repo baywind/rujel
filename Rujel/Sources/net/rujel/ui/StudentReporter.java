@@ -33,6 +33,7 @@ import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
+import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Period;
@@ -174,7 +175,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String teacher() {
-		Person t = (Person)valueForKeyPath("courseItem.teacher.person");
+		PersonLink t = (PersonLink)valueForKeyPath("courseItem.teacher");
 		if(t == null)
 			return null;
 		return Person.Utility.fullName(t,true,2,2,2);

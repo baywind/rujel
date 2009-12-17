@@ -162,7 +162,6 @@ CategoryRow : OnClickContainer {
   invokeAction = select;
   onclick = session.tryLoad;
   class = listClass;
-  hide = hideRow;
 }
 
 IsGroup : WOConditional {

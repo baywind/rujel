@@ -101,7 +101,7 @@ public class SrcMark extends WOComponent {
 		if(pLink instanceof Teacher) {
 			currTeacher = (Teacher)ec.objectForGlobalID(pLink);
 			courses = coursesForTeacher(currTeacher);
-			//teacherName = Person.Utility.fullName(currTeacher.person(),true,2,1,1);
+			//teacherName = Person.Utility.fullName(currTeacher,true,2,1,1);
 			byClass = false;
 		}
 		ec.unlock();
@@ -236,7 +236,7 @@ public class SrcMark extends WOComponent {
     	if(currTeacher != null && currTeacher.editingContext() != ec)
     		currTeacher = (Teacher)EOUtilities.localInstanceOfObject(ec, currTeacher);
 		if(teacherName != null) {
-			teacherName = Person.Utility.fullName(currTeacher.person(),true,2,2,2);
+			teacherName = Person.Utility.fullName(currTeacher,true,2,2,2);
 			return null;
 		} else {
 			currIndex = -1;
@@ -248,7 +248,7 @@ public class SrcMark extends WOComponent {
 			courses = coursesForTeacher(currTeacher);
 			gradeCycles = null;
 			byClass = false;
-			//teacherName = Person.Utility.fullName(currTeacher.person(),true,2,1,1);
+			//teacherName = Person.Utility.fullName(currTeacher,true,2,1,1);
 	//		aCycle = null;
 		}
         return null;
@@ -316,7 +316,7 @@ public class SrcMark extends WOComponent {
 			aCourse = null;
 		}*/
 		if(currTeacher != null)
-		teacherName = Person.Utility.fullName(currTeacher.person(),true,2,2,2);
+		teacherName = Person.Utility.fullName(currTeacher,true,2,2,2);
         return null;
     }
 	
@@ -622,7 +622,8 @@ public class SrcMark extends WOComponent {
 			}
 			return;
 		}
-		if(currTeacher != null && teacherName.equals(Person.Utility.fullName(currTeacher.person(),true,2,2,2))) {
+		if(currTeacher != null && teacherName.equals(
+				Person.Utility.fullName(currTeacher,true,2,2,2))) {
 			addCourse();
 			newCourse = true;
 			ec.lock();

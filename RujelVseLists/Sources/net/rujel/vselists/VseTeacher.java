@@ -37,11 +37,9 @@ import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
-import com.webobjects.foundation.NSComparator.ComparisonException;
 
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
@@ -57,7 +55,7 @@ public class VseTeacher extends _VseTeacher implements Teacher{
 				new PersonLink.ComparisonSupport(), VseTeacher.class);
 	}
 
-	public static VseTeacher teacherForPerson(VsePerson person, NSTimestamp date) {
+	public static VseTeacher teacherForPerson(Person person, NSTimestamp date) {
 		EOEditingContext ec = person.editingContext();
 		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME,
 				PERSON_KEY, person);
@@ -74,7 +72,7 @@ public class VseTeacher extends _VseTeacher implements Teacher{
 		return (VseTeacher)list.objectAtIndex(0);
 	}
 
-	public static VseTeacher teacherForPerson(VsePerson person, NSTimestamp date,
+	public static VseTeacher teacherForPerson(Person person, NSTimestamp date,
 			boolean create) {
 		VseTeacher teacher = teacherForPerson(person, date);
 		if(create && teacher == null) {

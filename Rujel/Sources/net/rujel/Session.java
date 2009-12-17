@@ -195,9 +195,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		try {
 			EOEnterpriseObject personLink = EOUtilities.objectWithPrimaryKeyValue(
 					defaultEditingContext(),className, pKey);
-			//person = pLink.person();
 			personGID = defaultEditingContext().globalIDForObject(personLink);
-			if(personLink != null) persList.addObject(((PersonLink)personLink).person());
+			if(personLink != null && ((PersonLink)personLink).person() != null)
+				persList.addObject(((PersonLink)personLink).person());
 			logger.log(WOLogLevel.CONFIG, "Person resolved for user: "+ user + " = " + 
 					Person.Utility.fullName((PersonLink)personLink,true,2,2,2),this); 
 		} catch (Exception ex) {

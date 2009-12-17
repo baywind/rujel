@@ -57,8 +57,7 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     		return null;
     	StringBuffer buf = new StringBuffer(course.eduGroup().name());
     	buf.append(" - ").append(course.cycle().subject());
-    	Person tp = course.teacher().person();
-    	buf.append(" - ").append(Person.Utility.fullName(tp, true, 2, 1, 1));
+    	buf.append(" - ").append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
     	return buf.toString();
     }
 /*    
@@ -121,7 +120,7 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     	StringBuffer result = new StringBuffer();
     	result.append(application().valueForKeyPath("strings.RujelInterfaces_Names.EduLesson.substitute"));
     	result.append(": ");
-    	result.append(Person.Utility.fullName(teacher.person(), false, 2, 1, 1));
+    	result.append(Person.Utility.fullName(teacher, false, 2, 1, 1));
     	return result.toString();
     }
     */
@@ -158,8 +157,7 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
 					result.append(',').append(' ');
 				}
 				Teacher teacher = (Teacher)sub.valueForKey("teacher");
-				result.append(teacher.person().lastName()).append(' ');
-				result.append(Person.Utility.composeName(teacher.person(), 1, 1));
+				result.append(Person.Utility.fullName(teacher,true,2, 1, 1));
 			}
         	result.append("</em>");
         	return result.toString();

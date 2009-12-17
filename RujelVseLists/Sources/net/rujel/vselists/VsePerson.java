@@ -36,6 +36,7 @@ import net.rujel.interfaces.PersonLink;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
@@ -70,7 +71,8 @@ public class VsePerson extends _VsePerson implements Person {
 		Enumeration enu = list.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			PersonLink plink = (PersonLink) enu.nextElement();
-			String ln = plink.person().lastName();
+			String ln = (String)NSKeyValueCodingAdditions.Utility.valueForKeyPath(
+					plink, "person.lastName");
 			String letter = (ln==null)?"?":ln.substring(0,1);
 			NSMutableArray byLetter = (NSMutableArray)agregate.valueForKey(letter);
 			if(byLetter == null) {

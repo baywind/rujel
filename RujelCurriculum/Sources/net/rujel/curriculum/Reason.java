@@ -127,16 +127,10 @@ public class Reason extends _Reason {
     protected void exts(StringBuilder result) {
     	if(namedFlags().flagForKey("forTeacher")) {
     		if(teacher() != null) {
-    			Person t = teacher().person();
-    			result.append(t.lastName()).append(' ');
-    			if(t.firstName() != null) {
-    				result.append(t.firstName().charAt(0)).append('.');
-    				if(t.secondName() != null)
-    					result.append(' ').append(t.secondName().charAt(0)).append('.');
-    			}
+    			result.append(Person.Utility.fullName(teacher(), true, 2, 1, 1));
     		} else {
     			result.append(WOApplication.application().valueForKeyPath(
-    					"strings.RujelBase_Base.vacant"));
+    			"strings.RujelBase_Base.vacant"));
     		}
     	}
     	if(eduGroup() != null) {

@@ -63,7 +63,7 @@
 		<true/>
 		<key>presenterBindings</key>
 		<dict>
-			<key>entity</key>
+			<key>alterEntity</key>
 			<string>VsePerson</string>
 			<key>firstNameDisplay</key>
 			<integer>2</integer>

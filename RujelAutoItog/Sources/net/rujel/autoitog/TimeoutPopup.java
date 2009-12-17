@@ -149,12 +149,11 @@ public class TimeoutPopup extends WOComponent {
     public String title() {
     	if(prognosis == null)
     		return (String)valueForKeyPath("application.strings.RujelAutoItog_AutoItog.properties.CourseTimeout.this");
-    	Person student = prognosis.student().person();
     	StringBuffer buf = new StringBuffer((String)valueForKeyPath("application.strings.RujelAutoItog_AutoItog.properties.Timeout.this"));
     	buf.append(" - ");
     	buf.append(course.cycle().subject());
        	buf.append(" - ");
-       	buf.append(Person.Utility.fullName(student,true,2,1,1));
+       	buf.append(Person.Utility.fullName(prognosis.student(),true,2,1,1));
        	return  buf.toString();
     }
 	

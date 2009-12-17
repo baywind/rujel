@@ -600,7 +600,7 @@ public class AutoItogModule {
 			buf.append(cto.cycle().subject()).append(' ');
 		}
 		if(cto.teacher() != null) {
-			buf.append(Person.Utility.fullName(cto.teacher().person(), false, 2, 1, 1)).append(' ');
+			buf.append(Person.Utility.fullName(cto.teacher(), false, 2, 1, 1)).append(' ');
 		}
 		if(cto.course() != null) {
 			buf.append("for single EduCourse");
@@ -647,7 +647,7 @@ cycleCourses:
 			if(ct != null) {
 				buf.append(course.eduGroup().name()).append(" : ");
 				buf.append(course.cycle().subject()).append(" - ");
-				buf.append(Person.Utility.fullName(course.teacher().person(), false, 2, 1, 0));
+				buf.append(Person.Utility.fullName(course.teacher(), false, 2, 1, 0));
 				if(ct.namedFlags().flagForKey("negative")) {
 					logger.log(WOLogLevel.INFO,
 							"Course should have been already automated",course);

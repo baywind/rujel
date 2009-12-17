@@ -32,11 +32,15 @@ package net.rujel.interfaces;
 import java.util.Calendar;
 import java.util.Date;
 
+import net.rujel.reusables.DelegateManager;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOEntity;
 import com.webobjects.eoaccess.EOModelGroup;
 import com.webobjects.eoaccess.EORelationship;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
@@ -78,7 +82,17 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 	public String initials();
 	
 	public static class Utility {
+		public static final DelegateManager delegateManager = new DelegateManager();
+		
+		protected static final NSSelector initials = new NSSelector(
+				"initials",new Class[] {Person.class});
 		public static String initials(Person pers) {
+			Object byDelegate = delegateManager.useDelegates(initials, new Object[] {pers});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (String)byDelegate;
+			}
 			StringBuffer sb = new StringBuffer(5);
 			if(pers.firstName() != null)
 				sb.append(pers.firstName().charAt(0)).append('.');
@@ -90,10 +104,20 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			return sb.toString();
 		}
 		
+		protected static final NSSelector composeName = new NSSelector(
+				"composeName",new Class[] {Person.class,Integer.TYPE,Integer.TYPE});
 		public static String composeName(Person pers, int firstNameDisplay,int secondNameDisplay) {
 			if(firstNameDisplay < 1 && secondNameDisplay < 1)
 				return "";
-			
+
+			Object byDelegate = delegateManager.useDelegates(composeName, 
+					new Object[] {pers,firstNameDisplay,secondNameDisplay});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (String)byDelegate;
+			}
+				
 			if(firstNameDisplay == 1 && secondNameDisplay == 1)
 				return pers.initials();
 			
@@ -127,9 +151,18 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			return buf.toString();//first + " " + second;
 		}
 		
+		protected static final NSSelector fullName = new NSSelector(
+				"fullName",new Class[] {PersonLink.class,Boolean.TYPE,Integer.TYPE,Integer.TYPE,Integer.TYPE});
 		public static String fullName(PersonLink person, boolean startWithLastName,int lastNameDisplay,int firstNameDisplay,int secondNameDisplay) {
 			if(person == null)
 				return null;
+			Object byDelegate = delegateManager.useDelegates(fullName, 
+					new Object[] {person,startWithLastName,lastNameDisplay,firstNameDisplay,secondNameDisplay});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (String)byDelegate;
+			}
 			Person pers = (person instanceof Person)?(Person)person:person.person();
 			if(lastNameDisplay < 1) return composeName(pers,firstNameDisplay,secondNameDisplay);
 			String last = pers.lastName();
@@ -147,7 +180,16 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 				return compose + " " + last;
 		}
 		
-		public static EOQualifier personQualifier(String last,String first,String second) {
+//		protected static final NSSelector personQualifier = new NSSelector(
+//				"personQualifier",new Class[] {String.class,String.class,String.class});
+		protected static EOQualifier personQualifier(String last,String first,String second) {
+/*			Object byDelegate = delegateManager.useDelegates(personQualifier, 
+					new Object[] {last,first,second});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (EOQualifier)byDelegate;
+			}*/
 			NSMutableArray quals = new NSMutableArray();
 			if(last != null)
 				quals.addObject(new EOKeyValueQualifier("lastName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
@@ -172,7 +214,16 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			return tmp.split("\\ +");
 		}
 				
-		public static EOQualifier fullNameQualifier(String searchString) {
+//		protected static final NSSelector fullNameQualifier = new NSSelector(
+//				"fullNameQualifier",new Class[] {String.class});
+		protected static EOQualifier fullNameQualifier(String searchString) {
+/*			Object byDelegate = delegateManager.useDelegates(personQualifier, 
+					new Object[] {searchString});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (EOQualifier)byDelegate;
+			} */
 			String[] names = splitNames(searchString);
 			if(names == null) return null;
 
@@ -207,10 +258,36 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 //			return ec.objectsWithFetchSpecification(fspec);
 //		}
 
+		protected static final NSSelector search = new NSSelector(
+				"search",new Class[] {EOEditingContext.class,String.class,String.class});
 		public static NSArray search(EOEditingContext ec,String entity, String searchString) {
+			Object byDelegate = delegateManager.useDelegates(search, 
+					new Object[] {ec,entity,searchString});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (NSArray)byDelegate;
+			}
 			EOQualifier qual = Person.Utility.fullNameQualifier(searchString);
-			if(qual == null)
-				return null;
+			if(qual == null) {
+				NSKeyValueCodingAdditions strings = null;
+				if(ec instanceof SessionedEditingContext) {
+					strings = (NSKeyValueCodingAdditions)((SessionedEditingContext)
+							ec).session().valueForKey("strings");
+				} else {
+					strings = (NSKeyValueCodingAdditions)WOApplication.application()
+									.valueForKey("strings");
+				}
+				String noMore = (String)strings.valueForKeyPath(
+						"RujelBase_Base.notMoreXwords");
+				StringBuilder buf = new StringBuilder();
+				buf.append(strings.valueForKeyPath("Strings.messages.illegalFormat"));
+				buf.append(' ');
+				buf.append(strings.valueForKeyPath("Reusables_Strings.dataTypes.ofRequest"));
+				buf.append(' ');
+				buf.append(String.format(noMore,3));
+				throw new IllegalArgumentException(buf.toString());
+			}
 			return search(ec, qual, entity);
 		}
 		
@@ -230,6 +307,29 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			fspec.setQualifier(qual);
 			fspec.setSortOrderings(sorter);
 			return ec.objectsWithFetchSpecification(fspec);
+		}
+		
+		protected static final NSSelector create = new NSSelector(
+				"create",new Class[] {EOEditingContext.class,String.class,String.class});
+		public static PersonLink create(EOEditingContext ec,String entity, String initString) {
+			Object byDelegate = delegateManager.useDelegates(create, 
+					new Object[] {ec,entity,initString});
+			if(byDelegate != null) {
+				if(byDelegate == NullValue)
+					return null;
+				return (PersonLink)byDelegate;
+			}
+			Person onEdit = (Person)EOUtilities.createAndInsertInstance(ec,entity);
+			String[] names = splitNames(initString);
+			if(names != null) {
+				if(names.length > 0)
+					onEdit.setLastName(names[0]);
+				if(names.length > 1)
+					onEdit.setFirstName(names[1]);
+				if(names.length > 2)
+					onEdit.setSecondName(names[2]);
+			}
+			return onEdit;
 		}
 		
 		public static int calculateAge(Date birth, Date day) {

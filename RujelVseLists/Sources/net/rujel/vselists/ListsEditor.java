@@ -1,9 +1,39 @@
+// ListsEditor.java: Class file for WO Component 'ListsEditor'
+
+/*
+ * Copyright (c) 2008, Gennady & Michael Kushnir
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ * 
+ * 	•	Redistributions of source code must retain the above copyright notice, this
+ * 		list of conditions and the following disclaimer.
+ * 	•	Redistributions in binary form must reproduce the above copyright notice,
+ * 		this list of conditions and the following disclaimer in the documentation
+ * 		and/or other materials provided with the distribution.
+ * 	•	Neither the name of the RUJEL nor the names of its contributors may be used
+ * 		to endorse or promote products derived from this software without specific 
+ * 		prior written permission.
+ * 		
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+ * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package net.rujel.vselists;
 
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.reusables.Counter;
 import net.rujel.reusables.NamedFlags;
@@ -28,7 +58,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
-			//
+			Person.Utility.delegateManager.addDelegate(new PersonDelegate(),30);
 		} else if(obj.equals("regimes")) {
 			if(ctx != null && ctx.hasSession())
 				return ctx.session().valueForKeyPath(
@@ -204,7 +234,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		Boolean sex = (Boolean)valueForKeyPath("plink.person.sex");
-		if(sex == null) return null;
+		if(sex == null) return "gerade";
 		return (sex.booleanValue())?"male":"female";
 	}
 	
@@ -218,13 +248,17 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	public WOActionResults addPerson() {
 		WOComponent popup = pageWithName("SelectorPopup");
 		popup.takeValueForKey(this, "returnPage");
-		popup.takeValueForKey(session().valueForKeyPath(
-				"strings.RujelVseLists_VseStrings.selectPerson"), "dict");
+		NSMutableDictionary dict = ((NSDictionary)session().valueForKeyPath(
+		"strings.RujelVseLists_VseStrings.selectPerson")).mutableClone();
+    	String ent = (mode == null || mode.intValue() == 0)?
+    			VseStudent.ENTITY_NAME:VseTeacher.ENTITY_NAME; 
+		dict.takeValueForKeyPath(ent, "presenterBindings.entity");
+		popup.takeValueForKey(dict, "dict");
 		popup.takeValueForKey("newPerson", "resultPath");
 		return popup;
 	}
 	
-	public void setNewPerson(VsePerson person) {
+	public void setNewPerson(PersonLink person) {
 		boolean student = (mode == null || mode.intValue() == 0);
 		if(student && selection == null)
 			return;
@@ -232,7 +266,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			ec.revert();
 			return;
 		}
-		person = (VsePerson)EOUtilities.localInstanceOfObject(ec, person);
+		person = (PersonLink)EOUtilities.localInstanceOfObject(ec, (EOEnterpriseObject)person);
 		if (group() != null) {
 			Enumeration enu = group().vseList().objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -246,10 +280,10 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		}
 		ec.lock();
 		try {
-			PersonLink pl = null;
 			if (student) {
-				VseStudent aStudent = VseStudent.studentForPerson(person, date, true);
-				pl = aStudent;
+				if(!(person instanceof VseStudent))
+					person = VseStudent.studentForPerson(person.person(), date, true);
+				VseStudent aStudent = (VseStudent)person;
 				if (selection instanceof VseEduGroup) {
 					aStudent.setAbsGrade(group().absStart());
 					EOEnterpriseObject newEntry = EOUtilities
@@ -259,53 +293,28 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 					newEntry.addObjectToBothSidesOfRelationshipWithKey(
 							aStudent, "student");
 					newEntry.takeValueForKey(date, "enter");
+					logger.log(WOLogLevel.UNOWNED_EDITING, "Added person to group",
+							new Object[] {session(),person,selection});
 				} else {
 					Integer grade = aStudent.absGrade();
 					if(grade == null || grade.intValue() <= 0) {
-						grade = (Integer)selection;
-						if(grade.intValue() > 0) {
+						grade = (Integer)NSKeyValueCoding.Utility.valueForKey(
+								selection, "absGrade");
+						if(grade.intValue() < 1000) {
 							Integer year = MyUtility.eduYearForDate(date);
 							grade = new Integer(year.intValue() - grade.intValue());
 						}
 						aStudent.setAbsGrade(grade);
 					}
 				}
+				if(aStudent.enter() == null)
+					aStudent.setEnter(date);
 			} else {
-				pl = VseTeacher.teacherForPerson(person, date, true);
+				if(!(person instanceof VseTeacher))
+					person = VseTeacher.teacherForPerson(person.person(), date, true);
 			}
 			ec.saveChanges();
-			logger.log(WOLogLevel.UNOWNED_EDITING, "Added person to group",
-					new Object[] {session(),person,selection});
-			if(student) {
-				if(group() != null) {
-					/* NSMutableArray byGrade = (NSMutableArray)
-								agregate.objectForKey(group().grade());
-					if(byGrade != null)
-						byGrade.removeObject(pl); */
-					list = list.arrayByAddingObject(pl);
-				} else {
-					VseEduGroup gr = ((VseStudent)pl).recentMainEduGroup();
-					if(gr != null) {
-						setGroup(gr);
-					} else {
-						Integer grade = ((VseStudent)pl).currGrade();
-						if(grade.equals(selection) && !list.containsObject(pl))
-							((NSMutableArray)list).addObject(pl);
-//						else
-//							setSelection(grade);
-					}
-				}
-/*			} else {
-				String letter = person.lastName().substring(0,1);
-				list = (NSArray)agregate.valueForKey(letter);
-				if(list == null) {
-					list = new NSMutableArray(pl);
-					agregate.takeValueForKey(list, letter);
-				} else {
-					((NSMutableArray)list).addObject(pl);
-				}
-				selection = letter; */
-			}
+			list = list.arrayByAddingObject(person);
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING, "Error adding person to group",
 					new Object[] {session(),person,selection,e});
@@ -385,7 +394,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	public void select() {
 		setSelection(item);
 	}
-		
+/*
 	public Object hideRow() {
 		if(showAll)
 			return Boolean.FALSE;
@@ -393,14 +402,14 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			return NSKeyValueCoding.Utility.valueForKey(item, "hide");
 		}
 		return Boolean.FALSE;
-	}
+	}*/
 
 	public String listClass() {
 		if(selection == item)
 			return "selection";
 		if(item instanceof EOEnterpriseObject)
 			return "ungerade";
-		Object count = item.valueForKey((showAll)?"allCount":"currCount");
+		Object count = item.valueForKey("currCount"); //(showAll)?"allCount":
 		if(Various.boolForObject(count))
 			return "orange";
 		else

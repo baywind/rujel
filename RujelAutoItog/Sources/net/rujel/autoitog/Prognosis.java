@@ -332,7 +332,7 @@ public class Prognosis extends _Prognosis {
 				student = (PersonLink)obj;
 			else if (obj instanceof NSKeyValueCoding)
 				student = (PersonLink)((NSKeyValueCoding)obj).valueForKey("student");
-			buf.append(Person.Utility.fullName(student.person(), false, 2, 1, 0));
+			buf.append(Person.Utility.fullName(student, false, 2, 1, 0));
 			buf.append(" : ").append(report).append('\n');
 		}
 	}
@@ -430,7 +430,7 @@ public class Prognosis extends _Prognosis {
 		StringBuffer buf = (buffer == null)?new StringBuffer():buffer;
 		buf.append(course.eduGroup().name()).append(" : ");
 		buf.append(course.cycle().subject()).append(" - ");
-		buf.append(Person.Utility.fullName(course.teacher().person(), false, 2, 1, 0));
+		buf.append(Person.Utility.fullName(course.teacher(), false, 2, 1, 0));
 		buf.append('\n');
 		
 		NSArray prognoses = prognosesArrayForCourseAndPeriod(course, itog, true);
@@ -528,7 +528,7 @@ cycleStudents:
 			buf.append("No prognoses found for students:\n");
 			while (enu.hasMoreElements()) {
 				Student stu = (Student) enu.nextElement();
-				buf.append(Person.Utility.fullName(stu.person(), true, 2, 1, 0)).append(", ");
+				buf.append(Person.Utility.fullName(stu, true, 2, 1, 0)).append(", ");
 			}
 			buf.append('\n');
 		}
