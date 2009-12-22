@@ -293,4 +293,9 @@ public class VseStudent extends _VseStudent implements Student {
 		dict.takeValueForKey(new Counter(), "currCount");
 		return dict;
 	}
+	
+	public void validateForSave() {
+		super.validateForSave();
+		VseList.validateDates(enter(), leave());
+	}
 }

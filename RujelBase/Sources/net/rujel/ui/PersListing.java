@@ -342,7 +342,12 @@ public class PersListing extends WOComponent {
 		setValueForBinding(selection,"selection");
 		PersonLink onEdit = Person.Utility.create(ec, entity(), searchString);
 		WOComponent returnPage = context().page();
-		WOComponent popup = pageWithName("SelectorPopup");
+		WOComponent popup = null;
+//		try {
+//			popup = pageWithName("PersonInspector");
+//		} catch (Exception e) {
+			popup = pageWithName("SelectorPopup");
+//		}
 		if(returnPage instanceof SelectorPopup) {
 			SelectorPopup sp = (SelectorPopup)returnPage;
 			popup.takeValueForKey(sp.returnPage, "returnPage");
@@ -352,12 +357,14 @@ public class PersListing extends WOComponent {
 		} else {
 			popup.takeValueForKey(returnPage, "returnPage");
 		}
-		NSDictionary dict = (NSDictionary) session().valueForKeyPath(
-					"strings.RujelBase_Base.newPerson");
-//		dict = PlistReader.cloneDictionary(dict, true);
-//		dict.takeValueForKeyPath(null, "presenterBindings.")
-		popup.takeValueForKey(onEdit, "value");
-		popup.takeValueForKey(dict, "dict");
+		if(popup instanceof SelectorPopup) {
+			NSDictionary dict = (NSDictionary) session().valueForKeyPath(
+				"strings.RujelBase_Base.newPerson");
+			popup.takeValueForKey(onEdit.person(), "value");
+			popup.takeValueForKey(dict, "dict");
+//		} else {
+//			popup.takeValueForKey(onEdit, "personLink");
+		}
 		return popup;
     }
 

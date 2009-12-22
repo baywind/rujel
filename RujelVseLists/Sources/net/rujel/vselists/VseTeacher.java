@@ -118,4 +118,9 @@ public class VseTeacher extends _VseTeacher implements Teacher{
 		}
 		return result;
 	}
+	
+	public void validateForSave() {
+		super.validateForSave();
+		VseList.validateDates(enter(), leave());
+	}
 }

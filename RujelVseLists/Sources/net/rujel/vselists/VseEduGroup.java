@@ -175,17 +175,17 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 	
 	public void setLists(NSArray value) {
-		_list = null;
+		nullify();
 		super.setLists(value);
 	}
 
 	public void addToLists(EOEnterpriseObject object) {
-		_list = null;
+		nullify();
 		super.addToLists(object);
 	}
 
 	public void removeFromLists(EOEnterpriseObject object) {
-		_list = null;
+		nullify();
 		super.removeFromLists(object);
 	}
 
@@ -234,12 +234,16 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
     	super.setFlags(value);
     }
 
-	public void turnIntoFault(EOFaultHandler handler) {
-		super.turnIntoFault(handler);
+    public void nullify() {
 		_list = null;
 		since = 0;
 		to = Long.MAX_VALUE;
 		_flags = null;
+    }
+    
+	public void turnIntoFault(EOFaultHandler handler) {
+		super.turnIntoFault(handler);
+		nullify();
 	}
 
 	public static NSArray listGroups(NSTimestamp date, EOEditingContext ec) {

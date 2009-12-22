@@ -47,6 +47,7 @@ public class VsePerson extends _VsePerson implements Person {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+		setSex(Boolean.FALSE);
 	}
 
 	public String initials() {

@@ -36,6 +36,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.reusables.Counter;
+import net.rujel.reusables.DegenerateFlags;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
@@ -242,6 +243,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		WOComponent popup = pageWithName("PersonInspector");
 		popup.takeValueForKey(this, "returnPage");
 		popup.takeValueForKey(plink(), "personLink");
+		popup.takeValueForKey("newPerson", "resultPath");
 		return popup;
 	}
 	
@@ -271,9 +273,9 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			Enumeration enu = group().vseList().objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject vl = (EOEnterpriseObject) enu.nextElement();
-				if (vl.valueForKeyPath("student.person") == person) {
-					session().takeValueForKey(session().valueForKeyPath(
-						"strings.RujelVseLists_VseStrings.duplicateEntry"),"message");
+				if (vl.valueForKeyPath("student.person") == person.person()) {
+//					session().takeValueForKey(session().valueForKeyPath(
+//						"strings.RujelVseLists_VseStrings.duplicateEntry"),"message");
 					return;
 				}
 			}
@@ -306,15 +308,27 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 						}
 						aStudent.setAbsGrade(grade);
 					}
+					if(aStudent.enter() == null)
+						aStudent.setEnter(date);
 				}
-				if(aStudent.enter() == null)
-					aStudent.setEnter(date);
 			} else {
 				if(!(person instanceof VseTeacher))
 					person = VseTeacher.teacherForPerson(person.person(), date, true);
 			}
 			ec.saveChanges();
-			list = list.arrayByAddingObject(person);
+//			if(!list.containsObject(person)) {
+				if(student) {
+					if(person instanceof VseStudent) {
+						Object sel = selection;
+						setSelection(((VseStudent)person).absGrade());
+						setSelection(sel);
+					}
+//					list = list.arrayByAddingObject(person);
+				} else {
+					categories = (NSArray)VseTeacher.agregatedList(ec, date);
+					setSelection(person.person().lastName().substring(0,1));
+//				}
+			}
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING, "Error adding person to group",
 					new Object[] {session(),person,selection,e});
@@ -355,36 +369,78 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 
 	public static Object personInspector(WOContext ctx) {
 		WOSession ses = ctx.session();
+		EOEnterpriseObject person = (EOEnterpriseObject)ses.objectForKey("PersonInspector");
+		if(person == null)
+			return null;
 		NSMutableArray result = new NSMutableArray();
-		NamedFlags access = (NamedFlags)ses.valueForKeyPath(
-				"readAccess.FLAGS.VsePerson");
+		EOEditingContext ec = person.editingContext();
+		NamedFlags access = DegenerateFlags.ALL_FALSE;
+		boolean created = ec.globalIDForObject(person).isTemporary();
+		if(created) {
+			try {
+				Person pers = (Person)person.valueForKey(VseTeacher.PERSON_KEY);
+				if(pers != null && ec.globalIDForObject(pers).isTemporary()) {
+					access = (NamedFlags)ses.valueForKeyPath(
+							"readAccess.FLAGS." + pers.entityName());
+				}
+			} catch(Exception e) {
+				
+			}
+		} else {
+			access = (NamedFlags)ses.valueForKeyPath(
+			"readAccess.FLAGS." + person.entityName());
+		}
 		if(access.getFlag(0)) {
 			NSDictionary dict = (NSDictionary)ses.valueForKeyPath(
 					"strings.RujelVseLists_VseStrings.inspectors.Person");
 			dict = PlistReader.cloneDictionary(dict, true);
+			if(created)
+				dict.takeValueForKey(person.valueForKey(VseTeacher.PERSON_KEY), "usage");
+			else
+				dict.takeValueForKey(person, "usage");
 			dict.takeValueForKey(access, "access");
 			result.addObject(dict);
 		}
-		VsePerson person = (VsePerson)ses.objectForKey("PersonInspector");
-		access = (NamedFlags)ses.valueForKeyPath(
-			"readAccess.FLAGS.VseStudent");
-		if(access.getFlag(0) 
-				&& VseStudent.studentForPerson(person, null) != null) {
-			NSDictionary dict = (NSDictionary)ses.valueForKeyPath(
-					"strings.RujelVseLists_VseStrings.inspectors.Student");
-			dict = PlistReader.cloneDictionary(dict, true);
-			dict.takeValueForKey(access, "access");
-			result.addObject(dict);
+		access = (NamedFlags)ses.valueForKeyPath("readAccess.FLAGS.VseStudent");
+		NSArray list = null;
+		if(access.getFlag(0)) {
+			if(created) {
+					list = null;
+			} else { 
+				list = EOUtilities.objectsMatchingKeyAndValue(ec,
+						VseStudent.ENTITY_NAME, VseStudent.PERSON_KEY, person);
+			}
+			if((person instanceof VseStudent) || (list != null && list.count() > 0)) {
+				NSDictionary dict = (NSDictionary)ses.valueForKeyPath(
+						"strings.RujelVseLists_VseStrings.inspectors.Student");
+				dict = PlistReader.cloneDictionary(dict, true);
+				dict.takeValueForKey(access, "access");
+				if(created)
+					dict.takeValueForKey(person, "usage");
+				else
+					dict.takeValueForKey(list, "usage");
+				result.addObject(dict);
+			}
 		}
-		access = (NamedFlags)ses.valueForKeyPath(
-			"readAccess.FLAGS.VseTeacher");
-		if(access.getFlag(0) 
-				&& VseTeacher.teacherForPerson(person, null) != null) {
-			NSDictionary dict = (NSDictionary)ses.valueForKeyPath(
-			"strings.RujelVseLists_VseStrings.inspectors.Teacher");
-			dict = PlistReader.cloneDictionary(dict, true);
-			dict.takeValueForKey(access, "access");
-			result.addObject(dict);
+		access = (NamedFlags)ses.valueForKeyPath("readAccess.FLAGS.VseTeacher");
+		if(access.getFlag(0)) { 
+			if(created) {
+				list = null;
+			} else { 
+				list = EOUtilities.objectsMatchingKeyAndValue(ec,
+						VseTeacher.ENTITY_NAME, VseTeacher.PERSON_KEY, person);
+			}
+			if((person instanceof VseTeacher) || (list != null && list.count() > 0)) {
+				NSDictionary dict = (NSDictionary)ses.valueForKeyPath(
+						"strings.RujelVseLists_VseStrings.inspectors.Teacher");
+				dict = PlistReader.cloneDictionary(dict, true);
+				if(created)
+					dict.takeValueForKey(person, "usage");
+				else
+					dict.takeValueForKey(list, "usage");
+				dict.takeValueForKey(access, "access");
+				result.addObject(dict);
+			}
 		}
 		if(result.count() == 0)
 			return null;
