@@ -81,6 +81,8 @@ public class CurriculumModule {
 			return deleteCourse(ctx);
 		} else if("assumeNextLesson".equals(obj)) {
 			return assumeNextLesson(ctx);
+		} else if("objectSaved".equals(obj)) {
+			return objectSaved(ctx);
 		}
 		return null;
 	}
@@ -419,5 +421,38 @@ public class CurriculumModule {
 		return new NSDictionary(
 				new Object[] {sort,date},
 				new Object[] {"sort","date"});
+	}
+	
+	public static Object objectSaved(WOContext ctx) {
+		boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
+				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+		if(disable)
+			return null;
+		Object saved = ctx.session().objectForKey("objectSaved");
+		EduCourse course = null;
+		NSTimestamp date = null;
+		if (saved instanceof NSDictionary) {
+			NSDictionary dict = (NSDictionary) saved;
+			saved = dict.valueForKey("lesson");
+			if(saved == null &&
+					EduLesson.entityName.equals(dict.valueForKey("entityName"))) {
+				course = (EduCourse)dict.valueForKey("course");
+				date = (NSTimestamp)dict.valueForKey("date");
+			}
+		}
+		if (saved instanceof EduLesson) {
+			EduLesson lesson = (EduLesson) saved;
+			if(!lesson.entityName().equals(EduLesson.entityName))
+				return null;
+			course = lesson.course();
+			date = lesson.date();
+		}
+		if(course != null) {
+			String usr = (String)ctx.session().valueForKeyPath("user.present");
+			if(usr == null)
+				usr = "??" + Person.Utility.fullName(course.teacher(), true, 2, 1, 1);
+			Reprimand.autoRelieve(course, date, usr);
+		}
+		return null;
 	}
 }

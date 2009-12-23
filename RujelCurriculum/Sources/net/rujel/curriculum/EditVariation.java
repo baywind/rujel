@@ -33,6 +33,8 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.Person;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -148,6 +150,15 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	variation.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
     	try {
 			ec.saveChanges();
+			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
+			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+			if(!disable) {
+				String usr = (String)session().valueForKeyPath("user.present");
+				if(usr == null)
+					usr = "??" + Person.Utility.fullName(
+							course.teacher(), true, 2, 1, 1);
+				Reprimand.autoRelieve(course, date, usr);
+			}
 		} catch (Exception e) {
 			ec.revert();
 			Object[] args = new Object[] {session(),e,variation}; 
@@ -174,6 +185,15 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	ec.deleteObject(variation);
     	try {
     		ec.saveChanges();
+			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
+			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+			if(!disable) {
+				String usr = (String)session().valueForKeyPath("user.present");
+				if(usr == null)
+					usr = "??" + Person.Utility.fullName(
+							course.teacher(), true, 2, 1, 1);
+				Reprimand.autoRelieve(course, date, usr);
+			}
  		} catch (Exception e) {
 			ec.revert();
 			Object[] args = new Object[] {session(),e,variation}; 

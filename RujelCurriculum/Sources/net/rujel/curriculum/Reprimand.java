@@ -44,7 +44,6 @@ import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
-import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
 
@@ -125,12 +124,13 @@ public class Reprimand extends _Reprimand {
 					EduPeriod.ENTITY_NAME, ec, false);
 			SettingsBase devForRpr = SettingsBase.baseForKey(
 					"deviationForReprimand", ec, false);
-
+/*
 			SettingsBase requireVerification = SettingsBase.baseForKey(
 					"ignoreUnverifiedReasons",ec,false);
 			FieldPosition fp = new FieldPosition(SimpleDateFormat.DATE_FIELD);
 			NSArray weekdays = (NSArray)WOApplication.application().valueForKeyPath(
 					"strings.Reusables_Strings.presets.weekdayShort");
+			*/
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EduCourse course = (EduCourse) enu.nextElement();
@@ -159,12 +159,6 @@ public class Reprimand extends _Reprimand {
 						continue;
 					byListName.setObjectForKey(dict, listName);
 				} // init dict by listName
-				EduPeriod eduPeriod = (EduPeriod)dict.valueForKey("eduPeriod");
-				if(eduPeriod == null)
-					continue;
-				int plan = PlanCycle.planHoursForCourseAndPeriod(course, eduPeriod);
-				if(plan == 0)
-					continue;
 				int minDev = 1;
 				if(devForRpr != null) {
 					Integer num = (Integer)devForRpr.forCourse(course).
@@ -174,6 +168,13 @@ public class Reprimand extends _Reprimand {
 					if(minDev < 0)
 						continue;
 				}
+				/*
+				EduPeriod eduPeriod = (EduPeriod)dict.valueForKey("eduPeriod");
+				if(eduPeriod == null)
+					continue;
+				int plan = PlanCycle.planHoursForCourseAndPeriod(course, eduPeriod);
+				if(plan == 0)
+					continue;
 				boolean verifiedOnly = (requireVerification != null &&
 						Various.boolForObject(requireVerification.forCourse(course)
 								.valueForKey(SettingsBase.NUMERIC_VALUE_KEY)));
@@ -195,7 +196,7 @@ public class Reprimand extends _Reprimand {
 							fact -= var.value().intValue();
 					}
 				}
-				if(fact == plan)
+				if(fact == plan && minDev > 0)
 					continue;
 //				if(holidays.count() > 0 || 
 //						Various.boolForObject(dict.valueForKey("periodEdge"))) {
@@ -306,38 +307,31 @@ public class Reprimand extends _Reprimand {
 							ec.saveChanges();
 						cal.add(Calendar.DATE, 1);
 					} // review week day by day
-					/*if(ec.hasChanges()) {
-						try {
-							ec.saveChanges();
-							logger.log(WOLogLevel.FINE, "Automatically created " + autoVars
-									 + " variations for course", course);
-						} catch (Exception e) {
-							logger.log(WOLogLevel.WARNING, "Error autocreating variations",
-									new Object[] {course,e});
-							ec.revert();
-						}
-					}*/
 					plan -= autoVars;
 					deviation += autoVars;
 					}
 //				} // processing holidays
 				if((deviation == 0 && buf.length() == 0)
 						|| Math.abs(plan - fact) < minDev)
+					continue; */
+				StringBuffer buf = new StringBuffer();
+				Integer deviation = checkWeekByDays(course, dict, minDev, buf);
+				if(deviation == null)
 					continue;
 				Reprimand rpr = (Reprimand) EOUtilities
 						.createAndInsertInstance(ec, ENTITY_NAME);
 				rpr.setCourse(course);
-				if(deviation != 0){
+				if(deviation.intValue() != 0){
 					if(buf.length() > 0)
 						buf.append("\n");
-					if(deviation > 0)
+					if(deviation.intValue() > 0)
 						buf.append('+');
 					buf.append(deviation);
 					buf.append(" : ");
 					buf.append(dict.valueForKey("weekString"));
 				}
 				rpr.setContent(buf.toString());
-				rpr.setAuthor("AutoCheck");
+				rpr.setAuthor((String)dict.valueForKey("author"));
 				if(onDate != null)
 					rpr.setRaised(onDate);
 				logger.log(WOLogLevel.FINER,"Creating Reprimand",course);
@@ -352,7 +346,7 @@ public class Reprimand extends _Reprimand {
 			quals[1] = new EOKeyValueQualifier(Reprimand.RELIEF_KEY,
 					EOQualifier.QualifierOperatorEqual,NullValue);
 			quals[2] = new EOKeyValueQualifier(Reprimand.AUTHOR_KEY,
-					EOQualifier.QualifierOperatorEqual,"AutoCheck");
+					EOQualifier.QualifierOperatorLike,"AutoCheck??");
 			quals[0] = new EOAndQualifier(new NSArray(quals));			
 			EOFetchSpecification fs = new EOFetchSpecification(Reprimand.ENTITY_NAME,quals[0],null);
 			list = ec.objectsWithFetchSpecification(fs);
@@ -360,6 +354,7 @@ public class Reprimand extends _Reprimand {
 				enu = list.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					Reprimand rpr = (Reprimand) enu.nextElement();
+					/*
 					EduCourse course = rpr.course();
 					EOEnterpriseObject setting = listSettings.forCourse(course);
 					
@@ -403,6 +398,8 @@ public class Reprimand extends _Reprimand {
 						}
 					}
 					if(fact == plan)
+					*/
+					if(shouldRelieve(rpr));
 						rpr.setRelief(onDate);
 				} // enumerate previous reprimands
 				if(ec.hasChanges())
@@ -415,6 +412,218 @@ public class Reprimand extends _Reprimand {
 		} finally {
 			ec.unlock();
 		}
+	}
+	
+	protected static Integer checkWeekByDays(EduCourse course, NSDictionary dict,
+			int minDev, StringBuffer buf) {
+		EduPeriod eduPeriod = (EduPeriod)dict.valueForKey("eduPeriod");
+		if(eduPeriod == null)
+			return null;
+		int plan = PlanCycle.planHoursForCourseAndPeriod(course, eduPeriod);
+		if(plan == 0)
+			return null;
+		EOEditingContext ec = course.editingContext();
+		boolean verifiedOnly = (SettingsBase.numericSettingForCourse(
+				"ignoreUnverifiedReasons", course, ec,1) > 0);
+		EOQualifier[] quals = (EOQualifier[])dict.valueForKey("weekQualifier");
+		quals[2] = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,course);
+		quals[2] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
+				quals[2],MyUtility.dateSorter);
+		NSArray lessons = ec.objectsWithFetchSpecification(fs);
+		int fact = (lessons == null)? 0 : lessons.count();
+		fs.setEntityName(Variation.ENTITY_NAME);
+		NSArray variations = ec.objectsWithFetchSpecification(fs);
+		if(variations != null && variations.count() > 0) {
+			Enumeration venu = variations.objectEnumerator();
+			while (venu.hasMoreElements()) {
+				Variation var = (Variation) venu.nextElement();
+				if(!(verifiedOnly && var.reason().unverified()))
+					fact -= var.value().intValue();
+			}
+		}
+		if(fact == plan && minDev > 0)
+			return null;
+		int week = ((Integer)dict.valueForKey("week")).intValue();
+		int[] currWeek = new int[week];
+		int ref = ((Integer)dict.valueForKey("refDay")).intValue();
+		putLessons(lessons, ref, currWeek, 1);
+		putVariations(variations, ref, currWeek, verifiedOnly, 1);
+		
+		// compare to previous week
+		quals = (EOQualifier[])dict.valueForKey("prevQualifier");
+		int deviation = fact - plan;
+		if(quals != null) {
+			ref = ((Integer)dict.valueForKey("prevRef")).intValue();
+
+			quals[2] = new EOKeyValueQualifier("course",
+					EOQualifier.QualifierOperatorEqual,course);
+			quals[2] = new EOAndQualifier(new NSArray(quals));
+			fs.setQualifier(quals[2]);
+			NSArray prevVariations = ec.objectsWithFetchSpecification(fs);
+			fs.setEntityName(EduLesson.entityName);
+			NSArray prevLessons = ec.objectsWithFetchSpecification(fs);
+			putVariations(prevVariations, ref, currWeek, verifiedOnly, -1);
+			putLessons(prevLessons, ref, currWeek, -1);
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(eduPeriod.end());
+			cal.set(Calendar.HOUR_OF_DAY, 23);
+			cal.set(Calendar.MINUTE, 59);
+			cal.set(Calendar.SECOND, 59);
+			cal.set(Calendar.MILLISECOND, 999);
+			long periodEnd = cal.getTimeInMillis();
+			NSTimestamp now = (NSTimestamp)dict.valueForKey("date");
+			cal.setTime(now);
+			cal.add(Calendar.DATE, -week);
+			int autoVars = 0;
+			Reason periodEndReason = null;
+			String listName = (String)dict.valueForKey("listName");
+			NSArray holidays = (NSArray) dict.valueForKey("holidays");
+			FieldPosition fp = new FieldPosition(SimpleDateFormat.DATE_FIELD);
+			NSArray weekdays = (NSArray)WOApplication.application().valueForKeyPath(
+				"strings.Reusables_Strings.presets.weekdayShort");
+		for (int i = 0; i < currWeek.length; i++) {
+			NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
+			if(currWeek[i] < 0) {
+				Enumeration henu = holidays.objectEnumerator();
+				while (henu.hasMoreElements()) {
+					Holiday hd = (Holiday) henu.nextElement();
+					if(!hd.contains(date))
+						continue;
+					Reason reason = Reason.reasonForHoliday(hd, true);
+					Variation var = (Variation)EOUtilities.
+					createAndInsertInstance(ec, Variation.ENTITY_NAME);
+					var.addObjectToBothSidesOfRelationshipWithKey(
+							course, "course");
+					var.addObjectToBothSidesOfRelationshipWithKey(
+							reason, "reason");
+					var.setDate(date);
+					var.setValue(new Integer(currWeek[i]));
+					autoVars -= currWeek[i];
+					currWeek[i] = 0;
+					break;
+				} // holiday variation
+				if(currWeek[i] < 0 && date.getTime() > periodEnd &&
+					EduPeriod.getCurrentPeriod(date, listName, ec) == null) {
+					if(periodEndReason == null) {
+//						EOGlobalID gid = ec.globalIDForObject(eduPeriod);
+						String key = WOLogFormatter.formatEO(eduPeriod);
+						NSDictionary values = new NSDictionary(
+								new Object[] {key, new Integer(1)},
+								new String[] {Reason.VERIFICATION_KEY,Reason.FLAGS_KEY});
+						NSArray found = EOUtilities.objectsMatchingValues(ec, ENTITY_NAME, values);
+						if(found == null || found.count() == 0) {
+							periodEndReason = (Reason)EOUtilities.createAndInsertInstance(
+									ec, ENTITY_NAME);
+							periodEndReason.takeValuesFromDictionary(values);
+							periodEndReason.setBegin(eduPeriod.end().
+									timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0));
+							periodEndReason.setEnd(now);
+							periodEndReason.setReason((String)WOApplication.application().
+									valueForKeyPath(
+									"strings.RujelCurriculum_Curriculum.titles.periodEnd") +
+									' ' + eduPeriod.name());
+						} else {
+							periodEndReason = (Reason)found.objectAtIndex(0);
+						}
+					} // init periodEndReason
+					Variation var = (Variation)EOUtilities.
+					createAndInsertInstance(ec, Variation.ENTITY_NAME);
+					var.addObjectToBothSidesOfRelationshipWithKey(
+							course, "course");
+					var.addObjectToBothSidesOfRelationshipWithKey(
+							periodEndReason, "reason");
+					var.setDate(date);
+					var.setValue(new Integer(currWeek[i]));
+					autoVars -= currWeek[i];
+					currWeek[i] = 0;
+				}// period end variation
+			}
+			if(currWeek[i] != 0) {
+				if(buf.length() > 0)
+					buf.append("\n");
+				if(currWeek[i] > 0)
+					buf.append('+');
+				buf.append(currWeek[i]);
+				deviation -= currWeek[i];
+				buf.append(" : ");
+				buf.append(weekdays.objectAtIndex(
+						cal.get(Calendar.DAY_OF_WEEK) -1));
+				buf.append(',').append(' ');
+				MyUtility.dateFormat().format(date, buf, fp);
+			}
+			if (ec.hasChanges())
+				ec.saveChanges();
+			cal.add(Calendar.DATE, 1);
+		} // review week day by day
+		/*if(ec.hasChanges()) {
+			try {
+				ec.saveChanges();
+				logger.log(WOLogLevel.FINE, "Automatically created " + autoVars
+						 + " variations for course", course);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING, "Error autocreating variations",
+						new Object[] {course,e});
+				ec.revert();
+			}
+		}*/
+		plan -= autoVars;
+		deviation += autoVars;
+		}
+		if((deviation == 0 && buf.length() == 0)
+				|| Math.abs(plan - fact) < minDev)
+			return null;
+		return new Integer(deviation);
+	}
+	
+	protected static boolean shouldRelieve(Reprimand rpr) {
+		EduCourse course = rpr.course();
+		EOEditingContext ec = rpr.editingContext();
+		EOEnterpriseObject setting = SettingsBase.settingForCourse(
+				EduPeriod.ENTITY_NAME, course, ec);
+		
+		String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+		Integer weekDays = (Integer)setting.valueForKey(
+				SettingsBase.NUMERIC_VALUE_KEY);
+		int week = (weekDays == null)? 7 : weekDays.intValue();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(rpr.raised());
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.add(Calendar.DATE, -SettingsReader.intForKeyPath("edu.planFactLagDays", 0));
+		
+		NSTimestamp end = new NSTimestamp(cal.getTimeInMillis());
+		cal.add(Calendar.DATE, -week);
+		NSTimestamp begin = new NSTimestamp(cal.getTimeInMillis());
+
+		EduPeriod eduPeriod = EduPeriod.getCurrentPeriod(begin,listName,ec);
+		int plan = PlanCycle.planHoursForCourseAndPeriod(course, eduPeriod);
+		
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorLessThan,end);
+		quals[1] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin);
+		quals[2] = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,course);
+		quals[2] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
+				quals[2],MyUtility.dateSorter);
+		NSArray lessons = ec.objectsWithFetchSpecification(fs);
+		int fact = (lessons == null)? 0 : lessons.count();
+		fs.setEntityName(Variation.ENTITY_NAME);
+		NSArray variations = ec.objectsWithFetchSpecification(fs);
+		if(variations != null && variations.count() > 0) {
+			boolean verifiedOnly = (SettingsBase.numericSettingForCourse(
+					"ignoreUnverifiedReasons", course, ec,1) > 0);
+			Enumeration venu = variations.objectEnumerator();
+			while (venu.hasMoreElements()) {
+				Variation var = (Variation) venu.nextElement();
+				if(!(verifiedOnly && var.reason().unverified()))
+					fact -= var.value().intValue();
+			}
+		}
+		return (fact == plan);
 	}
 
 	protected static Reason createPeriodStartReason(
@@ -445,9 +654,21 @@ public class Reprimand extends _Reprimand {
 			EOEditingContext ec, int week, int testDay) {
 		Calendar cal = Calendar.getInstance();
 		NSMutableDictionary dict = new NSMutableDictionary();
+		dict.takeValueForKey(now, "date");
+		dict.takeValueForKey(listName, "listName");
+		dict.takeValueForKey(new Integer(week), "week");
 		cal.setTime(now);
-		if(cal.get(Calendar.DAY_OF_WEEK) != testDay)
+		if(cal.get(Calendar.DAY_OF_WEEK) != testDay) {
 			return null;
+		} else {
+			StringBuilder buf = new StringBuilder("AutoCheck");
+			int weekOfYear = cal.get(Calendar.WEEK_OF_YEAR);
+			if(weekOfYear < 10) {
+				buf.append('0');
+			}
+			buf.append(weekOfYear);
+			dict.takeValueForKey(buf.toString(), "author");
+		}
 		cal.add(Calendar.DATE, -week);
 		NSTimestamp prevDate = new NSTimestamp(cal.getTimeInMillis());
 		if(true) {
@@ -616,5 +837,133 @@ public class Reprimand extends _Reprimand {
 	   	String result = WOMessage.stringByEscapingHTMLString(content());
 	    result = result.replaceAll("\n", "<br/>\n");
 	    return result;
+	}
+	
+	public static void autoRelieve(EduCourse course, NSTimestamp date, String author) {
+		EOEditingContext ec = course.editingContext();
+		ec.lock();
+		try {
+			int minDev = SettingsBase.numericSettingForCourse("deviationForReprimand",
+					course, ec, 1);
+			if(minDev < 0)
+				return;
+			int weekStart = SettingsBase.numericSettingForCourse("weekStart",
+					course, ec, Calendar.MONDAY);
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(date);
+			do {
+				cal.add(Calendar.DATE, 1);
+			} while(cal.get(Calendar.DAY_OF_WEEK) != weekStart);
+			NSTimestamp now = new NSTimestamp(cal.getTimeInMillis());
+			EOQualifier[] quals = new EOQualifier[5];
+			quals[0] = new EOKeyValueQualifier("course",
+					EOQualifier.QualifierOperatorEqual,course);
+			quals[1] = new EOKeyValueQualifier("date",
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,now);
+			quals[2] = new EOAndQualifier(new NSArray(quals));			
+			EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName
+					,quals[2],null);
+			fs.setFetchLimit(1);
+			NSArray list = ec.objectsWithFetchSpecification(fs);
+			if(list == null || list.count() == 0)
+				return;
+			
+			int week = SettingsBase.numericSettingForCourse(EduPeriod.ENTITY_NAME,
+					course, ec, 7);
+			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME,
+					course, ec);
+			NSDictionary dict = prepareDict(now, listName, ec, week, weekStart);
+//			week += SettingsReader.intForKeyPath("edu.planFactLagDays", 0);
+			quals[1] = new EOKeyValueQualifier(Reprimand.AUTHOR_KEY,
+					EOQualifier.QualifierOperatorEqual,dict.valueForKey("author"));
+			quals[2] = new EOKeyValueQualifier(Reprimand.RELIEF_KEY,
+					EOQualifier.QualifierOperatorEqual,NullValue);
+			/*
+			quals[2] = new EOKeyValueQualifier(Reprimand.RAISED_KEY,
+					EOQualifier.QualifierOperatorGreaterThan, date);
+			quals[3] = new EOKeyValueQualifier(Reprimand.RAISED_KEY,
+					EOQualifier.QualifierOperatorLessThanOrEqualTo,
+					date.timestampByAddingGregorianUnits(0, 0, week, 0, 0, 0));
+			*/
+			quals[2] = new EOAndQualifier(new NSArray(quals));			
+			fs = new EOFetchSpecification(Reprimand.ENTITY_NAME,quals[2],null);
+			list = ec.objectsWithFetchSpecification(fs);
+			Reprimand rpr = null;
+			if(list != null && list.count() > 0)
+				rpr = (Reprimand)list.objectAtIndex(0);
+			StringBuffer buf = new StringBuffer();
+			Integer deviation = checkWeekByDays(course, dict, minDev, buf);
+			if(deviation == null) {
+				if(rpr != null) {
+					rpr.setRelief(new NSTimestamp());
+					rpr.setAuthor(rpr.author() + " / " + author);
+					logger.log(WOLogLevel.FINE,"Automatically relieving reprimand",rpr);
+					rpr = null;
+				}
+			} else {
+				if(deviation.intValue() != 0){
+					if(buf.length() > 0)
+						buf.append("\n");
+					if(deviation.intValue() > 0)
+						buf.append('+');
+					buf.append(deviation);
+					buf.append(" : ");
+					buf.append(dict.valueForKey("weekString"));
+				}
+				String newMessage = buf.toString();
+				int compare = countRows(newMessage);
+				if(rpr != null)
+					compare -= countRows(rpr.content());
+				if(compare == 0) {
+					if(rpr != null && newMessage.equals(rpr.content()))
+						compare--;
+					else
+						compare++;
+				}
+				if(compare > 0) {
+					if(rpr != null) {
+						rpr.setRelief(new NSTimestamp());
+						rpr.setAuthor(rpr.author() + " / " + author);
+						logger.log(WOLogLevel.FINE,"Automatically recreating reprimand",rpr);				}
+					}
+					rpr = (Reprimand) EOUtilities
+					.createAndInsertInstance(ec, ENTITY_NAME);
+					rpr.setCourse(course);
+					rpr.setContent(newMessage);
+					rpr.setAuthor((String)dict.valueForKey("author"));
+			}
+			/*
+			if(list == null || list.count() == 0)
+				return;
+			Enumeration enu = list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Reprimand rpr = (Reprimand) enu.nextElement();
+				if(shouldRelieve(rpr)) {
+					rpr.setRelief(new NSTimestamp());
+					rpr.setAuthor(rpr.author() + " / " + author);
+					logger.log(WOLogLevel.FINE,"Automatically relieving reprimand",rpr);
+				}
+			}*/
+			if(ec.hasChanges())
+				ec.saveChanges();
+			if(rpr != null)
+				logger.log(WOLogLevel.FINE,"Autogenerating Reprimand",rpr);
+		} catch (RuntimeException e) {
+			logger.log(WOLogLevel.WARNING,"Error autorelieving reprimands",
+					new Object[] {course, e});
+			ec.revert();
+		} finally {
+			ec.unlock();
+		}
+	}
+	
+	protected static int countRows(String string) {
+		int result = 0;
+		int idx = string.indexOf('\n');
+		while(idx > 0) {
+			result++;
+			idx = string.indexOf('\n', idx +1);
+		}
+		return result;
 	}
 }
