@@ -30,9 +30,13 @@
 package net.rujel.vselists;
 
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 
 public class VseList extends _VseList {
+
+	public static final NSArray sorter = new NSArray(
+			new EOSortOrdering("student",EOSortOrdering.CompareAscending));
 
 	public void setEnter(NSTimestamp value) {
 		super.setEnter(value);

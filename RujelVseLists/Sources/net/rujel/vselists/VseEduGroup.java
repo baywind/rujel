@@ -36,14 +36,12 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.PersonLink;
-import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
-import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eocontrol.*;
 
@@ -53,6 +51,12 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new EduGroup.ComparisonSupport(), VseEduGroup.class);
 	}
+	
+	public static final NSArray sorter = new NSArray(new Object[] {
+			new EOSortOrdering(ABS_GRADE_KEY, EOSortOrdering.CompareDescending),
+//			new EOSortOrdering("eduGroup.flags",EOSortOrdering.CompareAscending),
+			new EOSortOrdering(TITLE_KEY, EOSortOrdering.CompareAscending)
+	});
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -60,24 +64,10 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
 		Integer year = MyUtility.eduYearForDate(date());
 		setFirstYear(year);
-//		setAbsStart(year);
-		setStartGrade(new Integer(minGrade));
+		setAbsGrade(new Integer(year.intValue()-minGrade));
 		year = new Integer(year.intValue() + maxGrade - minGrade);
 		setLastYear(year);
 		setFlags(new Integer(0));
-	}
-	
-/*	public void setStartGrade(Integer startGrade) {
-		super.setStartGrade(startGrade);
-		setAbsStart(new Integer(firstYear().intValue() - startGrade.intValue()));
-	}*/
-	
-	public Integer absStart() {
-		try{
-			return new Integer(firstYear().intValue() - startGrade().intValue());
-		} catch (NullPointerException e) {
-			return null;
-		}
 	}
 
 	protected NSTimestamp date() {
@@ -92,16 +82,22 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	public Integer grade() {
-		Integer start = startGrade();
-		if(start == null)
-			return start;
-		Integer firstYear = firstYear();
+		Integer absGrade = absGrade();
+		if(absGrade == null)
+			return absGrade;
 		Integer year = MyUtility.eduYearForDate(date());
-		if(year.equals(firstYear))
-			return start;
-		return new Integer(start.intValue() + year.intValue() - firstYear.intValue());
+		return new Integer(year.intValue() - absGrade.intValue());
 	}
-
+	
+	public void setGrade(Number grade) {
+		if(grade == null) {
+			setAbsGrade(null);
+			return;
+		}
+		Integer year = MyUtility.eduYearForDate(date());
+		Integer absGrade = new Integer(year.intValue() - grade.intValue());
+		setAbsGrade(absGrade);
+	}
 
 	public NSArray fullList() {
 		if(lists() == null)
@@ -118,8 +114,6 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 			list = (NSArray)list.valueForKey("student");
 		return list;
 	}
-	protected static final NSArray listSorter = new NSArray(
-			new EOSortOrdering("student",EOSortOrdering.CompareAscending));
 	public NSArray vseList() {
 		NSTimestamp date = date();
 		long now = date.getTime();
@@ -169,7 +163,7 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 			result.addObject(l);
 		}
 		if(result.count() > 1)
-			EOSortOrdering.sortArrayUsingKeyOrderArray(result, listSorter);
+			EOSortOrdering.sortArrayUsingKeyOrderArray(result, VseList.sorter);
 		_list = result.immutableClone();
 		return _list;
 	}
@@ -254,15 +248,10 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		quals[1] = new EOKeyValueQualifier(LAST_YEAR_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,year);
 		quals[0] = new EOAndQualifier(new NSArray(quals));
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],sorter);
 		NSArray result = ec.objectsWithFetchSpecification(fs);
 		if(result == null || result.count() <= 1)
 			return result;
-		try {
-			result = result.sortedArrayUsingComparator(AdaptingComparator.sharedInstance);
-		} catch (ComparisonException e) {
-			e.printStackTrace();
-		}
 		return result;
 	}
 }

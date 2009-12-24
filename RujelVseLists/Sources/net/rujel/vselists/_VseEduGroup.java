@@ -41,14 +41,22 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 	public static final String ENTITY_NAME = "VseEduGroup";
 
 	// Attributes
+	public static final String ABS_GRADE_KEY = "absGrade";
 	public static final String FIRST_YEAR_KEY = "firstYear";
 	public static final String FLAGS_KEY = "flags";
 	public static final String LAST_YEAR_KEY = "lastYear";
-	public static final String START_GRADE_KEY = "startGrade";
 	public static final String TITLE_KEY = "title";
 
 	// Relationships
 	public static final String LISTS_KEY = "lists";
+
+  public Integer absGrade() {
+    return (Integer) storedValueForKey(ABS_GRADE_KEY);
+  }
+
+  public void setAbsGrade(Integer value) {
+    takeStoredValueForKey(value, ABS_GRADE_KEY);
+  }
 
   public Integer firstYear() {
     return (Integer) storedValueForKey(FIRST_YEAR_KEY);
@@ -72,14 +80,6 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 
   public void setLastYear(Integer value) {
     takeStoredValueForKey(value, LAST_YEAR_KEY);
-  }
-
-  public Integer startGrade() {
-    return (Integer) storedValueForKey(START_GRADE_KEY);
-  }
-
-  public void setStartGrade(Integer value) {
-    takeStoredValueForKey(value, START_GRADE_KEY);
   }
 
   public String title() {

@@ -50,7 +50,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 	public VseEduGroup currGroup;
 	public NSDictionary firstYear;
 	public NSDictionary lastYear;
-	public Integer startGrade;
+	public Integer grade;
 	public String groupTitle;
 	public EOEditingContext ec;
 	public WOComponent returnPage;
@@ -68,7 +68,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 			bYears[i] = yearDict(currYear + i - grds.length + 1);
 			eYears[i] = yearDict(currYear + i);
 		}
-		startGrade = grds[0];
+		grade = grds[0];
 		firstYear = bYears[bYears.length -1];
 		lastYear = eYears[0];
 		grades = new NSArray(grds);
@@ -85,7 +85,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
     public void setCurrGroup(VseEduGroup gr) {
     	currGroup = gr;
     	ec = gr.editingContext();
-    	startGrade = gr.startGrade();
+    	grade = gr.grade();
     	groupTitle = gr.title();
     	firstYear = yearDict(gr.firstYear().intValue());
     	lastYear = yearDict(gr.lastYear().intValue());
@@ -124,9 +124,9 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 				if(currGroup.title() != null)
 					currGroup.setTitle(null);
 			}
-			Integer grade = currGroup.grade();
-			if(!startGrade.equals(currGroup.startGrade()))
-				currGroup.setStartGrade(startGrade);
+			create = !grade.equals(currGroup.grade());
+			if(create)
+				currGroup.setGrade(grade);
 			Integer year = (Integer)firstYear.valueForKey("year");
 			if(!year.equals(currGroup.firstYear()))
 				currGroup.setFirstYear(year);
@@ -137,7 +137,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 				ec.saveChanges();
 				ListsEditor.logger.log(WOLogLevel.UNOWNED_EDITING,"VseEduGroup changes saved",
 						new Object[] {session(),currGroup});
-				if(create || !grade.equals(currGroup.grade())) {
+				if(create) {
 					returnPage.valueForKey("switchMode");
 					returnPage.takeValueForKey(currGroup, "group");
 				}

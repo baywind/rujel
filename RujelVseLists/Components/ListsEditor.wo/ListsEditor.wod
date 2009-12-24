@@ -35,12 +35,12 @@ EditGroup : OnClickContainer {
   elementName = "th";
   onclick = session.ajaxPopup;
   invokeAction = editGroup;
-  disabled = session.readAccess._edit.group;
+  disabled = noGroupEdit;
   class = "orange";
 }
 
 GroupTitle : WOString {
-  value = group.name;
+  value = selection.name;
 }
 
 Name : PersonDisplay {
@@ -134,10 +134,6 @@ Categories : WORepetition {
   item = item;
 }
 
-HasGroup : WOConditional {
-  condition = group;
-}
-
 ShowAllForm : WOForm {
 }
 
@@ -152,9 +148,11 @@ ShowAllTitle : WOString {
 }
 
 ShowAllToggle : OnClickContainer {
-  elementName = "span";
+  elementName = "td";
+  colspan = 2;
   onclick = session.checkRun;
   invokeAction = toggleAll;
+  style = "font-style:italic;";
 }
 
 CategoryRow : OnClickContainer {
@@ -165,7 +163,7 @@ CategoryRow : OnClickContainer {
 }
 
 IsGroup : WOConditional {
-  condition = item.startGrade;
+  condition = item.firstYear;
 }
 
 GroupGrade : WOString {

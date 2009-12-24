@@ -186,6 +186,14 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     	else
     		return null;
     }
+    
+    public Boolean noGroupEdit() {
+    	if(selection instanceof VseEduGroup) {
+    		return (Boolean)session().valueForKeyPath("readAccess._edit.group");
+    	} else {
+    		return Boolean.TRUE;
+    	}
+    }
 
     public void setGroup(VseEduGroup gr) {
     	selection = gr;
@@ -193,7 +201,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     	if(gr == null) {
     		list = null;
     	} else if(showAll) {
-    		list = gr.lists();
+    		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(gr.lists(),VseList.sorter);
     	} else {
     		list = gr.vseList();
     	}
@@ -287,7 +295,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 					person = VseStudent.studentForPerson(person.person(), date, true);
 				VseStudent aStudent = (VseStudent)person;
 				if (selection instanceof VseEduGroup) {
-					aStudent.setAbsGrade(group().absStart());
+					aStudent.setAbsGrade(group().absGrade());
 					EOEnterpriseObject newEntry = EOUtilities
 							.createAndInsertInstance(ec, "VseList");
 					newEntry.addObjectToBothSidesOfRelationshipWithKey(group(),

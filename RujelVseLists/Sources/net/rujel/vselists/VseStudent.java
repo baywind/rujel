@@ -85,11 +85,18 @@ public class VseStudent extends _VseStudent implements Student {
 		lists = EOQualifier.filteredArrayWithQualifier(lists, qual);
 		if(lists == null || lists.count() == 0)
 			return null;
+		int year = MyUtility.eduYearForDate(date);
 		if(lists.count() > 1) {
 			lists = EOSortOrdering.sortedArrayUsingKeyOrderArray(lists, flagsSorter);
 		}
-		return (VseEduGroup)((EOEnterpriseObject)lists.objectAtIndex(0))
-				.valueForKey("eduGroup");		
+		Enumeration enu = lists.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			VseList vl = (VseList) enu.nextElement();
+			VseEduGroup grp = vl.eduGroup();
+			if(grp.firstYear().intValue() <= year && grp.lastYear().intValue() >= year)
+				return grp;
+		}
+		return null;	
 	}
 	
 	public static VseStudent studentForPerson(Person person, NSTimestamp date) {
@@ -227,24 +234,24 @@ public class VseStudent extends _VseStudent implements Student {
 		quals[1] = new EOKeyValueQualifier(ABS_GRADE_KEY,
 				EOQualifier.QualifierOperatorLessThan,new Integer(eduYear - maxGrade));
 		fs.setQualifier(quals[1]);
-		EOSortOrdering so = new EOSortOrdering(ABS_GRADE_KEY,EOSortOrdering.CompareAscending);
+		EOSortOrdering so = new EOSortOrdering(ABS_GRADE_KEY,EOSortOrdering.CompareDescending);
 		args = new NSArray(so);
 		fs.setSortOrderings(args);
 		NSArray list = ec.objectsWithFetchSpecification(fs);
 		NSMutableDictionary currdict = null;
 		if(list != null && list.count() > 0) {
 			Enumeration stenu = list.objectEnumerator();
-			eduYear = eduYear + maxGrade;
+			eduYear = eduYear - maxGrade;
 			while (stenu.hasMoreElements()) {
 				VseStudent st = (VseStudent) stenu.nextElement();
-				if(st.absGrade().intValue() > eduYear) {
+				if(st.absGrade().intValue() < eduYear) {
 					eduYear = st.absGrade().intValue();
-					while(grp != null && grp.absStart().intValue() < eduYear) {
+					while(grp != null && grp.absGrade().intValue() < eduYear) {
 						NSMutableDictionary dict = dict(
-								grp.grade().toString(), grp.absStart(), quals) ;
+								grp.grade().toString(), grp.absGrade(), quals) ;
 						result.addObject(dict);
-						int absStart = grp.absStart().intValue();
-						while(grp != null && grp.absStart().intValue() == absStart ) {
+						int absGrade = grp.absGrade().intValue();
+						while(grp != null && grp.absGrade().intValue() == absGrade ) {
 							result.addObject(grp);
 							grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
 						}
@@ -253,7 +260,7 @@ public class VseStudent extends _VseStudent implements Student {
 							Integer.toString(st.currGrade()), st.absGrade(),quals);
 //					currdict.takeValueForKey(Boolean.TRUE, "hide");
 					result.addObject(currdict);
-					while(grp != null && grp.absStart().intValue() == eduYear ) {
+					while(grp != null && grp.absGrade().intValue() == eduYear ) {
 						result.addObject(grp);
 						grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
 //						currdict.takeValueForKey(Boolean.FALSE, "hide");
@@ -269,10 +276,10 @@ public class VseStudent extends _VseStudent implements Student {
 		}
 		while(grp != null) {
 			NSMutableDictionary dict = dict(
-					grp.grade().toString(), grp.absStart(), quals) ;
+					grp.grade().toString(), grp.absGrade(), quals) ;
 			result.addObject(dict);
-			int absStart = grp.absStart().intValue();
-			while(grp != null && grp.absStart().intValue() == absStart ) {
+			int absGrade = grp.absGrade().intValue();
+			while(grp != null && grp.absGrade().intValue() == absGrade ) {
 				result.addObject(grp);
 				grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
 			}
