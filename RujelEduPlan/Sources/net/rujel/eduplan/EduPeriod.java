@@ -130,6 +130,8 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	}
 	
 	public static NSArray periodsInList(String listName,EOEditingContext ec) {
+		if(listName == null)
+			return null;
 		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
 				"PeriodList", "listName", listName);
 		if(list != null && list.count() > 0) {

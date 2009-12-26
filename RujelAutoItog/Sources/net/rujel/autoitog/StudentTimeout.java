@@ -30,18 +30,13 @@
 package net.rujel.autoitog;
 
 
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.Format;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import com.webobjects.foundation.*;
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;

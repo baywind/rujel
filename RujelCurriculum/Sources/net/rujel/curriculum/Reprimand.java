@@ -512,7 +512,8 @@ public class Reprimand extends _Reprimand {
 						NSDictionary values = new NSDictionary(
 								new Object[] {key, new Integer(1)},
 								new String[] {Reason.VERIFICATION_KEY,Reason.FLAGS_KEY});
-						NSArray found = EOUtilities.objectsMatchingValues(ec, ENTITY_NAME, values);
+						NSArray found = EOUtilities.objectsMatchingValues(ec,
+								ENTITY_NAME, values);
 						if(found == null || found.count() == 0) {
 							periodEndReason = (Reason)EOUtilities.createAndInsertInstance(
 									ec, ENTITY_NAME);
@@ -683,6 +684,12 @@ public class Reprimand extends _Reprimand {
 			buf.append(']');
 			dict.takeValueForKey(buf.toString(),"weekString");
 		}
+		EOQualifier[] quals = new  EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorLessThan,now);
+		quals[1] = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,prevDate);
+		dict.takeValueForKey(quals, "weekQualifier");
 		dict.takeValueForKey(
 				new Integer(cal.get(Calendar.DAY_OF_YEAR)), "refDay");
 		EduPeriod eduPeriod = EduPeriod.getCurrentPeriod(prevDate,listName,ec);
@@ -699,12 +706,6 @@ public class Reprimand extends _Reprimand {
 			dict.takeValueForKey(Boolean.TRUE, "periodEdge");
 		}
 		dict.takeValueForKey(eduPeriod, "eduPeriod");
-		EOQualifier[] quals = new  EOQualifier[3];
-		quals[0] = new EOKeyValueQualifier("date",
-				EOQualifier.QualifierOperatorLessThan,now);
-		quals[1] = new EOKeyValueQualifier("date",
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,prevDate);
-		dict.takeValueForKey(quals, "weekQualifier");
 		NSArray holidays = Holiday.holidaysInDates(prevDate, now,ec,listName);
 		if(holidays == null) {
 			holidays = NSArray.EmptyArray;

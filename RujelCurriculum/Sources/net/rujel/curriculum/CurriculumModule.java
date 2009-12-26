@@ -332,7 +332,7 @@ public class CurriculumModule {
 		int verifiedOnly = SettingsBase.numericSettingForCourse(
 				"ignoreUnverifiedReasons", course, ec, 0);
 		fact += Reprimand.putVariations(list, ref, currWeek,verifiedOnly > 0, 1);
-		if(fact == plan) {
+		if(fact >= plan) {
 			for (int i = 0; i < currWeek.length; i++) {
 				if(currWeek[i] > 0) {
 					cal.add(Calendar.DATE,i);
@@ -341,21 +341,32 @@ public class CurriculumModule {
 				}
 			}
 		} else {
+			cal.add(Calendar.DATE, - week);
 			quals = (EOQualifier[])dict.valueForKey("prevQualifier");
-			if(quals == null)
-				return null;
+			if(quals == null) {
+				quals = new EOQualifier[3];
+				cal.add(Calendar.DATE, - week);
+				ref = cal.get(Calendar.DAY_OF_YEAR);
+				NSTimestamp tmpDate = new NSTimestamp(cal.getTimeInMillis());
+				quals[0] = new EOKeyValueQualifier("date",
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,tmpDate);
+				cal.add(Calendar.DATE, week);
+				tmpDate = new NSTimestamp(cal.getTimeInMillis());
+				quals[1] = new EOKeyValueQualifier("date",
+						EOQualifier.QualifierOperatorLessThan,tmpDate);
+			} else {
+				ref = ((Integer)dict.valueForKey("prevRef")).intValue();
+			}
 			quals[2] = new EOKeyValueQualifier("course",
 					EOQualifier.QualifierOperatorEqual,course);
 			qual = new EOAndQualifier(new NSArray(quals));
 			fs = new EOFetchSpecification(EduLesson.entityName, qual,MyUtility.dateSorter);
 			list = ec.objectsWithFetchSpecification(fs);
-			ref = ((Integer)dict.valueForKey("prevRef")).intValue();
 			int[] prevWeek = new int[week];
 			Reprimand.putLessons(list, ref, prevWeek, 1);
 			fs.setEntityName(Variation.ENTITY_NAME);
 			list = ec.objectsWithFetchSpecification(fs);
 			Reprimand.putVariations(list, ref, prevWeek,verifiedOnly > 0, 1);
-			cal.add(Calendar.DATE, - week);
 			year = cal.getActualMaximum(Calendar.YEAR);
 			cal.set(Calendar.HOUR_OF_DAY,23);
 			boolean none = true;
@@ -382,12 +393,40 @@ public class CurriculumModule {
 				date = new NSTimestamp(cal.getTimeInMillis());
 			}
 		}
-		if(EduPeriod.getCurrentPeriod(date, listName, ec) == null)
-			return null;
-		list = Holiday.holidaysInDates(date, date, ec, listName);
-		while (list != null && list.count() > 0) {
-			Holiday hd = (Holiday)list.lastObject();
-			cal.setTime(hd.end());
+		EduPeriod per = null;
+		Enumeration enu = null;
+		list = EduPeriod.periodsInList(listName, ec);
+		if(list != null && list.count() > 0) {
+			enu = list.objectEnumerator();
+		}
+		do {
+			NSTimestamp fromDate = null;
+			if(enu != null && (per == null || !per.contains(date))) {
+				while (enu.hasMoreElements()) {
+					per = (EduPeriod) enu.nextElement();
+					if(per.contains(date)) {
+						break;
+					}
+					if(per.begin().after(date)) {
+						fromDate = per.begin();
+						break;
+					}
+					per = null;
+				}
+				if(per == null)
+					return null;
+			}
+			if(fromDate == null)
+				list = Holiday.holidaysInDates(date, date, ec, listName);
+			else
+				list = Holiday.holidaysInDates(fromDate, fromDate, ec, listName);
+			if (list != null && list.count() > 0) {
+				Holiday hd = (Holiday)list.lastObject();
+				fromDate = hd.end();
+			}
+			if(fromDate == null)
+				break;
+			cal.setTime(fromDate);
 			cal.add(Calendar.DATE, 1);
 			int days = cal.get(Calendar.DAY_OF_YEAR) - ref;
 			if(days < 0)
@@ -414,10 +453,7 @@ public class CurriculumModule {
 			} else {
 				date = new NSTimestamp(cal.getTimeInMillis());
 			}
-			if(EduPeriod.getCurrentPeriod(date, listName, ec) == null)
-				return null;
-			list = Holiday.holidaysInDates(date, date, ec, listName);
-		}
+		} while(true);
 		return new NSDictionary(
 				new Object[] {sort,date},
 				new Object[] {"sort","date"});
