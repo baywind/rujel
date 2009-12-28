@@ -478,7 +478,7 @@
 				<string>Бонус</string>
 				<key>keyPath</key>
 				<string>bonus.value</string>
-				<key>rounded</key>
+				<key>multiplied</key>
 				<dict>
 					<key>object</key>
 					<string>.value</string>
@@ -496,7 +496,7 @@
 				<key>presenterBindings</key>
 				<dict>
 					<key>value</key>
-					<string>$valueOf.item.itemDict.rounded</string>
+					<string>$valueOf.item.itemDict.multiplied</string>
 					<key>numberformat</key>
 					<string>&apos;0.##%</string>
 				</dict>
