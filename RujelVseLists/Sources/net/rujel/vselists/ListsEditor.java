@@ -29,6 +29,13 @@
 
 package net.rujel.vselists;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -154,7 +161,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				if(!showAll) {
 					NSArray args = new NSArray(new Object[] {date,date});
 					EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
-					   "(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
+					  "(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
 					list = EOQualifier.filteredArrayWithQualifier(list,qual);
 					dict.takeValueForKey(new Counter(list.count()), "currCount");
 				}
@@ -162,9 +169,9 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 					list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
     		}
         	if(studMode)
-        		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseStudent");
+        		access =(NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseStudent");
         	else
-        		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseTeacher");
+        		access =(NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseTeacher");
     	} else {
     		selection = null;
     		list = NSArray.EmptyArray;
@@ -276,7 +283,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			ec.revert();
 			return;
 		}
-		person = (PersonLink)EOUtilities.localInstanceOfObject(ec, (EOEnterpriseObject)person);
+		person = (PersonLink)EOUtilities.localInstanceOfObject(ec,
+				(EOEnterpriseObject)person);
 		if (group() != null) {
 			Enumeration enu = group().vseList().objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -488,5 +496,71 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				return (Number)item.valueForKey("count");
 		}
 		return (Number)item.valueForKey((showAll)?"allCount":"currCount");
+	}
+	
+	public InputStream uploadStream;
+	public NSMutableDictionary uploadDict = new NSMutableDictionary(); 
+		
+	public WOActionResults upload() {
+		WOResponse response = application().createResponseInContext(context());
+		response.appendContentHTMLString(uploadDict.toString());
+		if(uploadStream == null) {
+			response.appendContentString("null input");
+			return response;
+		}
+		try {
+			if(!uploadStream.markSupported())
+				uploadStream = new BufferedInputStream(uploadStream,1024);
+			uploadStream.mark(512);
+			NSArray charsets = new NSArray("cp1251");
+			Enumeration cenu = charsets.objectEnumerator();
+			CharsetDecoder decoder = Charset.forName("utf8").newDecoder();
+			decoder.onMalformedInput(CodingErrorAction.REPORT)
+				.onUnmappableCharacter(CodingErrorAction.REPORT);
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					uploadStream,decoder),1024);
+			response.appendContentString("<table border = \"1\">\n");
+			while(true) {
+				String line = null;
+				try {
+					line = in.readLine();
+					uploadStream.mark(1024);
+				} catch (java.nio.charset.CharacterCodingException e) {
+					if(cenu.hasMoreElements()) {
+						String charset = (String)cenu.nextElement();
+						uploadStream.reset();
+						decoder = Charset.forName(charset).newDecoder();
+						decoder.onMalformedInput(CodingErrorAction.REPORT)
+							.onUnmappableCharacter(CodingErrorAction.REPORT);
+						in = new BufferedReader(
+								new InputStreamReader(uploadStream,decoder),1024);
+						continue;
+					} else {
+						response.appendContentString(
+								"<tr><td>unsupported character set</td></tr>");
+					}
+				}
+				if(line == null)
+					break;
+				response.appendContentString("<tr>");
+				String[] split = line.split(" ");
+				if(split != null && split.length > 0) {
+					for (int i = 0; i < split.length; i++) {
+						response.appendContentString("<td>");
+						response.appendContentHTMLString(split[i]);
+						response.appendContentString("</td>\n");
+					}
+				}
+				response.appendContentString("</tr>\n");
+			}
+			response.appendContentString("</table>");
+		} catch (Exception e) {
+			logger.log(WOLogLevel.INFO,"Error importing file", new Object[] {session(),e});
+//			session().takeValueForKey(e.getMessage(), "message");
+			throw new NSForwardException(e);
+		}
+		uploadStream = null;
+		uploadDict.removeAllObjects();
+		return response;
 	}
 }
