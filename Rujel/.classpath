@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="Sources"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Authentication"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelAutoItog"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelArchiving"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelBase"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelComplete"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelContacts"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelCriterial"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelCurriculum"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduPlan"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduResults"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelVseLists"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelVseobuch"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelReports"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RujelStats"/>
-	<classpathentry kind="con" path="org.objectstyle.wolips.ContainerInitializer/10/1/Authentication/1/nil/1/nil/1/0/1/false/10/1/Reusables/1/nil/1/nil/1/0/1/false/10/1/RujelArchiving/1/nil/1/nil/1/0/1/false/10/1/RujelAutoItog/1/nil/1/nil/1/0/1/false/10/1/RujelBase/1/nil/1/nil/1/0/1/false/10/1/RujelComplete/1/nil/1/nil/1/0/1/false/10/1/RujelContacts/1/nil/1/nil/1/0/1/false/10/1/RujelCriterial/1/nil/1/nil/1/0/1/false/10/1/RujelCurriculum/1/nil/1/nil/1/0/1/false/10/1/RujelEduPlan/1/nil/1/nil/1/0/1/false/10/1/RujelEduResults/1/nil/1/nil/1/0/1/false/10/1/RujelInterfaces/1/nil/1/nil/1/0/1/false/10/1/RujelReports/1/nil/1/nil/1/0/1/false/10/1/RujelStats/1/nil/1/nil/1/0/1/false/10/1/RujelVseLists/1/nil/1/nil/1/0/1/false/10/1/RujelVseobuch/1/nil/1/nil/1/0/1/false/10/1/JavaEOAccess/1/nil/1/nil/1/0/1/false/10/1/JavaEOControl/1/nil/1/nil/1/0/1/false/10/1/JavaFoundation/1/nil/1/nil/1/0/1/false/10/1/JavaJDBCAdaptor/1/nil/1/nil/1/0/1/false/10/1/JavaWebObjects/1/nil/1/nil/1/0/1/false/9/1/JavaWOExtensions/1/nil/1/nil/0/1/false/10/1/JavaXML/1/nil/1/nil/1/0/1/false"/>
+	<classpathentry kind="con" path="WOFramework/Authentication"/>
+	<classpathentry kind="con" path="WOFramework/Reusables"/>
+	<classpathentry kind="con" path="WOFramework/RujelArchiving"/>
+	<classpathentry kind="con" path="WOFramework/RujelAutoItog"/>
+	<classpathentry kind="con" path="WOFramework/RujelBase"/>
+	<classpathentry kind="con" path="WOFramework/RujelComplete"/>
+	<classpathentry kind="con" path="WOFramework/RujelContacts"/>
+	<classpathentry kind="con" path="WOFramework/RujelCriterial"/>
+	<classpathentry kind="con" path="WOFramework/RujelCurriculum"/>
+	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
+	<classpathentry kind="con" path="WOFramework/RujelEduResults"/>
+	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
+	<classpathentry kind="con" path="WOFramework/RujelReports"/>
+	<classpathentry kind="con" path="WOFramework/RujelStats"/>
+	<classpathentry kind="con" path="WOFramework/RujelVseLists"/>
+	<classpathentry kind="con" path="WOFramework/RujelVseobuch"/>
+	<classpathentry kind="con" path="WOFramework/JavaWOExtensions"/>
+	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
+	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>
+	<classpathentry kind="con" path="WOFramework/JavaFoundation"/>
+	<classpathentry kind="con" path="WOFramework/JavaJDBCAdaptor"/>
+	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
+	<classpathentry kind="con" path="WOFramework/JavaXML"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
