@@ -156,8 +156,10 @@ public class Main extends WOComponent {
 						ec, EduGroup.entityName,currGr);
 //					if(grName == null)
 //						grName = eduGroup.name();
-					courses = EOUtilities.objectsMatchingKeyAndValue(ec,
-							EduCourse.entityName, "eduGroup", eduGroup);
+					NSDictionary dict = new NSDictionary(new Object[] {year,eduGroup},
+							new String[] {"eduYear","eduGroup"});
+					courses = EOUtilities.objectsMatchingValues(ec,
+							EduCourse.entityName, dict);
 					//TODO: respect eduYear
 				} catch (Exception e) {
 					logger.log(Level.INFO,"Failed to get eduGroup for id: " + currGr,e);

@@ -54,6 +54,10 @@ public class BaseModule {
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if("deleteCourse".equals(obj)) {
 			return deleteCourse(ctx);
+		} else if ("diary".equals(obj)) {
+			NSDictionary diaryTabs = (NSDictionary)WOApplication.application().
+					valueForKeyPath("strings.RujelBase_Base.diaryTab");
+			return PlistReader.cloneDictionary(diaryTabs, true);
 		}
 		return null;
 	}

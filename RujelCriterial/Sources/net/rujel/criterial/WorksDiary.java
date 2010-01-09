@@ -159,12 +159,12 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 					boolean finWeek = (week >= 0 && week < cal.get(Calendar.WEEK_OF_YEAR));
 					Object nextValue = work.valueForKeyPath(sectionKey);
 					if(!nextValue.equals(section)) {
-						if(finWeek && section instanceof Date) {
+						if(finWeek && sectionKey.equals(Work.DATE_KEY)) {
 							agregate.addObject(NSArray.EmptyArray);
 							((NSMutableArray)sections).addObject(Boolean.FALSE);
 							week = -1;
 						}
-						if(week < 0 && !(section instanceof Date)) {
+						if(week < 0 && !sectionKey.equals(Work.DATE_KEY)) {
 							cal.setTime(work.date());
 							if(-week >= cal.get(Calendar.WEEK_OF_YEAR))
 								week = -week;
