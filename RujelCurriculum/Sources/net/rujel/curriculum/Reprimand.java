@@ -166,9 +166,26 @@ public class Reprimand extends _Reprimand {
 				Integer deviation = checkWeekByDays(course, dict, minDev, buf);
 				if(deviation == null)
 					continue;
-				Reprimand rpr = (Reprimand) EOUtilities
+				EOQualifier[] quals = new EOQualifier[3];
+				quals[0] = new EOKeyValueQualifier("course",
+						EOQualifier.QualifierOperatorEqual,course);
+				quals[1] = new EOKeyValueQualifier(Reprimand.AUTHOR_KEY,
+						EOQualifier.QualifierOperatorEqual,dict.valueForKey("author"));
+				quals[2] = new EOKeyValueQualifier(Reprimand.RELIEF_KEY,
+						EOQualifier.QualifierOperatorEqual,NullValue);
+				quals[2] = new EOAndQualifier(new NSArray(quals));			
+				EOFetchSpecification fs = new EOFetchSpecification(
+						Reprimand.ENTITY_NAME,quals[2],null);
+				list = ec.objectsWithFetchSpecification(fs);
+				Reprimand rpr = null;
+				if(list != null && list.count() > 0) {
+					rpr = (Reprimand)list.objectAtIndex(0);
+				} else {
+					rpr = (Reprimand) EOUtilities
 						.createAndInsertInstance(ec, ENTITY_NAME);
-				rpr.setCourse(course);
+					rpr.setCourse(course);
+					rpr.setAuthor((String)dict.valueForKey("author"));
+				}
 				if(deviation.intValue() != 0){
 					if(buf.length() > 0)
 						buf.append("\n");
@@ -179,7 +196,6 @@ public class Reprimand extends _Reprimand {
 					buf.append(dict.valueForKey("weekString"));
 				}
 				rpr.setContent(buf.toString());
-				rpr.setAuthor((String)dict.valueForKey("author"));
 				if(onDate != null)
 					rpr.setRaised(onDate);
 				logger.log(WOLogLevel.FINER,"Creating Reprimand",course);
@@ -479,11 +495,11 @@ public class Reprimand extends _Reprimand {
 
 	public static NSDictionary prepareDict(NSTimestamp now, String listName,
 			EOEditingContext ec, int week, int testDay) {
-		Calendar cal = Calendar.getInstance();
 		NSMutableDictionary dict = new NSMutableDictionary();
 		dict.takeValueForKey(now, "date");
 		dict.takeValueForKey(listName, "listName");
 		dict.takeValueForKey(new Integer(week), "week");
+		Calendar cal = Calendar.getInstance();
 		cal.setTime(now);
 		if(cal.get(Calendar.DAY_OF_WEEK) != testDay) {
 			return null;
@@ -496,6 +512,8 @@ public class Reprimand extends _Reprimand {
 			buf.append(weekOfYear);
 			dict.takeValueForKey(buf.toString(), "author");
 		}
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		long nowMillis = cal.getTimeInMillis();
 		cal.add(Calendar.DATE, -week);
 		NSTimestamp prevDate = new NSTimestamp(cal.getTimeInMillis());
 		if(true) {
@@ -535,15 +553,18 @@ public class Reprimand extends _Reprimand {
 		NSArray holidays = Holiday.holidaysInDates(prevDate, now,ec,listName);
 		if(holidays == null) {
 			holidays = NSArray.EmptyArray;
-		} else  {
+		} else {
 			NSTimestamp day = prevDate;
 			for (int i = 0; i < holidays.count(); i++) {
 				Holiday hd = (Holiday)holidays.objectAtIndex(i);
-				if(hd.begin().getTime() > day.getTime())
+				if(hd.begin().after(day))
 					break;
 				day = hd.end();
 			}
-			if(day.getTime() >= now.getTime() - NSLocking.OneDay) {
+			cal.setTime(day);
+			cal.set(Calendar.HOUR_OF_DAY, 1);
+			cal.add(Calendar.DATE, 1);
+			if(cal.getTimeInMillis() >= nowMillis) {
 				// whole week in holidays
 				dict.takeValueForKey(null, "eduPeriod");
 				return dict;
