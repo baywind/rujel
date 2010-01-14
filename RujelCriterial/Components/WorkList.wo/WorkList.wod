@@ -213,7 +213,7 @@ SplitTab: WOImageButton {
 
 Weight: WOString {
 	numberformat = "0.##";
-	value = work.weight;
+	value = work.trimmedWeight;
 }
 StudentPresenter: WOSwitchComponent {
 	WOComponentName = studentPresenter;

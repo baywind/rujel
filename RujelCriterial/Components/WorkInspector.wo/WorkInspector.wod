@@ -43,7 +43,7 @@ WorkWeight: WOTextField {
 	maxlength = 5;
 	numberformat = "0.##";
 	size = 3;
-	value = work.weight;
+	value = work.trimmedWeight;
 	style = "text-align:center;";
 	onkeypress = "return isNumberInput(event,true);";
 	disabled = work.namedFlags.fixWeight;

@@ -741,23 +741,25 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		return (super.weight().compareTo(BigDecimal.ZERO) != 0);
 	}
 	
-	public void setWeight(BigDecimal aValue) {
-       if(weight().compareTo(aValue) != 0) {
-    	   if(weight().compareTo(BigDecimal.ZERO) == 0 
-    			   || aValue.compareTo(BigDecimal.ZERO) == 0)
-    		   _integralPresenter = null;
-		   super.setWeight(aValue);
-       }
-    }
+	public void setTrimmedWeight(BigDecimal aValue) {
+		if(namedFlags().flagForKey("fixWeight"))
+			return;
+		if(weight().compareTo(aValue) != 0) {
+			if(trimmedWeight().compareTo(BigDecimal.ZERO) == 0 
+					|| aValue.compareTo(BigDecimal.ZERO) == 0)
+				_integralPresenter = null;
+			super.setWeight(aValue);
+		}
+	}
 	
-	public BigDecimal weight() {
+	public BigDecimal trimmedWeight() {
 		BigDecimal weight = super.weight();
 		if(weight == null) return null;
 		if(weight.compareTo(BigDecimal.ZERO) == 0)
 			return BigDecimal.ZERO;
 		weight = weight.stripTrailingZeros();
 		if(weight.scale() < 0)
-			weight.setScale(0);
+			return weight.setScale(0);
 		return weight;
 	}
 	

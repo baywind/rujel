@@ -128,7 +128,7 @@ public class PrintWorks extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String style() {
-		if(work.weight().compareTo(BigDecimal.ZERO) > 0)
+		if(work.hasWeight())
 			return "font-weight:bold;";
 		return null;
 	}

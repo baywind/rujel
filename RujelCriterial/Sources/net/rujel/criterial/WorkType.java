@@ -101,6 +101,12 @@ public class WorkType extends _WorkType {
 		super.awakeFromFetch(ec);
 		if(sort().intValue() > maxNum)
 			maxNum = sort().intValue();
+		NSDictionary snapshot = ec.committedSnapshotForObject(this);
+		if(snapshot == null || snapshot.count() == 0) {
+			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+					"Empty snapshot for fetched object",
+					new Object[] {this, new IllegalStateException()});
+		}
 	}
 	
 	public void setSort(Integer sort) {

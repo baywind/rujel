@@ -384,7 +384,7 @@ public class StudentMarks extends WOComponent {
 			} else {
 				theme = WOMessage.stringByEscapingHTMLString(theme);
 			}
-			BigDecimal weight = currWork.weight().stripTrailingZeros();
+			BigDecimal weight = currWork.trimmedWeight();
 //			if(BigDecimal.ZERO.compareTo(currWork.weight()) == 0) {
 			if(weight.equals(BigDecimal.ZERO)) {
 				curr.setObjectForKey("noWeight","kind");
@@ -396,8 +396,6 @@ public class StudentMarks extends WOComponent {
 				buf.append(theme).append("</strong>");
 //				if(BigDecimal.ONE.compareTo(currWork.weight()) != 0) {
 				if(!weight.equals(BigDecimal.ONE)) {
-					if(weight.scale() < 0)
-						weight = weight.setScale(0);
 					buf.append(" &lt;");
 					buf.append(WOApplication.application().valueForKeyPath(
 							"strings.RujelCriterial_Strings.weight"));
