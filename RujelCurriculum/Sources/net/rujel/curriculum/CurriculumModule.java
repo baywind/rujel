@@ -239,69 +239,39 @@ public class CurriculumModule {
 				EOQualifier.QualifierOperatorEqual,course);
 		EOFetchSpecification fs = new EOFetchSpecification(
 				EduLesson.entityName,qual,sorter);
+		fs.setFetchLimit(1);
 		EOEditingContext ec = course.editingContext();
 		NSArray list = ec.objectsWithFetchSpecification(fs);
-		if(list == null || list.count() == 0)
-			return null;
-		Enumeration lenu = list.objectEnumerator();
-		EduLesson lesson = (EduLesson)lenu.nextElement();
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(lesson.date());
+		if(list == null || list.count() == 0) {
+			return null;
+		} else {
+			EduLesson lesson = (EduLesson)list.objectAtIndex(0); // last lesson
+			cal.setTime(lesson.date());
+		}
 		fs.setEntityName(Variation.ENTITY_NAME);
 		list = ec.objectsWithFetchSpecification(fs);
 		if(list != null && list.count() > 0) {
-			Enumeration venu = list.objectEnumerator();
-			while (venu.hasMoreElements()) {
-				Variation var = (Variation) venu.nextElement();
-				if(var.reason().namedFlags().flagForKey("external"))
-					continue;
-				int lday = cal.get(Calendar.DAY_OF_YEAR);
-				int lyear = cal.get(Calendar.YEAR);
-				cal.setTime(var.date());
-				int value = var.value().intValue();
-				if(cal.get(Calendar.YEAR) == lyear &&
-						cal.get(Calendar.DAY_OF_YEAR) == lday) {
-					if(value > 0) {
-						value--;
-						while(value > 0) {
-							if(!lenu.hasMoreElements())
-								return new NSDictionary(
-										new Object[] {sort,var.date()},
-										new Object[] {"sort","date"});
-							lesson = (EduLesson)lenu.nextElement();
-							cal.setTime(lesson.date());
-							if(cal.get(Calendar.YEAR) == lyear &&
-									cal.get(Calendar.DAY_OF_YEAR) == lday) {
-								value--;
-							} else {
-								return new NSDictionary(
-										new Object[] {sort,var.date()},
-										new Object[] {"sort","date"});
-							}
-						}
-					} else {
-						lesson = null;
-						break;
-					}
-				} else {
-					if(cal.get(Calendar.YEAR) > lyear || (cal.get(Calendar.YEAR) == lyear 
-							&& cal.get(Calendar.DAY_OF_YEAR) > lday)) {
-						if(value > 0) {
+				Variation var = (Variation)list.objectAtIndex(0);
+				if(var.date().getTime() > cal.getTimeInMillis() &&
+						!var.reason().namedFlags().flagForKey("external")) {
+					Calendar vcal = Calendar.getInstance();
+					vcal.setTime(var.date());
+					if(vcal.get(Calendar.YEAR) > cal.get(Calendar.YEAR) ||
+							(vcal.get(Calendar.YEAR) == cal.get(Calendar.YEAR) 
+						&& vcal.get(Calendar.DAY_OF_YEAR) > cal.get(Calendar.DAY_OF_YEAR))) {
+						
+						if(var.value().intValue() > 0) {
 							return new NSDictionary(
 								new Object[] {sort,var.date()},
 								new Object[] {"sort","date"});
 						}
-						lesson = null;
+						cal = vcal;
 					}
-					break;
 				}
-			}
-			if(lesson != null)
-				cal.setTime(lesson.date());
 		} // choose last date from lessons and variations
 		int weekStart = SettingsBase.numericSettingForCourse(
 				"weekStart", course, ec, Calendar.MONDAY);
-		int year = cal.getActualMaximum(Calendar.YEAR);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		long last = cal.getTimeInMillis();
 		cal.add(Calendar.DATE, 1);
@@ -313,6 +283,7 @@ public class CurriculumModule {
 			return null;
 		int week = SettingsBase.numericSettingForCourse(
 				EduPeriod.ENTITY_NAME, course, ec,7);
+		int year = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
 
 		String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, course, ec);
 		NSDictionary dict = Reprimand.prepareDict(date, listName, ec, week, weekStart);
@@ -332,7 +303,7 @@ public class CurriculumModule {
 		int verifiedOnly = SettingsBase.numericSettingForCourse(
 				"ignoreUnverifiedReasons", course, ec, 0);
 		fact += Reprimand.putVariations(list, ref, currWeek,verifiedOnly > 0, 1);
-		if(fact >= plan) {
+		if(fact >= plan) { // get first lesson of next week
 			for (int i = 0; i < currWeek.length; i++) {
 				if(currWeek[i] > 0) {
 					cal.add(Calendar.DATE,i);
@@ -340,7 +311,7 @@ public class CurriculumModule {
 					break;
 				}
 			}
-		} else {
+		} else { // compare with previous week
 			cal.add(Calendar.DATE, - week);
 			quals = (EOQualifier[])dict.valueForKey("prevQualifier");
 			if(quals == null) {
@@ -367,7 +338,7 @@ public class CurriculumModule {
 			fs.setEntityName(Variation.ENTITY_NAME);
 			list = ec.objectsWithFetchSpecification(fs);
 			Reprimand.putVariations(list, ref, prevWeek,verifiedOnly > 0, 1);
-			year = cal.getActualMaximum(Calendar.YEAR);
+			year = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
 			cal.set(Calendar.HOUR_OF_DAY,23);
 			boolean none = true;
 			for (int i = 0; i < currWeek.length; i++) {

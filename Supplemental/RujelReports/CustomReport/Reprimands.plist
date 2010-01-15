@@ -180,7 +180,7 @@
 			<key>qualifierSelector</key>
 			<string>caseInsensitiveLike</string>
 			<key>defaultValue</key>
-			<string>PlanFactCheck Daemon</string>
+			<string>AutoCheck??</string>
 		</dict>
 		<dict>
 			<key>title</key>

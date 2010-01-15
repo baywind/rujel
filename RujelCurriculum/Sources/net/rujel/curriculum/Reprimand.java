@@ -715,12 +715,21 @@ public class Reprimand extends _Reprimand {
 			NSArray list = ec.objectsWithFetchSpecification(fs);
 			int week = SettingsBase.numericSettingForCourse(EduPeriod.ENTITY_NAME,
 					course, ec, 7);
+			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME,
+					course, ec);
 			if(list == null || list.count() == 0) {
 				cal.add(Calendar.DATE, -week);
 				now = new NSTimestamp(cal.getTimeInMillis());
+				do {
+					cal.add(Calendar.DATE, -1);
+					NSTimestamp to = new NSTimestamp(cal.getTimeInMillis());
+					cal.add(Calendar.DATE,1 -week);
+					NSTimestamp since = new NSTimestamp(cal.getTimeInMillis());
+					if(Holiday.freeDaysInDates(since, to, ec,listName) < week)
+						break;
+					now = since;
+				} while(true);
 			}
-			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME,
-					course, ec);
 			NSDictionary dict = prepareDict(now, listName, ec, week, weekStart);
 			if(dict == null)
 				return;
