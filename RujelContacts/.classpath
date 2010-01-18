@@ -4,11 +4,8 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/activation.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/mail.jar"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
-	<classpathentry kind="con" path="WOFramework/RujelBase"/>
-	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
 	<classpathentry kind="con" path="WOFramework/Authentication"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
-	<classpathentry kind="con" path="WOFramework/RujelEduResults"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>
 	<classpathentry kind="con" path="WOFramework/JavaFoundation"/>
@@ -16,5 +13,7 @@
 	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
 	<classpathentry kind="con" path="WOFramework/JavaXML"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
+	<classpathentry kind="con" path="WOFramework/RujelBase"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="Sources"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
-	<classpathentry kind="con" path="WOFramework/RujelEduResults"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>
