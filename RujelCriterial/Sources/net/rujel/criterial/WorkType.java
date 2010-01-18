@@ -32,6 +32,7 @@ package net.rujel.criterial;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
@@ -59,6 +60,24 @@ public class WorkType extends _WorkType {
 			maxNum = wt.sort().intValue();
 		}
 		return new Integer(maxNum +1);
+	}
+	
+	protected static EOGlobalID defaultType;
+	public static WorkType defaultType(EOEditingContext ctx) {
+		if(defaultType != null)
+			return (WorkType)ctx.faultForGlobalID(defaultType, ctx);
+		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
+				EOQualifier.QualifierOperatorLessThan, new Integer(16));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,
+				ModulesInitialiser.sorter);
+		fs.setFetchLimit(1);
+		NSArray found = ctx.objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			WorkType type = (WorkType)found.objectAtIndex(0);
+			defaultType = ctx.globalIDForObject(type);
+			return type;
+		}
+		return null;
 	}
 
 	private NamedFlags _flags;

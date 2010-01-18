@@ -60,21 +60,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		setLoad(zero);
 		setFlags(zero);
 		setAnnounce(new NSTimestamp());
-		if(defaultType == null) {
-			EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
-					EOQualifier.QualifierOperatorLessThan, new Integer(16));
-			EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
-					ModulesInitialiser.sorter);
-			fs.setFetchLimit(1);
-			NSArray found = ctx.objectsWithFetchSpecification(fs);
-			if(found != null && found.count() > 0) {
-				EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
-				setWorkType(type);
-				defaultType = ctx.globalIDForObject(type);
-			}
-		} else {
-			setWorkType(ctx.faultForGlobalID(defaultType, ctx));
-		}
+		setWorkType(WorkType.defaultType(ctx));
 	}
 	
 	public void awakeFromFetch(EOEditingContext ec) {
@@ -292,11 +278,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	}
 
 	public String criterName(Integer criter) {
-		if(criter.intValue() == 0)
-			return "#";
-		if(critSet() == null)
-			return Character.toString((char)('A' + criter.intValue() -1));
-		return critSet().critNameForNum(criter);
+		return CriteriaSet.critNameForNum(criter, critSet());
 	}
 	
 	public Integer critForName(String critName) {

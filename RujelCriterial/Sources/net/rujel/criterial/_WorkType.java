@@ -75,11 +75,11 @@ public abstract class _WorkType extends EOGenericRecord {
     takeStoredValueForKey(value, DFLT_FLAGS_KEY);
   }
 
-  public BigDecimal dfltWeight() {
-    return (BigDecimal) storedValueForKey(DFLT_WEIGHT_KEY);
+  public java.math.BigDecimal dfltWeight() {
+    return (java.math.BigDecimal) storedValueForKey(DFLT_WEIGHT_KEY);
   }
 
-  public void setDfltWeight(BigDecimal value) {
+  public void setDfltWeight(java.math.BigDecimal value) {
     takeStoredValueForKey(value, DFLT_WEIGHT_KEY);
   }
 

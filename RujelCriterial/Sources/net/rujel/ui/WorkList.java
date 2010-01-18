@@ -224,9 +224,21 @@ public class WorkList extends LessonList {
     	return nextPage;
     }
     
+    public WOActionResults addWork() {
+    	valueForBinding("save");
+    	WOComponent nextPage = pageWithName("WorkInspector");
+    	nextPage.takeValueForKey(context().page(), "returnPage");
+    	if(session().valueForKey("message") != null)
+    		nextPage.takeValueForKey(valueForBinding("currLesson"), "work");
+    	return nextPage;
+    }
+    
     public boolean lessonIsNew() {
+    	lessonItem = (Work)valueForBinding("currLesson");
+    	if(lessonItem == null)
+    		return false;
     	EOEditingContext ec = lessonItem.editingContext();
-    	return (ec == null || ec.insertedObjects().contains(lessonItem));
+    	return (ec.globalIDForObject(lessonItem).isTemporary());
     }
 
 	public String dateStyle() {

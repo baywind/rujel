@@ -73,7 +73,15 @@ public class CriteriaSet extends _CriteriaSet
 		}
 		return null;
 	}
-	
+
+	public static String critNameForNum(Integer criter, CriteriaSet set) {
+		if(criter.intValue() == 0)
+			return "#";
+		if(set == null)
+			return Character.toString((char)('A' + criter.intValue() -1));
+		return set.critNameForNum(criter);
+	}
+
 	public String critNameForNum(Integer criterion) {
 		EOEnterpriseObject criter = criterionForNum(criterion);
 		return (criter==null)?null:(String)criter.valueForKey("title");

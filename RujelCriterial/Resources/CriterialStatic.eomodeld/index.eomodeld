@@ -14,18 +14,4 @@
         {className = EOGenericRecord; name = IndexRow; }, 
         {className = "net.rujel.criterial.WorkType"; name = WorkType; }
     ); 
-    userInfo = {
-        "_EntityModeler" = {
-            activeDatabaseConfigName = Default; 
-            databaseConfigs = {
-                Default = {
-                    adaptorName = JDBC; 
-                    connectionDictionary = {
-                        URL = "jdbc:mysql://localhost/Criterial?capitalizeTypeNames=true&useUnicode=true&characterEncoding=utf8"; 
-                        username = rujel; 
-                    }; 
-                }; 
-            }; 
-        }; 
-    }; 
 }

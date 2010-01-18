@@ -43,13 +43,14 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.WOLogLevel;
 
 public class HomeWorkDelegate extends TaskDelegate {
 	
 	public String homeTaskForLesson(EduLesson lesson) {
-		Work work = homeWorkForLesson(lesson, false);
+		Work work = homeWorkForLesson(lesson);
 		if(work == null)
 			return null;
 		return work.theme();
@@ -57,13 +58,20 @@ public class HomeWorkDelegate extends TaskDelegate {
 	
 	public void setHomeTaskForLesson(String newTask, EduLesson lesson) {
 		 if(newTask == null) {
-			 Work work = homeWorkForLesson(lesson, false);
+			 Work work = homeWorkForLesson(lesson);
 			 if(work != null) {
 				 work.removeObjectFromBothSidesOfRelationshipWithKey(lesson.course(),"course");
 				 work.editingContext().deleteObject(work);
 			 }
 		 } else {
-			 Work work = homeWorkForLesson(lesson, true);
+			 Work work = homeWorkForLesson(lesson);
+			 if(work == null) {
+				 work = (Work)EOUtilities.createAndInsertInstance(
+						 lesson.editingContext(), Work.ENTITY_NAME);
+				 work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
+				 work.takeValuesFromDictionary(newDictForLesson(lesson));
+				 MyUtility.setNumberToNewLesson(work);
+			 }
 			 work.setTheme(newTask);
 		 }
 	}
@@ -71,13 +79,13 @@ public class HomeWorkDelegate extends TaskDelegate {
 	public WOComponent homeWorkPopupForLesson(WOContext context, EduLesson lesson) {
     	WOComponent nextPage = WOApplication.application().pageWithName("WorkInspector", context);
     	nextPage.takeValueForKey(context.page(), "returnPage");
-	   	EOEditingContext tmpEc = new SessionedEditingContext(
-	   			lesson.editingContext(),context.session());
-//    	tmpEc.lock();
-    	lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-    	nextPage.takeValueForKey(tmpEc, "tmpEC");
-    	nextPage.takeValueForKey(homeWorkForLesson(lesson,true), "work");
-//    	tmpEc.unlock();
+    	Object init = homeWorkForLesson(lesson);
+    	if(init != null) {
+    		nextPage.takeValueForKey(init, "work");
+    	} else {
+    		init = newDictForLesson(lesson);
+    		nextPage.takeValueForKey(init, "dict");
+    	}
     	return nextPage;
 	}
 	
@@ -85,7 +93,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 		return true;
 	}
 	
-	protected Work homeWorkForLesson(EduLesson lesson,boolean create) {
+	protected Work homeWorkForLesson(EduLesson lesson) {
 		EOEditingContext ec = lesson.editingContext();
 		if(ec == null) {
 			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
@@ -93,7 +101,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 			return null;
 		}
 		if(ec.insertedObjects().containsObject(lesson )) {
-			if(!create)
+//			if(!create)
 				return null;
 		}
 		EOQualifier[] quals = new EOQualifier[3];
@@ -122,17 +130,26 @@ public class HomeWorkDelegate extends TaskDelegate {
 			}
 			return work;
 		}
-		if(!create)
+//		if(!create)
 			return null;
-		Work result = (Work)EOUtilities.createAndInsertInstance(ec, Work.ENTITY_NAME);
-		result.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
-		result.setAnnounce(date);
+	}
+	
+	public NSMutableDictionary newDictForLesson(EduLesson lesson) {
+		EOEditingContext ec = lesson.editingContext();
+		NSMutableDictionary result = new NSMutableDictionary();
+		NSTimestamp date = lesson.date();
+		result.takeValueForKey(date, Work.ANNOUNCE_KEY);
+		
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,lesson.course());
 		quals[1] = new EOKeyValueQualifier("date",
 				EOQualifier.QualifierOperatorGreaterThan,date);
 		quals[2] = null;
 		quals[2] = new EOAndQualifier(new NSArray(quals));
-		fs = new EOFetchSpecification(EduLesson.entityName,quals[2],EduLesson.sorter);
-		found = ec.objectsWithFetchSpecification(fs);
+		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
+				quals[2],EduLesson.sorter);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
 		date = date.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
 		if(found != null && found.count() > 0) {
 			date = ((EduLesson)found.objectAtIndex(0)).date();
@@ -152,7 +169,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 				}
 			}
 		}
-		result.setDate(date);
+		result.takeValueForKey(date, Work.DATE_KEY);
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
 				"dfltFlags >= 16 and dfltFlags < 64", null);
 		fs = new EOFetchSpecification("WorkType",qual,ModulesInitialiser.sorter);
@@ -171,12 +188,13 @@ public class HomeWorkDelegate extends TaskDelegate {
 				if(type == null)
 					type = (EOEnterpriseObject)found.objectAtIndex(0);
 			}
-			result.setWorkType(type);
+			result.takeValueForKey(type,Work.WORK_TYPE_KEY);
 		} else {
-			result.namedFlags().setFlagForKey(true, "hometask");
+			NamedFlags namedFlags = new NamedFlags(WorkType.flagNames);
+			namedFlags.setFlagForKey(true, "hometask");
+			namedFlags.setFlagForKey(true, "fixHometask");
+			result.takeValueForKey(namedFlags, "namedFlags");
 		}
-		MyUtility.setNumberToNewLesson(result);
-		//result.setNumber(new Integer(0));
 		return result;
 	}
 }

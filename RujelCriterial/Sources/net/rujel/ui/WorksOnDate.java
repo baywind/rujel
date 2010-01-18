@@ -31,11 +31,8 @@ package net.rujel.ui;
 
 import net.rujel.criterial.Work;
 import net.rujel.interfaces.EduLesson;
-import net.rujel.reusables.SessionedEditingContext;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.*;
 
@@ -90,22 +87,14 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
     	EduLesson lesson = (EduLesson)valueForBinding("lesson");
      	EOEnterpriseObject currLesson = (EOEnterpriseObject)valueForBinding("currLesson");
     	if(currLesson instanceof Work) {
-    		//currLesson = EOUtilities.localInstanceOfObject(tmpEc, currLesson);
+        	nextPage.takeValueForKey(currLesson, "work");
     	} else {
-    	   	EOEditingContext tmpEc = new SessionedEditingContext(lesson.editingContext(),session());
-        	tmpEc.lock();
-        	currLesson = EOUtilities.createAndInsertInstance(tmpEc, "Work");
         	NSTimestamp date = lesson.date();
-        	((Work)currLesson).setDate(date);
-        	((Work)currLesson).setAnnounce(date);
-//        	((Work)currLesson).setType(new Integer(Work.CLASSWORK));
-        	EOEnterpriseObject course = EOUtilities.localInstanceOfObject(tmpEc, lesson.course());
-        	((Work)currLesson).setNumber(new Integer(0));
-        	currLesson.addObjectToBothSidesOfRelationshipWithKey(course, "course");
-        	nextPage.takeValueForKey(tmpEc, "tmpEC");
-        	tmpEc.unlock();
+        	NSMutableDictionary dict = new NSMutableDictionary();
+        	dict.takeValueForKey(date,Work.DATE_KEY);
+        	dict.takeValueForKey(date,Work.ANNOUNCE_KEY);
+        	nextPage.takeValueForKey(dict, "dict");
     	}
-    	nextPage.takeValueForKey(currLesson, "work");
     	return nextPage;
     }
     /*
