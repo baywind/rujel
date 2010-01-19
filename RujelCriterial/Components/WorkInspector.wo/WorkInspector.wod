@@ -190,7 +190,7 @@ WeightField : WOGenericElement {
 Save: WOSubmitButton {
 	action = save;
 	value = application.strings.Reusables_Strings.uiElements.Save;
-    disabled = session.readAccess._edit.work;
+    disabled = cantSave;
 }
 
 ResetButton1: WOResetButton {

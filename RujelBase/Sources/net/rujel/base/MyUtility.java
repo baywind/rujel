@@ -267,13 +267,8 @@ public class MyUtility {
 		context.generateCompleteURLs();
 		return context;
 	}
-		
-	public static void scheduleTaskOnTime(TimerTask task, String time) {
-		Timer timer = (Timer)WOApplication.application().valueForKey("timer");
-		if(timer == null)
-			return;
-		if(time == null || task == null)
-			throw new NullPointerException("Both attributes are required");
+	
+	public static void setTime(Calendar cal, String time) {
 		int hour = 0;
 		int minute = 0;
 		int idx = time.indexOf(':');
@@ -291,10 +286,19 @@ public class MyUtility {
 				idx = Integer.parseInt(time.substring(idx+1));
 			}
 		}
-		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.HOUR_OF_DAY, hour);
 		cal.set(Calendar.MINUTE, minute);
 		cal.set(Calendar.SECOND, idx);
+	}
+		
+	public static void scheduleTaskOnTime(TimerTask task, String time) {
+		Timer timer = (Timer)WOApplication.application().valueForKey("timer");
+		if(timer == null)
+			return;
+		if(time == null || task == null)
+			throw new NullPointerException("Both attributes are required");
+		Calendar cal = Calendar.getInstance();
+		setTime(cal, time);
 //		NSTimestamp moment = new NSTimestamp(cal.getTimeInMillis());
 		if(System.currentTimeMillis() < cal.getTimeInMillis())
 			timer.schedule(task, cal.getTime());

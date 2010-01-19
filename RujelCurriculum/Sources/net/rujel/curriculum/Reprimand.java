@@ -88,6 +88,9 @@ public class Reprimand extends _Reprimand {
 		Calendar cal = Calendar.getInstance();
 		if(onDate != null) {
 			cal.setTime(onDate);
+//			String checkTime = SettingsReader.stringForKeyPath(
+//					"edu.planFactCheckTime", "0:59");
+//			MyUtility.setTime(cal, checkTime);
 		} else {
 			onDate = new NSTimestamp(cal.getTimeInMillis());
 		}
@@ -234,9 +237,13 @@ public class Reprimand extends _Reprimand {
 					Integer weekDays = (Integer)setting.valueForKey(
 							SettingsBase.NUMERIC_VALUE_KEY);
 					int week = (weekDays == null)? 7 : weekDays.intValue();
-					cal.set(Calendar.DAY_OF_WEEK, testDay);
+					cal.setTime(onDate);
+					if(weekNum > cal.get(Calendar.WEEK_OF_YEAR))
+						cal.add(Calendar.YEAR, -1);
 					cal.set(Calendar.WEEK_OF_YEAR, weekNum);
-					now = new NSTimestamp(MyUtility.dateToEduYear(cal.getTime(), eduYear));
+					cal.set(Calendar.DAY_OF_WEEK, testDay);
+					now = new NSTimestamp(cal.getTimeInMillis());
+					//(MyUtility.dateToEduYear(cal.getTime(), eduYear));
 					NSDictionary dict = prepareDict(now, listName, ec, week, testDay);
 					if(dict == null)
 						continue;

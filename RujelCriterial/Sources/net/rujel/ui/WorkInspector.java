@@ -344,4 +344,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		_itemMask.takeValueForKey(newCriterWeight,"weight");
     }*/
 
+    public Boolean cantSave() {
+    	if(work != null)
+    		return (Boolean)session().valueForKeyPath("readAccess._edit.work");
+    	else
+    		return (Boolean)session().valueForKeyPath("readAccess._create.Work");
+    }
 }
