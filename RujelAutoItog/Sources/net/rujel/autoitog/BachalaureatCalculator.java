@@ -84,7 +84,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 				continue;
 			if(crit == null)
 				continue;
-			if(!work.namedFlags().flagForKey("compulsory")) {
+			if(!work.isCompulsory()) {
 				optWorks.addObject(work);
 			}
 			BigDecimal[] agregator = (BigDecimal[])dict.objectForKey(crit);
@@ -120,7 +120,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			Work work = (Work)en.nextElement();
 			BigDecimal weightValue = work.weight();
 			if(filter) {
-				if(!work.namedFlags().flagForKey("compulsory"))
+				if(!work.isCompulsory())
 					continue;
 				if(weightValue == null || weightValue.compareTo(BigDecimal.ZERO) == 0)
 					continue;

@@ -85,6 +85,8 @@ public class HomeWorkDelegate extends TaskDelegate {
     	} else {
     		init = newDictForLesson(lesson);
     		nextPage.takeValueForKey(init, "dict");
+    		if(((NSDictionary)init).valueForKey(Work.WORK_TYPE_KEY) == null)
+    			nextPage.takeValueForKey(new NamedFlags(16,WorkType.flagNames), "namedFlags");
     	}
     	return nextPage;
 	}
@@ -121,7 +123,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 			if(found.count() > 1) {
 				for (int i = 0; i < found.count(); i++) {
 					work = (Work)found.objectAtIndex(i);
-					if(work.namedFlags().flagForKey("fixHometask"))
+					if(work.workType().namedFlags().flagForKey("fixHometask"))
 						break;
 					work = null;
 				}
@@ -172,13 +174,13 @@ public class HomeWorkDelegate extends TaskDelegate {
 		result.takeValueForKey(date, Work.DATE_KEY);
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
 				"dfltFlags >= 16 and dfltFlags < 64", null);
-		fs = new EOFetchSpecification("WorkType",qual,ModulesInitialiser.sorter);
+		fs = new EOFetchSpecification(WorkType.ENTITY_NAME,qual,ModulesInitialiser.sorter);
 		found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
-			EOEnterpriseObject type = (EOEnterpriseObject)found.objectAtIndex(0);
+			WorkType type = (WorkType)found.objectAtIndex(0);
 			if(found.count() > 1) {
 				for (int i = 0; i < found.count(); i++) {
-					type = (EOEnterpriseObject)found.objectAtIndex(i);
+					type = (WorkType)found.objectAtIndex(i);
 					Integer flags = (Integer) type.valueForKey("dfltFlags"); 
 					if((flags.intValue() & 4) == 4)
 						break;
@@ -186,14 +188,15 @@ public class HomeWorkDelegate extends TaskDelegate {
 						type = null;
 				}
 				if(type == null)
-					type = (EOEnterpriseObject)found.objectAtIndex(0);
+					type = (WorkType)found.objectAtIndex(0);
 			}
 			result.takeValueForKey(type,Work.WORK_TYPE_KEY);
+/*			result.takeValueForKey(type.namedFlags(), "namedFlags");
 		} else {
 			NamedFlags namedFlags = new NamedFlags(WorkType.flagNames);
 			namedFlags.setFlagForKey(true, "hometask");
 			namedFlags.setFlagForKey(true, "fixHometask");
-			result.takeValueForKey(namedFlags, "namedFlags");
+			result.takeValueForKey(namedFlags, "namedFlags");*/
 		}
 		return result;
 	}

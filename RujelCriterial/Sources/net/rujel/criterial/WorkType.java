@@ -138,4 +138,15 @@ public class WorkType extends _WorkType {
 		super.turnIntoFault(handler);
 		_flags = null;
 	}
+	
+	public BigDecimal trimmedWeight() {
+		BigDecimal weight = super.dfltWeight();
+		if(weight == null) return null;
+		if(weight.compareTo(BigDecimal.ZERO) == 0)
+			return BigDecimal.ZERO;
+		weight = weight.stripTrailingZeros();
+		if(weight.scale() < 0)
+			return weight.setScale(0);
+		return weight;
+	}
 }

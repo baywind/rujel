@@ -37,6 +37,7 @@ import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -58,15 +59,20 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	
 	public Integer hours;
 	public Integer minutes;
-	public NSDictionary dict;
+	public NSMutableDictionary dict;
 	protected EduCourse course;
 	protected CriteriaSet critSet;
+	public NamedFlags namedFlags;
 
     public WorkInspector(WOContext context) {
         super(context);
     }
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(course == null)
+    		course = (EduCourse)returnPage.valueForKey("course");
+    	EOEditingContext ec = course.editingContext();
+    	critSet = CriteriaSet.critSetForCourse(course);
     	if(dict == null)
     		dict = new NSMutableDictionary();
     	if(dict.valueForKey("trimmedWeight") == null)
@@ -75,10 +81,16 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		dict.takeValueForKey(session().valueForKey("today"), Work.ANNOUNCE_KEY);
     	if(dict.valueForKey(Work.DATE_KEY) == null)
     		dict.takeValueForKey(session().valueForKey("today"), Work.DATE_KEY);
+    	if(namedFlags == null) {
+    		WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
+    		if(type == null) {
+    			type = WorkType.defaultType(ec);
+    			dict.takeValueForKey(type, Work.WORK_TYPE_KEY);
+    		}
+    		namedFlags = (type==null)?new NamedFlags(WorkType.flagNames):
+    			type.namedFlags().and(24);
+    	}
     	if(types == null) {
-        	course = (EduCourse)returnPage.valueForKey("course");
-        	critSet = CriteriaSet.critSetForCourse(course);
-        	EOEditingContext ec = course.editingContext();
     		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
     				EOQualifier.QualifierOperatorLessThan,new Integer(64));
     		EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
@@ -90,7 +102,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     
     public void setWork(Work newWork) {
     	work = newWork;
-    	if(work != null && work.load() != null) {
+    	if(work == null)
+    		return;
+    	if(work.load() != null) {
     		int mins = work.load().intValue();
     		int hrs = mins / 60;
     		mins = mins % 60;
@@ -99,7 +113,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		if(hrs > 0)
     			hours = new Integer(hrs);
     	}
-    	dict = work.valuesForKeys(keys);
+    	dict = work.valuesForKeys(keys).mutableClone();
+    	namedFlags = new NamedFlags(work.flags(),WorkType.flagNames);
     }
 
     public String lessonTitle() {
@@ -112,6 +127,16 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(created) {
     		work = (Work)EOUtilities.createAndInsertInstance(ec, Work.ENTITY_NAME);
     		work.addObjectToBothSidesOfRelationshipWithKey(course, "course");
+    	}
+    	WorkType type = (WorkType)dict.removeObjectForKey(Work.WORK_TYPE_KEY);
+    	if(type != null) {
+    		work.setWorkType(type);
+    		if(!type.namedFlags().flagForKey("fixHometask"))
+    			work.setIsHometask(namedFlags.flagForKey("hometask"));
+    		if(!type.namedFlags().flagForKey("fixCompulsory"))
+    			work.setIsCompulsory(namedFlags.flagForKey("compulsory"));
+    	} else {
+    		work.setFlags(namedFlags.toInteger());
     	}
     	work.takeValuesFromDictionary(dict);
     	if(created)
@@ -349,5 +374,19 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		return (Boolean)session().valueForKeyPath("readAccess._edit.work");
     	else
     		return (Boolean)session().valueForKeyPath("readAccess._create.Work");
+    }
+    
+    public String typeChange() {
+    	if(types == null || types.count() == 0)
+    		return null;
+    	StringBuilder buf = new StringBuilder("switch(value){");
+    	for (int i = 0; i < types.count(); i++) {
+			WorkType type = (WorkType) types.objectAtIndex(i);
+			buf.append("case '").append(i).append("': setDefaults(");
+			buf.append(type.dfltFlags()).append(',').append(type.trimmedWeight());
+			buf.append(");break;");
+		}
+    	buf.append("default: setDefaults(0);};");
+    	return buf.toString();
     }
 }

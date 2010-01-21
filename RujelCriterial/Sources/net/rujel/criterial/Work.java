@@ -724,7 +724,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 	}
 	
 	public void setTrimmedWeight(BigDecimal aValue) {
-		if(namedFlags().flagForKey("fixWeight"))
+		if(Various.boolForObject(valueForKeyPath("workType.namedFlags.fixWeight")))
 			return;
 		if(weight().compareTo(aValue) != 0) {
 			if(trimmedWeight().compareTo(BigDecimal.ZERO) == 0 
@@ -745,7 +745,47 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		return weight;
 	}
 	
+	public boolean isFlag(int flag) {
+		Integer flags = flags();
+		if(flags == null)
+			return false;
+		return ((flags.intValue() & flag) > 0);
+	}
+	
+	protected void setIsFlag(boolean is,int flag) {
+		Integer flags = flags();
+		if(flags == null) {
+			setFlags(new Integer(flag));
+		} else {
+			int newFlags = flags.intValue();
+			if(is) {
+				newFlags = newFlags | flag;
+			} else {
+				newFlags = newFlags - (newFlags & flag);
+			}
+			if(newFlags != flags.intValue())
+				setFlags(new Integer(newFlags));
+		}
+	}
+	
+	public boolean isHometask() {
+		return isFlag(16);
+	}
+	
+	public void setIsHometask(boolean is) {
+		if(Various.boolForObject(valueForKeyPath("workType.namedFlags._fixHometask")))
+			setIsFlag(is,16);
+	}
 
+	public boolean isCompulsory() {
+		return isFlag(8);
+	}
+	
+	public void setIsCompulsory(boolean is) {
+		if(Various.boolForObject(valueForKeyPath("workType.namedFlags._fixCompulsory")))
+			setIsFlag(is,8);
+	}
+/*
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {
     	if(_flags==null) {
@@ -770,7 +810,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
     public void setFlags(Integer value) {
     	_flags = null;
     	super.setFlags(value);
-    }
+    }*/
 
 	public void setWorkType(EOEnterpriseObject workType) {
 		EOEnterpriseObject prevType = workType();
@@ -786,7 +826,13 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			Integer useCount = (Integer)workType.valueForKey("useCount");
 			useCount = new Integer(useCount.intValue() +1);
 			workType.takeValueForKey(useCount, "useCount");
-			setFlags((Integer)workType.valueForKey("dfltFlags"));
+			Integer flags = (Integer)workType.valueForKey("dfltFlags");
+			if(flags == null) {
+				flags = new Integer(0);
+			} else {
+				flags = new Integer(flags.intValue() & 24);
+			}
+			setFlags(flags);
 			setWeight((BigDecimal)workType.valueForKey("dfltWeight"));
 /*		} else {
 			//TODO: remove this debug

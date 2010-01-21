@@ -55,7 +55,7 @@ public class IntegralCalculator extends WorkCalculator {
 				if (BigDecimal.ZERO.compareTo(work.weight()) == 0)
 					continue;
 				BigDecimal integral = work.integralForStudent(student);
-				if (integral == null && !work.namedFlags().flagForKey("compulsory"))
+				if (integral == null && !work.isCompulsory())
 					continue;
 				double weight = work.weight().doubleValue();
 				weightSum += weight;

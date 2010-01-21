@@ -59,6 +59,8 @@
 	<string>заметки</string>
 	<key>inspector</key>
 	<string>Подробное описание</string>
+	<key>compulsory</key>
+	<string>обязательная</string>
 	<key>messages</key>
 	<dict>
 		<key>critersRequired</key>

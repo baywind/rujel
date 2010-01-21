@@ -122,11 +122,11 @@ public abstract class _Work extends EOGenericRecord {
     takeStoredValueForKey(value, TITLE_KEY);
   }
 
-  public BigDecimal weight() {
-    return (BigDecimal) storedValueForKey(WEIGHT_KEY);
+  public java.math.BigDecimal weight() {
+    return (java.math.BigDecimal) storedValueForKey(WEIGHT_KEY);
   }
 
-  public void setWeight(BigDecimal value) {
+  public void setWeight(java.math.BigDecimal value) {
     takeStoredValueForKey(value, WEIGHT_KEY);
   }
 
@@ -138,8 +138,8 @@ public abstract class _Work extends EOGenericRecord {
     	takeStoredValueForKey(value, TASK_TEXT_KEY);
   }
   
-  public EOGenericRecord workType() {
-    return (EOGenericRecord)storedValueForKey(WORK_TYPE_KEY);
+  public net.rujel.criterial.WorkType workType() {
+    return (net.rujel.criterial.WorkType)storedValueForKey(WORK_TYPE_KEY);
   }
 
   public void setWorkType(EOEnterpriseObject value) {
