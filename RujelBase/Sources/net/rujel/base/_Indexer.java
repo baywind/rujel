@@ -30,7 +30,7 @@
 // Created by eogenerator
 // $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Indexer.java instead.
 
-package net.rujel.criterial;
+package net.rujel.base;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;

@@ -16,7 +16,7 @@
         }
     ); 
     attributesUsedForLocking = (type, title, defaultValue); 
-    className = "net.rujel.criterial.Indexer"; 
+    className = "net.rujel.base.Indexer"; 
     classProperties = (type, title, defaultValue, indexRows); 
     externalName = "BASE_INDEXER"; 
     fetchSpecificationDictionary = {}; 
