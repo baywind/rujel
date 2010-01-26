@@ -47,7 +47,7 @@ public class WorkType extends _WorkType {
 	public static EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
 			EOQualifier.QualifierOperatorLessThan,new Integer(64));
 	
-	protected static int maxNum = 0;
+/*	protected static int maxNum = 0;
 	
 	public static Integer nextSortNum(EOEditingContext ec) {
 		NSArray sorter = new NSArray(new EOSortOrdering(
@@ -60,7 +60,7 @@ public class WorkType extends _WorkType {
 			maxNum = wt.sort().intValue();
 		}
 		return new Integer(maxNum +1);
-	}
+	}*/
 	
 	protected static EOGlobalID defaultType;
 	public static WorkType defaultType(EOEditingContext ctx) {
@@ -112,31 +112,57 @@ public class WorkType extends _WorkType {
 		super.setDfltFlags(new Integer(0));
 		setDfltWeight(BigDecimal.ZERO);
 		setUseCount(new Integer(0));
-		if(maxNum <= 0)
-			setSort(nextSortNum(ec));
+//		if(maxNum <= 0)
+//			setSort(nextSortNum(ec));
 	}
-	
+	/*
 	public void awakeFromFetch(EOEditingContext ec) {
 		super.awakeFromFetch(ec);
 		if(sort().intValue() > maxNum)
 			maxNum = sort().intValue();
-		NSDictionary snapshot = ec.committedSnapshotForObject(this);
-		if(snapshot == null || snapshot.count() == 0) {
-			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-					"Empty snapshot for fetched object",
-					new Object[] {this, new IllegalStateException()});
-		}
 	}
 	
 	public void setSort(Integer sort) {
 		super.setSort(sort);
 		if(sort.intValue() > maxNum)
 			maxNum = sort.intValue();
-	}
+	}*/
 	
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
 		_flags = null;
+	}
+	
+	public String weightHex() {
+		if(colorWeight() == null)
+			return null;
+		return colorWeight().substring(1).toUpperCase();
+	}
+	
+	public void setWeightHex(String hex) {
+		if(hex != null) {
+			if(hex.charAt(0) != '#')
+				hex = "#" + hex.toLowerCase();
+			else
+				hex = hex.toLowerCase();
+		}
+		setColorWeight(hex);
+	}
+
+	public String noWeightHex() {
+		if(colorNoWeight() == null)
+			return null;
+		return colorNoWeight().substring(1).toUpperCase();
+	}
+	
+	public void setNoWeightHex(String hex) {
+		if(hex != null) {
+			if(hex.charAt(0) != '#')
+				hex = "#" + hex.toLowerCase();
+			else
+				hex = hex.toLowerCase();
+		}
+		setColorNoWeight(hex);
 	}
 	
 	public BigDecimal trimmedWeight() {

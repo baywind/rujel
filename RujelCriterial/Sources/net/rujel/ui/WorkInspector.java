@@ -91,10 +91,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     			type.namedFlags().and(24);
     	}
     	if(types == null) {
-    		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
-    				EOQualifier.QualifierOperatorLessThan,new Integer(64));
-    		EOFetchSpecification fs = new EOFetchSpecification("WorkType",qual,
-    				ModulesInitialiser.sorter);
+    		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,
+   				WorkType.activeQualifier, ModulesInitialiser.sorter);
     		types = ec.objectsWithFetchSpecification(fs);
     	}
     	super.appendToResponse(aResponse, aContext);

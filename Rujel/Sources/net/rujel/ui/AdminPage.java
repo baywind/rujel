@@ -29,9 +29,11 @@
 
 package net.rujel.ui;
 
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
@@ -41,7 +43,7 @@ public class AdminPage extends com.webobjects.appserver.WOComponent {
 	
 	public NSArray modules;
 	public NSKeyValueCodingAdditions currModule;
-	
+    public EOEditingContext ec;
 	
     public AdminPage(WOContext context) {
         super(context);
@@ -60,5 +62,6 @@ public class AdminPage extends com.webobjects.appserver.WOComponent {
         	currModule = (NSKeyValueCodingAdditions)modules.objectAtIndex(0);
         	
         }
+        ec = new SessionedEditingContext(context.session());
     }
 }

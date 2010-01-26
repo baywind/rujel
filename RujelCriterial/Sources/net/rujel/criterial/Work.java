@@ -63,16 +63,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		setWorkType(WorkType.defaultType(ctx));
 	}
 	
-	public void awakeFromFetch(EOEditingContext ec) {
-		super.awakeFromFetch(ec);
-		NSDictionary snapshot = ec.committedSnapshotForObject(this);
-		if(snapshot == null || snapshot.count() == 0) {
-			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-					"Empty snapshot for fetched object",
-					new Object[] {this, new IllegalStateException()});
-		}
-	}
-	
 	public FractionPresenter integralPresenter() {
 		if(_integralPresenter == null) {
 			boolean weightless = !hasWeight();//(weight().compareTo(BigDecimal.ZERO) == 0);
@@ -860,6 +850,8 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 
     public String color() {
     	String result = null;
+    	if(Various.boolForObject(valueForKeyPath("workType.namedFlags.unused")))
+    		return "#999999";
     	if(hasWeight()) {
     		result = (String)valueForKeyPath("workType.colorWeight");
     		if(result == null)

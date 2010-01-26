@@ -86,6 +86,9 @@ public class ModuleInit {
 					valueForKeyPath("strings.RujelCriterial_Strings.courseComplete");
 		} else if("deleteCourse".equals(obj)) {
 			return deleteCourse(ctx);
+		} else if("adminModules".equals(obj)) {
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelCriterial_Strings.setup.WorkType");
 		}
 		return null;
 	}

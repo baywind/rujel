@@ -187,13 +187,14 @@ selection:
 
 	public EOEnterpriseObject borderForFraction(BigDecimal fraction, boolean findNext) {
 		if(fraction == null) return null;
+		fraction = fraction.movePointRight(2);
 		Enumeration en = sortedBorders().objectEnumerator();
 		EOEnterpriseObject result = null;
 selection:
 		while (en.hasMoreElements()) {
 			EOEnterpriseObject border = (EOEnterpriseObject)en.nextElement();
 			BigDecimal curr = (BigDecimal)border.valueForKey("least");
-			int comparator = fraction.compareTo(curr.movePointLeft(2));
+			int comparator = fraction.compareTo(curr);
 			if(comparator > 0) {
 				result = border;//(String)border.valueForKey("title");
 			} else {
