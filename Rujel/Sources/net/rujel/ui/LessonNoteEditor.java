@@ -976,9 +976,6 @@ public class LessonNoteEditor extends WOComponent {
 	public WOActionResults chooseTeacher() {
 		WOComponent resultPage = srcMark();
  		resultPage.takeValueForKey(course.teacher(), "currTeacher");
-    	WOActionResults  result = (WOActionResults)resultPage.valueForKey("selectTeacher");
-		if(result == null)
-			result = resultPage;
-		return result;
+		return resultPage;
 	}
 }

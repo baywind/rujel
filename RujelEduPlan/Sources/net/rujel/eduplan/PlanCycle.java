@@ -268,7 +268,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		quals.addObject(new EOKeyValueQualifier(SPEC_CLASS_KEY,
 				EOQualifier.QualifierOperatorEqual,NullValue));
 		quals.addObject(new EOKeyValueQualifier(SCHOOL_KEY,
-				EOQualifier.QualifierOperatorEqual,school(ec)));
+				EOQualifier.QualifierOperatorEqual,school));
 		quals.addObject(new EOKeyValueQualifier(GRADE_KEY,
 				EOQualifier.QualifierOperatorEqual,grade));		
 		qual = new EOAndQualifier(quals);
@@ -281,14 +281,17 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOEditingContext ec = group.editingContext();
 		NSMutableArray result = cyclesForGrade(group.grade(), ec).mutableClone();
 		Integer year = null;
+		Integer school = null;;
 		if(ec instanceof SessionedEditingContext) {
 			WOSession ses = (WOSession)((SessionedEditingContext)ec).session();
 			year = (Integer)ses.valueForKey("eduYear");
 			year = new Integer(year.intValue()%100);
+			school = (Integer)ses.valueForKey("school");
 		} 
 		if(year == null) {
 			int eduYear = MyUtility.eduYearForDate(new Date());
 			year = new Integer(eduYear%100);
+			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
 		}
 
 		EOQualifier qual = new EOKeyValueQualifier(SPEC_CLASS_KEY,
@@ -296,8 +299,10 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		NSMutableArray quals = new NSMutableArray(qual);
 		quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
 				EOQualifier.QualifierOperatorEqual,year));
+		quals.addObject(new EOKeyValueQualifier(SCHOOL_KEY,
+				EOQualifier.QualifierOperatorEqual,school));
 		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",qual,null);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		NSArray spec = ec.objectsWithFetchSpecification(fs);
 		if(spec != null && spec.count() > 0) {
 			quals.removeAllObjects();

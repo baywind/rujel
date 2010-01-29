@@ -31,10 +31,9 @@ package net.rujel.ui;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
-//import net.rujel.base.MyUtility;
 
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -43,117 +42,86 @@ import java.util.logging.Logger;
 
 public class SrcMark extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
-	protected NamedFlags _access;
-	public static final NSArray accessKeys = new NSArray(new Object[] {
-		"read","create","edit","delete","openCourses","createNewEduPlanCourses","editSubgroups"});
+	protected NamedFlags access;
 
-	private EOEditingContext ec;
-	
-	private boolean newCourse = false;
-	
-	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		newCourse = (aCourse != null && ec.insertedObjects().containsObject(aCourse));
-		if(currIndex < 0 || courses.count() <= currIndex || !(courses.objectAtIndex(currIndex) instanceof EduCycle))
-			teacherName = null;
-		super.appendToResponse(aResponse,aContext);
-	}
-	
-	public NamedFlags access() {
-		if (_access == null) return DegenerateFlags.ALL_TRUE;
-		return (NamedFlags)_access.immutableClone();
-	}
+	public EOEditingContext ec;
 	
 	public EduGroup currClass;
-	public Integer currGrade;
 	public Teacher currTeacher;
 	public NSArray courses;
-	public EduCourse aCourse;
+//	public EduCourse aCourse;
 	
 	public EOEnterpriseObject item;
-	public NSArray gradeCycles;
-//	public EduCycle cycleItem;
-//	public EduCycle aCycle;
-    public String subject;
-	
-	public EOEditingContext ec() {
-		return ec;
-	}
+    public int cursIndex;
+	protected int currIndex = -1;
+	public NSMutableArray popupCycles;
+	public NSMutableDictionary dict = new NSMutableDictionary();
 	
 	
     public SrcMark(WOContext context) {
         super(context);
 		ec = new SessionedEditingContext(session());
 		ec.lock();
-		UserPresentation user = (UserPresentation)session().valueForKey("user");
-		try {
-			int acc = user.accessLevel(EduCourse.entityName);
-			if (acc == 0) throw new AccessHandler.UnlistedModuleException("Zero access");
-			_access = new NamedFlags(acc,accessKeys);
-		} catch (AccessHandler.UnlistedModuleException e) {
-			try {
-				_access = new NamedFlags(user.accessLevel("SrcMark"),accessKeys);
-			} catch (AccessHandler.UnlistedModuleException e1) {
-				logger.logp(WOLogLevel.CONFIG,"SrcMark","<init>","Can't get accessLevel",session());
-				_access = DegenerateFlags.ALL_TRUE;
-			}
-		}
+		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SrcMark");
 		EOGlobalID pLink = (EOGlobalID)session().valueForKey("userPersonGID");
 		if(pLink instanceof Teacher) {
 			currTeacher = (Teacher)ec.objectForGlobalID(pLink);
-			courses = coursesForTeacher(currTeacher);
 			//teacherName = Person.Utility.fullName(currTeacher,true,2,1,1);
-			byClass = false;
 		}
+		selectTeacher();
 		ec.unlock();
     }
 	
 	public void setCurrClass(EduGroup newClass) {
 		if(newClass != null && newClass.editingContext() != ec) {
 			currClass = (EduGroup)EOUtilities.localInstanceOfObject(ec, newClass);
-			currGrade = currClass.grade();
 		} else {
 			currClass = newClass;
-			currGrade = null;
 		}
-//		courses = coursesForClass(currClass);
 	}
 
-	public NSArray coursesForTeacher(Teacher teacher) {
-		if(teacher == null) return null;
-/*		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
-		if(today == null) today = new NSTimestamp();*/
-		NSArray args = new NSArray(new Object[] {
-			session().valueForKey("eduYear")/*MyUtility.eduYearForSession(session(),"today")*/,teacher
-		});
-		return EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,"eduYear = %d AND teacher = %@",args);
+    public WOActionResults selectTeacher() {
+    	currIndex = -1;
+    	currClass = null;
+		popupCycles = null;
+		NSArray args = new NSArray(new Object[] {session().valueForKey("eduYear"),
+				(currTeacher==null)?NullValue:currTeacher});
+		NSArray result =  EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,
+				"eduYear = %d AND teacher = %@",args);
+		EOQualifier qual = new EOKeyValueQualifier("cycle.school",
+				EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
+		courses = EOQualifier.filteredArrayWithQualifier(result, qual);
+		return null;
 	}
 	
-	public NSArray coursesForClass(EduGroup aClass) {
-		if(aClass == null)
+    public WOComponent selectClass() {
+		dict.removeAllObjects();
+		currIndex = -1;
+		undoCreation();
+		if(currClass == null)
 			return null;
-		NSMutableArray cycles = EduCycle.Lister.cyclesForEduGroup(aClass).mutableClone();
-
-		NSArray args = new NSArray(new Object[] { session().valueForKey("eduYear") , aClass });
-		NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+		NSMutableArray cycles = EduCycle.Lister.cyclesForEduGroup(currClass).mutableClone();
+		dict.takeValueForKey(currClass, "eduGroup");
+		dict.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
+		NSArray existingCourses = EOUtilities.objectsMatchingValues(ec, EduCourse.entityName, dict);
+		EOQualifier qual = new EOKeyValueQualifier("cycle.school",
+				EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
+		existingCourses = EOQualifier.filteredArrayWithQualifier(existingCourses, qual);
 		//filter cycles
 		
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enumerator = cycles.objectEnumerator();
-		EduCycle currCycle;
-		EOQualifier qual;
-		NSArray matches;
-		int count = 0;
 		NSMutableSet coursesSet = new NSMutableSet(existingCourses);
+		popupCycles = new NSMutableArray();
 		while (enumerator.hasMoreElements()) {
-			currCycle = (EduCycle)enumerator.nextElement();
+			EduCycle currCycle = (EduCycle)enumerator.nextElement();
 			qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,currCycle);
-			matches = EOQualifier.filteredArrayWithQualifier(existingCourses,qual);
+			NSArray matches = EOQualifier.filteredArrayWithQualifier(existingCourses,qual);
+			int count = 0;
 			if(matches != null && matches.count() > 0) {
 				count = matches.count();
 				result.addObjectsFromArray(matches);
 				coursesSet.subtractSet(new NSSet(matches));
-			} else {
-				count = 0;
 			}
 			Number subs = currCycle.subgroups();
 			if(subs == null)
@@ -163,278 +131,130 @@ public class SrcMark extends WOComponent {
 				for (int i = 0; i < count; i++) {
 					result.addObject(currCycle);
 				}
+			} else {
+				popupCycles.addObject(currCycle);
 			}
 		}
 		if(coursesSet.count() > 0) {
 			result.addObjectsFromArray(coursesSet.allObjects());
 		}
-		return result.immutableClone();
-		//old implementation
-		/*
-		NSMutableDictionary cycleCourse = new NSMutableDictionary();
-		Enumeration enumerator = existingCourses.objectEnumerator();
-		EduCourse currCourse;
-		EduCycle currCycle;
-		int idx;
-		while (enumerator.hasMoreElements()) {
-			currCourse = (EduCourse)enumerator.nextElement();
-			currCycle = currCourse.cycle();
-			idx = cycles.indexOfObject(currCycle);
-			if(idx >= 0) {
-				currCycle = (EduCycle)cycles.replaceObjectAtIndex(currCourse,idx);
-			} else {
-				Object tmpCourse = cycleCourse.objectForKey(currCycle.subject());
-				if(tmpCourse != null) {
-					idx = cycles.indexOfObject(tmpCourse) + 1;
-					cycles.insertObjectAtIndex(currCourse,idx);
-				} else {
-					cycles.addObject(currCourse);
-				}
-			}
-			cycleCourse.setObjectForKey(currCourse,currCycle.subject());
-		}
-		return cycles.immutableClone();//existingCourses.arrayByAddingObjectsFromArray(cycles);
-			*/
+		courses = result.immutableClone();
+        return null;
 	}
 	
     public boolean isEduPlan() {
         return (item instanceof EduCycle);
     }
-	
-    public WOComponent selectClass() {
-		courses = coursesForClass(currClass);
-		currIndex = -1;
-		if(currClass != null)
-			gradeCycles = EduCycle.Lister.cyclesForEduGroup(currClass);
-		else
-			gradeCycles = null;
-		if(newCourse && currClass != null) {
-			EduCycle cle = aCourse.cycle();
-			if(cle != null) {
-				subject = cle.subject();
-				/*if(!currClass.grade().equals(cle.grade())) {
-					EOQualifier qual = new EOKeyValueQualifier("subject",EOQualifier.QualifierOperatorLike,subject);
-					NSArray like = EOQualifier.filteredArrayWithQualifier(gradeCycles,qual);
-					
-					if(like.count() == 1)
-						aCycle = (EduCycle)like.objectAtIndex(0);
-					else
-						aCycle = null;
-					
-				}*/
-			}
-			aCourse.setEduGroup(currClass);
-		} else {
-			undoCreation();
-	//		aCycle = null;
-		}
-		byClass = true;
-        return null;
-    }
 
-    public WOComponent selectTeacher() {
-    	if(currTeacher != null && currTeacher.editingContext() != ec)
-    		currTeacher = (Teacher)EOUtilities.localInstanceOfObject(ec, currTeacher);
-		if(teacherName != null) {
-			teacherName = Person.Utility.fullName(currTeacher,true,2,2,2);
-			return null;
-		} else {
-			currIndex = -1;
-		}
-		if(newCourse)
-			aCourse.setTeacher(currTeacher);
-		else {
-			undoCreation();
-			courses = coursesForTeacher(currTeacher);
-			gradeCycles = null;
-			byClass = false;
-			//teacherName = Person.Utility.fullName(currTeacher,true,2,1,1);
-	//		aCycle = null;
-		}
-        return null;
+    public void setCurrTeacher(Object teacher) {
+		undoCreation();
+    	if(teacher instanceof Teacher) {
+    		currTeacher = (Teacher)EOUtilities.localInstanceOfObject(ec, (Teacher)teacher);
+    	} else {
+    		currTeacher = null;
+    	}
+    	selectTeacher();
+    }
+    
+    public String teacherRowClass() {
+    	if(currClass == null)
+    		return "selection";
+    	return "orange";
     }
 
     public WOComponent addCourse() {
-		ec.lock();
-		aCourse = (EduCourse)EOUtilities.createAndInsertInstance(ec,EduCourse.entityName);
-		aCourse.setEduYear((Integer)session().valueForKey("eduYear"));//(MyUtility.eduYearForSession(session(),"today"));
-		aCourse.setEduGroup(currClass);
-		aCourse.setTeacher(currTeacher);
-		if(currIndex >= 0) {
-			Object cur = courses.objectAtIndex(currIndex);
-			if(cur instanceof EduCycle)
-				aCourse.setCycle((EduCycle)cur);
-		}
-	//	aCourse.setCycle(aCycle);
-		ec.unlock();
+		currIndex = courses.count();
         return null;
     }
-	
-	public String onClick() {
-		String href = context().componentActionURL();
-		if(!newCourse || (item instanceof EduCourse))
-			return "return checkRun('" + href + "');";
-		else
-			return "if(tryLoad())window.location = '" + href +"';";
-	}
-	
-    public int cursIndex;
-	protected int currIndex = -1;
-	
-	public WOComponent select() {
+    
+    public Boolean disableSelect() {
+    	if(item instanceof EduCourse)
+    		return (Boolean)access.valueForKey("_read");
+    	if(item instanceof EduCycle)
+    		return (Boolean)access.valueForKey("_create");
+    	return Boolean.TRUE;
+    }
+
+    public WOComponent select() {
 		if(item instanceof EduCourse)
 			return openCourse();
 		if(item instanceof EduCycle)
-			return selectCycle();
+			return selectRow();
 		return null;
 	}
-	
-    public WOComponent selectCourse() {
-		undoCreation();
-		currIndex = cursIndex;
-        aCourse = (EduCourse)item;
-		currGrade = aCourse.eduGroup().grade();
-		gradeCycles = EduCycle.Lister.cyclesForEduGroup(aCourse.eduGroup());
-//		aCycle = aCourse.cycle();
-		return null;
-    }
 
-    public WOComponent selectCycle() {
-//		aCycle = (EduCycle)item;
+    public WOComponent selectRow() {
+    	undoCreation();
 		currIndex = cursIndex;
-		/*if(ec.hasChanges()) {
-			ec.lock();
-			if(newCourse) {
-				aCourse.setCycle((EduCycle)item);//(aCycle);
-				subject = ((EduCycle)item).subject();//aCycle.subject();
-			} else {
-				ec.revert();
-				aCourse = null;
-			}
-			ec.unlock();
-		} else {
-			aCourse = null;
-		}*/
-		if(currTeacher != null)
-		teacherName = Person.Utility.fullName(currTeacher,true,2,2,2);
+		if(item instanceof EduCycle)
+			dict.takeValueForKey(item, "cycle");
         return null;
     }
 	
     public WOComponent openCourse() {
 		undoCreation();
 		currIndex = -1;
-		if(!item.equals(aCourse)) aCourse = null;
-//		if(!((EduCourse)item).cycle().equals(aCycle)) aCycle = null;
-		
-//		Session ses = (Session)session();
-		/*int acc = ses.accessLevel(item);
-		if(acc < 0 && access.flagForKey("openCourses")) acc = 1;
-		UserPresentation user = (UserPresentation)session().valueForKey("user");
-		try {
-			acc = user.accessLevel(item);
-		} catch (AccessHandler.UnlistedModuleException e) {
-			logger.logp(WOLogLevel.CONFIG,"SrcMark","<init>","Can't get accessLevel",session());
-			acc = (access.flagForKey("openCourses"))?1:0;
-		}*/
-		
-		Boolean canRead = (Boolean)session().valueForKeyPath("readAccess.read.item");
-		if((canRead == null || !canRead.booleanValue()) && !access().flagForKey("openCourses")) {
+		if(Various.boolForObject(session().valueForKeyPath("readAccess._read.item"))) {
 			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 			logger.log(WOLogLevel.READING,"Denied access to course",new Object[] {session(),item});
 			return null;
 		}
-//		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.openCourse","LessonNoteEditor");
 		WOComponent nextPage = pageWithName("LessonNoteEditor");
 		nextPage.takeValueForKey(item,"course");
-//		nextPage.takeValueForKeyPath(item,"accessSchemeAssistant.lessons");
-//		session().setObjectForKey(this,"SrcCourseComponent");
 		session().takeValueForKey(this,"pushComponent");
 		return nextPage;
     }
 	
-    public WOComponent saveCourse() {
-		if(aCourse.eduGroup() == null) {
-			String message = String.format((String)valueForKeyPath("application.strings.Strings.messages.parameterRequired"),(String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduGroup.this"));
-			session().takeValueForKey(message,"message");
-			return null;
-		}
-		if(subject == null && aCourse.cycle() == null) {
-			String message = String.format((String)valueForKeyPath("application.strings.Strings.messages.parameterRequired"),(String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduCycle.subject"));
-			session().takeValueForKey(message,"message");
-			return null;
-		}
-		//boolean newCycle = false;
-		ec.lock();
-		if(subject != null && aCourse.cycle() == null) { //EduCycle from string
-			NSDictionary dict = new NSDictionary(new Object[] {subject,aCourse.eduGroup().grade()},
-												 new Object[] {"subject","grade"});
-			EduCycle aCycle;
-			try {
-				aCycle = (EduCycle)EOUtilities.objectMatchingValues(ec,EduCycle.entityName,dict);
-			} catch (com.webobjects.eoaccess.EOObjectNotAvailableException ex) {
-				if(!access().flagForKey("createNewEduPlanCourses")) {
-					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-					logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","saveCourse","Denied to create new cycle for new course",session());
-					return null;
-				}
-				aCycle = (EduCycle)EOUtilities.createAndInsertInstance(ec,EduCycle.entityName);
-				aCycle.takeValuesFromDictionary(dict);
-				/*aCycle.setSubject(subject);
-				aCycle.setGrade(currGrade);*/
-				if(aCourse.eduGroup().grade().equals(currGrade)) {
-					if(gradeCycles == null)
-						gradeCycles = new NSArray(aCycle);
-					else
-						gradeCycles = gradeCycles.arrayByAddingObject(aCycle);
-				}
-				//newCycle = true;
+	public void save() {
+		EduCourse aCourse = null;
+		if(currIndex >= 0 && currIndex < courses.count() && 
+				courses.objectAtIndex(currIndex) instanceof EduCourse)
+			aCourse = (EduCourse)courses.objectAtIndex(currIndex);
+		boolean newCourse = (aCourse == null);
+		if(newCourse) {
+			if(!access.flagForKey("create")) {
+				session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
+				logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied to create new course",session());
+				return;
 			}
-			aCourse.setCycle(aCycle);
+			aCourse = (EduCourse)EOUtilities.createAndInsertInstance(ec, EduCourse.entityName);
+			aCourse.takeValuesFromDictionary(dict);
 		} else {
-//			aCycle = aCourse.cycle();
-		}
-		save();
-		if(!ec.hasChanges() && !courses.containsObject(aCourse)) { //add new course to list
-			int idx = courses.indexOfObject(aCourse.cycle());
-			if(idx >= 0) {
-				NSMutableArray tmp = courses.mutableClone();
-				tmp.replaceObjectAtIndex(aCourse,idx);//aCycle = (EduCycle)
-					courses = tmp.immutableClone();
-			} else {
-				courses = courses.arrayByAddingObject(aCourse);
+			if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.aCourse"))) {
+				session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
+				logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied course editing",session());
+				return;
 			}
 		}
-		
-		/*
-		 if(currClass != null)
-		 courses = coursesForClass(currClass);
-		 if(currTeacher != null)
-		 courses = coursesForTeacher(currTeacher); */
-		ec.unlock();
-        return null;
-    } //sveCourse
-	
-	protected void save() {
 		if(ec.hasChanges()) {
-			if(newCourse) {
-				if(!access().flagForKey("create")) {
-					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-					logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied to create new course",session());
-					return;
-				}
-			} else {
-				Boolean allowEdit = (Boolean)aCourse.valueForKeyPath("access.edit");
-				if(!((allowEdit == null && access().flagForKey("edit")) || (allowEdit != null && allowEdit.booleanValue()))) {
-					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-					logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied course editing",session());
-					return;
-				}
-			}
 			try {
 				ec.saveChanges();
 				if(newCourse) { //log creation
 					logger.logp(WOLogLevel.UNOWNED_EDITING,"SrcMark","save","Created new course",new Object[] {session(),aCourse});
-					NSNotificationCenter.defaultCenter().postNotification(net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey("user"),new NSDictionary(aCourse,"EO"));
+					NSNotificationCenter.defaultCenter().postNotification(
+							net.rujel.auth.AccessHandler.ownNotificationName,
+							session().valueForKey("user"),new NSDictionary(aCourse,"EO"));
+					NSMutableArray tmp = courses.mutableClone();
+					dict.removeObjectForKey("teacher");
+					if (createNew()) {
+						tmp.addObject(aCourse);
+						EOSortOrdering.sortArrayUsingKeyOrderArray(tmp,
+								EduCourse.sorter);
+						currIndex = tmp.indexOf(aCourse);
+					} else {
+						Object cycle = tmp.replaceObjectAtIndex(aCourse, currIndex);
+						if(!tmp.containsObject(cycle)) {
+							popupCycles.addObject(cycle);
+							try {
+								popupCycles.sortUsingComparator(
+										AdaptingComparator.sharedInstance);
+							} catch (ComparisonException e) {
+								logger.log(WOLogLevel.WARNING,"Error sorting cycles",
+										new Object[] {session(),cycle,e});
+							}
+						}
+					}
+					courses = tmp.immutableClone();
 				} else { //log change
 					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 //					if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
@@ -453,71 +273,17 @@ public class SrcMark extends WOComponent {
 		ec.lock();
 		try {
 			ec.revert();
-			subject = null;
-			aCourse = null;
 		} catch (NSValidation.ValidationException vex) {
 			session().takeValueForKey(vex.getMessage(),"message");
 		}
 		ec.unlock();
         //return null;
     }
-
-    public WOComponent delete() {
-		ec.lock();
-		session().setObjectForKey(aCourse, "deleteCourse");
-		NSArray modules = (NSArray)session().valueForKeyPath("modules.deleteCourse");
-		if(modules != null && modules.count() > 0) {
-			logger.log(WOLogLevel.INFO,"Could not delete EduCourse",
-					new Object[] {session(),aCourse,modules});
-			session().removeObjectForKey("deleteCourse");
-			ec.unlock();
-			return null;
-		}
-		session().removeObjectForKey("deleteCourse");
-		WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
-		if(aCourse.lessons().count() > 0)
-			level = WOLogLevel.MASS_EDITING;
-//		else if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
-//			level = WOLogLevel.OWNED_EDITING;
- 		try {
-			//EOGlobalID id = ec.globalIDForObject(aCourse);
-			if(newCourse)
-				ec.revert();
-			else {
-				aCourse.validateForDelete();
-				logger.logp(level,"SrcMark","delete","Deleting EduCourse",new Object[] {session(),aCourse});
-				ec.deleteObject(aCourse);
-				ec.saveChanges();
-			}
-			subject = null;
-		} catch (NSValidation.ValidationException vex) {
-			logger.logp(level,"SrcMark","delete","Deletion failed: ",new Object[] {session(),aCourse,vex});
-			session().takeValueForKey(vex.getMessage(),"message");
-		}
-		if(courses != null & courses.count() > 0) {
-			NSMutableArray editedCourses = courses.mutableClone();
-			editedCourses.removeObject(aCourse);
-			courses = editedCourses.immutableClone();
-		}
-		aCourse = null;
-//		courses = coursesForClass(currClass);
-		ec.unlock();
-		return null;
-    }
-/*
-    public boolean canDelete() {
-        return access.flagForKey("delete");
-    }
-*/	
-	public String getSubject() {
-		if(aCourse != null && aCourse.cycle() != null && subject == null)
-			return aCourse.cycle().subject();
-		else
-			return subject;
-	}
 	
 	public boolean isSelected() {
-		return (cursIndex == currIndex && courses.objectAtIndex(cursIndex) instanceof EduCycle && access().flagForKey("create"));
+		return (cursIndex == currIndex && 
+				courses.objectAtIndex(cursIndex) instanceof EduCycle &&
+				access.flagForKey("create"));
 	}
 	
     public String rowStyle() {
@@ -525,124 +291,59 @@ public class SrcMark extends WOComponent {
 			return "selection";
 		
 		if(isEduPlan())
-			return "eduPlan";
+			return "grey";
 		else
-			return "course";
-    }
+ 			return "green";
+   }
 	
-	
-    /** @TypeInfo Teacher */
-    public NSArray teachers() {
-		NSArray sesList = (NSArray)session().valueForKey("sortedPersList");
-		NSMutableArray result = new NSMutableArray();
-        Enumeration enumerator = sesList.objectEnumerator();
-		Object curr;
-		while(enumerator.hasMoreElements()) {
-			curr = enumerator.nextElement();
-			if(curr instanceof Teacher)
-				result.addObject(EOUtilities.localInstanceOfObject(ec,(EOEnterpriseObject)curr));
-		}
-		if (aCourse != null) {
-			Teacher t = aCourse.teacher();
-			if(t != null && !result.containsObject(t)) {
-				result.insertObjectAtIndex(t,0);
-			}
-		}
-		return result;
-    }
-	
-	public NSArray classes() {
-		return ClassListing.listGroups((NSTimestamp)session().valueForKey("today"),ec);
+	public String teacherName() {
+		Object teacher = dict.valueForKey("teacher");
+		if(teacher == null)
+			return (String)session().valueForKeyPath(
+					"strings.Reusables_Strings.uiElements.Select");
+		if(teacher == NullValue)
+			return (String)session().valueForKeyPath(
+					"strings.RujelBase_Base.vacant");
+		if(teacher instanceof PersonLink)
+			return Person.Utility.fullName((PersonLink)teacher,true,2,1,1);
+		
+		return "???";
 	}
 	
-	public String itemToString() {
-		if(item instanceof PersonLink) {
-			return Person.Utility.fullName((PersonLink)item,true,2,1,1);
-		}
-		return item.toString();
-	}
-	
-    public boolean canCreate() {
-		if (aCourse != null)
-			return false;
-        if (access().flagForKey("createNewEduPlanCourses"))
+    public boolean cantCreate() {
+		if (currClass == null || courses == null || currIndex >= courses.count() ||
+				popupCycles == null || popupCycles.count() == 0)
 			return true;
-/*		if (aCycle != null & currClass != null & access.flagForKey("create"))
-			return true; */
-		return false;
+        if (access.flagForKey("edit"))
+			return false;
+		return true;
+    }
+    
+    public boolean createNew() {
+    	return (courses != null && currIndex >= courses.count());
     }
 	
-//	public NSArray tabs = new NSArray(new String[] {"Классы","Учителя"});
     public WOComponent editSubgroup() {
-        WOComponent nextPage = saveCourse();
+        WOComponent nextPage = null;//saveCourse();
 		if(session().valueForKey("message") != null)
 			return nextPage;
-//		String pageName = SettingsReader.stringForKeyPath("ui.subRegime.editCourseSubgroup","SubgroupEditor");
 		nextPage = pageWithName("SubgroupEditor");
 
-		nextPage.takeValueForKey(aCourse,"course");
-//		session().setObjectForKey(this,"SrcCourseComponent");
+		nextPage.takeValueForKey(courses.objectAtIndex(currIndex),"course");
 		session().takeValueForKey(this,"pushComponent");
 
         return nextPage;
     }
 	
-	public boolean byClass = true;
-	
-	public NSArray tablist = (NSArray)valueForKeyPath("application.strings.Strings.SrcMark.tabs");
-	public int tabindex = 0;
-    public String teacherName;
-	
-	public String tabSelected() {
-		if(tabindex == NSArray.NotFound) return null;
-		try {
-			return (String)tablist.objectAtIndex(tabindex);
-		} catch (Exception ex) {
-			return null;
-		}
-	}
-		
-	public void setTabSelected(String tabName) {
-		tabindex = tablist.indexOfObject(tabName);
-		currIndex = -1;
-	}
-	
 	public String title() {
 		return (String)valueForKeyPath("application.strings.Strings.SrcMark.title");
-		// return "Выбор Курса";
     }
 
-    public void submitTeacher() {
-        if(teacherName == null || teacherName.length() == 0) {
-			currIndex = -1;
-			if(ec.hasChanges()) {
-				ec.lock();
-				ec.revert();
-				ec.unlock();
-			}
-			return;
-		}
-		if(currTeacher != null && teacherName.equals(
-				Person.Utility.fullName(currTeacher,true,2,2,2))) {
-			addCourse();
-			newCourse = true;
-			ec.lock();
-			save();
-			if(ec.hasChanges()) {
-				ec.revert();
-				aCourse = null;
-			}
-			ec.unlock();
-			if(aCourse != null) {
-				NSMutableArray tmp = courses.mutableClone();
-				tmp.replaceObjectAtIndex(aCourse,currIndex);
-				courses = tmp.immutableClone();
-				teacherName = null;
-				aCourse = null;
-			}
-		} else {
-			tabindex = 1;
-		}
-    }
-
+	public WOActionResults chooseTeacherForDict() {
+		return TeacherSelector.selectorPopup(this, "dict.teacher", ec);
+	}
+	
+	public WOActionResults chooseCurrentTeacher() {
+		return TeacherSelector.selectorPopup(this, "currTeacher", ec);
+	}
 }
