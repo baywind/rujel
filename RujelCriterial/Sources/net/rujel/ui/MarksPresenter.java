@@ -139,21 +139,7 @@ public class MarksPresenter extends NotePresenter {
 				if(lesson() != null) {
 					_usedCriteria = lesson().usedCriteria();
 				} else {
-					// TODO: remove this debug
-					NSMutableDictionary args = new NSMutableDictionary(parent().name(),"parent");
-					args.takeValueForKey(session(), "session");
-					args.takeValueForKey(context().elementID(), "elementID");
-					args.takeValueForKey(context().senderID(), "senderID");
-					args.takeValueForKey(context().request().requestHandlerPath(), "requestHandlerPath");
-					args.takeValueForKey(student(), "student");
-					args.takeValueForKey(valueForKeyPath("context.page.currLesson"), "currLesson");
-					args.takeValueForKey(valueForKeyPath("context.page.course"), "currCourse");
-					args.takeValueForKey(parent().valueForBinding("present"), "present");
-					args.takeValueForKey(parent().valueForBinding("single"), "single");
-					args.takeValueForKey(parent().valueForKey("lessonsListing"), "lessonsListing");
-					args.takeValueForKey(
-							new NSArray(Thread.currentThread().getStackTrace()), "stackTrace");
-					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",args);
+					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",session());
 				}
 			}
 			if(_usedCriteria == null) _usedCriteria = NSArray.EmptyArray;

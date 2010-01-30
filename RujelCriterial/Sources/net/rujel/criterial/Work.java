@@ -824,11 +824,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 			}
 			setFlags(flags);
 			setWeight((BigDecimal)workType.valueForKey("dfltWeight"));
-/*		} else {
-			//TODO: remove this debug
-			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-					"Setting workType to NULL",new Object[]
-			{this,snapshot(),new IllegalArgumentException("Null workType")});*/
 		}
 	}
     
