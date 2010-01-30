@@ -159,7 +159,7 @@ public class SrcMark extends WOComponent {
     public String teacherRowClass() {
     	if(currClass == null)
     		return "selection";
-    	return "orange";
+    	return "grey";
     }
 
     public WOComponent addCourse() {

@@ -1,15 +1,15 @@
 <webobject name="PageWrapper1">
 <h2><webobject name="Title"/></h2>
 <table cellspacing="0" cellpadding="0" border="0" width="100%">
-<tr><th></th><td width="60%">
+<tr><th><webobject name = "SelectorTitle"/></th><td width="60%">
 <table width="100%"><tr><th align="center" width="15%"><webobject name="EduGroupLabel"></webobject></th>
 <th align="center" width="55%"><webobject name="EduPlanLabel"></webobject>
 <span style="color:#aaaaaa;">[<webobject name = "CountTitle"/>]</span>
 </th>
 <th><webobject name="TeacherLabel"/></th></tr></table></td></tr>
 <tr><td class="backfield2 selectionBorder" style = "border-style:solid solid none none;">
-<table width = "100%"><tr>
-	<webobject name = "ChooseCurrTeacher"><webobject name="TeacherLabel"/>:</webobject>
+<table width = "100%" style = "border-style: none none solid none; padding:1ex 0px;" class = "selectionBorder"><tr>
+	<webobject name = "ChooseCurrTeacher"><webobject name="TeacherLabel"/></webobject>
 	<webobject name = "TeacherCell"><webobject name = "CurrTeacherName"/></webobject>
 </tr></table>
 <webobject name="ClassListing1"/></td>

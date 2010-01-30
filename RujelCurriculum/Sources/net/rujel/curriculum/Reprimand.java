@@ -720,44 +720,61 @@ public class Reprimand extends _Reprimand {
 					,quals[2],null);
 			fs.setFetchLimit(1);
 			NSArray list = ec.objectsWithFetchSpecification(fs);
+			final boolean lastWeek = (list == null || list.count() == 0);
 			int week = SettingsBase.numericSettingForCourse(EduPeriod.ENTITY_NAME,
 					course, ec, 7);
 			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME,
 					course, ec);
-			if(list == null || list.count() == 0) {
+			NSDictionary dict = prepareDict(now, listName, ec, week, weekStart);
+			if(dict == null && !lastWeek)
+				return;
+			quals[2] = new EOKeyValueQualifier(Reprimand.RELIEF_KEY,
+					EOQualifier.QualifierOperatorEqual,NullValue);
+			Reprimand rpr = null;
+			if(dict != null) {
+				quals[1] = new EOKeyValueQualifier(Reprimand.AUTHOR_KEY,
+						EOQualifier.QualifierOperatorEqual,dict.valueForKey("author"));
+				quals[1] = new EOAndQualifier(new NSArray(quals));			
+				fs = new EOFetchSpecification(Reprimand.ENTITY_NAME,quals[1],null);
+				list = ec.objectsWithFetchSpecification(fs);
+				if(list != null && list.count() > 0) {
+					rpr = (Reprimand)list.objectAtIndex(0);
+					if(lastWeek) {
+						Integer deviation = checkWeekByDays(course, dict, minDev, null);
+						if(deviation == null) {
+							rpr.setRelief(new NSTimestamp());
+							rpr.setAuthor(rpr.author() + " / " + author);
+							logger.log(WOLogLevel.FINE,
+									"Automatically relieving reprimand",rpr);
+						}
+						rpr = null;
+					}
+				}
+			}
+			if(lastWeek) { // check previous week
 				cal.add(Calendar.DATE, -week);
 				now = new NSTimestamp(cal.getTimeInMillis());
 				do {
 					cal.add(Calendar.DATE, -1);
 					NSTimestamp to = new NSTimestamp(cal.getTimeInMillis());
-					cal.add(Calendar.DATE,1 -week);
+					cal.add(Calendar.DATE, 1 -week);
 					NSTimestamp since = new NSTimestamp(cal.getTimeInMillis());
 					if(Holiday.freeDaysInDates(since, to, ec,listName) < week)
 						break;
 					now = since;
 				} while(true);
+				dict = prepareDict(now, listName, ec, week, weekStart);
+				if(dict == null)
+					return;
+				quals[1] = new EOKeyValueQualifier(Reprimand.AUTHOR_KEY,
+						EOQualifier.QualifierOperatorEqual,dict.valueForKey("author"));
+				quals[1] = new EOAndQualifier(new NSArray(quals));			
+				fs = new EOFetchSpecification(Reprimand.ENTITY_NAME,quals[1],null);
+				list = ec.objectsWithFetchSpecification(fs);
+				if(list != null && list.count() > 0) {
+					rpr = (Reprimand)list.objectAtIndex(0);
+				}
 			}
-			NSDictionary dict = prepareDict(now, listName, ec, week, weekStart);
-			if(dict == null)
-				return;
-//			week += SettingsReader.intForKeyPath("edu.planFactLagDays", 0);
-			quals[1] = new EOKeyValueQualifier(Reprimand.AUTHOR_KEY,
-					EOQualifier.QualifierOperatorEqual,dict.valueForKey("author"));
-			quals[2] = new EOKeyValueQualifier(Reprimand.RELIEF_KEY,
-					EOQualifier.QualifierOperatorEqual,NullValue);
-			/*
-			quals[2] = new EOKeyValueQualifier(Reprimand.RAISED_KEY,
-					EOQualifier.QualifierOperatorGreaterThan, date);
-			quals[3] = new EOKeyValueQualifier(Reprimand.RAISED_KEY,
-					EOQualifier.QualifierOperatorLessThanOrEqualTo,
-					date.timestampByAddingGregorianUnits(0, 0, week, 0, 0, 0));
-			*/
-			quals[2] = new EOAndQualifier(new NSArray(quals));			
-			fs = new EOFetchSpecification(Reprimand.ENTITY_NAME,quals[2],null);
-			list = ec.objectsWithFetchSpecification(fs);
-			Reprimand rpr = null;
-			if(list != null && list.count() > 0)
-				rpr = (Reprimand)list.objectAtIndex(0);
 			StringBuffer buf = new StringBuffer();
 			Integer deviation = checkWeekByDays(course, dict, minDev, buf);
 			if(deviation == null) {
