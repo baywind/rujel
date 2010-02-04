@@ -185,7 +185,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     		currObject = currReason;
     		tmpDict.takeValueForKey(Boolean.FALSE,"allowSelection");
     	} else {
-    		tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
+    		tmpDict.takeValueForKey(session().valueForKeyPath(
+    				"readAccess.create.Curriculum"),"allowSelection");
     	}
     	if(tmpDict.valueForKey("inReason") != null) {
 			String reasonKey = (String)tab.valueForKey("reasonKey");
@@ -390,33 +391,19 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return ((Reason.Props)highlight).eduGroup;
 		return null;
 	}
-	public boolean noTeacher() {
-		return (tmpDict.valueForKey("reasonsToMoveIn") != null);
-//			return true;
-//		if(currReason == null || 
-//				Various.boolForObject(valueForKeyPath("currReason.namedFlags.forTeacher")))
-//			return false;
-//		return (reasonTeacher() == null);
+	
+	public Boolean cantEdit() {
+		if (tmpDict.valueForKey("reasonsToMoveIn") != null)
+			return Boolean.TRUE;
+		return (Boolean)session().valueForKeyPath("readAccess._edit.currReason");
 	}
-	public boolean noEduGroup() {
-		return (reasonGroup() == null || tmpDict.valueForKey("reasonsToMoveIn") != null);
+	public Boolean noEduGroup() {
+		if (reasonGroup() == null)
+			return Boolean.TRUE;
+		return cantEdit();
 	}
 	
 	public WOActionResults selectTeacher() {
-/*		WOComponent selector = pageWithName("SelectorPopup");
-		selector.takeValueForKey(this, "returnPage");
-		selector.takeValueForKey("reasonTeacher", "resultPath");
-		Teacher teacher = reasonTeacher();
-		selector.takeValueForKey(teacher, "value");
-		NSMutableDictionary dict = (NSMutableDictionary)plist.valueForKey("selectTeacher");
-		if(teacher != null) {
-			dict.takeValueForKeyPath(new NSArray(teacher), "presenterBindings.forcedList");
-		} else {
-			dict.takeValueForKeyPath(null, "presenterBindings.forcedList");
-		}
-		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
-		selector.takeValueForKey(dict, "dict");
-		return selector;*/
 		return TeacherSelector.selectorPopup(this, "reasonTeacher", ec);
 	}
 	
