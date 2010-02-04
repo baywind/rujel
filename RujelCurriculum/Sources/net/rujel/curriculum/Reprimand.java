@@ -343,6 +343,8 @@ public class Reprimand extends _Reprimand {
 			FieldPosition fp = new FieldPosition(SimpleDateFormat.DATE_FIELD);
 			NSArray weekdays = (NSArray)WOApplication.application().valueForKeyPath(
 					"strings.Reusables_Strings.presets.weekdayShort");
+			if(buf == null)
+				buf = new StringBuffer();
 			for (int i = 0; i < currWeek.length; i++) {
 				NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
 				if(currWeek[i] < 0) {
@@ -426,55 +428,6 @@ public class Reprimand extends _Reprimand {
 			return null;
 		return new Integer(deviation);
 	}
-	/*
-	protected static boolean shouldRelieve(Reprimand rpr) {
-		EduCourse course = rpr.course();
-		EOEditingContext ec = rpr.editingContext();
-		EOEnterpriseObject setting = SettingsBase.settingForCourse(
-				EduPeriod.ENTITY_NAME, course, ec);
-		
-		String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-		Integer weekDays = (Integer)setting.valueForKey(
-				SettingsBase.NUMERIC_VALUE_KEY);
-		int week = (weekDays == null)? 7 : weekDays.intValue();
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(rpr.raised());
-		cal.set(Calendar.HOUR_OF_DAY, 0);
-		cal.add(Calendar.DATE, -SettingsReader.intForKeyPath("edu.planFactLagDays", 0));
-		
-		NSTimestamp end = new NSTimestamp(cal.getTimeInMillis());
-		cal.add(Calendar.DATE, -week);
-		NSTimestamp begin = new NSTimestamp(cal.getTimeInMillis());
-
-		EduPeriod eduPeriod = EduPeriod.getCurrentPeriod(begin,listName,ec);
-		int plan = PlanCycle.planHoursForCourseAndPeriod(course, eduPeriod);
-		
-		EOQualifier[] quals = new EOQualifier[3];
-		quals[0] = new EOKeyValueQualifier("date",
-				EOQualifier.QualifierOperatorLessThan,end);
-		quals[1] = new EOKeyValueQualifier("date",
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin);
-		quals[2] = new EOKeyValueQualifier("course",
-				EOQualifier.QualifierOperatorEqual,course);
-		quals[2] = new EOAndQualifier(new NSArray(quals));
-		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
-				quals[2],MyUtility.dateSorter);
-		NSArray lessons = ec.objectsWithFetchSpecification(fs);
-		int fact = (lessons == null)? 0 : lessons.count();
-		fs.setEntityName(Variation.ENTITY_NAME);
-		NSArray variations = ec.objectsWithFetchSpecification(fs);
-		if(variations != null && variations.count() > 0) {
-			boolean verifiedOnly = (SettingsBase.numericSettingForCourse(
-					"ignoreUnverifiedReasons", course, ec,0) > 0);
-			Enumeration venu = variations.objectEnumerator();
-			while (venu.hasMoreElements()) {
-				Variation var = (Variation) venu.nextElement();
-				if(!(verifiedOnly && var.reason().unverified()))
-					fact -= var.value().intValue();
-			}
-		}
-		return (fact == plan);
-	} */
 
 	protected static Reason createPeriodStartReason(
 			EduPeriod eduPeriod, NSTimestamp prevDate) {
@@ -816,18 +769,6 @@ public class Reprimand extends _Reprimand {
 					rpr.setAuthor((String)dict.valueForKey("author"));
 				}
 			}
-			/*
-			if(list == null || list.count() == 0)
-				return;
-			Enumeration enu = list.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				Reprimand rpr = (Reprimand) enu.nextElement();
-				if(shouldRelieve(rpr)) {
-					rpr.setRelief(new NSTimestamp());
-					rpr.setAuthor(rpr.author() + " / " + author);
-					logger.log(WOLogLevel.FINE,"Automatically relieving reprimand",rpr);
-				}
-			}*/
 			if(ec.hasChanges())
 				ec.saveChanges();
 			if(rpr != null)

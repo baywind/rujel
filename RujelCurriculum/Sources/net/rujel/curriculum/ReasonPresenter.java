@@ -59,6 +59,15 @@ public class ReasonPresenter extends com.webobjects.appserver.WOComponent {
 					"strings.RujelCurriculum_Curriculum.Reason.wholeSchool");
 		return result;
 	}
+	
+	public String iconStyle() {
+		Object ref = valueForBinding("refTeacher");
+		boolean alarm = (ref != null && reason().namedFlags().flagForKey("forTeacher")
+				&& ref != reason().teacher());
+		if(alarm)
+			return "warning";
+		return null;
+	}
     
 	public boolean isStateless() {
 		return true;

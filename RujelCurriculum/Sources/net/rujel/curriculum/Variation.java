@@ -127,4 +127,47 @@ public class Variation extends _Variation implements Reason.Event {
     	}
     	return "text-align:center;";
     }
+    
+    public NSArray getAllPaired(boolean byReason) {
+    	Integer value = value();
+    	if(value == null || value.intValue() == 0)
+    		return null;
+    	EOQualifier[] quals = new EOQualifier[4];
+    	if(byReason)
+    		quals[0] = new EOKeyValueQualifier(REASON_KEY,
+    				EOQualifier.QualifierOperatorEqual, reason());
+    	quals[1] = new EOKeyValueQualifier(DATE_KEY,
+    			EOQualifier.QualifierOperatorEqual, date());
+    	quals[2] = new EOKeyValueQualifier(VALUE_KEY,(value.intValue() < 0)?
+    		EOQualifier.QualifierOperatorGreaterThan:EOQualifier.QualifierOperatorLessThan
+    			, new Integer(0));
+    	quals[3] = new EOKeyValueQualifier("course",
+    			EOQualifier.QualifierOperatorNotEqual, course());
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
+    	NSArray found = editingContext().objectsWithFetchSpecification(fs);
+    	if(found == null || found.count() == 0)
+    		return null;
+    	quals[1] = new EOKeyValueQualifier("course.eduGroup",
+    			EOQualifier.QualifierOperatorEqual,course().eduGroup());
+    	found = EOQualifier.filteredArrayWithQualifier(found, quals[1]);
+       	if(found == null || found.count() == 0)
+       		return null;
+       	return found;
+    }
+    
+    public Variation getPaired() {
+    	NSArray found = getAllPaired(true);
+       	if(found == null || found.count() == 0)
+       		return null;
+       	if(found.count() > 0) {
+       		int val = -value().intValue();
+       		for (int i = 0; i < found.count(); i++) {
+       			Variation var = (Variation)found.objectAtIndex(i);
+       			if(var.value().intValue() == val)
+       				return var;
+       		}
+       	}
+       	return (Variation)found.objectAtIndex(0);
+     }
 }

@@ -321,6 +321,7 @@ ReasonSelectRepetition : WORepetition {
 
 NextReasonPresenter : ReasonPresenter {
   reason = itemRow;
+  refTeacher = tmpDict.reasonProps.teacher;
 }
 
 NextExtString : WOString {

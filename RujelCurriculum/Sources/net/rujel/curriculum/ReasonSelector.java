@@ -43,6 +43,7 @@ import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.*;
 
@@ -83,8 +84,11 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     	ec = course().editingContext();
     	reason = (Reason)valueForBinding("reason");
     	if(reason != null) {
-    		EOKeyGlobalID rgid = (EOKeyGlobalID)ec.globalIDForObject(reason);
-    		reasonID = (Number)rgid.keyValues()[0];
+    		EOGlobalID rgid = ec.globalIDForObject(reason);
+    		if(rgid.isTemporary())
+    			reasonID = -1;
+    		else
+    			reasonID = (Number)((EOKeyGlobalID)rgid).keyValues()[0];
     		reasonText = reason.reason();
     		if(reason.namedFlags().flagForKey("forTeacher"))
     			relation = 1;
@@ -259,8 +263,11 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     public Object itemID() {
     	if(rItem == null)
     		return null;
-		EOKeyGlobalID rgid = (EOKeyGlobalID)ec.globalIDForObject(rItem);
-		return rgid.keyValues()[0];
+		EOGlobalID rgid = ec.globalIDForObject(rItem);
+		if(rgid.isTemporary())
+			return "-1";
+		else
+		return ((EOKeyGlobalID)rgid).keyValues()[0];
     }
     
     public boolean canEditReason() {

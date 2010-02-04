@@ -272,7 +272,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		}
 		substitute.addObjectToBothSidesOfRelationshipWithKey(selLesson, "lesson");
 		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
-		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
+		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, Substitute.REASON_KEY);
 		BigDecimal factor = new BigDecimal(SettingsReader.stringForKeyPath(
 				"edu.joinFactor", "0.5"));
 		if(others != null) {

@@ -430,4 +430,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		session().takeValueForKey(returnPage,"pushComponent");
 		return nextPage;
 	}
+	
+	public boolean noSubstitute() {
+		return (substitute == null);
+	}
  }

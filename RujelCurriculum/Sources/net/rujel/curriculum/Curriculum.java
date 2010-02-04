@@ -375,6 +375,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return (Teacher)highlight;
 		if(highlight instanceof EduCourse)
 			return ((EduCourse)highlight).teacher();
+		if(highlight instanceof Reason.Props)
+			return ((Reason.Props)highlight).teacher();
 		return null;
 	}
 	public EduGroup reasonGroup() {
@@ -384,6 +386,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return (EduGroup)highlight;
 		if(highlight instanceof EduCourse)
 			return ((EduCourse)highlight).eduGroup();
+		if(highlight instanceof Reason.Props)
+			return ((Reason.Props)highlight).eduGroup;
 		return null;
 	}
 	public boolean noTeacher() {
@@ -629,6 +633,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		boolean newReason = (idx == null || idx.intValue() < 0);
 		Reason moveIn = null;
 		if(newReason) {
+			highlight = props;
 			moveIn = props.newReason();
 			moveIn.setReason((String)plist.valueForKey("newReason"));
 		} else {

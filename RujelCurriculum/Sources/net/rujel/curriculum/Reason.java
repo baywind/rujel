@@ -81,7 +81,7 @@ public class Reason extends _Reason {
 	}
 	
 	public void setTeacher(Object newTeacher) {
-//		namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
+		namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
 		takeStoredValueForKey((newTeacher==NullValue)?null:newTeacher, "teacher");
 	}
 	
@@ -175,9 +175,12 @@ public class Reason extends _Reason {
 		while (enu.hasMoreElements()) {
 			Event event = (Event) enu.nextElement();
 			EduCourse course = event.course();
+			boolean others = (event instanceof Variation && 
+					((Variation)event).value().intValue() > 0);
 			NSTimestamp date = event.date();
 			if(props == null) {
 				props = new Props(course,date);
+				props.otherTeachers = others;
 			} else {
 				if(props.ec != event.editingContext())
 					throw new IllegalArgumentException(
@@ -187,28 +190,38 @@ public class Reason extends _Reason {
 							"Given events belong to different schools");
 				if(props.eduGroup != null && props.eduGroup != course.eduGroup())
 					props.eduGroup = null;
-				if(props.teacher != null && course.teacher() != props.teacher())
-					props.teacher = null;
+				if(!others) {
+					if(props.teacher() != null && course.teacher() != props.teacher()) {
+						if(props.otherTeachers)
+							props.teacher = course.teacher();
+						else
+							props.teacher = null;
+					}
+					props.otherTeachers = false;
+				}
 			}
 			if(props.begin == null || props.begin.compare(date) > 0)
 				props.begin = date;
 			if(props.end == null || props.end.compare(date) < 0)
 				props.end = date;
-		}
+		} // cycle events
 		return props;
 	}
 	
 	public static NSArray reasons (Props props) {
 		EOQualifier qual = null;
 		NSMutableArray quals = new NSMutableArray();
-		if (props.teacher != null) {
+		if(props.otherTeachers) {
+			qual = new EOKeyValueQualifier(FLAGS_KEY,
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo, new Integer(32));
+			quals.addObject(qual);
+		} else if (props.teacher != null) {
 			qual = new EOKeyValueQualifier("teacher",
 					EOQualifier.QualifierOperatorEqual, props.teacher);
 			if (props.teacher == NullValue) {
 				quals.addObject(qual);
 				qual = new EOKeyValueQualifier(FLAGS_KEY,
-						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,
-						new Integer(32));
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo, new Integer(32));
 				quals.addObject(qual);
 				qual = new EOAndQualifier(quals);
 				quals.removeAllObjects();
@@ -255,7 +268,7 @@ public class Reason extends _Reason {
 				if(r.namedFlags().flagForKey("forEduGroup") 
 						&& r.eduGroup() != props.eduGroup)
 					continue;
-				else if(r.namedFlags().flagForKey("forTeacher")
+				else if(!props.otherTeachers && r.namedFlags().flagForKey("forTeacher")
 						&& r.teacher() != props.teacher())
 					continue;
 				else
@@ -329,7 +342,8 @@ public class Reason extends _Reason {
 			while (enu.hasMoreElements()) {
 				Variation var = (Variation) enu.nextElement();
 				EduCourse course = var.course();
-				if(checkTeacher && (teacher != course.teacher(var.date()))) {
+				if(checkTeacher && (teacher != course.teacher(var.date()))
+						&& var.value().intValue() <= 0) {
 					String message = (String)WOApplication.application().valueForKeyPath(
 							"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
 					throw new NSValidation.ValidationException(message,teacher,"teacher");
@@ -368,6 +382,7 @@ public class Reason extends _Reason {
 		public NSTimestamp end;
 		public Object teacher;
 		public EduGroup eduGroup;
+		public boolean otherTeachers = false;
 		
 		public Props() {
 			super();
