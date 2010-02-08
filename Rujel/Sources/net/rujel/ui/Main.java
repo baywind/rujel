@@ -57,4 +57,7 @@ public class Main extends com.webobjects.appserver.WOComponent {
     	return guestPassword;
     }
     
+    public String version() {
+    	return System.getProperty("Version");
+    }
 }

@@ -47,7 +47,7 @@ public class SrcMark extends WOComponent {
 	public EOEditingContext ec;
 	
 	public EduGroup currClass;
-	public Teacher currTeacher;
+	public Object currTeacher;
 	public NSArray courses;
 //	public EduCourse aCourse;
 	
@@ -67,8 +67,9 @@ public class SrcMark extends WOComponent {
 		if(pLink instanceof Teacher) {
 			currTeacher = (Teacher)ec.objectForGlobalID(pLink);
 			//teacherName = Person.Utility.fullName(currTeacher,true,2,1,1);
+			if(currTeacher != null)
+				coursesForTeacher(currTeacher);
 		}
-		selectTeacher();
 		ec.unlock();
     }
 	
@@ -79,19 +80,28 @@ public class SrcMark extends WOComponent {
 			currClass = newClass;
 		}
 	}
+	
+	public String teacherOnClick() {
+		String key = (currTeacher == null || currClass == null)?"ajaxPopup":"checkRun";
+		return (String)session().valueForKey(key);
+	}
 
     public WOActionResults selectTeacher() {
+    	if(currTeacher == null || currClass == null)
+    		return chooseCurrentTeacher();
+    	coursesForTeacher(currTeacher);
+		return null;
+    }
+    public void coursesForTeacher(Object teacher) {
     	currIndex = -1;
     	currClass = null;
 		popupCycles = null;
-		NSArray args = new NSArray(new Object[] {session().valueForKey("eduYear"),
-				(currTeacher==null)?NullValue:currTeacher});
+		NSArray args = new NSArray(new Object[] {session().valueForKey("eduYear"),teacher});
 		NSArray result =  EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,
 				"eduYear = %d AND teacher = %@",args);
 		EOQualifier qual = new EOKeyValueQualifier("cycle.school",
 				EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
 		courses = EOQualifier.filteredArrayWithQualifier(result, qual);
-		return null;
 	}
 	
     public WOComponent selectClass() {
@@ -151,13 +161,14 @@ public class SrcMark extends WOComponent {
     	if(teacher instanceof Teacher) {
     		currTeacher = (Teacher)EOUtilities.localInstanceOfObject(ec, (Teacher)teacher);
     	} else {
-    		currTeacher = null;
+    		currTeacher = teacher;
     	}
-    	selectTeacher();
+    	if(teacher != null)
+    		coursesForTeacher(currTeacher);
     }
     
     public String teacherRowClass() {
-    	if(currClass == null)
+    	if(currClass == null && currTeacher != null)
     		return "selection";
     	return "grey";
     }
@@ -294,10 +305,17 @@ public class SrcMark extends WOComponent {
 			return "grey";
 		else
  			return "green";
-   }
+    }
+    
+	public String currTeacherName() {
+		return teacherName(currTeacher);
+	}
 	
 	public String teacherName() {
-		Object teacher = dict.valueForKey("teacher");
+		return teacherName(dict.valueForKey("teacher"));
+	}
+	
+	public String teacherName(Object teacher) {
 		if(teacher == null)
 			return (String)session().valueForKeyPath(
 					"strings.Reusables_Strings.uiElements.Select");

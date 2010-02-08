@@ -124,7 +124,8 @@ public class Application extends UTF8Application {
 			timer.scheduleAtFixedRate(task, cal.getTime(), NSLocking.OneDay);
 			ModulesInitialiser.useModules(null, "scheduleTask");
 		}
-		logger.logp(WOLogLevel.INFO,"Application","<init>","Rujel started " + webserverConnectURL());
+		logger.log(WOLogLevel.INFO,"Rujel started. Version:" + System.getProperty("Version"),
+				webserverConnectURL());
 	}
 	
 	public Timer timer() {
