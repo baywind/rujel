@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 
 import net.rujel.criterial.WorkType;
 import net.rujel.reusables.ModulesInitialiser;
-import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOContext;

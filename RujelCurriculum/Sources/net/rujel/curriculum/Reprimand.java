@@ -674,6 +674,13 @@ public class Reprimand extends _Reprimand {
 			fs.setFetchLimit(1);
 			NSArray list = ec.objectsWithFetchSpecification(fs);
 			final boolean lastWeek = (list == null || list.count() == 0);
+			if(lastWeek) {
+				fs.setQualifier(quals[0]);
+				list = ec.objectsWithFetchSpecification(fs);
+				if(list == null || list.count() == 0)
+					return;
+				list = null;
+			}
 			int week = SettingsBase.numericSettingForCourse(EduPeriod.ENTITY_NAME,
 					course, ec, 7);
 			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME,

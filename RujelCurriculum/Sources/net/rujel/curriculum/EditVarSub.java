@@ -2,6 +2,8 @@ package net.rujel.curriculum;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.interfaces.Person;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
@@ -142,10 +144,19 @@ public class EditVarSub extends WOComponent {
 		variation.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
 		variation.setDate(date);
 		variation.setValue(value);
+		boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
+				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 		try {
 			ec.saveChanges();
 	       	Curriculum.logger.log(WOLogLevel.UNOWNED_EDITING,"VarSub Variation saved",
 	       			new Object[] {session(),variation});
+			if(!noRelieve) {
+				String usr = (String)session().valueForKeyPath("user.present");
+				if(usr == null)
+					usr = "??" + Person.Utility.fullName(
+							toCourse.teacher(), true, 2, 1, 1);
+				Reprimand.autoRelieve(toCourse, date, usr);
+			}
 		} catch (Exception e) {
 			ec.revert();
 			session().takeValueForKey(e.getMessage(), "message");
@@ -178,6 +189,13 @@ public class EditVarSub extends WOComponent {
     	       	Curriculum.logger.log(WOLogLevel.UNOWNED_EDITING,
     	       			"VarSub reverse Variation created",
     	       			new Object[] {session(),var});
+    			if(!noRelieve) {
+    				String usr = (String)session().valueForKeyPath("user.present");
+    				if(usr == null)
+    					usr = "??" + Person.Utility.fullName(
+    							toCourse.teacher(), true, 2, 1, 1);
+    				Reprimand.autoRelieve(fromCourse, date, usr);
+    			}
     		} catch (Exception e) {
     			ec.revert();
     			session().takeValueForKey(e.getMessage(), "message");

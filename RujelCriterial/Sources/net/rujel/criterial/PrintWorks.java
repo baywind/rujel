@@ -29,7 +29,6 @@
 
 package net.rujel.criterial;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Enumeration;
 
