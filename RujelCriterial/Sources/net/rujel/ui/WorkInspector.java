@@ -111,7 +111,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		if(hrs > 0)
     			hours = new Integer(hrs);
     	}
-    	dict = work.valuesForKeys(keys).mutableClone();
+    	dict = new NSMutableDictionary();
+    	for (int i = 0; i < keys.count(); i++) {
+			String key = (String)keys.objectAtIndex(i);
+			dict.takeValueForKey(work.valueForKey(key), key);
+		}
+//    	dict = work.valuesForKeys(keys).mutableClone();
     	namedFlags = new NamedFlags(work.flags(),WorkType.flagNames);
     }
 
@@ -126,7 +131,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		work = (Work)EOUtilities.createAndInsertInstance(ec, Work.ENTITY_NAME);
     		work.addObjectToBothSidesOfRelationshipWithKey(course, "course");
     	}
-    	WorkType type = (WorkType)dict.removeObjectForKey(Work.WORK_TYPE_KEY);
+    	WorkType type = (WorkType)dict.objectForKey(Work.WORK_TYPE_KEY);
     	if(type != null) {
     		work.setWorkType(type);
     		if(!type.namedFlags().flagForKey("fixHometask"))
@@ -136,7 +141,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	} else {
     		work.setFlags(namedFlags.toInteger());
     	}
-    	work.takeValuesFromDictionary(dict);
+    	for (int i = 0; i < keys.count(); i++) {
+			String key = (String)keys.objectAtIndex(i);
+			Object value = dict.valueForKey(key);
+			if(!created || value != null)
+				work.takeValueForKey(value, key);
+		}
+//    	work.takeValuesFromDictionary(dict);
     	if(created)
     		MyUtility.setNumberToNewLesson(work);
     	int load = 0;
