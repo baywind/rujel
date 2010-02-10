@@ -149,10 +149,10 @@ public class Overview extends WOComponent {
 			if(matches != null && matches.count() > 0) {
 				currSubject.takeValueForKey(new Integer(matches.count()),"count");
 				currSubject.takeValueForKey(matches,"courses");
-				currSubject.takeValueForKey("course","style");
+				currSubject.takeValueForKey("green","style");
 			} else {
 				currSubject.takeValueForKey(new Integer(0),"count");
-				currSubject.takeValueForKey("eduPlan","style");
+				currSubject.takeValueForKey("grey","style");
 			}
 			subjects.addObject(currSubject);
 		}

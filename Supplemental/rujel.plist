@@ -14,6 +14,8 @@
 		<string>Main</string>
 		<key>loginHandlerClass</key>
 		<string>net.rujel.auth.PrefsDrivenUser</string>
+		<key>__loginHandlerClass</key>
+		<string>net.rujel.auth.ldap.LdapAuthentication</string>
 		<key>accessHandlerClass</key>
 		<string>net.rujel.auth.PrefsAccessHandler</string>
 		<key>access</key>
@@ -633,20 +635,25 @@
 				<string>7</string>
 			</dict>
 		</dict>
-		<key>groupMapping</key>
+		<key>_groupMapping</key>
 		<dict>
 			<key>root</key>
-			<string>root</string>
+			<string>cn=rujel_adm, ou=Group</string>
 			<key>zavuch</key>
-			<string>zavuch</string>
+			<string>cn=zavuch, ou=Group</string>
 			<key>zav_kaf</key>
-			<string>zav_kaf</string>
+			<string>cn=zav_kaf, ou=Group</string>
 			<key>tutor</key>
-			<string>tutor</string>
+			<string>cn= tutor, ou=Group</string>
 			<key>teacher</key>
-			<string>teacher</string>
+			<string>cn=teacher, ou=Group</string>
 			<key>any</key>
-			<string>any</string>
+			<string>*</string>
+		</dict>
+		<key>groupMapping</key>
+		<dict>
+			<key>any</key>
+			<string>*</string>
 		</dict>
 		<key>allowNone</key>
 		<string>false</string>
@@ -694,13 +701,17 @@
 		<key>ldap</key>
 		<dict>
 			<key>providerUrl</key>
-			<string>ldaps://192.168.0.2:636</string>
+			<string>ldap://192.168.0.11</string>
 			<key>authentication</key>
 			<string>simple</string>
 			<key>groupAttribute</key>
 			<string>securityEquals</string>
 			<key>useSSL</key>
-			<string>true</string>
+			<string>false</string>
+			<key>uidAttribute</key>
+			<string>uid</string>
+			<key>memberAttribute</key>
+			<string>memberUid</string>
 			<key>ssl</key>
 			<dict>
 				<key>protocol</key>
@@ -720,40 +731,32 @@
 				<key>givenName</key>
 				<string>Gena</string>
 				<key>groups</key>
-				<string>root;any</string>
+				<string>root</string>
 				<key>password</key>
 				<string>qqq</string>
 				<key>sn</key>
 				<string>Kushnir</string>
 			</dict>
-			<key>user</key>
-			<dict/>
 			<key>guest</key>
-			<dict>
-				<key>groups</key>
-				<string>any</string>
-			</dict>
+			<dict/>
 			<key>teacher</key>
-			<dict>
-				<key>groups</key>
-				<string>any</string>
-			</dict>
+			<dict/>
 			<key>tutor</key>
 			<dict>
 				<key>groups</key>
-				<string>teacher;any</string>
+				<string>teacher</string>
 			</dict>
 			<key>zavuch</key>
 			<dict>
 				<key>groups</key>
-				<string>zavuch;any</string>
+				<string>zavuch</string>
 				<key>password</key>
 				<string>123</string>
 			</dict>
 			<key>zav_kaf</key>
 			<dict>
 				<key>groups</key>
-				<string>teacher;any</string>
+				<string>teacher</string>
 				<key>password</key>
 				<string>123</string>
 			</dict>
