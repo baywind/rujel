@@ -94,8 +94,8 @@ public class Application extends UTF8Application {
 				_year.toString());
 
 		net.rujel.interfaces.EOInitialiser.initAll();
-		SettingsReader node = SettingsReader.settingsForPath("modules",true);
-		ModulesInitialiser.initModules(node,"init");
+//		SettingsReader node = SettingsReader.settingsForPath("modules",true);
+		ModulesInitialiser.initModules("init");
 				
 /*		int cacheSize = SettingsReader.intForKeyPath("ui.keyValueCacheSize", 0);
 		if(cacheSize > 0) {

@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -41,6 +42,7 @@ import net.rujel.reusables.WOLogLevel;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOModelGroup;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSData;
@@ -54,6 +56,8 @@ public class ReportsModule {
 	static {
 		System.out.println ("Initialising ReportsModule");
 	}
+	
+	protected static File reportsFolder;
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -67,6 +71,23 @@ public class ReportsModule {
 						"strings.RujelReports_Reports.regimes");
 		}
 		return null;
+	}
+	
+	public static void merge(NSDictionary dict,SettingsReader settings) {
+		String reportsDir = (String)dict.valueForKey("reportsDir");
+		if(reportsDir == null)
+			reportsDir = settings.get("reportsDir", "CONFIGDIR/RujelReports");
+		reportsDir = Various.convertFilePath(reportsDir);
+		reportsFolder = new File(reportsDir);
+		Object value = dict.objectForKey("auth.access");
+		if(value == null)
+			return;
+		NSDictionary access = null;
+		if(value instanceof NSDictionary)
+			access = (NSDictionary)value;
+		else
+			access = (NSDictionary)PlistReader.readPlist(value.toString(), null);
+		settings.mergeValueToKeyPath(access, "auth.access");
 	}
 /*	
 	public static Object regimes(WOContext ctx) {
@@ -88,7 +109,7 @@ public class ReportsModule {
 */    public static NSMutableArray reportsFromDir(String dir,WOContext context) {
     	NSMutableArray reports = new NSMutableArray();
     	String reportsDirPath = SettingsReader.stringForKeyPath("reportsDir",
-    	"LOCALROOT/Library/WebObjects/Configuration/RujelReports");
+    	"CONFIGDIR/RujelReports");
     	reportsDirPath = Various.convertFilePath(reportsDirPath);
     	File reportsDir = new File(reportsDirPath, dir);
     	if (reportsDir.isDirectory()) {
@@ -134,6 +155,11 @@ public class ReportsModule {
 
     protected static boolean checkInDict(NSDictionary dict,
     		NSKeyValueCodingAdditions readAccess) {
+		String entity = (String)dict.valueForKey("entity");
+		if(entity != null) {
+			if(EOModelGroup.defaultGroup().entityNamed(entity) == null)
+				return false;
+		}
     	NSArray checkAccess = (NSArray)dict.valueForKey("checkAccess");
     	if(checkAccess != null && checkAccess.count() > 0) {
 //  		NSKeyValueCodingAdditions readAccess = 
@@ -145,9 +171,7 @@ public class ReportsModule {
     					readAccess.valueForKeyPath("_read." + acc)))
     				return false;
     		}
-    	} else {
-    		String entity = (String)dict.valueForKey("entity");
-    		if(entity != null)
+    	} else if(entity != null) {
     			return Various.boolForObject(readAccess.valueForKeyPath("read." + entity));
     	}
     	//reports.addObject(dict);

@@ -35,7 +35,8 @@ import com.webobjects.foundation.NSArray;
 import com.webobjects.eocontrol.EOSortOrdering;
 
 public interface EduLesson extends PerPersonLink,com.webobjects.eocontrol.EOEnterpriseObject {//,UseAccessScheme
-	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath("interfaces.EduLesson",null);
+	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath(
+			"interfaces.EduLesson","net.rujel.base.BaseLesson");
 	public static final String entityName = className.substring(1 + className.lastIndexOf('.'));
 
 	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {

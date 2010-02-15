@@ -37,13 +37,15 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.foundation.NSDictionary;
 
 public class BaseModule {
-	protected static NSDictionary lessonsTab = (NSDictionary)WOApplication.application().
-					valueForKeyPath("strings.RujelBase_Base.lessonsTab");
+	protected static NSDictionary lessonsTab;
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			init();
 		} else if("presentTabs".equals(obj)) {
+			if(lessonsTab == null) lessonsTab = (NSDictionary)WOApplication.application().
+			valueForKeyPath("strings.RujelBase_Base.lessonsTab");
+			if(lessonsTab == null) lessonsTab = NSDictionary.EmptyDictionary;
 			return lessonsTab.mutableClone();
 		} else if("reportForStudent".equals(obj)) {
 			NSDictionary settings = (NSDictionary)ctx.session().objectForKey("reportForStudent");

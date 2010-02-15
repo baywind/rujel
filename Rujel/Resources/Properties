@@ -21,10 +21,11 @@ ApplicationName=Rujel
 Version=0.8.2
 
 #Settings.className = net.rujel.reusables.PrefsReader
-#PrefsReader.nodePath = /ru/edu/ms45
+#PrefsReader.nodePath = /net/rujel
 
 Settings.className = net.rujel.reusables.PlistReader
-PlistReader.filePath = LOCALROOT/Library/WebObjects/Configuration/rujel.plist
+CONFIGDIR=LOCALROOT/Library/WebObjects/Configuration
+PlistReader.filePath = CONFIGDIR/rujel.plist
 
 DisableScheduledTasks = false
 # Each of these should be enabled for one instance only to avoid conflicts

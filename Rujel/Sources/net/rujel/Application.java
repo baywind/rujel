@@ -64,6 +64,7 @@ public class Application extends UTF8Application {
 		if(propertiesPath != null) {
 			LogInitialiser.initLogging(null, propertiesPath, logger);
 		}
+		ModulesInitialiser.readModules(SettingsReader.rootSettings(), "modules");
 		propertiesPath = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
 		if(propertiesPath != null) {
 			_strings = new StringStorage(propertiesPath,null);
@@ -100,8 +101,8 @@ public class Application extends UTF8Application {
 		}
 		SettingsBase.init();
 		net.rujel.interfaces.EOInitialiser.initAll();
-		SettingsReader node = SettingsReader.settingsForPath("modules",true);
-		ModulesInitialiser.initModules(node,"init");
+//		SettingsReader node = SettingsReader.settingsForPath("modules",true);
+		ModulesInitialiser.initModules("init");
 		
 		int cacheSize = SettingsReader.intForKeyPath("ui.keyValueCacheSize", 0);
 		if(cacheSize > 0) {

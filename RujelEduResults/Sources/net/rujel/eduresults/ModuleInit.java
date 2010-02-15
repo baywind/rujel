@@ -43,8 +43,6 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class ModuleInit {
-	protected static final NSDictionary addOn = (NSDictionary)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn");
-	protected static final NSArray marksPreset = ((NSArray)WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.marksPreset")).immutableClone();
 	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -70,7 +68,8 @@ public class ModuleInit {
 	public static NSMutableDictionary notesAddOns(WOContext ctx) {
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
 		if(access.getFlag(0)) {
-			NSMutableDictionary itogAddOn = addOn.mutableClone();
+			NSMutableDictionary itogAddOn = ((NSDictionary)WOApplication.application().
+					valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn")).mutableClone();
 			itogAddOn.takeValueForKey(access,"access");
 			return itogAddOn;
 		}
@@ -173,7 +172,8 @@ public class ModuleInit {
 
 	
 	public static NSArray marksPreset() {
-		return marksPreset;
+		return ((NSArray)WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.marksPreset")).immutableClone();
 	}
 	
 	public static Object statCourseReport(WOContext ctx) {
