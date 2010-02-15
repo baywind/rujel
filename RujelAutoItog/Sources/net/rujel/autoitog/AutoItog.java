@@ -223,9 +223,9 @@ public class AutoItog extends _AutoItog {
     }
     public NSArray relatedForCourse(EduCourse course) {
     	NSArray found = relKeysForCourse(course);
+    	EOEditingContext ec = editingContext();
     	if(found == null || found.count() == 0) {
     		NSArray result = null;
-    		EOEditingContext ec = editingContext();
     		boolean cache = ec.hasChanges();
     		try {
     			if(cache) {
@@ -244,7 +244,7 @@ public class AutoItog extends _AutoItog {
 				}
 				ec.saveChanges();
 				if(cache)
-					result = EOUtilities.localInstancesOfObjects(editingContext(), result);
+					result = EOUtilities.localInstancesOfObjects(ec, result);
 			} catch (RuntimeException e) {
 				AutoItogModule.logger.log(WOLogLevel.WARNING,"Error collecting related",
 						new Object[] {this,e});
@@ -261,7 +261,7 @@ public class AutoItog extends _AutoItog {
 			Integer relKey = (Integer)ir.valueForKey("relKey");
 			try {
 				related.addObject(EOUtilities.objectWithPrimaryKeyValue(
-						editingContext(), entName, relKey));
+						ec, entName, relKey));
 			} catch (RuntimeException e) {
 				AutoItogModule.logger.log(WOLogLevel.WARNING,
 						"Could not get related object: " + entName + ':' + relKey

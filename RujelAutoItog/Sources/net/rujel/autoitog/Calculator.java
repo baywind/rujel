@@ -77,7 +77,12 @@ public abstract class Calculator {
 		}
 		return new PerPersonLink.Dictionary(result);
 	}
-	
+
+	public NSMutableDictionary describeObject(Object object) {
+		return new NSMutableDictionary( new String[] {"???", "?? ?? ??", "#ffffff", "null"},
+				new String[] {"title","description","color","hover"});
+	}
+
 //	public abstract NSArray reliesOn();
 	
 	public abstract String reliesOnEntity();
@@ -89,5 +94,4 @@ public abstract class Calculator {
 	
 	public abstract boolean skipAutoAdd(Integer relKey, EOEditingContext ec);
 	
-	public abstract NSMutableDictionary describeObject(Object object);
 }

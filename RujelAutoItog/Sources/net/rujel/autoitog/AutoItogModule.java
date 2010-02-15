@@ -288,12 +288,13 @@ public class AutoItogModule {
 						ec.saveChanges();
 				}
 //				ai.calculator().collectRelated(course, ai);
-			} else if (student == null &&  dict.valueForKey("lesson") == null) {
+			} else if(ai.calculator().skipAutoAdd(relKey, ec)) { 
+				//if (student == null &&  dict.valueForKey("lesson") == null) {
 				if(ai.removeRelatedObject(relKey, course))
 					ec.saveChanges();
 			}
 			boolean ifArchive = (canArchive && ai.namedFlags().flagForKey("manual"));
-			if(student == null) {
+			if(student == null) { // whole class
 				if(addOn != null) {
 					addOn.setPeriodItem(ai);
 					addOn.calculate();
@@ -344,7 +345,7 @@ public class AutoItogModule {
 					addOn.setPrognosis(progn);
 //					addOn.reset();
 			}
-		} // pertypes.objectEnumerator();
+		} // autoItogs.objectEnumerator();
 		if(ec.hasChanges()) 
 			ec.saveChanges();
 		} catch (Exception e) {

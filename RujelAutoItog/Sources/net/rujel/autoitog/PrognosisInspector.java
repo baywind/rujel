@@ -38,6 +38,7 @@ import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
@@ -116,10 +117,12 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 	public NSArray collected() {
 		if(collected != null)
 			return collected;
-		collected = autoItog.relatedForCourse(course);
-		NSMutableArray related = (collected == null)?new NSMutableArray():
-			collected.mutableClone();
+//		collected = autoItog.relatedForCourse(course);
 		Calculator calc = autoItog.calculator();
+		collected = autoItog.relKeysForCourse(course);
+		NSMutableArray related = (collected == null || collected.count() == 0)?
+				new NSMutableArray():
+			((NSArray)collected.valueForKey("relKey")).mutableClone();
 		collected = calc.collectRelated(course, autoItog,
 				!autoItog.namedFlags().flagForKey("runningTotal"), false);
 		NSMutableArray result = new NSMutableArray();
@@ -129,7 +132,9 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 				Object object = enu.nextElement();
 				NSMutableDictionary dict = calc.describeObject(object);
 				dict.takeValueForKey(object, "object");
-				if(related.removeObject(object)) {
+				Integer relKey = calc.relKeyForObject(object);
+				dict.takeValueForKey(relKey, "relKey");
+				if(related.removeObject(relKey)) {
 					dict.takeValueForKey(Boolean.TRUE, "related");
 					dict.takeValueForKey("gerade", "styleClass");
 				} else {
@@ -140,10 +145,19 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 		}
 		if(related.count() > 0) {
 			Enumeration enu = related.objectEnumerator();
+			EOEditingContext ec = autoItog.editingContext();
+			String entName = calc.reliesOnEntity();
 			while (enu.hasMoreElements()) {
-				Object object = enu.nextElement();
+				Integer relKey = (Integer)enu.nextElement();
+				Object object = null;
+				try {
+					object = EOUtilities.objectWithPrimaryKeyValue(ec, entName, relKey);
+				} catch (RuntimeException e) {
+					object = null;
+				}
 				NSMutableDictionary dict = calc.describeObject(object);
 				dict.takeValueForKey(object, "object");
+				dict.takeValueForKey(relKey, "relKey");
 				dict.takeValueForKey(Boolean.TRUE, "related");
 				dict.takeValueForKey("warning", "styleClass");
 				result.addObject(dict);
@@ -163,7 +177,9 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 		try {
 			while (enu.hasMoreElements()) {
 				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
-				Object object = dict.valueForKey("object");
+				Object object = dict.valueForKey("relKey");
+				if(object == null) 
+					object = dict.valueForKey("object");
 				if(Various.boolForObject(dict.valueForKey("related"))) {
 					autoItog.addRelatedObject(object, course);
 				} else {

@@ -215,8 +215,8 @@ public abstract class WorkCalculator extends Calculator {
 			return null;
 		}
 		try {
-			if(work.weight().compareTo(BigDecimal.ZERO) == 0)
-				return null;
+//			if(work.weight().compareTo(BigDecimal.ZERO) == 0)
+//				return null;
 			EOKeyGlobalID gid = (EOKeyGlobalID)work.editingContext().
 								globalIDForObject(work);
 			return (Integer)gid.keyValues()[0];
@@ -242,7 +242,7 @@ public abstract class WorkCalculator extends Calculator {
 
 	public NSMutableDictionary describeObject(Object object) {
 		if(object == null)
-			return null;
+			return super.describeObject(object);
 		Work work = null;
 		if(object instanceof Work) {
 			work = (Work)object;
@@ -271,7 +271,7 @@ public abstract class WorkCalculator extends Calculator {
 			work = (Work)EOUtilities.objectWithPrimaryKeyValue(
 					new EOEditingContext(), Work.ENTITY_NAME, object); */
 		} else {
-			return null;
+			return super.describeObject(object);
 		}
 		String title = work.title();
 		if(title == null)
