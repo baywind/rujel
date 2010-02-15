@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>moduleClass</key>
+	<string>net.rujel.eduresults.ModuleInit</string>
+	<key>dbConnection.EduResults</key>
+	<dict>
+		<key>dbName</key>
+		<string>RujelStatic</string>
+	</dict>
+	<key>auth.access</key>
+	<dict>
+		<key>ItogMark</key>
+		<dict>
+			<key>root</key>
+			<string>1023</string>
+			<key>zavuch</key>
+			<string>15</string>
+			<key>teacher</key>
+			<string>1</string>
+		</dict>
+		<key>ItogComment</key>
+		<dict>
+			<key>root</key>
+			<string>1023</string>
+			<key>zavuch</key>
+			<string>15</string>
+			<key>teacher</key>
+			<string>1</string>
+		</dict>
+		<key>ItogContainer</key>
+		<dict>
+			<key>root</key>
+			<string>1023</string>
+			<key>zavuch</key>
+			<string>15</string>
+			<key>any</key>
+			<string>1</string>
+		</dict>
+		<key>ItogType</key>
+		<dict>
+			<key>root</key>
+			<string>1023</string>
+			<key>zavuch</key>
+			<string>15</string>
+			<key>any</key>
+			<string>1</string>
+		</dict>
+		<key>ItogTypeList</key>
+		<dict>
+			<key>root</key>
+			<string>1023</string>
+			<key>zavuch</key>
+			<string>15</string>
+			<key>any</key>
+			<string>1</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>moduleClass</key>
+	<string>net.rujel.vseobuch.VOClass</string>
+	<key>dbConnection.VseobuchSimple</key>
+	<dict>
+		<key>_URL</key>
+		<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
+		<key>skip</key>
+		<string>true</string>
+		<key>dbName</key>
+		<string>shobase4</string>
+	</dict>
+	<key>auth.access</key>
+	<dict>
+		<key>VOTeacher</key>
+		<dict>
+			<key>root</key>
+			<string>1017</string>
+			<key>zav_kaf</key>
+			<string>1</string>
+			<key>zavuch</key>
+			<string>1</string>
+			<key>teacher</key>
+			<string>1</string>
+		</dict>
+		<key>VOList</key>
+		<dict>
+			<key>root</key>
+			<string>1023</string>
+			<key>teacher</key>
+			<string>1</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

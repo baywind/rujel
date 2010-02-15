@@ -1,5 +1,7 @@
 отложенные задачи:
 
+отработка групп LDAP по полному пути  (full DN)
+
 документация по CustomReports
 отработка subParams и exportDict в ReportTable
 
