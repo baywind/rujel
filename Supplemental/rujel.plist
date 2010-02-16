@@ -6,7 +6,7 @@
 	<string>0</string>
 	<key>loggingProperties</key>
 	<string>LOCALROOT/Library/WebObjects/Configuration/logging.properties</string>
-	<key>modules</key>
+	<key>_modules</key>
 	<string>/Users/gena/Documents/WOProj/_workspace/rujel/Supplemental/modules</string>
 	<key>auth</key>
 	<dict>

@@ -107,7 +107,7 @@
 		<key>Teacher</key>
 		<string>net.rujel.vselists.VseTeacher</string>
 	</dict>
-	<key>modules</key>
+	<key>_modules</key>
 	<dict>
 		<key>net.rujel.base.BaseModule</key>
 		<string>true</string>

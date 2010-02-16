@@ -13,10 +13,18 @@
 		<key>Teacher</key>
 		<string>net.rujel.vselists.VseTeacher</string>
 	</dict>
-	<key>dbConnection.VseLists</key>
+	<key>dbConnection</key>
 	<dict>
-		<key>skip</key>
-		<string>false</string>
+		<key>VseLists</key>
+		<dict>
+			<key>skip</key>
+			<string>false</string>
+		</dict>
+		<key>VseobuchSimple</key>
+		<dict>
+			<key>skip</key>
+			<string>true</string>
+		</dict>
 	</dict>
 	<key>auth.access</key>
 	<dict>

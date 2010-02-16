@@ -72,6 +72,7 @@ public class Application extends UTF8Application {
 		if(propertiesPath != null) {
 			LogInitialiser.initLogging(null, propertiesPath, logger);
 		}
+		ModulesInitialiser.readModules(SettingsReader.rootSettings(), "modules");
 		propertiesPath = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
 		if(propertiesPath != null) {
 			_strings = new StringStorage(propertiesPath,null);

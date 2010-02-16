@@ -4,14 +4,20 @@
 <dict>
 	<key>moduleClass</key>
 	<string>net.rujel.vseobuch.VOClass</string>
-	<key>dbConnection.VseobuchSimple</key>
+	<key>dbConnection</key>
 	<dict>
-		<key>_URL</key>
-		<string>jdbc:mysql://127.0.0.1/DemoSho?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8</string>
-		<key>skip</key>
-		<string>true</string>
-		<key>dbName</key>
-		<string>shobase4</string>
+		<key>VseobuchSimple</key>
+		<dict>
+			<key>dbName</key>
+			<string>shobase4</string>
+			<key>_dbName</key>
+			<string>DemoSho</string>
+		</dict>
+		<key>VseLists</key>
+		<dict>
+			<key>skip</key>
+			<string>true</string>
+		</dict>
 	</dict>
 	<key>auth.access</key>
 	<dict>
