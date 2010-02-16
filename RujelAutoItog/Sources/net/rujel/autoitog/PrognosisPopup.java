@@ -183,6 +183,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    		if(bonus == null) {
     	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
 //    	    			bonus.initBonus(prognosis, true);
+    	    			args[1] = bonus;
     	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding bonus to prognosis",args);
     	    		} else if(!bonus.submitted()) {
     	    			bonus.calculateValue(prognosis, true);
@@ -203,6 +204,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    			prognosis.addObjectToBothSidesOfRelationshipWithKey(bonus, 
     	    					Prognosis.BONUS_KEY);
     	    			Bonus.calculateBonus(prognosis, bonus, false);
+    	    			args[1] = bonus;
     	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Requesting bonus for prognosis",args);
     	    		}
     	    		bonus.setReason(bonusText);

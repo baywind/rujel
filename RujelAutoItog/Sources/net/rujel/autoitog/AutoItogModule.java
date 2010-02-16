@@ -428,6 +428,20 @@ public class AutoItogModule {
 			ec.lock();
 			try {
 				AutoItog autoItog = (AutoItog)ec.faultForGlobalID(gid,ec);
+				NSTimestamp fire = autoItog.fireDate();
+				if(fire.getTime() > System.currentTimeMillis()) {
+					logger.log(WOLogLevel.INFO,"Cancelling autoItog execution",
+							new Object[] {gid, fire});
+					return;
+				}
+				fire = autoItog.fireDateTime();
+				if(fire.getTime() > System.currentTimeMillis()) { // reschedule
+					Timer timer = (Timer)WOApplication.application().valueForKey("timer");
+					timer.schedule(this, fire);
+					logger.log(WOLogLevel.INFO,"Postponing autoItog execution",
+							new Object[] {gid, fire});
+					return;
+				}
 				if(!skip)
 					automateItog(autoItog);
 				automateTimedOutPrognoses(autoItog);

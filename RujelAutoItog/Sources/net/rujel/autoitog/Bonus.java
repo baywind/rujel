@@ -78,8 +78,7 @@ public class Bonus extends _Bonus {
     		BigDecimal topValue = prognosis.autoItog().borderSet().borderForKey(mark());
     		topValue = topValue.movePointLeft(2);
     		BigDecimal prognos = prognosis.value();
-    		BigDecimal bonus = (topValue.compareTo(prognos) < 0)?
-    				BigDecimal.ZERO : topValue.subtract(prognos);
+    		BigDecimal bonus = topValue.subtract(prognos);
     		if(update)
     			setValue(bonus);
     		return bonus;

@@ -105,9 +105,13 @@ public class Prognosis extends _Prognosis {
     		return;
     	Bonus bonus = bonus();
     	if(bonus != null) {
-    		if(namedFlags().flagForKey("keepBonus")) {
-    			bonus.calculateValue(this,true);
-     		} else if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
+    		boolean keep = namedFlags().flagForKey("keepBonus");
+    		BigDecimal value = bonus.calculateValue(this,keep);
+    		if(value.compareTo(BigDecimal.ZERO) < 0) {
+    			removeObjectFromBothSidesOfRelationshipWithKey(bonus, BONUS_KEY);
+    			editingContext().deleteObject(bonus);
+    			logger.log(WOLogLevel.FINE,"Bonus was overriden. Removing.",this);
+    		} else if(!keep && bonus.value().compareTo(BigDecimal.ZERO) > 0) {
     			bonus.setValue(BigDecimal.ZERO);
     			logger.log(WOLogLevel.FINE,"Automatically dismissing bonus",bonus);
     		}

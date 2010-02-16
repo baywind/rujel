@@ -29,6 +29,7 @@
 
 package net.rujel.autoitog;
 
+import java.lang.ref.WeakReference;
 import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -71,6 +72,7 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 	public String fireTime;
 	public BorderSet borderSet;
 	public NamedFlags namedFlags;
+	public boolean recalculate;
 	
 	public Boolean cantChange;
 	
@@ -116,7 +118,8 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     }
 
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    	if(autoItog == null)
+    	recalculate = (autoItog == null);
+    	if(recalculate)
     		cantChange = (Boolean)session().valueForKeyPath("readAccess._create.AutoItog");
     	else
     		cantChange = (Boolean)session().valueForKeyPath("readAccess._edit.autoItog");
@@ -142,8 +145,9 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     		autoItog.setCalculatorName((String)valueForKeyPath("calc.className"));
 //    		String pattern = SettingsReader.stringForKeyPath("ui.shortDateFormat","MM-dd");
     		Format format = MyUtility.dateFormat();
-    		if(autoItog.fireDate() == null ||
-    				!fireDate.equals(format.format(autoItog.fireDate()))) {
+    		boolean changeDate = (autoItog.fireDate() == null ||
+    				!fireDate.equals(format.format(autoItog.fireDate())));
+    		if(changeDate) {
     			try {
     				Date dt = (Date)format.parseObject(fireDate);
     				dt = MyUtility.dateToEduYear(dt, itog.eduYear());
@@ -165,22 +169,19 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     			}
     		}
     		ec.saveChanges();
-    		SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
-    		NSArray courses = base.coursesForSetting(listName, null, itog.eduYear());
-    		Enumeration enu = courses.objectEnumerator();
-    		Calculator calculator = autoItog.calculator();
-    		while (enu.hasMoreElements()) {
-				EduCourse course = (EduCourse) enu.nextElement();
-				PerPersonLink prppl = calculator.calculatePrognoses(course, autoItog);
-				if(prppl == null || prppl.count() == 0)
-					continue;
-				CourseTimeout cto = CourseTimeout.
-						getTimeoutForCourseAndPeriod(course, itog);
-				prppl.allValues().takeValueForKey(cto, "updateWithCourseTimeout");
-	    		ec.saveChanges();
-			}
-    		logger.log(WOLogLevel.COREDATA_EDITING, "Saved AutoItog", 
-    				new Object[] {session(),autoItog});
+   			logger.log(WOLogLevel.COREDATA_EDITING, "Saved AutoItog", 
+					new Object[] {session(),autoItog});
+    		if(recalculate || changeDate) {
+    			Thread t = new Thread(new Updater(autoItog, listName, recalculate,session()),
+    					"AutoItogUpdate");
+				t.setPriority(Thread.MIN_PRIORITY + 1);
+				t.start();
+				StringBuilder message = new StringBuilder();
+				message.append(session().valueForKeyPath(
+					"strings.RujelAutoItog_AutoItog.ui.updateStarted"));
+				message.append(' ').append(itog.title());
+				session().takeValueForKey(message.toString(), "message");
+     		}
     	} catch (Exception e) {
     		logger.log(WOLogLevel.WARNING, "Error saving AutoItog", 
     				new Object[] {session(),autoItog,e});
@@ -209,5 +210,77 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	}
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
+    }
+    
+    protected static class Updater implements Runnable{
+    	protected AutoItog ai;
+    	protected EOEditingContext ec;
+    	protected String listName;
+    	protected boolean recalc;
+    	protected WeakReference sesRef;
+    	
+    	public Updater(AutoItog autoItog, String listName, 
+    			boolean recalculate, WOSession session) {
+    		ec = new EOEditingContext();
+    		ec.lock();
+    		try {
+    			ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, autoItog);
+        		this.listName = listName;
+        		recalc = recalculate;
+        		sesRef = new WeakReference(session);
+    		} finally {
+    			ec.unlock();
+    		}
+    	}
+    	
+    	public void run() {
+    		ec.lock();
+    		try {
+    			ItogContainer itog = ai.itogContainer();
+    			SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
+    			NSArray courses = base.coursesForSetting(listName, null,itog.eduYear());
+    			Enumeration enu = courses.objectEnumerator();
+    			Calculator calculator = ai.calculator();
+    			while (enu.hasMoreElements()) {
+    				EduCourse course = (EduCourse) enu.nextElement();
+    				NSArray prognoses = null;
+					CourseTimeout cto = CourseTimeout.
+							getTimeoutForCourseAndPeriod(course, itog);
+    				if(recalc && calculator != null) {
+    					PerPersonLink prppl = calculator.calculatePrognoses(course, ai);
+    					if(prppl == null || prppl.count() == 0)
+    						continue;
+    					prognoses = prppl.allValues();
+    				} else {
+    					prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, ai);
+    				}
+    				prognoses.takeValueForKey(cto, "updateWithCourseTimeout");
+    				ec.saveChanges();
+    			}
+				WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
+				if(ses != null) {
+					StringBuilder message = new StringBuilder();
+					message.append(ses.valueForKeyPath(
+							"strings.RujelAutoItog_AutoItog.ui.updateFinished"));
+					message.append(' ').append(ai.itogContainer().title());
+					ses.takeValueForKey(message.toString(), "message");
+				}
+				logger.log(WOLogLevel.INFO,"Prognoses update complete",
+						new Object[] {ses,ai});
+			} catch (Exception e) {
+				WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
+				logger.log(WOLogLevel.WARNING,"Error updating prognoses",
+						new Object [] {ses,ai,e});
+				if(ses != null) {
+					StringBuilder message = new StringBuilder();
+					message.append(ses.valueForKeyPath(
+							"strings.RujelAutoItog_AutoItog.ui.updateError"));
+					message.append(' ').append(ai.itogContainer().title());
+					ses.takeValueForKey(message.toString(), "message");
+				}
+			} finally {
+				ec.unlock();
+			}
+    	}
     }
 }

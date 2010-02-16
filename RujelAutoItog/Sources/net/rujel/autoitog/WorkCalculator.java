@@ -118,6 +118,8 @@ public abstract class WorkCalculator extends Calculator {
 					if(ai == autoItog || ai.itogContainer().itogType() != type 
 							|| !ai.itogContainer().eduYear().equals(eduYear))
 						continue;
+					if(ai.calculator() == null)
+						continue;
 					if(!getClass().getName().equals(ai.calculatorName()) && 
 							!ai.calculator().reliesOnEntity().equals(reliesOnEntity()))
 						continue;
