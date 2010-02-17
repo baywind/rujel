@@ -271,13 +271,13 @@ public class TabelReporter extends WOComponent {
 		/*NSDictionary perAlias = (NSDictionary)marksAgregate.objectForKey("none");
 		String alias = (perAlias == null)?null:(String)perAlias.objectForKey(perItem); */
 		StringBuffer buf = new StringBuffer();
-		if(perItem.num() > 0) {
+		if(perItem.itogType().inYearCount().intValue() > 1) {
 			/*if(alias != null)
 				buf.append("<span style=\"white-space:nowrap;\">");*/
 			buf.append(Various.makeRoman(perItem.num().intValue()));
 			/*if(alias != null)
 				buf.append(" <sup class=\"sup\">(").append(alias).append("</sup>").append("</span>");*/
-			buf.append("<br>\n<small>");
+			buf.append("<br />\n<small>");
 			buf.append(perItem.itogType().title());
 			buf.append("</small>");
 		} else {

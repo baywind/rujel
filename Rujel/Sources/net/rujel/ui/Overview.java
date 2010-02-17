@@ -470,4 +470,16 @@ public class Overview extends WOComponent {
 		}
 		return result;
 	}
+
+	public void setPeriod(Period period) {
+		this.period = period;
+	}
+
+	public void setSince(NSTimestamp since) {
+		this.since = since;
+	}
+
+	public void setTo(NSTimestamp to) {
+		this.to = to;
+	}
 }
