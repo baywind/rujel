@@ -116,6 +116,14 @@ public class CurriculumModule {
 					Variation.ENTITY_NAME, "course = %@ AND value >= 1", args);
 			showVars = (vars != null && vars.count() > 0);
 		}
+		if(showSubs) {
+			EOQualifier qual = Various.getEOInQualifier("lesson", lessonsList);
+			EOFetchSpecification fs = new EOFetchSpecification(Substitute.ENTITY_NAME
+					,qual,null);
+			EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(0);
+			NSArray subs = lesson.editingContext().objectsWithFetchSpecification(fs);
+			showSubs = (subs != null && subs.count() > 0);
+		}
 		Enumeration enu = lessonsList.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduLesson lesson = (EduLesson) enu.nextElement();
