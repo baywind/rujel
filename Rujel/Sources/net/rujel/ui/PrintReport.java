@@ -101,4 +101,11 @@ public class PrintReport extends WOComponent {
 		return MyUtility.presentEduYear(year);
 	}
 
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		Thread t = Thread.currentThread();
+		int priority = t.getPriority();
+		t.setPriority(priority -1);
+		super.appendToResponse(aResponse, aContext);
+		t.setPriority(priority);
+	}
 }
