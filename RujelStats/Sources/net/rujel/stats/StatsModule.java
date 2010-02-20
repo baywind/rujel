@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -45,6 +46,7 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -56,7 +58,12 @@ public class StatsModule {
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
-			;
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelStats", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 		} else if("coursesReport".equals(obj)) {
 			return coursesReport(ctx);
 		} else if("journalPlugins".equals(obj)) {

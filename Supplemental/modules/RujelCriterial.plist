@@ -10,8 +10,6 @@
 	<dict>
 		<key>Criterial</key>
 		<dict>
-			<key>_untagged</key>
-			<string>Criterial</string>
 			<key>dbName</key>
 			<string>RujelYear%s</string>
 		</dict>
@@ -25,42 +23,6 @@
 	<dict>
 		<key>EduLesson</key>
 		<string>net.rujel.criterial.Work</string>
-	</dict>
-	<key>auth.access</key>
-	<dict>
-		<key>Mark</key>
-		<dict>
-			<key>root</key>
-			<string>1023</string>
-			<key>zav_kaf</key>
-			<string>31</string>
-			<key>zavuch</key>
-			<string>31</string>
-			<key>teacher</key>
-			<string>15</string>
-		</dict>
-		<key>Work</key>
-		<dict>
-			<key>root</key>
-			<string>1023</string>
-			<key>zav_kaf</key>
-			<string>31</string>
-			<key>zavuch</key>
-			<string>31</string>
-			<key>any</key>
-			<string>1</string>
-			<key>teacher</key>
-			<string>31</string>
-		</dict>
-		<key>WorkType</key>
-		<dict>
-			<key>root</key>
-			<string>1023</string>
-			<key>zavuch</key>
-			<string>15</string>
-			<key>any</key>
-			<string>1</string>
-		</dict>
 	</dict>
 </dict>
 </plist>

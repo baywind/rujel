@@ -18,8 +18,6 @@
 		<string>net.rujel.auth.ldap.LdapAuthentication</string>
 		<key>accessHandlerClass</key>
 		<string>net.rujel.auth.PrefsAccessHandler</string>
-		<key>access</key>
-		<string>access/General.plist</string>
 		<key>_groupMapping</key>
 		<dict>
 			<key>root</key>
@@ -171,6 +169,16 @@
 		<string>true</string>
 		<key>prototypes</key>
 		<string>MySQL</string>
+		<key>BaseStatic</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelStatic</string>
+		</dict>
+		<key>BaseYearly</key>
+		<dict>
+			<key>dbName</key>
+			<string>RujelYear%s</string>
+		</dict>
 	</dict>
 	<key>edu</key>
 	<dict>

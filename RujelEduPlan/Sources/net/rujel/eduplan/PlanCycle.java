@@ -51,6 +51,12 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			//init();
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelEduPlan", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 			EOSortOrdering.ComparisonSupport.setSupportForClass(
 					new SubjectComparator.ComparisonSupport(), Subject.class);
 			EOSortOrdering.ComparisonSupport.setSupportForClass(

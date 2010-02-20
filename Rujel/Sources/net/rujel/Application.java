@@ -29,6 +29,7 @@
 
 package net.rujel;
 
+import net.rujel.auth.ReadAccess;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.*;
@@ -99,6 +100,9 @@ public class Application extends UTF8Application {
 		} else {
 			DataBaseConnector.makeConnections();
 		}
+		NSDictionary access = (NSDictionary)PlistReader.readPlist("access.plist", null, null);
+		ReadAccess.mergeDefaultAccess(access);
+		
 		SettingsBase.init();
 		net.rujel.interfaces.EOInitialiser.initAll();
 //		SettingsReader node = SettingsReader.settingsForPath("modules",true);
@@ -125,8 +129,8 @@ public class Application extends UTF8Application {
 			timer.scheduleAtFixedRate(task, cal.getTime(), NSLocking.OneDay);
 			ModulesInitialiser.useModules(null, "scheduleTask");
 		}
-		logger.log(WOLogLevel.INFO,"Rujel started. Version:" + System.getProperty("Version"),
-				webserverConnectURL());
+		logger.log(WOLogLevel.INFO,"Rujel started. Version:"
+				+ System.getProperty("RujelVersion"), webserverConnectURL());
 	}
 	
 	public Timer timer() {
@@ -247,5 +251,9 @@ public class Application extends UTF8Application {
 					"Generating session: " + aRequest.method() + ':' + aRequest.uri(), args);
 		}
 		return result;
+	}
+	
+	public void setDefaultAccess(NSDictionary toMerge) {
+		ReadAccess.mergeDefaultAccess(toMerge);
 	}
 }

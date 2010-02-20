@@ -2,7 +2,62 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>VsePerson</key>
+	<key>Curriculum</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>zav_kaf</key>
+		<string>1</string>
+	</dict>
+	<key>Substitute</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>zav_kaf</key>
+		<string>15</string>
+		<key>teacher</key>
+		<string>3</string>
+		<key>any</key>
+		<string>1</string>
+	</dict>
+	<key>Variation</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>zav_kaf</key>
+		<string>15</string>
+		<key>teacher</key>
+		<string>3</string>
+		<key>any</key>
+		<string>1</string>
+	</dict>
+	<key>Reason</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>teacher</key>
+		<string>3</string>
+		<key>any</key>
+		<string>1</string>
+	</dict>
+	<key>Reprimand</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>teacher</key>
+		<string>1</string>
+	</dict>
+	<key>ListsEditor</key>
 	<dict>
 		<key>root</key>
 		<string>1023</string>
@@ -15,47 +70,14 @@
 		<key>teacher</key>
 		<string>1</string>
 	</dict>
-	<key>VseTeacher</key>
-	<dict>
-		<key>root</key>
-		<string>1023</string>
-		<key>zavuch</key>
-		<string>15</string>
-		<key>zav_kaf</key>
-		<string>7</string>
-		<key>teacher</key>
-		<string>1</string>
-	</dict>
-	<key>VseStudent</key>
-	<dict>
-		<key>root</key>
-		<string>1023</string>
-		<key>zavuch</key>
-		<string>15</string>
-		<key>tutor</key>
-		<string>7</string>
-		<key>teacher</key>
-		<string>1</string>
-	</dict>
-	<key>VseList</key>
-	<dict>
-		<key>root</key>
-		<string>1023</string>
-		<key>zavuch</key>
-		<string>15</string>
-		<key>tutor</key>
-		<string>7</string>
-		<key>teacher</key>
-		<string>1</string>
-	</dict>
-	<key>VseEduGroup</key>
+	<key>Tabel</key>
 	<dict>
 		<key>root</key>
 		<string>1023</string>
 		<key>zavuch</key>
 		<string>15</string>
 		<key>teacher</key>
-		<string>1</string>
+		<string>5</string>
 	</dict>
 </dict>
 </plist>

@@ -47,6 +47,7 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSData;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSPropertyListSerialization;
@@ -61,7 +62,12 @@ public class ReportsModule {
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
-			;
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelReports", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 		} else if(obj.equals("regimeGroups")) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelReports_Reports.regimeGroup");

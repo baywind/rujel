@@ -53,8 +53,23 @@ import net.rujel.reusables.WOLogLevel;
 public class AutoItogModule {
 	public static final Logger logger = Logger.getLogger("rujel.autoitog");
 	
+	public static boolean isAvailable(NSArray active) {
+		boolean res = (active.containsObject("net.rujel.eduresults.ModuleInit") &&
+				active.containsObject("net.rujel.criterial.ModuleInit"));
+		if(!res)
+			logger.log(WOLogLevel.INFO,
+					"AutoItog module requires EduResults and Criterial modules");
+		return res;
+	}
+	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelAutoItog", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 			AutoItog.init();
 			Prognosis.init();
 			StudentTimeout.init();

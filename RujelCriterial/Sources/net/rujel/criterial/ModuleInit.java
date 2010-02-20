@@ -59,6 +59,12 @@ public class ModuleInit {
 */	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelCriterial", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 			init();
 //		} else if("init2".equals(obj)) {
 //			Work.initTypes();

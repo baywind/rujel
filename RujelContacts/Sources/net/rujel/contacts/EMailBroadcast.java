@@ -56,8 +56,13 @@ public class EMailBroadcast implements Runnable{
 	protected static Logger logger = Logger.getLogger("rujel.contacts");
 
 	public static Object init(Object obj, WOContext ctx) {
-		if (obj == null) {
-			return null;
+		if (obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelContacts", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 		} else if(obj.equals("scheduleTask")) {
 			boolean dontBcast = Boolean.getBoolean("EMailBroadcast.disableWeekly");
 			if(dontBcast)

@@ -58,6 +58,6 @@ public class Main extends com.webobjects.appserver.WOComponent {
     }
     
     public String version() {
-    	return System.getProperty("Version");
+    	return System.getProperty("RujelVersion");
     }
 }

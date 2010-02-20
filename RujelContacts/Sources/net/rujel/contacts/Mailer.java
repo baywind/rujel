@@ -202,6 +202,7 @@ public class Mailer {
 			"strings.RujelContacts_Contacts.defaultMessage");*/
 			String filePath = settings.get("messageFilePath", null);
 			if(filePath != null) {
+				filePath = Various.convertFilePath(filePath);
 				try {
 					InputStream strm = new FileInputStream(filePath);
 					InputStreamReader reader = new InputStreamReader(strm,"utf8");

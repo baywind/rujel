@@ -57,8 +57,24 @@ import com.webobjects.foundation.*;
 
 public class CurriculumModule {
 		
+	public static boolean isAvailable(NSArray active) {
+		boolean res = (active.containsObject("net.rujel.eduplan.PlanCycle") &&
+				active.containsObject("net.rujel.base.BaseModule"));
+		if(!res)
+			Logger.getLogger("rujel.curriculum").log(WOLogLevel.INFO,
+					"Curriculum module requires EduPlan and Base modules");
+		return res;
+	}
+	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist",
+						"RujelCurriculum", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 			Substitute.init();
 			Reason.init();
 			Variation.init();

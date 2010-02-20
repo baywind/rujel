@@ -36,7 +36,8 @@ import com.webobjects.foundation.NSTimestamp;
 public interface EduCourse extends com.webobjects.eocontrol.EOEnterpriseObject {
 	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath(
 			"interfaces.EduCourse","net.rujel.base.BaseCourse");
-	public static final String entityName = className.substring(1 + className.lastIndexOf('.'));
+	public static final String entityName = className.substring(1 
+			+ className.lastIndexOf('.'));
 	
 	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
 			new EOSortOrdering("eduGroup",EOSortOrdering.CompareCaseInsensitiveAscending),

@@ -35,12 +35,19 @@ import net.rujel.reusables.PlistReader;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 
 public class BaseModule {
 	protected static NSDictionary lessonsTab;
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelBase", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 			init();
 		} else if("presentTabs".equals(obj)) {
 			if(lessonsTab == null) lessonsTab = (NSDictionary)WOApplication.application().

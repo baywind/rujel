@@ -1,24 +1,11 @@
-# Add application properties here
-
-# These properties are loaded into the Java system properties for the application
-# These properties may be overridden at the command-line
-# The properties listed are only examples, and are not intended to be comprehensive
-# Remove the leading '#' to uncomment a property
-
-#WOAutoOpenInBrowser=true
-#WOAutoOpenClientApplication=true
 WOPort=2000
-#WODebuggingEnabled=true
-#WODirectConnectEnabled=true
-#WOAllowRapidTurnaround=true
 WOSessionTimeOut=910
 WOSessionTimeOutMultiplier=3.2
 WOSessionLongTimeOut=3600
 WOSessionShortTimeOut=300
-#WOAllowsConcurrentRequestHandling=false
 
 ApplicationName=Rujel
-Version=0.8.2
+RujelVersion=0.8.3
 
 #Settings.className = net.rujel.reusables.PrefsReader
 #PrefsReader.nodePath = /net/rujel

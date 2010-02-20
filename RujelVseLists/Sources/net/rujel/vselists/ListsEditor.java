@@ -68,6 +68,12 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelVseLists", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
 			Person.Utility.delegateManager.addDelegate(new PersonDelegate(),30);
 		} else if(obj.equals("regimes")) {
 			if(ctx != null && ctx.hasSession())

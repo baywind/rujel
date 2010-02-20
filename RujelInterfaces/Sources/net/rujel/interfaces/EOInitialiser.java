@@ -33,7 +33,6 @@ import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import net.rujel.reusables.SettingsReader;
 
 public class EOInitialiser {
 	protected static Logger logger = Logger.getLogger("EOInitialiser");
@@ -41,7 +40,7 @@ public class EOInitialiser {
 //	public static final String PKEY = "PrimaryKeyAttribute";
 //	public static final String TOMANY = "isToMany";
 	
-	public static final SettingsReader intefacesPrefs = SettingsReader.settingsForPath("interfaces",true);
+//	public static final SettingsReader intefacesPrefs = SettingsReader.settingsForPath("interfaces",true);
 	protected static final EOModelGroup mg = EOModelGroup.defaultGroup();
 	
 	
@@ -70,6 +69,17 @@ public class EOInitialiser {
 		EORelationship relationship = sourceEntity.relationshipNamed(relationshipName);
 		
 		EOEntity tEntity = mg.entityNamed(targetInterface);
+		try {
+			Class tIf = Class.forName("net.rujel.interfaces." + targetInterface);
+			String tEntityName = (String)tIf.getDeclaredField("entityName").get(null);
+			tEntity = mg.entityNamed(tEntityName);
+		} catch (Exception e) {
+			if (relationship == null)
+				throw new IllegalStateException("Target Entity was not properly described");
+			else
+				return relationship;
+		}
+		/*
 		String tEntityName = intefacesPrefs.get(targetInterface,null);
 		if(tEntityName == null) { 
 			if (tEntity == null) {
@@ -93,8 +103,17 @@ public class EOInitialiser {
 			}
 			tEntity = mg.entityNamed(tEntityName);
 		}
-		if(tEntity == null)
+		*/
+		if(tEntity == null) {
 			throw new IllegalStateException ("Could not retrieve target entity");
+		} else {
+			if(relationship != null) {
+				if (relationship.destinationEntity().equals(tEntity))
+					return relationship;
+				else
+					sourceEntity.removeRelationship(relationship);
+			}
+		}
 		NSArray tPkey = tEntity.primaryKeyAttributes();
 		if (tPkey.count() != 1)
 			throw new IllegalStateException ("Target entity should have exactly one primaryKey attribute");
@@ -107,7 +126,9 @@ public class EOInitialiser {
 		relationship.setToMany(toMany);
 		relationship.setJoinSemantic(EORelationship.InnerJoin);
 		relationship.setIsMandatory(!sourceAttribute.allowsNull());
-		logger.logp(Level.CONFIG,"EOInitialiser","initialiseRelationship","Connected '" + sourceEntity.name() + "' to '" + tEntityName + "' with relationship named '" + relationshipName + '\'');
+		logger.logp(Level.CONFIG,"EOInitialiser","initialiseRelationship","Connected '" 
+				+ sourceEntity.name() + "' to '" + tEntity.name() +
+				"' with relationship named '" + relationshipName + '\'');
 		return relationship;
 	}
 	
@@ -120,7 +141,7 @@ public class EOInitialiser {
 	
 	public static void initAll() {
 		//String[] interfaces = null;
-		String className;
+//		String className;
 		Class aClass;
 		java.lang.reflect.Method method;
 		/*try {
@@ -128,13 +149,17 @@ public class EOInitialiser {
 		} catch (BackingStoreException bex) {
 			throw new NSForwardException(bex, "Could not read preferences.");
 		}*/
-		java.util.Enumeration enu = intefacesPrefs.keyEnumerator();
-		//for (int i = 0; i < interfaces.length; i++) {
-		while (enu.hasMoreElements()) {
-			String intrfc = (String)enu.nextElement();
-			className = intefacesPrefs.get(intrfc,intrfc);
+//		java.util.Enumeration enu = intefacesPrefs.keyEnumerator();
+		String[] ifClasses = new String[] {
+				EduCourse.className, EduCycle.className, EduLesson.className,
+				EduGroup.className, Student.className, Teacher.className
+		};
+		for (int i = 0; i < ifClasses.length; i++) {
+//		while (enu.hasMoreElements()) {
+//			String intrfc = (String)enu.nextElement();
+//			className = intefacesPrefs.get(intrfc,intrfc);
 			try {
-				aClass = Class.forName(className);
+				aClass = Class.forName(ifClasses[i]);
 				method = aClass.getMethod("init");
 				method.invoke(null,(Object[])null);
 			} catch (java.lang.NoSuchMethodException nex) {
