@@ -30,7 +30,6 @@
 package net.rujel.criterial;
 
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
 import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
@@ -45,7 +44,7 @@ import java.math.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObserving
+public class Work extends _Work implements EduLesson {	// EOObserving
 	public transient FractionPresenter _integralPresenter;
 
 	public Work() {
@@ -111,20 +110,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     }
 */
-	public static final NSArray accessKeys = new NSArray (new String[] {
-			"read","create","edit","delete","setMarks","changeCritSet"});
-	
-	private transient NamedFlags _access;
-	public NamedFlags access() {
-		if(_access == null) {
-			_access = StaticImplementation.access(this,accessKeys);
-		}
-		return _access.immutableClone();
-	}
-	
-	public boolean isOwned() {
-		return StaticImplementation.isOwned(this);
-	}
+
 	
 	private transient NSArray _usedCriteria;
 	public NSArray usedCriteria() {
@@ -460,7 +446,7 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 		_oddMarksIndex = null;
 //		_oddMarks = null;
 //		_uninitialisedMarks = null;
-		_access = null;
+//		_access = null;
 		_allCriteria=null;
 		_integralPresenter = null;
 		weightToMax = null;
@@ -676,36 +662,6 @@ public class Work extends _Work implements UseAccessScheme,EduLesson {	// EOObse
 					throw new NSValidation.ValidationException(message);
 				}
 			}
-		}
-	}
-	
-	public AccessSchemeAssistant assistantForAttribute(
-			String attribute, NSArray useAccessKeys) {
-		return null;
-	}
-	
-	public NamedFlags accessForAttribute (String attribute, NSArray useAccessKeys) {
-		if(editingContext() == null) return DegenerateFlags.ALL_FALSE;
-		UserPresentation user = (UserPresentation)valueForKeyPath(
-				"editingContext.session.user");
-		if(user == null)
-			throw new IllegalStateException ("Can't get user to determine access");
-		if(useAccessKeys == null) useAccessKeys = UseAccess.accessKeys;
-		String request = "Work." + attribute;
-		if("marks".equals(attribute))
-			request = "Mark";
-		else if("notes".equals(attribute))
-			request = "BaseNote";
-		try {
-			int level = user.accessLevel(request);
-			NamedFlags result = new ImmutableNamedFlags(level,useAccessKeys);
-			return result;
-		} catch (AccessHandler.UnlistedModuleException e) {
-//			Logger.getLogger("auth").logp(Level.WARNING,
-//					"UseAccess.StaticImplementation","access",
-//					"Undefined access to module : returning full access",
-//					new Object[] {valueForKeyPath("editingContext.session"),request});
-			return  null;
 		}
 	}
 	

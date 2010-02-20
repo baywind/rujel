@@ -29,8 +29,6 @@
 
 package net.rujel.base;
 
-import net.rujel.reusables.*;
-import net.rujel.auth.*;
 import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
@@ -39,7 +37,7 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
-public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme {
+public class BaseLesson extends _BaseLesson implements EduLesson {
 /*	
 	public static final NSArray flagNames = new NSArray(new Object[] {
 		"notLesson","lastOnPage"});
@@ -64,53 +62,10 @@ public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     }
-*/
-	public static final NSArray accessKeys = new NSArray (new String[] {"read","create","edit","delete","setNotes"});
-	
-	private transient NamedFlags _access;
-	public NamedFlags access() {
-		if(_access == null) {
-			_access = StaticImplementation.access(this,accessKeys);
-		}
-		return _access.immutableClone();
-	}
-	/*
-	private transient NSMutableDictionary _schemeCache;
-	public NamedFlags schemeAccess(String schemePath) {
-		NamedFlags result = null;
-		if(_schemeCache == null) {
-			_schemeCache = new NSMutableDictionary();
-		} else {
-			result = (NamedFlags)_schemeCache.objectForKey(schemePath);
-		}
-		if(result == null) {
-			result = StaticImplementation.schemeAccess(this,schemePath);
-			if(result == null) {
-				result = DegenerateFlags.ALL_FALSE;
-			}
-			_schemeCache.setObjectForKey(result,schemePath);
-		}
-		if(result == DegenerateFlags.ALL_FALSE)
-			return null;
-		else return result;
-	}*/
-	
+*/	
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
-		_access = null;
-		//_homeTask = null;
 	}
-
-	
-	public boolean isOwned() {
-		return StaticImplementation.isOwned(this);
-	}
-	
-	/*
-	public void awakeFromInsertion(EOEditingContext ec) {
-		super.awakeFromInsertion(ec);
-		super.setFlags(new Byte((byte)0));
-	}*/
 	
 	public NSArray students() {
 		if(notes() == null) return null;
@@ -182,28 +137,6 @@ public class BaseLesson extends _BaseLesson implements EduLesson,UseAccessScheme
 	
 	public void setCourse(EduCourse newCourse) {
          takeStoredValueForKey(newCourse, "course");
-	}
-
-	public AccessSchemeAssistant assistantForAttribute(String attribute, NSArray accKeys) {
-		return null;
-	}
-	
-	public NamedFlags accessForAttribute (String attribute, NSArray accKeys) {
-		UserPresentation user = (UserPresentation)valueForKeyPath("editingContext.session.user");
-		if(user == null)
-			throw new IllegalStateException ("Can't get user to determine access");
-		if(accKeys == null) accKeys = UseAccessScheme.accessKeys;
-		String request = "BaseLesson." + attribute;
-		if("notes".equals(attribute))
-			request = "BaseNote";
-		try {
-			int level = user.accessLevel(request);
-			NamedFlags result = new ImmutableNamedFlags(level,accKeys);
-			return result;
-		} catch (AccessHandler.UnlistedModuleException e) {
-			//			Logger.getLogger("auth").logp(Level.WARNING,"UseAccess.StaticImplementation","access","Undefined access to module : returning full access",new Object[] {valueForKeyPath("editingContext.session"),request});
-			return  null;
-		}
 	}
 	
 	public static class TaskDelegate {

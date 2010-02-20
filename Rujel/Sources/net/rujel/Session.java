@@ -361,35 +361,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		String href = context().componentActionURL();
 		return "if(confirmAction(null,event) && tryLoad())window.location = '" + href +"';";
     }
-	public static final NSArray defaultAccessKeys = new NSArray(new Object[] {
-		"read","create","edit","delete"});
-/*
-	public NamedFlags access(Object module,NSArray keys) {
-		if(keys == null) keys = defaultAccessKeys;
-		return new NamedFlags(accessLevel(module),UseAccess.accessKeys);
-	}
-	
-	public int accessLevel(Object module) {
-		try {
-			return user.accessLevel(module);
-		} catch (AccessHandler.UnlistedModuleException e) {
-			logger.log(WOLogLevel.CONFIG,"Can't get accessLevel",new Object[] {this,module,e.getMessage()});
-			return -1;
-		}
-	}
-	
-	public NSKeyValueCoding accessLevel() {
-		return new NSKeyValueCoding() {
-			public void takeValueForKey(Object value,String key) {
-				throw new UnsupportedOperationException("This is read-only value");
-			}
-			
-			public Object valueForKey(String key) {
-				return access(key,null);
-			}
-		};
-	}
-	*/
+
 	public NSMutableArray pathStack = new NSMutableArray();
 	
 	public void setPushComponent (WOComponent nextComponent) {

@@ -4,7 +4,6 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/activation.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/mail.jar"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
-	<classpathentry kind="con" path="WOFramework/Authentication"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>

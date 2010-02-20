@@ -35,7 +35,6 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
 import net.rujel.criterial.*;
-import net.rujel.auth.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
@@ -191,19 +190,13 @@ public class WorkList extends LessonList {
 	private NamedFlags _access;
 	public NamedFlags access() {
 		if(_access == null) {
-			UserPresentation user = (UserPresentation)session().valueForKey("user");
-			if(user != null) {
-				try {
-					int lvl = user.accessLevel("Work");
-					_access = new ImmutableNamedFlags(lvl,Work.accessKeys);
-				}  catch (AccessHandler.UnlistedModuleException e) {
-					_access = DegenerateFlags.ALL_TRUE;
-				}
-			}
-			if(_access == null)
-				_access = DegenerateFlags.ALL_TRUE;
+			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Work");
 		}
 		return _access;
+	}
+	
+	public Work currLesson() {
+		return (Work)valueForBinding("currLesson");
 	}
 	
 	private NSArray _criteria;

@@ -29,8 +29,6 @@
 
 package net.rujel.ui;
 
-//import net.rujel.auth.*;
-
 import java.text.FieldPosition;
 
 import net.rujel.base.MyUtility;

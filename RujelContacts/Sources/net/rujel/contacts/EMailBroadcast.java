@@ -31,12 +31,10 @@ package net.rujel.contacts;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
-import net.rujel.auth.UserPresentation.DummyUser;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
-//import er.javamail.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
@@ -334,11 +332,15 @@ gr:		while (eduGroups.hasMoreElements()) {
 		
 		if(ec==null)
 			ec = (EOEditingContext)params.valueForKey("editingContext");
-		if(ec==null || !(ec instanceof SessionedEditingContext) ||
-				!(((SessionedEditingContext)ec).session().valueForKey("user") instanceof DummyUser)) {
-			ec = new SessionedEditingContext(ctx.session());//((EOEnterpriseObject)students.objectAtIndex(0)).editingContext();
+		if(ec !=null && !(ec instanceof SessionedEditingContext))
+			ec = null;
+		if(ec instanceof SessionedEditingContext) {
+			Object user = ((SessionedEditingContext)ec).session().valueForKey("user");
+			if(user == null || !user.toString().startsWith("DummyUser"))
+				ec = null;
 		}
-		
+		if(ec==null)	
+			ec = new SessionedEditingContext(ctx.session());
 //		ec.lock();
 		
 		students = EOUtilities.localInstancesOfObjects(ec,students);

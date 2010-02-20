@@ -29,7 +29,6 @@
 
 package net.rujel.interfaces;
 
-//import net.rujel.auth.*;
 import com.webobjects.foundation.NSTimestamp;//java.util.Date;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.eocontrol.EOEnterpriseObject;

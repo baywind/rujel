@@ -38,9 +38,6 @@ import com.webobjects.appserver.WOSession;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
-import net.rujel.auth.AccessHandler;
-import net.rujel.auth.ReadAccess;
-import net.rujel.auth.UserPresentation;
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.*;
 import net.rujel.interfaces.*;
@@ -62,52 +59,28 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	public PrognosesAddOn(WOSession ses) {
 		super();
 		session = ses;
-		user = (UserPresentation)ses.valueForKey("user");
 	}
 	protected WOSession session;
-	protected UserPresentation user;
 
 	private NamedFlags _access;
 	public NamedFlags access() {
-		if(user == null)
-			_access = DegenerateFlags.ALL_TRUE;
-		else {
-			try {
-				int lvl = user.accessLevel("Prognosis");
-				_access = new ImmutableNamedFlags(lvl,ReadAccess.accessKeys);
-			}  catch (AccessHandler.UnlistedModuleException e) {
-				_access = DegenerateFlags.ALL_TRUE;
-			}
-		}
+		if(_access == null)
+			_access = (NamedFlags)session.valueForKeyPath("readAccess.FLAGS.Prognosis");
 		return _access;
 	}
 
 	private NamedFlags _accessTimeout;
 	public NamedFlags accessTimeout() {
-		if(user == null)
-			_accessTimeout = DegenerateFlags.ALL_TRUE;
-		else {
-			try {
-				int lvl = user.accessLevel("StudentTimeout");
-				_accessTimeout = new ImmutableNamedFlags(lvl,ReadAccess.accessKeys);
-			}  catch (AccessHandler.UnlistedModuleException e) {
-				_accessTimeout = DegenerateFlags.ALL_TRUE;
-			}
-		}
+		if(_accessTimeout == null)
+			_accessTimeout = (NamedFlags)session.valueForKeyPath(
+					"readAccess.FLAGS.StudentTimeout");
 		return _accessTimeout;
 	}
 	private NamedFlags _accessCourseTimeout;
 	public NamedFlags accessCourseTimeout() {
-		if(user == null)
-			_accessCourseTimeout = DegenerateFlags.ALL_TRUE;
-		else {
-			try {
-				int lvl = user.accessLevel("CourseTimeout");
-				_accessCourseTimeout = new ImmutableNamedFlags(lvl,ReadAccess.accessKeys);
-			}  catch (AccessHandler.UnlistedModuleException e) {
-				_accessCourseTimeout = DegenerateFlags.ALL_TRUE;
-			}
-		}
+		if(_accessCourseTimeout == null)
+			_accessCourseTimeout = (NamedFlags)session.valueForKeyPath(
+			"readAccess.FLAGS.StudentTimeout");
 		return _accessCourseTimeout;
 	}
 

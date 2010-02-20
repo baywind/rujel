@@ -153,44 +153,6 @@ public class ChooseRegime extends WOComponent {
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }
-	/*
-	public static NSArray allRegimes() {
-		try {
-			return new NSArray(prefs.keys());
-		} catch (java.util.prefs.BackingStoreException bex) {
-			return null;
-		}
-	}
-	
-	public static NSDictionary allowedRegimes(UserPresentation user) {
-		try {
-			NSMutableDictionary result = new NSMutableDictionary();
-			SettingsReader prefs = SettingsReader.settingsForPath("ui.regime",true);
-			java.util.Enumeration enu = prefs.keyEnumerator();
-			while(enu.hasMoreElements()) {
-				String name = (String)enu.nextElement();
-				String cmpnt = prefs.get(name,name);
-				try {
-					if(user.accessLevel(cmpnt) != 0)
-						result.setObjectForKey(cmpnt,name);
-				} catch (AccessHandler.UnlistedModuleException ex) {
-					result.setObjectForKey(cmpnt,name);
-				}
-			}
-			return result.immutableClone();
-		} catch (Exception ex) {
-			logger.logp(WOLogLevel.SEVERE,"ChooseRegime","allowedRegimes",
-					"Can't get list of regimes preferences",ex);
-			return null;
-		}
-	}
-	
-    public String title() {
-        String result = (String)application().valueForKeyPath("strings.Strings.ChooseRegime.title");
-        	if(result == null)
-        		result = "Choose Regime";
-        return result;
-    }*/
     
     protected NSArray _regimeGroups;
     public NSArray regimeGroups() {
@@ -201,21 +163,7 @@ public class ChooseRegime extends WOComponent {
     	NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)
     							session().valueForKey("readAccess");
     	NSMutableArray result = PlistReader.cloneArray(_regimeGroups, true);
-/*    	if(Various.boolForObject(readAccess.valueForKeyPath("_read.Overview"))) {
-    		NSMutableDictionary edu = (NSMutableDictionary)result.objectAtIndex(0);
-    		if(!"edu".equals(edu.valueForKey("id"))) {
-    			for (int i = 1; i < result.count(); i++) {
-    				edu = (NSMutableDictionary)result.objectAtIndex(i);
-    				if("edu".equals(edu.valueForKey("id")))
-    					break;
-    				else
-    					edu = null;
-    			}
-    		}
-    		if(edu != null) {
-    			edu.removeObjectForKey("regimes");
-    		}
-    	}*/
+
     	_regimeGroups = (NSArray)session().valueForKeyPath("modules.regimeGroups");
     	if(_regimeGroups != null && _regimeGroups.count() > 0)
     		result.addObjectsFromArray(PlistReader.cloneArray(_regimeGroups, true));

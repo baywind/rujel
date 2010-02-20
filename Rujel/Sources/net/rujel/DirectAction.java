@@ -31,7 +31,7 @@ package net.rujel;
 
 import java.util.logging.Logger;
 
-import net.rujel.auth.*;
+import net.rujel.auth.LoginProcessor;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 

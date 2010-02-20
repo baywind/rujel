@@ -31,7 +31,6 @@ package net.rujel.ui;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -56,17 +55,8 @@ public class Overview extends WOComponent {
 	protected NamedFlags _access;
 	public NamedFlags access() {
 		if(_access == null) {
-			UserPresentation user = (UserPresentation)session().valueForKey("user");
-			if(user != null) {
-				try {
-					int lvl = user.accessLevel("Overview");
-					_access = new ImmutableNamedFlags(lvl,accessKeys);
-				}  catch (AccessHandler.UnlistedModuleException e) {
-					_access = DegenerateFlags.ALL_TRUE;
-				}
-			}
-			if(_access == null)
-				_access = DegenerateFlags.ALL_TRUE;
+			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Overview");
+			_access.setKeys(accessKeys);
 		}
 		return _access;
 	}

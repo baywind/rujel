@@ -1,12 +1,12 @@
 AddButton: WOSubmitButton {
 	value = application.strings.Reusables_Strings.uiElements.Add;
 	onclick = "changed=false;ajaxPost(this);";
-	disabled = access._create;
+	disabled = session.readAccess._create.Work;
 	action = addWork;
 }
 
 AllowEdit: WOConditional {
-	condition = access.edit;
+	condition = session.readAccess.edit.currLesson;
 }
 
 CanEdit: WOConditional {
@@ -18,12 +18,12 @@ CanMove: WOString {
 }
 
 Conditional1: WOConditional {
-	condition = ^currLesson.access.delete;
+	condition = session.readAccess.delete.currLesson;
 }
 
 
 Conditional3: WOConditional {
-	condition = ^currLesson.access.edit;
+	condition = session.readAccess.edit.currLesson;
 }
 
 CritHead: WOGenericContainer {
@@ -51,7 +51,7 @@ CurrAnnounceDateField: WOTextField {
 CurrLessonDateField: WOTextField {
 	size = lessonTitle.length;
 	value = lessonTitle;
-	disabled = lessonItem.access._edit;
+	disabled = session.readAccess._edit.lessonItem;
 	onChange = "checkChanges(this);";
 	onFocus = "if(!tryLoad(false)) blur();";
 	style = "text-align:center;";
@@ -64,7 +64,7 @@ CurrLessonThemeField: WOText {
 	style = "width:100%";
 	rows = 2;
 	value = ^currLesson.theme;
-	disabled = lessonItem.access._edit;
+	disabled = session.readAccess._edit.lessonItem;
 	onChange = "checkChanges(this);";
 	onFocus = "if(!tryLoad(false)) blur();";
 	id = themeFieldID;

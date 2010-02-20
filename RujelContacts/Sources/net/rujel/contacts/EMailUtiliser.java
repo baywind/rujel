@@ -29,7 +29,6 @@
 
 package net.rujel.contacts;
 
-//import net.rujel.auth.*;
 import net.rujel.reusables.*;
 import net.rujel.base.MyUtility;
 //import er.javamail.*;

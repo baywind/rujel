@@ -31,7 +31,6 @@ package net.rujel.base;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOMessage;
 import com.webobjects.eocontrol.*;
@@ -39,7 +38,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
+public class BaseCourse extends _BaseCourse implements EduCourse
 {
     public BaseCourse() {
         super();
@@ -63,21 +62,6 @@ public class BaseCourse extends _BaseCourse implements EduCourse, UseAccess
 		courseEntity.addRelationship(subgroupRelationship); */
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new BaseCourse.ComparisonSupport(), BaseCourse.class);
-	}
-
-	public static final NSArray accessKeys = new NSArray (new String[] {
-		"read","create","edit","delete","openCourses","createNewEduPlanCourses","editSubgroups"});
-
-	private transient NamedFlags _access;
-	public NamedFlags access() {
-		if(_access == null) {
-			_access = StaticImplementation.access(this,accessKeys);
-		}
-		return _access.immutableClone();
-	}
-	
-	public boolean isOwned() {
-		return StaticImplementation.isOwned(this);
 	}
 	
 	/*

@@ -61,20 +61,6 @@ public class NotePresenter extends WOComponent {
 				if(presenterCache != null)
 					presenterCache.takeValueForKey(_access, "noteAccess");
 			}
-			/*
-			if(lesson() instanceof UseAccessScheme) {
-				_access = ((UseAccessScheme)lesson()).accessForAttribute("notes",null);
-			} else {
-				UserPresentation user = (UserPresentation)session().valueForKey("user");
-				if(user != null) {
-					try {
-						int lvl = user.accessLevel("BaseNote");
-						_access = new ImmutableNamedFlags(lvl,UseAccess.accessKeys);
-					}  catch (AccessHandler.UnlistedModuleException e) {
-						_access = DegenerateFlags.ALL_TRUE;
-					}
-				}
-			}*/
 		}	
 		if(_access == null)
 			_access = DegenerateFlags.ALL_TRUE;

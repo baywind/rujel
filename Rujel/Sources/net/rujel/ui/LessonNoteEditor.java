@@ -34,8 +34,6 @@ import net.rujel.base.BaseTab;
 import net.rujel.base.MyUtility;
 
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
-//import net.rujel.base.BaseLesson;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -172,17 +170,9 @@ public class LessonNoteEditor extends WOComponent {
 	protected NamedFlags _accessInterface;
 	public NamedFlags accessInterface() {
 		if(_accessInterface == null) {
-			UserPresentation user = (UserPresentation)session().valueForKey("user");
-			if(user != null) {
-				try {
-					int lvl = user.accessLevel("LessonNoteEditor");
-					_accessInterface = new ImmutableNamedFlags(lvl,accessKeys);
-				}  catch (AccessHandler.UnlistedModuleException e) {
-					_accessInterface = DegenerateFlags.ALL_TRUE;
-				}
-			}
-			if(_accessInterface == null)
-				_accessInterface = DegenerateFlags.ALL_TRUE;
+			_accessInterface = (NamedFlags)session().valueForKeyPath(
+					"readAccess.FLAGS.LessonNoteEditor");
+			_accessInterface.setKeys(accessKeys);
 		}
 		return _accessInterface;
 	}
@@ -370,7 +360,7 @@ public class LessonNoteEditor extends WOComponent {
 						logger.log(level,"Created new lesson. " + changes,
 								new Object[] {session(),currPerPersonLink});
 						NSNotificationCenter.defaultCenter().postNotification(
-								net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey(
+								"Own created object",session().valueForKey(
 										"user"),new NSDictionary(currPerPersonLink,"EO"));
 					} else {
 //						if(currPerPersonLink instanceof UseAccess && 

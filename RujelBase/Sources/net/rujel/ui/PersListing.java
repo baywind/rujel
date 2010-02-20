@@ -33,8 +33,6 @@ import java.util.Enumeration;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
-import net.rujel.auth.UserPresentation;
-import net.rujel.auth.AccessHandler;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -75,23 +73,8 @@ public class PersListing extends WOComponent {
     }
 	
 	public NamedFlags access() {
-		if(access == null) {
-			UserPresentation user = (UserPresentation)session().valueForKey("user");
-			try {
-//				entity = (String)valueForBinding("entity");
-				access = new ImmutableNamedFlags(user.accessLevel(entity()),accessKeys);
-			} catch (AccessHandler.UnlistedModuleException e1) {
-				try {
-					access = new ImmutableNamedFlags(user.accessLevel("Person"),accessKeys);
-				} catch (AccessHandler.UnlistedModuleException e2) {
-					try {
-						access = new ImmutableNamedFlags(user.accessLevel("PersListing"),accessKeys);
-					} catch (AccessHandler.UnlistedModuleException e3) {
-						access = new ImmutableNamedFlags(1,accessKeys);;
-					}
-				}
-			}
-		}
+		if(access == null)
+			access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.PersListing");
 		return access;
 	}
 	

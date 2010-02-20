@@ -31,7 +31,6 @@ package net.rujel.ui;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
-import net.rujel.auth.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -56,32 +55,19 @@ public class EduPlanEditor extends WOComponent {
 	public EduCycle currCycle;
 	
 	protected NamedFlags _access;
-	public static final NSArray accessKeys = new NSArray(new Object[] {
-		"read","create","edit","delete"});
 	
 	public NamedFlags access() {
-		if (_access == null) return DegenerateFlags.ALL_TRUE;
-		return (NamedFlags)_access.immutableClone();
+		if (_access == null) {
+			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." 
+					+ EduCycle.entityName);
+		}
+		return _access;
 	}
 	
     public EduPlanEditor(WOContext context) {
         super(context);
 		NSArray gradeSorter = new NSArray(EOSortOrdering.sortOrderingWithKey("grade",EOSortOrdering.CompareAscending));
 		NSArray attribList = new NSArray("grade");
-		
-		UserPresentation user = (UserPresentation)session().valueForKey("user");
-		try {
-			int acc = user.accessLevel(EduCycle.entityName);
-			if (acc == 0) throw new AccessHandler.UnlistedModuleException("Zero access");
-			_access = new NamedFlags(acc,accessKeys);
-		} catch (AccessHandler.UnlistedModuleException e) {
-			try {
-				_access = new NamedFlags(user.accessLevel("EduPlanEditor"),accessKeys);
-			} catch (AccessHandler.UnlistedModuleException e1) {
-				logger.logp(WOLogLevel.CONFIG,"EduPlanEditor","<init>","Can't get accessLevel",session());
-				_access = DegenerateFlags.ALL_TRUE;
-			}
-		}
 		
 		ec = new SessionedEditingContext(session());
 		ec.lock();
@@ -173,7 +159,7 @@ public class EduPlanEditor extends WOComponent {
 				ec.saveChanges();
 				if(newCycle) { //log creation
 					logger.logp(WOLogLevel.UNOWNED_EDITING,"EduPlanEditor","save","Created new cycle",new Object[] {session(),currCycle});
-					NSNotificationCenter.defaultCenter().postNotification(net.rujel.auth.AccessHandler.ownNotificationName,session().valueForKey("user"),new NSDictionary(currCycle,"EO"));
+					NSNotificationCenter.defaultCenter().postNotification("Own created object",session().valueForKey("user"),new NSDictionary(currCycle,"EO"));
 				} else { //log change
 					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 //					if(currCycle instanceof UseAccess && ((UseAccess)currCycle).isOwned())

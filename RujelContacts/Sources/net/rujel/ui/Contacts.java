@@ -70,16 +70,7 @@ public class Contacts extends WOComponent {
 	public Contacts(WOContext context) {
         super(context);
 		ec = new SessionedEditingContext(session());
-		ec.lock();/*
-		UserPresentation user = (UserPresentation)session().valueForKey("user");
-		try {
-			int acc = user.accessLevel("Contacts");
-			if (acc == 0) throw new AccessHandler.UnlistedModuleException("Zero access");
-			_access = new NamedFlags(acc,accessKeys);
-		} catch (AccessHandler.UnlistedModuleException e) {
-				logger.logp(WOLogLevel.CONFIG,this.getClass().getName(),"<init>","Can't get accessLevel",session());
-				_access = DegenerateFlags.ALL_TRUE;
-		}*/
+		ec.lock();
 		_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Contacts");
 		ec.unlock();
 		contypes = EOUtilities.objectsForEntityNamed(ec,"ConType");

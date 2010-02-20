@@ -31,12 +31,11 @@ package net.rujel.base;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
-import net.rujel.auth.UseAccess;
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-public class PrimitiveEduCycle extends _PrimitiveEduCycle implements EduCycle,UseAccess
+public class PrimitiveEduCycle extends _PrimitiveEduCycle implements EduCycle
 {
     public PrimitiveEduCycle() {
         super();
@@ -69,53 +68,6 @@ public class PrimitiveEduCycle extends _PrimitiveEduCycle implements EduCycle,Us
     public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec) {
     	return EOUtilities.objectsMatchingKeyAndValue(ec,"PrimitiveEduCycle","grade",grade);
     }
-	
-	private transient NamedFlags _access;
-	public NamedFlags access() {
-		if(_access == null) {
-			_access = StaticImplementation.access(this,accessKeys);
-		}
-		return _access.immutableClone();
-	}
-	/*
-	private transient NSMutableDictionary _schemeCache;
-	public NamedFlags schemeAccess(String schemePath) {
-		NamedFlags result = null;
-		if(_schemeCache == null) {
-			_schemeCache = new NSMutableDictionary();
-		} else {
-			result = (NamedFlags)_schemeCache.objectForKey(schemePath);
-		}
-		if(result == null) {
-			result = StaticImplementation.schemeAccess(this,schemePath);
-			if(result == null) {
-				result = DegenerateFlags.ALL_FALSE;
-			}
-			_schemeCache.setObjectForKey(result,schemePath);
-		}
-		if(result == DegenerateFlags.ALL_FALSE)
-			return null;
-		else return result;
-	}
-	*/
-	
-	public boolean isOwned() {
-		return StaticImplementation.isOwned(this);
-	}
-	/*
-	public Integer grade() {
-		return new Integer(super.grade().intValue());
-	}
-	public void setGrade(Integer newGrade) {
-		super.setGrade(newGrade);
-	}
-
-	public Integer subgroups() {
-		return new Integer(super.subgroups().intValue());
-	}
-	public void setSubgroups(Integer newCount) {
-		super.setSubgroups(newCount);
-	}*/
 	
 	public void awakeFromInsertion(EOEditingContext ec){
 		super.awakeFromInsertion(ec);

@@ -46,8 +46,6 @@ import java.text.Format;
 import java.util.logging.Logger;
 
 public class MarksPresenter extends NotePresenter {
-	public static final NSArray accessKeys = new NSArray (
-			new String[] {"read","create","edit","delete","changeDate"});
 	
 	protected String entityName() {
 		return "Mark";
@@ -60,7 +58,7 @@ public class MarksPresenter extends NotePresenter {
 				_access = (NamedFlags)presenterCache.valueForKey("markAccess");
 			if(_access == null) {
 				if(_access == null && lesson() != null)
-					_access = lesson().accessForAttribute("marks",accessKeys);
+					_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Mark");
 				if(_access == null)
 					_access = DegenerateFlags.ALL_TRUE;
 				if(presenterCache != null)
@@ -71,19 +69,6 @@ public class MarksPresenter extends NotePresenter {
 	}
 	
     public Object critItem;
-	
-/*	public void setCritItem(Object item) {
-		if(item == null) {
-			critItem = null;//"text";
-		} else if(item instanceof Integer) {
-			critItem = (Integer)item;
-		} else if(item instanceof EOEnterpriseObject) {
-			critItem =  (Integer)((EOEnterpriseObject)item).valueForKey("criterion");
-		} else {
-			critItem = null;
-		}
-		_mark = null;
-	}*/
 	
 	protected Integer critItem() {
 		if(critItem instanceof Integer)
@@ -383,14 +368,6 @@ public class MarksPresenter extends NotePresenter {
     	return pres.presentFraction(integral);
     }
 
-    /*
-	public boolean isStateless() {
-		return true;
-	}
-	public boolean synchronizesVariablesWithBindings() {
-		return false;
-	}
-     */
     public void reset() {
     	super.reset();
     	_mark = null;
@@ -398,12 +375,7 @@ public class MarksPresenter extends NotePresenter {
 //    	_allCriteria = null;
 		critItem = null;
 	}
-/*	
-	public boolean cantCreate() {
-		Boolean deny = (Boolean)valueForBinding("denyCreation");
-        return (deny != null && deny.booleanValue() && lesson().integralForStudent(student()) == null);
-    }
-	*/
+
 	public boolean showNote() {
 	//	if(student() == null) return true;
 		if(!"text".equals(session().objectForKey("activeCriterion")))
@@ -429,23 +401,6 @@ public class MarksPresenter extends NotePresenter {
 			return !hasBinding("selectAction");
 		return false;
 	}
-
-	/*
-	public boolean deactivateNote() {
-		critItem = "text";
-		if (Various.boolForObject(valueForBinding("readOnly")))
-			return true;
-		if(forceArchives && noteForStudent() != null)
-			return false;
-		return isSelected();
-	}
-	
-	public String tdStyle() {
-		if(student() == null && lesson()!= null)
-			return lesson().styleClass();
-		return null;
-	}
-	*/
 	
 	public int len() {
 		int len = super.len();
@@ -495,20 +450,6 @@ public class MarksPresenter extends NotePresenter {
         return (deny != null && deny.booleanValue() && student() != null && lesson() != null && mark() == null);
     }
 	
-	/*
-	public String shortNoteForStudent() {
-		if(student() == null) {
-			String result = (String)application().valueForKeyPath("strings.RujelCriterial_Strings.text");
-			return (result==null)?"text":result;
-		}
-		return super.shortNoteForStudent();
-	}
-	
-//	public String 
-    public boolean display() {
-		return (Various.boolForObject(valueForBinding("full")) || !Various.boolForObject(valueForBinding("single")) || super.isSelected());
-    }*/
-	
 	public String noteWidth() {
 		if(student() != null && !isSelected()) return null;
 		int len = (len() + 1);
@@ -549,33 +490,4 @@ public class MarksPresenter extends NotePresenter {
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);
 	}
-	/*
-	public String onClick() {
-		String key = "checkRun";
-		if(enableArchive && student() != null && (single() || hasValue()))
-			key = "ajaxPopup";
-		return (String)session().valueForKey(key);
-    }
-	
-	
-	public String fieldTag() {
-		if(archiveOnly())
-			return "span";
-		else
-			return "input";
-	}
-	
-	public String fieldInit() {
-		StringBuffer buf = new StringBuffer(15);
-		if(archiveOnly()) {
-			buf.append("class = \"backfield2\" onclick=\"");
-			buf.append(session().valueForKey("ajaxPopup"));
-			buf.append("\"");
-		} else {
-			buf.append("type =\"text\" value=\"");
-			buf.append(markValue()).append("\" ");
-			buf.append("onchange = \"checkChanges(this);\" onkeypress = \"return isNumberInput(event);\"");
-		}
-		return buf.toString();
-	}*/
 }

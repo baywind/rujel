@@ -242,8 +242,7 @@ public class SrcMark extends WOComponent {
 				ec.saveChanges();
 				if(newCourse) { //log creation
 					logger.logp(WOLogLevel.UNOWNED_EDITING,"SrcMark","save","Created new course",new Object[] {session(),aCourse});
-					NSNotificationCenter.defaultCenter().postNotification(
-							net.rujel.auth.AccessHandler.ownNotificationName,
+					NSNotificationCenter.defaultCenter().postNotification("Own created object",
 							session().valueForKey("user"),new NSDictionary(aCourse,"EO"));
 					NSMutableArray tmp = courses.mutableClone();
 					dict.removeObjectForKey("teacher");
