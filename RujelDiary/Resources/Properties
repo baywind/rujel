@@ -4,4 +4,4 @@ ApplicationName=RujelDiary
 
 Settings.className = net.rujel.reusables.PlistReader
 CONFIGDIR=LOCALROOT/Library/WebObjects/Configuration
-PlistReader.filePath = CONFIGDIR/diaryConfig.plist
+PlistReader.filePath = CONFIGDIR/rujel.plist

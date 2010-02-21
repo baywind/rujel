@@ -66,7 +66,7 @@ public class Application extends UTF8Application {
 		WORequestHandler directActionRequestHandler = requestHandlerForKey("wa");
 		setDefaultRequestHandler(directActionRequestHandler);
 
-		String propertiesPath = SettingsReader.stringForKeyPath("loggingProperties", null);
+		String propertiesPath = SettingsReader.stringForKeyPath("diaryLogging", null);
 //		InputStream propsIn = (propertiesPath!=null)?null:
 //			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
 		if(propertiesPath != null) {
