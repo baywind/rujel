@@ -6,44 +6,12 @@
 	<string>0</string>
 	<key>loggingProperties</key>
 	<string>LOCALROOT/Library/WebObjects/Configuration/logging.properties</string>
-	<key>_modules</key>
-	<string>/Users/gena/Documents/WOProj/_workspace/rujel/Supplemental/modules</string>
 	<key>auth</key>
 	<dict>
 		<key>loginPageName</key>
 		<string>Main</string>
-		<key>loginHandlerClass</key>
-		<string>net.rujel.auth.PrefsDrivenUser</string>
-		<key>__loginHandlerClass</key>
-		<string>net.rujel.auth.ldap.LdapAuthentication</string>
 		<key>accessHandlerClass</key>
 		<string>net.rujel.auth.PrefsAccessHandler</string>
-		<key>_groupMapping</key>
-		<dict>
-			<key>root</key>
-			<string>cn=rujel_adm, ou=Group</string>
-			<key>zavuch</key>
-			<string>cn=zavuch, ou=Group</string>
-			<key>zav_kaf</key>
-			<string>cn=zav_kaf, ou=Group</string>
-			<key>tutor</key>
-			<string>cn= tutor, ou=Group</string>
-			<key>teacher</key>
-			<string>cn=teacher, ou=Group</string>
-			<key>any</key>
-			<string>*</string>
-		</dict>
-		<key>groupMapping</key>
-		<dict>
-			<key>any</key>
-			<string>*</string>
-		</dict>
-		<key>allowNone</key>
-		<string>false</string>
-		<key>guestUser</key>
-		<string>guest</string>
-		<key>guestPassword</key>
-		<string></string>
 		<key>welcomeMessage</key>
 		<string>Добро пожаловать</string>
 		<key>authErrorMessage</key>
@@ -60,8 +28,6 @@
 		<string>success</string>
 		<key>refuseAction</key>
 		<string>refuse</string>
-		<key>_refuseUrl</key>
-		<string>http://localhost/</string>
 		<key>useHTTPS</key>
 		<string>false</string>
 		<key>_customURL</key>
@@ -81,94 +47,11 @@
 				<string>https://demo.rujel.net</string>
 			</dict>
 		</dict>
-		<key>ldap</key>
-		<dict>
-			<key>providerUrl</key>
-			<string>ldap://192.168.0.11</string>
-			<key>authentication</key>
-			<string>simple</string>
-			<key>groupAttribute</key>
-			<string>securityEquals</string>
-			<key>useSSL</key>
-			<string>false</string>
-			<key>uidAttribute</key>
-			<string>uid</string>
-			<key>memberAttribute</key>
-			<string>memberUid</string>
-			<key>ssl</key>
-			<dict>
-				<key>protocol</key>
-				<string>TLS</string>
-				<key>trustAny</key>
-				<string>true</string>
-				<key>customKeytstore</key>
-				<string>/Library/WebObjects/Configuration/custcerts</string>
-			</dict>
-		</dict>
-		<key>usersList</key>
-		<dict>
-			<key>gena</key>
-			<dict>
-				<key>fullName</key>
-				<string>Gennady Kushnir</string>
-				<key>givenName</key>
-				<string>Gena</string>
-				<key>groups</key>
-				<string>root</string>
-				<key>password</key>
-				<string>qqq</string>
-				<key>sn</key>
-				<string>Kushnir</string>
-			</dict>
-			<key>guest</key>
-			<dict/>
-			<key>teacher</key>
-			<dict/>
-			<key>tutor</key>
-			<dict>
-				<key>groups</key>
-				<string>teacher</string>
-			</dict>
-			<key>zavuch</key>
-			<dict>
-				<key>groups</key>
-				<string>zavuch</string>
-				<key>password</key>
-				<string>123</string>
-			</dict>
-			<key>zav_kaf</key>
-			<dict>
-				<key>groups</key>
-				<string>teacher</string>
-				<key>password</key>
-				<string>123</string>
-			</dict>
-		</dict>
 	</dict>
 	<key>dbConnection</key>
 	<dict>
-		<key>serverURL</key>
-		<string>jdbc:mysql://127.0.0.1/</string>
-		<key>serverURL_Firebird</key>
-		<string>jdbc:firebirdsql://localhost/Users/gena/Documents/WOProj/SQL/firebird</string>
-		<key>urlSuffix</key>
-		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
-		<key>urlSuffix_Firebird</key>
-		<string>?lc_ctype=UNICODE_FSS</string>
-		<key>driver_Firebird</key>
-		<string>org.firebirdsql.jdbc.FBDriver</string>
-		<key>username</key>
-		<string>rujel</string>
-		<key>username_Firebird</key>
-		<string>sysdba</string>
-		<key>password</key>
-		<string></string>
-		<key>password_Firebird</key>
-		<string>masterkey</string>
 		<key>yearTag</key>
 		<string>true</string>
-		<key>prototypes</key>
-		<string>MySQL</string>
 		<key>BaseStatic</key>
 		<dict>
 			<key>dbName</key>
@@ -201,8 +84,6 @@
 		<string>08.09.2009</string>
 		<key>keyValueCacheSize</key>
 		<string>2</string>
-		<key>_logoutScreen</key>
-		<string>/cgi-bin/WebObjects/Rujel.woa</string>
 		<key>redirectTimeout</key>
 		<string>10</string>
 		<key>_localisationFolder</key>

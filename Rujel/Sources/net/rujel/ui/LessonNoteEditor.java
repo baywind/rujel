@@ -142,26 +142,10 @@ public class LessonNoteEditor extends WOComponent {
 		}
 		currPerPersonLink = null;
 		if (ec.hasChanges()) ec.revert();
-		/*Object tmp = selector;
-		setSingle(true);
-		selector = tmp;*/
 		if(selector instanceof Student)
 			student = (Student)selector;
 		regime = NORMAL;
 		//refresh();
-	}
-	//	public AccessSchemeAssistant courseAssistant;
-	//	public AccessSchemeAssistant lessonsAssistant;
-
-	public static final NSArray courseAccessKeys = new NSArray (new String[] {
-			"read","create","edit","delete","openCourses","createNewEduPlanCourses","editSubgroups"});
-	protected NamedFlags _access;
-	public NamedFlags access() {
-		if (_access == null) {
-			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.course");
-			_access.setKeys(courseAccessKeys);
-		}
-		return _access;
 	}
 
 	public static final NSArray accessKeys = new NSArray(
@@ -420,12 +404,9 @@ public class LessonNoteEditor extends WOComponent {
 		EOFetchSpecification fs = new EOFetchSpecification(
 				currLesson().entityName(),qual,EduLesson.sorter);
 		NSArray allLessons = ec.objectsWithFetchSpecification(fs);
-//EOUtilities.objectsMatchingKeyAndValue(ec,currLesson().entityName(),"course", course);
 		WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 		if(currLesson().notes().count() > 0)
 			level = WOLogLevel.MASS_EDITING;
-//		if(currLesson() instanceof UseAccess && ((UseAccess)currLesson()).isOwned())
-//			level = WOLogLevel.OWNED_EDITING;
 		ec.lock();
 		try {
 			if(ec.insertedObjects().contains(currLesson())) { //just inserted
@@ -433,8 +414,6 @@ public class LessonNoteEditor extends WOComponent {
 				logger.log(level,"Undo lesson creation: ",new Object[] {session(),currLesson()});
 				ec.revert();
 				NSMutableArray tmp = lessonsList.mutableClone();
-				/*				if(tmp.removeObjectAtIndex(idx) != currLesson())
-						throw new RuntimeException("Something wrong when deleting lesson"); */
 				tmp.removeObject(currLesson());
 				lessonsList = tmp.immutableClone();
 				currPerPersonLink = null;
@@ -459,31 +438,6 @@ public class LessonNoteEditor extends WOComponent {
 				}
 				
 				ec.deleteObject(currLesson());
-				/*
-					BaseTab tmp = _currTab;
-					if(tablist != null && tablist.count() > 0) {
-						num = currTab().length();
-						if(num <=1) {
-							ec.deleteObject(_currTab);
-						} else {
-							_currTab.setLessonsCount(num - 1);
-						}
-						num = tablist.indexOf(_currTab);
-						if (num < (tablist.count() - 1)) { // lower tab starters						
-							num ++;
-							_currTab = (BaseTab)tablist.objectAtIndex(num);
-							BaseTab tab = _currTab;
-							tab.setFirstLessonNumber(tab.startIndex() - 1);
-							num ++;
-							while (num < tablist.count()) {
-								tab = (BaseTab)tablist.objectAtIndex(num);
-								tab.setFirstLessonNumber(tab.startIndex() - 1);
-								num ++;
-							}
-						} else {
-							_currTab = null;
-						}
-					}*/
 				if(idx < (allLessons.count() - 1)) { //lower numbers of following lessons
 					idx++;
 					while(idx < allLessons.count()) {

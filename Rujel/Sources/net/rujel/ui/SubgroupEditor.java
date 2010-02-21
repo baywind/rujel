@@ -36,6 +36,8 @@ import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import java.util.logging.Logger;
+
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 public class SubgroupEditor extends WOComponent {
@@ -44,9 +46,12 @@ public class SubgroupEditor extends WOComponent {
     public Student studentItem;
 	private NSMutableSet subgroup;
 	public NSArray studentsList;
+	public NamedFlags access;
 	
     public SubgroupEditor(WOContext context) {
         super(context);
+        access = (NamedFlags)context.session().valueForKeyPath(
+        		"readAccess.FLAGS.CourseAudience");
     }
 	
 	public void setCourse(BaseCourse aCourse) {

@@ -77,13 +77,22 @@
 		<key>root</key>
 		<string>1023</string>
 		<key>zav_kaf</key>
-		<string>127</string>
+		<string>15</string>
 		<key>zavuch</key>
-		<string>127</string>
+		<string>15</string>
 		<key>any</key>
 		<string>1</string>
 		<key>teacher</key>
-		<string>83</string>
+		<string>3</string>
+	</dict>
+	<key>CourseAudience</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>teacher</key>
+		<string>7</string>
 	</dict>
 	<key>PrimitiveEduCycle</key>
 	<dict>
