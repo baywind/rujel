@@ -2,6 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ItogMark</key>
+	<dict>
+		<key>root</key>
+		<string>1023</string>
+		<key>zavuch</key>
+		<string>15</string>
+		<key>teacher</key>
+		<string>1</string>
+	</dict>
 	<key>AutoItog</key>
 	<dict>
 		<key>root</key>
@@ -31,17 +40,6 @@
 		<key>tutor</key>
 		<string>1</string>
 	</dict>
-	<key>Timeout</key>
-	<dict>
-		<key>root</key>
-		<string>1023</string>
-		<key>zavuch</key>
-		<string>15</string>
-		<key>teacher</key>
-		<string>1</string>
-		<key>tutor</key>
-		<string>3</string>
-	</dict>
 	<key>CourseTimeout</key>
 	<dict>
 		<key>root</key>
@@ -57,10 +55,10 @@
 		<string>1023</string>
 		<key>zavuch</key>
 		<string>15</string>
-		<key>teacher</key>
-		<string>1</string>
 		<key>tutor</key>
 		<string>3</string>
+		<key>teacher</key>
+		<string>1</string>
 	</dict>
 </dict>
 </plist>

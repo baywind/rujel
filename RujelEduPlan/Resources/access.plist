@@ -7,7 +7,7 @@
 		<key>root</key>
 		<string>1023</string>
 		<key>zavuch</key>
-		<string>127</string>
+		<string>15</string>
 		<key>any</key>
 		<string>1</string>
 	</dict>
@@ -16,9 +16,7 @@
 		<key>root</key>
 		<string>1023</string>
 		<key>zavuch</key>
-		<string>127</string>
-		<key>zav_kaf</key>
-		<string>7</string>
+		<string>15</string>
 		<key>any</key>
 		<string>1</string>
 	</dict>
@@ -51,7 +49,7 @@
 		<key>zavuch</key>
 		<string>15</string>
 		<key>zav_kaf</key>
-		<string>15</string>
+		<string>3</string>
 		<key>any</key>
 		<string>1</string>
 	</dict>

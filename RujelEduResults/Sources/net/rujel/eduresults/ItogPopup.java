@@ -142,11 +142,11 @@ public class ItogPopup extends WOComponent {
 		if(mark == null)
 			return delete();
 
-		if(!access().flagForKey("edit")) {
+		boolean newItog = (itog == null);
+		if(!access().flagForKey((newItog)?"create":"edit")) {
 			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
 			return returnPage;
 		}
-		boolean newItog = (itog == null);
 		boolean same = (!newItog && mark.equals(itog.mark()));
 		if(newItog || !same || itog.readFlags().flagForKey("constituents")) {
 			ec.lock();

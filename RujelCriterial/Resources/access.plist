@@ -6,10 +6,6 @@
 	<dict>
 		<key>root</key>
 		<string>1023</string>
-		<key>zav_kaf</key>
-		<string>31</string>
-		<key>zavuch</key>
-		<string>31</string>
 		<key>teacher</key>
 		<string>15</string>
 	</dict>
@@ -17,14 +13,10 @@
 	<dict>
 		<key>root</key>
 		<string>1023</string>
-		<key>zav_kaf</key>
-		<string>31</string>
-		<key>zavuch</key>
-		<string>31</string>
+		<key>teacher</key>
+		<string>15</string>
 		<key>any</key>
 		<string>1</string>
-		<key>teacher</key>
-		<string>31</string>
 	</dict>
 	<key>WorkType</key>
 	<dict>

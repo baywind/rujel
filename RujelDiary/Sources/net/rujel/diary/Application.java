@@ -103,7 +103,7 @@ public class Application extends UTF8Application {
 			keyValueCache = new KeyValueCache(cacheSize);
 		}*/
 		
-		logger.logp(WOLogLevel.INFO,"Application","<init>","RujelMarkbook started " + webserverConnectURL());
+		logger.logp(WOLogLevel.INFO,"Application","<init>","RujelDiary started " + webserverConnectURL());
 	}
 	
 	protected Integer _year;

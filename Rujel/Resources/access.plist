@@ -6,14 +6,22 @@
 	<dict>
 		<key>root</key>
 		<string>1023</string>
-		<key>zav_kaf</key>
-		<string>7</string>
 		<key>zavuch</key>
 		<string>127</string>
-		<key>any</key>
-		<string>0</string>
 		<key>teacher</key>
 		<string>3</string>
+		<key>any</key>
+		<string>0</string>
+	</dict>
+	<key>login</key>
+	<dict>
+		<key>any</key>
+		<string>1</string>
+	</dict>
+	<key>timeMachine</key>
+	<dict>
+		<key>any</key>
+		<string>7</string>
 	</dict>
 	<key>LessonNoteEditor</key>
 	<dict>
@@ -21,10 +29,10 @@
 		<string>1023</string>
 		<key>zavuch</key>
 		<string>31</string>
-		<key>any</key>
-		<string>3</string>
 		<key>teacher</key>
 		<string>31</string>
+		<key>any</key>
+		<string>3</string>
 	</dict>
 	<key>Overview</key>
 	<dict>
@@ -32,23 +40,21 @@
 		<string>1023</string>
 		<key>zavuch</key>
 		<string>7</string>
-		<key>teacher</key>
-		<string>3</string>
 		<key>tutor</key>
 		<string>7</string>
+		<key>teacher</key>
+		<string>3</string>
 	</dict>
 	<key>SrcMark</key>
 	<dict>
 		<key>root</key>
 		<string>1023</string>
-		<key>zav_kaf</key>
-		<string>15</string>
 		<key>zavuch</key>
 		<string>15</string>
-		<key>any</key>
-		<string>1</string>
 		<key>teacher</key>
 		<string>3</string>
+		<key>any</key>
+		<string>1</string>
 	</dict>
 	<key>AdminPage</key>
 	<dict>
@@ -62,28 +68,16 @@
 		<key>root</key>
 		<string>1023</string>
 	</dict>
-	<key>login</key>
-	<dict>
-		<key>any</key>
-		<string>1</string>
-	</dict>
-	<key>timeMachine</key>
-	<dict>
-		<key>any</key>
-		<string>7</string>
-	</dict>
 	<key>BaseCourse</key>
 	<dict>
 		<key>root</key>
 		<string>1023</string>
-		<key>zav_kaf</key>
-		<string>15</string>
 		<key>zavuch</key>
 		<string>15</string>
-		<key>any</key>
-		<string>1</string>
 		<key>teacher</key>
 		<string>3</string>
+		<key>any</key>
+		<string>1</string>
 	</dict>
 	<key>CourseAudience</key>
 	<dict>
