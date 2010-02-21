@@ -108,4 +108,60 @@ public class PrintReport extends WOComponent {
 		super.appendToResponse(aResponse, aContext);
 		t.setPriority(priority);
 	}
+	
+	public boolean allowAjax() {
+		return (students.count() > 1 &&
+				Various.boolForObject(reporter.valueForKey("allowAjax")));
+	}
+	
+	public String stDivStyle() {
+		StringBuilder result = new StringBuilder();
+		if(students.count() > 1) {
+			result.append("page-break-after:always;");
+			if(Various.boolForObject(reporter.valueForKey("allowAjax")))
+				result.append("display:none;");
+		}
+		return (result.length() == 0)?null:result.toString();
+	}
+	
+	public String onLoad() {
+		if(allowAjax())
+			return "onLoad(this);";
+		return null;
+	}
+	
+	public WOActionResults loadStudent() {
+		WOComponent result = pageWithName((String)reporter.valueForKey("component"));
+		try {
+			result.takeValueForKey(studentItem, "student");
+		} catch (Exception e) {
+			;
+		}
+		try {
+			result.takeValueForKey(courses, "courses");
+		} catch (Exception e) {
+			;
+		}
+		try {
+			result.takeValueForKey(since, "since");
+		} catch (Exception e) {
+			;
+		}
+		try {
+			result.takeValueForKey(to, "to");
+		} catch (Exception e) {
+			;
+		}
+		try {
+			result.takeValueForKey(period, "period");
+		} catch (Exception e) {
+			;
+		}
+		try {
+			result.takeValueForKey(reporter, "reporter");
+		} catch (Exception e) {
+			;
+		}
+		return result;
+	}
 }

@@ -90,6 +90,13 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		return _readAccess;
 	}
 	
+	public String formMethod() {
+		String ua = context().request().headerForKey(CLIENT_IDENTITY_KEYS[3]);
+		if(ua == null || ua.contains("MSIE"))
+			return "get";
+		return "post";
+	}
+	
 	public static final String[] CLIENT_IDENTITY_KEYS = new String[]
 	{"x-webobjects-remote-addr", "remote_addr","remote_host","user-agent"};
 	

@@ -94,19 +94,25 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 
 	
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
-		student = (Student)valueForBinding("student");
-		since = (NSTimestamp)valueForBinding("since");
-		to = (NSTimestamp)valueForBinding("to");
-		period = (Period)valueForBinding("period");
-		if(period != null) {
-			if(since == null)
-				since = date2timestamp(period.begin());
-			if(to == null)
-				to = date2timestamp(period.end());
-		}
-		//EOEditingContext ec = student.editingContext();
+		Thread t = Thread.currentThread();
+		int priority = t.getPriority();
+		if(parent() != null) {
+			student = (Student)valueForBinding("student");
+			since = (NSTimestamp)valueForBinding("since");
+			to = (NSTimestamp)valueForBinding("to");
+			period = (Period)valueForBinding("period");
+			if(period != null) {
+				if(since == null)
+					since = date2timestamp(period.begin());
+				if(to == null)
+					to = date2timestamp(period.end());
+			}
+			//EOEditingContext ec = student.editingContext();
 
-		courses = ((NSArray)valueForBinding("courses")).mutableClone();
+			courses = ((NSArray)valueForBinding("courses")).mutableClone();
+		} else {
+			t.setPriority(priority -1);
+		}
 		EOQualifier q;
 		/*NSMutableArray quals = new NSMutableArray();
 		q = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
@@ -155,6 +161,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		reports = (NSArray)ses.valueForKeyPath("modules.reportForStudent");
 		ses.removeObjectForKey("reportForStudent");
 		super.appendToResponse(aResponse,aContext);
+		t.setPriority(priority);
 	}
 	
 	public EduCourse courseItem;
