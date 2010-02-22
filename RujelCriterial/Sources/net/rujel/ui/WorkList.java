@@ -56,9 +56,7 @@ public class WorkList extends LessonList {
 	public void reset() {
 		super.reset();
 		_itemMask = null;
-		_access = null;
 		_criteria = null;
-		//		_criteria = null;
 	}
 	
     /** @TypeInfo Criterion */
@@ -186,15 +184,7 @@ public class WorkList extends LessonList {
 	public boolean wide() {
 		return (Various.boolForObject(valueForBinding("showHomeTask")) && (valueForBinding("student") == null));
 	}*/
-	
-	private NamedFlags _access;
-	public NamedFlags access() {
-		if(_access == null) {
-			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Work");
-		}
-		return _access;
-	}
-	
+		
 	public Work currLesson() {
 		return (Work)valueForBinding("currLesson");
 	}

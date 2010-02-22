@@ -54,7 +54,6 @@ LessonList1: WOSwitchComponent {
 	save = save;
 	delete = delete;
 	addLesson = addLesson;
-	accessAssistant = lessonsAssistant;
 	wide = hideLeft;
 	down = down;
 	splitTab = splitTab;

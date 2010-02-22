@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -72,6 +73,7 @@ public class LessonList extends WOComponent {
 		if(lessonItem != null) {
 			EOEditingContext ec = lessonItem.editingContext();
 			if (ec.hasChanges()) ec.revert();
+			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.lessonItem");
 		}
     }	
 	
@@ -149,7 +151,8 @@ public class LessonList extends WOComponent {
 		NSArray args = new NSArray(new Object[] {les.course(),les.number()});
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("" +
 				"course = %@ AND number < %@ AND title = nil",args);
-		NSArray sort = new NSArray(new EOSortOrdering ("number",EOSortOrdering.CompareDescending));
+		NSArray sort = new NSArray(new EOSortOrdering ("number",
+				EOSortOrdering.CompareDescending));
 		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,qual,sort);
 		fs.setFetchLimit(1);
 		NSArray found = les.editingContext().objectsWithFetchSpecification(fs);
@@ -184,6 +187,7 @@ public class LessonList extends WOComponent {
 		_extentions = null;
 		extItem = null;
 		lessonProperies = null;
+		_access = null;
 	}
 
 	protected NSArray _extentions;
@@ -219,7 +223,8 @@ public class LessonList extends WOComponent {
 			return false;
 		else if (diff < 0)
 			return true;
-		return (test.get(GregorianCalendar.DAY_OF_YEAR) < cur.get(GregorianCalendar.DAY_OF_YEAR));
+		return (test.get(GregorianCalendar.DAY_OF_YEAR) < 
+						cur.get(GregorianCalendar.DAY_OF_YEAR));
 	}
 
 	public String dateCellStyle() {
@@ -243,7 +248,8 @@ public class LessonList extends WOComponent {
 		if(lessonsList == null || lessonsList.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		session().setObjectForKey(lessonsList, "lessonsList");
-		NSArray propertiesList = (NSArray)session().valueForKeyPath("modules.lessonProperies");
+		NSArray propertiesList = (NSArray)session().valueForKeyPath(
+				"modules.lessonProperies");
 		session().removeObjectForKey("lessonsList");
 		lessonProperies = new NSMutableDictionary();
 		if(propertiesList == null || propertiesList.count() == 0) 
@@ -263,7 +269,8 @@ public class LessonList extends WOComponent {
 					String key = (String) lmEnu.nextElement();
 					Object value = lm.objectForKey(key);
 					if(key.equals("image")) {
-						NSMutableArray images = (NSMutableArray)currProperties.valueForKey("images");
+						NSMutableArray images = (NSMutableArray)
+						currProperties.valueForKey("images");
 						if(images == null) {
 							images = new NSMutableArray(value);
 							currProperties.setObjectForKey(images, "images");
@@ -349,5 +356,26 @@ public class LessonList extends WOComponent {
 		if(!BaseLesson.getTaskDelegate().hasPopup())
 			return null;
 		return BaseLesson.getTaskDelegate().homeWorkPopupForLesson(context(), lessonItem);
+	}
+	
+	protected NamedFlags _access;
+	public NamedFlags access() {
+		if(_access == null) {
+			if(valueForBinding("currLesson") == null) {
+				String ent = EduLesson.entityName; 
+				try {
+					ent = (String)parent().valueForKeyPath("present.entityName");
+					if(ent == null)
+						ent = EduLesson.entityName;
+				} catch (Exception e) {
+					;
+				}
+				_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." + ent);
+			} else {
+				_access = (NamedFlags)session().valueForKeyPath(
+						"readAccess.FLAGS.currLesson");
+			}
+		}
+		return _access;
 	}
 }

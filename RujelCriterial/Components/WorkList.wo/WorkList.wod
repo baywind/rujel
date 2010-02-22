@@ -6,7 +6,7 @@ AddButton: WOSubmitButton {
 }
 
 AllowEdit: WOConditional {
-	condition = session.readAccess.edit.currLesson;
+	condition = currLesson;
 }
 
 CanEdit: WOConditional {
@@ -17,13 +17,12 @@ CanMove: WOString {
 	value = canMove;
 }
 
-Conditional1: WOConditional {
-	condition = session.readAccess.delete.currLesson;
+CanDelete: WOConditional {
+	condition = access.delete;
 }
 
-
-Conditional3: WOConditional {
-	condition = session.readAccess.edit.currLesson;
+CanSave: WOConditional {
+	condition = access.edit;
 }
 
 CritHead: WOGenericContainer {
@@ -272,4 +271,8 @@ LinkImage : WOImage {
 	align = "right";
 	title = lessonItem.taskUrl;
 	onclick = "window.open(this.title);";
+}
+
+CanAdd : WOConditional {
+  condition = access.create;
 }
