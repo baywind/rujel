@@ -43,25 +43,14 @@ public class PersListing extends WOComponent {
 	private EOEditingContext ec = session().defaultEditingContext();
 	private int firstNameDisplay = 2;
 	private int secondNameDisplay = 2;
-//	protected String entity;
-	protected NamedFlags access;
-	public static final NSArray accessKeys = new NSArray(new Object[] {
-		"search", "create", "edit","delete"});
 	private NSArray found;
-//	protected NSMutableDictionary actions = new NSMutableDictionary();
 	
 	public PersonLink selection;
 	public Person item;
     public String searchString;
     public String searchMessage;
     public boolean canCreate = false;
-//	public NSMutableDictionary newPerson;
-//	private Person onEdit;
     public int index;
-/*	public String lastName;
-	public String firstName;
-	public String secondName;
-    public Boolean sex; */
 
 	public void setItem(PersonLink newItem) {
 		if(newItem == null) item = null;
@@ -71,12 +60,6 @@ public class PersListing extends WOComponent {
     public PersListing(WOContext context) {
         super(context);		
     }
-	
-	public NamedFlags access() {
-		if(access == null)
-			access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.PersListing");
-		return access;
-	}
 	
 	public Boolean canEdit() {
 		if(Various.boolForObject(valueForBinding("noEdit")))
@@ -177,10 +160,11 @@ public class PersListing extends WOComponent {
 			canCreate = false;
 			return;
 		}
-		canCreate = (access != null && access.flagForKey("create"));
 		if(found.count() < 1) {
 			searchMessage = (String)session().valueForKeyPath(
 					"strings.Strings.messages.nothingFound");
+			canCreate = Various.boolForObject(
+					session().valueForKeyPath("readAccess.create." + entity()));
 			return;
 		}
 		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");

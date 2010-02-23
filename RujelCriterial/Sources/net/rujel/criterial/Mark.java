@@ -29,6 +29,7 @@
 
 package net.rujel.criterial;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import com.webobjects.foundation.*;
@@ -106,16 +107,30 @@ public class Mark extends _Mark {
 		if (aValue == null)
 			throw new NSValidation.ValidationException("Mark value can not be null");
 		EOEnterpriseObject criterMask = work().getCriterMask(criterion());
+		String message = null;
 		if(criterMask == null) {
-			String message = (String)WOApplication.application().valueForKeyPath
+			message = (String)WOApplication.application().valueForKeyPath
 				("strings.RujelCriterial_Strings.messages.unavailbleCriterion");
 			throw new NSValidation.ValidationException(message);
 		}
 		Number max = (Number)criterMask.valueForKey("max");
-		if(aValue.intValue() > max.intValue()) {
-			String message = (String)WOApplication.application().valueForKeyPath
-						("strings.RujelCriterial_Strings.messages.markValueOverMax");
+		if(message == null && aValue.intValue() > max.intValue()) {
+			message = "markValueOverMax";
+		}
+		if(message == null && aValue.intValue() < 0) {
+			if(SettingsBase.numericSettingForCourse("allowMarkLowerZero", 
+					work().course(), editingContext(), 0) > 0) {
+				if(aValue.intValue() < -max.intValue()) {
+					message = "markValueOverMax";
+				}
+			} else {
+				message = "markValueLowerZero";
+			}
+		}
+		if (message != null) {
 			String criterion = work().criterName(criterion());
+			message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelCriterial_Strings.messages." + message);
 			if(criterion == null)
 				criterion = criterion().toString();
 			message = String.format(message,criterion);

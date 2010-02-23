@@ -591,13 +591,24 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		MyUtility.validateDateInEduYear(announce(), course().eduYear(), ANNOUNCE_KEY);
 		if(announce().compare(date()) > 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
-			"strings.RujelCriterial_Strings.messages.lateAnnounce");
+				"strings.RujelCriterial_Strings.messages.lateAnnounce");
+			throw new NSValidation.ValidationException(message);
+		}
+		BigDecimal weight = weight();
+		if(weight.compareTo(BigDecimal.ZERO) < 0 ||
+				weight.compareTo(new BigDecimal(100)) >= 0) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelCriterial_Strings.messages.illegalWeight");
+			throw new NSValidation.ValidationException(message);
+		}
+		if(weight.scale() > 2) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+			"strings.RujelCriterial_Strings.messages.illegalScale");
 			throw new NSValidation.ValidationException(message);
 		}
 		NSArray criterMask = criterMask();
-//		boolean hasWeight = (BigDecimal.ZERO.compareTo(weight()) != 0);
 		if(criterMask == null || criterMask.count() == 0) {
-			if(hasWeight()) {
+			if(weight.compareTo(BigDecimal.ZERO) > 0) {
 				String message = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelCriterial_Strings.messages.critersRequired");
 				throw new NSValidation.ValidationException(message);
