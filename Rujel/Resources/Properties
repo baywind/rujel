@@ -11,7 +11,7 @@ RujelVersion=0.8.3
 #PrefsReader.nodePath = /net/rujel
 
 Settings.className = net.rujel.reusables.PlistReader
-CONFIGDIR=LOCALROOT/Library/WebObjects/Configuration
+CONFIGDIR=LOCALROOT/Library/WebObjects/Configuration/rujel
 PlistReader.filePath = CONFIGDIR/rujel.plist
 
 DisableScheduledTasks = false

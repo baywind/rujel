@@ -77,8 +77,8 @@ ShowJournales : WOConditional {
 }
 
 AllowTimeMachine : WOConditional {
-  condition = application.prefs.ui.allowTimeMachine;
- }
+  condition = allowTimeMachine;
+}
 
 Cross : WOImage {
   framework = "RujelBase";

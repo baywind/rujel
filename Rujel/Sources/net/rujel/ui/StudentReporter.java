@@ -92,6 +92,9 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 			presenterCache.removeAllObjects();
 	}
 
+	public void setCourses(NSArray list) {
+		courses = (list==null)?null:list.mutableClone();
+	}
 	
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
 		Thread t = Thread.currentThread();
@@ -109,7 +112,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 			}
 			//EOEditingContext ec = student.editingContext();
 
-			courses = ((NSArray)valueForBinding("courses")).mutableClone();
+			setCourses((NSArray)valueForBinding("courses"));
 		} else {
 			t.setPriority(priority -1);
 		}

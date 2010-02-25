@@ -247,10 +247,20 @@ public class SrcMark extends WOComponent {
 					NSMutableArray tmp = courses.mutableClone();
 					dict.removeObjectForKey("teacher");
 					if (createNew()) {
-						tmp.addObject(aCourse);
-						EOSortOrdering.sortArrayUsingKeyOrderArray(tmp,
-								EduCourse.sorter);
-						currIndex = tmp.indexOf(aCourse);
+						boolean found = false;
+						EduCycle cycle = aCourse.cycle();
+						for(int i = 0; i < courses.count();i++) {
+							Object cur = courses.objectAtIndex(i);
+							if(cur instanceof EduCourse) {
+								if(found && ((EduCourse)cur).cycle() != cycle) {
+									tmp.insertObjectAtIndex(aCourse, i);
+									currIndex = i;
+									break;
+								} else {
+									found = (((EduCourse)cur).cycle() == cycle);
+								}
+							}
+						}
 					} else {
 						Object cycle = tmp.replaceObjectAtIndex(aCourse, currIndex);
 						if(!tmp.containsObject(cycle)) {

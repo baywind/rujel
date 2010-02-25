@@ -114,10 +114,7 @@ public class ReportsModule {
 
 */    public static NSMutableArray reportsFromDir(String dir,WOContext context) {
     	NSMutableArray reports = new NSMutableArray();
-    	String reportsDirPath = SettingsReader.stringForKeyPath("reportsDir",
-    	"CONFIGDIR/RujelReports");
-    	reportsDirPath = Various.convertFilePath(reportsDirPath);
-    	File reportsDir = new File(reportsDirPath, dir);
+    	File reportsDir = new File(reportsFolder, dir);
     	if (reportsDir.isDirectory()) {
     		File[] files = reportsDir.listFiles(new FileFilter() {
     			public boolean accept(File file) {

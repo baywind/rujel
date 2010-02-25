@@ -50,9 +50,11 @@ public class ChooseRegime extends WOComponent {
 //    public Object eduGroup;
     public WOComponent srcMark;
     protected Number eduYear;
+    public boolean allowTimeMachine;
 
     public ChooseRegime(WOContext context) {
         super(context);
+        allowTimeMachine = SettingsReader.boolForKeyPath("ui.allowTimeMachine", true);
     }
 	
     public void awake() {

@@ -87,11 +87,11 @@
 		<key>nullDate</key>
 		<string>Должны быть указаны обе даты - объявления и сдачи работы</string>
 		<key>markValueOverMax</key>
-		<string>Величина оценки по критерию &apos;%s&apos; больше предусмотренного максимума</string>
+		<string>Оценка по критерию &apos;%s&apos; превышает максимум</string>
 		<key>markValueLowerZero</key>
-		<string>Величина оценки по критерию &apos;%s&apos; не должна быть меньше нуля</string>
+		<string>Оценка по критерию &apos;%s&apos; меньше нуля</string>
 		<key>maxShouldBeOverZero</key>
-		<string>Максимум по критерию &apos;%s&apos; не может быть меньше нуля</string>
+		<string>Максимум по критерию &apos;%s&apos; должен быть больше нуля</string>
 		<key>unavailbleCriterion</key>
 		<string>Оценка по недоступному критерию</string>
 		<key>oddCriteria</key>

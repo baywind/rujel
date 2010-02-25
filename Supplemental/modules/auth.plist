@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>auth</key>
+	<dict>
+		<key>loginPageName</key>
+		<string>Main</string>
+		<key>accessHandlerClass</key>
+		<string>net.rujel.auth.PrefsAccessHandler</string>
+		<key>welcomeMessage</key>
+		<dict>
+			<key>thisIsPlistLink</key>
+			<string>true</string>
+			<key>innerKeyPath</key>
+			<string>schoolName</string>
+		</dict>
+		<key>authErrorMessage</key>
+		<string>Произошла ошибка</string>
+		<key>authFailedMessage</key>
+		<string>Не удалось авторизоваться</string>
+		<key>badCredentialMessage</key>
+		<string>Неверный пароль</string>
+		<key>badIdentityMessage</key>
+		<string>Неизвестный пользователь</string>
+		<key>denyNoneMessage</key>
+		<string>Запрещено подключение без имени пользователя</string>
+		<key>welcomeAction</key>
+		<string>success</string>
+		<key>refuseAction</key>
+		<string>refuse</string>
+		<key>useHTTPS</key>
+		<string>false</string>
+		<key>_customURL</key>
+		<dict>
+			<key>insecure</key>
+			<dict>
+				<key>192.168.0.*</key>
+				<string>http://192.168.0.1</string>
+				<key>default</key>
+				<string>http://demo.rujel.net</string>
+			</dict>
+			<key>secure</key>
+			<dict>
+				<key>192.168.0.*</key>
+				<string>https://192.168.0.1</string>
+				<key>default</key>
+				<string>https://demo.rujel.net</string>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>
