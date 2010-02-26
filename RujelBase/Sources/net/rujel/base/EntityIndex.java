@@ -32,6 +32,7 @@ package net.rujel.base;
 import java.util.logging.Logger;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.eoaccess.EOEntity;
 import com.webobjects.eoaccess.EOModelGroup;
 import com.webobjects.eoaccess.EOUtilities;
@@ -43,16 +44,50 @@ public class EntityIndex extends _EntityIndex {
 	public static EntityIndex indexForEntityName(EOEditingContext ec, String entName) {
 		return indexForEntityName(ec, entName,true);
 	}
-	public static EntityIndex indexForEntityName(EOEditingContext ec, String entName, boolean create) {
-		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, "EntityIndex", "entName", entName);
+	public static EntityIndex indexForEntityName(EOEditingContext ec,
+			String entName, boolean create) {
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, "EntityIndex",
+				"entName", entName);
 		EntityIndex result = null;
 		if(found == null || found.count() == 0) {
-			result = (EntityIndex)EOUtilities.createAndInsertInstance(ec, "EntityIndex");
-			result.setEntName(entName);
+			StringBuilder tableName = new StringBuilder();
 			EOEntity entity = EOModelGroup.defaultGroup().entityNamed(entName);
-			String path = entity.model().pathURL().getPath();
-			result.setSqlTable(path + '.' + entity.externalName());
-			Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,"Autocreating EnityIndex for entity " + entName,result);
+			NSDictionary cd = null;
+    		try {
+				EODatabaseContext dc = EODatabaseContext.
+								registeredDatabaseContextForModel(entity.model(), ec);
+				cd =  dc.adaptorContext().adaptor().connectionDictionary();
+			} catch (RuntimeException e) {
+				
+			}
+			if(cd == null)
+	    		cd = entity.model().connectionDictionary();
+			if(cd != null) {
+				tableName.append(cd.valueForKey("URL"));
+				int idx = tableName.indexOf("?");
+				if(idx > 0)
+					tableName.delete(idx, tableName.length());
+				tableName.append('.');
+			}
+			tableName.append(entity.externalName());
+			EOEditingContext tmpEc = ec;
+			if(ec.hasChanges())
+				tmpEc = new EOEditingContext(ec.parentObjectStore());
+			tmpEc.lock();
+			try {
+				result = (EntityIndex)EOUtilities.createAndInsertInstance(ec, "EntityIndex");
+				result.setEntName(entName);
+				result.setSqlTable(tableName.toString());
+				tmpEc.saveChanges();
+				Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,
+						"Autocreating EnityIndex for entity " + entName,result);
+			} catch (Exception e) {
+				Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
+						"Error autocreating EnityIndex for entity " + entName,e);
+				return null;
+			} finally {
+				tmpEc.unlock();
+			}
 		} else {
 			result = (EntityIndex)found.objectAtIndex(0);
 		}
