@@ -203,7 +203,12 @@ public class Reprimand extends _Reprimand {
 					rpr.setRaised(onDate);
 				logger.log(WOLogLevel.FINER,"Creating Reprimand",course);
 				if (ec.hasChanges()) {
-					ec.saveChanges();
+					try {
+						ec.saveChanges();
+					} catch (Exception e) {
+						logger.log(WOLogLevel.WARNING,"Error saving reprimand",
+								new Object[] {course,now,e});
+					}
 				}
 			} // iterating courses
 			// check previous reprimands
@@ -262,8 +267,14 @@ public class Reprimand extends _Reprimand {
 					if(checkWeekByDays(course, dict, minDev, buf) == null)
 						rpr.setRelief(onDate);
 				} // enumerate previous reprimands
-				if(ec.hasChanges())
-					ec.saveChanges();
+				if (ec.hasChanges()) {
+					try {
+						ec.saveChanges();
+					} catch (Exception e) {
+						logger.log(WOLogLevel.WARNING,"Error saving after planFact check",
+								new Object[] {onDate,e});
+					}
+				}
 			}
 			logger.log(WOLogLevel.FINE,"Automatic PlanFactCheck finished");
 		} catch (Exception e) {
@@ -416,8 +427,14 @@ public class Reprimand extends _Reprimand {
 					buf.append(',').append(' ');
 					MyUtility.dateFormat().format(date, buf, fp);
 				}
-				if (ec.hasChanges())
-					ec.saveChanges();
+				if (ec.hasChanges()) {
+					try {
+						ec.saveChanges();
+					} catch (Exception e) {
+						logger.log(WOLogLevel.WARNING,"Error saving planFact changes",
+								new Object[] {course,now,e});
+					}
+				}
 				cal.add(Calendar.DATE, 1);
 			} // review week day by day
 			plan -= autoVars;
@@ -445,9 +462,8 @@ public class Reprimand extends _Reprimand {
 		result.takeValuesFromDictionary(values);
 		result.setBegin(prevDate);
 		result.setEnd(eduPeriod.begin());
-		result.setReason((String)WOApplication.application().
-				valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.titles.periodStart") +
+		result.setReason((String)WOApplication.application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.titles.periodStart") +
 						' ' + eduPeriod.name());
 		ec.saveChanges();
 		return result;
