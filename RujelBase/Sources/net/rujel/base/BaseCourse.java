@@ -238,11 +238,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		NSArray aud = EOUtilities.objectsMatchingValues(editingContext(),"CourseAudience",dict);
 		if(aud == null || aud.count() == 0) {
 			EOEnterpriseObject audience = EOUtilities.createAndInsertInstance(editingContext(),"CourseAudience");
-			//audience.takeValuesFromDictionary(dict);
 			addObjectToBothSidesOfRelationshipWithKey(audience,"audience");
 			audience.addObjectToBothSidesOfRelationshipWithKey((EOEnterpriseObject)dict.objectForKey("student"),"student");
-//			if(_subgroup != null)
-//				_subgroup.addObject(dict.objectForKey("student"));
 		}
 		
     }
@@ -253,30 +250,29 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		if(aud != null && aud.count() > 0) {
 			EOEnterpriseObject audience = (EOEnterpriseObject)aud.lastObject();
 			removeObjectFromBothSidesOfRelationshipWithKey(audience,"audience");
-//			if(_subgroup != null)
-//				_subgroup.removeObject(dict.objectForKey("student"));
 		}
     }
 	
 	public void setSubgroup(NSArray newList) {
 		if(newList == null || newList.count() == 0) {
-			takeStoredValueForKey(new NSArray(),"audience");
+			setAudience(NSArray.EmptyArray);
 			return;
 		}
 		NSMutableSet subSet = new NSMutableSet(newList);
 		NSSet stuSet = new NSSet(eduGroup().list());
-		if (stuSet.setBySubtractingSet(subSet).count() == 0) {
-			takeStoredValueForKey(new NSArray(),"audience");
+		if (!namedFlags().flagForKey("mixedGroup") && 
+				stuSet.setBySubtractingSet(subSet).count() == 0) {
+			setAudience(NSArray.EmptyArray);
 			return;
 		}
-		NSArray audience = (NSArray)storedValueForKey("audience");
+		NSArray audience = audience();
 		EOEnterpriseObject aud;
 		if(audience != null && audience.count() > 0) {
 			Enumeration enumerator = audience.objectEnumerator();
 			NSMutableArray tmp = new NSMutableArray(audience.count());
 			while (enumerator.hasMoreElements()) {
 				aud = (EOEnterpriseObject)enumerator.nextElement();
-				Object stu = aud.storedValueForKey("student");
+				Object stu = aud.valueForKey("student");
 				if(subSet.containsObject(stu))
 					subSet.removeObject(stu);
 				else
@@ -303,10 +299,11 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	}
 
 	public NSArray groupList() {
-		NSArray studentsList = eduGroup().list();
+		NSArray studentsList = (namedFlags().flagForKey("mixedGroup"))?null
+				:eduGroup().list();
 		NSArray audience = (NSArray)storedValueForKey("audience");
 		if(audience == null || audience.count() == 0) {
-			return studentsList;
+			return (studentsList==null)?NSArray.EmptyArray:studentsList;
 		}
 		NSMutableArray tmp = new NSMutableArray();
 		Enumeration enumerator = audience.objectEnumerator();
@@ -314,10 +311,10 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		Object stu;
 		while (enumerator.hasMoreElements()) {
 			aud = (EOEnterpriseObject)enumerator.nextElement();
-			stu = aud.storedValueForKey("student");
-			if(studentsList.containsObject(stu))
+			stu = aud.valueForKey("student");
+			if(studentsList == null || studentsList.containsObject(stu))
 				tmp.addObject(stu);
-		}		
+		}
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(tmp,Person.sorter);
 	}
 
@@ -399,7 +396,7 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	}
 
 	public static final NSArray flagNames = new NSArray (new String[] 
-	                                   {"teacherChanged","mixedGroup"});
+	      {"teacherChanged","-2-","-4-","-8-","mixedGroup"});
 
 	private NamedFlags _flags;
 	public NamedFlags namedFlags() {

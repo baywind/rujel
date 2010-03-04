@@ -106,6 +106,37 @@
 		<key>removeTab</key>
 		<string>Снять закладку</string>
 	</dict>
+	<key>SubgroupEditor</key>
+	<dict>
+		<key>mixed</key>
+		<string>Смешанная группа</string>
+		<key>notMixed</key>
+		<string>Подгруппа класса</string>
+		<key>popup</key>
+		<dict>
+			<key>title</key>
+			<string>Выберите класс</string>
+			<key>style</key>
+			<string>min-width:8em</string>
+			<key>presenter</key>
+			<string>ClassListing</string>
+			<key>takeValuesFromRequest</key>
+			<true/>
+			<key>invokeAction</key>
+			<true/>
+			<key>presenterBindings</key>
+			<dict>
+				<key>width</key>
+				<string>100%</string>
+				<key>selection</key>
+				<string>.</string>
+				<key>editingContext</key>
+				<string>.editingContext</string>
+				<key>onClick</key>
+				<string>$session.tryLoad</string>
+			</dict>
+		</dict>
+	</dict>
 	<key>Overview</key>
 	<dict>
 		<key>defaultReporter</key>

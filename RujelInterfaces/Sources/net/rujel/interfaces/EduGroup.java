@@ -31,6 +31,7 @@ package net.rujel.interfaces;
 
 //import java.util.Collection;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import com.webobjects.foundation.NSComparator;
@@ -46,6 +47,9 @@ public interface EduGroup extends PersonGroup {
 	
 	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath("interfaces.EduGroup",null);
 	public static final String entityName = className.substring(1 + className.lastIndexOf('.'));
+	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
+			new EOSortOrdering("grade",EOSortOrdering.CompareAscending),
+			new EOSortOrdering("title",EOSortOrdering.CompareAscending)});
 	
 	public Integer grade();
 	public String title();
@@ -68,7 +72,22 @@ public interface EduGroup extends PersonGroup {
 				return (NSArray)method.invoke(null,date,ec);
 			} catch (Exception ex) {
 				throw new NSForwardException(ex, "Could not initialise EduGroup listing method");
-			}			
+			}
+		}
+		
+		protected static NSArray aSorter;
+		public static NSArray sorter() {
+			if(aSorter == null) {
+				try {
+					Class aClass = Class.forName(EduGroup.className);
+					Field field = aClass.getDeclaredField("sorter");
+					aSorter = (NSArray)field.get(null);
+				} catch (Exception ex) {
+				}
+				if(aSorter == null)
+					aSorter = sorter;
+			}
+			return aSorter;
 		}
 	}
 	

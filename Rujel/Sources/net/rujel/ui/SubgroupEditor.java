@@ -35,9 +35,10 @@ import net.rujel.base.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
+
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 public class SubgroupEditor extends WOComponent {
@@ -45,13 +46,14 @@ public class SubgroupEditor extends WOComponent {
     public BaseCourse course;
     public Student studentItem;
 	private NSMutableSet subgroup;
-	public NSArray studentsList;
-	public NamedFlags access;
+	public boolean cantEdit;
+	public EduGroup currGroup;
+	public NSArray groups;
+	public EduGroup groupItem;
+	public NSMutableDictionary byGroup;
 	
     public SubgroupEditor(WOContext context) {
         super(context);
-        access = (NamedFlags)context.session().valueForKeyPath(
-        		"readAccess.FLAGS.CourseAudience");
     }
 	
 	public void setCourse(BaseCourse aCourse) {
@@ -60,8 +62,88 @@ public class SubgroupEditor extends WOComponent {
 			return;
 		}
 		course = aCourse;
-		studentsList = course.eduGroup().list();
 		subgroup = new NSMutableSet(course.groupList());
+		currGroup = course.eduGroup();
+		if(course.namedFlags().flagForKey("mixedGroup")) {
+			if(subgroup.count() > 0)
+				currGroup = null;
+			prepareByGroup();
+		}			
+		StringBuilder keyPath = new StringBuilder("readAccess._");
+		if(course.audience() != null && course.audience().count() > 0)
+			keyPath.append("edit");
+		else
+			keyPath.append("create");
+		keyPath.append(".CourseAudience");
+		cantEdit = (Boolean)session().valueForKeyPath(keyPath.toString());
+	}
+	
+	protected void prepareByGroup() {
+		byGroup = new NSMutableDictionary();
+		groups = EduGroup.Lister.listGroups((NSTimestamp)session().valueForKey("today"),
+				course.editingContext());
+		groups = EOQualifier.filteredArrayWithQualifier(groups, new EOKeyValueQualifier(
+				"grade",EOQualifier.QualifierOperatorEqual,course.cycle().grade()));
+		NSArray audience = course.audience();
+		if(audience == null || audience.count() == 0)
+			return;
+		NSMutableArray left = ((NSArray)audience.valueForKey("student")).mutableClone();
+		Enumeration enu = groups.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduGroup gr = (EduGroup) enu.nextElement();
+			NSMutableArray list = new NSMutableArray();
+			Enumeration grlist = gr.list().objectEnumerator();
+			while (grlist.hasMoreElements()) {
+				Student stu = (Student) grlist.nextElement();
+				if(left.removeObject(stu))
+					list.addObject(stu);
+			}
+			byGroup.setObjectForKey(list, gr);
+		}
+		NSMutableArray dangling = null;
+		while(left.count() > 0) {
+			Student student = (Student)left.objectAtIndex(0);
+			EduGroup gr = student.recentMainEduGroup();
+			if(gr == null) {
+				if(dangling == null)
+					dangling = new NSMutableArray();
+				dangling.addObject(student);
+			}
+			if(left.count() == 1) {
+				byGroup.setObjectForKey(new NSMutableArray(student), gr);
+				left.removeAllObjects();
+				break;
+			}
+			NSMutableArray list = new NSMutableArray();
+			Enumeration grlist = gr.list().objectEnumerator();
+			while (grlist.hasMoreElements()) {
+				Student stu = (Student) grlist.nextElement();
+				if(left.removeObject(stu))
+					list.addObject(stu);
+			}
+			byGroup.setObjectForKey(list, gr);			
+		}
+		if(dangling != null) {
+			NSDictionary dict = new NSDictionary("???","name");
+			byGroup.setObjectForKey(dangling,dict);
+		}
+		if(byGroup.count() > groups.count())
+			groups = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+					byGroup.allKeys(), EduGroup.Lister.sorter());
+	}
+	
+	public NSArray studentsList() {
+		if(groupItem == null) {
+			if(groups == null)
+				return currGroup.list();
+			if(currGroup != null && !groups.contains(currGroup))
+				return currGroup.list();
+			return null;
+		} else if(groupItem == currGroup) {
+			return currGroup.list();
+		} else {
+			return (NSArray)byGroup.objectForKey(groupItem);
+		}
 	}
 	
     public boolean isInSubgroup() {
@@ -76,9 +158,9 @@ public class SubgroupEditor extends WOComponent {
     }
 	
 	public WOActionResults save() {
-		NSArray ls = course.groupList();
-		if(ls != null && subgroup.equals(new NSMutableSet(ls))) 
-			return (WOComponent)session().valueForKey("pullComponent");
+//		NSArray ls = course.groupList();
+//		if(ls != null && subgroup.equals(new NSMutableSet(ls)) && !course.editingContext().hasChanges()) 
+//			return (WOComponent)session().valueForKey("pullComponent");
 		
 		WOActionResults nextPage = null;
 		EOEditingContext ec = course.editingContext();
@@ -90,11 +172,28 @@ public class SubgroupEditor extends WOComponent {
 				ec.saveChanges();
 //				if(course instanceof UseAccess && ((UseAccess)course).isOwned())
 //					level = WOLogLevel.OWNED_EDITING;
-				logger.logp(level,"SubgroupEditor","save","Subgroup changes saved",new Object[] {session(),course});
+				logger.logp(level,"SubgroupEditor","save","Subgroup changes saved",
+						new Object[] {session(),course});
 				session().takeValueForKey(Boolean.TRUE,"prolong");
-				nextPage = (WOComponent)session().valueForKey("pullComponent");
+				if(groups == null || currGroup == null) {
+					nextPage = (WOComponent)session().valueForKey("pullComponent");
+				} else {
+					NSMutableArray list = new NSMutableArray();
+					Enumeration grlist = currGroup.list().objectEnumerator();
+					while (grlist.hasMoreElements()) {
+						Student stu = (Student) grlist.nextElement();
+						if(subgroup.containsObject(stu))
+							list.addObject(stu);
+					}
+					byGroup.setObjectForKey(list, currGroup);
+					currGroup = null;
+					if(byGroup.count() > groups.count())
+						groups = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+								byGroup.allKeys(), EduGroup.Lister.sorter());
+				}
 			} catch (Exception ex) {
-				logger.logp(level,"SubgroupEditor","save","Failed to save changes in subgroup",new Object[] {session(),course,ex});
+				logger.logp(level,"SubgroupEditor","save","Failed to save changes in subgroup",
+						new Object[] {session(),course,ex});
 				session().takeValueForKey(ex.toString(),"message");
 			}
 			ec.unlock();
@@ -141,7 +240,8 @@ public class SubgroupEditor extends WOComponent {
     }
 	
     public String title() {
-        return (String)valueForKeyPath("application.strings.RujelInterfaces_Names.EduCourse.subgroup");
+        return (String)valueForKeyPath(
+        		"application.strings.RujelInterfaces_Names.EduCourse.subgroup");
     }
     public Number total() {
         return subgroup.count();
@@ -149,7 +249,8 @@ public class SubgroupEditor extends WOComponent {
 	
     public void setTotal(Number newTotal) {
         if(newTotal.intValue() != subgroup.count())
-			logger.logp(WOLogLevel.INFO,"SubgroupEditor","setTotal","Incorrect subgroup.count calculation",new Object[] {session(),course});
+			logger.logp(WOLogLevel.INFO,"SubgroupEditor","setTotal",
+					"Incorrect subgroup.count calculation",new Object[] {session(),course});
     }
 
 	private int idx = 0;
@@ -158,5 +259,80 @@ public class SubgroupEditor extends WOComponent {
 	}
 	public void setIdx(Number nextIdx) {
 		idx = (nextIdx == null)?0:nextIdx.intValue();
+	}
+	
+	public void toggleMixed() {
+		boolean mixed = (groups == null);
+		course.namedFlags().setFlagForKey(mixed,"mixedGroup");
+		if(mixed) {
+			if(course.audience() == null || course.audience().count() == 0)
+				course.setSubgroup(currGroup.list());
+			prepareByGroup();
+		} else {
+			byGroup = null;
+			groups = null;
+			currGroup = course.eduGroup();
+		}
+	}
+	
+	public String toggleTitle() {
+		String txt = (groups == null)?"mixed":"notMixed";
+		txt = (String)session().valueForKeyPath("strings.Strings.SubgroupEditor." + txt);
+		return txt;
+	}
+	
+	public WOActionResults selectGroup() {
+		currGroup = groupItem;
+		return null;
+	}
+
+	public String cellID () {
+		if(groupItem == null || currGroup == groupItem)
+			return "currGroup";
+		return null;
+	}
+
+	public String groupCellClass() {
+		if(groupItem == null)
+			return "selectionBorder grey";
+		StringBuilder buf = new StringBuilder(25);
+		if(currGroup == groupItem)
+			buf.append("selectionBorder ");
+		if(!groupItem.grade().equals(course.cycle().grade()))
+			buf.append("un");
+		buf.append("gerade");
+		return buf.toString();
+	}
+	
+	public String borderClass() {
+		if(currGroup == groupItem)
+			return "selection";
+		else
+			return "grey";
+	}
+	
+	public String rowspan() {
+		int count = studentsList().count();
+		if(count == 0)
+			return null;
+		return String.valueOf(count +2);
+	}
+	
+	public boolean otherGroup() {
+		if(groupItem instanceof EduGroup)
+			return false;
+		if(groupItem instanceof NSDictionary)
+			return true;
+		return (groups != null && currGroup != null && !groups.contains(currGroup));
+	}
+	
+	public WOActionResults chooseGroup() {
+		WOComponent nextPage = pageWithName("SelectorPopup");
+		nextPage.takeValueForKey(this, "returnPage");
+		nextPage.takeValueForKey("currGroup", "resultPath");
+		nextPage.takeValueForKey(course.eduGroup(), "value");
+		nextPage.takeValueForKey(session().valueForKeyPath(
+				"strings.Strings.SubgroupEditor.popup"), "dict");
+		return nextPage;
 	}
 }
