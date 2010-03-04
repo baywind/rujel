@@ -193,7 +193,7 @@ public class Substitute extends _Substitute implements Reason.Event {
 					if(date != null && !date.equals(substitute.date())) {
 						if(ec == null) {
 							ec = new EOEditingContext(substitute.
-									editingContext().parentObjectStore());
+									editingContext().rootObjectStore());
 							ec.lock();
 						}
 						substitute = (Substitute)EOUtilities.localInstanceOfObject(ec, substitute);

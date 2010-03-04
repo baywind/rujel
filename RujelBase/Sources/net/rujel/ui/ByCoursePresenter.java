@@ -113,7 +113,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 			NSMutableArray list = (NSMutableArray)valueForBinding("editList");
 			ec.deleteObject(bc);
 			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting SettingByCourse",
-					new Object[] {session(),bc});
+					new Object[] {session(),bc.valueForKey("settingsBase")});
 			ec.saveChanges();
 			list.removeObject(bc);
 		} catch (Exception e) {

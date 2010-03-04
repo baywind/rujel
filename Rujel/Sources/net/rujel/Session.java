@@ -65,7 +65,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			os = (EOObjectStore)objectForKey("objectStore");
 			if(os == null)
 				os = DataBaseConnector.objectStoreForTag(eduYear().toString());
-			if(_defaultEC == null || _defaultEC.parentObjectStore() != os) {
+			if(_defaultEC == null || _defaultEC.rootObjectStore() != os) {
 				if(_defaultEC != null)
 					_defaultEC.unlock();
 				_defaultEC = new SessionedEditingContext(os,this);

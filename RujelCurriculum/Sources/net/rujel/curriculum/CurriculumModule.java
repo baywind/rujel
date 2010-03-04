@@ -181,7 +181,7 @@ public class CurriculumModule {
 				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
 					if(ec == null)
 						ec = new EOEditingContext(lesson.
-								editingContext().parentObjectStore());
+								editingContext().rootObjectStore());
 					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
 					sub.setDate(lesson.date());
 					Logger.getLogger("rujel.curriculum").log(WOLogLevel.OWNED_EDITING,

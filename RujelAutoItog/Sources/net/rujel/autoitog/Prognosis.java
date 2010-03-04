@@ -101,9 +101,7 @@ public class Prognosis extends _Prognosis {
     	//_bonus = null;
     	if(aValue == null)
     		return;
-    	if(namedFlags().flagForKey("keep"))
-    		return;
-    	Bonus bonus = bonus();
+     	Bonus bonus = bonus();
     	if(bonus != null) {
     		boolean keep = namedFlags().flagForKey("keepBonus");
     		BigDecimal value = bonus.calculateValue(this,keep);
@@ -111,9 +109,17 @@ public class Prognosis extends _Prognosis {
     			removeObjectFromBothSidesOfRelationshipWithKey(bonus, BONUS_KEY);
     			editingContext().deleteObject(bonus);
     			logger.log(WOLogLevel.FINE,"Bonus was overriden. Removing.",this);
-    		} else if(!keep && bonus.value().compareTo(BigDecimal.ZERO) > 0) {
-    			bonus.setValue(BigDecimal.ZERO);
-    			logger.log(WOLogLevel.FINE,"Automatically dismissing bonus",bonus);
+    		} else if(!keep) {
+    			BigDecimal curValue = bonus.value();
+    			if(curValue.compareTo(BigDecimal.ZERO) > 0) {
+    				MathContext mc = new MathContext(4);
+    				curValue = curValue.round(mc);
+    				value = value.round(mc);
+    				if(!value.equals(curValue)) {
+    					bonus.setValue(BigDecimal.ZERO);
+    					logger.log(WOLogLevel.FINE,"Automatically dismissing bonus",bonus);
+    				}
+    			}
     		}
     	}
     	updateMarkFromValue();

@@ -46,21 +46,7 @@ public class WorkType extends _WorkType {
 
 	public static EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
 			EOQualifier.QualifierOperatorLessThan,new Integer(64));
-	
-/*	protected static int maxNum = 0;
-	
-	public static Integer nextSortNum(EOEditingContext ec) {
-		NSArray sorter = new NSArray(new EOSortOrdering(
-				SORT_KEY,EOSortOrdering.CompareDescending));
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,activeQualifier,sorter);
-		fs.setFetchLimit(1);
-		NSArray list = ec.objectsWithFetchSpecification(fs);
-		if(list != null && list.count() > 0) {
-			WorkType wt = (WorkType)list.objectAtIndex(0);
-			maxNum = wt.sort().intValue();
-		}
-		return new Integer(maxNum +1);
-	}*/
+
 	
 	protected static EOGlobalID defaultType;
 	public static WorkType defaultType(EOEditingContext ctx) {
@@ -112,21 +98,8 @@ public class WorkType extends _WorkType {
 		super.setDfltFlags(new Integer(0));
 		setDfltWeight(BigDecimal.ZERO);
 		setUseCount(new Integer(0));
-//		if(maxNum <= 0)
-//			setSort(nextSortNum(ec));
 	}
-	/*
-	public void awakeFromFetch(EOEditingContext ec) {
-		super.awakeFromFetch(ec);
-		if(sort().intValue() > maxNum)
-			maxNum = sort().intValue();
-	}
-	
-	public void setSort(Integer sort) {
-		super.setSort(sort);
-		if(sort.intValue() > maxNum)
-			maxNum = sort.intValue();
-	}*/
+
 	
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);

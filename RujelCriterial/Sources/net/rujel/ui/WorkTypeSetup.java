@@ -69,9 +69,23 @@ public class WorkTypeSetup extends WOComponent {
 				EOSortOrdering.sortArrayUsingKeyOrderArray(types, ModulesInitialiser.sorter);
 			} catch (Exception e) {
 				ec.revert();
-				session().takeValueForKey(e.getMessage(), "message");
-				logger.log(WOLogLevel.WARNING,"Error saving workType changes",
+				String message = e.getMessage();
+				java.util.logging.Level level = WOLogLevel.WARNING;
+				if(message.equals(
+						"The typeName property of WorkType is not allowed to be null.")) {
+					message = (String)session().valueForKeyPath(
+							"strings.Strings.messages.nullProhibit");
+					message = String.format(message, session().valueForKeyPath(
+						"strings.RujelCriterial_Strings.setup.WorkType.workType"));
+					level = WOLogLevel.FINE;
+				}
+				session().takeValueForKey(message, "message");
+				logger.log(level,"Error saving workType changes",
 						new Object[] {session(),currType,e});
+				if(currType.editingContext() == null) {
+					types.removeObject(currType);
+					currType = null;
+				}
 			}
 		}
     }

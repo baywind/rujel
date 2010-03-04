@@ -229,7 +229,7 @@ public class AutoItog extends _AutoItog {
     		boolean cache = ec.hasChanges();
     		try {
     			if(cache) {
-					ec = new EOEditingContext(ec.parentObjectStore());
+					ec = new EOEditingContext(ec.rootObjectStore());
 	    			ec.lock();
 					AutoItog ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, this);
 					course = (EduCourse)EOUtilities.localInstanceOfObject(ec, course);
