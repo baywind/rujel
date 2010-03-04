@@ -240,7 +240,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		double to = timeOut();
 		if(WOApplication.application().isRefusingNewSessions()) {
-			to = to / Double.parseDouble(System.getProperty("TimeOutProgressiveDivizor","2"));
+			if(!prolong)
+				to = to / Double.parseDouble(System.getProperty("TimeOutProgressiveDivizor","2"));
+			logger.log(WOLogLevel.FINE,"Session timeout: " + to,this);
 		} else {
 			to = Double.parseDouble(System.getProperty("WOSessionTimeOut","3600"));
 			if(prolong) {
