@@ -221,7 +221,7 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	
     	public Updater(AutoItog autoItog, String listName, 
     			boolean recalculate, WOSession session) {
-    		ec = new EOEditingContext();
+    		ec = new EOEditingContext(autoItog.editingContext().rootObjectStore());
     		ec.lock();
     		try {
     			ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, autoItog);

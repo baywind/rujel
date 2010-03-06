@@ -536,7 +536,7 @@ public class LessonNoteEditor extends WOComponent {
 			if(ec.hasChanges()) {
 				if(ec.insertedObjects().contains(currLesson()))
 					return;
-				tmpEc = new EOEditingContext(ec.parentObjectStore());
+				tmpEc = new EOEditingContext(ec.rootObjectStore());
 			}
 			int tabIdx = (baseTabs == null)?-1:baseTabs.indexOf(_currTab);
 			if(_currTab == null || tabIdx == 0) {
@@ -590,7 +590,7 @@ public class LessonNoteEditor extends WOComponent {
 			BaseTab tab = null;
 			EOEditingContext tmpEc = ec;
 			if(ec.hasChanges()) {
-				tmpEc = new EOEditingContext(ec.parentObjectStore());
+				tmpEc = new EOEditingContext(ec.rootObjectStore());
 				if(ec.insertedObjects().contains(currLesson()))
 					return;
 			}
@@ -668,7 +668,7 @@ public class LessonNoteEditor extends WOComponent {
 		EOEditingContext tmpEc = ec;
 		EduLesson lesson = currLesson();
 		if(tmpEc.hasChanges()) {
-			tmpEc = new EOEditingContext(ec.parentObjectStore());
+			tmpEc = new EOEditingContext(ec.rootObjectStore());
 			if(ec.insertedObjects().contains(lesson))
 				return;
 			lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);

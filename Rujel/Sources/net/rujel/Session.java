@@ -65,7 +65,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			os = (EOObjectStore)objectForKey("objectStore");
 			if(os == null)
 				os = DataBaseConnector.objectStoreForTag(eduYear().toString());
-			if(_defaultEC == null || _defaultEC.parentObjectStore() != os) {
+			if(_defaultEC == null || _defaultEC.rootObjectStore() != os) {
 				if(_defaultEC != null)
 					_defaultEC.unlock();
 				_defaultEC = new SessionedEditingContext(os,this);
@@ -240,7 +240,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		double to = timeOut();
 		if(WOApplication.application().isRefusingNewSessions()) {
-			to = to / Double.parseDouble(System.getProperty("TimeOutProgressiveDivizor","2"));
+			if(!prolong)
+				to = to / Double.parseDouble(System.getProperty("TimeOutProgressiveDivizor","2"));
+			logger.log(WOLogLevel.FINE,"Session timeout: " + to,this);
 		} else {
 			to = Double.parseDouble(System.getProperty("WOSessionTimeOut","3600"));
 			if(prolong) {

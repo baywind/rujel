@@ -72,7 +72,7 @@ public class EntityIndex extends _EntityIndex {
 			tableName.append(entity.externalName());
 			EOEditingContext tmpEc = ec;
 			if(ec.hasChanges())
-				tmpEc = new EOEditingContext(ec.parentObjectStore());
+				tmpEc = new EOEditingContext(ec.rootObjectStore());
 			tmpEc.lock();
 			try {
 				result = (EntityIndex)EOUtilities.createAndInsertInstance(ec, "EntityIndex");

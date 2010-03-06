@@ -174,28 +174,30 @@ public class MyUtility {
 		return (String)WOApplication.application().valueForKeyPath("strings." + path);
 	}
 
-	public static Object validateAttributeValue(String attr,Object value,
+	public static Object validateAttributeValue(String attr,Object value,String namePath,
 			Class valueType,boolean notNull,int maxLenth) 
 	throws NSValidation.ValidationException {
+		if(namePath == null)
+			namePath = "RujelInterfaces_Names.properties." + attr;
 		// TODO: review validation localisation
 		//String attributeName = attr.substring(attr.lastIndexOf('.') + 1);
 		if(value == null) {
 			if(notNull)
 				throw new NSValidation.ValidationException(String.format(
 						stringForPath("Strings.messages.nullProhibit"),
-						stringForPath("RujelInterfaces_Names.properties." + attr)),value,attr);
+						stringForPath(namePath)),value,attr);
 			else
 				return value;
 		}
 		if(valueType != null && !(valueType.isInstance(value)))
 			throw new NSValidation.ValidationException(String.format(
 					stringForPath("Strings.messages.invalidValue"),
-					stringForPath("RujelInterfaces_Names.properties." + attr)),value,attr);
+					stringForPath(namePath)),value,attr);
 
 		if(maxLenth > 0 && ((String)value).length() > maxLenth)
 			throw new NSValidation.ValidationException(String.format(
 					stringForPath("Strings.messages.longString"),
-					stringForPath("RujelInterfaces_Names.properties." + attr),maxLenth),value,attr);
+					stringForPath(namePath),maxLenth),value,attr);
 
 		return value;
 	}

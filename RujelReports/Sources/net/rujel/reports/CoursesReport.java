@@ -50,8 +50,6 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 	public NSArray courses;
 	public Object curSource;
 
-	public NSArray tablist = (NSArray)valueForKeyPath(
-			"application.strings.Strings.SrcMark.tabs");
 	public int tabindex = 0;
 	
 	public NSKeyValueCoding item;
@@ -89,23 +87,6 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
     	}
     	super.appendToResponse(aResponse, aContext);
     }
-
-	public String tabSelected() {
-		if(tabindex == NSArray.NotFound) return null;
-		try {
-			return (String)tablist.objectAtIndex(tabindex);
-		} catch (Exception ex) {
-			return null;
-		}
-	}
-		
-	public void setTabSelected(String tabName) {
-		tabindex = tablist.indexOfObject(tabName);
-		if(curSource == null) {
-        	display.replaceObjectAtIndex(defaultDisplay.valueForKey(
-        			(tabindex == 0)?"teacher":"eduGroup"),1);
- 		}
-	}
 
 	public void setCurSource(Object newSource) {
 		curSource = newSource;

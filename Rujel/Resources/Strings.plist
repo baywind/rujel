@@ -204,13 +204,13 @@
 		<key>nothingFound</key>
 		<string>По вашему запросу ничего не найдено, попробуйте задействовать меньше параметров</string>
 		<key>nullProhibit</key>
-		<string>Поле &quot;%s&quot; не может быть пустым</string>
+		<string>Поле &quot;%s&quot; не должно быть пустым</string>
 		<key>parameterRequired</key>
 		<string>Необходимо указать &quot;%s&quot;</string>
 		<key>pleaseWait</key>
 		<string>Пожалуйста подождите</string>
 		<key>refusingSessions</key>
-		<string>РУЖЕЛЬ просит Вас закончить работу и нажать &quot;Выход&quot;. &lt;br/&gt;Ждем Вас сразу после завершения технических работ</string>
+		<string>РУЖЕЛЬ просит Вас закончить работу и &lt;u&gt;нажать &quot;Выход&quot;&lt;/u&gt;. &lt;br/&gt;Ждем Вас сразу после завершения технических работ</string>
 		<key>unsavedChanges</key>
 		<string>Несохраненные изменения будут потеряны</string>
 		<key>unavailableYearlyDb</key>
