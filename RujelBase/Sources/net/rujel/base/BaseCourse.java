@@ -31,6 +31,7 @@ package net.rujel.base;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
+
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOMessage;
 import com.webobjects.eocontrol.*;
@@ -422,5 +423,40 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	public void setFlags(Integer value) {
 		_flags = null;
 		super.setFlags(value);
+	}
+	
+	public static NSArray coursesForStudent(NSArray initialCourses, Student student) {
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = initialCourses.objectEnumerator();
+		Integer eduYear = null;
+		while (enu.hasMoreElements()) {
+			EduCourse crs = (EduCourse) enu.nextElement();
+			if(eduYear==null)
+				eduYear = crs.eduYear();
+			NSArray aud = (NSArray)crs.valueForKey("audience");
+			if(aud == null || aud.count() == 0)
+				result.addObject(crs);
+		}
+		EOQualifier qual = new EOKeyValueQualifier("student",
+				EOQualifier.QualifierOperatorEqual,student);
+		EOFetchSpecification fs = new EOFetchSpecification("CourseAudience",qual,null);
+		NSArray found = student.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject aud = (EOEnterpriseObject) enu.nextElement();
+				EduCourse crs = (EduCourse)aud.valueForKey("course");
+				if(initialCourses.contains(crs)) {
+					result.addObject(crs);
+					continue;
+				}
+				if(crs.eduYear().equals(eduYear) &&
+						Various.boolForObject(crs.valueForKeyPath("namedFlags.mixedGroup")))
+					result.addObject(crs);
+			}
+		}
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result,new NSArray(
+				new EOSortOrdering("cycle",EOSortOrdering.CompareCaseInsensitiveAscending)));
+		return result;
 	}
 }

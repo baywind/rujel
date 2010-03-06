@@ -30,6 +30,7 @@
 package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
+import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import com.webobjects.foundation.*;
@@ -78,6 +79,30 @@ public class TabelReporter extends WOComponent {
 	public NSMutableArray comments;
 	public NSMutableArray years;
 	
+	public void setCourses(NSArray list) {
+		cycles = new NSMutableArray();
+		if(list == null || list.count() == 0) {
+	        if(context().hasSession())
+	        	eduYear = (Integer)session().valueForKey("eduYear");
+	        else
+	        	eduYear = MyUtility.eduYearForDate(new NSTimestamp());
+			return;
+		}
+			EduCourse course = (EduCourse)list.objectAtIndex(0);
+			eduYear = course.eduYear();
+			list = BaseCourse.coursesForStudent(list, student);
+			if(list.count() > 0) {
+				NSMutableSet itogs = new NSMutableSet();
+				Enumeration enu = list.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					course = (EduCourse) enu.nextElement();
+					itogs.addObjectsFromArray(ItogContainer.itogsForCourse(course));
+					cycles.addObject(course.cycle());
+				}
+				perlist = itogs.allObjects().mutableClone();
+			}
+	}
+	
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
 		student = (Student)valueForBinding("student");
 		EOEditingContext ec = student.editingContext();
@@ -85,35 +110,11 @@ public class TabelReporter extends WOComponent {
 		item = (NSKeyValueCoding)valueForBinding("reporter");
 		if(Various.boolForObject(item.valueForKey("noYear"))) {
 			eduYear = null;
-		} else if(valueForBinding("courses") != null) {
-			cycles = ((NSArray)valueForBinding("courses")).mutableClone();
-			if (cycles.count() > 0) {
-				EduCourse course = (EduCourse)cycles.objectAtIndex(0);
-				eduYear = course.eduYear();
-				EOQualifier qual = new EOKeyValueQualifier("groupList",EOQualifier.QualifierOperatorContains,student);
-				EOQualifier.filterArrayWithQualifier(cycles,qual);
-//				if(cycles.count() > 1)
-//				EOSortOrdering.sortArrayUsingKeyOrderArray(cycles,EduCourse.sorter);
-				if(cycles.count() > 0) {
-					NSMutableSet itogs = new NSMutableSet();
-					Enumeration enu = cycles.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						course = (EduCourse) enu.nextElement();
-						itogs.addObjectsFromArray(ItogContainer.itogsForCourse(course));
-					}
-					cycles = ((NSArray)cycles.valueForKey("cycle")).mutableClone();
-					perlist = itogs.allObjects().mutableClone();
-				}
-			} else {
-		        if(aContext.hasSession())
-		        	eduYear = (Integer)aContext.session().valueForKey("eduYear");
-		        else
-		        	eduYear = MyUtility.eduYearForDate(new NSTimestamp());
-			}
+			cycles = new NSMutableArray();
+		} else {
+			setCourses((NSArray)valueForBinding("courses"));
 		}
-		if(cycles == null)
-			cycles = new NSMutableArray(); 
-		
+
 		EOQualifier qual = new EOKeyValueQualifier(ItogMark.STUDENT_KEY,EOQualifier.QualifierOperatorEqual,student);
 		if(eduYear != null) {
 			EOQualifier[] quals = new EOQualifier[2];
