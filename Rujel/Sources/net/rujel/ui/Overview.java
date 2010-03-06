@@ -166,9 +166,9 @@ public class Overview extends WOComponent {
 		if(currSubject == null) return;
 		Number count = (Number)currSubject.objectForKey("count");
 		if(count != null && count.intValue() > 0)
-			currSubject.setObjectForKey("course","style");
+			currSubject.setObjectForKey("green","style");
 		else
-			currSubject.setObjectForKey("eduPlan","style");
+			currSubject.setObjectForKey("grey","style");
 		currSubject = null;
 /*		if(activeNotesAddOns != null && activeNotesAddOns.count() > 0) {
 			Object obj = activeNotesAddOns.objectAtIndex(0);
