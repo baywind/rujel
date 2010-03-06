@@ -113,7 +113,7 @@ CanEdit : WOConditional {
 MixedButton : OnClickContainer {
   elementName = "span";
   class = "button";
-  onclick = session.checkRun;
+  onclick = session.tryLoad;
   hide = session.readAccess._delete.CourseAudience;
   invokeAction = toggleMixed;
 }
@@ -132,7 +132,7 @@ GroupCell : OnClickContainer {
   elementName = "th";
   class = groupCellClass;
   invokeAction = selectGroup;
-  onclick = session.checkRun;
+  onclick = session.tryLoad;
   rowspan = rowspan;
   style = "padding:4pt;";
   disabled = otherGroup;

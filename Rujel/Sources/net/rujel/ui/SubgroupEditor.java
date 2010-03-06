@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 public class SubgroupEditor extends WOComponent {
@@ -157,6 +158,28 @@ public class SubgroupEditor extends WOComponent {
 			subgroup.removeObject(studentItem);
     }
 	
+    protected boolean autoUnmix() {
+		int dfltFlags = SettingsBase.numericSettingForCourse("defaultCourseFlags",
+				course, course.editingContext(), 0);
+		if(dfltFlags != 0) {
+			NamedFlags flags = new NamedFlags(dfltFlags,BaseCourse.flagNames);
+			if(flags.flagForKey("mixedGroup"))
+				return false;
+		}
+		NSArray list = course.eduGroup().list();
+		Enumeration enu = subgroup.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Student student = (Student) enu.nextElement();
+			if(!list.containsObject(student))
+				return false;
+		}
+		course.namedFlags().setFlagForKey(false, "mixedGroup");
+		byGroup = null;
+		groups = null;
+		currGroup = course.eduGroup();
+		return true;
+    }
+    
 	public WOActionResults save() {
 //		NSArray ls = course.groupList();
 //		if(ls != null && subgroup.equals(new NSMutableSet(ls)) && !course.editingContext().hasChanges()) 
@@ -175,8 +198,10 @@ public class SubgroupEditor extends WOComponent {
 				logger.logp(level,"SubgroupEditor","save","Subgroup changes saved",
 						new Object[] {session(),course});
 				session().takeValueForKey(Boolean.TRUE,"prolong");
-				if(groups == null || currGroup == null) {
+				if(groups == null) {
 					nextPage = (WOComponent)session().valueForKey("pullComponent");
+				} else if(autoUnmix()) {
+					ec.saveChanges();
 				} else {
 					NSMutableArray list = new NSMutableArray();
 					Enumeration grlist = currGroup.list().objectEnumerator();
