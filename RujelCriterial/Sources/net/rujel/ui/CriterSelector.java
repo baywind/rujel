@@ -183,13 +183,24 @@ public class CriterSelector extends WOComponent {
 	}
 	
 	public WOActionResults select(Integer sel) {
+		Integer currSel = (Integer)valueForBinding("selection");
 		if(hasBinding("selection")) {
 			setValueForBinding(sel,"selection");
 		} else {
+			currSel = (Integer)session().objectForKey("activeCriterion");
 			if(sel != null)
 				session().setObjectForKey(sel,"activeCriterion");
 			else
 				session().removeObjectForKey("activeCriterion");
+		}
+		if((sel==null)?currSel==null:sel.equals(currSel)) {
+			Boolean hide = (Boolean)session().objectForKey("hideMarkless");
+			if(hide == null) {
+				hide = new Boolean(sel != null && sel.intValue() < 0);
+			} else {
+				hide = new Boolean(!hide.booleanValue());
+			}
+			session().setObjectForKey(hide,"hideMarkless");
 		}
 		_selection = sel;
 		return (WOActionResults)valueForBinding("selectAction");

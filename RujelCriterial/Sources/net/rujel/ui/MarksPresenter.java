@@ -322,11 +322,32 @@ public class MarksPresenter extends NotePresenter {
 	protected Integer activeCriterion() {
 		//Boolean single = (Boolean)valueForBinding("single");
 		if(single())//(!hasBinding("single") ||Various.boolForObject(valueForBinding("single")))
-			return null;
+			return new Integer(0);
 		Integer activeCriterion = (Integer)session().objectForKey("activeCriterion");
 		if(activeCriterion == null)
-			return null;
+			return new Integer(0);
 		return activeCriterion;
+	}
+	
+	public Boolean hideIntegralCell() {
+		if(valueForBinding("initData") != null)
+			return Boolean.TRUE;
+		if(lesson() == null)
+			return Boolean.FALSE;
+		if(Various.boolForObject(valueForBinding("full")))
+			return Boolean.FALSE;
+		Boolean hide = (Boolean)session().objectForKey("hideMarkless");
+		if(hide != null && !hide.booleanValue())
+			return hide;
+		if(activeCriterion().intValue() < 0) {
+			if(hide != null && 
+					(lesson().notes() == null || lesson().notes().count() == 0))
+				return hide;
+			return Boolean.FALSE;
+		} else {
+			return new Boolean(lesson().criterMask() == null 
+					|| lesson().criterMask().count() == 0);
+		}
 	}
 	
     public String integralTitle() {
@@ -340,23 +361,32 @@ public class MarksPresenter extends NotePresenter {
 			return lessonTitle();
 		}
 		if(!access().flagForKey("read")) return "#";
-		if(activeCriterion == null) {
-			if(lesson().noCriteria()) {
+		if(activeCriterion.intValue() == 0) {
+			if(lesson().usedCriteria().count() == 0)
+				return null;
+			if(lesson().usedCriteria().contains(activeCriterion)) {
 				Mark mark = lesson().markForStudentAndCriterion(student(),new Integer(0));
-				return (mark == null)?null:mark.value().toString();
+				return (mark == null)?".":mark.value().toString();
 			}
 			return lesson().integralForStudent(student(),lesson().integralPresenter());
 		} else if(activeCriterion.intValue() < 0) {
 			return shortNoteForStudent();
 		}
 		critItem = activeCriterion;
-		return (mark() == null)?null:mark().value().toString();
+		if(mark() == null) {
+			if(lesson().usedCriteria().contains(activeCriterion))
+				return ".";
+			else
+				return null;
+		} else {
+			return mark().value().toString();
+		}
     }
 
     public String integralColor() {
     	if(student() == null)
     		return (String)valueForKeyPath("lesson.color");
-    	if(activeCriterion() != null) return null;
+    	if(activeCriterion().intValue() != 0) return null;
     	if(hasBinding("data"))
     		return null;
     	if(!access().flagForKey("read")) return "#aaaaaa";
@@ -463,7 +493,7 @@ public class MarksPresenter extends NotePresenter {
 		String title = null;
 		if(student() == null){ 
 			title = (String)valueForKeyPath("lesson.theme");
-		} else if(activeCriterion() != null) {
+		} else if(activeCriterion().intValue() != 0) {
 			if(activeCriterion().intValue() < 0) {
 				title = fullNoteForStudent();
 			} else {

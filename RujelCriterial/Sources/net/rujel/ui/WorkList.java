@@ -239,5 +239,19 @@ public class WorkList extends LessonList {
 			return "grey";
 		return null;
 	}
+	
+	public Boolean hideRow() {
+		Boolean hide = canEdit();
+		if(hide.booleanValue())
+			return hide;
+		Student student = (Student)valueForBinding("student");
+		if(student == null)
+			return Boolean.FALSE;
+		hide = (Boolean)session().objectForKey("hideMarkless");
+		if(hide != null && !hide.booleanValue())
+			return hide;
+		return new Boolean((work().criterMask() == null || work().criterMask().count() == 0) &&
+				work().noteForStudent(student) == null);
+	}
 }
 	
