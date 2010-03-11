@@ -376,15 +376,22 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public Boolean disabledClick() {
 		if(Various.boolForObject(valueForBinding("disabled")))
 			return Boolean.TRUE;
+		if(onClick() == null)
+			return Boolean.TRUE;
+		if(item == null) {
+			if(subDict != null)
+				if(Various.boolForObject(valueOf.valueForKeyPath("item.subDict.skipNull")))
+					return Boolean.TRUE;
+			if(Various.boolForObject(valueOf.valueForKeyPath("item.itemDict.skipNull")))
+				return Boolean.TRUE;
+		}
 		if(subDict != null) {
 			if(Various.boolForObject(valueOf.valueForKeyPath("item.subDict.disabled")))
 				return Boolean.TRUE;
 		}
 		if(Various.boolForObject(valueOf.valueForKeyPath("item.itemDict.disabled")))
 			return Boolean.TRUE;
-		if(onClick() != null)
-			return Boolean.FALSE;
-		return Boolean.TRUE;
+		return Boolean.FALSE;
 	}
 	
 	public String cellClass() {

@@ -125,8 +125,8 @@ public class AutoItogModule {
 						automateItog(ai);
 					} else {
 						timer.schedule(new AutoItogAutomator(ai,false),fire);
+						alreadyScheduled.addObject(ai);
 					}
-					alreadyScheduled.addObject(ai);
 				}
 			}
 		// CourseTimeout firedate
@@ -213,14 +213,14 @@ public class AutoItogModule {
 				AutoItog.ENTITY_NAME, AutoItog.ITOG_CONTAINER_KEY, itog);
 		if(ais == null)
 			return;
-		NSMutableArray toGigs = new NSMutableArray();
+		NSMutableArray toGids = new NSMutableArray();
 		Enumeration enu = timeouts.objectEnumerator();
 		NSTimestamp date = null;
 		while (enu.hasMoreElements()) {
 			CourseTimeout cto = (CourseTimeout) enu.nextElement();
 			if(date == null || date.compare(cto.fireDate()) < 0)
 				date = cto.fireDate();
-			toGigs.addObject(ec.globalIDForObject(cto));
+			toGids.addObject(ec.globalIDForObject(cto));
 		}
 		enu = ais.objectEnumerator();
 		while (enu.hasMoreElements()) {
@@ -233,11 +233,11 @@ public class AutoItogModule {
 					automateCourseTimeout(cto, autoItog);
 				}
 			} else {
-				timer.schedule(new CourseTimeoutsAutomator(autoItog,toGigs),
+				timer.schedule(new CourseTimeoutsAutomator(autoItog,toGids),
 						fire);
+				if(!alreadyScheduled.containsObject(autoItog))
+					alreadyScheduled.addObject(autoItog);
 			}
-			if(!alreadyScheduled.containsObject(autoItog))
-				alreadyScheduled.addObject(autoItog);
 		}
 	}
 	
