@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
 import java.util.logging.Logger;
+import com.webobjects.appserver.WOActionResults;
 
 public class SrcMark extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -372,5 +373,12 @@ public class SrcMark extends WOComponent {
 	
 	public WOActionResults chooseCurrentTeacher() {
 		return TeacherSelector.selectorPopup(this, "currTeacher", ec);
+	}
+
+	public WOActionResults inspectCourse() {
+		WOComponent result = pageWithName("CourseInspector");
+		result.takeValueForKey(this, "returnPage");
+		result.takeValueForKey(item, "course");
+		return result;
 	}
 }

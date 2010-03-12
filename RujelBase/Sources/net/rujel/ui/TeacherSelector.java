@@ -264,7 +264,12 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		WOComponent selector = returnPage.pageWithName("SelectorPopup");
 		selector.takeValueForKey(returnPage, "returnPage");
 		selector.takeValueForKey(resultPath, "resultPath");
-		Object teacher = returnPage.valueForKeyPath(resultPath);
+		Object teacher = null;
+		try {
+			teacher = returnPage.valueForKeyPath(resultPath);
+		} catch (UnknownKeyException e) {
+			;
+		}
 		selector.takeValueForKey(teacher, "value");
 		NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
 				"strings.RujelBase_Base.selectTeacher");
@@ -277,5 +282,14 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
 		selector.takeValueForKey(dict, "dict");
 		return selector;
+	}
+	
+	public String onSelect() {
+		if(Various.boolForObject(valueForBinding("ajaxReturn"))) {
+			String href = context().componentActionURL();
+			String result = "ajaxPopupAction('" + href + "');";
+			return result;
+		}
+		return (String)session().valueForKey("tryLoad");
 	}
 }
