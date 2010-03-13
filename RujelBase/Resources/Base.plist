@@ -166,6 +166,8 @@
 		<string>Сменить преподавателя</string>
 		<key>reason</key>
 		<string>Причина смены</string>
+		<key>reasonRequired</key>
+		<string>Пожалуйста, укажите причину смены преподавателя</string>
 	</dict>
 </dict>
 </plist>

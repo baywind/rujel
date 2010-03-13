@@ -83,6 +83,7 @@ NextDate : WOTextField {
 
 NextComment : WOTextField {
   value = nextComment;
+  id = "nextComment";
 }
 
 ChangeTeacherCell : OnClickContainer {
@@ -107,7 +108,8 @@ NextTeacherCell : OnClickContainer {
   elementName = "td";
   rowspan = 2;
   class = "orange";
-  onclick = "ajaxPost('nextTeacher')";
+  onclick = "f=getElementById('nextComment');if(f.value==null || f.value.length==0){alert(title);f.focus();}else ajaxPost('nextTeacher');";
+  title = session.strings.RujelBase_Base.CourseInspector.reasonRequired;
   style = "white-space:nowrap;font-style:italic;";
 }
 
@@ -181,4 +183,13 @@ CanCreate : WOConditional {
 
 CanEdit : WOConditional {
   condition = session.readAccess.edit.course;
+}
+
+Delete : WOGenericElement {
+  elementName = "input";
+  type = "button";
+  value = application.strings.Reusables_Strings.uiElements.Delete;
+  invokeAction = delete;
+  onclick = session.tryLoad;
+  omitTags = session.readAccess._delete.course;
 }

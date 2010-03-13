@@ -3,6 +3,7 @@ package net.rujel.base;
 
 import java.util.logging.Logger;
 
+import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -12,6 +13,7 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOMessage;
 import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
@@ -26,7 +28,7 @@ public class CourseInspector extends WOComponent {
 	public EOEnterpriseObject changeItem;
 	public NSTimestamp nextDate;
 	public String nextComment;
-	
+	public Updater updater;
 	
     public CourseInspector(WOContext context) {
         super(context);
@@ -142,6 +144,33 @@ public class CourseInspector extends WOComponent {
 		return returnPage;
 	}
 	
+	public WOActionResults delete() {
+		session().setObjectForKey(course, "deleteCourse");
+		NSArray modules = (NSArray)session().valueForKeyPath("modules.deleteCourse");
+		EOEditingContext ec =course.editingContext();
+		returnPage.ensureAwakeInContext(context());
+		if(modules != null && modules.count() > 0) {
+			logger.log(WOLogLevel.INFO,"Could not delete EduCourse",
+					new Object[] {session(),course,modules});
+		} else {
+			try {
+				EduCycle cycle = course.cycle();
+				ec.deleteObject(course);
+				ec.saveChanges();
+				updater.update();
+				logger.log(WOLogLevel.COREDATA_EDITING,"Deleted EduCourse",
+						new Object[] {session(),cycle});
+			} catch (Exception e) {
+				ec.revert();
+				logger.log(WOLogLevel.WARNING,"Error deleting EduCourse",
+						new Object[] {session(),course,e});
+				session().takeValueForKey(e.getMessage(), "message");
+			}
+		}
+		session().removeObjectForKey("deleteCourse");
+		return returnPage;
+	}	
+	
 	public String crossOnclick() {
 		if(course.editingContext().hasChanges()) {
 			StringBuilder buf = new StringBuilder("changed=true;checkRun('");
@@ -203,5 +232,9 @@ public class CourseInspector extends WOComponent {
 				teacher = NullValue;
 			return teacher;
 		}
+	}
+	
+	public static interface Updater {
+		public void update();
 	}
  }

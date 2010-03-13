@@ -29,6 +29,7 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.CourseInspector;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -93,6 +94,7 @@ public class SrcMark extends WOComponent {
     	coursesForTeacher(currTeacher);
 		return null;
     }
+    
     public void coursesForTeacher(Object teacher) {
     	currIndex = -1;
     	currClass = null;
@@ -379,6 +381,20 @@ public class SrcMark extends WOComponent {
 		WOComponent result = pageWithName("CourseInspector");
 		result.takeValueForKey(this, "returnPage");
 		result.takeValueForKey(item, "course");
+		result.takeValueForKey(new CourseInspector.Updater() {
+			protected final int idx = cursIndex;
+			protected final EduCycle cycle = ((EduCourse)item).cycle();
+			public void update() {
+				NSMutableArray tmp = courses.mutableClone();
+				if(currClass == null) {
+					tmp.removeObjectAtIndex(idx);
+				} else {
+					tmp.replaceObjectAtIndex(cycle,idx);
+				}
+				courses = tmp.immutableClone();
+				currIndex = -1;
+			}
+		}, "updater");
 		return result;
 	}
 }
