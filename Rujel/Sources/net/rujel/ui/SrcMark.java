@@ -228,7 +228,7 @@ public class SrcMark extends WOComponent {
 		if(newCourse) {
 			if(!access.flagForKey("create")) {
 				session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-				logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied to create new course",session());
+				logger.log(WOLogLevel.FINE,"Denied to create new course",session());
 				return;
 			}
 			aCourse = (EduCourse)EOUtilities.createAndInsertInstance(ec, EduCourse.entityName);
@@ -236,7 +236,7 @@ public class SrcMark extends WOComponent {
 		} else {
 			if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.aCourse"))) {
 				session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-				logger.logp(WOLogLevel.OWNED_EDITING,"SrcMark","save","Denied course editing",session());
+				logger.log(WOLogLevel.FINE,"Denied course editing",session());
 				return;
 			}
 		}
@@ -244,7 +244,7 @@ public class SrcMark extends WOComponent {
 			try {
 				ec.saveChanges();
 				if(newCourse) { //log creation
-					logger.logp(WOLogLevel.UNOWNED_EDITING,"SrcMark","save","Created new course",new Object[] {session(),aCourse});
+					logger.log(WOLogLevel.COREDATA_EDITING,"Created new course",new Object[] {session(),aCourse});
 					NSNotificationCenter.defaultCenter().postNotification("Own created object",
 							session().valueForKey("user"),new NSDictionary(aCourse,"EO"));
 					NSMutableArray tmp = courses.mutableClone();

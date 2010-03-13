@@ -32,13 +32,14 @@ package net.rujel.eduplan;
 import java.io.InputStream;
 import java.util.Enumeration;
 
+import net.rujel.base.CourseInspector;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Counter;
 import net.rujel.reusables.NamedFlags;
-import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -402,11 +403,11 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String weeklyHours() {
-		if(pdItem != null)
-			return pdItem.valueForKey("weekly").toString();
 		if(listItem == null || 
 				!listItem.equals(rowItem.valueForKeyPath("listSetting.listName")))
 			return null;
+		if(pdItem != null)
+			return pdItem.valueForKey("weekly").toString();
 //		if(Various.boolForObject(valueForKeyPath("rowItem.details.count")))
 		if(rowItem.valueForKey("details") != null)
 			return null;
@@ -658,28 +659,33 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public WOActionResults selectTeacher() {
-		WOComponent selector = pageWithName("SelectorPopup");
-		selector.takeValueForKey(context().page(), "returnPage");
-		selector.takeValueForKey("teacher", "resultPath");
-		selector.takeValueForKey(new TeacherGetter(rowItem,ec,
-				(PlanCycle)cycleItem.valueForKey("cycle"),session()), "resultGetter");
-		Object teacher = rowItem.valueForKeyPath("course.teacher");
-		if(teacher == null && rowItem.valueForKey("course") != null)
-			teacher = NullValue;
-		selector.takeValueForKey(teacher, "value");
-		NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
-				"strings.RujelBase_Base.selectTeacher");
-		dict = PlistReader.cloneDictionary(dict, true);
-		if(teacher != null) {
-			dict.takeValueForKeyPath(new NSArray(teacher), "presenterBindings.forcedList");
-		} else {
-			dict.takeValueForKeyPath(null, "presenterBindings.forcedList");
+		if(rowItem.valueForKey("course") == null) {
+			WOComponent selector = TeacherSelector.selectorPopup(context().page(), "teacher", ec);
+			selector.takeValueForKey(new TeacherGetter(rowItem,ec,
+					(PlanCycle)cycleItem.valueForKey("cycle"),session()), "resultGetter");
+			return selector;
 		}
-		dict.takeValueForKeyPath(ec, "presenterBindings.editingContext");
-		dict.takeValueForKeyPath(courseAccess().valueForKey("delete"),
-				"presenterBindings.allowDelete");
-		selector.takeValueForKey(dict, "dict");
-		return selector;
+		WOComponent result = pageWithName("CourseInspector");
+		result.takeValueForKey(context().page(), "returnPage");
+		result.takeValueForKey(rowItem.valueForKey("course"), "course");
+		result.takeValueForKey(new CourseInspector.Updater() {
+			final NSMutableDictionary row = rowItem;
+			public void update() {
+				NSDictionary details = (NSDictionary)row.valueForKey("details");
+				if(details != null) {
+					Enumeration enu = details.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
+						ec.deleteObject(detail);
+					}
+					ec.saveChanges();
+					row.removeObjectForKey("details");
+				}
+				row.removeObjectForKey("course");
+				row.takeValueForKey("grey", "styleClass");
+			}
+		}, "updater");
+		return result;
 	}
 	
 	protected static class TeacherGetter { 
@@ -700,56 +706,18 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		public void setTeacher(Object teacher) {
 			ec.lock();
 			try {
-				EduCourse course = (EduCourse)row.valueForKey("course");
-				String message = null;
-				if(course == null) {
-					course = (EduCourse)EOUtilities.createAndInsertInstance(ec,
-							EduCourse.entityName);
-					course.takeValueForKey(ses.valueForKey("eduYear"), "eduYear");
-					course.addObjectToBothSidesOfRelationshipWithKey(cycle, "cycle");
-					course.takeValueForKey(row.valueForKey("eduGroup"), "eduGroup");
-					if(teacher instanceof Teacher)
-						course.setTeacher((Teacher)teacher);
-					message = "Created EduCourse";
-				} else {
-					if(teacher == null) {
-						ses.setObjectForKey(course, "deleteCourse");
-						NSArray modules = (NSArray)ses.valueForKeyPath("modules.deleteCourse");
-						if(modules != null && modules.count() > 0) {
-							EduPlan.logger.log(WOLogLevel.INFO,"Could not delete EduCourse",
-									new Object[] {ses,course,modules});
-							ses.removeObjectForKey("deleteCourse");
-							return;
-						}
-						ses.removeObjectForKey("deleteCourse");
-						ec.deleteObject(course);
-						message = "Deleted EduCourse: " + ec.globalIDForObject(course);
-					} else {
-						if(teacher == NullValue)
-							teacher = null;
-						course.takeValueForKey(teacher, "teacher");
-						message = "Changed teacher on EduCourse";
-					}
-				}
+				EduCourse course = (EduCourse)EOUtilities.createAndInsertInstance(ec,
+						EduCourse.entityName);
+				course.takeValueForKey(ses.valueForKey("eduYear"), "eduYear");
+				course.addObjectToBothSidesOfRelationshipWithKey(cycle, "cycle");
+				course.takeValueForKey(row.valueForKey("eduGroup"), "eduGroup");
+				if(teacher instanceof Teacher)
+					course.setTeacher((Teacher)teacher);
 				ec.saveChanges();
-				if(row.valueForKey("course") != course) {
-					row.takeValueForKey(course, "course");
-					row.takeValueForKey("green", "styleClass");
-				} else if(teacher == null) {
-					NSDictionary details = (NSDictionary)row.valueForKey("details");
-					if(details != null) {
-						Enumeration enu = details.objectEnumerator();
-						while (enu.hasMoreElements()) {
-							EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
-							ec.deleteObject(detail);
-						}
-						row.removeObjectForKey("details");
-					}
-					row.removeObjectForKey("course");
-					row.takeValueForKey("grey", "styleClass");
-				}
-				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING, message, new Object[]
-				                                                   {ses, course, teacher});
+				row.takeValueForKey(course, "course");
+				row.takeValueForKey("green", "styleClass");
+				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING, "Created EduCourse",
+						new Object[] {ses, course});
 			} catch (Exception e) {
 				EduPlan.logger.log(WOLogLevel.INFO,"Error saving EduCourse",
 						new Object[] {ses,e});

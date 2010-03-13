@@ -85,7 +85,7 @@ public class CourseInspector extends WOComponent {
 		WOComponent result = TeacherSelector.selectorPopup(this, "teacher",
 				course.editingContext());
 		result.takeValueForKeyPath("ajaxPopup", "dict.onCancel");
-		result.takeValueForKey(course.teacher(), "value");
+//		result.takeValueForKey(course.teacher(), "value");
 		result.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.ajaxReturn");
 		return result;
 	}
