@@ -458,12 +458,14 @@ public class LessonNoteEditor extends WOComponent {
 		} catch (NSValidation.ValidationException vex) {
 			logger.log(level,"Deletion failed: ",new Object[] {session(),currLesson(),vex});
 			session().takeValueForKey(vex.toString(),"message");
+			ec.revert();
 		} catch (Exception ex) {
 			logger.log(WOLogLevel.WARNING,"Deletion failed: ",new Object[] {session(),currLesson(),ex});
 			String message = (String)application().valueForKeyPath(
 					"strings.Strings.messages.error") + " : " + application().valueForKeyPath(
 							"strings.Strings.messages.cantDelete") + " : " + ex;
 			session().takeValueForKey(message,"message");
+			ec.revert();
 		} finally {
 			ec.unlock();
 		}
