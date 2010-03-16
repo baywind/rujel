@@ -155,6 +155,8 @@
 			<string>recentMarks</string>
 			<key>allowAjax</key>
 			<true/>
+			<key>settingsName</key>
+			<string>reportSettingsForStudent</string>
 		</dict>
 		<key>showMarks</key>
 		<string>Показать оценки</string>

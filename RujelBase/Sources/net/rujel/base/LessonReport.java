@@ -35,8 +35,8 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
-import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Period;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -52,15 +52,16 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 	public NSDictionary lessonItem;
 
 	public static NSDictionary reportForStudent(NSDictionary settings) {
-		NamedFlags options = (NamedFlags)settings.valueForKey("lessons");	
-		if(options == null)
+		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.lessons");	
+		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
 		
 		Student student = (Student)settings.valueForKey("student");
 		EOEditingContext ec = student.editingContext();
 		
-		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
-				.valueForKeyPath("strings.RujelBase_Base.lessonReport")).mutableClone();
+		NSMutableDictionary result = new NSMutableDictionary("lessons","id");
+		result.takeValueForKey("LessonReport", "component");
+		result.takeValueForKey(options.valueForKey("sort"), "sort");
 		int count = 0;
 		Date since = (NSTimestamp)settings.valueForKey("since");
 		Date to = (NSTimestamp)settings.valueForKey("to");		
@@ -78,7 +79,7 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 			}
 		}
 //		NSMutableArray args = new NSMutableArray(new Object[] { since,to,student });
-		if(!options.flagForKey("all")) { //get existing notes
+		if(!Various.boolForObject(options.valueForKey("all"))) { //get existing notes
 			NSMutableArray list = new NSMutableArray(new EOKeyValueQualifier("student",
 					EOQualifier.QualifierOperatorEqual,student));
 			if(since != null)

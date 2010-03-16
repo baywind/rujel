@@ -57,15 +57,16 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
     
 	public static NSDictionary reportForStudent(WOSession session) {
 		NSDictionary settings = (NSDictionary)session.objectForKey("reportForStudent");
-		NamedFlags options = (NamedFlags)settings.valueForKey("autoitog");	
-		if(options == null)
+		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.autoitog");	
+		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
-		boolean ifTimeout = options.flagForKey("timeout");
+		boolean ifTimeout = Various.boolForObject(options.valueForKey("timeout"));
 		Student student = (Student)settings.valueForKey("student");
 		EOEditingContext ec = student.editingContext();
 //		NSArray courses = (NSArray)settings.valueForKey("courses");
-		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
-				.valueForKeyPath("strings.RujelAutoItog_AutoItog.prognosReport")).mutableClone();
+		NSMutableDictionary result = new NSMutableDictionary("autoitog","id");
+		result.takeValueForKey("PrognosReport", "component");
+		result.takeValueForKey(options.valueForKey("sort"), "sort");
 //		ItogContainer eduper = null;
 		NSTimestamp date = (NSTimestamp)session.valueForKey("today");
 		Period period = (Period)settings.valueForKey("period");

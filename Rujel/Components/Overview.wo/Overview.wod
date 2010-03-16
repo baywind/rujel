@@ -101,7 +101,7 @@ PageWrapper1: PageWrapper {
 	scriptURL = present.scriptURL;
 	scriptResource = present.scriptResource;
 	resourcesFramework = present.framework;
-	styles = ".student{font-size:large; font-weight:bold; padding-left:2em;}; .dates {padding-left:3em; font-style:italic; white-space:nowrap;};";
+	styles = ".student{font-size:large; font-weight:bold; padding-left:2em;} .dates {padding-left:3em; font-style:italic; white-space:nowrap;} .sorting{display:none;};";
 }
 
 PeriodSelector: PeriodSelector {
@@ -132,7 +132,7 @@ Repetition2: WORepetition {
 ReporterContainer: WOGenericContainer {
 	elementName = "span";
 	invokeAction = selectReporter;
-	onclick = session.tryLoad;
+	onclick = reporterOnclick;
 	onmouseout = "style.textDecoration='none';";
 	onmouseover = "style.textDecoration='underline';";
 	style = reporterItemStyle;
@@ -274,4 +274,9 @@ TickCount : WOTextField {
   size = 2;
   style = "text-align:center;";
   id = "total";
+}
+
+SortingScripts : ResourceLink {
+  framework = "RujelBase";
+  jsLink = "sorting.js";
 }

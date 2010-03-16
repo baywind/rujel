@@ -37,9 +37,7 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
-import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Period;
-import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.foundation.*;
@@ -140,36 +138,8 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		if(period != null)
 			reportSettings.takeValueForKey(period,"period");
 		reportSettings.takeValueForKey(courses.immutableClone(), "courses");
-
-		WOSession ses = aContext.session();
-		reports = (NSArray)ses.objectForKey("reportSettingsForStudent");
-		if(reports == null) {
-			reports = (NSArray)ses.valueForKeyPath("modules.reportSettingsForStudent");
-			ses.setObjectForKey(reports, "reportSettingsForStudent");
-		}
+		reports = ReporterSetup.prepareReports(aContext.session(), reportSettings);
 		Enumeration enu = reports.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			NSDictionary mod = (NSDictionary) enu.nextElement();
-			if(!Various.boolForObject(mod.valueForKey("on")))
-				continue;
-			NSArray options = (NSArray)mod.valueForKey("options");
-			NamedFlags flags = new NamedFlags();
-			NSMutableArray keys = new NSMutableArray();
-			for (int i = 0; i < options.count(); i++) {
-				NSDictionary flag = (NSDictionary) options.objectAtIndex(i);
-				Object key = flag.valueForKey("flag");
-				keys.addObject(key);
-				boolean value = Various.boolForObject(flag.valueForKey("on"));
-				flags.setFlag(i, value);
-			}
-			flags.setKeys(keys);
-			Object key = mod.valueForKey("title");
-			reportSettings.setObjectForKey(flags, key);
-		}
-		ses.setObjectForKey(reportSettings,"reportForStudent");
-		reports = (NSArray)ses.valueForKeyPath("modules.reportForStudent");
-		ses.removeObjectForKey("reportForStudent");
-		enu = reports.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			NSDictionary rp = (NSDictionary) enu.nextElement();
 			NSArray extraCourses = (NSArray)rp.valueForKey("extraCourses");

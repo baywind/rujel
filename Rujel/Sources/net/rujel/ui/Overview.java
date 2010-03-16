@@ -355,8 +355,27 @@ public class Overview extends WOComponent {
 		}
 		return reporters;
 	}
-	public void selectReporter() {
+	public String reporterOnclick() {
+		if(reporter == reporterItem) {
+			if(reporter.valueForKey("settingsName") == null)
+				return null;
+			return (String)session().valueForKey("ajaxPopup");
+		} else {
+			return (String)session().valueForKey("tryLoad");
+		}
+	}
+	public WOActionResults selectReporter() {
+		if(reporter == reporterItem) {
+			String settings = (String)reporter.valueForKey("settingsName");
+			if(settings != null) {
+				WOComponent result = pageWithName("ReporterSetup");
+				result.takeValueForKey(this, "returnPage");
+				result.takeValueForKey(settings, "settingName");
+				return result;
+			}
+		}
 		reporter = reporterItem;
+		return null;
 	}
 	public boolean showReporterSelector() {
 		return (reporterList().count() > 1);

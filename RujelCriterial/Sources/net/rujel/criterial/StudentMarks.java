@@ -45,16 +45,6 @@ import java.math.BigDecimal;
 
 public class StudentMarks extends WOComponent {	
 	public static final String workIntegral = SettingsReader.stringForKeyPath("criterial.workIntegral","%");
-/*
-	public Student student;
-	public NSTimestamp since;
-	public NSTimestamp to;
-	public Period period;
-	public NSKeyValueCoding reporter;
-*/
-//	protected NSMutableArray courses;
-//	public NSMutableArray coursePresent;
-//    public NSMutableDictionary courseItem;
     public NSKeyValueCoding workItem;
     public Object critItem;
     
@@ -82,15 +72,16 @@ public class StudentMarks extends WOComponent {
 	}
 	
 	public static NSDictionary reportForStudent(NSDictionary settings) {
-		NamedFlags options = (NamedFlags)settings.valueForKey("marks");	
-		if(options == null)
+		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.marks");	
+		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
 		
 		Student student = (Student)settings.valueForKey("student");
 		EOEditingContext ec = student.editingContext();
 		
-		NSMutableDictionary result = ((NSDictionary)WOApplication.application()
-				.valueForKeyPath("strings.RujelCriterial_Strings.marksReport")).mutableClone();
+		NSMutableDictionary result = new NSMutableDictionary("marks","id");
+		result.takeValueForKey("StudentMarks", "component");
+		result.takeValueForKey(options.valueForKey("sort"), "sort");
 		int count = 0;
 		NSTimestamp since = (NSTimestamp)settings.valueForKey("since");
 		NSTimestamp to = (NSTimestamp)settings.valueForKey("to");
@@ -112,12 +103,14 @@ public class StudentMarks extends WOComponent {
 			args.addObject(new EOKeyValueQualifier(Work.DATE_KEY,
 					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
 //		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
+		boolean all = Various.boolForObject(options.valueForKey("all"));
+		boolean marked = Various.boolForObject(options.valueForKey("marked"));
 		for(int i = 0; i < courses.count(); i++) { //get works for courses;
 			EduCourse c = (EduCourse)courses.objectAtIndex(i);
 			NSMutableArray quals = args.mutableClone();//new NSMutableArray(qual);
 			quals.add(new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,c));
-			if(!options.flagForKey("all")) {
-				if(options.flagForKey("markable")) {
+			if(!all) {
+				if(Various.boolForObject(options.valueForKey("markable"))) {
 					/*NSArray qs = new NSArray(new Object[] {
 							new EOKeyValueQualifier(Work.WEIGHT_KEY,
 									EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO),
@@ -131,7 +124,7 @@ public class StudentMarks extends WOComponent {
 					quals.addObject(new EOKeyValueQualifier(Work.WEIGHT_KEY,
 							EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO));
 				}
-				if(options.flagForKey("marked")) {
+				if(marked) {
 					
 					quals.addObject(EOQualifier.qualifierWithQualifierFormat(
 							"flags >= 24 OR (flags >= 8 and flags < 16) ", null));
@@ -147,7 +140,7 @@ public class StudentMarks extends WOComponent {
 			if(works != null && works.count() > 0) {
 				allWorks[i] = works.mutableClone();
 				
-				if(!(options.flagForKey("all") || options.flagForKey("marked"))) {
+				if(!(all || marked)) {
 					EOQualifier q =EOQualifier.qualifierWithQualifierFormat(
 							"flags < 8 OR (flags >= 16 and flags < 24) ", null);
 //						new EOKeyValueQualifier(Work.TYPE_KEY,
@@ -166,7 +159,7 @@ public class StudentMarks extends WOComponent {
 		}
 		
 		NSMutableArray extraWorks = new NSMutableArray();
-		if(options.flagForKey("marked")) { //add works with marks
+		if(marked) { //add works with marks
 			args.removeAllObjects();
 //			args.addObjects(new Object[] { student,since,to,since,to });
 //			String qualifierFormat = "student = %@ AND ";
