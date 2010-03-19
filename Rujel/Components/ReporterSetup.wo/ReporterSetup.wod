@@ -8,6 +8,11 @@ Cross : WOImage {
   style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
 }
 
+Title : WOString {
+  value = session.strings.Strings.PrintReport.reportSettings;
+  escapeHTML = false;
+}
+
 ReportTable : ReportTable {
   list = courses;
   properties = display;
@@ -17,9 +22,9 @@ ReportTable : ReportTable {
 }
 
 Form : WOForm {
-  class = "backfield2 selectionBorder";
-  style = ^style;
+  style = "border: 1px solid #999999;";
   onsubmit = "enumerate(this,'sorting',1);return true;";
+  multipleSubmit = true;
 }
 
 ReportsRepetition : WORepetition {
@@ -103,4 +108,76 @@ MoveDown: WOImage {
 	framework ="RujelBase";
 	onclick= "down(get(this,'table',0));";
 	style = "cursor:pointer;";
+}
+
+ShowPresets : OnClickContainer {
+  elementName = "span";
+  onclick = "toggleObj('reportPresets');fitWindow();";
+  style = "float:right;";
+}
+
+PresetsContainer : WOGenericContainer {
+  elementName = "td";
+  id = "reportPresets";
+  style = presetsStyle;
+  valign = "top";
+}
+
+Save : WOSubmitButton {
+  action = savePreset;
+  name = "savePreset";
+  value = application.strings.Reusables_Strings.uiElements.Save;
+  onclick = savePresetOnClick;
+}
+NameField : WOTextField {
+  name = "presetName";
+  value = presetName;
+  size = 15;
+  onkeypress = "b=form.savePreset;t=(value.length);if(t)b.disabled=false;if(eventKey(event)==13){if(t)ajaxPost(b);return false;}return true;";
+}
+
+DefaultContainer : OnClickContainer {
+  elementName = "div";
+  class = "gerade";
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = usePreset;
+  style = "min-width:16ex;";
+}
+
+DefaultTitle : WOString {
+  value = session.strings.Strings.PrintReport.defaultSettings;
+  escapeHTML = false;
+}
+
+Presets : WORepetition {
+  list = presets;
+  item = item;
+}
+
+PresetContainer : OnClickContainer {
+  elementName = "td";
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = usePreset;
+}
+
+PresetTitle : WOString {
+  value = item.title;
+}
+
+DeletePreset : OnClickContainer {
+  elementName = "td";
+  invokeAction = deletePreset;
+  onclick = deletePresetOnClick;
+  width = 16;
+  hide = session.readAccess._delete.ReporterSetup;
+}
+
+DelCross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  height = 12;
+  width = 12;
+}
+CanCreate : WOConditional {
+  condition = session.readAccess.create.ReporterSetup;
 }

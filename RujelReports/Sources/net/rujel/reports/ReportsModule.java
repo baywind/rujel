@@ -83,6 +83,8 @@ public class ReportsModule {
 		String reportsDir = (String)dict.valueForKey("reportsDir");
 		if(reportsDir == null)
 			reportsDir = settings.get("reportsDir", "CONFIGDIR/RujelReports");
+		else
+			settings.mergeValueToKeyPath(reportsDir, "reportsDir");
 		reportsDir = Various.convertFilePath(reportsDir);
 		reportsFolder = new File(reportsDir);
 		Object value = dict.objectForKey("auth.access");

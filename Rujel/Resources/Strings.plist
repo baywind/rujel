@@ -178,6 +178,10 @@
 		<string> оценки</string>
 		<key>tutor</key>
 		<string>Подпись классного руководителя:</string>
+		<key>reportSettings</key>
+		<string>Настройка распечатки</string>
+		<key>defaultSettings</key>
+		<string>по умолчанию</string>
 	</dict>
 	<key>messages</key>
 	<dict>

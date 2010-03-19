@@ -355,36 +355,37 @@ public class Overview extends WOComponent {
 		}
 		return reporters;
 	}
-	public String reporterOnclick() {
-		if(reporter == reporterItem) {
-			if(reporter.valueForKey("settingsName") == null)
-				return null;
-			return (String)session().valueForKey("ajaxPopup");
-		} else {
-			return (String)session().valueForKey("tryLoad");
-		}
+	
+	public boolean reporterIsCurr() {
+		return (reporter == reporterItem);
 	}
+
 	public WOActionResults selectReporter() {
-		if(reporter == reporterItem) {
-			String settings = (String)reporter.valueForKey("settingsName");
-			if(settings != null) {
-				WOComponent result = pageWithName("ReporterSetup");
-				result.takeValueForKey(this, "returnPage");
-				result.takeValueForKey(settings, "settingName");
-				return result;
-			}
-		}
 		reporter = reporterItem;
 		return null;
 	}
+	public WOComponent editReporter() {
+		WOComponent result = pageWithName("ReporterSetup");
+		result.takeValueForKey(this, "returnPage");
+		result.takeValueForKey(reporter.valueForKey("settingsName"), "settingName");
+		return result;
+	}
+	public Boolean hideReporterEdit() {
+		if(reporter != reporterItem || reporter.valueForKey("settingsName") == null)
+			return Boolean.TRUE;
+		return (Boolean)session().valueForKeyPath("readAccess._read.ReporterSetup");
+	}
 	public boolean showReporterSelector() {
-		return (reporterList().count() > 1);
+		boolean result = (reporterList().count() > 1);
+		if(!result)
+			reporterItem = reporter;
+		return result;
 	}
 	public String reporterItemStyle() {
 		if(reporterItem == reporter) {
-			return "cursor:pointer;font-weight:bold;";
+			return "font-weight:bold;padding:2px 1.3ex;";
 		} else {
-			return "cursor:pointer;color:blue;";
+			return "cursor:pointer;color:blue;padding:2px 1.3ex;";
 		}
 	}
 	/*
