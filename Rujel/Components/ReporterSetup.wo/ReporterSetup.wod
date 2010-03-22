@@ -52,6 +52,7 @@ ItemTitle : WOString {
 SubmitButton : WOSubmitButton {
   action = submit;
   value = application.strings.Reusables_Strings.uiElements.Submit;
+  style = "margin:1ex;";
 }
 
 ReportCell : WOGenericContainer {
@@ -111,9 +112,9 @@ MoveDown: WOImage {
 }
 
 ShowPresets : OnClickContainer {
-  elementName = "span";
-  onclick = "toggleObj('reportPresets');fitWindow();";
-  style = "float:right;";
+  elementName = "div";
+  onclick = "toggleObj('saveSection');fitWindow();";
+  style = "font-size:small;";
 }
 
 PresetsContainer : WOGenericContainer {
@@ -180,4 +181,9 @@ DelCross : WOImage {
 }
 CanCreate : WOConditional {
   condition = session.readAccess.create.ReporterSetup;
+}
+
+SaveTitle : WOString {
+  value = session.strings.Strings.PrintReport.saveSettings;
+  escapeHTML = false;
 }

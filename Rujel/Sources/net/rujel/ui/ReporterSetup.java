@@ -98,6 +98,8 @@ public class ReporterSetup extends WOComponent {
 		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(settingsName);
 		if(settings == null)
 			settings = PlistReader.cloneDictionary(defaultSettings, true);
+		else if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
+        	presetName = (String)settings.valueForKey("title");
 		settings = synchronizeReportSettings(settings, reports, false, true);
 	}
 	
@@ -105,6 +107,7 @@ public class ReporterSetup extends WOComponent {
 //		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
 		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(SETTINGS);
 		settings = synchronizeReportSettings(settings, reports,true,false);
+		settings.takeValueForKey(presetName, "title");
 		session().setObjectForKey(settings, SETTINGS);
 		returnPage.ensureAwakeInContext(context());
 		showPresets = false;
@@ -346,6 +349,8 @@ public class ReporterSetup extends WOComponent {
 		NSMutableDictionary settings = (NSMutableDictionary)ses.objectForKey(SETTINGS);
 		if(settings == null) {
 			settings = getDefaultSettings(ses);
+			settings.takeValueForKey(ses.valueForKeyPath(
+			"strings.Strings.PrintReport.defaultSettings"), "title");
 			ses.setObjectForKey(settings,SETTINGS);
 		}
 		reportSettings.takeValueForKey(settings, "settings");

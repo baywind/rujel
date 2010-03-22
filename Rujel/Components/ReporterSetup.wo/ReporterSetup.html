@@ -1,7 +1,15 @@
 <div class="backfield1" id="ajaxPopup">
 <webobject name = "Cross"/><webobject name = "Form">
 <div style = "font-size:larger;margin:5pt;"><webobject name = "Title"/></div>
-<table width = "100%"><tr><td valign = "top">
+<webobject name = "DefaultContainer"><webobject name = "DefaultTitle"/></webobject>
+	<table width = "100%"><webobject name = "Presets">
+	<tr class = "ungerade"><webobject name = "PresetContainer">
+		<webobject name = "PresetTitle"/></webobject>
+		<webobject name = "DeletePreset"><webobject name = "DelCross"/></webobject>
+	</tr></webobject>
+	</table>
+	<hr/>
+	<div id = "reports">
 	<webobject name = "ReportsRepetition">
 	<table width = "100%"><thead>
 			<tr class = "orange"><td style = "width:1.2em;"><webobject name = "ItemCheckBox"/>
@@ -17,20 +25,11 @@
 					</webobject></webobject>
 				</webobject>
 		</table></webobject>
-		<webobject name = "ShowPresets">&gt;&gt;</webobject>
-<webobject name = "SubmitButton"/></td>
-		<webobject name = "PresetsContainer">
-		<webobject name = "DefaultContainer"><webobject name = "DefaultTitle"/></webobject>
-		<table width = "100%"><webobject name = "Presets">
-		<tr class = "ungerade"><webobject name = "PresetContainer">
-			<webobject name = "PresetTitle"/></webobject>
-			<webobject name = "DeletePreset"><webobject name = "DelCross"/></webobject>
-		</tr></webobject>
-		</table>
-		<webobject name = "CanCreate">
-			<div>
+	<webobject name = "SubmitButton"/>
+	</div>
+	<webobject name = "CanCreate">
+		<webobject name = "ShowPresets"><webobject name = "SaveTitle"/></webobject>
+	<div id = "saveSection" style = "display:none;">
 			<webobject name = "NameField"/><br/>
-			<webobject name = "Save"/></div></webobject>
-		</webobject>
-		</tr></table>
+			<webobject name = "Save"/></div></webobject>	
 </webobject></div>

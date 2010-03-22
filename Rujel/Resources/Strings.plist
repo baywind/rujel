@@ -181,7 +181,9 @@
 		<key>reportSettings</key>
 		<string>Настройка распечатки</string>
 		<key>defaultSettings</key>
-		<string>по умолчанию</string>
+		<string>Стандартная</string>
+		<key>saveSettings</key>
+		<string>сохранить настройки</string>
 	</dict>
 	<key>messages</key>
 	<dict>

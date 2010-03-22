@@ -284,7 +284,7 @@ EditReporter : OnClickContainer {
   elementName = "span";
   invokeAction = editReporter;
   hide = hideReporterEdit;
-  onclick = session.ajaxPopup;
+  onclick = session.ajaxPopupNoPos;
 }
 
 EditImage : WOImage {
