@@ -46,6 +46,14 @@
 				<key>active</key>
 				<false/>
 			</dict>
+			<dict>
+				<key>id</key>
+				<string>short</string>
+				<key>title</key>
+				<string>кратко</string>
+				<key>active</key>
+				<false/>
+			</dict>
 		</array>
 		<key>sort</key>
 		<string>12</string>

@@ -30,6 +30,7 @@
 package net.rujel.base;
 
 import java.text.Format;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -50,6 +51,57 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
     }
 
 	public NSDictionary lessonItem;
+	
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		NSDictionary settings = (NSDictionary)aContext.session().objectForKey(
+				"reportSettingsForStudent");
+		if(!Various.boolForObject(settings.valueForKeyPath("lessons.short"))) {
+			super.appendToResponse(aResponse, aContext);
+			return;
+		}
+		NSArray lessons = (NSArray)valueForBinding("value");
+		if(lessons == null || lessons.count() == 0)
+			return;
+		int month = -1;
+		boolean showDate = false;
+		NSArray months = (NSArray)aContext.session().valueForKeyPath(
+				"strings.Reusables_Strings.presets.monthLong");
+		Calendar cal = (showDate)?Calendar.getInstance():null;
+		Enumeration lenu = lessons.objectEnumerator();
+		while (lenu.hasMoreElements()) {
+			NSDictionary ldict = (NSDictionary) lenu.nextElement();
+			NSTimestamp date = (NSTimestamp)ldict.valueForKeyPath("lesson.date");
+			if(cal != null) {
+				cal.setTime(date);
+				if(cal.get(Calendar.MONTH) != month) {
+					month = cal.get(Calendar.MONTH);
+					aResponse.appendContentString("<strong>");
+					aResponse.appendContentString((String)months.objectAtIndex(month));
+					aResponse.appendContentString(": </strong>");
+				}
+			}
+			aResponse.appendContentString("<span title=\"");
+			if(cal == null) {
+				aResponse.appendContentHTMLAttributeValue((String)ldict.valueForKey("date"));
+				aResponse.appendContentHTMLAttributeValue(": ");
+			}
+			aResponse.appendContentHTMLAttributeValue((String)ldict.valueForKey("theme"));
+			aResponse.appendContentString("\">");
+			if(cal != null) {
+				aResponse.appendContentString("<span style=\"color:#666666;\">");
+				aResponse.appendContentString(String.valueOf(cal.get(Calendar.DATE)));
+				aResponse.appendContentCharacter(':');
+				aResponse.appendContentString("</span>");
+			}
+			Object note = ldict.valueForKey("note");
+			if(note != null)
+				aResponse.appendContentString(String.valueOf(note));
+			else
+				aResponse.appendContentCharacter('.');
+			aResponse.appendContentString("; ");
+			aResponse.appendContentString("</span>");
+		}
+	}
 
 	public static NSDictionary reportForStudent(NSDictionary settings) {
 		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.lessons");	
