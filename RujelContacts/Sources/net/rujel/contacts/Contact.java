@@ -169,9 +169,12 @@ public class Contact extends _Contact {
 		//EOEditingContext ec = ((EOEnterpriseObject)list.objectAtIndex(0)).editingContext();
 		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary ents = new NSMutableDictionary();
-		NSMutableDictionary dict = new NSMutableDictionary();
+		EOQualifier [] quals = new EOQualifier[4];
+		quals[1] = new EOKeyValueQualifier(FLAGS_KEY, 
+				EOQualifier.QualifierOperatorLessThan, new Integer(32));
 		if(type != null) {
-			dict.setObjectForKey(type,"type");
+			quals[0] = new EOKeyValueQualifier(TYPE_KEY,
+					EOQualifier.QualifierOperatorEqual, type);
 		}
 		while (enu.hasMoreElements()) {
 			Person person = ((PersonLink)enu.nextElement()).person();
@@ -183,10 +186,13 @@ public class Contact extends _Contact {
 			}
 			if(pEnt == NSKeyValueCoding.NullValue)
 				continue;
-			dict.setObjectForKey(pEnt,PERSON_ENTITY_KEY);
-			dict.setObjectForKey(idForPerson(person),PERS_ID_KEY);
-			NSArray contacts = EOUtilities.objectsMatchingValues(
-					person.editingContext(),ENTITY_NAME,dict);
+			quals[2] = new EOKeyValueQualifier(PERSON_ENTITY_KEY, 
+					EOQualifier.QualifierOperatorEqual, pEnt); 
+			quals[3] = new EOKeyValueQualifier(PERS_ID_KEY, 
+					EOQualifier.QualifierOperatorEqual, idForPerson(person)); 
+			quals[3] = new EOAndQualifier(new NSArray(quals));
+			EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[3],null);
+			NSArray contacts = person.editingContext().objectsWithFetchSpecification(fs);
 			if(contacts.count() > 0)
 				result.setObjectForKey(contacts,person);
 		}

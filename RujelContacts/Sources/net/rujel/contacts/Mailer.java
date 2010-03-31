@@ -35,6 +35,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -143,8 +145,8 @@ public class Mailer {
 		}
 	}
 	
-	public void sendPage(String subject, String text, WOActionResults page ,InternetAddress[] to)
-																			throws MessagingException{
+	public void sendPage(String subject, String text, WOActionResults page,
+			InternetAddress[] to, boolean zip) throws MessagingException{
 		NSData content = page.generateResponse().content();
 		StringBuffer name = new StringBuffer(20);
 		
@@ -157,7 +159,21 @@ public class Mailer {
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		sdf.format(new Date(), name,new FieldPosition(SimpleDateFormat.YEAR_FIELD));
-		name.append(".html");
+		if(zip) {
+			try {
+				ByteArrayOutputStream zipped = new ByteArrayOutputStream(content.length());
+				ZipOutputStream zipStream = new ZipOutputStream(zipped);
+				zipStream.putNextEntry(new ZipEntry(name.toString() + ".html"));
+				content.writeToStream(zipStream);
+				zipStream.closeEntry();
+				zipStream.close();
+				content = new NSData(zipped.toByteArray());
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Error zipping message",
+						new Object[] {ses,subject,e});
+			}
+		}
+		name.append((zip)?".zip":".html");
 		if(!dontSend) {
 			//try {
 				MimeMessage msg = constructMessage(to);
@@ -190,7 +206,7 @@ public class Mailer {
 			}*/
 		}
 		if(writeToFile) {
-			writeToFile(subject + ".html", content);
+			writeToFile(subject + ((zip)?".zip":".html"), content);
 		}
 	}
 

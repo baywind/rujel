@@ -411,7 +411,24 @@ st:		while (stEnu.hasMoreElements()) {
 			stContacts = contactsInSet(stContacts, adrSet);
 			if(stContacts == null || stContacts.count() == 0)
 				continue st;
-			InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(stContacts,adrSet != null);
+			Enumeration cenu = stContacts.objectEnumerator();
+			boolean zip = false;
+			while (cenu.hasMoreElements()) {
+				Contact cnt = (Contact) cenu.nextElement();
+				Integer flags = cnt.flags();
+				if(flags == null)
+					continue;
+				int fl = flags.intValue();
+				if(adrSet == null) {
+					if((fl & 1) == 0 || (fl & 32) != 0)
+						continue;					
+				}
+				zip = ((fl & 2) > 0);
+				if(zip)
+					break;
+			}
+			cenu = stContacts.objectEnumerator();
+			InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(cenu,adrSet != null);
 			if(to == null || to.length == 0)
 				continue st;
 			synchronized (mailer) {
@@ -432,7 +449,7 @@ st:		while (stEnu.hasMoreElements()) {
 						reportPage.takeValueForKey(period,"period");
 						reportPage.takeValueForKey(since,"since");
 						reportPage.takeValueForKey(upTo,"to");
-						mailer.sendPage(subject.toString(), text, reportPage, to);
+						mailer.sendPage(subject.toString(), text, reportPage, to, zip);
 					} else {
 						mailer.sendTextMessage(subject.toString(), text, to);
 					}

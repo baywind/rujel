@@ -48,7 +48,8 @@ import javax.mail.internet.InternetAddress;
 
 public class EMailUtiliser implements Contact.Utiliser {
 	public static final String presenter = "EMailPresenter";
-	public static final NSArray flagsKeys = new NSArray (new String[] {"subscribe"});
+	public static final NSArray flagsKeys = new NSArray (
+			new String[] {"subscribe","zip","-4-","-8-","-16-","disabled"});
 	/*
 	static {
 		ERJavaMail.sharedInstance().finishInitialization();
@@ -67,7 +68,7 @@ public class EMailUtiliser implements Contact.Utiliser {
 	}
 	
 	public void _syncFlags(Flags flags) {
-		if(_contact.flags() != null && _contact.flags().intValue() != flags.intValue())
+		if(_contact.flags() == null || _contact.flags().intValue() != flags.intValue())
 			_contact.setFlags(flags.toInteger());
 	}
 	
@@ -149,7 +150,7 @@ public class EMailUtiliser implements Contact.Utiliser {
 	}
 	
 	public String present() {
-		if(!flags().getFlag(0)) {
+		if(!flags().getFlag(0) || flags().flagForKey("disabled")) {
 			StringBuffer buf = new StringBuffer("<span style=\"color:#aaaaaa;\">");
 			buf.append(address());
 			buf.append("</span>");
@@ -198,7 +199,8 @@ public class EMailUtiliser implements Contact.Utiliser {
 			if(tmp == null || !tmp.equals(className))
 				continue;
 			if(!ignoreFlags) {
-				if((con.flags().intValue() & 1) == 0)
+				int fl = con.flags().intValue();
+				if((fl & 1) == 0 || (fl & 32) != 0)
 					continue;
 			}
 			toAdresses.addObject(((EMailUtiliser)con.getUtiliser()).email());

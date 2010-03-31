@@ -174,10 +174,12 @@ public class EMailPresenter extends WOComponent {
 	
 	public String styleClass() {
 		if(item == null) return null;
-		if(item.getUtiliser().flags().getFlag(0))
-			return "ungerade";
-		else 
+		if(item.getUtiliser().flags().flagForKey("disabled"))
 			return "grey";
+		else if(item.getUtiliser().flags().flagForKey("subscribe"))
+			return "gerade";
+		else 
+			return "ungerade";
 	}
 	
 	public boolean isStateless() {
