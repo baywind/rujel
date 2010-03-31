@@ -422,8 +422,20 @@ public class LessonNoteEditor extends WOComponent {
 				if(idx >= allLessons.count())
 					throw new RuntimeException("Something wrong when deleting lesson");
 				currLesson().validateForDelete();
-				int num = currLesson().number().intValue();
-
+				Number number = currLesson().number();
+				int num = (number == null)?0:number.intValue();
+				if(number == null) {
+					EduLesson lesson = (EduLesson)allLessons.objectAtIndex(0);
+					number = lesson.number();
+					if(number != null)
+						num = number.intValue() + idx;
+				}
+				if(number == null) {
+					EduLesson lesson = (EduLesson)allLessons.lastObject();
+					number = lesson.number();
+					if(number != null)
+						num = number.intValue() + idx - allLessons.count() + 1;
+				}
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
 				if(currLesson() != null) {
 					dict.takeValueForKey(currLesson().entityName(), "entityName");

@@ -317,7 +317,11 @@ public class Reason extends _Reason {
 			Enumeration enu =  list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Substitute sub = (Substitute) enu.nextElement();
-				EduCourse course = sub.lesson().course();
+				if(sub.editingContext() == null)
+					continue;
+				EduCourse course = (EduCourse)sub.valueForKeyPath("lesson.course");
+				if(course == null)
+					continue;
 				if(checkTeacher && (teacher != course.teacher(sub.date()))) {
 					String message = (String)WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");

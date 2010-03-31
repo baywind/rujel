@@ -180,8 +180,7 @@ public class CurriculumModule {
 				title.append(Person.Utility.fullName(sub.teacher(), true, 2, 1, 1));
 				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
 					if(ec == null)
-						ec = new EOEditingContext(lesson.
-								editingContext().rootObjectStore());
+						ec = new EOEditingContext(lesson.editingContext().rootObjectStore());
 					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
 					sub.setDate(lesson.date());
 					Logger.getLogger("rujel.curriculum").log(WOLogLevel.OWNED_EDITING,
@@ -202,7 +201,8 @@ public class CurriculumModule {
 				ec.saveChanges();
 			} catch (Exception e) {
 				Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
-						"Error saving substitute corrections",  new Object[] {ctx.session(),e});
+						"Error saving substitute corrections",
+						new Object[] {ctx.session(),ec.updatedObjects(),e});
 			}
 		}
 		return result;

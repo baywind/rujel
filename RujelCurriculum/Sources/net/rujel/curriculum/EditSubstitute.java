@@ -291,7 +291,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 				ec.revert();
 			return returnPage;
 		}
-		String action = "saved";
+		String action = "modified";
 		ec.lock();
 		if(substitute == null) {
 			substitute = (Substitute)EOUtilities.createAndInsertInstance(ec, 
