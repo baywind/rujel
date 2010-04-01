@@ -328,6 +328,13 @@ gr:		while (eduGroups.hasMoreElements()) {
 			} else {
 				ctx._setSession(ses);
 			}
+			WeakReference sesRef = (WeakReference)params.valueForKey("callerSession");
+			WOSession callerSession = (sesRef == null)?null:(WOSession)sesRef.get();
+			if(callerSession != null) {
+				Object reportSettings = callerSession.objectForKey("reportSettingsForStudent");
+				if(reportSettings != null)
+					ses.setObjectForKey(reportSettings, "reportSettingsForStudent");
+			}
 		}
 		
 		if(ec==null)
