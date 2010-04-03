@@ -44,7 +44,8 @@ import java.util.logging.Logger;
 import java.math.BigDecimal;
 
 public class StudentMarks extends WOComponent {	
-	public static final String workIntegral = SettingsReader.stringForKeyPath("criterial.workIntegral","%");
+	public static final String workIntegral = SettingsReader.stringForKeyPath(
+			"criterial.workIntegral","%");
     public NSKeyValueCoding workItem;
     public Object critItem;
     
@@ -82,7 +83,6 @@ public class StudentMarks extends WOComponent {
 		NSMutableDictionary result = new NSMutableDictionary("marks","id");
 		result.takeValueForKey("StudentMarks", "component");
 		result.takeValueForKey(options.valueForKey("sort"), "sort");
-		int count = 0;
 		NSTimestamp since = (NSTimestamp)settings.valueForKey("since");
 		NSTimestamp to = (NSTimestamp)settings.valueForKey("to");
 		Period period = (Period)settings.valueForKey("period");
@@ -102,64 +102,51 @@ public class StudentMarks extends WOComponent {
 		if(to != null)
 			args.addObject(new EOKeyValueQualifier(Work.DATE_KEY,
 					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
-//		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
-		boolean all = Various.boolForObject(options.valueForKey("all"));
-		boolean marked = Various.boolForObject(options.valueForKey("marked"));
+		Number lvl = (Number)options.valueForKey("level");
+		int level = (lvl == null)?1:lvl.intValue();
+//		boolean all = Various.boolForObject(options.valueForKey("all"));
+//		boolean marked = Various.boolForObject(options.valueForKey("marked"));
 		for(int i = 0; i < courses.count(); i++) { //get works for courses;
 			EduCourse c = (EduCourse)courses.objectAtIndex(i);
 			NSMutableArray quals = args.mutableClone();//new NSMutableArray(qual);
 			quals.add(new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,c));
-			if(!all) {
-				if(Various.boolForObject(options.valueForKey("markable"))) {
-					/*NSArray qs = new NSArray(new Object[] {
-							new EOKeyValueQualifier(Work.WEIGHT_KEY,
-									EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO),
-							new EOKeyValueQualifier(Work.CRITER_MASK_KEY,
-									EOQualifier.QualifierOperatorNotEqual,NullValue)
-					});
-					quals.addObject(new EOOrQualifier(qs));*/
-					quals.addObject(new EOKeyValueQualifier(Work.CRITER_MASK_KEY,
-									EOQualifier.QualifierOperatorNotEqual,NullValue));
-				} else {
-					quals.addObject(new EOKeyValueQualifier(Work.WEIGHT_KEY,
-							EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO));
-				}
-				if(marked) {
-					
-					quals.addObject(EOQualifier.qualifierWithQualifierFormat(
-							"flags >= 24 OR (flags >= 8 and flags < 16) ", null));
-//							new EOKeyValueQualifier(Work.TYPE_KEY,
-//							EOQualifier.QualifierOperatorNotEqual,new Integer(Work.OPTIONAL)));
-				}
+			if(level < 2) {
+				quals.addObject(EOQualifier.qualifierWithQualifierFormat(
+						"flags >= 24 OR (flags >= 8 and flags < 16) ", null));
+				quals.addObject(new EOKeyValueQualifier(Work.WEIGHT_KEY,
+						EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO));
 			}
-			
+
 			EOFetchSpecification fs = new EOFetchSpecification("Work",
 					new EOAndQualifier(quals),EduLesson.sorter);
 			fs.setRefreshesRefetchedObjects(true);
 			NSArray works = ec.objectsWithFetchSpecification(fs);
 			if(works != null && works.count() > 0) {
-				allWorks[i] = works.mutableClone();
-				
-				if(!(all || marked)) {
-					EOQualifier q =EOQualifier.qualifierWithQualifierFormat(
-							"flags < 8 OR (flags >= 16 and flags < 24) ", null);
-//						new EOKeyValueQualifier(Work.TYPE_KEY,
-//							EOQualifier.QualifierOperatorEqual,new Integer(Work.OPTIONAL));
-					NSArray optional = EOQualifier.filteredArrayWithQualifier(works, q);
-					if(optional != null && optional.count() > 0) {
-						Enumeration enu = optional.objectEnumerator();
-						while (enu.hasMoreElements()) {
-							Work w = (Work) enu.nextElement();
-							if(w.forPersonLink(student) == null)
-								allWorks[i].removeObject(w);
+				if(level < 5) {
+					allWorks[i] = new NSMutableArray(works.count());
+					Enumeration enu = works.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						Work w = (Work) enu.nextElement();
+						if(level < 2) {
+							int flags = w.flags().intValue();
+							if(((flags & 8) == 0 || !w.hasWeight()) 
+									&& w.forPersonLink(student) == null)
+								continue;
+						} else {
+							NSArray mask = w.criterMask();
+							if(mask == null || mask.count() == 0)
+								continue;
 						}
+						allWorks[i].addObject(w);
 					}
-				} // removing not estimated optional works
+				} else {
+					allWorks[i] = works.mutableClone();
+				}
 			} // add result to allWorks
 		}
 		
 		NSMutableArray extraWorks = new NSMutableArray();
-		if(marked) { //add works with marks
+		if(level >= 1) { //add works with marks
 			args.removeAllObjects();
 //			args.addObjects(new Object[] { student,since,to,since,to });
 //			String qualifierFormat = "student = %@ AND ";
@@ -170,7 +157,6 @@ public class StudentMarks extends WOComponent {
 						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,period.begin()));
 				args.addObject(new EOKeyValueQualifier("work.date",
 						EOQualifier.QualifierOperatorLessThanOrEqualTo,period.end()));
-//				qualifierFormat = qualifierFormat + "(work.date >= %@ AND work.date <= %@)";
 			} else if(since != null || to != null) {
 				EOQualifier[] or = new EOQualifier[2];
 				if(since != null) {
@@ -187,9 +173,7 @@ public class StudentMarks extends WOComponent {
 							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
 					args.addObject(new EOOrQualifier(new NSArray(or)));
 				}
-//				qualifierFormat = qualifierFormat + "((dateSet >= %@ AND dateSet <= %@) OR (work.date >= %@ AND work.date <= %@))";
 			}
-//			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat,args);
 			EOFetchSpecification fs = new EOFetchSpecification("Mark",
 					new EOAndQualifier(args),null);
 			fs.setRefreshesRefetchedObjects(true);
@@ -220,7 +204,8 @@ public class StudentMarks extends WOComponent {
 				EOEnterpriseObject m = (EOEnterpriseObject)enu.nextElement();
 				EduCourse course = (EduCourse)m.valueForKeyPath("work.course");
 				if(course == null) {
-					Logger.getLogger("rujel.criterial").log(WOLogLevel.INFO,"Dangling mark found",m);
+					Logger.getLogger("rujel.criterial").log(WOLogLevel.INFO,
+							"Dangling mark found",m);
 					continue;
 				}
 				Work w = (Work)m.valueForKey("work");
@@ -251,7 +236,6 @@ public class StudentMarks extends WOComponent {
 				result.takeValueForKey(extraCourses, "extraCourses");
 			}
 		}
-
 		for (int i = 0; i < courses.count(); i++) {
 			NSMutableArray works = null;//(NSMutableArray)allWorks.objectAtIndex(i);
 			if(i < allWorks.length)
@@ -264,14 +248,15 @@ public class StudentMarks extends WOComponent {
 				NSArray criteria = (NSArray)courseItem.valueForKeyPath("criteria.title");
 				synchronized (dateFormat) {
 					if(works != null && works.count() > 0) {
-						courseItem.setObjectForKey(formatWorks(works,criteria),"works");
+						boolean hideMax = Various.boolForObject(options.valueForKey("hideMax"));
+						courseItem.setObjectForKey(formatWorks(works,criteria, hideMax),"works");
 					}
 				}
 				result.setObjectForKey(courseItem, c);
-				count++;
+				level++;
 			}
 		}
-		if(count == 0)
+		if(level == 0)
 			return null;
 		return result;
 	}
@@ -310,7 +295,7 @@ public class StudentMarks extends WOComponent {
 		return result;
 	}
 	
-	public static NSArray formatWorks(NSArray works,NSArray criteria) {
+	public static NSArray formatWorks(NSArray works,NSArray criteria, boolean hideMax) {
 		if(works == null || works.count() ==0) return null;
 		NSArray blanc = null;
 		if(criteria != null && criteria.count() > 0) {
@@ -323,7 +308,8 @@ public class StudentMarks extends WOComponent {
 		}
 		NSMutableArray maxValues = null;
 		NSMutableArray result = new NSMutableArray();
-		Enumeration enu = EOSortOrdering.sortedArrayUsingKeyOrderArray(works,Work.sorter).objectEnumerator();
+		Enumeration enu = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+				works,Work.sorter).objectEnumerator();
 		while(enu.hasMoreElements()) {
 			Work currWork = (Work)enu.nextElement();
 			NSMutableDictionary curr = new NSMutableDictionary(currWork,"work");
@@ -338,9 +324,6 @@ public class StudentMarks extends WOComponent {
 						int idx = ((Integer)mask.valueForKey("criterion")).intValue() -1;
 						if(idx < 0)
 							continue;
-							//criteria.indexOfObject(mask.valueForKeyPath("criterion.title"));
-//						if(idx == NSArray.NotFound)
-//							throw new IllegalArgumentException("Work employs undescribed criterion");
 						Number max = (Number)mask.valueForKey("max");
 						critMask.replaceObjectAtIndex(max,idx);
 						if(status != 2) {
@@ -354,7 +337,7 @@ public class StudentMarks extends WOComponent {
 							}
 						}
 					}
-					if(status == 2) {
+					if(status == 2 && !hideMax) {
 						maxValues = critMask;
 						NSMutableDictionary maxRow = new NSMutableDictionary("max","kind");
 						maxRow.setObjectForKey(critMask,"values");
@@ -378,6 +361,7 @@ public class StudentMarks extends WOComponent {
 				theme = WOMessage.stringByEscapingHTMLString(theme);
 			}
 			BigDecimal weight = currWork.trimmedWeight();
+			curr.setObjectForKey(weight,"weight");
 //			if(BigDecimal.ZERO.compareTo(currWork.weight()) == 0) {
 			if(weight.equals(BigDecimal.ZERO)) {
 				curr.setObjectForKey("noWeight","kind");
@@ -388,13 +372,14 @@ public class StudentMarks extends WOComponent {
 				StringBuilder buf = new StringBuilder("<strong>");
 				buf.append(theme).append("</strong>");
 //				if(BigDecimal.ONE.compareTo(currWork.weight()) != 0) {
+				curr.takeValueForKey(buf.toString(),"theme");
 				if(!weight.equals(BigDecimal.ONE)) {
-					buf.append(" &lt;");
+					buf.delete(1, buf.length());
 					buf.append(WOApplication.application().valueForKeyPath(
 							"strings.RujelCriterial_Strings.weight"));
-					buf.append(':').append(' ').append(weight).append("&gt;");
+					buf.append(':').append(' ').append(weight).append('>');
+					curr.takeValueForKey(buf.toString(),"weightStr");
 				}
-				curr.takeValueForKey(buf.toString(),"theme");
 			}
 			result.addObject(curr);
 		}
@@ -405,6 +390,103 @@ public class StudentMarks extends WOComponent {
         super(context);
     }
 	
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		WOSession ses = aContext.session();
+		NSDictionary settings = (NSDictionary)ses.objectForKey("reportSettingsForStudent");
+		if(!Various.boolForObject(settings.valueForKeyPath("marks.short"))) {
+			super.appendToResponse(aResponse, aContext);
+			return;
+		}
+		NSKeyValueCoding item = (NSKeyValueCoding)valueForBinding("value");
+		NSArray works = (NSArray)item.valueForKey("works");
+		if(works == null || works.count() == 0)
+			return;
+		Student student = (Student)valueForBinding("student");
+		boolean hideMax = Various.boolForObject(settings.valueForKeyPath("marks.hideMax"));
+		aResponse.appendContentString("<strong style = \"font-size:110%;\">");
+		aResponse.appendContentString((String)ses.valueForKeyPath(
+				"strings.RujelCriterial_Strings.works"));
+		aResponse.appendContentString(":</strong> ");
+		Enumeration enu = works.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			workItem = (NSKeyValueCoding) enu.nextElement();
+			Work work = (Work)workItem.valueForKey("work");
+			if(work == null)
+				continue;
+			BigDecimal weight = (BigDecimal)workItem.valueForKey("weight");
+			aResponse.appendContentString("<span");
+			aResponse.appendContentString(" style = \"");
+			if(weight.equals(BigDecimal.ZERO))
+				aResponse.appendContentString("font-style:italic;\"");
+			String tmp = (String)workItem.valueForKey("kind");
+			if(tmp != null) {
+				aResponse.appendContentString(" class = \"");
+				aResponse.appendContentString(tmp);
+				aResponse.appendContentCharacter('"');
+			}
+ 			aResponse.appendContentString(" title = \"");
+			tmp = (String)workItem.valueForKey("date");
+			aResponse.appendContentHTMLAttributeValue(tmp);
+			aResponse.appendContentHTMLAttributeValue(": ");
+			aResponse.appendContentHTMLAttributeValue(work.theme());
+			tmp = (String)workItem.valueForKey("weightStr");
+			if(tmp != null) {
+				aResponse.appendContentCharacter(' ');
+				aResponse.appendContentHTMLAttributeValue(tmp);
+			}
+			aResponse.appendContentCharacter(' ');
+			aResponse.appendContentCharacter('(');
+			tmp = (String)workItem.valueForKey("type");
+			aResponse.appendContentHTMLAttributeValue(tmp);
+			aResponse.appendContentString(")\">");
+			NSArray criteria = work.criterMask();
+			if(criteria == null)
+				criteria = NSArray.EmptyArray;
+			boolean crits = (criteria.count() > 1);
+			tmp = work.noteForStudent(student);
+			if(crits) {
+				criteria = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+						criteria, CriteriaSet.sorter);
+			} else if (criteria.count() == 1) {
+				EOEnterpriseObject crMask = (EOEnterpriseObject)criteria.objectAtIndex(0);
+				Integer cr = (Integer)crMask.valueForKey("criterion");
+				crits = (cr.intValue() != 0 || tmp != null);
+			}
+			if(crits)
+				aResponse.appendContentCharacter('[');
+			Enumeration cenu = criteria.objectEnumerator();
+			while (cenu.hasMoreElements()) {
+				EOEnterpriseObject crMask = (EOEnterpriseObject)cenu.nextElement();
+				Integer cr = (Integer)crMask.valueForKey("criterion");
+				if(cr.intValue() != 0) {
+					aResponse.appendContentHTMLString(work.criterName(cr));
+					aResponse.appendContentCharacter(':');
+				}
+				Mark mark = work.markForStudentAndCriterion(student, cr);
+				if(mark == null || mark.value() == null)
+					aResponse.appendContentString("&oslash;");
+				else
+					aResponse.appendContentString(mark.value().toString());
+				if(!hideMax) {
+					aResponse.appendContentString(
+							"<sub style = \"font-size:60%;color:#999999\">");
+					aResponse.appendContentString(crMask.valueForKey("max").toString());
+					aResponse.appendContentString("</sub>");
+				}
+				if(cenu.hasMoreElements())
+					aResponse.appendContentString(",&nbsp;");
+			}
+			if(tmp != null) {
+				if(crits)
+					aResponse.appendContentString(", ");
+				aResponse.appendContentHTMLString(tmp);
+			}
+			if(crits)
+				aResponse.appendContentCharacter(']');
+			aResponse.appendContentString("</span>; ");
+		}
+	}
+    
 	public boolean isMax() {
 		if(workItem == null) return false;
 		return "max".equals(workItem.valueForKey("kind"));

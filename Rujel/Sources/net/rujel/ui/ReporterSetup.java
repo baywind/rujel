@@ -35,6 +35,7 @@ public class ReporterSetup extends WOComponent {
     public NSMutableArray reports;
 	public NSKeyValueCoding item;
 	public NSKeyValueCoding subItem;
+	public NSKeyValueCoding optItem;
 	public NSMutableArray presets;
 	public String presetName;
 	protected boolean showPresets = false;
@@ -290,7 +291,7 @@ public class ReporterSetup extends WOComponent {
 				NSMutableDictionary opt = (NSMutableDictionary) options.nextElement();
 				key = opt.valueForKey("id");
 				if(updSettings || subs.objectForKey(key) == null)
-					subs.setObjectForKey(opt.valueForKey("active"),key);
+					subs.takeValueForKey(opt.valueForKey("active"),(String)key);
 				else if(updReports)
 					opt.setObjectForKey(subs.objectForKey(key),"active");
 				if(skeys != null)

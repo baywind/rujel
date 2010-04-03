@@ -62,8 +62,12 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 		NSArray lessons = (NSArray)valueForBinding("value");
 		if(lessons == null || lessons.count() == 0)
 			return;
+		aResponse.appendContentString("<strong style = \"font-size:110%;\">");
+		aResponse.appendContentString((String)aContext.session().valueForKeyPath(
+				"strings.RujelBase_Base.lessons"));
+		aResponse.appendContentString(":</strong> ");
 		int month = -1;
-		boolean showDate = false;
+		boolean showDate = true;
 		NSArray months = (NSArray)aContext.session().valueForKeyPath(
 				"strings.Reusables_Strings.presets.monthLong");
 		Calendar cal = (showDate)?Calendar.getInstance():null;
