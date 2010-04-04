@@ -94,7 +94,7 @@ public class Reprimand extends _Reprimand {
 		} else {
 			onDate = new NSTimestamp(cal.getTimeInMillis());
 		}
-		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.HOUR_OF_DAY, 12);
 		cal.add(Calendar.DATE, -SettingsReader.intForKeyPath("edu.planFactLagDays", 0));
 		
 		NSTimestamp now = new NSTimestamp(cal.getTimeInMillis());
@@ -488,7 +488,7 @@ public class Reprimand extends _Reprimand {
 			buf.append(weekOfYear);
 			dict.takeValueForKey(buf.toString(), "author");
 		}
-		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.HOUR_OF_DAY, 12);
 		long nowMillis = cal.getTimeInMillis();
 		cal.add(Calendar.DATE, -week);
 		NSTimestamp prevDate = new NSTimestamp(cal.getTimeInMillis());
@@ -538,7 +538,7 @@ public class Reprimand extends _Reprimand {
 				day = hd.end();
 			}
 			cal.setTime(day);
-			cal.set(Calendar.HOUR_OF_DAY, 1);
+			cal.set(Calendar.HOUR_OF_DAY, 13);
 			cal.add(Calendar.DATE, 1);
 			if(cal.getTimeInMillis() >= nowMillis) {
 				// whole week in holidays

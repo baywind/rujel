@@ -265,7 +265,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		return null;
 		EOGlobalID rgid = ec.globalIDForObject(rItem);
 		if(rgid.isTemporary())
-			return "-1";
+			return new Integer(-1);
 		else
 		return ((EOKeyGlobalID)rgid).keyValues()[0];
     }

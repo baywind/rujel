@@ -296,7 +296,7 @@ public class CurriculumModule {
 		} // choose last date from lessons and variations
 		int weekStart = SettingsBase.numericSettingForCourse(
 				"weekStart", course, ec, Calendar.MONDAY);
-		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.HOUR_OF_DAY, 12);
 		long last = cal.getTimeInMillis();
 		cal.add(Calendar.DATE, 1);
 		while(cal.get(Calendar.DAY_OF_WEEK) != weekStart)
