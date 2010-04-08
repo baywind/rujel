@@ -182,6 +182,20 @@ public class EMailPresenter extends WOComponent {
 			return "ungerade";
 	}
 	
+	public WOActionResults sendMail() {
+		WOComponent nextPage = pageWithName("SendMailForm");
+		NSMutableDictionary dict = new NSMutableDictionary();
+		dict.takeValueForKey(parent().valueForKey("currClass"),"eduGroup");
+		dict.takeValueForKey(new NSArray(valueForBinding("person")),"students");
+		nextPage.takeValueForKey(dict,"dict");
+		return nextPage;
+	}
+	
+	public String mailButton() {
+		return "window.open('" + context().componentActionURL() + 
+			"','mailForm','toolbar=no, location=no')";
+	}
+	
 	public boolean isStateless() {
 		return true;
 	}
