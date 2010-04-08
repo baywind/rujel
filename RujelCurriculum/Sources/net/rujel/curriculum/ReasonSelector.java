@@ -120,7 +120,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
 //    		logger.log(WOLogLevel.OWNED_EDITING,"Creating Reason",session());
     		aDate = null;
 //        	setValueForBinding(reason, "reason");
-    	} else {
+    	} else if(reasonID.intValue() != -1) {
     		try {
 				reason = (Reason) EOUtilities.objectWithPrimaryKeyValue(ec,
 						Reason.ENTITY_NAME, reasonID);
