@@ -326,21 +326,20 @@ public class LessonNoteEditor extends WOComponent {
 		ec.lock();
 		try {
 			if(ec.hasChanges()) {
-				boolean newLesson = (currPerPersonLink != null && 
-						ec.globalIDForObject((EOEnterpriseObject)currPerPersonLink).isTemporary());
-				if(currPerPersonLink != null)
+				if(currPerPersonLink != null) {
+					boolean newLesson = (ec.globalIDForObject((EOEnterpriseObject)
+							currPerPersonLink).isTemporary());
 					((EOEnterpriseObject)currPerPersonLink).validateForSave();
-				if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
-					if(newLesson) {
-						MyUtility.setNumberToNewLesson(currLesson());
-					}
-					NSMutableSet changes = new NSMutableSet();
-					changes.addObjectsFromArray((NSArray)ec.updatedObjects().valueForKey("entityName"));
-					changes.addObjectsFromArray((NSArray)ec.insertedObjects().valueForKey("entityName"));
-					changes.addObjectsFromArray((NSArray)ec.deletedObjects().valueForKey("entityName"));
-					ec.saveChanges();
-					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
-					if(currPerPersonLink != null) {
+					if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
+						if(newLesson) {
+							MyUtility.setNumberToNewLesson(currLesson());
+						}
+						NSMutableSet changes = new NSMutableSet();
+						changes.addObjectsFromArray((NSArray)ec.updatedObjects().valueForKey("entityName"));
+						changes.addObjectsFromArray((NSArray)ec.insertedObjects().valueForKey("entityName"));
+						changes.addObjectsFromArray((NSArray)ec.deletedObjects().valueForKey("entityName"));
+						ec.saveChanges();
+						WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
 						if(newLesson) {
 							logger.log(level,"Created new lesson. " + changes,
 									new Object[] {session(),currPerPersonLink});
@@ -371,22 +370,22 @@ public class LessonNoteEditor extends WOComponent {
 								_currTab = null;
 							refresh();
 						}
-					} else {
-//					if(course instanceof UseAccess && ((UseAccess)course).isOwned())
-//						level = WOLogLevel.OWNED_EDITING;
-						logger.log(level,"Course comment modified",new Object[] {session(),course});
+					} else { // check access to edited data
+						String message = (String)session().valueForKeyPath("readAccess.message");
+						if(message != null)
+							session().takeValueForKey(message, "message");
+						logger.log(WOLogLevel.FINER,"Saving forbidden for lesson", new Object[] 
+						                                                                      {session(),currPerPersonLink,message});
+						ec.revert();
+						if(newLesson) {
+							currPerPersonLink = null;
+							refresh();
+						}
 					}
-				} else { // check access to edited data
-					String message = (String)session().valueForKeyPath("readAccess.message");
-					if(message != null)
-						session().takeValueForKey(message, "message");
-					logger.log(WOLogLevel.FINER,"Saving forbidden for lesson", new Object[] 
-							{session(),currPerPersonLink,message});
-					ec.revert();
-					if(newLesson) {
-						currPerPersonLink = null;
-						refresh();
-					}
+				} else { // no lesson
+					ec.saveChanges();
+					logger.log(WOLogLevel.UNOWNED_EDITING,
+							"Course comment modified",new Object[] {session(),course});
 				}
 			}// ec.hasChanges
 			//session().takeValueForKey(Boolean.FALSE,"prolong");
