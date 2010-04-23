@@ -53,7 +53,11 @@ public class MarksPresenter extends NotePresenter {
 
 	public NamedFlags access() {
 		if(_access == null) {
-			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding("presenterCache");
+			_access = (NamedFlags)valueForBinding("access");
+			if(_access != null)
+				return _access;
+			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding(
+					"presenterCache");
 			if(presenterCache != null)
 				_access = (NamedFlags)presenterCache.valueForKey("markAccess");
 			if(_access == null) {

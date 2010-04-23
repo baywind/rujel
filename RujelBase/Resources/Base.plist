@@ -18,6 +18,8 @@
 		<string>05</string>
 		<key>entityName</key>
 		<string>BaseLesson</string>
+		<key>checkAccess</key>
+		<string>BaseNote</string>
 		<key>courseAttribute</key>
 		<string>course</string>
 		<key>presenter</key>

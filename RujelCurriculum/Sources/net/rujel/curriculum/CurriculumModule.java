@@ -99,7 +99,9 @@ public class CurriculumModule {
 			return assumeNextLesson(ctx);
 		} else if("objectSaved".equals(obj)) {
 			return objectSaved(ctx);
-		}
+		} else if("accessModifier".equals(obj)) {
+			return accessModifier(ctx);
+		} 
 		return null;
 	}
 
@@ -485,5 +487,13 @@ public class CurriculumModule {
 			Reprimand.autoRelieve(course, date, usr);
 		}
 		return null;
+	}
+	
+	public static OldLessonLock accessModifier(WOContext ctx) {
+		SettingsBase sb = SettingsBase.baseForKey("OldLessonLock",
+				ctx.session().defaultEditingContext(), false);
+		if(sb == null)
+			return null;
+		return new OldLessonLock(sb);
 	}
 }

@@ -119,6 +119,8 @@
 		<string>10</string>
 		<key>entityName</key>
 		<string>Work</string>
+		<key>checkAccess</key>
+		<string>Mark</string>
 		<key>courseAttribute</key>
 		<string>course</string>
 		<key>single</key>

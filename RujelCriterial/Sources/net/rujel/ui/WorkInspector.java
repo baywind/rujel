@@ -36,6 +36,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
@@ -397,5 +398,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 		}
     	buf.append("default: setDefaults(0);};");
     	return buf.toString();
+    }
+    
+    public EduLesson currLesson() {
+    	return work;
     }
 }

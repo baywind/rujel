@@ -66,28 +66,29 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 				newTitle, new java.text.ParsePosition(0));
 		returnPage.valueForKey("addLesson");
 		EduLesson lesson = (EduLesson)returnPage.valueForKey("currLesson");
-		lesson.setTheme(newTheme);
-    	if(date != null) {
-    		newDate = (date instanceof NSTimestamp)?
-    				(NSTimestamp)date:new NSTimestamp(date);
-    		newTitle = null;
-    		lesson.setDate(newDate);
-    	}
-		lesson.setTitle(newTitle);
-		MyUtility.setNumberToNewLesson(lesson);
-		EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
-		if(limits != null && !limits.evaluateWithObject(lesson)) {
-			session().setObjectForKey(this, "LessonInspector");
-			lesson.editingContext().revert();
-			returnPage.takeValueForKey(null, "currPerPersonLink");
-			returnPage.valueForKey("refresh");
-			appendMessage("strings.RujelBase_Base.notInTab");
-			return returnPage;
-		}
-//		Object oldMessage = session().valueForKey("message");
-//    	session().setObjectForKey(lesson.date(), "recentDate");
-    	returnPage.valueForKey("save");
-/*    	Object newMessage = session().valueForKey("message");
+		if(lesson != null) {
+			lesson.setTheme(newTheme);
+			if(date != null) {
+				newDate = (date instanceof NSTimestamp)?
+						(NSTimestamp)date:new NSTimestamp(date);
+						newTitle = null;
+						lesson.setDate(newDate);
+			}
+			lesson.setTitle(newTitle);
+			MyUtility.setNumberToNewLesson(lesson);
+			EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
+			if(limits != null && !limits.evaluateWithObject(lesson)) {
+				session().setObjectForKey(this, "LessonInspector");
+				lesson.editingContext().revert();
+				returnPage.takeValueForKey(null, "currPerPersonLink");
+				returnPage.valueForKey("refresh");
+				appendMessage("strings.RujelBase_Base.notInTab");
+				return returnPage;
+			}
+			//		Object oldMessage = session().valueForKey("message");
+			//    	session().setObjectForKey(lesson.date(), "recentDate");
+			returnPage.valueForKey("saveNoreset");
+			/*    	Object newMessage = session().valueForKey("message");
     	if(oldMessage != null && !oldMessage.equals(newMessage)) {
     		if(newMessage != null) {
     			StringBuilder buf = new StringBuilder();
@@ -98,10 +99,12 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     			session().takeValueForKey(oldMessage, "message");
     		}
     	} */
-    	returnPage.takeValueForKey(lesson,"currPerPersonLink");
-    	return returnPage;
+		} else {
+			session().setObjectForKey(this, "LessonInspector");
+		}
+		return returnPage;
     }
-    
+
     protected void appendMessage(String keyPath) {
 /*    	Object message = session().valueForKey("message");
 			if(message != null) {
@@ -122,5 +125,9 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     public WOActionResults back() {
        	returnPage.ensureAwakeInContext(context());
     	return returnPage;
-   }
+    }
+    
+    public EduLesson currLesson() {
+    	return (EduLesson)returnPage.valueForKey("currLesson");
+    }
 }

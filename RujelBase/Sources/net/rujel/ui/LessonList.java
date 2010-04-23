@@ -88,7 +88,8 @@ public class LessonList extends WOComponent {
 	
 	public Boolean canEdit() {
 		if(lessonItem == valueForBinding("currLesson")) {
-			Boolean acc = (Boolean)session().valueForKeyPath("readAccess.edit.currLesson");
+			Boolean acc = (Boolean)access().valueForKey("edit");
+//				(Boolean)session().valueForKeyPath("readAccess.edit.currLesson");
 			return acc;
 		} else return Boolean.FALSE;
 	}

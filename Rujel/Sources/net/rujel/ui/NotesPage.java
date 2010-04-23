@@ -83,6 +83,20 @@ public class NotesPage extends WOComponent {
 		return _currLesson;
 	}
 
+	protected NamedFlags _access;
+	public NamedFlags access() {
+		if(_access == null) {
+			NSKeyValueCoding present = (NSKeyValueCoding)valueForBinding("present");
+			String checkAccess = (String)present.valueForKey("checkAccess");
+			if(checkAccess == null)
+				checkAccess = (String)present.valueForKey("entityName");
+			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." + checkAccess);
+			if(_access == null)
+				_access = DegenerateFlags.ALL_TRUE;
+		}	
+		return _access;
+	}
+	
 	protected String _currPresenter;
 	public String presenter() {
 		if(_currPresenter == null) {
@@ -240,6 +254,7 @@ public class NotesPage extends WOComponent {
 		addOnItem = null;
 		allAddOns = null;
 		activeAddOns = null;
+		_access = null;
 		if(presenterCache == null)
 			presenterCache = new NSMutableDictionary();
 		else
@@ -256,8 +271,7 @@ public class NotesPage extends WOComponent {
 	}
 	
 	public boolean canSave() {
-		return (currLesson() != null && 
-				Various.boolForObject(session().valueForKeyPath("readAccess.edit.currLesson")));
+		return (currLesson() != null && access().flagForKey("edit"));
 	}
 	
     public WOActionResults save() {

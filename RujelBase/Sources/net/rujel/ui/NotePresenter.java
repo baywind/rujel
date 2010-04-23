@@ -53,6 +53,9 @@ public class NotePresenter extends WOComponent {
 	
 	public NamedFlags access() {
 		if(_access == null) {
+			_access = (NamedFlags)valueForBinding("access");
+			if(_access != null)
+				return _access;
 			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding("presenterCache");
 			if(presenterCache != null)
 				_access = (NamedFlags)presenterCache.valueForKey("noteAccess");
@@ -61,9 +64,9 @@ public class NotePresenter extends WOComponent {
 				if(presenterCache != null)
 					presenterCache.takeValueForKey(_access, "noteAccess");
 			}
+			if(_access == null)
+				_access = DegenerateFlags.ALL_TRUE;
 		}	
-		if(_access == null)
-			_access = DegenerateFlags.ALL_TRUE;
 		return _access;
 	}
 	
