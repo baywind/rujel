@@ -122,7 +122,8 @@ public class Prognosis extends _Prognosis {
     			}
     		}
     	}
-    	updateMarkFromValue();
+    	if(!namedFlags().flagForKey("keep"))
+    		updateMarkFromValue();
     }
     
     public String markFromValue() {
