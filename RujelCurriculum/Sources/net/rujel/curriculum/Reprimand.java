@@ -208,6 +208,7 @@ public class Reprimand extends _Reprimand {
 					} catch (Exception e) {
 						logger.log(WOLogLevel.WARNING,"Error saving reprimand",
 								new Object[] {course,now,e});
+						ec.revert();
 					}
 				}
 			} // iterating courses
@@ -273,6 +274,7 @@ public class Reprimand extends _Reprimand {
 					} catch (Exception e) {
 						logger.log(WOLogLevel.WARNING,"Error saving after planFact check",
 								new Object[] {onDate,e});
+						ec.revert();
 					}
 				}
 			}
@@ -433,6 +435,7 @@ public class Reprimand extends _Reprimand {
 					} catch (Exception e) {
 						logger.log(WOLogLevel.WARNING,"Error saving planFact changes",
 								new Object[] {course,now,e});
+						ec.revert();
 					}
 				}
 				cal.add(Calendar.DATE, 1);

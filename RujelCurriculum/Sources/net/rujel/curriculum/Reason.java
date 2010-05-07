@@ -37,6 +37,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+import net.rujel.base.MyUtility;
 import net.rujel.eduplan.Holiday;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
@@ -303,10 +304,12 @@ public class Reason extends _Reason {
 
 	public void validateForSave() {
 		super.validateForSave();
+		StringBuilder buf = new StringBuilder();
+		buf.append(reason()).append(':').append(' ');
 		if(end() != null && end().compare(begin()) < 0) {
-			String message = (String)WOApplication.application().valueForKeyPath(
-					"strings.RujelCurriculum_Curriculum.messages.invalidPeriod");
-			throw new NSValidation.ValidationException(message);
+			buf.append(WOApplication.application().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.messages.invalidPeriod"));
+			throw new NSValidation.ValidationException(buf.toString());
 		}
 		boolean checkTeacher = namedFlags().flagForKey("forTeacher");
 		boolean checkGroup = namedFlags().flagForKey("forEduGroup");
@@ -323,20 +326,31 @@ public class Reason extends _Reason {
 				if(course == null)
 					continue;
 				if(checkTeacher && (teacher != course.teacher(sub.date()))) {
-					String message = (String)WOApplication.application().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
-					throw new NSValidation.ValidationException(message,teacher,"teacher");
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher"));
+					buf.append(" (").append(Person.Utility.fullName(course.teacher(sub.date())
+							, true, 2, 1, 1)).append(')');
+					throw new NSValidation.ValidationException(buf.toString(),teacher,"teacher");
 				}
 				if(checkGroup && (eduGroup != course.eduGroup())) {
-					String message = (String)WOApplication.application().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup");
-					throw new NSValidation.ValidationException(message,eduGroup,"eduGroup");
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup"));
+					buf.append(" (").append(course.eduGroup().name()).append(')');
+					throw new NSValidation.ValidationException(buf.toString()
+							,eduGroup,"eduGroup");
 				}
 				if(begin().compareTo(sub.date()) > 0 || 
 						(end() != null && end().compareTo(sub.date()) < 0)) {
-					String message = (String)WOApplication.application().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.messages.cantSetDates");
-					throw new NSValidation.ValidationException(message,sub.date(),"date");
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetDates"));
+					buf.append(" (").append(
+							MyUtility.dateFormat().format(sub.date())).append(')');
+					if(begin().compareTo(sub.date()) > 0)
+						throw new NSValidation.ValidationException(
+								buf.toString(),begin(),BEGIN_KEY);
+					else
+						throw new NSValidation.ValidationException(
+								buf.toString(),end(),END_KEY);
 				}
 			} // enu substitutes
 		}
@@ -348,21 +362,31 @@ public class Reason extends _Reason {
 				EduCourse course = var.course();
 				if(checkTeacher && (teacher != course.teacher(var.date()))
 						&& var.value().intValue() <= 0) {
-					String message = (String)WOApplication.application().valueForKeyPath(
-							"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher");
-					throw new NSValidation.ValidationException(message,teacher,"teacher");
+					buf.append(WOApplication.application().valueForKeyPath(
+							"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher"));
+					buf.append(" (").append(Person.Utility.fullName(course.teacher(var.date())
+							, true, 2, 1, 1)).append(')');
+					throw new NSValidation.ValidationException(buf.toString(),teacher,"teacher");
 				}
 				if(checkGroup && (eduGroup != course.eduGroup())) {
-					String message = (String)WOApplication.application().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup");
-					throw new NSValidation.ValidationException(message,eduGroup,"eduGroup");
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup"));
+					buf.append(" (").append(course.eduGroup().name()).append(')');
+					throw new NSValidation.ValidationException(buf.toString()
+							,eduGroup,"eduGroup");
 				}
 				if(begin().compareTo(var.date()) > 0 || 
 						(end() != null && end().compareTo(var.date()) < 0)) {
-					String message = (String)WOApplication.application().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.messages.cantSetDates");
-					throw new NSValidation.ValidationException(message,var.date(),"date");
-				}
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetDates"));
+					buf.append(" (").append(
+							MyUtility.dateFormat().format(var.date())).append(')');
+					if(begin().compareTo(var.date()) > 0)
+						throw new NSValidation.ValidationException(
+								buf.toString(),begin(),BEGIN_KEY);
+					else
+						throw new NSValidation.ValidationException(
+								buf.toString(),end(),END_KEY);				}
 			} // enu variations
 		}
 	}
