@@ -29,6 +29,7 @@
 
 package net.rujel.curriculum;
 
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -306,7 +307,17 @@ public class Reason extends _Reason {
 		super.validateForSave();
 		StringBuilder buf = new StringBuilder();
 		buf.append(reason()).append(':').append(' ');
-		if(end() != null && end().compare(begin()) < 0) {
+		long end = Long.MAX_VALUE;
+		if(end() != null) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(end());
+			cal.set(Calendar.HOUR_OF_DAY, 23);
+			cal.set(Calendar.MINUTE, 59);
+			cal.set(Calendar.SECOND, 59);
+			cal.set(Calendar.MILLISECOND, 999);
+			end = cal.getTimeInMillis();
+		}
+		if(end() != null && begin().getTime() > end) {
 			buf.append(WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.messages.invalidPeriod"));
 			throw new NSValidation.ValidationException(buf.toString());
@@ -330,27 +341,24 @@ public class Reason extends _Reason {
 						"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher"));
 					buf.append(" (").append(Person.Utility.fullName(course.teacher(sub.date())
 							, true, 2, 1, 1)).append(')');
-					throw new NSValidation.ValidationException(buf.toString(),teacher,"teacher");
+					throw new NSValidation.ValidationException(buf.toString(),sub,"teacher");
 				}
 				if(checkGroup && (eduGroup != course.eduGroup())) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup"));
 					buf.append(" (").append(course.eduGroup().name()).append(')');
-					throw new NSValidation.ValidationException(buf.toString()
-							,eduGroup,"eduGroup");
+					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
 				}
 				if(begin().compareTo(sub.date()) > 0 || 
-						(end() != null && end().compareTo(sub.date()) < 0)) {
+						(sub.date().getTime() > end)) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetDates"));
 					buf.append(" (").append(
 							MyUtility.dateFormat().format(sub.date())).append(')');
 					if(begin().compareTo(sub.date()) > 0)
-						throw new NSValidation.ValidationException(
-								buf.toString(),begin(),BEGIN_KEY);
+						throw new NSValidation.ValidationException(buf.toString(),sub,BEGIN_KEY);
 					else
-						throw new NSValidation.ValidationException(
-								buf.toString(),end(),END_KEY);
+						throw new NSValidation.ValidationException(buf.toString(),sub,END_KEY);
 				}
 			} // enu substitutes
 		}
@@ -366,27 +374,27 @@ public class Reason extends _Reason {
 							"strings.RujelCurriculum_Curriculum.messages.cantSetTeacher"));
 					buf.append(" (").append(Person.Utility.fullName(course.teacher(var.date())
 							, true, 2, 1, 1)).append(')');
-					throw new NSValidation.ValidationException(buf.toString(),teacher,"teacher");
+					throw new NSValidation.ValidationException(buf.toString(),var,"teacher");
 				}
 				if(checkGroup && (eduGroup != course.eduGroup())) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetEduGroup"));
 					buf.append(" (").append(course.eduGroup().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString()
-							,eduGroup,"eduGroup");
+							,var,"eduGroup");
 				}
 				if(begin().compareTo(var.date()) > 0 || 
-						(end() != null && end().compareTo(var.date()) < 0)) {
+						(var.date().getTime() > end)) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetDates"));
 					buf.append(" (").append(
 							MyUtility.dateFormat().format(var.date())).append(')');
 					if(begin().compareTo(var.date()) > 0)
 						throw new NSValidation.ValidationException(
-								buf.toString(),begin(),BEGIN_KEY);
+								buf.toString(),var,BEGIN_KEY);
 					else
 						throw new NSValidation.ValidationException(
-								buf.toString(),end(),END_KEY);				}
+								buf.toString(),var,END_KEY);				}
 			} // enu variations
 		}
 	}
