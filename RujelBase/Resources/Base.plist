@@ -123,6 +123,8 @@
 		<string>Для всех курсов</string>
 		<key>unspecified</key>
 		<string>(все)</string>
+		<key>addByCourse</key>
+		<string>уточнить для отдельных курсов</string>
 	</dict>
 	<key>newPerson</key>
 	<dict>

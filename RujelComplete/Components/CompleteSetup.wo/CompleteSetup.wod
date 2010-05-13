@@ -13,3 +13,35 @@ WriteStudents : WOCheckBox {
 WriteReports : WOCheckBox {
 	checked = writeReports;
 }
+StateTitle : WOString {
+  value = session.strings.RujelComplete_Complete.stateTitle;
+  escapeHTML = false;
+}
+
+CurrState : WOString {
+  value = stateCell;
+  escapeHTML = false;
+}
+
+StateToggle : OnClickContainer {
+  elementName = "td";
+  invokeAction = toggleActive;
+  onclick = session.tryLoad;
+  class = "grey";
+  hide = noItem;
+}
+
+ToggleTitle : WOString {
+  value = toggleTitle;
+}
+
+
+SettingsByCourse : SettingsByCourse {
+  item = item;
+  base = base;
+  ec = ^ec;
+  hideEmptyDetails = true;
+  defaultNumeric = session.eduYear;
+  defaultText = defaultValue;
+  pushByCourse = "pushByCourse";
+}

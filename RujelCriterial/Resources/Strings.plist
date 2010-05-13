@@ -312,6 +312,12 @@
 		<string>работы</string>
 		<key>component</key>
 		<string>PrintWorks</string>
+		<key>manual</key>
+		<true/>
+		<key>precedes</key>
+		<array>
+			<string>student</string>
+		</array>
 		<key>sort</key>
 		<string>10</string>
 	</dict>

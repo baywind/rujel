@@ -87,9 +87,9 @@ public class MyUtility {
 	}
 
 	public static Integer eduYearForDate(Date date) {
-		if (date == null) return null;
 		GregorianCalendar gcal = new GregorianCalendar();
-		gcal.setTime(date);
+		if(date != null)
+			gcal.setTime(date);
 		int year = gcal.get(GregorianCalendar.YEAR);
 		int month = gcal.get(GregorianCalendar.MONTH);
 		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);

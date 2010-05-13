@@ -30,6 +30,8 @@
 package net.rujel.ui;
 
 import net.rujel.base.SettingsBase;
+import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -53,6 +55,32 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     	return _bc;
     }
     
+    protected NamedFlags _access;
+    public NamedFlags access() {
+    	if(_access != null)
+    		return _access;
+    	_access = (NamedFlags)valueForBinding("access");
+    	if(_access != null)
+    		return _access;
+    	_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
+    	return _access;
+    }
+    
+	public String editorHead() {
+    	if(Various.boolForObject(valueForBinding("readOnly")))
+    		return null;
+    	NamedFlags access = (NamedFlags)valueForBinding("access");
+    	if(access == null)
+    		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
+    	if(access.flagForKey("edit") || access.flagForKey("delete")) {
+    		if(access.flagForKey("edit") && access.flagForKey("delete"))
+    			return "<td colspan = \"2\"/>";
+    		else
+    			return "<td/>";
+    	}
+    	return null;
+	}
+	
     public boolean isBase() {
     	return (bc() instanceof SettingsBase);
     }
@@ -100,6 +128,10 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(bc(), "byCourse");
 		editor.takeValueForKey(valueForBinding("editList"), "baseByCourse");
+    	if(hasBinding("pushByCourse")) {
+    		editor.takeValueForKey("^pushByCourse", "pushToKeyPath");
+    		editor.takeValueForKey(this, "resultGetter");
+    	}
 		return editor;
 	}
 	
@@ -109,16 +141,32 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		EOEnterpriseObject bc = (EOEnterpriseObject)bc();
 		EOEditingContext ec = bc.editingContext();
 		ec.lock();
+		SettingsBase base = null;
+		if(bc instanceof SettingsBase)
+			base = (SettingsBase)bc;
+		else
+			base = (SettingsBase)bc.valueForKey("settingsBase");
 		try {
-			NSMutableArray list = (NSMutableArray)valueForBinding("editList");
 			ec.deleteObject(bc);
-			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting SettingByCourse",
-					new Object[] {session(),bc.valueForKey("settingsBase")});
+			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting SettingByCourse: "
+					+ base.key(), new Object[] {session(),bc.valueForKey("settingsBase")});
+			String path = (String)valueForBinding("pushByCourse");
+			if(path != null) {
+				WOComponent getter = parent();
+	    		while (path.charAt(0) == '^') {
+	    			path = path.substring(1);
+					path = (String)getter.valueForBinding(path);
+					getter = getter.parent();
+				}
+	    		getter.takeValueForKeyPath(bc, path);
+			}
 			ec.saveChanges();
-			list.removeObject(bc);
+			NSMutableArray list = (NSMutableArray)valueForBinding("editList");
+			if(list != null)
+				list.removeObject(bc);
 		} catch (Exception e) {
-			ByCourseEditor.logger.log(WOLogLevel.INFO,"Could not delete SettingByCourse",
-					new Object[] {session(),bc,e});
+			ByCourseEditor.logger.log(WOLogLevel.INFO,"Could not delete SettingByCourse: "
+					+ base.key(), new Object[] {session(),bc,e});
 			session().takeValueForKey(e.getMessage(), "message");
 		} finally {
 			ec.unlock();

@@ -30,18 +30,45 @@
 package net.rujel.complete;
 
 
+import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
+
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.foundation.NSKeyValueCoding;
 
 public class CompleteModule {
 	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
-			
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelComplete", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
+			Completion.init();
+		} else if("journalPlugins".equals(obj)) {
+			return journalPlugins(ctx);
 		} else if("adminModules".equals(obj)) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelComplete_Complete.adminModule");
 		}
+		return null;
+	}
+	
+	public static Object journalPlugins(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Completion")))
+			return null;
+		EduCourse course = (EduCourse)ctx.page().valueForKey("course");
+		if(course == null)
+			return null;
+		String active = SettingsBase.stringSettingForCourse(
+				Completion.SETTINGS_BASE, course, course.editingContext());
+		if(Boolean.parseBoolean(active))
+			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.dashboard");
 		return null;
 	}
 }

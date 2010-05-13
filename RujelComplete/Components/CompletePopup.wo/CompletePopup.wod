@@ -1,0 +1,43 @@
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  align = "right";
+  height = 10;
+  width = 10;
+  onclick = "closePopup();";
+  style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
+}
+
+Modules : WORepetition {
+  list = modules;
+  item = item;
+}
+
+IsClosed : WOCheckBox {
+  checked = item.closed;
+  disabled = item.disabled;
+}
+
+ModuleRow : WOGenericContainer {
+  elementName = "tr";
+  title = item.hover;
+  class = item.styleClass;
+}
+
+ModuleTitle : WOString {
+  value = item.title;
+}
+
+Submit : WOSubmitButton {
+	value = session.strings.Reusables_Strings.uiElements.Submit;
+	action = save;
+	onclick = "return confirmAction(null,event);";
+}
+
+Form : WOForm {
+  style = "border:1px solid #666666;";
+}
+
+Title : WOString {
+  value = session.strings.RujelComplete_Complete.dashboard.title;
+}

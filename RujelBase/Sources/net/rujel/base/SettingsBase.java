@@ -39,6 +39,7 @@ import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Various;
 
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -252,6 +253,32 @@ public class SettingsBase extends _SettingsBase {
 		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
 	}
 	
+    public NSMutableArray byCourse(Integer eduYear) {
+		NSArray baseByCourse = byCourse();
+		NSMutableArray byCourse = new NSMutableArray(this);
+		if(baseByCourse == null || baseByCourse.count() == 0)
+			return byCourse;
+		Enumeration enu = baseByCourse.objectEnumerator();
+		if(eduYear == null) {
+			byCourse.addObjectsFromArray(baseByCourse);
+		} else {
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
+				if(bc.valueForKey("eduYear") == null || 
+						eduYear.equals(bc.valueForKey("eduYear")))
+					byCourse.addObject(bc);
+			}
+		}
+		if(byCourse.count() > 2) {
+			try {
+				byCourse.sortUsingComparator(new SettingsBase.Comparator());
+			} catch (ComparisonException e) {
+				e.printStackTrace();
+			}
+		}
+    	return byCourse;
+    }
+	
 	public static EOQualifier byCourseQualifier(EOEnterpriseObject byCourse) {
 		if(!byCourse.entityName().equals("SettingByCourse"))
 			return null;
@@ -290,6 +317,10 @@ public class SettingsBase extends _SettingsBase {
 				EduCourse.entityName, "eduYear", eduYear);
 		if(allCourses == null || allCourses.count() == 0)
 			return null;
+		return coursesForSetting(text, numeric, allCourses);
+	}
+	
+	public NSArray coursesForSetting(String text, Integer numeric, NSArray allCourses) {
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enu = allCourses.objectEnumerator();
 		while (enu.hasMoreElements()) {

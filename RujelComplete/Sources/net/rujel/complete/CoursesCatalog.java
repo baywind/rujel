@@ -24,10 +24,10 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
 		new EOSortOrdering("teacher",EOSortOrdering.CompareAscending)
 	};
 	public static final NSArray byClass = new NSArray(orders);
-	public static final NSArray bySubject = new NSArray(new EOSortOrdering[] 
-	                                    {orders[1],orders[0],orders[2]});
-	public static final NSArray byTeacher = new NSArray(new EOSortOrdering[] 
-	                                    {orders[2],orders[0],orders[1]});
+	public static final NSArray bySubject = new NSArray(
+			new EOSortOrdering[] {orders[1],orders[0],orders[2]});
+	public static final NSArray byTeacher = new NSArray(
+			new EOSortOrdering[] {orders[2],orders[0],orders[1]});
 	
 	public EOEditingContext ec;
 	public NSArray allCourses;

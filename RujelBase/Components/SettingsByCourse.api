@@ -17,5 +17,9 @@
     <binding defaults="Boolean" name="readOnly"/>
     <binding name="defaultText"/>
         <binding name="defaultNumeric"/>
+    <binding name="pushByCourse"/>
+        <validation message="'changedByCourse' must be bound to a settable value">
+            
+        </validation>
     </wo>
 </wodefinitions>

@@ -62,6 +62,8 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 	public EduCycle cycleItem;
 	protected NSMutableDictionary coursesByCycle;
 	public EduCourse courseItem;
+	public String pushToKeyPath;
+	public NSKeyValueCodingAdditions resultGetter;
 	
 	
     public ByCourseEditor(WOContext context) {
@@ -76,6 +78,19 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 		}
 		grades = new NSArray(grds);
 		groupsByGrade = new NSMutableDictionary(grps,grds);
+    }
+    
+    public void setPushToKeyPath(String path) {
+    	if(resultGetter instanceof WOComponent) {
+    		WOComponent getter = (WOComponent)resultGetter;
+    		while (path.charAt(0) == '^') {
+    			path = path.substring(1);
+				path = (String)getter.valueForBinding(path);
+				getter = getter.parent();
+			}
+    		resultGetter = getter;
+    	}
+    	pushToKeyPath = path;
     }
     
     public void setBase(SettingsBase b) {
@@ -335,13 +350,19 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 						baseByCourse.addObject(byCourse);
 				} // insert into list
 			}
+			if(pushToKeyPath != null) {
+				if(resultGetter == null)
+					resultGetter = returnPage;
+				resultGetter.takeValueForKeyPath(byCourse, pushToKeyPath);
+			}
 			ec.saveChanges();
-			logger.log(WOLogLevel.COREDATA_EDITING,"Edited SettingByCourse",
+			logger.log(WOLogLevel.COREDATA_EDITING,"Edited SettingByCourse: " + base.key(),
 					new Object[] {session(),byCourse});
     	} catch (Exception e) {
-			logger.log(WOLogLevel.INFO,"Failed editing SettingByCourse",
+			logger.log(WOLogLevel.INFO,"Failed editing SettingByCourse: " + base.key(),
 					new Object[] {session(),byCourse,e});
     		session().takeValueForKey(e.getMessage(), "message");
+    		ec.revert();
     	} finally {
     		ec.unlock();
     	}
