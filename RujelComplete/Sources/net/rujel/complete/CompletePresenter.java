@@ -1,4 +1,4 @@
-// CompleteModule.java
+// CompletePresenter.java: Class file for WO Component 'CompletePresenter'
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -30,56 +30,82 @@
 package net.rujel.complete;
 
 
-import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.reusables.PlistReader;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.Various;
 
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
-import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.appserver.WOComponent;
+import com.webobjects.foundation.NSMutableDictionary;
 
-public class CompleteModule {
+public class CompletePresenter extends WOComponent {
+	protected CptAddOn _currAddOn;
+	protected NSMutableDictionary _dict;
+	private EduCourse _course;
+	private Object _student;
+
+	public CompletePresenter(WOContext context) {
+        super(context);
+    }
+	public boolean synchronizesVariablesWithBindings() {
+        return false;
+	}
 	
-	public static Object init(Object obj, WOContext ctx) {
-		if(obj == null || obj.equals("init")) {
-			try {
-				Object access = PlistReader.readPlist("access.plist", "RujelComplete", null);
-				WOApplication.application().takeValueForKey(access, "defaultAccess");
-			} catch (NSKeyValueCoding.UnknownKeyException e) {
-				// default access not supported
-			}
-			Completion.init();
-		} else if("journalPlugins".equals(obj)) {
-			return journalPlugins(ctx);
-		} else if("notesAddOns".equals(obj)) {
-			return notesAddOns(ctx);
-		} else if("courseComplete".equals(obj)) {
-			return ctx.session().valueForKeyPath(
-			"strings.RujelComplete_Complete.courseComplete");
-		} else if("adminModules".equals(obj)) {
-			return ctx.session().valueForKeyPath(
-					"strings.RujelComplete_Complete.adminModule");
+	public boolean isStateless() {
+		return true;
+	}
+	
+	public void reset() {
+		super.reset();
+		_currAddOn = null;
+		_course = null;
+		_student = null;
+		_dict = null;
+	}
+	
+	public CptAddOn currAddOn() {
+		if(_currAddOn == null) {
+			_currAddOn = (CptAddOn)valueForBinding("currAddOn");
+			_currAddOn.setCourse(course());
 		}
-		return null;
+		return _currAddOn;
 	}
 	
-	public static Object journalPlugins(WOContext ctx) {
-		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Completion")))
+	public NSMutableDictionary dict() {
+		if(student() == null)
 			return null;
-		EduCourse course = (EduCourse)ctx.page().valueForKey("course");
-		if(course == null)
-			return null;
-		String active = SettingsBase.stringSettingForCourse(
-				Completion.SETTINGS_BASE, course, course.editingContext());
-		if(Boolean.parseBoolean(active))
-			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.dashboard");
-		return null;
+		if(_dict == null) {
+			_dict = currAddOn().dictForStudent(student());
+		}
+		return _dict;
 	}
 
-	public static NSKeyValueCoding notesAddOns(WOContext ctx) {
-		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Completion")))
-			return null;
-		return new CptAddOn(ctx.session());
+	public EduCourse course() {
+		if(_course == null) {
+			_course = (EduCourse)valueForBinding("course");
+		}
+		return _course;
+	}
+	
+	public Student student() {
+		if(_student == null) {
+			_student = (Student)valueForBinding("student");
+			if(_student == null)
+				_student = NullValue;
+		}
+		return (_student==NullValue)?null:(Student)_student;
+	}
+	
+	public boolean disabled() {
+		if(student() == null) {
+			return (currAddOn().access().intValue() <=1);
+		} else {
+			boolean closed = Various.boolForObject(dict().valueForKey("closed"));
+			if(closed) {
+				return !currAddOn().access().flagForKey("edit");
+			} else {
+				return true;//!access.flagForKey("create");
+			}
+		}
 	}
 }

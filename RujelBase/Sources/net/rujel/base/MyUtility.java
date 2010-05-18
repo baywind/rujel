@@ -58,9 +58,13 @@ public class MyUtility {
 
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
 
+	protected static Format _format;
 	@SuppressWarnings("deprecation")
 	public static Format dateFormat() {
-		return new NSTimestampFormatter(SettingsReader.stringForKeyPath("ui.dateFormat","%Y-%m-%d"));
+		if(_format == null)
+			_format = new NSTimestampFormatter(SettingsReader.stringForKeyPath(
+					"ui.dateFormat","%Y-%m-%d"));
+		return _format;
 	}
 	
 	public static NSTimestamp parseDate(String dateString) {

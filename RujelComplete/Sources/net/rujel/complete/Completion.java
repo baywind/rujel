@@ -29,9 +29,11 @@
 
 package net.rujel.complete;
 
+import java.text.FieldPosition;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;
@@ -63,8 +65,8 @@ public class Completion extends _Completion {
 		setCloseDate(null);
 	}
 	
-	public boolean isClosed() {
-		return (closeDate() != null);
+	public boolean isNotClosed() {
+		return (closeDate() == null);
 	}
 
 	public EduCourse course() {
@@ -84,8 +86,8 @@ public class Completion extends _Completion {
     }
     
 	public static NSMutableDictionary localisation(WOSession ses) {
-		NSMutableDictionary result = new NSMutableDictionary(
-				ses.valueForKeyPath("strings.RujelBase_Base.lessons"),"lessons");
+		NSMutableDictionary result = new NSMutableDictionary(ses.valueForKeyPath(
+				"strings.RujelComplete_Complete.StudentCatalog"), "student");
 		NSArray modules = (NSArray)ses.valueForKeyPath("modules.courseComplete");
 		if(modules != null && modules.count() > 0) {
 			Enumeration enu = modules.objectEnumerator();
@@ -94,8 +96,6 @@ public class Completion extends _Completion {
 				result.setObjectForKey(mod.valueForKey("title"), mod.valueForKey("id"));
 			}
 		}
-		result.takeValueForKey(ses.valueForKeyPath(
-				"strings.RujelComplete_Complete.StudentCatalog"), "students");
 		return result;
 	}
 	
@@ -116,6 +116,15 @@ public class Completion extends _Completion {
 
 	public String title() {
 		return title(((SessionedEditingContext)editingContext()).session());
+	}
+	
+	private static final FieldPosition pos = new FieldPosition(0);
+	public String present() {
+		StringBuffer buf = new StringBuffer();
+		if(closeDate() != null)
+			MyUtility.dateFormat().format(closeDate(), buf, pos);
+		buf.append(" : ").append(whoClosed());
+		return buf.toString();
 	}
 	
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -177,11 +186,11 @@ public class Completion extends _Completion {
 			cmpl.setCourse(course);
 			cmpl.setAspect("student");
 		}
-		if (found == null || !found.containsObject("lessons")) {
+/*		if (found == null || !found.containsObject("lessons")) {
 			cmpl = (Completion) EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
 			cmpl.setCourse(course);
 			cmpl.setAspect("lessons");
-		}
+		}*/
 		Enumeration menu = modules.objectEnumerator();
 		while (menu.hasMoreElements()) {
 			NSKeyValueCoding module = (NSKeyValueCoding) menu.nextElement();
@@ -194,5 +203,21 @@ public class Completion extends _Completion {
 			cmpl.setCourse(course);
 			cmpl.setAspect(id);
 		}
+	}
+	
+	public static int[] countReady(NSArray completions) {
+		int[] result = new int[] {0,0,0};
+		if(completions == null || completions.count() == 0)
+			return null;
+		result[2] = completions.count();
+		Enumeration enu = completions.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Completion cpt = (Completion) enu.nextElement();
+			if(cpt.closeDate() == null)
+				result[0]++;
+			else
+				result[1]++;
+		}
+		return result;
 	}
 }

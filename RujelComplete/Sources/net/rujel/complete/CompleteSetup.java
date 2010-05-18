@@ -29,6 +29,7 @@
 
 package net.rujel.complete;
 
+import java.io.File;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
@@ -191,6 +192,14 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     }
     
     protected void prepareActive(EOEnterpriseObject bc) {
+		Integer year = (Integer) session().valueForKey("eduYear");
+    	File folder = Executor.completeFolder(year, "courses");
+		if(!folder.exists())
+			folder.mkdirs();
+		Executor.createIndex(folder, MyUtility.presentEduYear(year), "eduGroup.html");
+		Executor.copyResource(folder,"scripts.js");
+		Executor.copyResource(folder,"styles.css");
+
     	NSArray modules = (NSArray)session().valueForKeyPath("modules.courseComplete");
     	if(modules == null || modules.count() == 0)
     		return;

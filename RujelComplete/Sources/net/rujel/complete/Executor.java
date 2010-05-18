@@ -92,17 +92,21 @@ public class Executor implements Runnable {
 		}
 	}
 
-    public static File completeFolder(Integer year, String type) {
+    public static File completeFolder(Object year, String type) {
     	String completeDir = SettingsReader.stringForKeyPath("edu."+ type + "CompleteDir", null);
     	if(completeDir == null) {
     		completeDir = SettingsReader.stringForKeyPath("edu.completeDir", null);
+    	} else {
     		type = null;
     	}
     	completeDir = Various.convertFilePath(completeDir);
     	if(completeDir == null)
     		return null;
     	try {
-			File folder = new File(completeDir,year.toString());
+    		String name = year.toString();
+    		if(type != null)
+    			name = name + type;
+			File folder = new File(completeDir,name);
 			if(!folder.exists())
 				folder.mkdirs();
 //			createIndex(folder, MyUtility.presentEduYear(year), src);
@@ -159,8 +163,11 @@ public class Executor implements Runnable {
     }
     
     protected static void writeFile(File folder, String filename, WOComponent page,boolean overwrite)  {
+		File file = new File(folder,filename);
+		writeFile(file, page, overwrite);
+    }
+	protected static void writeFile(File file, WOComponent page,boolean overwrite)  {
     	try {
-    		File file = new File(folder,filename);
     		if(file.exists()) {
     			if(overwrite)
     				file.delete();
@@ -172,8 +179,7 @@ public class Executor implements Runnable {
     		content.writeToStream(fos);
     		fos.close();
     	} catch (Exception e) {
-    		logger.log(WOLogLevel.WARNING,"Error writing file " + folder.getAbsolutePath() +
-    				'/' + filename,e);
+    		logger.log(WOLogLevel.WARNING,"Error writing file " + file.getAbsolutePath(),e);
     	}
     }
 }

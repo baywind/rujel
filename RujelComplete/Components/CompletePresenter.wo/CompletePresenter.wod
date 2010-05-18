@@ -1,0 +1,41 @@
+Container : OnClickContainer {
+  elementName = "td";
+  disabled = disabled;
+  title = dict.hover;
+  onclick = "var m = '';for(var a in returnField){m = m + a + '=' + returnField[a] + '\\n';}alert(m);";
+  align = "center";
+  hide = currAddOn.hide;
+}
+
+Header : WOConditional {
+  condition = student;
+  negate = true;
+}
+
+Stamp : WOImage {
+  framework = "RujelComplete";
+  filename = "stamp.gif";
+  height = 38;
+  width = 38;
+}
+
+Row : WOConditional {
+  condition = student;
+}
+
+IsComplete : WOConditional {
+  condition = dict.complete;
+}
+
+Incomplete : WOConditional {
+  condition = dict.complete;
+  negate = true;
+}
+
+Tick : WOCheckBox {
+  checked = dict.closed;
+  disabled = currAddOn.access._create;
+  name = dict.id;
+  title = dict.title;
+  onchange = "if(returnField==null)returnField=new Object();returnField[name]=checked;";
+}

@@ -169,12 +169,13 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     public static void reportsForStudent(NSArray reports, Student student, WOContext ctx,
     		NSArray existingCourses, File stDir, boolean overwrite) {
 		Enumeration repEnu = reports.objectEnumerator();
+		NSArray array = new NSArray(student);
 		while (repEnu.hasMoreElements()) {
 			NSDictionary reporter = (NSDictionary) repEnu.nextElement();
 			WOComponent page = WOApplication.application().pageWithName("PrintReport",ctx);
 			page.takeValueForKey(reporter,"reporter");
 			page.takeValueForKey(existingCourses,"courses");
-			page.takeValueForKey(new NSArray(student),"students");
+			page.takeValueForKey(array,"students");
 			String filename = reporter.valueForKey("id") + ".html";
 			Executor.writeFile(stDir, filename, page,overwrite);
 		}

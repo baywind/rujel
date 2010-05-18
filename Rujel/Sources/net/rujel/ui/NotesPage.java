@@ -295,10 +295,11 @@ public class NotesPage extends WOComponent {
 	
 	public NSArray allAddOns() {
 		if((single() && currLesson() != null) || session()==null) return null;
-		if(allAddOns == null) {
-			//allAddOns = (NSArray)valueForBinding("allAddOns");
-			allAddOns = (NSArray)session().objectForKey("notesAddOns");
-		}
+		
+		if(allAddOns != null)
+			return allAddOns;
+		//allAddOns = (NSArray)valueForBinding("allAddOns");
+		allAddOns = (NSArray)session().objectForKey("notesAddOns");
 		if(allAddOns == null) {
 			allAddOns = (NSArray)session().valueForKeyPath("modules.notesAddOns");
 			if(allAddOns == null)
@@ -306,15 +307,16 @@ public class NotesPage extends WOComponent {
 			session().setObjectForKey(allAddOns,"notesAddOns");
 			//setValueForBinding(allAddOns,"allAddOns");
 		}
+		allAddOns.takeValueForKey(valueForBinding("course"), "course");
 		return allAddOns;
 	}
-	
+
 	public NSMutableArray activeAddOns() {
 		if((single() && currLesson() != null) || session()==null) return null;
-		if(activeAddOns == null) {
-			//activeAddOns = (NSMutableArray)valueForBinding("activeAddOns");
-			activeAddOns = (NSMutableArray)session().objectForKey("activeAddOns");
-		}
+		if(activeAddOns != null)
+			return activeAddOns;
+		//activeAddOns = (NSMutableArray)valueForBinding("activeAddOns");
+		activeAddOns = (NSMutableArray)session().objectForKey("activeAddOns");
 		if(activeAddOns == null) {
 			activeAddOns = new NSMutableArray();
 			if(allAddOns() != null && allAddOns.count() > 0) {
@@ -326,12 +328,16 @@ public class NotesPage extends WOComponent {
 					}
 				}
 			}
-			if(activeAddOns != null)
+			if(activeAddOns != null) {
 				session().setObjectForKey(activeAddOns, "activeAddOns");
+			}
+		}
+		if(activeAddOns != null) {
+			activeAddOns.takeValueForKey(valueForBinding("course"), "course");
 		}
 		return activeAddOns;
 	}
-	
+
 	/*
 	public boolean single() {
 		return (lessonsList != null && lessonsList.count() == 1);

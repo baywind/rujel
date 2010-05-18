@@ -29,12 +29,10 @@
 
 package net.rujel.complete;
 
-import java.text.FieldPosition;
-import java.text.Format;
+import java.io.File;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
@@ -62,14 +60,10 @@ public class CompletePopup extends WOComponent {
     public void setCourse(EduCourse eduCourse) {
     	course = eduCourse;
     	modules = (NSArray)session().valueForKeyPath("modules.courseComplete");
-    	NSMutableDictionary dict = new NSMutableDictionary("lessons","id");
-    	dict.takeValueForKey(session().valueForKeyPath("strings.RujelBase_Base.lessons"), "title");
-    	dict.takeValueForKey(Boolean.TRUE, "manual");
-    	NSMutableArray list = new NSMutableArray(dict);
-    	NSMutableArray ids = new NSMutableArray("lessons");
+    	NSMutableArray list = new NSMutableArray();
+    	NSMutableArray ids = new NSMutableArray();
     	NSMutableDictionary precedes = null;
-    	NSMutableDictionary localisation = new NSMutableDictionary(
-    			dict.valueForKey("title"),"lessons");
+    	NSMutableDictionary localisation = new NSMutableDictionary();
     	if(modules != null && modules.count() > 0) {
     		Enumeration enu = modules.objectEnumerator();
     		while (enu.hasMoreElements()) {
@@ -78,7 +72,7 @@ public class CompletePopup extends WOComponent {
 					continue;
 				String id = (String)mod.valueForKey("id");
 				ids.addObject(id);
-				dict = new NSMutableDictionary(id,"id");
+				NSMutableDictionary dict = new NSMutableDictionary(id,"id");
 				dict.takeValueForKey(mod.valueForKey("title"), "title");
 				localisation.takeValueForKey(mod.valueForKey("title"), id);
 				NSArray requires = (NSArray)mod.valueForKey("requires");
@@ -102,7 +96,7 @@ public class CompletePopup extends WOComponent {
 			}
     	}
     	ids.addObject("student");
-    	dict = new NSMutableDictionary("student","id");
+    	NSMutableDictionary dict = new NSMutableDictionary("student","id");
     	dict.takeValueForKey(session().valueForKeyPath(
     			"strings.RujelComplete_Complete.StudentCatalog"), "title");
     	localisation.takeValueForKey(dict.valueForKey("title"), "student");
@@ -118,8 +112,6 @@ public class CompletePopup extends WOComponent {
     	NamedFlags access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Completion");
     	NSMutableSet set = new NSMutableSet();
     	Enumeration enu = modules.objectEnumerator();
-    	Format format = MyUtility.dateFormat();
-    	FieldPosition pos = new FieldPosition(0);
     	while (enu.hasMoreElements()) {
 			Completion cpt = (Completion) enu.nextElement();
 			String id = cpt.aspect();
@@ -128,7 +120,7 @@ public class CompletePopup extends WOComponent {
 				continue;
 			completions[idx] = cpt;
 			dict = (NSMutableDictionary)list.objectAtIndex(idx);
-			boolean closed = cpt.isClosed();
+			boolean closed = !cpt.isNotClosed();
 			dict.takeValueForKey(Boolean.valueOf(closed), "closed");
 			if(closed) {
 				dict.takeValueForKey(Boolean.valueOf(!access.flagForKey("edit")), "disabled");
@@ -140,17 +132,13 @@ public class CompletePopup extends WOComponent {
 				if(cpt.whoClosed() == null)
 					continue;
 			}
-			StringBuffer buf = new StringBuffer();
-			if(closed)
-				format.format(cpt.closeDate(), buf, pos);
-			buf.append(" : ").append(cpt.whoClosed());
-			dict.takeValueForKey(buf.toString(), "hover");
+			dict.takeValueForKey(cpt.present(), "hover");
 		}
     	for (int i = 0; i < completions.length; i++) {
 			if(completions[i] == null)
 				; //TODO
 			dict = (NSMutableDictionary)list.objectAtIndex(i);
-			if(Various.boolForObject(dict.valueForKey("disabled")) || completions[i].isClosed()) {
+			if(Various.boolForObject(dict.valueForKey("disabled")) || !completions[i].isNotClosed()) {
 				continue;
 			}
 			NSSet requires = (NSSet)dict.valueForKey("requires");
@@ -198,7 +186,7 @@ public class CompletePopup extends WOComponent {
     					course.editingContext(), Completion.ENTITY_NAME);
     			completions[i].setCourse(course);
     			completions[i].setAspect((String)dict.valueForKey("id"));
-    		} else if(closed == completions[i].isClosed()) {
+    		} else if(closed != completions[i].isNotClosed()) {
     			continue;
     		}
     		changed = true;
@@ -207,6 +195,8 @@ public class CompletePopup extends WOComponent {
     	}
     	if(changed) {
     		try {
+    			File folder = Executor.completeFolder(course.eduYear(), "courses");
+    			CoursesCatalog.printCourseReports(course, folder, context(), null, true);
 				course.editingContext().saveChanges();
 			} catch (Exception e) {
 				course.editingContext().revert();

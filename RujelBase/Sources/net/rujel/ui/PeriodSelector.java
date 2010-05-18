@@ -46,9 +46,9 @@ public class PeriodSelector extends com.webobjects.appserver.WOComponent {
 
     public void takeValuesFromRequest(WORequest aRequest, WOContext aContext) {
     	//periods = (NSArray)session().valueForKeyPath("modules.periods");
-    	super.takeValuesFromRequest(aRequest, aContext);
     	if(!aContext.senderID().startsWith(aContext.elementID() + '.'))
     		return;
+    	super.takeValuesFromRequest(aRequest, aContext);
     	if(hasBinding("period")) {
     		setValueForBinding(period, "period");
     	}

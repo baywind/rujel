@@ -28,6 +28,19 @@
 	<string>отменить закрытие</string>
 	<key>requires</key>
 	<string>Требуется</string>
+	<key>courseComplete</key>
+	<dict>
+		<key>id</key>
+		<string>lessons</string>
+		<key>title</key>
+		<string>уроки</string>
+		<key>component</key>
+		<string>PrintLessons</string>
+		<key>manual</key>
+		<true/>
+		<key>sort</key>
+		<string>10</string>
+	</dict>
 	<key>adminModule</key>
 	<dict>
 		<key>title</key>
@@ -79,6 +92,31 @@
 			<key>width</key>
 			<string>38</string>
 		</dict>
+		<key>sort</key>
+		<string>90</string>
+	</dict>
+	<key>addOn</key>
+	<dict>
+		<key>activeComponent</key>
+		<string>CompletePresenter</string>
+		<key>component</key>
+		<string>GenericAddOn</string>
+		<key>defaultOn</key>
+		<string>true</string>
+		<key>framework</key>
+		<string>RujelComplete</string>
+		<key>id</key>
+		<string>complete</string>
+		<key>imageOff</key>
+		<string>stamp.gif</string>
+		<key>imageOn</key>
+		<string>stamp_gr.gif</string>
+		<key>height</key>
+		<string>19</string>
+		<key>width</key>
+		<string>19</string>
+		<key>title</key>
+		<string>Закрытие года</string>
 		<key>sort</key>
 		<string>90</string>
 	</dict>
