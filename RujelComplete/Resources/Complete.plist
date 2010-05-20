@@ -28,6 +28,25 @@
 	<string>отменить закрытие</string>
 	<key>requires</key>
 	<string>Требуется</string>
+	<key>closeTitle</key>
+	<string>Закрыть</string>
+	<key>release</key>
+	<string>Раскрыть</string>
+	<key>messages</key>
+	<dict>
+		<key>closingCourse</key>
+		<string>установка галок в этом окне запретит редактирование соответствующих параметров курса</string>
+		<key>noneSelected</key>
+		<string>Вы не выбрали ни одного учащегося для закрытия. Поставьте одну или несколько &quot;галок&quot; прежде чем нажимать на &quot;печать&quot;</string>
+		<key>closing1</key>
+		<string>Вы собираетесь закрыть результаты следующих учащихся:</string>
+		<key>closing2</key>
+		<string>после закрытия редактирование всех их отметок будет запрещено.</string>
+		<key>release</key>
+		<string>Снять закрытие с учащегося</string>
+		<key>preceding</key>
+		<string>Перед закрытием учащихся необходимо закрыть</string>
+	</dict>
 	<key>courseComplete</key>
 	<dict>
 		<key>id</key>
@@ -112,9 +131,9 @@
 		<key>imageOn</key>
 		<string>stamp_gr.gif</string>
 		<key>height</key>
-		<string>19</string>
+		<string>24</string>
 		<key>width</key>
-		<string>19</string>
+		<string>24</string>
 		<key>title</key>
 		<string>Закрытие года</string>
 		<key>sort</key>

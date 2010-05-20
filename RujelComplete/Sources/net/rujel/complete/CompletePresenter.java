@@ -30,12 +30,20 @@
 package net.rujel.complete;
 
 
+import java.util.Enumeration;
+
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Various;
 
+import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WORequest;
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class CompletePresenter extends WOComponent {
@@ -107,5 +115,89 @@ public class CompletePresenter extends WOComponent {
 				return true;//!access.flagForKey("create");
 			}
 		}
+	}
+	
+	public WOActionResults stamp() {
+		WOComponent alert = pageWithName("MyAlert");
+		alert.takeValueForKey(context().page(), "returnPage");
+		if(student() != null) { // release student
+			StringBuilder buf = new StringBuilder((String)session().valueForKeyPath(
+					"strings.RujelComplete_Complete.messages.release"));
+			buf.append(":<br/>\n").append(Person.Utility.fullName(student(), true, 2, 2, 0));
+			NSMutableDictionary action = new NSMutableDictionary("closeDict","setKey");
+			NSMutableDictionary cd = new NSMutableDictionary(course(),"course");
+			cd.takeValueForKey(session().valueForKeyPath("user.present"), "user");
+			cd.setObjectForKey(Boolean.FALSE, student());
+			action.takeValueForKey(cd, "setValue");
+			action.takeValueForKey(currAddOn(), "object");
+			action.takeValueForKey(session().valueForKeyPath(
+					"strings.RujelComplete_Complete.release"), "title");
+			alert.takeValueForKey(action, "addAction");
+			
+			alert.takeValueForKey(buf.toString(), "message");
+			return alert;
+		}
+		StringBuilder buf = currAddOn().checkRequirements(course());
+		if(buf != null) {
+			buf.insert(0, ":\n");
+			buf.insert(0,session().valueForKeyPath(
+				"strings.RujelComplete_Complete.messages.preceding"));
+			alert.takeValueForKey(buf.toString(), "message");
+			return alert;
+		}
+		WORequest req = context().request();
+		NSArray keys = req.formValueKeys();
+		if(keys != null && keys.count() > 0) {
+			buf = new StringBuilder((String)session().valueForKeyPath(
+				"strings.RujelComplete_Complete.messages.closing1"));
+			buf.append("<ul>");
+			NSMutableDictionary cd = new NSMutableDictionary(course(),"course");
+			Enumeration enu = keys.objectEnumerator();
+			EOEditingContext ec = course().editingContext();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				if(!key.startsWith("cpt"))
+					continue;
+				Boolean state = Boolean.valueOf(req.stringFormValueForKey(key));
+				if(!state.booleanValue())
+					continue;
+				Integer stID = Integer.valueOf(key.substring(3));
+				Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec,
+						Student.entityName, stID);
+				buf.append("<li>");
+				buf.append(Person.Utility.fullName(student, true, 2, 2, 0));
+				cd.setObjectForKey(state, student);
+				buf.append("</li>\n");
+			}
+			if(cd.count() > 1) {
+				buf.append("</ul>").append(session().valueForKeyPath(
+						"strings.RujelComplete_Complete.messages.closing2"));
+				cd.takeValueForKey(session().valueForKeyPath("user.present"), "user");
+				NSMutableDictionary action = new NSMutableDictionary("closeDict","setKey");
+				action.takeValueForKey(cd, "setValue");
+				action.takeValueForKey(currAddOn(), "object");
+				action.takeValueForKey(session().valueForKeyPath(
+						"strings.RujelComplete_Complete.closeTitle"), "title");
+				alert.takeValueForKey(action, "addAction");
+				alert.takeValueForKey(buf.toString(), "message");
+			} else {
+				alert.takeValueForKey(session().valueForKeyPath(
+						"strings.RujelComplete_Complete.messages.noneSelected"), "message");
+			}
+		} else {
+			alert.takeValueForKey(session().valueForKeyPath(
+				"strings.RujelComplete_Complete.messages.noneSelected"), "message");
+		}
+		return alert;
+	}
+	
+	public String onClick() {
+		if(student() != null)
+			return (String)session().valueForKey("ajaxPopup");
+		StringBuilder buf = new StringBuilder(
+				"var m = '';for(var a in returnField){m = m.concat(a,'=',returnField[a],'&');}");
+		buf.append("getAjaxPopup(event,'");
+		buf.append(context().componentActionURL()).append("',m);");
+		return buf.toString();
 	}
 }

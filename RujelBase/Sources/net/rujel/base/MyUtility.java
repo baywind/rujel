@@ -265,7 +265,11 @@ public class MyUtility {
 			dummyUrl = dummyUrl + "?wosid=" + ses.sessionID();
 		}
 		WORequest request = app.createRequest( "GET", dummyUrl, "HTTP/1.0", null, null, null);
-		WOContext context = app.createContextForRequest (request);
+		WOContext context = new WOContext(request) {
+			public boolean shouldNotStorePageInBacktrackCache() {
+				return true;
+			}
+		};//app.createContextForRequest (request);
 		if(ses == null) {
 			ses = context.session();
 			ses.takeValueForKey(Boolean.TRUE,"dummyUser");

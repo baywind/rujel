@@ -41,3 +41,7 @@ Form : WOForm {
 Title : WOString {
   value = session.strings.RujelComplete_Complete.dashboard.title;
 }
+
+Text : WOString {
+  value = session.strings.RujelComplete_Complete.messages.closingCourse;
+}

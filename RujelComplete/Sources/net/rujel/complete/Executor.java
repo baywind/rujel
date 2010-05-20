@@ -33,9 +33,12 @@ import java.io.*;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.foundation.*;
 
 public class Executor implements Runnable {
@@ -47,7 +50,8 @@ public class Executor implements Runnable {
     public boolean writeReports = false;
     public File studentsFolder;
     public File coursesFolder;
-    
+    public EOGlobalID courseID;
+    public EOGlobalID[] studentIDs;
 
     public Executor() {
 		super();
@@ -75,20 +79,36 @@ public class Executor implements Runnable {
 	}
 
 	public void run() {
-		MultiECLockManager lm = ((MultiECLockManager.Session)ctx.session()).ecLockManager();
-		lm.lock();
 		try {
+			MultiECLockManager lm = ((MultiECLockManager.Session)ctx.session()).ecLockManager();
+			lm.lock();
 //			ctx.session().defaultEditingContext().lock();
 			if(studentsFolder != null)
-				StudentCatalog.prepareStudents(studentsFolder, ctx, writeReports);
+				StudentCatalog.prepareStudents(studentsFolder, ctx);
 			if(coursesFolder != null)
-				CoursesCatalog.prepareCourses(coursesFolder, ctx, writeReports);
+				CoursesCatalog.prepareCourses(coursesFolder, ctx);
 			lm.unlock();
 		} catch (RuntimeException e) {
 			logger.log(WOLogLevel.WARNING,"Error in Complete",new Object[] {ctx.session(),e});
 		} finally {
 //			ctx.session().defaultEditingContext().unlock();
 			ctx.session().terminate();
+		}
+	}
+	
+	public void setCourse(EduCourse course) {
+			courseID = (course == null)?null: course.editingContext().globalIDForObject(course);
+	}
+	
+	public void setStudents(NSArray students) {
+		if(students == null || students.count() == 0) {
+			studentIDs = null;
+			return;
+		}
+		studentIDs = new EOGlobalID[students.count()];
+		for (int i = 0; i < studentIDs.length; i++) {
+			Student student = (Student)students.objectAtIndex(i);
+			studentIDs[i] = student.editingContext().globalIDForObject(student);
 		}
 	}
 
@@ -160,6 +180,15 @@ public class Executor implements Runnable {
 			logger.log(WOLogLevel.WARNING,"Could not copy resource file: " + fileName,e);
 		}
     	return file;
+    }
+    
+    public static void prepareFolder(File folder, WOContext ctx, String listName) {
+		Integer year = (Integer) ctx.session().valueForKey("eduYear");
+		if(!folder.exists())
+			folder.mkdirs();
+		Executor.createIndex(folder, MyUtility.presentEduYear(year), listName);
+		Executor.copyResource(folder,"scripts.js");
+		Executor.copyResource(folder,"styles.css");
     }
     
     protected static void writeFile(File folder, String filename, WOComponent page,boolean overwrite)  {

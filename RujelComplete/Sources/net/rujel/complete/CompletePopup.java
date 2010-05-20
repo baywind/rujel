@@ -93,7 +93,7 @@ public class CompletePopup extends WOComponent {
 							pSet.addObject(id);
 					}
 				}
-			}
+			} // collect manual modules
     	}
     	ids.addObject("student");
     	NSMutableDictionary dict = new NSMutableDictionary("student","id");
@@ -133,7 +133,7 @@ public class CompletePopup extends WOComponent {
 					continue;
 			}
 			dict.takeValueForKey(cpt.present(), "hover");
-		}
+		} // read database for current state
     	for (int i = 0; i < completions.length; i++) {
 			if(completions[i] == null)
 				; //TODO
@@ -171,7 +171,7 @@ public class CompletePopup extends WOComponent {
 					buf.append(", ").append(title);
 				}
 				dict.takeValueForKey(buf.toString(), "hover");
-			}
+			} // check requirements
 		}
     	modules = list;
     }

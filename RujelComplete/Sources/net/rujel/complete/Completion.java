@@ -34,9 +34,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
-import net.rujel.interfaces.EOInitialiser;
-import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.Student;
+import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -123,7 +121,9 @@ public class Completion extends _Completion {
 		StringBuffer buf = new StringBuffer();
 		if(closeDate() != null)
 			MyUtility.dateFormat().format(closeDate(), buf, pos);
-		buf.append(" : ").append(whoClosed());
+		buf.append(" : ");
+		if(whoClosed() != null)
+			buf.append(whoClosed());
 		return buf.toString();
 	}
 	
@@ -219,5 +219,12 @@ public class Completion extends _Completion {
 				result[1]++;
 		}
 		return result;
+	}
+	
+	public static boolean studentIsReady(Student student, EduGroup gr, Integer year) {
+		EOEditingContext ec = student.editingContext();
+		NSArray courses = EOUtilities.objectsWithQualifierFormat(ec, EduCourse.entityName,
+				"eduGroup = %@ AND eduYear = %@", new NSArray(new Object[] {gr,year}));
+		return false;
 	}
 }

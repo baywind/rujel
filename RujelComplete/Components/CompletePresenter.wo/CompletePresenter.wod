@@ -2,9 +2,10 @@ Container : OnClickContainer {
   elementName = "td";
   disabled = disabled;
   title = dict.hover;
-  onclick = "var m = '';for(var a in returnField){m = m + a + '=' + returnField[a] + '\\n';}alert(m);";
+  onclick = onClick;
   align = "center";
   hide = currAddOn.hide;
+  invokeAction = stamp;
 }
 
 Header : WOConditional {
@@ -19,16 +20,23 @@ Stamp : WOImage {
   width = 38;
 }
 
+Stamp2 : WOImage {
+  framework = "RujelComplete";
+  filename = "stamp.gif";
+  height = 24;
+  width = 24;
+}
+
 Row : WOConditional {
   condition = student;
 }
 
 IsComplete : WOConditional {
-  condition = dict.complete;
+  condition = dict.closed;
 }
 
 Incomplete : WOConditional {
-  condition = dict.complete;
+  condition = dict.closed;
   negate = true;
 }
 

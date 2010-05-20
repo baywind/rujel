@@ -32,9 +32,7 @@ package net.rujel.complete;
 import java.io.File;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
-import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -95,20 +93,9 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     	return EOSortOrdering.sortedArrayUsingKeyOrderArray(list, Person.sorter);*/
     }
     
-    public static void prepareStudents(File folder, WOContext ctx, boolean writeReports) {
+    public static void prepareStudents(File folder, WOContext ctx) {
+    	Executor.prepareFolder(folder, ctx, "list.html");
     	EOEditingContext ec = ctx.session().defaultEditingContext();
-		Integer year = (Integer) ctx.session().valueForKey("eduYear");
-		if(SettingsReader.stringForKeyPath("edu.studentsCompleteDir", null) == null) {
-			folder = new File(folder,"students");
-//		} else {
-//			folder = new File(folder,year.toString());
-		}
-		if(!folder.exists())
-			folder.mkdirs();
-		Executor.createIndex(folder, MyUtility.presentEduYear(year), "list.html");
-		Executor.copyResource(folder,"scripts.js");
-		Executor.copyResource(folder,"styles.css");
-		
 		NSArray groups = EduGroup.Lister.listGroups(
 				(NSTimestamp)ctx.session().valueForKey("today"), ec);
 		WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
@@ -122,6 +109,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
 		StringBuilder filename = new StringBuilder(12);
+		Integer year = (Integer) ctx.session().valueForKey("eduYear");
 		while (grenu.hasMoreElements()) {
 			EduGroup gr = (EduGroup) grenu.nextElement();
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(gr);
@@ -135,26 +123,34 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 					EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
 			while (stenu.hasMoreElements()) {
 				Student student = (Student) stenu.nextElement();
-				gid = (EOKeyGlobalID)ec.globalIDForObject(student);
-				File stDir = new File(grDir,gid.keyValues()[0].toString());
-				if(!stDir.exists())
-					stDir.mkdirs();
-				page = WOApplication.application().pageWithName("StudentPage", ctx);
-	    		page.takeValueForKey(student, "student");
-	    		page.takeValueForKey(gr, "eduGroup");
-	    		page.takeValueForKey(reports, "reports");
-	    		Executor.writeFile(stDir, "index.html", page,false);
-	    		if(!writeReports)
-	    			continue;
-	    		reportsForStudent(reports, student, ctx, existingCourses, stDir, false);
+				completeStudent(gr, student, reports, existingCourses, grDir, ctx, false);
 			}
 		}
 	}
     
+    public static void writeGroup(EduGroup gr,NSArray students, NSArray reports,
+    		File folder,Integer year, WOContext ctx) {
+    	EOEditingContext ec = gr.editingContext();
+		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(gr);
+		StringBuilder filename = new StringBuilder(12);
+		filename.append(gr.grade()).append('_');
+		filename.append(gid.keyValues()[0]);
+		File grDir = new File(folder,filename.toString());
+		if(students == null)
+			students = gr.list();
+		Enumeration stenu = students.objectEnumerator();
+		NSArray args = new NSArray(new Object[] {year, gr });
+		NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
+				EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+		while (stenu.hasMoreElements()) {
+			Student student = (Student) stenu.nextElement();
+			completeStudent(gr, student, reports, existingCourses, grDir, ctx, false);
+		}
+    }
+    
     public static void completeStudent(EduGroup gr, Student student, NSArray reports,
     		NSArray existingCourses, File grDir, WOContext ctx, boolean overwrite) {
-    	EOEditingContext ec = student.editingContext();
-    	EOKeyGlobalID 	gid = (EOKeyGlobalID)ec.globalIDForObject(student);
+    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
 		File stDir = new File(grDir,gid.keyValues()[0].toString());
 		if(!stDir.exists())
 			stDir.mkdirs();

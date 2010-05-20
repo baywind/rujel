@@ -3,10 +3,8 @@ package net.rujel.complete;
 import java.io.File;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
-import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -126,21 +124,9 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     	return buf.toString();
     }
     
-    public static void prepareCourses(File folder, WOContext ctx, boolean writeReports) {
+    public static void prepareCourses(File folder, WOContext ctx) {
+    	Executor.prepareFolder(folder, ctx, "eduGroup.html");
     	EOEditingContext ec = ctx.session().defaultEditingContext();
-		Integer year = (Integer) ctx.session().valueForKey("eduYear");
-//		if(folder.getName().equals(year.toString())) {
-//		if(SettingsReader.stringForKeyPath("edu.coursesCompleteDir", null) == null)
-//			folder = new File(folder,"courses");
-//		} else {
-//			folder = new File(folder,year.toString());
-//		}
-		if(!folder.exists())
-			folder.mkdirs();
-		Executor.createIndex(folder, MyUtility.presentEduYear(year), "eduGroup.html");
-		Executor.copyResource(folder,"scripts.js");
-		Executor.copyResource(folder,"styles.css");
-
 		WOComponent page = WOApplication.application().pageWithName("CoursesCatalog", ctx);
 		page.takeValueForKey(ec, "ec");
 		page.takeValueForKey("teacher", "grouping");

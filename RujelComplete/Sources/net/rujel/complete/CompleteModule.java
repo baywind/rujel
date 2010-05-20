@@ -55,11 +55,9 @@ public class CompleteModule {
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
 		} else if("courseComplete".equals(obj)) {
-			return ctx.session().valueForKeyPath(
-			"strings.RujelComplete_Complete.courseComplete");
+			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.courseComplete");
 		} else if("adminModules".equals(obj)) {
-			return ctx.session().valueForKeyPath(
-					"strings.RujelComplete_Complete.adminModule");
+			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.adminModule");
 		}
 		return null;
 	}
