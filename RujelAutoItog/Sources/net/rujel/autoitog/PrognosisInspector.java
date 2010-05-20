@@ -119,6 +119,8 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 			return collected;
 //		collected = autoItog.relatedForCourse(course);
 		Calculator calc = autoItog.calculator();
+		if(calc == null)
+			return null;
 		collected = autoItog.relKeysForCourse(course);
 		NSMutableArray related = (collected == null || collected.count() == 0)?
 				new NSMutableArray():

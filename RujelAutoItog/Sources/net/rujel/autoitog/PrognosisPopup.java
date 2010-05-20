@@ -303,9 +303,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 		if(student == null || eduPeriod == null || course == null)
     		return null;
 		NSMutableDictionary ident = new NSMutableDictionary("Prognosis","entityName");
-		ident.takeValueForKey(eduPeriod,"period");
+		ident.takeValueForKey(eduPeriod.itogContainer(),"itog");
 		ident.takeValueForKey(student, "student");
-		ident.takeValueForKey(course,"eduCourse");
+		ident.takeValueForKey(course,"course");
 		ident.takeValueForKey(course.editingContext(), "editingContext");
 		return ident;
     }
