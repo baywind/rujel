@@ -6,6 +6,7 @@ Container : OnClickContainer {
   align = "center";
   hide = currAddOn.hide;
   invokeAction = stamp;
+  style = "width:42px;";
 }
 
 Header : WOConditional {
@@ -15,7 +16,7 @@ Header : WOConditional {
 
 Stamp : WOImage {
   framework = "RujelComplete";
-  filename = "stamp.gif";
+  filename = currAddOn.filename;
   height = 38;
   width = 38;
 }
@@ -37,12 +38,12 @@ IsComplete : WOConditional {
 
 Incomplete : WOConditional {
   condition = dict.closed;
-  negate = true;
+  negate = dict;
 }
 
 Tick : WOCheckBox {
-  checked = dict.closed;
-  disabled = currAddOn.access._create;
+  checked = dict.checked;
+  disabled = dict.disable;
   name = dict.id;
   title = dict.title;
   onchange = "if(returnField==null)returnField=new Object();returnField[name]=checked;";

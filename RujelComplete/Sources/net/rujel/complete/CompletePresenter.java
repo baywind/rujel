@@ -41,9 +41,7 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WORequest;
-import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class CompletePresenter extends WOComponent {
@@ -106,7 +104,7 @@ public class CompletePresenter extends WOComponent {
 	
 	public boolean disabled() {
 		if(student() == null) {
-			return (currAddOn().access().intValue() <=1);
+			return (!currAddOn().access().flagForKey("create"));
 		} else {
 			boolean closed = Various.boolForObject(dict().valueForKey("closed"));
 			if(closed) {
@@ -120,20 +118,19 @@ public class CompletePresenter extends WOComponent {
 	public WOActionResults stamp() {
 		WOComponent alert = pageWithName("MyAlert");
 		alert.takeValueForKey(context().page(), "returnPage");
+		NSMutableDictionary action = new NSMutableDictionary("closeDict","setKey");
+		NSMutableDictionary cd = new NSMutableDictionary(course(),"course");
+		cd.takeValueForKey(session().valueForKeyPath("user.present"), "user");
+		action.takeValueForKey(cd, "setValue");
+		action.takeValueForKey(currAddOn(), "object");
 		if(student() != null) { // release student
 			StringBuilder buf = new StringBuilder((String)session().valueForKeyPath(
 					"strings.RujelComplete_Complete.messages.release"));
 			buf.append(":<br/>\n").append(Person.Utility.fullName(student(), true, 2, 2, 0));
-			NSMutableDictionary action = new NSMutableDictionary("closeDict","setKey");
-			NSMutableDictionary cd = new NSMutableDictionary(course(),"course");
-			cd.takeValueForKey(session().valueForKeyPath("user.present"), "user");
-			cd.setObjectForKey(Boolean.FALSE, student());
-			action.takeValueForKey(cd, "setValue");
-			action.takeValueForKey(currAddOn(), "object");
+			cd.setObjectForKey(student(),"releaseStudent");
 			action.takeValueForKey(session().valueForKeyPath(
 					"strings.RujelComplete_Complete.release"), "title");
 			alert.takeValueForKey(action, "addAction");
-			
 			alert.takeValueForKey(buf.toString(), "message");
 			return alert;
 		}
@@ -146,48 +143,65 @@ public class CompletePresenter extends WOComponent {
 			return alert;
 		}
 		WORequest req = context().request();
-		NSArray keys = req.formValueKeys();
-		if(keys != null && keys.count() > 0) {
+//		NSArray keys = req.formValueKeys();
+//		if(keys != null && keys.count() > 0) {
 			buf = new StringBuilder((String)session().valueForKeyPath(
 				"strings.RujelComplete_Complete.messages.closing1"));
 			buf.append("<ul>");
-			NSMutableDictionary cd = new NSMutableDictionary(course(),"course");
-			Enumeration enu = keys.objectEnumerator();
-			EOEditingContext ec = course().editingContext();
+			Enumeration enu = course().groupList().objectEnumerator();//keys.objectEnumerator();
+//			EOEditingContext ec = course().editingContext();
+			NSMutableArray toClose = new NSMutableArray();
+			boolean all = true;
 			while (enu.hasMoreElements()) {
-				String key = (String) enu.nextElement();
-				if(!key.startsWith("cpt"))
+				Student student = (Student)enu.nextElement();
+				NSMutableDictionary dic = currAddOn().dictForStudent(student);
+				if(Various.boolForObject(dic.valueForKey("complete"))) {
+					all = false;
 					continue;
-				Boolean state = Boolean.valueOf(req.stringFormValueForKey(key));
-				if(!state.booleanValue())
+				}
+				String key = (String)dic.valueForKey("id");
+//				if(!key.startsWith("cpt"))
+//					continue;
+				boolean checked = false;
+				key = req.stringFormValueForKey(key);
+				if(key != null)
+					checked = Boolean.valueOf(key);
+				else
+					checked = Various.boolForObject(dic.valueForKey("checked"));
+				if(!checked) {
+					all = false;
 					continue;
-				Integer stID = Integer.valueOf(key.substring(3));
-				Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec,
-						Student.entityName, stID);
+				}
+//				Integer stID = Integer.valueOf(key.substring(3));
+//				Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec,
+//						Student.entityName, stID);
 				buf.append("<li>");
 				buf.append(Person.Utility.fullName(student, true, 2, 2, 0));
-				cd.setObjectForKey(state, student);
 				buf.append("</li>\n");
+				toClose.addObject(student);
 			}
-			if(cd.count() > 1) {
-				buf.append("</ul>").append(session().valueForKeyPath(
+			if(toClose.count() > 0) {
+				if(all) {
+					cd.takeValueForKey(Boolean.TRUE, "closeAll");
+					alert.takeValueForKey(session().valueForKeyPath(
+					"strings.RujelComplete_Complete.messages.closingAll"), "message");
+				} else {
+					cd.takeValueForKey(toClose, "toClose");
+					buf.append("</ul>").append(session().valueForKeyPath(
 						"strings.RujelComplete_Complete.messages.closing2"));
-				cd.takeValueForKey(session().valueForKeyPath("user.present"), "user");
-				NSMutableDictionary action = new NSMutableDictionary("closeDict","setKey");
-				action.takeValueForKey(cd, "setValue");
-				action.takeValueForKey(currAddOn(), "object");
+					alert.takeValueForKey(buf.toString(), "message");
+				}
 				action.takeValueForKey(session().valueForKeyPath(
 						"strings.RujelComplete_Complete.closeTitle"), "title");
 				alert.takeValueForKey(action, "addAction");
-				alert.takeValueForKey(buf.toString(), "message");
 			} else {
 				alert.takeValueForKey(session().valueForKeyPath(
 						"strings.RujelComplete_Complete.messages.noneSelected"), "message");
 			}
-		} else {
+		/*} else {
 			alert.takeValueForKey(session().valueForKeyPath(
 				"strings.RujelComplete_Complete.messages.noneSelected"), "message");
-		}
+		}*/
 		return alert;
 	}
 	

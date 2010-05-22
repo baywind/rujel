@@ -121,6 +121,8 @@ public class Completion extends _Completion {
 		StringBuffer buf = new StringBuffer();
 		if(closeDate() != null)
 			MyUtility.dateFormat().format(closeDate(), buf, pos);
+		else
+			return whoClosed();
 		buf.append(" : ");
 		if(whoClosed() != null)
 			buf.append(whoClosed());
@@ -221,10 +223,66 @@ public class Completion extends _Completion {
 		return result;
 	}
 	
+	public static NSArray findCompletions(Object course, Object student,
+			String aspect, Boolean closed, EOEditingContext ec) {
+		NSMutableArray quals = new NSMutableArray();
+		if(course instanceof NSArray) 
+			quals.addObject(Various.getEOInQualifier("course", (NSArray)course));
+		else if(course != null)
+			quals.addObject(new EOKeyValueQualifier("course",
+					EOQualifier.QualifierOperatorEqual,course));
+		if(student instanceof NSArray) 
+			quals.addObject(Various.getEOInQualifier("student", (NSArray)student));
+		else if(student != null)
+			quals.addObject(new EOKeyValueQualifier("student",
+					EOQualifier.QualifierOperatorEqual,student));
+		if(aspect != null)
+			quals.addObject(new EOKeyValueQualifier(ASPECT_KEY,
+					EOQualifier.QualifierOperatorEqual,aspect));
+		if(closed != null)
+			quals.addObject(new EOKeyValueQualifier(CLOSE_DATE_KEY,(closed.booleanValue())?
+	EOQualifier.QualifierOperatorNotEqual:EOQualifier.QualifierOperatorEqual,NullValue));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,
+				new EOAndQualifier(quals), null);
+		return ec.objectsWithFetchSpecification(fs); // course open Completion
+	}
+	
 	public static boolean studentIsReady(Student student, EduGroup gr, Integer year) {
 		EOEditingContext ec = student.editingContext();
-		NSArray courses = EOUtilities.objectsWithQualifierFormat(ec, EduCourse.entityName,
-				"eduGroup = %@ AND eduYear = %@", new NSArray(new Object[] {gr,year}));
-		return false;
+		NSArray found = EOUtilities.objectsWithQualifierFormat(ec, ENTITY_NAME,
+				"student = %@ AND closeDate = nil", new NSArray(student));
+		if(found != null && found.count() > 0) { // individual open Completion
+			Enumeration enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Completion cpt = (Completion) enu.nextElement();
+				if(year.equals(cpt.course().eduYear()))
+					return false;
+			}
+		}
+		NSMutableArray courses = new NSMutableArray();
+		found = EOUtilities.objectsMatchingKeyAndValue(ec, "CourseAudience", "student", student);
+		if(found != null && found.count() > 0) { //subgroup courses
+			Enumeration enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject aud = (EOEnterpriseObject)enu.nextElement();
+				EduCourse crs = (EduCourse) aud.valueForKey("course");
+				if(crs.eduYear().equals(year))
+					courses.addObject(crs);
+			}
+		}
+		if(gr != null) { //wide courses
+			found = EOUtilities.objectsWithQualifierFormat(ec, EduCourse.entityName,
+					"eduGroup = %@ AND eduYear = %d", new NSArray(new Object[] {gr,year}));
+			if(found != null && found.count() > 0) {
+				Enumeration enu = found.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EduCourse crs = (EduCourse) enu.nextElement();
+					if(!courses.contains(crs) && crs.groupList().contains(student))
+						courses.addObject(crs);
+				}
+			}
+		}
+		found = findCompletions(courses, NullValue, "student", Boolean.FALSE, ec);
+		return (found == null || found.count() == 0);
 	}
 }

@@ -30,15 +30,21 @@
 package net.rujel.complete;
 
 import java.io.*;
+import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.*;
 
 public class Executor implements Runnable {
@@ -82,16 +88,102 @@ public class Executor implements Runnable {
 		try {
 			MultiECLockManager lm = ((MultiECLockManager.Session)ctx.session()).ecLockManager();
 			lm.lock();
-//			ctx.session().defaultEditingContext().lock();
-			if(studentsFolder != null)
-				StudentCatalog.prepareStudents(studentsFolder, ctx);
-			if(coursesFolder != null)
-				CoursesCatalog.prepareCourses(coursesFolder, ctx);
+
+			if(courseID != null) { // Completion closing
+				EOEditingContext ec = ctx.session().defaultEditingContext();
+				EduCourse course = (EduCourse)ec.faultForGlobalID(courseID, ec);
+				if(studentIDs == null) { //TODO: closing course
+					
+				} else { // closing students
+					Integer year = course.eduYear();
+					EduGroup gr = course.eduGroup();
+					NSArray courses = EOUtilities.objectsWithQualifierFormat(ec,
+							EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+							new NSArray(new Object[] {gr, year}));
+					NSArray found = Completion.findCompletions(courses, 
+							NSKeyValueCoding.NullValue, "student", Boolean.FALSE, ec);
+					if(found != null && found.count() > 0) {
+						Enumeration enu = found.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							Completion cpt = (Completion) enu.nextElement();
+							NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
+							if(aud == null || aud.count() == 0) {
+								Object subj = cpt.valueForKeyPath("course.subjectWithComment");
+								subj.toString();
+								return;
+							}
+						}
+					}
+					File folder = completeFolder(year, STUDENTS, false);
+					File plist = new File(folder,"catalog.plist");
+					NSMutableDictionary catalog = null;
+					if(plist.exists()) {
+						try {
+							FileInputStream fis = new FileInputStream(plist);
+							NSData data = new NSData(fis,(int)plist.length());
+							catalog = (NSMutableDictionary)NSPropertyListSerialization.
+								propertyListFromData(data,"utf8");
+							fis.close();
+						} catch (Exception e) {
+							logger.log(WOLogLevel.WARNING,"Error reading catalog.plist",
+									new Object[] {ctx.session(),e});
+						}
+					}
+					if(catalog == null)
+						catalog = new NSMutableDictionary();
+					String grDir = StudentCatalog.groupDirName(gr);
+					NSMutableDictionary grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
+					if(grDict == null) {
+						grDict = new NSMutableDictionary();
+					}
+					NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
+							"modules.studentReporter");
+					reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
+							"strings.Strings.Overview.defaultReporter"),0);
+					File groupDir = new File(folder,grDir);
+					for (int i = 0; i < studentIDs.length; i++) {
+						Student student = (Student)ec.faultForGlobalID(studentIDs[i], ec);
+						String key = ((EOKeyGlobalID)studentIDs[i]).keyValues()[0].toString();
+						File stDir = new File(groupDir,key);
+						if(Completion.studentIsReady(student, null, year)) {
+							StudentCatalog.completeStudent(gr, student, reports,
+									courses, stDir, ctx, true);
+							grDict.takeValueForKey(Boolean.TRUE, key);
+						} else if(stDir.exists()){
+							grDict.takeValueForKey(Boolean.FALSE, key);
+							File[] files = stDir.listFiles();
+							for (int j = 0; j < files.length; j++) {
+								files[j].delete();
+							}
+							stDir.delete();
+						}
+					}
+					if(grDict.count() > 0) {
+						catalog.takeValueForKey(grDict, grDir);
+						// TODO: write list.html
+						try {
+							NSData data = NSPropertyListSerialization.dataFromPropertyList(
+									catalog, "utf8");
+							FileOutputStream fos = new FileOutputStream(plist);
+							data.writeToStream(fos);
+							fos.close();
+						} catch (Exception e) {
+							logger.log(WOLogLevel.WARNING,"Error writing catalog.plist",
+									new Object[] {ctx.session(),e});
+						}
+					}
+				}
+			} else if(writeReports) { //forced closing
+				if(studentsFolder != null)
+					StudentCatalog.prepareStudents(studentsFolder, ctx);
+				if(coursesFolder != null)
+					CoursesCatalog.prepareCourses(coursesFolder, ctx);
+			}
 			lm.unlock();
 		} catch (RuntimeException e) {
-			logger.log(WOLogLevel.WARNING,"Error in Complete",new Object[] {ctx.session(),e});
+			logger.log(WOLogLevel.WARNING,"Error in Completion process"
+					,new Object[] {ctx.session(),e});
 		} finally {
-//			ctx.session().defaultEditingContext().unlock();
 			ctx.session().terminate();
 		}
 	}
@@ -112,7 +204,10 @@ public class Executor implements Runnable {
 		}
 	}
 
-    public static File completeFolder(Object year, String type) {
+	public static final String COURSES = "courses";
+	public static final String STUDENTS = "students";
+	
+    public static File completeFolder(Object year, String type, boolean date) {
     	String completeDir = SettingsReader.stringForKeyPath("edu."+ type + "CompleteDir", null);
     	if(completeDir == null) {
     		completeDir = SettingsReader.stringForKeyPath("edu.completeDir", null);
@@ -126,6 +221,15 @@ public class Executor implements Runnable {
     		String name = year.toString();
     		if(type != null)
     			name = name + type;
+    		if(date) {
+    			StringBuilder buf = new StringBuilder(name);
+    			buf.append('_');
+    			Calendar cal = Calendar.getInstance();
+    			buf.append(cal.get(Calendar.YEAR));
+    			buf.append(cal.get(Calendar.MONTH));
+    			buf.append(cal.get(Calendar.DAY_OF_MONTH));
+    			name = buf.toString();
+    		}
 			File folder = new File(completeDir,name);
 			if(!folder.exists())
 				folder.mkdirs();
@@ -191,7 +295,8 @@ public class Executor implements Runnable {
 		Executor.copyResource(folder,"styles.css");
     }
     
-    protected static void writeFile(File folder, String filename, WOComponent page,boolean overwrite)  {
+    protected static void writeFile(File folder, String filename,
+    		WOComponent page,boolean overwrite)  {
 		File file = new File(folder,filename);
 		writeFile(file, page, overwrite);
     }

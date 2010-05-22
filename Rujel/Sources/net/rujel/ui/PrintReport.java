@@ -102,11 +102,11 @@ public class PrintReport extends WOComponent {
 	}
 
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		Thread t = Thread.currentThread();
-		int priority = t.getPriority();
-		t.setPriority(priority -1);
+//		Thread t = Thread.currentThread();
+//		int priority = t.getPriority();
+//		t.setPriority(priority -1);
 		super.appendToResponse(aResponse, aContext);
-		t.setPriority(priority);
+//		t.setPriority(priority);
 	}
 	
 	public boolean allowAjax() {

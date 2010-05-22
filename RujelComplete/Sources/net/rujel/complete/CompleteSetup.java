@@ -152,28 +152,29 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     	return Boolean.toString(!recent);
     }
     
-    public void prepareStructure() {
+    public WOActionResults prepareStructure() {
 		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
 		Executor executor = new Executor(today);
 		Integer year = MyUtility.eduYearForDate(today);
 		if(courses) {
-			executor.coursesFolder = Executor.completeFolder(year,"courses");
+			executor.coursesFolder = Executor.completeFolder(year,Executor.COURSES,true);
 			if(executor.coursesFolder == null) {
 				session().takeValueForKey(application().valueForKeyPath(
 				"strings.RujelComplete_Complete.folderError"), "message");
-				return;
+				return null;
 			}
 		}
 		if(students) {
-			executor.studentsFolder = Executor.completeFolder(year,"students");
+			executor.studentsFolder = Executor.completeFolder(year,Executor.STUDENTS,true);
 			if(executor.studentsFolder == null) {
 				session().takeValueForKey(application().valueForKeyPath(
 				"strings.RujelComplete_Complete.folderError"), "message");
-				return;
+				return null;
 				}
 		}
 		executor.writeReports = writeReports;	
 		Executor.exec(executor);
+		return null;
     }
     
     public void setPushByCourse(EOEnterpriseObject bc) {
@@ -193,12 +194,8 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     
     protected void prepareActive(EOEnterpriseObject bc) {
 		Integer year = (Integer) session().valueForKey("eduYear");
-    	File folder = Executor.completeFolder(year, "courses");
-		if(!folder.exists())
-			folder.mkdirs();
-		Executor.createIndex(folder, MyUtility.presentEduYear(year), "eduGroup.html");
-		Executor.copyResource(folder,"scripts.js");
-		Executor.copyResource(folder,"styles.css");
+    	File folder = Executor.completeFolder(year, "courses",false);
+    	Executor.prepareFolder(folder, session().context(), "eduGroup.html");
 
     	NSArray modules = (NSArray)session().valueForKeyPath("modules.courseComplete");
     	if(modules == null || modules.count() == 0)

@@ -42,6 +42,7 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.*;
 
 public class CompletePopup extends WOComponent {
@@ -95,16 +96,17 @@ public class CompletePopup extends WOComponent {
 				}
 			} // collect manual modules
     	}
-    	ids.addObject("student");
+    	/*ids.addObject("student");
     	NSMutableDictionary dict = new NSMutableDictionary("student","id");
     	dict.takeValueForKey(session().valueForKeyPath(
     			"strings.RujelComplete_Complete.StudentCatalog"), "title");
     	localisation.takeValueForKey(dict.valueForKey("title"), "student");
     	dict.takeValueForKey(Boolean.TRUE, "manual");
-    	list.addObject(dict);
-    	dict = new NSMutableDictionary(course,"course");
+    	list.addObject(dict);*/
+    	NSMutableDictionary dict = new NSMutableDictionary(course,"course");
     	dict.takeValueForKey(NSKeyValueCoding.NullValue, "student");
-    	modules = EOUtilities.objectsMatchingValues(eduCourse.editingContext(),
+    	EOEditingContext ec = course.editingContext();
+    	modules = EOUtilities.objectsMatchingValues(ec,
     			Completion.ENTITY_NAME, dict);
     	if(modules == null || modules.count() == 0)
     		return; //TODO
@@ -135,9 +137,16 @@ public class CompletePopup extends WOComponent {
 			dict.takeValueForKey(cpt.present(), "hover");
 		} // read database for current state
     	for (int i = 0; i < completions.length; i++) {
-			if(completions[i] == null)
-				; //TODO
 			dict = (NSMutableDictionary)list.objectAtIndex(i);
+			if(completions[i] == null) {
+				logger.log(WOLogLevel.INFO,"Creating missing completion",
+						new Object[] {session(),dict});
+				completions[i] = (Completion)EOUtilities.createAndInsertInstance(ec,
+						Completion.ENTITY_NAME);
+				completions[i].setCourse(course);
+				completions[i].setAspect((String)dict.valueForKey("id"));
+				ec.saveChanges();
+			}
 			if(Various.boolForObject(dict.valueForKey("disabled")) || !completions[i].isNotClosed()) {
 				continue;
 			}
@@ -195,9 +204,12 @@ public class CompletePopup extends WOComponent {
     	}
     	if(changed) {
     		try {
-    			File folder = Executor.completeFolder(course.eduYear(), "courses");
+    			File folder = Executor.completeFolder(course.eduYear(), "courses",false);
     			CoursesCatalog.printCourseReports(course, folder, context(), null, true);
 				course.editingContext().saveChanges();
+				NSArray addOns = (NSArray)session().objectForKey("notesAddOns");
+				if(addOns != null)
+					addOns.valueForKey("dropCompletionAgregate");
 			} catch (Exception e) {
 				course.editingContext().revert();
 				logger.log(WOLogLevel.WARNING,"Error saving completions", 

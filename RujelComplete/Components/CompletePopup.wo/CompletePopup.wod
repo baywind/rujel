@@ -31,7 +31,6 @@ ModuleTitle : WOString {
 Submit : WOSubmitButton {
 	value = session.strings.Reusables_Strings.uiElements.Submit;
 	action = save;
-	onclick = "return confirmAction(null,event);";
 }
 
 Form : WOForm {

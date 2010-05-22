@@ -108,50 +108,50 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 				"modules.studentReporter");
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
-		StringBuilder filename = new StringBuilder(12);
 		Integer year = (Integer) ctx.session().valueForKey("eduYear");
 		while (grenu.hasMoreElements()) {
 			EduGroup gr = (EduGroup) grenu.nextElement();
-			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(gr);
-			filename.append(gr.grade()).append('_');
-			filename.append(gid.keyValues()[0]);
-			File grDir = new File(folder,filename.toString());
-			filename.delete(0, filename.length());
+			File grDir = new File(folder,groupDirName(gr));
 			Enumeration stenu = gr.list().objectEnumerator();
 			NSArray args = new NSArray(new Object[] {year, gr });
 			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
 					EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
 			while (stenu.hasMoreElements()) {
 				Student student = (Student) stenu.nextElement();
-				completeStudent(gr, student, reports, existingCourses, grDir, ctx, false);
+		    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
+				File stDir = new File(grDir,gid.keyValues()[0].toString());
+				completeStudent(gr, student, reports, existingCourses, stDir, ctx, false);
 			}
 		}
 	}
-    
-    public static void writeGroup(EduGroup gr,NSArray students, NSArray reports,
-    		File folder,Integer year, WOContext ctx) {
-    	EOEditingContext ec = gr.editingContext();
-		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(gr);
+
+    public static String groupDirName(EduGroup gr) {
+		EOKeyGlobalID gid = (EOKeyGlobalID)gr.editingContext().globalIDForObject(gr);
 		StringBuilder filename = new StringBuilder(12);
 		filename.append(gr.grade()).append('_');
 		filename.append(gid.keyValues()[0]);
-		File grDir = new File(folder,filename.toString());
+		return filename.toString();
+//		return new File(folder,filename.toString());
+    }
+    /*
+    public static void writeGroup(EduGroup gr,NSArray students, NSArray reports,
+    		File folder,Integer year, WOContext ctx) {
+    	EOEditingContext ec = gr.editingContext();
 		if(students == null)
 			students = gr.list();
 		Enumeration stenu = students.objectEnumerator();
 		NSArray args = new NSArray(new Object[] {year, gr });
 		NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
 				EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+		File grDir = groupDir(folder, gr);
 		while (stenu.hasMoreElements()) {
 			Student student = (Student) stenu.nextElement();
 			completeStudent(gr, student, reports, existingCourses, grDir, ctx, false);
 		}
-    }
+    } */
     
     public static void completeStudent(EduGroup gr, Student student, NSArray reports,
-    		NSArray existingCourses, File grDir, WOContext ctx, boolean overwrite) {
-    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
-		File stDir = new File(grDir,gid.keyValues()[0].toString());
+    		NSArray existingCourses, File stDir, WOContext ctx, boolean overwrite) {
 		if(!stDir.exists())
 			stDir.mkdirs();
 		WOComponent page = WOApplication.application().pageWithName("StudentPage", ctx);
@@ -159,16 +159,15 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		page.takeValueForKey(gr, "eduGroup");
 		page.takeValueForKey(reports, "reports");
 		Executor.writeFile(stDir, "index.html", page, overwrite);
-		reportsForStudent(reports, student, ctx, existingCourses, stDir, overwrite);
+/*		reportsForStudent(reports, student, ctx, existingCourses, stDir, overwrite);
     }
-    
-    public static void reportsForStudent(NSArray reports, Student student, WOContext ctx,
-    		NSArray existingCourses, File stDir, boolean overwrite) {
+    private static void reportsForStudent(NSArray reports, Student student, WOContext ctx,
+    		NSArray existingCourses, File stDir, boolean overwrite) { */
 		Enumeration repEnu = reports.objectEnumerator();
 		NSArray array = new NSArray(student);
 		while (repEnu.hasMoreElements()) {
 			NSDictionary reporter = (NSDictionary) repEnu.nextElement();
-			WOComponent page = WOApplication.application().pageWithName("PrintReport",ctx);
+			page = WOApplication.application().pageWithName("PrintReport",ctx);
 			page.takeValueForKey(reporter,"reporter");
 			page.takeValueForKey(existingCourses,"courses");
 			page.takeValueForKey(array,"students");

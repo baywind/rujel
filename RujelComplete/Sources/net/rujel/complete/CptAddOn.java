@@ -2,10 +2,13 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOSession;
@@ -15,15 +18,18 @@ import com.webobjects.foundation.*;
 
 public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandling {
 
+	protected WOSession session;
 	protected NSDictionary dict;
 	protected Completion global;
 	protected NamedFlags access;
 	protected EduCourse course;
 	protected boolean active;
+	protected boolean dim = false;
 	protected NSMutableDictionary agregate;
 	protected NSArray requires;
 	
 	public CptAddOn(WOSession ses) {
+		session = ses;
 		dict = (NSDictionary)ses.valueForKeyPath("strings.RujelComplete_Complete.addOn");
 		access = (NamedFlags)ses.valueForKeyPath("readAccess.FLAGS.Completion");
 		NSArray modules = (NSArray)ses.valueForKeyPath("modules.courseComplete");
@@ -87,7 +93,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 	
 	protected void getAgregate() {
 		EOEditingContext ec = course.editingContext();
-//		NSMutableArray courseList = course.groupList().mutableClone();
+		NSMutableArray courseList = course.groupList().mutableClone();
 		NSMutableDictionary param = new NSMutableDictionary(course,"course");
 		param.takeValueForKey("student", Completion.ASPECT_KEY);
 		NSArray found = EOUtilities.objectsMatchingValues(ec, Completion.ENTITY_NAME, param);
@@ -102,36 +108,108 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 					continue;
 				}
 				NSMutableDictionary _dict = new NSMutableDictionary(cpt,Completion.ENTITY_NAME);
-				boolean closed = cpt.closeDate() != null;
-				_dict.takeValueForKey(Boolean.valueOf(closed), "closed");
+				Boolean closed = Boolean.valueOf(cpt.closeDate() != null);
+				_dict.takeValueForKey(closed, "closed");
 				_dict.takeValueForKey(cpt.present(), "hover");
 //				_dict.takeValueForKey(Person.Utility.fullName(student, true, 2, 2, 0), "title");
 				EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(student);
 				_dict.takeValueForKey("cpt" + gid.keyValues()[0], "id");
-//				courseList.removeObject(student);
+				courseList.removeObject(student);
 				agregate.setObjectForKey(_dict, student);
 			}
 		}
+		dim = !access().flagForKey("create");
+		if(!dim)
+			dim = (checkRequirements(course) != null);
+		if(courseList.count() > 0) {
+			NSMutableDictionary preset = new NSMutableDictionary();
+			boolean closed = false;
+			if(global != null) {
+				preset.takeValueForKey(global, Completion.ENTITY_NAME);
+				closed = (global.closeDate() != null);
+				preset.takeValueForKey(global.present(), "hover");
+			}
+			preset.takeValueForKey(Boolean.valueOf(closed), "closed");
+			if(closed) {
+				preset.takeValueForKey(Boolean.FALSE, "checked");
+			} else if(dim) {
+				preset.takeValueForKey(Boolean.FALSE, "checked");
+				preset.takeValueForKey(Boolean.TRUE, "disable");
+			} else {
+				preset.takeValueForKey(Boolean.TRUE, "checked");
+			}
+			Enumeration enu = courseList.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Student student = (Student) enu.nextElement();
+				NSMutableDictionary dic = preset.mutableClone();
+				EOKeyGlobalID gid = (EOKeyGlobalID)student.
+				editingContext().globalIDForObject(student);
+				dic.takeValueForKey("cpt" + gid.keyValues()[0], "id");
+				agregate.setObjectForKey(dic, student);
+			}
+		}
+		if(dim)
+			return;
+		session.setObjectForKey(course, "preventComplete");
+		found = (NSArray)session.valueForKeyPath("modules.preventComplete");
+		session.removeObjectForKey("preventComplete");
+		if(found != null && found.count() > 0) {
+			Enumeration enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSKeyValueCoding lock = (NSKeyValueCoding) enu.nextElement();
+				Student student = (Student)lock.valueForKey("student");
+				NSMutableDictionary dic = (NSMutableDictionary)agregate.objectForKey(student);
+				if(dic == null)
+					continue;
+				dic.takeValueForKey(Boolean.FALSE, "checked");
+				if(Various.boolForObject(lock.valueForKey("disable"))) {
+					dic.takeValueForKey(Boolean.TRUE, "disable");
+					if(Various.boolForObject(dic.valueForKey("closed")))
+						dic.takeValueForKey("warning", "styleClass");
+					else
+						dic.takeValueForKey("grey", "styleClass");
+				} else if(Various.boolForObject(dic.valueForKey("closed")))
+					dic.takeValueForKey("highlight", "styleClass");
+				String title = (String)lock.valueForKey("title");
+				if(title != null) {
+					Object hover = dic.valueForKey("hover");
+					if(hover instanceof StringBuilder) {
+						((StringBuilder)hover).append(';').append(' ').append(title);
+					} else {
+						hover = new StringBuilder(title);
+						dic.takeValueForKey(hover, "hover");
+					}
+				}
+			}
+		}
 	}
+	/*
+	protected NSMutableDictionary prepareDict(Student student) {
+		NSMutableDictionary dic = new NSMutableDictionary();
+		if(global != null) {
+			dic.takeValueForKey(global, Completion.ENTITY_NAME);
+			dic.takeValueForKey(Boolean.valueOf(global.closeDate() != null), "closed");
+			dic.takeValueForKey(global.present(), "hover");
+		} else {
+			dic.takeValueForKey(Boolean.FALSE, "closed");
+		}
+		dic.takeValueForKey(Boolean.TRUE, "checked");
+		dic.takeValueForKey(access.valueForKey("_create"), "disable");
+//		dic.takeValueForKey(Person.Utility.fullName(student, true, 2, 2, 0), "title");
+		EOKeyGlobalID gid = (EOKeyGlobalID)student.
+				editingContext().globalIDForObject(student);
+		dic.takeValueForKey("cpt" + gid.keyValues()[0], "id");
+		agregate.setObjectForKey(dic, student);
+		return dic;
+	}*/
 	
 	public NSMutableDictionary dictForStudent(Student student) {
 		if(agregate == null) getAgregate();
 		NSMutableDictionary dic = (NSMutableDictionary)agregate.objectForKey(student);
-		if(dic == null) {
-			dic = new NSMutableDictionary();
-			if(global != null) {
-				dic.takeValueForKey(global, Completion.ENTITY_NAME);
-				dic.takeValueForKey(Boolean.valueOf(global.closeDate() != null), "closed");
-				dic.takeValueForKey(global.present(), "hover");
-			} else {
-				dic.takeValueForKey(Boolean.FALSE, "closed");
-			}
-			dic.takeValueForKey(Boolean.valueOf(global.closeDate() != null), "closed");
-//			dic.takeValueForKey(Person.Utility.fullName(student, true, 2, 2, 0), "title");
-			EOKeyGlobalID gid = (EOKeyGlobalID)student.
-					editingContext().globalIDForObject(student);
-			dic.takeValueForKey("cpt" + gid.keyValues()[0], "id");
-		}
+/*		if(dic == null) {
+			if(course.groupList().containsObject(student))
+				prepareDict(student);
+		}*/
 		return dic;
 	}
 	
@@ -139,43 +217,100 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		return Boolean.valueOf(!active);
 	}
 	
+	public String filename() {
+		if(agregate == null) getAgregate();
+		if(dim)
+			return "stamp_gr.gif";
+		else
+			return "stamp.gif";
+	}
+	
 	public void setCloseDict(NSMutableDictionary cd) {
-		setCourse((EduCourse)cd.removeObjectForKey("course"));
-		String user = (String)cd.removeObjectForKey("user");
-		if(cd.count() == 0)
-			return;
-		Enumeration enu = course.groupList().objectEnumerator();//cd.keyEnumerator();
+		setCourse((EduCourse)cd.objectForKey("course"));
+		String user = (String)cd.objectForKey("user");
 		EOEditingContext ec = course.editingContext();
-		while (enu.hasMoreElements()) {
-			Student student = (Student) enu.nextElement();
-			NSMutableDictionary dic = dictForStudent(student);
-			Boolean closed = (Boolean)cd.objectForKey(student);
-			dic.takeValueForKey(closed, "closed");
+		NSTimestamp date = new NSTimestamp();
+		NSArray toClose = (NSArray)cd.valueForKey("toClose");
+		boolean closeAll = Various.boolForObject(cd.valueForKey("closeAll"));
+		if(closeAll) {
+			if(global == null) {
+				global = (Completion)EOUtilities.createAndInsertInstance(ec,Completion.ENTITY_NAME);
+				global.setCourse(course);
+				global.setAspect("student");
+				toClose = course.groupList();
+			} else if(agregate != null)
+				((NSArray)agregate.allValues()).takeValueForKey(Boolean.TRUE, "closed");
+			global.setCloseDate(date);
+			global.setWhoClosed(user);
+		} else if(toClose == null) {
+			Student releaseStudent = (Student)cd.valueForKey("releaseStudent");
+			if(releaseStudent == null)
+				return;
+			NSMutableDictionary dic = dictForStudent(releaseStudent);
 			Completion cpt = (Completion)dic.valueForKey(Completion.ENTITY_NAME);
-			if(cpt == null || student != cpt.student()) {
-				cpt = (Completion)EOUtilities.createAndInsertInstance(ec,Completion.ENTITY_NAME);
-				cpt.setStudent(student);
-				cpt.setCourse(course);
-				cpt.setAspect("student");
-				dic.takeValueForKey(cpt, Completion.ENTITY_NAME);
-				agregate.setObjectForKey(dic, student);
-				if(global != null && global.closeDate() != null) {
-					cpt.setCloseDate(global.closeDate());
-					cpt.setWhoClosed(global.whoClosed());
-					if(closed != null && closed.booleanValue())
-						continue;
+			if(cpt != null && cpt.student() == releaseStudent) {
+				cpt.setCloseDate(null);
+				cpt.setWhoClosed(user);
+//				toClose = new NSArray(releaseStudent);
+				dic.takeValueForKey(Boolean.FALSE, "closed");
+				dic.takeValueForKey(Boolean.FALSE, "checked");
+			} else { 
+				toClose = course.groupList().mutableClone();
+				((NSMutableArray)toClose).removeObject(releaseStudent);
+			}
+		}
+		if(toClose != null) {
+			Enumeration enu = course.groupList().objectEnumerator();//cd.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				Student student = (Student) enu.nextElement();
+				NSMutableDictionary dic = dictForStudent(student);
+				boolean close = toClose.containsObject(student);
+//				if(close && Various.boolForObject(dic.valueForKey("closed")))
+//					continue;
+				Completion cpt = (Completion)dic.valueForKey(Completion.ENTITY_NAME);
+				if(cpt == null || student != cpt.student()) {
+					cpt = (Completion)EOUtilities.createAndInsertInstance(ec,Completion.ENTITY_NAME);
+					cpt.setStudent(student);
+					cpt.setCourse(course);
+					cpt.setAspect("student");
+					dic.takeValueForKey(cpt, Completion.ENTITY_NAME);
+					if(global != null) {
+						cpt.setCloseDate(global.closeDate());
+						cpt.setWhoClosed(global.whoClosed());
+					}				
+				} else if(closeAll) {
+					ec.deleteObject(cpt);
+					dic.takeValueForKey(global, Completion.ENTITY_NAME);
+					dic.takeValueForKey(Boolean.TRUE, "closed");
+					continue;
+				} else if (cpt.closeDate() != null) {
+					continue;
+				}
+				if(close) {
+					if(cpt.closeDate() == null) {
+						cpt.setCloseDate(date);
+						cpt.setWhoClosed(user);
+						dic.takeValueForKey(cpt.present(), "hover");
+						dic.takeValueForKey(Boolean.TRUE, "closed");
+					}
+				} else {
+					if(cpt.closeDate() != null) {
+						cpt.setCloseDate(null);
+						cpt.setWhoClosed(user);
+						dic.takeValueForKey(Boolean.FALSE, "closed");
+					}
+					dic.takeValueForKey(Boolean.FALSE, "checked");
+					if(!(dic.valueForKey("hover") instanceof StringBuilder))
+						dic.takeValueForKey(cpt.present(), "hover");
 				}
 			}
-			cpt.setCloseDate(closed.booleanValue()? new NSTimestamp() : null);
-			if(closed.booleanValue() || cpt.whoClosed() != null)
-				cpt.setWhoClosed(user);
-			dic.takeValueForKey(cpt.present(), "hover");
+			if(global != null && !closeAll)
+				ec.deleteObject(global);
 		}
-		if(global != null)
-			ec.deleteObject(global);
 		try {
 			ec.saveChanges();
-			global = null;
+			if(global != null && global.editingContext() != ec)
+				global = null;
 			CompletePopup.logger.log(WOLogLevel.UNOWNED_EDITING,"Student Completions saved",
 					new Object[] {course,cd.allKeys()});
 		} catch (Exception e) {
@@ -184,6 +319,21 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 			CompletePopup.logger.log(WOLogLevel.WARNING,"Error saving student Completions",
 					new Object[] {course,cd.allKeys(),e});
 		}
+		if(ec instanceof SessionedEditingContext)
+			date = (NSTimestamp)((SessionedEditingContext)ec).session().valueForKey("today");
+		else
+			date = new NSTimestamp(MyUtility.dateToEduYear(date, course.eduYear()));
+		Executor executor = new Executor(date);
+		executor.setCourse(course);
+		if(cd.valueForKey("toClose") == null)
+			toClose = course.groupList();
+		executor.setStudents(toClose);
+		Executor.exec(executor);
+	}
+	
+	public Object dropCompletionAgregate() {
+		agregate = null;
+		return null;
 	}
 	
 	public void takeValueForKey(Object arg0, String arg1) {
