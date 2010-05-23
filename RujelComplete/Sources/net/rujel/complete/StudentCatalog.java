@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.*;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -51,6 +52,9 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	public String groupID;
 	public Student student;
 	public EOEditingContext ec;
+	public NSDictionary catalog;
+	protected NSDictionary grDict;
+	protected String grFolder;
 	
     public StudentCatalog(WOContext context) {
         super(context);
@@ -60,12 +64,42 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     	group = newGroup;
     	if(group == null) {
     		groupID = null;
+    		grDict = null;
+    		list = null;
+    		grFolder = null;
     		return;
     	}
     	if(ec == null)
     		ec = group.editingContext();
-    	EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(group); 
+    	list = group.list();
+    	EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(group);
     	groupID = "gr" + gid.keyValues()[0];
+    	StringBuilder buf = new StringBuilder(7);
+    	buf.append(group.grade()).append('_').append(gid.keyValues()[0]);
+    	grFolder = buf.toString();
+    	if(catalog != null)
+    		grDict = (NSDictionary)catalog.valueForKey(grFolder);
+    }
+    
+    public String ready() {
+    	if(catalog == null)
+    		return null;
+    	StringBuilder buf = new StringBuilder("<span style = \"float:right\">");
+    	if(grDict == null) {
+    		buf.append("&oslash;");
+    	} else {
+    		int count = 0;
+    		Enumeration enu = grDict.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+				if(Various.boolForObject(enu.nextElement()))
+						count++;
+			}
+    		if(count >= list.count())
+    			return null;
+    		buf.append(count).append('/').append(list.count());
+    	}
+    	buf.append("</span>");
+    	return buf.toString();
     }
     
     public String studentLink() {
@@ -73,8 +107,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     		return null;
        	EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(student); 
        	StringBuilder result = new StringBuilder(30);
-       	result.append(group.grade()).append('_');
-       	result.append(groupID.substring(2)).append('/');
+       	result.append(grFolder).append('/');
        	result.append(gid.keyValues()[0]).append("/index.html");
        	return result.toString();
     }
@@ -83,15 +116,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     	return "toggleObj('" + groupID + "');";
     }
 
-    public NSArray list() {
-    	return group.list();
- /*   	if(group == null)
-    		return null;
-    	NSArray list = group.fullList();
-    	if(list == null || list.count() < 2)
-    		return list;
-    	return EOSortOrdering.sortedArrayUsingKeyOrderArray(list, Person.sorter);*/
-    }
+    public NSArray list;
     
     public static void prepareStudents(File folder, WOContext ctx) {
     	Executor.prepareFolder(folder, ctx, "list.html");
@@ -175,4 +200,14 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			Executor.writeFile(stDir, filename, page,overwrite);
 		}
     }
+
+	public Boolean studentNotReady() {
+		if(catalog == null)
+			return Boolean.FALSE;
+		if(grDict == null)
+			return Boolean.TRUE;
+		EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(student); 
+		String key = gid.keyValues()[0].toString();
+		return Boolean.valueOf(!Various.boolForObject(grDict.valueForKey(key)));
+	}
 }

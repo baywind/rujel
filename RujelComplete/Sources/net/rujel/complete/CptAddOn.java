@@ -254,6 +254,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 //				toClose = new NSArray(releaseStudent);
 				dic.takeValueForKey(Boolean.FALSE, "closed");
 				dic.takeValueForKey(Boolean.FALSE, "checked");
+				dic.takeValueForKey(user, "hover");
 			} else { 
 				toClose = course.groupList().mutableClone();
 				((NSMutableArray)toClose).removeObject(releaseStudent);

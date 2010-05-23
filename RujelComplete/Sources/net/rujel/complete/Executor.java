@@ -160,7 +160,16 @@ public class Executor implements Runnable {
 					}
 					if(grDict.count() > 0) {
 						catalog.takeValueForKey(grDict, grDir);
-						// TODO: write list.html
+						File file = new File(folder,"index.html");
+						if(!file.exists())
+							prepareFolder(folder, ctx, "list.html");
+						NSArray groups = EduGroup.Lister.listGroups(
+								(NSTimestamp)ctx.session().valueForKey("today"), ec);
+						WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
+						page.takeValueForKey(ec, "ec");
+						page.takeValueForKey(catalog, "catalog");
+						page.takeValueForKey(groups, "eduGroups");
+						Executor.writeFile(folder, "list.html", page,true);
 						try {
 							NSData data = NSPropertyListSerialization.dataFromPropertyList(
 									catalog, "utf8");
