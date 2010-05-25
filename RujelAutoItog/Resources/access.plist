@@ -22,6 +22,18 @@
 	</dict>
 	<key>Prognosis</key>
 	<dict>
+		<key>modifiers</key>
+		<dict>
+			<key>completionClosed</key>
+			<dict>
+				<key>root</key>
+				<string>1</string>
+				<key>zavuch</key>
+				<string>1</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+		</dict>
 		<key>root</key>
 		<string>1023</string>
 		<key>zavuch</key>
@@ -51,6 +63,18 @@
 	</dict>
 	<key>StudentTimeout</key>
 	<dict>
+		<key>modifiers</key>
+		<dict>
+			<key>completionClosed</key>
+			<dict>
+				<key>root</key>
+				<string>1</string>
+				<key>zavuch</key>
+				<string>1</string>
+				<key>teacher</key>
+				<string>1</string>
+			</dict>
+		</dict>
 		<key>root</key>
 		<string>1023</string>
 		<key>zavuch</key>

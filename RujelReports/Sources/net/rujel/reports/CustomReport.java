@@ -327,4 +327,15 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 			return "visibility:visible;";
 		return "visibility:hidden;";
 	}
+	
+	public WOActionResults alert() {
+		WOResponse response = WOApplication.application().createResponseInContext(context());
+		response.appendContentString(
+	"<div id = \"ajaxPopup\" class=\"warning\" style=\"cursor:pointer;\" onclick=\"closePopup()\">");
+		response.appendContentString("OOPS!");
+		NSDictionary formValues = context().request().formValues();
+		response.appendContentString(WOResponse.stringByEscapingHTMLString(formValues.toString()));
+		response.appendContentString("</div>");
+		return response;
+	}
 }

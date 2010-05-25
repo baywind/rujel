@@ -64,6 +64,13 @@ public class ItogPopup extends WOComponent {
 		super(context);       
 	}
 
+	public EduCourse course() {
+		if(addOn == null)
+				return (itog==null)? null: itog.assumeCourse();
+		return (EduCourse)addOn.valueForKey("eduCourse");
+	}
+
+	
 	public String mark() {
 		if(itog != null) {
 			mark = itog.mark();
@@ -102,17 +109,17 @@ public class ItogPopup extends WOComponent {
 		return (String)flagNames.valueForKey(item.toString());
 	}
 
+	protected NamedFlags _access;
 	public NamedFlags access() {
-		if(itog != null)
-			return (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.itog");
-		return (NamedFlags)addOn.valueForKey("access");
+		if(_access == null)
+			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." +
+					((itog==null)?ItogMark.ENTITY_NAME:"itog"));
+		return _access;
 	}
 
 	public WOComponent save() {
-		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
-		EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
-			(EduCourse)addOn.valueForKey("eduCourse");
+		EduCourse eduCourse = course();
 		EOEditingContext ec = (eduCourse==null)?itog.editingContext():eduCourse.editingContext();
 		if(commentEO != null || (comments != null && comments.count() != 0)) {
 			ec.lock();
@@ -244,7 +251,6 @@ public class ItogPopup extends WOComponent {
 	}
 	
 	public WOComponent delete() {
-		//WOComponent returnPage = (WOComponent)addOn.valueForKey("returnPage");
 		returnPage.ensureAwakeInContext(context());
 		if(itog == null)
 			return returnPage;
@@ -265,9 +271,7 @@ public class ItogPopup extends WOComponent {
 			ec.deleteObject(itog);
 			ec.saveChanges();
 			logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
-			EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
-				(EduCourse)addOn.valueForKey("eduCourse");
-			ModuleInit.prepareStats(eduCourse, itogContainer,true);
+			ModuleInit.prepareStats(course(), itogContainer,true);
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});
 			session().takeValueForKey(ex.getMessage(),"message");
@@ -297,8 +301,7 @@ public class ItogPopup extends WOComponent {
 	}
 	
 	public NSMutableDictionary identifierDictionary() {
-		EduCourse eduCourse = (addOn == null)?itog.assumeCourse():
-				(EduCourse)addOn.valueForKey("eduCourse");
+		EduCourse eduCourse = course();
 		if(student == null || itogContainer == null || eduCourse == null)
     		return null;
 		NSMutableDictionary ident = new NSMutableDictionary("ItogMark","entityName");
@@ -321,8 +324,7 @@ public class ItogPopup extends WOComponent {
 			if(itog != null) {
 				cycle = itog.cycle();
 			} else {
-				EduCourse eduCourse = (EduCourse)addOn.valueForKey("eduCourse");
-				cycle = eduCourse.cycle();
+				cycle = course().cycle();
 			}
 			commentEO = ItogMark.getItogComment(cycle, itogContainer, student, false);
 			if(commentEO == null) {

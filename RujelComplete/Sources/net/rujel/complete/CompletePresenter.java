@@ -32,10 +32,10 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
-import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Various;
+import net.rujel.ui.AddOnPresenter;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
@@ -44,11 +44,8 @@ import com.webobjects.appserver.WORequest;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
-public class CompletePresenter extends WOComponent {
-	protected CptAddOn _currAddOn;
+public class CompletePresenter extends AddOnPresenter {
 	protected NSMutableDictionary _dict;
-	private EduCourse _course;
-	private Object _student;
 
 	public CompletePresenter(WOContext context) {
         super(context);
@@ -63,18 +60,15 @@ public class CompletePresenter extends WOComponent {
 	
 	public void reset() {
 		super.reset();
-		_currAddOn = null;
-		_course = null;
-		_student = null;
 		_dict = null;
 	}
 	
 	public CptAddOn currAddOn() {
 		if(_currAddOn == null) {
 			_currAddOn = (CptAddOn)valueForBinding("currAddOn");
-			_currAddOn.setCourse(course());
+			((CptAddOn)_currAddOn).setCourse(course());
 		}
-		return _currAddOn;
+		return (CptAddOn)_currAddOn;
 	}
 	
 	public NSMutableDictionary dict() {
@@ -84,22 +78,6 @@ public class CompletePresenter extends WOComponent {
 			_dict = currAddOn().dictForStudent(student());
 		}
 		return _dict;
-	}
-
-	public EduCourse course() {
-		if(_course == null) {
-			_course = (EduCourse)valueForBinding("course");
-		}
-		return _course;
-	}
-	
-	public Student student() {
-		if(_student == null) {
-			_student = (Student)valueForBinding("student");
-			if(_student == null)
-				_student = NullValue;
-		}
-		return (_student==NullValue)?null:(Student)_student;
 	}
 	
 	public boolean disabled() {

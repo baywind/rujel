@@ -96,6 +96,9 @@ public class AutoItogModule {
 //			return extItog(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
+		} else if("completionLock".equals(obj)) {
+			return new NSDictionary(new String[] {Prognosis.ENTITY_NAME,"course","student"},
+					new String[] {"entity","coursePath","studentPath"});
 		}
 		return null;
 	}

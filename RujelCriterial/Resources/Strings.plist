@@ -308,6 +308,8 @@
 	<dict>
 		<key>id</key>
 		<string>works</string>
+		<key>lockEntity</key>
+		<string>Work</string>
 		<key>title</key>
 		<string>работы</string>
 		<key>component</key>

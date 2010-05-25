@@ -45,7 +45,7 @@ public class AddOnPresenter extends WOComponent {
 	protected NSKeyValueCoding _currAddOn;
 	private EduCourse _course;
 //	private EduPeriod _period;
-	private Student _student;
+	private Object _student;
 	
 	public NSKeyValueCoding currAddOn() {
 		if(_currAddOn == null) {
@@ -81,8 +81,10 @@ public class AddOnPresenter extends WOComponent {
 	public Student student() {
 		if(_student == null) {
 			_student = (Student)valueForBinding("student");
+			if(_student == null)
+				_student = NullValue;
 		}
-		return _student;
+		return (_student==NullValue)?null:(Student)_student;
 	}
 		
 	public boolean synchronizesVariablesWithBindings() {
@@ -103,11 +105,15 @@ public class AddOnPresenter extends WOComponent {
 	}
 	
 	public WOActionResults messagePopup(String message) {
-		WOResponse response = WOApplication.application().createResponseInContext(context());
+		WOComponent alert = pageWithName("MyAlert");
+		alert.takeValueForKey(context().page(), "returnPage");
+		alert.takeValueForKey(message, "message");
+		return alert;
+/*		WOResponse response = WOApplication.application().createResponseInContext(context());
 		response.appendContentString("<div class=\"attention\" style=\"cursor:pointer;\" onclick=\"this.style.display='none';\">");
 		response.appendContentString(message);
 		response.appendContentString("</div>");
-		return response;
+		return response;*/
 	}
 	
 	protected Boolean _noAccess;

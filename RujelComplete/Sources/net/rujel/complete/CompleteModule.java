@@ -54,10 +54,10 @@ public class CompleteModule {
 			return journalPlugins(ctx);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
-		} else if("courseComplete".equals(obj)) {
-			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.courseComplete");
 		} else if("adminModules".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.adminModule");
+		} else if("accessModifier".equals(obj)) {
+			return new ClosingLock(ctx.session());
 		}
 		return null;
 	}

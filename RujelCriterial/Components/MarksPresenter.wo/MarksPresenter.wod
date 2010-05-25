@@ -62,9 +62,9 @@ MarkEdit: WOTextField {
 	value = markValue;
 	disabled = noAccess;
 	style = "text-align:center;width:75%;";
-	onchange = "checkChanges(this);";
 	numberformat = "0";
 	onkeypress = "return isNumberInput(event);";
+	class = "checkChanges";
 }
 
 MarkView: WOString {

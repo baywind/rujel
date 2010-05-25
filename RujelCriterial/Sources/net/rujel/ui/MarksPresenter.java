@@ -53,21 +53,21 @@ public class MarksPresenter extends NotePresenter {
 
 	public NamedFlags access() {
 		if(_access == null) {
-			_access = (NamedFlags)valueForBinding("access");
-			if(_access != null)
-				return _access;
-			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding(
-					"presenterCache");
-			if(presenterCache != null)
-				_access = (NamedFlags)presenterCache.valueForKey("markAccess");
-			if(_access == null) {
+//			_access = (NamedFlags)valueForBinding("access");
+//			if(_access != null)
+//				return _access;
+//			NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding(
+//					"presenterCache");
+//			if(presenterCache != null)
+//				_access = (NamedFlags)presenterCache.valueForKey("markAccess");
+//			if(_access == null) {
 				if(_access == null && lesson() != null)
 					_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Mark");
 				if(_access == null)
 					_access = DegenerateFlags.ALL_TRUE;
-				if(presenterCache != null)
-					presenterCache.takeValueForKey(_access, "markAccess");
-			}
+//				if(presenterCache != null)
+//					presenterCache.takeValueForKey(_access, "markAccess");
+//			}
 		}
 		return _access;
 	}

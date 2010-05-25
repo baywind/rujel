@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="Sources"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelBase"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Authentication"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>

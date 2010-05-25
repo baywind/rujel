@@ -275,6 +275,7 @@ function ext(fld,maxLen,message,extParent) {
 }
 
 var returnField;
+
 function myPrompt(message,cont,pos,extParent) {
 	if(cont == null && returnField.value != null)
 		cont = returnField.value;
@@ -457,6 +458,13 @@ function onReadyStateChange(pos) {
 		container.style.display='block';
 	}*/
 	container.innerHTML = xmlHttp.responseText;
+	var ins = container.getElementsByTagName("input");
+	for(var i = 0; i < ins.length; i++) {
+		if(ins[i].type == "text") {
+			if(ins[i].disabled)
+				ins[i].style.backgroundColor='#cccccc';
+		}
+	}
 	cancelLoading();
 	if(pos != null) {
 		positionPopup(container.firstChild,pos);
@@ -762,4 +770,16 @@ function blink(objID,nextClass,count) {
 	obj.className = nextClass;
 	if(count > 0)
 		blinkTimer = setTimeout("blink('" + objID + "','" + tmpClass + "'," + (count - 1) + ")",150);
+}
+
+function pagePreflight() {
+	var ins = document.getElementsByTagName("input");
+	for(var i = 0; i < ins.length; i++) {
+		if(ins[i].type == "text") {
+			if(ins[i].disabled)
+				ins[i].style.backgroundColor='#cccccc';
+			else if(ins[i].className = 'checkChanges')
+				ins[i].onchange = function() {checkChanges(this);};
+		}
+	}
 }

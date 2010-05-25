@@ -174,5 +174,20 @@
 		<key>reasonRequired</key>
 		<string>Пожалуйста, укажите причину смены преподавателя</string>
 	</dict>
+	<key>courseComplete</key>
+	<dict>
+		<key>id</key>
+		<string>lessons</string>
+		<key>title</key>
+		<string>уроки</string>
+		<key>component</key>
+		<string>PrintLessons</string>
+		<key>lockEntity</key>
+		<string>BaseLesson</string>
+		<key>manual</key>
+		<true/>
+		<key>sort</key>
+		<string>10</string>
+	</dict>
 </dict>
 </plist>

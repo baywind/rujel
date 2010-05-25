@@ -68,6 +68,10 @@ public class ModuleInit {
 		} else if("planTabs".equals(obj)) {
 			return WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.planTab");
+		} else if("completionLock".equals(obj)) {
+			return new NSDictionary(
+					new String[] {ItogMark.ENTITY_NAME,"student","cycle","cycle"},
+					new String[] {"entity","studentPath","checkPath","checkCourse"});
 		}
 		return null;
 	}
@@ -88,7 +92,8 @@ public class ModuleInit {
 		//NamedFlags access = moduleAccess(ctx,"ItogMark");
 		if(!access.getFlag(0))
 				return null;
-		Object result = WOApplication.application().valueForKeyPath("strings.RujelEduResults_EduResults.studentReporter");
+		Object result = WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.studentReporter");
 //		result = result.mutableClone();
 //		result.takeValueForKey(access,"access");
 		return result;
@@ -155,7 +160,8 @@ public class ModuleInit {
 		return grouping;
 	}
 	
-	public static EOEnterpriseObject prepareStats(EduCourse course, ItogContainer period, boolean save) {
+	public static EOEnterpriseObject prepareStats(EduCourse course,
+			ItogContainer period, boolean save) {
 		EOEnterpriseObject grouping = getStatsGrouping(course, period);
 		if(grouping != null) {
 			NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null);

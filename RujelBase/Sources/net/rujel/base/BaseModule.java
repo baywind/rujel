@@ -63,6 +63,11 @@ public class BaseModule {
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if("deleteCourse".equals(obj)) {
 			return deleteCourse(ctx);
+		} else if("courseComplete".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelBase_Base.courseComplete");
+		} else if("completionLock".equals(obj)) {
+			return new NSDictionary(new String[] {"BaseNote","lesson.course","student"},
+					new String[] {"entity","coursePath","studentPath"});
 		} else if ("diary".equals(obj)) {
 			NSDictionary diaryTabs = (NSDictionary)WOApplication.application().
 					valueForKeyPath("strings.RujelBase_Base.diaryTab");

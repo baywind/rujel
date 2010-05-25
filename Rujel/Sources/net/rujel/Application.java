@@ -227,12 +227,12 @@ public class Application extends UTF8Application {
 	}
 	
 	public void refuseNewSessions(boolean aVal) {
-		super.refuseNewSessions(aVal);
 		if(aVal) {
 			logger.info("Application is refusing new sessions");
 		} else {
 			logger.info("Application is accepting sessions again");
 		}
+		super.refuseNewSessions(aVal);
 	}
 	public void terminate() {
 		if(timer != null)

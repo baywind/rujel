@@ -81,15 +81,18 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
 		return (result.length() == 0)?null:result.toString();
 	}
     
+    public EduLesson lesson() {
+    	return (EduLesson)valueForBinding("lesson");
+    }
+
     public WOActionResults inspectorPopup() {
     	WOComponent nextPage = pageWithName("WorkInspector");
     	nextPage.takeValueForKey(context().page(), "returnPage");
-    	EduLesson lesson = (EduLesson)valueForBinding("lesson");
      	EOEnterpriseObject currLesson = (EOEnterpriseObject)valueForBinding("currLesson");
     	if(currLesson instanceof Work) {
         	nextPage.takeValueForKey(currLesson, "work");
     	} else {
-        	NSTimestamp date = lesson.date();
+        	NSTimestamp date = lesson().date();
         	NSMutableDictionary dict = new NSMutableDictionary();
         	dict.takeValueForKey(date,Work.DATE_KEY);
         	dict.takeValueForKey(date,Work.ANNOUNCE_KEY);
@@ -116,10 +119,17 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
     */
     public String inspectorIcon() {
     	Object currLesson = valueForBinding("currLesson");
-    	if(currLesson instanceof Work)
+    	if(currLesson instanceof Work) {
     		return "info.gif";
-    	else
+    	} else {
     		return "plus.png";
+    	}
+    }
+    
+    public Boolean disableButton() {
+    	if(valueForBinding("currLesson") instanceof Work)
+    		return Boolean.FALSE;
+    	return (Boolean)session().valueForKeyPath("readAccess._create.Work");
     }
     
     public String inspectorTitle() {

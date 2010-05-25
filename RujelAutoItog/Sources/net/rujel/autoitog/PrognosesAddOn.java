@@ -62,11 +62,12 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	}
 	protected WOSession session;
 
-	private NamedFlags _access;
+//	private NamedFlags _access;
 	public NamedFlags access() {
-		if(_access == null)
-			_access = (NamedFlags)session.valueForKeyPath("readAccess.FLAGS.Prognosis");
-		return _access;
+//		if(_access == null)
+//			_access = 
+				return (NamedFlags)session.valueForKeyPath("readAccess.FLAGS.Prognosis");
+//		return _access;
 	}
 
 	private NamedFlags _accessTimeout;

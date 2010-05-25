@@ -92,6 +92,12 @@ public class ModuleInit {
 					valueForKeyPath("strings.RujelCriterial_Strings.courseComplete");
 		} else if("deleteCourse".equals(obj)) {
 			return deleteCourse(ctx);
+		} else if("completionLock".equals(obj)) {
+			return new NSArray(new NSDictionary[] {
+					new NSDictionary(new String[] {"WorkNote","work.course","student"},
+							new String[] {"entity","coursePath","studentPath"}),
+					new NSDictionary(new String[] {"Mark","work.course","student"},
+							new String[] {"entity","coursePath","studentPath"}) });
 		} else if("adminModules".equals(obj)) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelCriterial_Strings.setup.WorkType");

@@ -48,19 +48,8 @@
 		<string>Снять закрытие с учащегося</string>
 		<key>preceding</key>
 		<string>Перед закрытием учащихся необходимо закрыть</string>
-	</dict>
-	<key>courseComplete</key>
-	<dict>
-		<key>id</key>
-		<string>lessons</string>
-		<key>title</key>
-		<string>уроки</string>
-		<key>component</key>
-		<string>PrintLessons</string>
-		<key>manual</key>
-		<true/>
-		<key>sort</key>
-		<string>10</string>
+		<key>locked</key>
+		<string>закрыто</string>
 	</dict>
 	<key>adminModule</key>
 	<dict>
@@ -123,7 +112,7 @@
 		<key>component</key>
 		<string>GenericAddOn</string>
 		<key>defaultOn</key>
-		<string>true</string>
+		<false/>
 		<key>framework</key>
 		<string>RujelComplete</string>
 		<key>id</key>

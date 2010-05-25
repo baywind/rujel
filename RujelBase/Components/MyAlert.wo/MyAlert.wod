@@ -27,8 +27,8 @@ CancelButton : OnClickContainer {
   elementName = "span";
   hide = cantCancel;
   onclick = "closePopup();";
-  class = "grey";
-  style = "border: double 3px #333333;margin:1ex;padding:3px;";
+  class = "button";
+  style = "background-color:#cccccc;";
   invokeAction = run;
 }
 

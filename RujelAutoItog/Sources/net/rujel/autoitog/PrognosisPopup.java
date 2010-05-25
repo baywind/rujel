@@ -77,8 +77,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	addOn.setPeriodItem(eduPeriod);
     	calculation = (eduPeriod.calculator() != null);
     	flags = new NamedFlags(Prognosis.flagNames);
-       	ifArchive = (SettingsReader.boolForKeyPath("markarchive.Prognosis", false) &&
-       			eduPeriod.namedFlags().flagForKey("manual"));
+       	ifArchive = (eduPeriod.namedFlags().flagForKey("manual") &&
+       			SettingsReader.boolForKeyPath("markarchive.Prognosis", false));
     	if(prognosis == null)  {
     		Calculator calc = eduPeriod.calculator();
     		if(calc != null) {
@@ -140,9 +140,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	return true;
     }
 
-    public boolean canChange() {
+    public boolean cantChange() {
     	String flag = (prognosis == null)?"create":"edit";
-    	return access().flagForKey(flag);
+    	return !access().flagForKey(flag);
     }
 
     public NamedFlags access() {

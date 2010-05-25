@@ -101,7 +101,7 @@ OverGroupName: WOString {
 PageWrapper1: PageWrapper {
 	hasChanges = ec.hasChanges;
 	title = title;
-	onLoad="focus();";
+	onLoad="pagePreflight();focus();";
 	styles = "a {font-style:italic;text-decoration:none;color:blue;} a:hover{color:red;}";
 	cssURL = present.cssURL;
 	cssResource = present.cssResource;

@@ -373,8 +373,7 @@ public class LessonList extends WOComponent {
 				}
 				_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS." + ent);
 			} else {
-				_access = (NamedFlags)session().valueForKeyPath(
-						"readAccess.FLAGS.currLesson");
+				_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.currLesson");
 			}
 		}
 		return _access;

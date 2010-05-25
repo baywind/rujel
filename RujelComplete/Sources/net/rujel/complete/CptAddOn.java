@@ -2,12 +2,10 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.NamedFlags;
-import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -27,6 +25,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 	protected boolean dim = false;
 	protected NSMutableDictionary agregate;
 	protected NSArray requires;
+	protected ClosingLock closingLock;
 	
 	public CptAddOn(WOSession ses) {
 		session = ses;
@@ -36,6 +35,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		EOQualifier qual = new EOKeyValueQualifier("precedes",
 				EOQualifier.QualifierOperatorContains,"student");
 		requires = EOQualifier.filteredArrayWithQualifier(modules, qual);
+		closingLock = (ClosingLock)ses.valueForKeyPath("readAccess.modifier.ClosingLock");
 	}
 	
 	public NamedFlags access() {
@@ -320,10 +320,9 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 			CompletePopup.logger.log(WOLogLevel.WARNING,"Error saving student Completions",
 					new Object[] {course,cd.allKeys(),e});
 		}
-		if(ec instanceof SessionedEditingContext)
-			date = (NSTimestamp)((SessionedEditingContext)ec).session().valueForKey("today");
-		else
-			date = new NSTimestamp(MyUtility.dateToEduYear(date, course.eduYear()));
+		if(closingLock != null)
+			closingLock.setCourse(null);
+		date = (NSTimestamp)session.valueForKey("today");
 		Executor executor = new Executor(date);
 		executor.setCourse(course);
 		if(cd.valueForKey("toClose") == null)
@@ -334,6 +333,8 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 	
 	public Object dropCompletionAgregate() {
 		agregate = null;
+		if(closingLock != null)
+			closingLock.setCourse(null);
 		return null;
 	}
 	

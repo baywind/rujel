@@ -149,6 +149,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	
 	public void setDummyUser(Boolean acc) {
 		setUser(new net.rujel.auth.UserPresentation.DummyUser(acc.booleanValue()));
+		readAccess().takeValueForKey(acc, "dummyUser");
 	}
 	
 	public UserPresentation user() {

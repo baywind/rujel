@@ -30,6 +30,7 @@
 package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
+import net.rujel.ui.AddOnPresenter;
 import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
@@ -38,12 +39,9 @@ import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-public class ItogsPresenter extends WOComponent {
+public class ItogsPresenter extends AddOnPresenter {
 
-	protected NSKeyValueCoding _currAddOn;
 	protected PerPersonLink _itogs;
-	private EduCourse _course;
-	private Student _student;
 	private NSArray _periods;
 	private ItogMark[] _arr;
 	
@@ -52,46 +50,14 @@ public class ItogsPresenter extends WOComponent {
     public ItogsPresenter(WOContext context) {
         super(context);
     }
-
-	public boolean synchronizesVariablesWithBindings() {
-        return false;
-	}
-	
-	public boolean isStateless() {
-		return true;
-	}
 	
 	public void reset() {
 		super.reset();
-		_currAddOn = null;
 		_itogs = null;
-		_course = null;
 		_periods = null;
-		_student = null;
 		_arr = null;
 		_pertype = null;
 		_styleClass = null;
-	}
-	
-	public EduCourse course() {
-		if(_course == null) {
-			_course = (EduCourse)valueForBinding("course");
-		}
-		return _course;
-	}
-	
-	public Student student() {
-		if(_student == null) {
-			_student = (Student)valueForBinding("student");
-		}
-		return _student;
-	}
-	
-	public NSKeyValueCoding currAddOn() {
-		if(_currAddOn == null) {
-			_currAddOn = (NSKeyValueCoding)valueForBinding("currAddOn");
-		}
-		return _currAddOn;
 	}
 	
 	public NSArray periods() {
@@ -202,7 +168,7 @@ public class ItogsPresenter extends WOComponent {
 		nextPage.takeValueForKey(itog(),"itog");
 		nextPage.takeValueForKey(student(),"student");
 		nextPage.takeValueForKey(periodItem,"itogContainer");
-		//nextPage.takeValueForKey(course().cycle(),"cycle");
+//		nextPage.takeValueForKey(course(),"course");
 		nextPage.takeValueForKey(context().page(),"returnPage");
 		nextPage.takeValueForKey(currAddOn(),"addOn");
         return nextPage;

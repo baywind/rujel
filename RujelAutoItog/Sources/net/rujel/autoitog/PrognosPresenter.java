@@ -33,7 +33,6 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 
 import net.rujel.reusables.Flags;
-import net.rujel.reusables.NamedFlags;
 import net.rujel.ui.AddOnPresenter;
 
 import com.webobjects.appserver.*;
@@ -104,13 +103,6 @@ public class PrognosPresenter extends AddOnPresenter {
 		else
 			return "female";*/
 	}
-
-	public NamedFlags access() {
-		if(currAddOn().inTimeout)
-			return currAddOn().accessTimeout();
-		else
-			return currAddOn().access();
-	}
 	
 	public Boolean noAccess() {
 		if(currAddOn().inTimeout) {
@@ -151,7 +143,7 @@ public class PrognosPresenter extends AddOnPresenter {
 	}
 
 	public WOActionResults editTimeout() {
-		if(currAddOn().timeout() == null && !access().flagForKey("create")) {
+		if(currAddOn().timeout() == null && !currAddOn().accessTimeout().flagForKey("create")) {
 			String message = (String)valueForKeyPath("application.strings.Strings.messages.noAccess");
 			return messagePopup(message);
 		}
