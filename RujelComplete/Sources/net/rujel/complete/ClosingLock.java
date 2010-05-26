@@ -42,6 +42,7 @@ import com.webobjects.foundation.*;
 import net.rujel.auth.ReadAccess;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 public class ClosingLock implements ReadAccess.Modifier {
@@ -50,13 +51,14 @@ public class ClosingLock implements ReadAccess.Modifier {
 
 	protected EduCourse course;
 	protected NSMutableDictionary locks;
-	protected NSArray aspects;
+	protected NSSet aspects;
 	protected NSArray diffStudents;
 	protected Boolean allStudents;
+	protected NSArray modules;
 	
 	public ClosingLock (WOSession ses) {
 		locks = new NSMutableDictionary();
-		NSArray modules = (NSArray)ses.valueForKeyPath("modules.completionLock");
+		modules = (NSArray)ses.valueForKeyPath("modules.completionLock");
 		if(modules != null && modules.count() > 0) {
 			Enumeration enu = modules.objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -109,27 +111,31 @@ public class ClosingLock implements ReadAccess.Modifier {
 				EduCourse crs = (EduCourse)ctx.page().valueForKey("course");
 				setCourse(crs);
 			} catch (Exception e) {
-				CompletePopup.logger.log(WOLogLevel.INFO,"String request to ClosingLock: " + entity, 
-						new Object[] {ctx.session(),e});
-				return null;
+				obj = ctx.session().objectForKey("readAccess");
+				if(obj == null) {
+					CompletePopup.logger.log(WOLogLevel.INFO,"String request to ClosingLock: "
+							+ entity, new Object[] {ctx.session(),e});
+					return null;
+				}
 			}
-			//TODO
-		} else {
+			//TODO: what else i can do with String?
+		} 
+		if(obj instanceof NSKeyValueCodingAdditions) {
 			String key = null;
 			key = (String)lock.valueForKey("coursePath");
 			if(key == null) {
 				key = (String)lock.valueForKey("checkCourse");
 				Object checkCourse = (course==null)?null:course.valueForKeyPath(key);
 				key = (String)lock.valueForKey("checkPath");
-				Object checkPath = ((EOEnterpriseObject)obj).valueForKeyPath(key);
+				Object checkPath = ((NSKeyValueCodingAdditions)obj).valueForKeyPath(key);
 				if((checkCourse==null)?checkPath!=null:!checkCourse.equals(checkPath)) {
 					key = (String)lock.valueForKey("assumeCourse");
 					if(key == null) key = "assumeCourse";
-					checkCourse = ((EOEnterpriseObject)obj).valueForKeyPath(key);
+					checkCourse = ((NSKeyValueCodingAdditions)obj).valueForKeyPath(key);
 					setCourse((EduCourse)checkCourse);
 				}
 			} else {
-				setCourse((EduCourse)((EOEnterpriseObject)obj).valueForKeyPath(key));
+				setCourse((EduCourse)((NSKeyValueCodingAdditions)obj).valueForKeyPath(key));
 			}
 		}
 		if(course == null || (aspects == null && allStudents == null && diffStudents == null))
@@ -160,7 +166,7 @@ public class ClosingLock implements ReadAccess.Modifier {
 		boolean closed = (allStudents != null && allStudents.booleanValue());
 		if(diffStudents != null) {
 			if(student == null)
-				student = ((EOEnterpriseObject)obj).valueForKeyPath(key);
+				student = ((NSKeyValueCodingAdditions)obj).valueForKeyPath(key);
 			if(diffStudents.containsObject(student))
 				closed = !closed;
 		}
@@ -184,8 +190,9 @@ public class ClosingLock implements ReadAccess.Modifier {
 			return;
 		NSMutableArray closedStudents = new NSMutableArray();
 		NSMutableArray openStudents = new NSMutableArray();
-		aspects = new NSMutableArray();
+		aspects = new NSMutableSet();
 		Enumeration enu = completions.objectEnumerator();
+		NSMutableDictionary readyModules = new NSMutableDictionary(modules.count() + 1);
 		while (enu.hasMoreElements()) {
 			Completion cpt = (Completion) enu.nextElement();
 			Student student = cpt.student();
@@ -199,14 +206,13 @@ public class ClosingLock implements ReadAccess.Modifier {
 				if(aspect.equals("student")) {
 					allStudents = Boolean.valueOf(cpt.closeDate() != null);
 				} else if (cpt.closeDate() != null) {
-					((NSMutableArray)aspects).addObject(aspect);
+					((NSMutableSet)aspects).addObject(aspect);
+					readyModules.takeValueForKey(Boolean.TRUE, aspect);
+				} else {
+					readyModules.takeValueForKey(Boolean.FALSE, aspect);
 				}
 			}
 		}
-		if(aspects.count() == 0)
-			aspects = null;
-		else
-			aspects = aspects.immutableClone();
 		if(allStudents == null) {
 			if(openStudents.count() >= closedStudents.count()) {
 				if(closedStudents.count() > 0)
@@ -228,6 +234,23 @@ public class ClosingLock implements ReadAccess.Modifier {
 			else
 				diffStudents = diffStudents.immutableClone();
 		}
+		if(diffStudents == null && allStudents != null)
+			readyModules.takeValueForKey(allStudents, "student");
+		else
+			readyModules.takeValueForKey(Boolean.FALSE, "student");
+		if(CoursePage.accountDependencies(readyModules, modules) > 0) {
+			enu = readyModules.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				String aspect = (String) enu.nextElement();
+				if(Various.boolForObject(readyModules.objectForKey(aspect)))
+					((NSMutableSet)aspects).addObject(aspect);
+			}
+		}
+		if(aspects.count() == 0)
+			aspects = null;
+		else
+			aspects = aspects.immutableClone();
+
 	}
 
 	public Number sort() {

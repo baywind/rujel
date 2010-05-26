@@ -95,10 +95,16 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			Completion cpt = (Completion) enu.nextElement();
 			result.takeValueForKey(Boolean.valueOf(cpt.closeDate() != null), cpt.aspect());
 		}
+    	accountDependencies(result, modules);
+    	return result;
+    }
+    public static int accountDependencies(NSMutableDictionary result, NSArray modules) {
     	boolean changed = true;
+    	int changes = -1;
     	while (changed) {
     		changed = false;
-    		enu = modules.objectEnumerator();
+    		changes++;
+    		Enumeration enu = modules.objectEnumerator();
     		while (enu.hasMoreElements()) {
     			NSKeyValueCoding mod = (NSKeyValueCoding) enu.nextElement();
     			String id = (String)mod.valueForKey("id");
@@ -137,6 +143,6 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     			}
     		}
 		}
-    	return result;
+    	return changes;
     }
 }

@@ -35,6 +35,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -72,6 +73,10 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(var instanceof Variation) {
     		variation = (Variation)var;
     		reason = variation.reason();
+    		session().setObjectForKey(variation, "readAccess");
+    		if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.session")))
+    			onlyChooseReason = true;
+    		session().removeObjectForKey("readAccess");
     	}
    		date = (NSTimestamp)NSKeyValueCoding.Utility.valueForKey(var,Variation.DATE_KEY);
 		setValue((Integer)NSKeyValueCoding.Utility.valueForKey(var,Variation.VALUE_KEY));
@@ -108,8 +113,10 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	return this;
     }
     
-    public boolean nullDate() {
-    	return (date == null);
+    public Boolean nullDate() {
+    	if (date == null) return Boolean.TRUE;
+    	if (variation == null) return Boolean.FALSE;
+    	return (Boolean)session().valueForKeyPath("readAccess._edit.variation");
     }
     
     public WOActionResults done() {

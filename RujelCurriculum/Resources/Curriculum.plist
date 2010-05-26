@@ -299,6 +299,11 @@
 			<array>
 				<string>lessons</string>
 			</array>
+			<key>lockEntity</key>
+			<array>
+				<string>Substitute</string>
+				<string>Variation</string>
+			</array>
 			<key>title</key>
 			<string>выполнение</string>
 			<key>component</key>
@@ -315,6 +320,8 @@
 			<array>
 				<string>curriculum</string>
 			</array>
+			<key>lockEntity</key>
+			<string>Reprimand</string>
 			<key>component</key>
 			<string>PrintReprimands</string>
 			<key>sort</key>

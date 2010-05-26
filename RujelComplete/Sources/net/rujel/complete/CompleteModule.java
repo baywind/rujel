@@ -30,6 +30,8 @@
 package net.rujel.complete;
 
 
+import java.util.Enumeration;
+
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.PlistReader;
@@ -37,7 +39,12 @@ import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
+import com.webobjects.foundation.NSSet;
 
 public class CompleteModule {
 	
@@ -80,4 +87,60 @@ public class CompleteModule {
 			return null;
 		return new CptAddOn(ctx.session());
 	}
+
+    public static NSMutableDictionary moduleDependencies(NSArray modules) {
+    	NSArray ids = (NSArray)modules.valueForKey("id"); 
+    	if(!ids.contains("student")) {
+    		ids = ids.arrayByAddingObject("student");
+    		modules = modules.arrayByAddingObject(new NSDictionary(Boolean.TRUE,"manual"));
+    	}
+    	NSSet[] result = new NSSet[modules.count()]; 
+    	boolean[] flag = new boolean[modules.count()];
+    	for (int i = 0; i < flag.length; i++) {
+			processModule(i, modules, ids, result, flag);
+			
+		}
+    	return new NSMutableDictionary(result,ids.objects());
+    }
+    
+    private static NSSet processModule(int idx, NSArray modules,NSArray ids,
+    		NSSet[] result,boolean[] flag) {
+		if(flag[idx])
+			return result[idx];
+		NSKeyValueCoding mod = (NSKeyValueCoding)modules.objectAtIndex(idx);
+		NSArray requires = (NSArray)mod.valueForKey("requires");
+		if(result[idx] == null)
+			result[idx] = new NSMutableSet(requires);
+		NSMutableSet req = (NSMutableSet)result[idx];
+		if(requires != null && requires.count() > 0) {
+			Enumeration enu = requires.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				String aspect = (String) enu.nextElement();
+				int ri = ids.indexOfIdenticalObject(aspect);
+				if(ri < 0)
+					continue;
+				req.addObject(aspect);
+				req.unionSet(processModule(ri, modules, ids, result, flag));
+			}
+		}
+		requires = (NSArray)mod.valueForKey("precedes");
+		if(requires != null && requires.count() > 0) {
+			Enumeration enu = requires.objectEnumerator();
+			boolean manual = Various.boolForObject(mod.valueForKey("manual"));
+			while (enu.hasMoreElements()) {
+				String aspect = (String) enu.nextElement();
+				int ri = ids.indexOfIdenticalObject(aspect);
+				if(ri < 0)
+					continue;
+				if(result[ri] == null)
+					result[ri] = new NSMutableSet(req.count() +1);
+				NSMutableSet pre = (NSMutableSet)result[ri];
+				pre.addObject(ids.objectAtIndex(idx));
+				if(!manual)
+					pre.unionSet(req);
+			}
+		}
+		flag[idx] = true;
+		return req;
+    }
 }

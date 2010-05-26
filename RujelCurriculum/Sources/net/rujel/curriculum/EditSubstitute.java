@@ -57,10 +57,6 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 
 	public EditSubstitute(WOContext context) {
         super(context);
-//        tabs = new NSArray(new Object[] {
-//        	session().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute.Substitute"),	
-//        	session().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute.Join")});
-		cantSelect = (Boolean)context.session().valueForKeyPath("readAccess._edit.Substitute");
     }
     
     public WOActionResults returnPage;
@@ -68,9 +64,6 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     public EduLesson lesson;
     public NSArray forcedList;
 	public Teacher teacher;
-	//public boolean join = false;
-//	public BigDecimal factor = BigDecimal.ONE;
-	//public String comment;
 	public Reason reason;
 	public Boolean cantSelect;
 	public Boolean cantEdit = Boolean.TRUE;
@@ -89,13 +82,17 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     	EOEditingContext ec = lesson.editingContext();
     	EOGlobalID userGID = (EOGlobalID)session().valueForKey("userPersonGID");
     	if(userGID != null) {
-       	   	PersonLink userPerson = (PersonLink)ec.objectForGlobalID(userGID);
+       	   	PersonLink userPerson = (PersonLink)ec.faultForGlobalID(userGID,ec);
        	   	if(userPerson instanceof Teacher && !(userPerson == lesson.course().teacher())) {
        	   		forcedList = new NSArray(userPerson);
        	   		teacher = (Teacher)userPerson;
        	   	}
     	}
     	others = (NSArray)lesson.valueForKey("substitutes");
+    }
+    
+    public EduCourse course() {
+    	return (lesson == null)?null: lesson.course();
     }
     
     public void setIdx(Integer index) {
@@ -228,16 +225,21 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		}
     		fromLesson = sub.fromLesson();
 			populateFrom();
-    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.Substitute");
+			session().setObjectForKey(substitute, "readAccess");
+    		cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.session");
     		cantSelect = cantEdit;
-    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.Substitute");
+    		canDelete = (Boolean)session().valueForKeyPath("readAccess.delete.session");
+    		session().removeObjectForKey("readAccess");
     		if(others == null)
     			others = new NSArray(substitute);
     		else if(!others.containsObject(substitute))
     			others = others.arrayByAddingObject(substitute);
     	} else {
+    		session().setObjectForKey(new NSDictionary(lesson.course(),"course"), "readAccess");
     		cantSelect = (Boolean)session().valueForKeyPath("readAccess._edit.Substitute");
+    		session().removeObjectForKey("readAccess");
     	}
+		session().removeObjectForKey("readAccess");
 		if(cantSelect.booleanValue() && teacher == null) {
 			cantSelect = Boolean.FALSE;
 		}

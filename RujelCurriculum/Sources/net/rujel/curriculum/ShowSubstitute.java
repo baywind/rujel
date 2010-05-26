@@ -131,7 +131,7 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     }
     
     public boolean show() {
-    	return (!cantCreate().booleanValue() || subsList().count() > 0 || variation() != null ||
+    	return (!cantCreate().booleanValue() || !empty() || variation() != null ||
     			Various.boolForObject(session().valueForKeyPath("readAccess.create.Variation")));
     }
     
