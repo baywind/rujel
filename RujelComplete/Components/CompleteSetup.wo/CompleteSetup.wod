@@ -27,7 +27,7 @@ StateToggle : OnClickContainer {
   elementName = "td";
   invokeAction = toggleActive;
   onclick = session.tryLoad;
-  class = "grey";
+  class = "button";
   hide = noItem;
 }
 
@@ -44,4 +44,8 @@ SettingsByCourse : SettingsByCourse {
   defaultNumeric = session.eduYear;
   defaultText = defaultValue;
   pushByCourse = "pushByCourse";
+}
+
+Hide : WOConditional {
+  condition = false;
 }

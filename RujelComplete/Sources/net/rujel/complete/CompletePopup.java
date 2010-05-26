@@ -29,7 +29,6 @@
 
 package net.rujel.complete;
 
-import java.io.File;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -204,9 +203,10 @@ public class CompletePopup extends WOComponent {
     	}
     	if(changed) {
     		try {
-    			File folder = Executor.completeFolder(course.eduYear(), "courses",false);
-    			CoursesCatalog.printCourseReports(course, folder, context(), null, true);
 				course.editingContext().saveChanges();
+	    		Executor executor = new Executor((NSTimestamp)session().valueForKey("today"));
+	    		executor.setCourse(course);
+	    		Executor.exec(executor);
 				NSArray addOns = (NSArray)session().objectForKey("notesAddOns");
 				if(addOns != null)
 					addOns.valueForKey("dropCompletionAgregate");

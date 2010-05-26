@@ -29,6 +29,7 @@
 
 package net.rujel.complete;
 
+import java.io.File;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
@@ -50,14 +51,35 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 	public EduCourse course;
 	public NSArray reports;
 	public NSKeyValueCodingAdditions item;
+	public NSKeyValueCoding readyModules;
 	
     public CoursePage(WOContext context) {
         super(context);
     }
     
-    public String href() {
+    public String link() {
+    	if(item == null)
+    		return null;
+    	StringBuilder buf = new StringBuilder();
+    	buf.append('<');
     	String id = (String)item.valueForKey("id");
-    	return id + ".html";
+    	boolean ready = true;
+    	if(readyModules != null)
+    		ready = Various.boolForObject(readyModules.valueForKey(id));
+    	if(ready)
+    		buf.append("a href = \"").append(id).append(".html\"");
+    	else
+    		buf.append("span");
+    	id = (String)item.valueForKey("hover");
+    	if(id != null)
+    		buf.append(" title = \"").append(id).append('"');
+    	buf.append('>');
+    	buf.append(item.valueForKey("title"));
+    	if(ready)
+    		buf.append("</a>");
+    	else
+    		buf.append("</span>");
+    	return buf.toString();
     }
     
     public static NSMutableDictionary readyModules(EduCourse course, NSArray modules) {
@@ -98,6 +120,7 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     	accountDependencies(result, modules);
     	return result;
     }
+    
     public static int accountDependencies(NSMutableDictionary result, NSArray modules) {
     	boolean changed = true;
     	int changes = -1;
@@ -144,5 +167,35 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     		}
 		}
     	return changes;
+    }
+    
+    public static void printCourseReports(EduCourse course, File cDir, WOContext ctx,
+    		NSArray reports, NSKeyValueCoding ready) {
+		if(!cDir.exists())
+			cDir.mkdirs();
+		if(reports == null)
+			reports = (NSArray)ctx.session().valueForKeyPath("modules.courseComplete");
+    	WOComponent page = WOApplication.application().pageWithName("CoursePage", ctx);
+		page.takeValueForKey(course, "course");
+		page.takeValueForKey(ready, "readyModules");
+		page.takeValueForKey(reports, "reports");
+		Executor.writeFile(cDir, "index.html", page,ready != null);
+    	if(reports == null || reports.count() == 0)
+    		return;
+    	Enumeration enu = reports.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+			NSKeyValueCoding rep = (NSKeyValueCoding) enu.nextElement();
+			String id = (String)rep.valueForKey("id");
+			File file = new File(cDir,id + ".html");
+			if(ready != null && ready.valueForKey(id) == Boolean.FALSE) {
+				if(file.exists())
+					file.delete();
+				continue;
+			}
+			String name = (String)rep.valueForKey("component");
+			page = WOApplication.application().pageWithName(name,ctx);
+			page.takeValueForKey(course,"course");
+			Executor.writeFile(file, page,ready != null);
+		}
     }
 }

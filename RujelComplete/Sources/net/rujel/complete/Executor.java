@@ -88,105 +88,20 @@ public class Executor implements Runnable {
 		try {
 			MultiECLockManager lm = ((MultiECLockManager.Session)ctx.session()).ecLockManager();
 			lm.lock();
-
 			if(courseID != null) { // Completion closing
 				EOEditingContext ec = ctx.session().defaultEditingContext();
 				EduCourse course = (EduCourse)ec.faultForGlobalID(courseID, ec);
-				if(studentIDs == null) { //TODO: closing course
-					
-				} else { // closing students
-					Integer year = course.eduYear();
-					EduGroup gr = course.eduGroup();
-					NSArray courses = EOUtilities.objectsWithQualifierFormat(ec,
-							EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
-							new NSArray(new Object[] {gr, year}));
-					NSArray found = Completion.findCompletions(courses, 
-							NSKeyValueCoding.NullValue, "student", Boolean.FALSE, ec);
-					if(found != null && found.count() > 0) {
-						Enumeration enu = found.objectEnumerator();
-						while (enu.hasMoreElements()) {
-							Completion cpt = (Completion) enu.nextElement();
-							NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
-							if(aud == null || aud.count() == 0) {
-								Object subj = cpt.valueForKeyPath("course.subjectWithComment");
-								subj.toString();
-								return;
-							}
-						}
-					}
-					File folder = completeFolder(year, STUDENTS, false);
-					File plist = new File(folder,"catalog.plist");
-					NSMutableDictionary catalog = null;
-					if(plist.exists()) {
-						try {
-							FileInputStream fis = new FileInputStream(plist);
-							NSData data = new NSData(fis,(int)plist.length());
-							catalog = (NSMutableDictionary)NSPropertyListSerialization.
-								propertyListFromData(data,"utf8");
-							fis.close();
-						} catch (Exception e) {
-							logger.log(WOLogLevel.WARNING,"Error reading catalog.plist",
-									new Object[] {ctx.session(),e});
-						}
-					}
-					if(catalog == null)
-						catalog = new NSMutableDictionary();
-					String grDir = StudentCatalog.groupDirName(gr);
-					NSMutableDictionary grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
-					if(grDict == null) {
-						grDict = new NSMutableDictionary();
-					}
-					NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
-							"modules.studentReporter");
-					reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
-							"strings.Strings.Overview.defaultReporter"),0);
-					File groupDir = new File(folder,grDir);
-					for (int i = 0; i < studentIDs.length; i++) {
-						Student student = (Student)ec.faultForGlobalID(studentIDs[i], ec);
-						String key = ((EOKeyGlobalID)studentIDs[i]).keyValues()[0].toString();
-						File stDir = new File(groupDir,key);
-						if(Completion.studentIsReady(student, null, year)) {
-							StudentCatalog.completeStudent(gr, student, reports,
-									courses, stDir, ctx, true);
-							grDict.takeValueForKey(Boolean.TRUE, key);
-						} else if(stDir.exists()){
-							grDict.takeValueForKey(Boolean.FALSE, key);
-							File[] files = stDir.listFiles();
-							for (int j = 0; j < files.length; j++) {
-								files[j].delete();
-							}
-							stDir.delete();
-						}
-					}
-					if(grDict.count() > 0) {
-						catalog.takeValueForKey(grDict, grDir);
-						File file = new File(folder,"index.html");
-						if(!file.exists())
-							prepareFolder(folder, ctx, "list.html");
-						NSArray groups = EduGroup.Lister.listGroups(
-								(NSTimestamp)ctx.session().valueForKey("today"), ec);
-						WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
-						page.takeValueForKey(ec, "ec");
-						page.takeValueForKey(catalog, "catalog");
-						page.takeValueForKey(groups, "eduGroups");
-						Executor.writeFile(folder, "list.html", page,true);
-						try {
-							NSData data = NSPropertyListSerialization.dataFromPropertyList(
-									catalog, "utf8");
-							FileOutputStream fos = new FileOutputStream(plist);
-							data.writeToStream(fos);
-							fos.close();
-						} catch (Exception e) {
-							logger.log(WOLogLevel.WARNING,"Error writing catalog.plist",
-									new Object[] {ctx.session(),e});
-						}
-					}
+				if(studentIDs != null) {
+					writeStudents(course, ec);
+				}
+				if(studentIDs == null) {
+					writeCourse(course);
 				}
 			} else if(writeReports) { //forced closing
 				if(studentsFolder != null)
 					StudentCatalog.prepareStudents(studentsFolder, ctx);
 				if(coursesFolder != null)
-					CoursesCatalog.prepareCourses(coursesFolder, ctx);
+					CoursesCatalog.prepareCourses(coursesFolder, ctx,true);
 			}
 			lm.unlock();
 		} catch (RuntimeException e) {
@@ -195,6 +110,109 @@ public class Executor implements Runnable {
 		} finally {
 			ctx.session().terminate();
 		}
+	}
+	
+	protected void writeStudents(EduCourse course, EOEditingContext ec) {
+		Integer year = course.eduYear();
+		EduGroup gr = course.eduGroup();
+		NSArray courses = EOUtilities.objectsWithQualifierFormat(ec,
+				EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+				new NSArray(new Object[] {gr, year}));
+		NSArray found = Completion.findCompletions(courses, 
+				NSKeyValueCoding.NullValue, "student", Boolean.FALSE, ec);
+		if(found != null && found.count() > 0) {
+			Enumeration enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Completion cpt = (Completion) enu.nextElement();
+				NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
+				if(aud == null || aud.count() == 0) {
+					Object subj = cpt.valueForKeyPath("course.subjectWithComment");
+					subj.toString();
+					return;
+				}
+			}
+		}
+		File folder = completeFolder(year, STUDENTS, false);
+		File plist = new File(folder,"catalog.plist");
+		NSMutableDictionary catalog = null;
+		if(plist.exists()) {
+			try {
+				FileInputStream fis = new FileInputStream(plist);
+				NSData data = new NSData(fis,(int)plist.length());
+				catalog = (NSMutableDictionary)NSPropertyListSerialization.
+					propertyListFromData(data,"utf8");
+				fis.close();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Error reading catalog.plist",
+						new Object[] {ctx.session(),e});
+			}
+		}
+		if(catalog == null)
+			catalog = new NSMutableDictionary();
+		String grDir = StudentCatalog.groupDirName(gr);
+		NSMutableDictionary grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
+		if(grDict == null) {
+			grDict = new NSMutableDictionary();
+		}
+		NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
+				"modules.studentReporter");
+		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
+				"strings.Strings.Overview.defaultReporter"),0);
+		File groupDir = new File(folder,grDir);
+		for (int i = 0; i < studentIDs.length; i++) {
+			Student student = (Student)ec.faultForGlobalID(studentIDs[i], ec);
+			String key = ((EOKeyGlobalID)studentIDs[i]).keyValues()[0].toString();
+			File stDir = new File(groupDir,key);
+			if(Completion.studentIsReady(student, null, year)) {
+				StudentCatalog.completeStudent(gr, student, reports,
+						courses, stDir, ctx, true);
+				grDict.takeValueForKey(Boolean.TRUE, key);
+			} else if(stDir.exists()){
+				grDict.takeValueForKey(Boolean.FALSE, key);
+				File[] files = stDir.listFiles();
+				for (int j = 0; j < files.length; j++) {
+					files[j].delete();
+				}
+				stDir.delete();
+			}
+		}
+		if(grDict.count() > 0) {
+			catalog.takeValueForKey(grDict, grDir);
+			File file = new File(folder,"index.html");
+			if(!file.exists())
+				prepareFolder(folder, ctx, "list.html");
+			NSArray groups = EduGroup.Lister.listGroups(
+					(NSTimestamp)ctx.session().valueForKey("today"), ec);
+			WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
+			page.takeValueForKey(ec, "ec");
+			page.takeValueForKey(catalog, "catalog");
+			page.takeValueForKey(groups, "eduGroups");
+			Executor.writeFile(folder, "list.html", page,true);
+			try {
+				NSData data = NSPropertyListSerialization.dataFromPropertyList(
+						catalog, "utf8");
+				FileOutputStream fos = new FileOutputStream(plist);
+				data.writeToStream(fos);
+				fos.close();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Error writing catalog.plist",
+						new Object[] {ctx.session(),e});
+			}
+		}
+	}
+	
+	protected void writeCourse(EduCourse course) {
+		NSArray reports = (NSArray)ctx.session().valueForKeyPath("modules.courseComplete");
+		if(reports == null || reports.count() == 0)
+			return;
+		NSDictionary ready = CoursePage.readyModules(course, reports);
+		File folder = Executor.completeFolder(course.eduYear(), "courses",false);
+		File file = new File(folder,"index.html");
+		if(!file.exists())
+			prepareFolder(folder, ctx, "eduGroup.html");
+		CoursesCatalog.prepareCourses(folder, ctx, false);
+		file = new File(folder,((EOKeyGlobalID)courseID).keyValues()[0].toString());
+		CoursePage.printCourseReports(course, file, ctx, null, ready);
 	}
 	
 	public void setCourse(EduCourse course) {
