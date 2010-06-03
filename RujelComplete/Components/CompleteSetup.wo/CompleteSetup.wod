@@ -60,7 +60,7 @@ StudentFiles : FileLister {
 }
 
 CourseFiles : FileLister {
-  filePath = "/Users/Shared/test/courses";
+  file = coursesFolder;
   target = "_blank";
 }
 

@@ -55,6 +55,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 	public SettingsBase base;
 	public EOEnterpriseObject item;
 	public File studentsFolder;
+	public File coursesFolder;
 	
     public CompleteSetup(WOContext context) {
         super(context);
@@ -75,6 +76,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 //        	byCourse = base.byCourse((Integer)session().valueForKey("eduYear"));
         }
         studentsFolder = Executor.completeFolder(null,Executor.STUDENTS,false);
+        coursesFolder = Executor.completeFolder(null,Executor.COURSES,false);
     }
     
     public boolean noItem() {

@@ -113,12 +113,11 @@ public class ClosingLock implements ReadAccess.Modifier {
 			} catch (Exception e) {
 				obj = ctx.session().objectForKey("readAccess");
 				if(obj == null) {
-					CompletePopup.logger.log(WOLogLevel.INFO,"String request to ClosingLock: "
+					CompletePopup.logger.log(WOLogLevel.FINER,"String request to ClosingLock: "
 							+ entity, new Object[] {ctx.session(),e});
 					return null;
 				}
 			}
-			//TODO: what else i can do with String?
 		} 
 		if(obj instanceof NSKeyValueCodingAdditions) {
 			String key = null;
