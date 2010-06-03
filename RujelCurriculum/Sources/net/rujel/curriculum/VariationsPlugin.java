@@ -158,9 +158,11 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				cal.setTime(eduPer.begin());
 				cal.add(Calendar.DATE, -1);
 				cal.set(Calendar.HOUR_OF_DAY, 20);
-				Period per = new Period.ByDates(perFin,
-						new NSTimestamp(cal.getTimeInMillis()));
-				holidays.addObject(per);
+				if(cal.getTimeInMillis() > perFin.getTime()) {
+					Period per = new Period.ByDates(perFin,
+							new NSTimestamp(cal.getTimeInMillis()));
+					holidays.addObject(per);
+				}
 			}
 			perFin = eduPer.end();
 			if(finDate != null && perFin.after(finDate))
@@ -178,7 +180,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		int result = days / week;
 		int left = days % week;
 		if(left > 0) {
-			if(perFin.before(finDate)) {
+			if(EOPeriod.Utility.compareDates(perFin, finDate) < 0) {
 				result ++;
 				cal.add(Calendar.DATE, week);
 			}
@@ -261,7 +263,16 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				exclude = (cal.get(Calendar.HOUR_OF_DAY) == 0);
 			}
 		}*/
-		Calendar cal = Calendar.getInstance();;
+		
+		Calendar cal = Calendar.getInstance();
+		//TODO remove this plug
+		NSArray list = EduPeriod.periodsInList(listName, ec);
+		if(date != null && list != null && list.count() > 0) {
+			EduPeriod last = (EduPeriod)list.lastObject();
+			if(date.compare(last.end()) > 0)
+				date = last.end();
+		}
+		//
 		if(date != null) {
 			cal.setTime(date);
 			weeks = weeks(listName, cal, ec, weekDays, weekStart);
@@ -270,7 +281,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		} else {
 			weeks = weeks(listName, null, ec, weekDays, weekStart);
 		}
-		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec,
+		list = EOUtilities.objectsMatchingKeyAndValue(ec,
 				"PlanDetail","course", course);
 		if(list != null && list.count() > 0) {  // has details
 			Enumeration enu = list.objectEnumerator();
@@ -282,6 +293,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
 //				int days = 0;
 				if(date == null || date.compare(per.end()) > 0) {
+// TODO 			if(hours.intValue() < 0) { // calculate plan and update hours
 //					days += per.daysInPeriod(null,listName);
 					plan += Math.abs(hours.intValue());
 				} else if(date.compare(per.begin()) >= 0) {
@@ -350,7 +362,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		cal.set(Calendar.HOUR_OF_DAY,20);
 		long startDate = cal.getTimeInMillis();
 		int verifiedOnly = SettingsBase.numericSettingForCourse("ignoreUnverifiedReasons", course, ec, 0);
-		if(list != null && list.count() > 0) {
+		if(list != null && list.count() > 0) {  // accont for variations
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Variation var = (Variation) enu.nextElement();
@@ -371,16 +383,16 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey(new Integer(minus), "minus");
 			result.takeValueForKey(new Integer(plus - minus), "netChange");
 			plan = minPlan;
-		}		
+		} // accont for variations
 		if(extraDays == 0)
 			minPlan -= maxDev;
 		result.takeValueForKey(new Integer(minPlan), "minPlan");
 
 //		NSTimestamp refDate = new NSTimestamp(cal.getTimeInMillis());
-		if(date != null && extraDays > 0) {
+		if(date != null && extraDays > 0) {  // calculate last week 
 			cal.add(Calendar.DATE, weekDays +1);
-			NSDictionary dict = Reprimand.prepareDict(new NSTimestamp(cal.getTimeInMillis()), listName, ec, 
-					weekDays, weekStart);
+			NSDictionary dict = Reprimand.prepareDict(new NSTimestamp(cal.getTimeInMillis()), 
+					listName, ec, weekDays, weekStart);
 			if(dict != null && dict.valueForKey("eduPeriod") != null) {
 				EOQualifier[] quals = (EOQualifier[])dict.valueForKey("prevQualifier");
 				if(quals != null) {
@@ -448,7 +460,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						result.takeValueForKey(suggest, "suggest");
 				}
 			}
-		}
+		}  // calculate last week 
 		result.takeValueForKey(new Integer(plan), "plan");
 		fact = fact - (plus - minus);
 		

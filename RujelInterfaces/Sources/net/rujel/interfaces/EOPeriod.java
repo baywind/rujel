@@ -122,6 +122,22 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			}
 			return days +1;
 		}
+		
+		public static int compareDates(Date first, Date second) {
+			long a = first.getTime() - second.getTime();
+			if(a==0)
+				return 0;
+			int v = (a>0)? 1: -1;
+			if(Math.abs(a) > 2*NSLocking.OneDay)
+				return v;
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(first);
+			int day = cal.get(Calendar.DAY_OF_YEAR);
+			cal.setTime(second);
+			if(day == cal.get(Calendar.DAY_OF_YEAR))
+				return 0;
+			return v;
+		}
 
 		public static int intersect (NSTimestamp since, NSTimestamp to, EOPeriod per) {
 			NSTimestamp begin = per.begin();
