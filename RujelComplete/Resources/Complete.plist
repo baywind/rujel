@@ -32,10 +32,16 @@
 	<string>Закрыть</string>
 	<key>release</key>
 	<string>Раскрыть</string>
+	<key>byCourse</key>
+	<string>Выборочно</string>
+	<key>results</key>
+	<string>Результаты</string>
 	<key>messages</key>
 	<dict>
+		<key>closingTitle</key>
+		<string>В курсе завершены:</string>
 		<key>closingCourse</key>
-		<string>установка галок в этом окне запретит редактирование соответствующих параметров курса</string>
+		<string>установка галки запрещает дальнейшее редактирование</string>
 		<key>noneSelected</key>
 		<string>Вы не выбрали ни одного учащегося для закрытия. Поставьте одну или несколько &quot;галок&quot; прежде чем нажимать на &quot;печать&quot;</string>
 		<key>closing1</key>
@@ -50,6 +56,8 @@
 		<string>Перед закрытием учащихся необходимо закрыть</string>
 		<key>locked</key>
 		<string>закрыто</string>
+		<key>instruction</key>
+		<string>установленная галка означает доступность режима закрытия для соответствующих курсов</string>
 	</dict>
 	<key>adminModule</key>
 	<dict>

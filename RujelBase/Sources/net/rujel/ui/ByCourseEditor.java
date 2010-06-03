@@ -327,8 +327,26 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 				}
     		} // search for same
 			if(byCourse instanceof NSMutableDictionary) {
-				EOEnterpriseObject bc = EOUtilities.createAndInsertInstance(ec,
-				"SettingByCourse");
+				EOEnterpriseObject bc = EOUtilities.createAndInsertInstance(ec,"SettingByCourse");
+				String text = (String)byCourse.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				Integer num = (Integer)byCourse.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				if(text == null || null == null) {
+					Integer year = (Integer)byCourse.valueForKey("eduYear");
+					if(year == null)
+						year = (Integer)session().valueForKey("eduYear");
+					Object value = byCourse.valueForKey("course");
+					if(value == null)
+						value = byCourse;
+					EOEnterpriseObject parent = base.forValue(value, year);
+					if(text == null) {
+						text = (String)parent.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+						bc.takeValueForKey(text, SettingsBase.TEXT_VALUE_KEY);
+					}
+					if(num == null) {
+						num = (Integer)parent.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+						bc.takeValueForKey(num, SettingsBase.NUMERIC_VALUE_KEY);
+					}					
+				}
 				bc.addObjectToBothSidesOfRelationshipWithKey(base, "settingsBase");
 				bc.takeValuesFromDictionary((NSDictionary)byCourse);
 				byCourse = bc;

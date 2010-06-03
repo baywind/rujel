@@ -22,6 +22,7 @@ ModuleRow : WOGenericContainer {
   elementName = "tr";
   title = item.hover;
   class = item.styleClass;
+  style = "height:2em;";
 }
 
 ModuleTitle : WOString {
@@ -38,7 +39,7 @@ Form : WOForm {
 }
 
 Title : WOString {
-  value = session.strings.RujelComplete_Complete.dashboard.title;
+  value = session.strings.RujelComplete_Complete.messages.closingTitle;
 }
 
 Text : WOString {

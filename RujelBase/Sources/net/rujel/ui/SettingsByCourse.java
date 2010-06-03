@@ -112,8 +112,18 @@ public class SettingsByCourse extends WOComponent {
     	editor.takeValueForKey(context().page(), "returnPage");
 //    	editor.takeValueForKey(byCourse, "baseByCourse");
     	editor.takeValueForKey(base(), "base");
-    	editor.takeValueForKeyPath(valueForBinding("defaultText"), "byCourse.textValue");
-    	editor.takeValueForKeyPath(valueForBinding("defaultNumeric"), "byCourse.numericValue");
+    	if(hasBinding("defaultText")) {
+    		Object value = valueForBinding("defaultText");
+    		if(value == null)
+    			value = NullValue;
+    		editor.takeValueForKeyPath(value, "byCourse.textValue");
+    	}
+    	if(hasBinding("defaultNumeric")) {
+    		Object value = valueForBinding("defaultNumeric");
+    		if(value == null)
+    			value = NullValue;
+    		editor.takeValueForKeyPath(value, "byCourse.numericValue");
+    	}
     	if(hasBinding("changedByCourse")) {
     		editor.takeValueForKey("^changedByCourse", "pushToKeyPath");
     		editor.takeValueForKey(this, "resultGetter");

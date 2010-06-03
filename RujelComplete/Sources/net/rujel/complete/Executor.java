@@ -242,6 +242,8 @@ public class Executor implements Runnable {
     		type = null;
     	}
     	completeDir = Various.convertFilePath(completeDir);
+    	if(year == null)
+    		return new File(completeDir);
     	if(completeDir == null)
     		return null;
     	try {
