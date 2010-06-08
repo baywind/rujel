@@ -322,8 +322,8 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		}
 		if(closingLock != null)
 			closingLock.setCourse(null);
-		date = (NSTimestamp)session.valueForKey("today");
-		Executor executor = new Executor(date);
+		Executor.Task executor = new Executor.Task();
+		executor.date = session.valueForKey("eduYear");
 		executor.setCourse(course);
 		if(cd.valueForKey("toClose") == null)
 			toClose = course.groupList();

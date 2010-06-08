@@ -204,7 +204,8 @@ public class CompletePopup extends WOComponent {
     	if(changed) {
     		try {
 				course.editingContext().saveChanges();
-	    		Executor executor = new Executor((NSTimestamp)session().valueForKey("today"));
+	    		Executor.Task executor = new Executor.Task();
+	    		executor.date = session().valueForKey("eduYear");
 	    		executor.setCourse(course);
 	    		Executor.exec(executor);
 				NSArray addOns = (NSArray)session().objectForKey("notesAddOns");

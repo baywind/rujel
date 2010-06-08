@@ -88,6 +88,8 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				desc = grouping.description();
 			}
 			if(!desc.equals(currDesc)) {
+				if(rows.count() > 0)
+					rows.addObject(NSDictionary.EmptyDictionary);
 				currDesc = desc;
 				NSArray keys = (NSArray)cfg.valueForKey("keys");
 				if(keys == null && (desc instanceof Description))
@@ -238,13 +240,16 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 //    	} else 
     	if(item instanceof NSDictionary) {
 			Object[] row = (Object[])((NSDictionary)item).valueForKey("values");
-			return row.length;
+			if(row != null)
+				return row.length;
 		}
     	return 0;
     }
     
     public String lastCell() {
-    	int num = 2 + count();
+    	int num = count();
+    	if(item != NSDictionary.EmptyDictionary)
+    		num += 2;
     	boolean titleRow = titleRow();
     	if(num >= cols)
     		return null;
@@ -252,8 +257,8 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
     		buf.append((titleRow)?"<th":"<td");
     	if(cols > num +1)
     		buf.append(" align = \"left\" colspan = \"").append(cols - num).append('"');
-//    	if(titleRow)
-//    		buf.append(" style = \"");
+    	if(item == NSDictionary.EmptyDictionary)
+    		buf.append(" style = \"height:1ex;border-left-style:none;\"");
     	buf.append('>');
     	if(titleRow) {
     		buf.append(application().valueForKeyPath("strings.RujelStats_Stats.others"));

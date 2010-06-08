@@ -278,6 +278,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	
 	public NSTimestamp today() {
 		if(today == null) {
+			if(_eduYear != null)
+				return null;
 			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
 			if(defaultDate == null) {
 				today = new NSTimestamp();
@@ -294,19 +296,21 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		return today;
 	}
 	
-	public void setToday(NSTimestamp day) {
+	public void setToday(Object day) {
 		if(day == null) {
 			day = new NSTimestamp();
+			_eduYear = null;
 		}
-		Integer year = MyUtility.eduYearForDate(day);
-		if(!year.equals(eduYear())) {
-			logger.log(WOLogLevel.INFO,"Switching eduYear to " + year);
+		_eduYear = (day instanceof Integer)?(Integer)day:
+			MyUtility.eduYearForDate((NSTimestamp)day);
+		if(!_eduYear.equals(eduYear())) {
+			logger.log(WOLogLevel.INFO,"Switching eduYear to " + _eduYear);
 			if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
-				EOObjectStore os = DataBaseConnector.objectStoreForTag(year.toString());
+				EOObjectStore os = DataBaseConnector.objectStoreForTag(_eduYear.toString());
 				if(os == null) {
 					String msg = (String)WOApplication.application().valueForKeyPath(
 					"strings.Strings.messages.unavailableYearlyDb");
-					msg = String.format(msg, MyUtility.presentEduYear(year.intValue()));
+					msg = String.format(msg, MyUtility.presentEduYear(_eduYear.intValue()));
 					setMessage(msg);
 					logger.log(WOLogLevel.INFO,msg);
 					return;
@@ -322,11 +326,17 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 //				}
 			}
 		}
-		today = day;
+		if(day instanceof Integer)
+			today = null;
+		else
+			today = (NSTimestamp)day;
 	}
 	
+	protected Integer _eduYear;
 	public Integer eduYear() {
-		return MyUtility.eduYearForDate(today());
+		if(_eduYear == null)
+			_eduYear = MyUtility.eduYearForDate(today()); 
+		return _eduYear;
 	}
 	
 	public String checkRun() {

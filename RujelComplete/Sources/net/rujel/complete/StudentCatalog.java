@@ -41,6 +41,7 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 
@@ -52,7 +53,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	public String groupID;
 	public Student student;
 	public EOEditingContext ec;
-	public NSDictionary catalog;
+	public NSKeyValueCoding catalog;
 	protected NSDictionary grDict;
 	protected String grFolder;
 	

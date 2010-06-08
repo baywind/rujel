@@ -113,7 +113,7 @@ public class ClosingLock implements ReadAccess.Modifier {
 			} catch (Exception e) {
 				obj = ctx.session().objectForKey("readAccess");
 				if(obj == null) {
-					CompletePopup.logger.log(WOLogLevel.FINER,"String request to ClosingLock: "
+					CompletePopup.logger.log(WOLogLevel.FINEST,"String request to ClosingLock: "
 							+ entity, new Object[] {ctx.session(),e});
 					return null;
 				}

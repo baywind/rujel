@@ -33,6 +33,7 @@ import java.io.*;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
@@ -48,67 +49,140 @@ import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.*;
 
 public class Executor implements Runnable {
-	public static Logger logger = Logger.getLogger("rujel.complete");
-	
-    public WOContext ctx;
-//    public Integer year;
-//    public File folder;
-    public boolean writeReports = false;
-    public File studentsFolder;
-    public File coursesFolder;
-    public EOGlobalID courseID;
-    public EOGlobalID[] studentIDs;
+	public static final Logger logger = Logger.getLogger("rujel.complete");
+	public static final String COURSES = "courses";
+	public static final String STUDENTS = "students";
 
-    public Executor() {
+	protected static transient ConcurrentLinkedQueue<Task> queue = 
+		new ConcurrentLinkedQueue<Task>();
+	protected static Thread thread;
+		
+	public static class Task {
+		public boolean writeReports = false;
+		public File studentsFolder;
+		public File coursesFolder;
+		public EOGlobalID courseID;
+		public EOGlobalID[] studentIDs;
+		public Object date;
+
+		public void setCourse(EduCourse course) {
+			courseID = (course == null)?null: course.editingContext().globalIDForObject(course);
+		}
+
+		public void setStudents(NSArray students) {
+			if(students == null || students.count() == 0) {
+				studentIDs = null;
+				return;
+			}
+			studentIDs = new EOGlobalID[students.count()];
+			for (int i = 0; i < studentIDs.length; i++) {
+				Student student = (Student)students.objectAtIndex(i);
+				studentIDs[i] = student.editingContext().globalIDForObject(student);
+			}
+		}	
+	}
+	public WOContext ctx;
+	protected Task task;
+
+    protected Executor() {
 		super();
+//		ctx = MyUtility.dummyContext(null);
 	}
 	
-	public Executor(NSTimestamp date) {
-		super();
-		ctx = MyUtility.dummyContext(null);
-		WOSession ses = ctx.session();
-		ses.takeValueForKey(date, "today");
-//		Integer year = MyUtility.eduYearForDate(date);
-//		folder = completeFolder(year);
-	}
-	
-	public static void exec(Executor ex) {
-		if(ex.ctx == null)
-			throw new IllegalStateException("Executor was not properly initialsed");
-		MultiECLockManager lm = ((MultiECLockManager.Session)ex.ctx.session())
-							.ecLockManager();
+	public static void exec(Task ex) {
+//		if(ex.ctx == null)
+//			throw new IllegalStateException("Executor was not properly initialsed");
+//		MultiECLockManager lm = ((MultiECLockManager.Session)ex.ctx.session())
+//							.ecLockManager();
 //		ex.ctx.session().defaultEditingContext().unlock();
-		lm.unlock();
-		Thread t = new Thread(ex,"Complete");
-		t.setPriority(Thread.MIN_PRIORITY + 1);
-		t.start();
+//		lm.unlock();
+		queue.offer(ex);
+		if(thread == null || !thread.isAlive()) {
+			thread = new Thread(new Executor());
+			thread.setPriority(Thread.MIN_PRIORITY + 1);
+			thread.start();
+		}
 	}
 
 	public void run() {
-		try {
-			MultiECLockManager lm = ((MultiECLockManager.Session)ctx.session()).ecLockManager();
-			lm.lock();
-			if(courseID != null) { // Completion closing
-				EOEditingContext ec = ctx.session().defaultEditingContext();
-				EduCourse course = (EduCourse)ec.faultForGlobalID(courseID, ec);
-				if(studentIDs != null) {
-					writeStudents(course, ec);
-				}
-				if(studentIDs == null) {
+		ctx = MyUtility.dummyContext(null);
+		WOSession ses = ctx.session();
+		while (queue.size() > 0) {
+			try {
+				task = queue.poll();
+				if(task == null)
+					break;
+				ses.takeValueForKey(task.date, "today");
+				MultiECLockManager lm = ((MultiECLockManager.Session)ses).ecLockManager();
+				lm.lock();
+				if(task.courseID != null) { // Completion closing
+					EOEditingContext ec = ses.defaultEditingContext();
+					EduCourse course = (EduCourse)ec.faultForGlobalID(task.courseID, ec);
+					if(task.studentIDs != null) {
+						writeStudents(course, ec);
+					}
+					//				if(studentIDs == null) {
 					writeCourse(course);
+					//				}
+				} else if(task.writeReports) { //forced closing
+					if(task.studentsFolder != null)
+						StudentCatalog.prepareStudents(task.studentsFolder, ctx);
+					if(task.coursesFolder != null)
+						CoursesCatalog.prepareCourses(task.coursesFolder, ctx, null, true);
 				}
-			} else if(writeReports) { //forced closing
-				if(studentsFolder != null)
-					StudentCatalog.prepareStudents(studentsFolder, ctx);
-				if(coursesFolder != null)
-					CoursesCatalog.prepareCourses(coursesFolder, ctx,true);
+				lm.unlock();
+			} catch (RuntimeException e) {
+				logger.log(WOLogLevel.WARNING,"Error in Completion process"
+						,new Object[] {ses,e});
 			}
-			lm.unlock();
-		} catch (RuntimeException e) {
-			logger.log(WOLogLevel.WARNING,"Error in Completion process"
-					,new Object[] {ctx.session(),e});
-		} finally {
-			ctx.session().terminate();
+		}
+		ses.terminate();
+		thread = null;
+	}
+	
+	public static class FolderCatalog  implements NSKeyValueCoding{
+		protected File plist;
+		protected NSMutableDictionary catalog;
+		protected WOSession session;
+		
+		public FolderCatalog(File folder, WOSession ses) {
+			plist = new File(folder,"catalog.plist");
+			if(plist.exists()) {
+				try {
+					FileInputStream fis = new FileInputStream(plist);
+					NSData data = new NSData(fis,(int)plist.length());
+					catalog = (NSMutableDictionary)NSPropertyListSerialization.
+						propertyListFromData(data,"utf8");
+					fis.close();
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Error reading catalog.plist",
+							new Object[] {ses,e});
+				}
+			}
+			if(catalog == null)
+				catalog = new NSMutableDictionary();
+			session = ses;
+		}
+		
+		public void writeCatalog() {
+			try {
+				NSData data = NSPropertyListSerialization.dataFromPropertyList(
+						catalog, "utf8");
+				FileOutputStream fos = new FileOutputStream(plist);
+				data.writeToStream(fos);
+				fos.close();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Error writing catalog.plist",
+						new Object[] {session,e});
+			}
+		}
+
+		public void takeValueForKey(Object value, String key) {
+			catalog.takeValueForKey(value, key);
+		}
+
+		public Object valueForKey(String key) {
+			return catalog.valueForKey(key);
 		}
 	}
 	
@@ -126,29 +200,17 @@ public class Executor implements Runnable {
 				Completion cpt = (Completion) enu.nextElement();
 				NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
 				if(aud == null || aud.count() == 0) {
-					Object subj = cpt.valueForKeyPath("course.subjectWithComment");
-					subj.toString();
+/*					Object subj = cpt.valueForKeyPath("course.subjectWithComment");
+//					subj.toString();
+					found = Completion.findCompletions(course,null,"student",Boolean.FALSE, ec);
+					if(found == null || found.count() == 0)
+						studentIDs = null;*/
 					return;
 				}
 			}
 		}
 		File folder = completeFolder(year, STUDENTS, false);
-		File plist = new File(folder,"catalog.plist");
-		NSMutableDictionary catalog = null;
-		if(plist.exists()) {
-			try {
-				FileInputStream fis = new FileInputStream(plist);
-				NSData data = new NSData(fis,(int)plist.length());
-				catalog = (NSMutableDictionary)NSPropertyListSerialization.
-					propertyListFromData(data,"utf8");
-				fis.close();
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Error reading catalog.plist",
-						new Object[] {ctx.session(),e});
-			}
-		}
-		if(catalog == null)
-			catalog = new NSMutableDictionary();
+		FolderCatalog catalog = new FolderCatalog(folder, ctx.session());
 		String grDir = StudentCatalog.groupDirName(gr);
 		NSMutableDictionary grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
 		if(grDict == null) {
@@ -159,9 +221,9 @@ public class Executor implements Runnable {
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
 		File groupDir = new File(folder,grDir);
-		for (int i = 0; i < studentIDs.length; i++) {
-			Student student = (Student)ec.faultForGlobalID(studentIDs[i], ec);
-			String key = ((EOKeyGlobalID)studentIDs[i]).keyValues()[0].toString();
+		for (int i = 0; i < task.studentIDs.length; i++) {
+			Student student = (Student)ec.faultForGlobalID(task.studentIDs[i], ec);
+			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
 			File stDir = new File(groupDir,key);
 			if(Completion.studentIsReady(student, null, year)) {
 				StudentCatalog.completeStudent(gr, student, reports,
@@ -188,17 +250,11 @@ public class Executor implements Runnable {
 			page.takeValueForKey(catalog, "catalog");
 			page.takeValueForKey(groups, "eduGroups");
 			Executor.writeFile(folder, "list.html", page,true);
-			try {
-				NSData data = NSPropertyListSerialization.dataFromPropertyList(
-						catalog, "utf8");
-				FileOutputStream fos = new FileOutputStream(plist);
-				data.writeToStream(fos);
-				fos.close();
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Error writing catalog.plist",
-						new Object[] {ctx.session(),e});
-			}
+			catalog.writeCatalog();
 		}
+/*		found = Completion.findCompletions(course,null,"student",Boolean.FALSE, ec);
+		if(found == null || found.count() == 0)
+			studentIDs = null;*/
 	}
 	
 	protected void writeCourse(EduCourse course) {
@@ -210,30 +266,15 @@ public class Executor implements Runnable {
 		File file = new File(folder,"index.html");
 		if(!file.exists())
 			prepareFolder(folder, ctx, "eduGroup.html");
-		CoursesCatalog.prepareCourses(folder, ctx, false);
-		file = new File(folder,((EOKeyGlobalID)courseID).keyValues()[0].toString());
+		FolderCatalog catalog = new FolderCatalog(folder, ctx.session());
+		String crID = ((EOKeyGlobalID)task.courseID).keyValues()[0].toString();
+		catalog.takeValueForKey(ready, crID);
+		CoursesCatalog.prepareCourses(folder, ctx, catalog, false);
+		file = new File(folder,crID);
 		CoursePage.printCourseReports(course, file, ctx, null, ready);
-	}
-	
-	public void setCourse(EduCourse course) {
-			courseID = (course == null)?null: course.editingContext().globalIDForObject(course);
-	}
-	
-	public void setStudents(NSArray students) {
-		if(students == null || students.count() == 0) {
-			studentIDs = null;
-			return;
-		}
-		studentIDs = new EOGlobalID[students.count()];
-		for (int i = 0; i < studentIDs.length; i++) {
-			Student student = (Student)students.objectAtIndex(i);
-			studentIDs[i] = student.editingContext().globalIDForObject(student);
-		}
+		catalog.writeCatalog();
 	}
 
-	public static final String COURSES = "courses";
-	public static final String STUDENTS = "students";
-	
     public static File completeFolder(Object year, String type, boolean date) {
     	String completeDir = SettingsReader.stringForKeyPath("edu."+ type + "CompleteDir", null);
     	if(completeDir == null) {

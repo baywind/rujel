@@ -844,12 +844,14 @@ cycleCourses:
 	
 	public static Object statCourseReport(WOContext ctx) {
 		EOEditingContext ec = null;
+		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
+		if(date == null)
+			return null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");
 		} catch (Exception e) {
 			ec = new SessionedEditingContext(ctx.session());
 		}
-		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
 		NSArray list = null;
 		try {
 			EduCourse course = (EduCourse)ctx.page().valueForKey("course");

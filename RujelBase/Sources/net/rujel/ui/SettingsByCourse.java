@@ -124,9 +124,9 @@ public class SettingsByCourse extends WOComponent {
     			value = NullValue;
     		editor.takeValueForKeyPath(value, "byCourse.numericValue");
     	}
-    	if(hasBinding("changedByCourse")) {
-    		editor.takeValueForKey("^changedByCourse", "pushToKeyPath");
+    	if(hasBinding("pushByCourse")) {
     		editor.takeValueForKey(this, "resultGetter");
+    		editor.takeValueForKey("^pushByCourse", "pushToKeyPath");
     	}
     	return editor;
     }

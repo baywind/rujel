@@ -94,16 +94,24 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     	NSArray found = ec.objectsWithFetchSpecification(fs);
     	if(found == null || found.count() == 0) {
     		result.takeValueForKey(Boolean.FALSE,"student");
+    		result.takeValueForKey(new Integer(0),"studentsClosed");
     	} else {
+    		int closed = 0;
     		Enumeration enu = found.objectEnumerator();
-    		result.takeValueForKey(Boolean.TRUE,"student");
     		while (enu.hasMoreElements()) {
 				Completion cpt = (Completion) enu.nextElement();
-				if(cpt.closeDate() == null) {
-					result.takeValueForKey(Boolean.FALSE,"student");
-					break;
+				if(cpt.closeDate() != null) {
+					closed++;
 				}
 			}
+    		if(closed < found.count()) {
+    			result.takeValueForKey(Boolean.FALSE,"student");
+    			result.takeValueForKey(new Integer(closed),"studentsClosed");
+    			if(found.count() > 1)
+    				result.takeValueForKey(new Integer(found.count()),"studentsTotal");
+    		} else {
+    			result.takeValueForKey(Boolean.TRUE,"student");
+    		}
     	}
     	qual[1] = new EOKeyValueQualifier(Completion.ASPECT_KEY
     			, EOQualifier.QualifierOperatorNotEqual,"student");
@@ -197,5 +205,19 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			page.takeValueForKey(course,"course");
 			Executor.writeFile(file, page,ready != null);
 		}
+    }
+    
+    public String students() {
+    	if(Various.boolForObject(readyModules.valueForKey("student")))
+    		return null;
+    	StringBuilder buf = new StringBuilder(
+    			"<span style = \"margin-left:2em;color:#000000;background-color:#ffff99;\">");
+    	buf.append(session().valueForKeyPath("strings.RujelComplete_Complete.StudentCatalog"));
+    	buf.append(':').append(' ').append(readyModules.valueForKey("studentsClosed"));
+    	Object total = readyModules.valueForKey("studentsTotal");
+    	if(total != null)
+    		buf.append(" / ").append(total);
+    	buf.append("</span>");
+    	return buf.toString();
     }
 }

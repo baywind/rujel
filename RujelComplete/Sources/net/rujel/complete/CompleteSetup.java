@@ -34,7 +34,6 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
-import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -90,13 +89,15 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     		if(eduYear.compareTo(settingYear) > 0) {
     			return false;
     		} else if(eduYear.compareTo(settingYear) > 0) {
-    			EOFetchSpecification fs = new EOFetchSpecification(Completion.ENTITY_NAME,null,null);
+    			EOFetchSpecification fs = new EOFetchSpecification(
+    			Completion.ENTITY_NAME,null,null);
     			fs.setFetchLimit(1);
     			NSArray found = base.editingContext().objectsWithFetchSpecification(fs);
     			return (found == null || found.count() == 0);
     		}
     	}
-    	String val = (String)NSKeyValueCoding.Utility.valueForKey(item, SettingsBase.TEXT_VALUE_KEY);
+    	String val = (String)NSKeyValueCoding.Utility.valueForKey(
+    	item, SettingsBase.TEXT_VALUE_KEY);
     	return Boolean.parseBoolean(val);
     }
     
@@ -152,7 +153,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     public String defaultValue() {
     	boolean recent = Boolean.parseBoolean(base.textValue());
     	return Boolean.toString(!recent);
-    }*/
+    }
     
     public WOActionResults prepareStructure() {
 		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
@@ -177,18 +178,19 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 		executor.writeReports = writeReports;	
 		Executor.exec(executor);
 		return null;
-    }
+    }*/
     
     public void setPushByCourse(EOEnterpriseObject bc) {
     	if(bc == null) {
 //    		prepareActive(base);
     		return;
     	}
-    	EOEditingContext ec = bc.editingContext();
-    	if(ec.deletedObjects().contains(bc) &&
-    			!Various.boolForObject(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
-    		bc = base;
-    	} else if(bc.entityName().equals("SettingByCourse")) {
+//    	EOEditingContext ec = bc.editingContext();
+//    	if(ec.deletedObjects().contains(bc) &&
+//    !net.rujel.reusables.Various.boolForObject(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
+//    		bc = base;
+//    	} else 
+    		if(bc.entityName().equals("SettingByCourse")) {
     		bc.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
     	}
 //    	prepareActive(bc);

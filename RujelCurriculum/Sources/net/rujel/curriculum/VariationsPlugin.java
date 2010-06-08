@@ -267,9 +267,9 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		Calendar cal = Calendar.getInstance();
 		//TODO remove this plug
 		NSArray list = EduPeriod.periodsInList(listName, ec);
-		if(date != null && list != null && list.count() > 0) {
+		if(list != null && list.count() > 0) {
 			EduPeriod last = (EduPeriod)list.lastObject();
-			if(date.compare(last.end()) > 0)
+			if(date == null || date.compare(last.end()) > 0)
 				date = last.end();
 		}
 		//

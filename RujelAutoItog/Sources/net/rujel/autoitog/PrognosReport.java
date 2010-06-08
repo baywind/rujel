@@ -60,6 +60,9 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.autoitog");	
 		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
+		NSTimestamp date = (NSTimestamp)session.valueForKey("today");
+		if(date == null)
+			return null;
 		boolean ifTimeout = Various.boolForObject(options.valueForKey("timeout"));
 		Student student = (Student)settings.valueForKey("student");
 		EOEditingContext ec = student.editingContext();
@@ -68,7 +71,6 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		result.takeValueForKey("PrognosReport", "component");
 		result.takeValueForKey(options.valueForKey("sort"), "sort");
 //		ItogContainer eduper = null;
-		NSTimestamp date = (NSTimestamp)session.valueForKey("today");
 		Period period = (Period)settings.valueForKey("period");
 		if(period != null && !period.contains(date)) {
 			long millis = period.end().getTime()/2 + period.begin().getTime()/2;

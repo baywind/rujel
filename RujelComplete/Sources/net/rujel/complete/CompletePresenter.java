@@ -133,7 +133,7 @@ public class CompletePresenter extends AddOnPresenter {
 			while (enu.hasMoreElements()) {
 				Student student = (Student)enu.nextElement();
 				NSMutableDictionary dic = currAddOn().dictForStudent(student);
-				if(Various.boolForObject(dic.valueForKey("complete"))) {
+				if(Various.boolForObject(dic.valueForKey("closed"))) {
 					all = false;
 					continue;
 				}

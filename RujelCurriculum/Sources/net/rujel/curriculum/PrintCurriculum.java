@@ -137,7 +137,8 @@ public class PrintCurriculum extends com.webobjects.appserver.WOComponent {
 				reasons = EOSortOrdering.sortedArrayUsingKeyOrderArray
 														(reasons,EOPeriod.sorter);
 		}
-    	planFact = VariationsPlugin.planFact(course, null);
+    	planFact = VariationsPlugin.planFact(course,
+    			(NSTimestamp)aContext.session().valueForKey("today"));
     	Integer plan = (Integer)planFact.valueForKey("plan");
     	Integer fact = (Integer)planFact.valueForKey("fact");
     	if(plan != null && fact != null)

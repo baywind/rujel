@@ -34,3 +34,8 @@ NewWindow : WOString {
   escapeHTML = false;
   valueWhenEmpty = "print";
 }
+
+Students : WOString {
+  value = students;
+  escapeHTML = false;
+}
