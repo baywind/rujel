@@ -61,7 +61,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	public Integer hours;
 	public Integer minutes;
 	public NSMutableDictionary dict;
-	protected EduCourse course;
+	public EduCourse course;
 	protected CriteriaSet critSet;
 	public NamedFlags namedFlags;
 

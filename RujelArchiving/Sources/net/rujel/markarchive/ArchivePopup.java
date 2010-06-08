@@ -229,4 +229,11 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	public boolean disableSave() {
 		return (reason == null || reason.length() == 0);
 	}
+	
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(initData != null)
+    		session().setObjectForKey(initData, "readAccess");
+    	super.appendToResponse(aResponse, aContext);
+    	session().removeObjectForKey("readAccess");
+    }
 }
