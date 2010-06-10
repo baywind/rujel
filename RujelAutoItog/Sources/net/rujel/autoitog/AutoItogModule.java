@@ -96,6 +96,11 @@ public class AutoItogModule {
 //			return extItog(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
+		} else if("accessModifier".equals(obj)) {
+			if(SettingsBase.baseForKey(ItogMark.ENTITY_NAME, 
+					ctx.session().defaultEditingContext(), false) == null)
+				return null;
+			return new ItogLock();
 		} else if("completionLock".equals(obj)) {
 			return new NSDictionary(new String[] {Prognosis.ENTITY_NAME,"course","student"},
 					new String[] {"entity","coursePath","studentPath"});
