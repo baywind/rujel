@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
@@ -245,6 +246,73 @@ public class Completion extends _Completion {
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,
 				new EOAndQualifier(quals), null);
 		return ec.objectsWithFetchSpecification(fs); // course open Completion
+	}
+	
+	public static NSMutableDictionary courseCompletion(EduCourse course,
+			NSArray modules, SettingsBase settings) {
+		EOEnterpriseObject bc = settings.forCourse(course);
+		if(!Various.boolForObject(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
+			return null;
+		}
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue(course.editingContext(),
+				ENTITY_NAME, "course", course);
+		if(list == null || list.count() == 0)
+			return null;
+		Enumeration enu = list.objectEnumerator();
+		int closed = 0;
+		int students = 0;
+		int totalStudents = 0;
+		NSMutableDictionary result = new NSMutableDictionary();
+		while (enu.hasMoreElements()) {
+			Completion cpt = (Completion) enu.nextElement();
+			String aspect = cpt.aspect();
+			if(aspect.equals("student")) {
+				totalStudents++;
+				if(cpt.closeDate() != null)
+					students++;
+			} else if(modules.containsObject(aspect)) {
+				if(cpt.closeDate() != null) {
+					closed++;
+					result.takeValueForKey(cpt.closeDate(), aspect);
+					result.takeValueForKey("gerade", aspect + "Class");
+				} else {
+					result.takeValueForKey("ungerade", aspect + "Class");
+				}
+			}
+		}
+		if(closed == 0) {
+			result.takeValueForKey("x", "integral");
+			result.takeValueForKey("grey", "integralClass");
+		} else if(closed < modules.count()) {
+			result.takeValueForKey("~", "integral");
+			result.takeValueForKey("ungerade", "integralClass");
+		} else if(students < totalStudents) {
+			result.takeValueForKey("s", "integral");
+			result.takeValueForKey("gerade", "integralClass");
+		} else {
+			result.takeValueForKey("V", "integral");
+			result.takeValueForKey("green", "integralClass");
+		}
+		if(totalStudents == 0) {
+			result.takeValueForKey("???", "presentStudent");
+		} else {
+			if(students < totalStudents) {
+				result.takeValueForKey("highlight", "studentClass");
+			} else {
+				result.takeValueForKey("green", "studentClass");
+			}
+			if(totalStudents > 1) {
+				StringBuffer buf = new StringBuffer(7);
+				buf.append(students).append(" / ").append(totalStudents);
+				result.takeValueForKey(buf.toString(), "presentStudent");
+			} else {
+				result.takeValueForKey((students < totalStudents)? "0" : "V",
+						"presentStudent");
+			}
+			if(students == 0)
+				result.takeValueForKey("grey", "studentClass");
+		}
+		return result;
 	}
 	
 	public static boolean studentIsReady(Student student, EduGroup gr, Integer year) {

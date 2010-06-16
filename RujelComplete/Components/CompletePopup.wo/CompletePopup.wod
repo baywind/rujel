@@ -40,8 +40,10 @@ Form : WOForm {
 
 Title : WOString {
   value = session.strings.RujelComplete_Complete.messages.closingTitle;
+  escapeHTML = false;
 }
 
 Text : WOString {
   value = session.strings.RujelComplete_Complete.messages.closingCourse;
+  escapeHTML = false;
 }

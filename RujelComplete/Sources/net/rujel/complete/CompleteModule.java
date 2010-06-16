@@ -30,18 +30,23 @@
 package net.rujel.complete;
 
 
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
+import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSMutableSet;
 import com.webobjects.foundation.NSSet;
@@ -61,6 +66,8 @@ public class CompleteModule {
 			return journalPlugins(ctx);
 		} else if("notesAddOns".equals(obj)) {
 			return notesAddOns(ctx);
+		} else if("coursesReport".equals(obj)) {
+			return coursesReport(ctx);
 		} else if("adminModules".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.adminModule");
 		} else if("accessModifier".equals(obj)) {
@@ -143,4 +150,78 @@ public class CompleteModule {
 		flag[idx] = true;
 		return req;
     }
+    
+	public static Object coursesReport(WOContext ctx) {
+		NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)ctx.
+							session().valueForKey("readAccess");
+		if(Various.boolForObject(readAccess.valueForKeyPath("_read.Completion")))
+			return null;
+		NSMutableDictionary result = new NSMutableDictionary("completion","id");
+		result.takeValueForKey(ctx.session().valueForKeyPath(
+				"strings.RujelComplete_Complete.adminModule.title"), "title");
+		result.takeValueForKey("80","sort");
+		result.takeValueForKey(Completion.ENTITY_NAME, "entity");
+		NSArray list = (NSArray)ctx.session().valueForKeyPath("modules.courseComplete");
+		Enumeration enu = list.objectEnumerator();
+		NSMutableArray modules = new NSMutableArray();
+		NSMutableDictionary dict = new NSMutableDictionary("integral","id");
+		dict.takeValueForKey(".integral", "value");
+		dict.takeValueForKey(ctx.session().valueForKeyPath(
+			"strings.Reusables_Strings.dataTypes.total"), "title");
+		dict.takeValueForKey("?", "short");
+		dict.takeValueForKey(Boolean.TRUE,"active");
+		dict.takeValueForKey(".integralClass", "class");
+		dict.takeValueForKey("font-weight:bold;width:1em;", "style");
+		dict.takeValueForKey(new NSDictionary(Boolean.FALSE,"escapeHTML"), "presenterBindings");
+		NSMutableArray subs = new NSMutableArray(dict);
+		NSDictionary dateFormat = new NSDictionary(SettingsReader.stringForKeyPath(
+				"ui.shortDateFormat", "dd.MM"),"dateformat");
+		while (enu.hasMoreElements()) {
+			NSKeyValueCoding mod = (NSKeyValueCoding) enu.nextElement();
+			if(!Various.boolForObject(mod.valueForKey("manual")))
+				continue;
+			String id = (String)mod.valueForKey("id");
+			modules.addObject(id);
+			dict = new NSMutableDictionary(id,"id");
+			StringBuilder buf = new StringBuilder(16);
+			buf.append('.').append(id);
+			dict.takeValueForKey(buf.toString(), "value");
+			dict.takeValueForKey(mod.valueForKey("title"), "title");
+			dict.takeValueForKey(mod.valueForKey("sort"), "sort");
+			buf.append("Class");
+			dict.takeValueForKey(buf.toString(), "class");
+			dict.takeValueForKey(dateFormat, "presenterBindings");
+			subs.addObject(dict);
+		}
+		dict = new NSMutableDictionary("student","id");
+		dict.takeValueForKey(ctx.session().valueForKeyPath(
+				"strings.RujelComplete_Complete.StudentCatalog"), "title");
+		dict.takeValueForKey(".presentStudent", "value");
+		dict.takeValueForKey(".studentClass", "class");
+		dict.takeValueForKey(Boolean.TRUE,"active");
+		dict.takeValueForKey("90", "sort");
+//		dict.takeValueForKey(escape, "presenterBindings");
+		subs.addObject(dict);
+		result.takeValueForKey(subs, "subParams");
+		try {
+			dict = new NSMutableDictionary("courseCompletion","methodName");
+			SettingsBase settings = null;
+			try {
+				EOEditingContext ec = null;
+				ec = (EOEditingContext)ctx.page().valueForKey("ec");
+				settings = SettingsBase.baseForKey(Completion.SETTINGS_BASE, ec, false);
+			} catch (Exception ex) {
+			}
+			Object[] args = new Object[] {".", modules, settings};
+			Method method = Completion.class.getMethod("courseCompletion", 
+					EduCourse.class, NSArray.class, SettingsBase.class);
+			dict.takeValueForKey(method, "parsedMethod");
+			dict.takeValueForKey(new NSArray(args), "paramValues");
+			result.takeValueForKey(dict, "value");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return result;
+	}
 }
