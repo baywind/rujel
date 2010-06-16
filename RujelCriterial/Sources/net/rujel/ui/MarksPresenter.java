@@ -458,21 +458,26 @@ public class MarksPresenter extends NotePresenter {
 					CriteriaSet critSet = lesson().critSet();
 					if(critSet == null)
 						return null;
-					EOEnterpriseObject criterion = critSet.criterionForNum((Integer)critItem);
+					EOEnterpriseObject criterion = critSet.criterionForNum(
+							(Integer)critItem);
 					if(criterion == null)
 						return "?";
 					return (String)criterion.valueForKey("comment");
 				} else {
-					return (String)NSKeyValueCoding.Utility.valueForKey(critItem, "comment");
+					return (String)NSKeyValueCoding.Utility.valueForKey(
+							critItem, "comment");
 				}
 			} /*else {
 				if(_critItem instanceof EOEnterpriseObject)
-					return (String)((EOEnterpriseObject)_critItem).valueForKey("comment");
+					return (String)((EOEnterpriseObject)_critItem).valueForKey(
+					"comment");
 			}*/
 			return null;
 		} else {
 			if(mark() == null) return null;
-			if(!access().flagForKey("read")) return (String)application().valueForKeyPath("strings.Strings.messages.noAccess");
+			if(!access().flagForKey("read"))
+				return (String)application().valueForKeyPath(
+						"strings.Strings.messages.noAccess");
 			synchronized (dateFormat) {
 				return dateFormat.format(mark().dateSet());
 			}
@@ -481,7 +486,8 @@ public class MarksPresenter extends NotePresenter {
 	
 	public boolean cantCreateMark() {
 		Boolean deny = (Boolean)valueForBinding("denyCreation");
-        return (deny != null && deny.booleanValue() && student() != null && lesson() != null && mark() == null);
+        return (deny != null && deny.booleanValue() && 
+        		student() != null && lesson() != null && mark() == null);
     }
 	
 	public String noteWidth() {
@@ -523,5 +529,54 @@ public class MarksPresenter extends NotePresenter {
 		if(title == null)
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);
+	}
+	
+	public boolean noteIsLink() {
+		String note = noteForStudent();
+		if(note == null)
+			return false;
+		return note.startsWith("http://");
+	}
+	
+	public String shortNoteForStudent() {
+		if(len() > 250) {
+			String note = noteForStudent();
+			if(note == null || !note.startsWith("http://"))
+				return note;
+			StringBuilder buf = new StringBuilder("<a href = \"");
+			buf.append(note).append("\" target = \"_blank\">");
+			buf.append(note).append("</a>");
+			return buf.toString();
+		}
+		if(noteIsLink()) {
+			String url = application().resourceManager().urlForResourceNamed(
+					"link.png","RujelBase",null,context().request());
+			return "<img src= \"" + url +
+					"\" alt= \"link\" height= \"16\" width= \"16\">";
+		}
+		return super.shortNoteForStudent();
+	}
+	
+	public String onClick() {
+		Integer activeCriterion = activeCriterion();
+		if(activeCriterion != null && activeCriterion.intValue() < 0) {
+			String note = noteForStudent();
+			if(note != null && note.startsWith("http://")) {
+				StringBuilder buf = new StringBuilder("window.open('");
+				buf.append(note).append("','_blanc');");
+				return buf.toString();
+			}
+		}
+		return super.onClick();
+    }
+
+	public String clickNote() {
+		String note = noteForStudent();
+		if(note != null && note.startsWith("http://")) {
+			StringBuilder buf = new StringBuilder("window.open('");
+			buf.append(note).append("','_blank');");
+			return buf.toString();
+		}
+		return (String)session().valueForKey("ajaxPopup");
 	}
 }

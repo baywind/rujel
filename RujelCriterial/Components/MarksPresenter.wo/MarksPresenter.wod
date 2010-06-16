@@ -102,7 +102,7 @@ Single: WOConditional {
 }
 
 StyledTD: OnClickContainer {
-	onclick = session.ajaxPopup;
+	onclick = clickNote;
 	disabled = deactivate;
 	invokeAction = archivePopup;
 	align = "center";
