@@ -531,24 +531,53 @@ public class MarksPresenter extends NotePresenter {
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);
 	}
 	
-	public boolean noteIsLink() {
+	public String extractNoteLink() {
 		String note = noteForStudent();
 		if(note == null)
-			return false;
-		return note.startsWith("http://");
+			return null;
+		int idx = note.indexOf("://");
+		if(idx < 0)
+			return null;
+		int pre = note.lastIndexOf(' ', idx);
+		if(pre < 0)
+			pre = 0;
+		int post = note.indexOf(' ', idx);
+		if(post > 0)
+			return note.substring(pre, post);
+		else if(pre > 0)
+			return note.substring(pre);
+		else
+			return note;
 	}
 	
 	public String shortNoteForStudent() {
+		String note = noteForStudent();
+		if(note == null)
+			return null;
+		int idx = note.indexOf("://");		
 		if(len() > 250) {
-			String note = noteForStudent();
-			if(note == null || !note.startsWith("http://"))
+			if(idx < 0)
 				return note;
-			StringBuilder buf = new StringBuilder("<a href = \"");
-			buf.append(note).append("\" target = \"_blank\">");
-			buf.append(note).append("</a>");
+			StringBuilder buf = new StringBuilder();
+			int pre = note.lastIndexOf(' ', idx);
+			if(pre < 0)
+				pre = 0;
+			else
+				buf.append(note.substring(0,pre +1));
+			int post = note.indexOf(' ', idx);
+			String link = note;
+			if(post > 0)
+				link = note.substring(pre, post);
+			else if(pre > 0)
+				link = note.substring(pre);
+			buf.append("<a href = \"");
+			buf.append(link).append("\" target = \"_blank\">");
+			buf.append(link).append("</a>");
+			if(post > 0)
+				buf.append(note.substring(post));
 			return buf.toString();
 		}
-		if(noteIsLink()) {
+		if(idx > 0) {
 			String url = application().resourceManager().urlForResourceNamed(
 					"link.png","RujelBase",null,context().request());
 			return "<img src= \"" + url +
@@ -560,10 +589,10 @@ public class MarksPresenter extends NotePresenter {
 	public String onClick() {
 		Integer activeCriterion = activeCriterion();
 		if(activeCriterion != null && activeCriterion.intValue() < 0) {
-			String note = noteForStudent();
-			if(note != null && note.startsWith("http://")) {
+			String note = extractNoteLink();
+			if(note != null) {
 				StringBuilder buf = new StringBuilder("window.open('");
-				buf.append(note).append("','_blanc');");
+				buf.append(note).append("','_blank');");
 				return buf.toString();
 			}
 		}
@@ -571,8 +600,8 @@ public class MarksPresenter extends NotePresenter {
     }
 
 	public String clickNote() {
-		String note = noteForStudent();
-		if(note != null && note.startsWith("http://")) {
+		String note = extractNoteLink();
+		if(note != null) {
 			StringBuilder buf = new StringBuilder("window.open('");
 			buf.append(note).append("','_blank');");
 			return buf.toString();
