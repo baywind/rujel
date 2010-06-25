@@ -1,11 +1,12 @@
 package net.rujel.complete;
 
-import java.io.File;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.FileWriterUtil;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -163,23 +164,26 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     	return buf.toString();
     }
     
-    public static void prepareCourses(File folder, WOContext ctx,
+    public static void prepareCourses(FileWriterUtil exec,
     		NSKeyValueCoding catalog, boolean write) {
-//    	Executor.prepareFolder(folder, ctx, "eduGroup.html");
-    	EOEditingContext ec = ctx.session().defaultEditingContext();
-		WOComponent page = WOApplication.application().pageWithName("CoursesCatalog", ctx);
+    	if(catalog == null)
+    		Executor.prepareFolder(exec, "eduGroup.html");
+    	EOEditingContext ec = exec.ctx.session().defaultEditingContext();
+		WOComponent page = WOApplication.application().pageWithName("CoursesCatalog", exec.ctx);
 		page.takeValueForKey(ec, "ec");
 		page.takeValueForKey(catalog, "catalog");
 		page.takeValueForKey("teacher", "grouping");
-		Executor.writeFile(folder, "teacher.html", page,true);
+		exec.writeFile("teacher.html", page);
 		page.takeValueForKey("cycle", "grouping");
-		Executor.writeFile(folder, "cycle.html", page,true);
+		exec.writeFile("cycle.html", page);
 		page.takeValueForKey("eduGroup", "grouping");
-		Executor.writeFile(folder, "eduGroup.html", page,true);
+		exec.writeFile("eduGroup.html", page);
 		if(write) {
 			NSArray courses = (NSArray)page.valueForKey("allCourses");
-			NSArray reports = (NSArray)ctx.session().valueForKeyPath("modules.courseComplete");
+			NSArray reports = (NSArray)exec.ctx.session().valueForKeyPath(
+					"modules.courseComplete");
 			Enumeration enu = courses.objectEnumerator();
+			int progress = 0;
 			while (enu.hasMoreElements()) {
 				EduCourse course = (EduCourse) enu.nextElement();
 				EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(course);
@@ -189,9 +193,24 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
 					crDict = (NSDictionary)catalog.valueForKey(key);
 					if(crDict == null || crDict.count() == 0)
 						continue;
+				} else {
+					EOEditingContext tmpEC = new SessionedEditingContext(
+							ec.parentObjectStore(), exec.ctx.session(), false);
+					tmpEC.lock();
+					course = (EduCourse)EOUtilities.localInstanceOfObject(tmpEC, course);
 				}
-				File cDir = new File(folder,key);
-				CoursePage.printCourseReports(course, cDir, ctx, reports, crDict);
+//				File cDir = new File(folder,key);
+				{
+					progress++;
+					StringBuilder buf = new StringBuilder(10);
+					buf.append(progress).append(" / ").append(courses.count());
+					Executor.progress().takeValueForKey(buf.toString(), "progress");
+				}
+				CoursePage.printCourseReports(course, exec, key, reports, crDict);
+				if(catalog == null) {
+					course.editingContext().unlock();
+					course.editingContext().dispose();
+				}
 			}
 		}
     }

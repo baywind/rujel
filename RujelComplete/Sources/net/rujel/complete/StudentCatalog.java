@@ -29,11 +29,12 @@
 
 package net.rujel.complete;
 
-import java.io.File;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.*;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.FileWriterUtil;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -119,43 +120,71 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 
     public NSArray list;
     
-    public static void prepareStudents(File folder, WOContext ctx) {
-    	Executor.prepareFolder(folder, ctx, "list.html");
-    	EOEditingContext ec = ctx.session().defaultEditingContext();
+    public static void prepareStudents(FileWriterUtil folder) {
+    	Executor.prepareFolder(folder, "list.html");
+    	WOSession ses = folder.ctx.session();
+    	EOEditingContext ec = ses.defaultEditingContext();
 		NSArray groups = EduGroup.Lister.listGroups(
-				(NSTimestamp)ctx.session().valueForKey("today"), ec);
-		WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
-		page.takeValueForKey(ec, "ec");
-		page.takeValueForKey(groups, "eduGroups");
-		
-		Executor.writeFile(folder, "list.html", page,false);
+				(NSTimestamp)ses.valueForKey("today"), ec);
+		{
+			WOComponent page = WOApplication.application().pageWithName("StudentCatalog",
+					folder.ctx);
+			page.takeValueForKey(ec, "ec");
+			page.takeValueForKey(groups, "eduGroups");
+
+			folder.writeFile("list.html", page);
+		}
 		Enumeration grenu = groups.objectEnumerator();
-		NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
+		NSMutableArray reports = (NSMutableArray)ses.valueForKeyPath(
 				"modules.studentReporter");
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
-		Integer year = (Integer) ctx.session().valueForKey("eduYear");
+		Integer year = (Integer) ses.valueForKey("eduYear");
+		int[] idx = new int [] {0,0};
 		while (grenu.hasMoreElements()) {
 			EduGroup gr = (EduGroup) grenu.nextElement();
-			File grDir = new File(folder,groupDirName(gr));
-			Enumeration stenu = gr.list().objectEnumerator();
+//			File grDir = new File(folder,groupDirName(gr));
+			EOEditingContext tmpEC = new SessionedEditingContext(
+					ec.parentObjectStore(), folder.ctx.session(), false);
+			tmpEC.lock();
+			gr = (EduGroup)EOUtilities.localInstanceOfObject(tmpEC, gr);
+			String grDir = groupDirName(gr,true);
+			folder.enterDir(grDir, false);
+			grDir = gr.name();
+			NSArray list = gr.list();
+			Enumeration stenu = list.objectEnumerator();
 			NSArray args = new NSArray(new Object[] {year, gr });
 			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
 					EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+			idx[0]++;
+			idx[1] = 0;
 			while (stenu.hasMoreElements()) {
+				{
+					StringBuilder buf = new StringBuilder();
+					buf.append(idx[0]).append(" / ").append(groups.count());
+					buf.append(" [ ").append(grDir).append(": ");
+					buf.append(idx[1]++).append(" / ").append(list.count()).append(" ]");
+					Executor.progress().takeValueForKey(buf.toString(), "progress");
+				}
 				Student student = (Student) stenu.nextElement();
-		    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
-				File stDir = new File(grDir,gid.keyValues()[0].toString());
-				completeStudent(gr, student, reports, existingCourses, stDir, ctx, false);
+//		    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
+//				File stDir = new File(grDir,gid.keyValues()[0].toString());
+				completeStudent(gr, student, reports, existingCourses,
+						folder, false);
 			}
+			tmpEC.unlock();
+			tmpEC.dispose();
+			folder.leaveDir();
 		}
 	}
 
-    public static String groupDirName(EduGroup gr) {
+    public static String groupDirName(EduGroup gr, boolean endslash) {
 		EOKeyGlobalID gid = (EOKeyGlobalID)gr.editingContext().globalIDForObject(gr);
 		StringBuilder filename = new StringBuilder(12);
 		filename.append(gr.grade()).append('_');
 		filename.append(gid.keyValues()[0]);
+		if (endslash)
+			filename.append('/');
 		return filename.toString();
 //		return new File(folder,filename.toString());
     }
@@ -177,14 +206,16 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     } */
     
     public static void completeStudent(EduGroup gr, Student student, NSArray reports,
-    		NSArray existingCourses, File stDir, WOContext ctx, boolean overwrite) {
-		if(!stDir.exists())
-			stDir.mkdirs();
-		WOComponent page = WOApplication.application().pageWithName("StudentPage", ctx);
+    		NSArray existingCourses, FileWriterUtil exec, boolean overwrite) {
+    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
+    	exec.enterDir(gid.keyValues()[0].toString(), false);
+//		if(!stDir.exists())
+//			stDir.mkdirs();
+		WOComponent page = WOApplication.application().pageWithName("StudentPage", exec.ctx);
 		page.takeValueForKey(student, "student");
 		page.takeValueForKey(gr, "eduGroup");
 		page.takeValueForKey(reports, "reports");
-		Executor.writeFile(stDir, "index.html", page, overwrite);
+		exec.writeFile("index.html", page);
 /*		reportsForStudent(reports, student, ctx, existingCourses, stDir, overwrite);
     }
     private static void reportsForStudent(NSArray reports, Student student, WOContext ctx,
@@ -193,13 +224,14 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		NSArray array = new NSArray(student);
 		while (repEnu.hasMoreElements()) {
 			NSDictionary reporter = (NSDictionary) repEnu.nextElement();
-			page = WOApplication.application().pageWithName("PrintReport",ctx);
+			page = WOApplication.application().pageWithName("PrintReport",exec.ctx);
 			page.takeValueForKey(reporter,"reporter");
 			page.takeValueForKey(existingCourses,"courses");
 			page.takeValueForKey(array,"students");
 			String filename = reporter.valueForKey("id") + ".html";
-			Executor.writeFile(stDir, filename, page,overwrite);
+			exec.writeFile(filename, page);
 		}
+		exec.leaveDir();
     }
 
 	public Boolean studentNotReady() {

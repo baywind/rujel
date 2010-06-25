@@ -34,9 +34,12 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
@@ -74,111 +77,23 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 //        } else {
 //        	byCourse = base.byCourse((Integer)session().valueForKey("eduYear"));
         }
-        studentsFolder = Executor.completeFolder(null,Executor.STUDENTS,false);
-        coursesFolder = Executor.completeFolder(null,Executor.COURSES,false);
+        String completeDir = SettingsReader.stringForKeyPath("edu.studentsCompleteDir",null);
+        if(completeDir == null) {
+        	completeDir = SettingsReader.stringForKeyPath("edu.completeDir", null);
+        } else {
+        	completeDir = Various.convertFilePath(completeDir);
+        	if(completeDir != null)
+        		studentsFolder = new File(completeDir);
+        	completeDir = SettingsReader.stringForKeyPath("edu.coursesCompleteDir", null);
+        }
+        completeDir = Various.convertFilePath(completeDir);
+        if(completeDir != null)
+        	coursesFolder = new File(completeDir);
     }
     
     public boolean noItem() {
     	return (item == null);
     }
-    /*
-    public boolean isClosing() {
-    	if(item == base) {
-    		Integer eduYear = (Integer)session().valueForKey("eduYear");
-    		Integer settingYear = base.numericValue();
-    		if(eduYear.compareTo(settingYear) > 0) {
-    			return false;
-    		} else if(eduYear.compareTo(settingYear) > 0) {
-    			EOFetchSpecification fs = new EOFetchSpecification(
-    			Completion.ENTITY_NAME,null,null);
-    			fs.setFetchLimit(1);
-    			NSArray found = base.editingContext().objectsWithFetchSpecification(fs);
-    			return (found == null || found.count() == 0);
-    		}
-    	}
-    	String val = (String)NSKeyValueCoding.Utility.valueForKey(
-    	item, SettingsBase.TEXT_VALUE_KEY);
-    	return Boolean.parseBoolean(val);
-    }
-    
-    public String stateCell() {
-    	if(item == null) {
-    		StringBuilder buf = new StringBuilder(
-    				"<th colspan = \"2\"  style = \"font-size:large;\">");
-    		buf.append(session().valueForKeyPath("strings.RujelComplete_Complete.stateTitle"));
-    		buf.append("</th>");
-    		return buf.toString();
-    	}
-    	boolean isClosing = isClosing();
-    	StringBuilder buf = new StringBuilder(
-    			"<td class = \"backfield2\" style = \"font-weight:bold;padding:1ex;color:#66");
-    	buf.append((isClosing)?"33cc":"6666");
-    	buf.append(";\">");
-    	buf.append(session().valueForKeyPath("strings.RujelComplete_Complete." +
-    			((isClosing())?"active":"inactive")));
-    	buf.append("</td>");
-    	return buf.toString();
-    }
-    
-    public String toggleTitle() {
-    	return (String)session().valueForKeyPath("strings.RujelComplete_Complete." +
-    			((isClosing())?"deactivate":"activate"));
-    }
-    
-    public WOActionResults toggleActive() {
-    	boolean isBase = (item instanceof SettingsBase);
-    	Integer eduYear = (Integer)session().valueForKey("eduYear");
-    	if(isBase && !eduYear.equals(MyUtility.eduYearForDate(null))) {
-    		session().takeValueForKey("wrong year!", "message");
-    		return null;
-    	}
-    	boolean val = !isClosing();
-    	item.takeValueForKey(Boolean.toString(val), SettingsBase.TEXT_VALUE_KEY);
-    	item.takeValueForKey(eduYear,(isBase)?SettingsBase.NUMERIC_VALUE_KEY:"eduYear");
-    	
-    	EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
-    	if(val)
-    		prepareActive(item);
-    	try {
-    		ec.saveChanges();
-    	} catch (Exception e) {
-			logger.log(WOLogLevel.WARNING,"Error autogenerating CompletionActive setting",
-					new Object[] {session(),e});
-			session().takeValueForKey(e.getMessage(), "message");
-			ec.revert();
-		}
-    	return null;
-    }
-    
-    public String defaultValue() {
-    	boolean recent = Boolean.parseBoolean(base.textValue());
-    	return Boolean.toString(!recent);
-    }
-    
-    public WOActionResults prepareStructure() {
-		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
-		Executor executor = new Executor(today);
-		Integer year = MyUtility.eduYearForDate(today);
-		if(courses) {
-			executor.coursesFolder = Executor.completeFolder(year,Executor.COURSES,true);
-			if(executor.coursesFolder == null) {
-				session().takeValueForKey(application().valueForKeyPath(
-				"strings.RujelComplete_Complete.folderError"), "message");
-				return null;
-			}
-		}
-		if(students) {
-			executor.studentsFolder = Executor.completeFolder(year,Executor.STUDENTS,true);
-			if(executor.studentsFolder == null) {
-				session().takeValueForKey(application().valueForKeyPath(
-				"strings.RujelComplete_Complete.folderError"), "message");
-				return null;
-				}
-		}
-		executor.writeReports = writeReports;	
-		Executor.exec(executor);
-		return null;
-    }*/
     
     public void setPushByCourse(EOEnterpriseObject bc) {
     	if(bc == null) {
@@ -212,7 +127,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 			ec.revert();
 			return null;
 		}
-    	NSArray modules = (NSArray)session().valueForKeyPath("modules.courseComplete");
+    	final NSArray modules = (NSArray)session().valueForKeyPath("modules.courseComplete");
     	if(modules == null || modules.count() == 0)
     		return null;
 //    	if(bc instanceof SettingsBase) {
@@ -226,23 +141,26 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     		NSArray found = base.coursesForSetting(Boolean.toString(true), null, eduYear);
     		if(cache != null)
     			base.setTextValue(cache);
-    		Completion.activateClosing(found, modules);
+    		final EOEditingContext nec = new EOEditingContext(ec.parentObjectStore());
+    		nec.lock();
+			final NSArray list = EOUtilities.localInstancesOfObjects(nec, found);
+			nec.unlock();
+    		Runnable r = new Runnable() {
+				public void run() {
+					nec.lock();
+					try {
+						Completion.activateClosing(list, modules);
+					} catch (Exception e) {
+						logger.log(WOLogLevel.WARNING,"Error activating closing",e);
+					} finally {
+						nec.unlock();
+					}
+				}
+			};
+			Thread thread = new Thread(r,"ActivateClosing");
+			thread.setPriority(Thread.MIN_PRIORITY + 1);
+			thread.start();
     		return null;
- /*   	} else if(Various.boolForObject(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
-    		EduCourse course = (EduCourse)bc.valueForKey("course");
-    		if(course != null) {
-    			Completion.activateForCourse(course, modules);
-    			return;
-    		} else {
-    			EOQualifier qual = SettingsBase.byCourseQualifier(bc);
-    			EOFetchSpecification fs = new EOFetchSpecification(
-    					EduCourse.entityName,qual,null);
-    			NSArray found = bc.editingContext().objectsWithFetchSpecification(fs);
-    			found = base.coursesForSetting(Boolean.toString(true), null, found);
-    			Completion.activateClosing(found, modules);
-    		}
-    	}
-*/
     }
     
     public Boolean getClosed() {
@@ -274,6 +192,35 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     		base.setNumericValue(eduYear);
     	else
     		item.takeValueForKeyPath(eduYear, "eduYear");
+    }
+    
+    public WOActionResults force() {
+    	Executor.Task task = new Executor.Task();
+    	task.date = session().valueForKey("today");
+    	task.year = (Integer)session().valueForKey("eduYear");
+    	task.writeCourses = courses;
+    	task.writeStudents = students;
+    	Executor.exec(task);
+    	return null;
+    }
+    
+    public String showProgress() {
+    	NSMutableDictionary progress = Executor.progress();
+    	if(progress == null || progress.count() == 0)
+    		return null;
+    	StringBuilder buf = new StringBuilder("<div style = \"float:right;\">");
+    	Object tmp = progress.valueForKey("running");
+    	if(tmp != null) {
+    		buf.append(session().valueForKeyPath("strings.RujelComplete_Complete.running"));
+    		buf.append(':').append(' ').append(tmp).append("<br/>");
+    	}
+    	tmp = progress.valueForKey("progress");
+    	if(tmp != null) {
+    		buf.append(session().valueForKeyPath("strings.RujelComplete_Complete.progress"));
+    		buf.append(':').append(' ').append(tmp).append("<br/>");
+    	}
+    	buf.append("</div>");
+    	return buf.toString();
     }
     
     public boolean synchronizesVariablesWithBindings() {

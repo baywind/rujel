@@ -153,9 +153,13 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 		
 		protected static final NSSelector fullName = new NSSelector(
 				"fullName",new Class[] {PersonLink.class,Boolean.TYPE,Integer.TYPE,Integer.TYPE,Integer.TYPE});
+
 		public static String fullName(PersonLink person, boolean startWithLastName,int lastNameDisplay,int firstNameDisplay,int secondNameDisplay) {
 			if(person == null)
-				return null;
+				return "???";
+			Person pers = (person instanceof Person)?(Person)person:person.person();
+			if(pers == null)
+				return "???";
 			Object byDelegate = delegateManager.useDelegates(fullName, 
 					new Object[] {person,startWithLastName,lastNameDisplay,firstNameDisplay,secondNameDisplay});
 			if(byDelegate != null) {
@@ -163,7 +167,6 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 					return null;
 				return (String)byDelegate;
 			}
-			Person pers = (person instanceof Person)?(Person)person:person.person();
 			if(lastNameDisplay < 1) return composeName(pers,firstNameDisplay,secondNameDisplay);
 			String last = pers.lastName();
 			if(last == null) last = "???";

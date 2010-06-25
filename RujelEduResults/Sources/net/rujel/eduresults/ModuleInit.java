@@ -193,20 +193,27 @@ public class ModuleInit {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
 			return null;
 		EOEditingContext ec = null;
-		try {
-			ec = (EOEditingContext)ctx.page().valueForKey("ec");
-		} catch (Exception e) {
-			ec = new SessionedEditingContext(ctx.session());
+		EduCourse course = (EduCourse)ctx.session().objectForKey("statCourseReport");
+		NSArray list = null;
+		if(course != null) {
+			ec = course.editingContext();
+			list = ItogContainer.itogsForCourse(course);
+		} else {
+			try {
+				ec = (EOEditingContext)ctx.page().valueForKey("ec");
+			} catch (Exception e) {
+				ec = new SessionedEditingContext(ctx.session());
+			}
+//			ec.lock();
+			Integer year = (Integer)ctx.session().valueForKey("eduYear");
+			EOQualifier qual = new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
+					EOQualifier.QualifierOperatorEqual,year);
+			EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,
+					qual,ItogContainer.sorter);
+			list = ec.objectsWithFetchSpecification(fs);
 		}
-		ec.lock();
-		Integer year = (Integer)ctx.session().valueForKey("eduYear");
-		EOQualifier qual = new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
-				EOQualifier.QualifierOperatorEqual,year);
-		EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,
-				qual,ItogContainer.sorter);
-		NSArray list = ec.objectsWithFetchSpecification(fs);
 		if(list == null || list.count() == 0) {
-			ec.unlock();
+//			ec.unlock();
 			return null;
 		}
 		NSMutableArray result = new NSMutableArray();
@@ -227,12 +234,11 @@ public class ModuleInit {
 		String title = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.itogAddOn.title");
 		int sort = 30;
-		fs.setEntityName(ItogMark.ENTITY_NAME);
-		fs.setSortOrderings(null);
+		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,null,null);
 		fs.setFetchLimit(1);
 		while (enu.hasMoreElements()) {
 			ItogContainer itog = (ItogContainer) enu.nextElement();
-			qual = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY,
+			EOQualifier qual = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY,
 					EOQualifier.QualifierOperatorEqual,itog);
 			fs.setQualifier(qual);
 			list = ec.objectsWithFetchSpecification(fs);
@@ -247,7 +253,7 @@ public class ModuleInit {
 			result.addObject(dict);
 			sort++;
 		}
-		ec.unlock();
+//		ec.unlock();
 		return result;
 	}
 }

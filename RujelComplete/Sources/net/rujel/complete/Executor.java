@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.*;
 
@@ -55,18 +56,25 @@ public class Executor implements Runnable {
 
 	protected static transient ConcurrentLinkedQueue<Task> queue = 
 		new ConcurrentLinkedQueue<Task>();
+	protected static transient NSMutableDictionary progress = new NSMutableDictionary();
+	
 	protected static Thread thread;
-		
+
 	public static class Task {
-		public boolean writeReports = false;
-		public File studentsFolder;
-		public File coursesFolder;
+		public boolean writeCourses = false;
+		public boolean writeStudents = false;
 		public EOGlobalID courseID;
 		public EOGlobalID[] studentIDs;
 		public Object date;
+		public Integer year;
 
 		public void setCourse(EduCourse course) {
-			courseID = (course == null)?null: course.editingContext().globalIDForObject(course);
+			if(course != null) {
+				courseID = course.editingContext().globalIDForObject(course);
+				year = course.eduYear();
+			} else {
+				courseID = null;
+			}
 		}
 
 		public void setStudents(NSArray students) {
@@ -81,7 +89,7 @@ public class Executor implements Runnable {
 			}
 		}	
 	}
-	public WOContext ctx;
+	private WOContext ctx;
 	protected Task task;
 
     protected Executor() {
@@ -90,47 +98,88 @@ public class Executor implements Runnable {
 	}
 	
 	public static void exec(Task ex) {
-//		if(ex.ctx == null)
-//			throw new IllegalStateException("Executor was not properly initialsed");
-//		MultiECLockManager lm = ((MultiECLockManager.Session)ex.ctx.session())
-//							.ecLockManager();
-//		ex.ctx.session().defaultEditingContext().unlock();
-//		lm.unlock();
 		queue.offer(ex);
 		if(thread == null || !thread.isAlive()) {
-			thread = new Thread(new Executor());
+			thread = new Thread(new Executor(),"CompletionExecutor");
 			thread.setPriority(Thread.MIN_PRIORITY + 1);
 			thread.start();
+			if(progress.count() == 0)
+				progress.takeValueForKey("!", "running");
 		}
 	}
 
+	public static synchronized NSMutableDictionary progress() {
+		return progress;
+	}
+	
 	public void run() {
 		ctx = MyUtility.dummyContext(null);
 		WOSession ses = ctx.session();
 		while (queue.size() > 0) {
 			try {
 				task = queue.poll();
-				if(task == null)
+				if(task == null) {
 					break;
+				}
+				progress().takeValueForKey(task, "task");
 				ses.takeValueForKey(task.date, "today");
-				MultiECLockManager lm = ((MultiECLockManager.Session)ses).ecLockManager();
-				lm.lock();
+//				MultiECLockManager lm = ((MultiECLockManager.Session)ses).ecLockManager();
+//				lm.lock();
 				if(task.courseID != null) { // Completion closing
 					EOEditingContext ec = ses.defaultEditingContext();
 					EduCourse course = (EduCourse)ec.faultForGlobalID(task.courseID, ec);
+					if(course != null) {
+						StringBuilder buf = new StringBuilder();
+//						buf.append(ses.valueForKeyPath(
+//								"strings.RujelComplete_Complete.closeTitle"));
+//						buf.append(' ');
+						buf.append(ses.valueForKeyPath(
+								"strings.RujelInterfaces_Names.EduCourse.this"));
+						buf.append(' ').append(':').append(' ');
+						buf.append(course.eduGroup().name()).append(' ');
+						buf.append(course.subjectWithComment()).append(' ');
+						buf.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+						progress().takeValueForKey(buf.toString(), "running");
+						
+					}
 					if(task.studentIDs != null) {
 						writeStudents(course, ec);
 					}
-					//				if(studentIDs == null) {
 					writeCourse(course);
-					//				}
-				} else if(task.writeReports) { //forced closing
-					if(task.studentsFolder != null)
-						StudentCatalog.prepareStudents(task.studentsFolder, ctx);
-					if(task.coursesFolder != null)
-						CoursesCatalog.prepareCourses(task.coursesFolder, ctx, null, true);
+					progress().removeAllObjects();
+				} else { //forced closing
+					if(task.writeStudents) {
+						FileWriterUtil folder = completeFolder(task.year, STUDENTS, true, true,false);
+						{
+							StringBuilder buf = new StringBuilder();
+							buf.append(ses.valueForKeyPath("strings.RujelComplete_Complete.forced"));
+							buf.append(' ').append(':').append(' ');
+							buf.append(ses.valueForKeyPath(
+									"strings.RujelComplete_Complete.StudentCatalog"));
+							progress().takeValueForKey(buf.toString(), "running");
+						}
+						folder.ctx = ctx;
+						StudentCatalog.prepareStudents(folder);
+						folder.close();
+						progress().removeAllObjects();
+					}
+					if(task.writeCourses) {
+						FileWriterUtil folder = completeFolder(task.year, COURSES, true, true, false);
+						{
+							StringBuilder buf = new StringBuilder();
+							buf.append(ses.valueForKeyPath("strings.RujelComplete_Complete.forced"));
+							buf.append(' ').append(':').append(' ');
+							buf.append(ses.valueForKeyPath(
+									"strings.RujelComplete_Complete.CourseCatalog"));
+							progress().takeValueForKey(buf.toString(), "running");
+						}
+						folder.ctx = ctx;
+						CoursesCatalog.prepareCourses(folder, null, true);
+						folder.close();
+						progress().removeAllObjects();
+					}
 				}
-				lm.unlock();
+//				lm.unlock();
 			} catch (RuntimeException e) {
 				logger.log(WOLogLevel.WARNING,"Error in Completion process"
 						,new Object[] {ses,e});
@@ -187,11 +236,10 @@ public class Executor implements Runnable {
 	}
 	
 	protected void writeStudents(EduCourse course, EOEditingContext ec) {
-		Integer year = course.eduYear();
 		EduGroup gr = course.eduGroup();
 		NSArray courses = EOUtilities.objectsWithQualifierFormat(ec,
 				EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
-				new NSArray(new Object[] {gr, year}));
+				new NSArray(new Object[] {gr, task.year}));
 		NSArray found = Completion.findCompletions(courses, 
 				NSKeyValueCoding.NullValue, "student", Boolean.FALSE, ec);
 		if(found != null && found.count() > 0) {
@@ -200,18 +248,14 @@ public class Executor implements Runnable {
 				Completion cpt = (Completion) enu.nextElement();
 				NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
 				if(aud == null || aud.count() == 0) {
-/*					Object subj = cpt.valueForKeyPath("course.subjectWithComment");
-//					subj.toString();
-					found = Completion.findCompletions(course,null,"student",Boolean.FALSE, ec);
-					if(found == null || found.count() == 0)
-						studentIDs = null;*/
 					return;
 				}
 			}
 		}
-		File folder = completeFolder(year, STUDENTS, false);
-		FolderCatalog catalog = new FolderCatalog(folder, ctx.session());
-		String grDir = StudentCatalog.groupDirName(gr);
+		FileWriterUtil folder = completeFolder(task.year, STUDENTS, false, false, true);
+		folder.ctx = ctx;
+		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());
+		String grDir = StudentCatalog.groupDirName(gr,false);
 		NSMutableDictionary grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
 		if(grDict == null) {
 			grDict = new NSMutableDictionary();
@@ -220,36 +264,41 @@ public class Executor implements Runnable {
 				"modules.studentReporter");
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
-		File groupDir = new File(folder,grDir);
+//		File groupDir = new File(folder,grDir);
+		folder.enterDir(grDir, true);
 		for (int i = 0; i < task.studentIDs.length; i++) {
 			Student student = (Student)ec.faultForGlobalID(task.studentIDs[i], ec);
 			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
-			File stDir = new File(groupDir,key);
-			if(Completion.studentIsReady(student, null, year)) {
+//			File stDir = new File(groupDir,key);
+			if(Completion.studentIsReady(student, null, task.year)) {
 				StudentCatalog.completeStudent(gr, student, reports,
-						courses, stDir, ctx, true);
+						courses, folder, true);
 				grDict.takeValueForKey(Boolean.TRUE, key);
-			} else if(stDir.exists()){
-				grDict.takeValueForKey(Boolean.FALSE, key);
-				File[] files = stDir.listFiles();
-				for (int j = 0; j < files.length; j++) {
-					files[j].delete();
+			} else {
+				File stDir = new File(folder.currDir(),key);
+				if(stDir.exists()){
+					grDict.takeValueForKey(Boolean.FALSE, key);
+					File[] files = stDir.listFiles();
+					for (int j = 0; j < files.length; j++) {
+						files[j].delete();
+					}
+					stDir.delete();
 				}
-				stDir.delete();
 			}
 		}
+		folder.leaveDir();
 		if(grDict.count() > 0) {
 			catalog.takeValueForKey(grDict, grDir);
-			File file = new File(folder,"index.html");
+			File file = new File(folder.getBase(),"index.html");
 			if(!file.exists())
-				prepareFolder(folder, ctx, "list.html");
+				prepareFolder(folder,"list.html");
 			NSArray groups = EduGroup.Lister.listGroups(
 					(NSTimestamp)ctx.session().valueForKey("today"), ec);
 			WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
 			page.takeValueForKey(ec, "ec");
 			page.takeValueForKey(catalog, "catalog");
 			page.takeValueForKey(groups, "eduGroups");
-			Executor.writeFile(folder, "list.html", page,true);
+			folder.writeFile("list.html", page);
 			catalog.writeCatalog();
 		}
 /*		found = Completion.findCompletions(course,null,"student",Boolean.FALSE, ec);
@@ -262,20 +311,22 @@ public class Executor implements Runnable {
 		if(reports == null || reports.count() == 0)
 			return;
 		NSDictionary ready = CoursePage.readyModules(course, reports);
-		File folder = Executor.completeFolder(course.eduYear(), "courses",false);
-		File file = new File(folder,"index.html");
+		FileWriterUtil folder = Executor.completeFolder(task.year, COURSES,false,false,true);
+		folder.ctx = ctx;
+		File file = new File(folder.getBase(),"index.html");
 		if(!file.exists())
-			prepareFolder(folder, ctx, "eduGroup.html");
-		FolderCatalog catalog = new FolderCatalog(folder, ctx.session());
+			prepareFolder(folder, "eduGroup.html");
+		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());
 		String crID = ((EOKeyGlobalID)task.courseID).keyValues()[0].toString();
 		catalog.takeValueForKey(ready, crID);
-		CoursesCatalog.prepareCourses(folder, ctx, catalog, false);
-		file = new File(folder,crID);
-		CoursePage.printCourseReports(course, file, ctx, null, ready);
+		CoursesCatalog.prepareCourses(folder, catalog, false);
+//		file = new File(folder,crID);
+		CoursePage.printCourseReports(course, folder, crID, null, ready);
 		catalog.writeCatalog();
 	}
 
-    public static File completeFolder(Object year, String type, boolean date) {
+    public static FileWriterUtil completeFolder(Integer year, String type, 
+    		boolean date, boolean zip, boolean overwrite) {
     	String completeDir = SettingsReader.stringForKeyPath("edu."+ type + "CompleteDir", null);
     	if(completeDir == null) {
     		completeDir = SettingsReader.stringForKeyPath("edu.completeDir", null);
@@ -283,107 +334,93 @@ public class Executor implements Runnable {
     		type = null;
     	}
     	completeDir = Various.convertFilePath(completeDir);
-    	if(year == null)
-    		return new File(completeDir);
+//    	if(year == null)
+//    		return new File(completeDir);
     	if(completeDir == null)
     		return null;
+		StringBuilder buf = new StringBuilder(year.toString());
+		buf.append('-').append(Integer.toString(year.intValue() +1).substring(2));
     	try {
-    		String name = year.toString();
     		if(type != null)
-    			name = name + type;
+    			buf.append(type);
     		if(date) {
-    			StringBuilder buf = new StringBuilder(name);
     			buf.append('_');
     			Calendar cal = Calendar.getInstance();
     			buf.append(cal.get(Calendar.YEAR));
-    			buf.append(cal.get(Calendar.MONTH));
-    			buf.append(cal.get(Calendar.DAY_OF_MONTH));
-    			name = buf.toString();
+    			int idx = cal.get(Calendar.MONTH);
+    			if(idx < 10)
+    				buf.append('0');
+    			buf.append(idx);
+    			idx = cal.get(Calendar.DAY_OF_MONTH);
+    			if(idx < 10)
+    				buf.append('0');
+    			buf.append(idx);
     		}
-			File folder = new File(completeDir,name);
-			if(!folder.exists())
-				folder.mkdirs();
-//			createIndex(folder, MyUtility.presentEduYear(year), src);
-//    		copyResource(folder,"scripts.js");
-//    		copyResource(folder,"styles.css");
-    		return folder;
+    		String name = buf.toString();
+    		if(zip)
+    			buf.append(".zip");
+			File folder = new File(completeDir,buf.toString());
+			FileWriterUtil result = new FileWriterUtil(folder, zip, overwrite);
+			if(zip)
+				result.enterDir(name, true);
+			return result;
 		} catch (Exception e) {
-			logger.log(WOLogLevel.WARNING,"Could not get completeFolder for year " + year,e);
+			logger.log(WOLogLevel.WARNING,"Could not get completeFolder " + buf,e);
 		}
     	return null;
     }
     
-    protected static File createIndex(File folder, String title,String list) {
-    	File file = new File(folder,"index.html");
-    	if(file.exists())
-    		return file;
+    protected static void createIndex(FileWriterUtil folder, String title,String list) {
+////    	File file = new File(folder,"index.html");
+//    	if(file.exists())
+//    		return file;
     	try {
 			InputStream str = WOApplication.application().resourceManager().
 					inputStreamForResourceNamed("index.html", "RujelComplete", null);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(str,"utf8"));
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(file),"utf8"));
+//			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+//					new FileOutputStream(file),"utf8"));
+			NSMutableData content = new NSMutableData();
 			while (reader.ready()) {
 				String line = reader.readLine();
 				if(line == null)
 					break;
 				line = line.replace("$title", title);
 				line = line.replace("$list", list);
-				writer.write(line);
-				writer.newLine();
+//				writer.write(line);
+//				writer.newLine();
+				content.appendBytes(line.getBytes("utf8"));
 			}
 			reader.close();
-			writer.close();
+			folder.writeData("index.html", content);
+//			writer.close();
 		} catch (IOException e) {
 			logger.log(WOLogLevel.WARNING,"Error preparing index file",e);
 		}
-    	return file;
+//    	return file;
     }
     
-    protected static File copyResource(File folder, String fileName) {
-    	File file = new File(folder, fileName);
-    	if(file.exists())
-    		return file;
-    	try {
+    protected static void copyResource(FileWriterUtil folder, String fileName) {
+//    	File file = new File(folder, fileName);
+//    	if(file.exists())
+//    		return file;
+//    	try {
 			byte[] fileBites = WOApplication.application().resourceManager().
 			bytesForResourceNamed(fileName, "RujelComplete", null);
-			FileOutputStream fos = new FileOutputStream(file);
-			fos.write(fileBites);
-			fos.close();
-		} catch (IOException e) {
-			logger.log(WOLogLevel.WARNING,"Could not copy resource file: " + fileName,e);
-		}
-    	return file;
+			folder.writeData(fileName, new NSData(fileBites));
+//			FileOutputStream fos = new FileOutputStream(file);
+//			fos.write(fileBites);
+//			fos.close();
+//		} catch (IOException e) {
+//			logger.log(WOLogLevel.WARNING,"Could not copy resource file: " + fileName,e);
+//		}
+//    	return file;
     }
     
-    public static void prepareFolder(File folder, WOContext ctx, String listName) {
-		Integer year = (Integer) ctx.session().valueForKey("eduYear");
-		if(!folder.exists())
-			folder.mkdirs();
+    public static void prepareFolder(FileWriterUtil folder, String listName) {
+		Integer year = (Integer) folder.ctx.session().valueForKey("eduYear");
 		Executor.createIndex(folder, MyUtility.presentEduYear(year), listName);
-		Executor.copyResource(folder,"scripts.js");
-		Executor.copyResource(folder,"styles.css");
-    }
-    
-    protected static void writeFile(File folder, String filename,
-    		WOComponent page,boolean overwrite)  {
-		File file = new File(folder,filename);
-		writeFile(file, page, overwrite);
-    }
-	protected static void writeFile(File file, WOComponent page,boolean overwrite)  {
-    	try {
-    		if(file.exists()) {
-    			if(overwrite)
-    				file.delete();
-    			else
-    				return;
-    		}
-    		FileOutputStream fos = new FileOutputStream(file);
-    		NSData content = page.generateResponse().content();
-    		content.writeToStream(fos);
-    		fos.close();
-    	} catch (Exception e) {
-    		logger.log(WOLogLevel.WARNING,"Error writing file " + file.getAbsolutePath(),e);
-    	}
+		copyResource(folder,"scripts.js");
+		copyResource(folder,"styles.css");
     }
 }

@@ -31,7 +31,9 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
     	course = aCourse;
 		NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)
 			session().valueForKey("readAccess");
+		session().setObjectForKey(course, "statCourseReport");
 		NSArray reports = (NSArray)session().valueForKeyPath("modules.statCourseReport");
+		session().removeObjectForKey("statCourseReport");
 		if(reports == null || reports.count() == 0)
 			return;
 		EOEditingContext ec = course.editingContext();

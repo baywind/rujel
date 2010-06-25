@@ -29,16 +29,17 @@
 
 package net.rujel.complete;
 
-import java.io.File;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.FileWriterUtil;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
@@ -177,38 +178,44 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     	return changes;
     }
     
-    public static void printCourseReports(EduCourse course, File cDir, WOContext ctx,
+    public static void printCourseReports(EduCourse course, FileWriterUtil exec, String cDir,
     		NSArray reports, NSKeyValueCoding ready) {
-		if(!cDir.exists())
-			cDir.mkdirs();
+    	if(cDir == null) {
+			EOKeyGlobalID gid = (EOKeyGlobalID)course.editingContext().globalIDForObject(course);
+			String key = gid.keyValues()[0].toString();
+			cDir = key + '/';
+    	}
+//    	exec.writeFile(cDir, null);
+    	exec.enterDir(cDir,false);
 		if(reports == null)
-			reports = (NSArray)ctx.session().valueForKeyPath("modules.courseComplete");
-    	WOComponent page = WOApplication.application().pageWithName("CoursePage", ctx);
+			reports = (NSArray)exec.ctx.session().valueForKeyPath("modules.courseComplete");
+    	WOComponent page = WOApplication.application().pageWithName("CoursePage", exec.ctx);
 		page.takeValueForKey(course, "course");
 		page.takeValueForKey(ready, "readyModules");
 		page.takeValueForKey(reports, "reports");
-		Executor.writeFile(cDir, "index.html", page,ready != null);
+		exec.writeFile("index.html", page);
     	if(reports == null || reports.count() == 0)
     		return;
     	Enumeration enu = reports.objectEnumerator();
     	while (enu.hasMoreElements()) {
 			NSKeyValueCoding rep = (NSKeyValueCoding) enu.nextElement();
 			String id = (String)rep.valueForKey("id");
-			File file = new File(cDir,id + ".html");
+//			File file = new File(cDir,id + ".html");
 			if(ready != null && ready.valueForKey(id) == Boolean.FALSE) {
-				if(file.exists())
-					file.delete();
+//				if(file.exists())
+//					file.delete();
 				continue;
 			}
 			String name = (String)rep.valueForKey("component");
-			page = WOApplication.application().pageWithName(name,ctx);
+			page = WOApplication.application().pageWithName(name,exec.ctx);
 			page.takeValueForKey(course,"course");
-			Executor.writeFile(file, page,ready != null);
+			exec.writeFile(id + ".html", page);
 		}
+    	exec.leaveDir();
     }
     
     public String students() {
-    	if(Various.boolForObject(readyModules.valueForKey("student")))
+    	if(readyModules == null || Various.boolForObject(readyModules.valueForKey("student")))
     		return null;
     	StringBuilder buf = new StringBuilder(
     			"<span style = \"margin-left:2em;color:#000000;background-color:#ffff99;\">");

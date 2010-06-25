@@ -84,7 +84,10 @@ public class CompletePresenter extends AddOnPresenter {
 		if(student() == null) {
 			return (!currAddOn().access().flagForKey("create"));
 		} else {
-			boolean closed = Various.boolForObject(dict().valueForKey("closed"));
+			NSMutableDictionary dict = dict();
+			if(dict == null)
+				return true;
+			boolean closed = Various.boolForObject(dict.valueForKey("closed"));
 			if(closed) {
 				return !currAddOn().access().flagForKey("edit");
 			} else {
