@@ -53,6 +53,7 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 	public NSArray reports;
 	public NSKeyValueCodingAdditions item;
 	public NSKeyValueCoding readyModules;
+	public NSArray changes;
 	
     public CoursePage(WOContext context) {
         super(context);
@@ -226,5 +227,20 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     		buf.append(" / ").append(total);
     	buf.append("</span>");
     	return buf.toString();
+    }
+    
+    public void setCourse(EduCourse aCourse) {
+    	course = aCourse;
+    	/*
+		try {
+			changes = (NSArray)course.valueForKey("teacherChanges");
+			if(changes.count() == 0) {
+				changes = null;
+				return;
+			}
+			changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(changes, MyUtility.dateSorter);
+		} catch (NSKeyValueCoding.UnknownKeyException e) {
+			changes = null;
+		}*/
     }
 }
