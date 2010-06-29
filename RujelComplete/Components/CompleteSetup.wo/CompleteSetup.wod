@@ -59,15 +59,13 @@ Hide : WOConditional {
 StudentFiles : FileLister {
   file = studentsFolder;
   target = "_blank";
-  noDelete = session.readAccess._delete.CompleteSetup;
-  noAction = session.readAccess._edit.CompleteSetup;
+  access = session.readAccess.FLAGS.CompleteSetup;
 }
 
 CourseFiles : FileLister {
   file = coursesFolder;
   target = "_blank";
-  noDelete = session.readAccess._delete.CompleteSetup;
-  noAction = session.readAccess._edit.CompleteSetup;
+  access = session.readAccess.FLAGS.CompleteSetup;
 }
 
 StudentsTitle : WOString {
