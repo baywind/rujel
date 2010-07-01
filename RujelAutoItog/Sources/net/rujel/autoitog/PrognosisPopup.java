@@ -84,7 +84,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     		if(calc != null) {
     			EOEditingContext ec = course.editingContext();
     			ec.lock();
-    			prognosis = calc.calculateForStudent(student, course, eduPeriod);
+    			prognosis = calc.calculateForStudent(student, course, eduPeriod,
+    					eduPeriod.relatedForCourse(course));
     			if(prognosis != null) {
     				prognosis.updateFireDate(addOn.courseTimeout());
     				noCancel = true;
@@ -164,7 +165,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     			prognosis = null;
     		} else {
     			if(mark == null) {
-    				prognosis = eduPeriod.calculator().calculateForStudent(student, course, eduPeriod);
+    				prognosis = eduPeriod.calculator().calculateForStudent(student, course, 
+    						eduPeriod, eduPeriod.relatedForCourse(course));
     				changeReason = eduPeriod.calculatorName();
     			} else if(prognosis == null) {
     				prognosis = (Prognosis)EOUtilities.createAndInsertInstance(ec, "Prognosis");

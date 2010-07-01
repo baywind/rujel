@@ -299,11 +299,11 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	public void setToday(Object day) {
 		if(day == null) {
 			day = new NSTimestamp();
-			_eduYear = null;
 		}
-		_eduYear = (day instanceof Integer)?(Integer)day:
+		Integer nextYear = (day instanceof Integer)?(Integer)day:
 			MyUtility.eduYearForDate((NSTimestamp)day);
-		if(!_eduYear.equals(eduYear())) {
+		if(!nextYear.equals(_eduYear)) {
+			_eduYear = nextYear;
 			logger.log(WOLogLevel.INFO,"Switching eduYear to " + _eduYear);
 			if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
 				EOObjectStore os = DataBaseConnector.objectStoreForTag(_eduYear.toString());

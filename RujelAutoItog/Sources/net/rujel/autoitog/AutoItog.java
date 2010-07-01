@@ -213,62 +213,88 @@ public class AutoItog extends _AutoItog {
     }
 
     public NSArray relKeysForCourse(EduCourse course) {
-    	NSDictionary values = new NSDictionary(new Object[] {this,course},
-    			new String[] {"autoItog","course"});
-    	NSArray found = EOUtilities.objectsMatchingValues(editingContext(), 
+    	return relKeysForCourse(course, itogContainer());
+    }
+    
+    public static NSArray relKeysForCourse(EduCourse course,ItogContainer itogContainer) {
+    	NSDictionary values = new NSDictionary(new Object[] {itogContainer,course},
+    			new String[] {"itogContainer","course"});
+    	NSArray found = EOUtilities.objectsMatchingValues(course.editingContext(), 
     			"ItogRelated", values);
     	if(found == null)
     		found = NSArray.EmptyArray;
     	return found;
     }
+    
     public NSArray relatedForCourse(EduCourse course) {
-    	NSArray found = relKeysForCourse(course);
-    	EOEditingContext ec = editingContext();
-    	if(found == null || found.count() == 0) {
-    		NSArray result = null;
-    		boolean cache = ec.hasChanges();
-    		try {
-    			if(cache) {
-					ec = new EOEditingContext(ec.rootObjectStore());
-	    			ec.lock();
-					AutoItog ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, this);
-					course = (EduCourse)EOUtilities.localInstanceOfObject(ec, course);
-//					NSDictionary snapshot = snapshot();
-//					ai.updateFromSnapshot(snapshot);
-					result = calculator().collectRelated(course, ai, 
-							!namedFlags().flagForKey("runningTotal"),true);
-				} else {
-	    			ec.lock();
-					result = calculator().collectRelated(course, this, 
-							!namedFlags().flagForKey("runningTotal"),true);
-				}
-				ec.saveChanges();
-				if(cache)
-					result = EOUtilities.localInstancesOfObjects(ec, result);
-			} catch (RuntimeException e) {
-				AutoItogModule.logger.log(WOLogLevel.WARNING,"Error collecting related",
-						new Object[] {this,e});
-			} finally {
-				ec.unlock();
-			}
-    		return result;
+    	if(noCalculator())
+    		return null;
+    	boolean cache = editingContext().hasChanges();
+    	EOEditingContext tmpEc = (cache)? new EOEditingContext(
+    			editingContext().parentObjectStore()) : editingContext();
+    	if(cache) {
+    		tmpEc.lock();
+    		course = (EduCourse)EOUtilities.localInstanceOfObject(tmpEc, course);
     	}
-    	NSMutableArray related = new NSMutableArray();
-    	String entName = calculator().reliesOnEntity();
-    	Enumeration enu = found.objectEnumerator();
-    	while (enu.hasMoreElements()) {
-			EOEnterpriseObject ir = (EOEnterpriseObject) enu.nextElement();
-			Integer relKey = (Integer)ir.valueForKey("relKey");
-			try {
-				related.addObject(EOUtilities.objectWithPrimaryKeyValue(
-						ec, entName, relKey));
-			} catch (RuntimeException e) {
-				AutoItogModule.logger.log(WOLogLevel.WARNING,
-						"Could not get related object: " + entName + ':' + relKey
-						,new Object[] {this,e});
-			}
-		}
-    	return related.immutableClone();
+    	AutoItog ai = (cache)?(AutoItog)EOUtilities.localInstanceOfObject(tmpEc, this):this;
+       	NSArray found = relKeysForCourse(course,ai.itogContainer());
+       	try {
+    		if(found != null && found.count() > 0) {
+    			NSMutableArray related = new NSMutableArray();
+    			String entName = calculator().reliesOnEntity();
+    			Enumeration enu = found.objectEnumerator();
+    			while (enu.hasMoreElements()) {
+    				EOEnterpriseObject ir = (EOEnterpriseObject) enu.nextElement();
+    				Integer relKey = (Integer)ir.valueForKey("relKey");
+    				try {
+    					EOEnterpriseObject object = EOUtilities.objectWithPrimaryKeyValue(
+    							tmpEc, entName, relKey);
+    					EduCourse crs = calculator().courseForObject(object);
+    					if(crs == null) {
+    						tmpEc.deleteObject(ir);
+    						AutoItogModule.logger.log(WOLogLevel.INFO,
+    								"Related object with null course found. deleting:" +
+    								relKey, new Object[] {this,course});
+    						continue;
+    					} else if(course != crs) {
+    						AutoItogModule.logger.log(WOLogLevel.WARNING,
+    								"Related object with wrong course found:" + relKey,
+    								new Object[] {this,course,crs});
+    						related = null;
+    						Enumeration denu = found.objectEnumerator();
+    						while (denu.hasMoreElements()) {
+    							ir = (EOEnterpriseObject) denu.nextElement();
+    							tmpEc.deleteObject(ir);
+    						}
+    						break;
+    					}
+    					related.addObject(object);
+    				} catch (RuntimeException e) {
+    					AutoItogModule.logger.log(WOLogLevel.WARNING,
+    							"Could not get related object: " + entName + ':' + relKey
+    							,new Object[] {this,e});
+    				}
+    			}
+    			found = (related == null)? null : related.immutableClone();
+    		} else {
+    			found = null;
+    		}
+    		if(found == null) {
+    			found = calculator().collectRelated(course, ai, 
+    					!namedFlags().flagForKey("runningTotal"),true);
+    		}
+    		if(tmpEc.hasChanges())
+    			tmpEc.saveChanges();
+			if(cache && found != null)
+				found = EOUtilities.localInstancesOfObjects(editingContext(), found);
+    	} catch (RuntimeException e) {
+    		AutoItogModule.logger.log(WOLogLevel.WARNING,"Error collecting related",
+    				new Object[] {this,e});
+    	} finally {
+    		if(cache)
+    			tmpEc.unlock();
+    	}
+    	return found;
     }
     
     public boolean evening() {
@@ -349,8 +375,9 @@ public class AutoItog extends _AutoItog {
 			}
 			if(relKey.intValue() == 0)
 				continue;
-			NSDictionary values = new NSDictionary(new Object[] {course,ai,relKey},
-					new String[] {"course","autoItog","relKey"});
+			NSDictionary values = new NSDictionary(
+					new Object[] {course,ai.itogContainer(),relKey},
+					new String[] {"course","itogContainer","relKey"});
 			found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
 			if(found != null && found.count() > 0)
 				result.addObject(ai);
@@ -367,14 +394,14 @@ public class AutoItog extends _AutoItog {
     	if(relKey == null)
     		throw new IllegalArgumentException(
     				"Provided object is not supported by defined calculator");
-		NSDictionary values = new NSDictionary(new Object[] {course,this,relKey},
-				new String[] {"course","autoItog","relKey"});
+		NSDictionary values = new NSDictionary(new Object[] {course,itogContainer(),relKey},
+				new String[] {"course","itogContainer","relKey"});
 		EOEditingContext ec = course.editingContext();
 		NSArray found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
 		boolean result = (found == null || found.count() == 0);
 		if(result) {
 			EOEnterpriseObject rel = EOUtilities.createAndInsertInstance(ec, "ItogRelated");
-			rel.addObjectToBothSidesOfRelationshipWithKey(this, "autoItog");
+			rel.addObjectToBothSidesOfRelationshipWithKey(itogContainer(), "itogContainer");
 			rel.addObjectToBothSidesOfRelationshipWithKey(course, "course");
 			rel.takeValueForKey(relKey, "relKey");
 		}
@@ -387,8 +414,8 @@ public class AutoItog extends _AutoItog {
     	if(relKey == null)
     		throw new IllegalArgumentException(
     				"Provided object is not supported by defined calculator");
-		NSDictionary values = new NSDictionary(new Object[] {course,this,relKey},
-				new String[] {"course","autoItog","relKey"});
+		NSDictionary values = new NSDictionary(new Object[] {course,itogContainer(),relKey},
+				new String[] {"course","itogContainer","relKey"});
 		EOEditingContext ec = course.editingContext();
 		NSArray found = EOUtilities.objectsMatchingValues(ec, "ItogRelated", values);
 		boolean result = (found != null && found.count() > 0);

@@ -155,7 +155,7 @@ public class Prognosis extends _Prognosis {
     	if(_autoItog != itog && itog != null) {
     		if(itogContainer() != itog.itogContainer())
     			setItogContainer(itog.itogContainer());
-    		if(itog != null && editingContext().globalIDForObject(this).isTemporary())
+    		if(editingContext().globalIDForObject(this).isTemporary())
     			setFireDate(itog.fireDate());
     	}
     	_autoItog = itog;

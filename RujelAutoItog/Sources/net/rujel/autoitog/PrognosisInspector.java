@@ -157,10 +157,12 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 				} catch (RuntimeException e) {
 					object = null;
 				}
+				if(course != calc.courseForObject(object))
+					object = null;
 				NSMutableDictionary dict = calc.describeObject(object);
 				dict.takeValueForKey(object, "object");
 				dict.takeValueForKey(relKey, "relKey");
-				dict.takeValueForKey(Boolean.TRUE, "related");
+				dict.takeValueForKey(Boolean.valueOf(object != null), "related");
 				dict.takeValueForKey("warning", "styleClass");
 				result.addObject(dict);
 			}

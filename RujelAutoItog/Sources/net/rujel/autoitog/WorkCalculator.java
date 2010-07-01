@@ -104,13 +104,13 @@ public abstract class WorkCalculator extends Calculator {
 		if(works == null || works.count() == 0)
 			return null;
 		NSMutableArray mentioned = null;
+		ItogContainer itog = autoItog.itogContainer();
 		if(omitMentioned) {
 			mentioned = new NSMutableArray();
 			NSArray aiList = EOUtilities.objectsMatchingKeyAndValue(ec,
 					AutoItog.ENTITY_NAME, AutoItog.LIST_NAME_KEY, autoItog.listName());
 			if(aiList != null && aiList.count() > 0) {
 				Enumeration enu = aiList.objectEnumerator();
-				ItogContainer itog = autoItog.itogContainer();
 				ItogType type = itog.itogType();
 				Integer eduYear = itog.eduYear();
 				while (enu.hasMoreElements()) {
@@ -129,25 +129,9 @@ public abstract class WorkCalculator extends Calculator {
 				}
 			}
 		}
-			/*
-		quals[0] = new EOKeyValueQualifier("itogContainer.itogType",
-				EOQualifier.QualifierOperatorEqual,autoItog.itogContainer().itogType());
-		EOQualifier.filterArrayWithQualifier(aiList, quals[0]);
-		aiList.removeObject(autoItog);
-//		EOSortOrdering.sortArrayUsingKeyOrderArray(aiList, AutoItog.sorter);
-		quals[0] = Various.getEOInQualifier("autoItog", aiList);
-		allQuals.removeAllObjects();
-		allQuals.addObjects(quals);
-		quals[0] = new EOAndQualifier(allQuals);
-		fs.setEntityName("ItogRelated");
-		fs.setQualifier(quals[0]);
-		NSArray mentioned = ec.objectsWithFetchSpecification(fs);
-		if(mentioned != null && mentioned.count() > 0)
-			mentioned = (NSArray)mentioned.valueForKey("relKey");
-		else
-			mentioned = null; */
-		quals[0] = new EOKeyValueQualifier("autoItog",EOQualifier.QualifierOperatorEqual,
-				autoItog);
+
+		quals[0] = new EOKeyValueQualifier("itogContainer",
+				EOQualifier.QualifierOperatorEqual,itog);
 		allQuals.removeAllObjects();
 		allQuals.addObjects(quals);
 		quals[0] = new EOAndQualifier(allQuals);
@@ -175,7 +159,7 @@ public abstract class WorkCalculator extends Calculator {
 				continue;
 			if(forNum == null || forNum.removeObjectForKey(key) == null) {
 				EOEnterpriseObject ir = EOUtilities.createAndInsertInstance(ec, "ItogRelated");
-				ir.addObjectToBothSidesOfRelationshipWithKey(autoItog, "autoItog");
+				ir.addObjectToBothSidesOfRelationshipWithKey(itog, "itogContainer");
 				ir.addObjectToBothSidesOfRelationshipWithKey(course, "course");
 				ir.takeValueForKey(key, "relKey");
 			}

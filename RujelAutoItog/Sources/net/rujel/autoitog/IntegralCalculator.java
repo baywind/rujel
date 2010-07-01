@@ -41,9 +41,7 @@ import net.rujel.interfaces.*;
 public class IntegralCalculator extends WorkCalculator {
 
 	public Prognosis calculateForStudent(Student student, EduCourse course,
-			AutoItog period) {
-		NSArray works = period.relatedForCourse(course);//works(course, period);
-		//.calculator().collectRelated(course, period, true);
+			AutoItog period, NSArray works) {
 		double weightSum = 0;
 		double integralSum = 0;
 		int count = 0;
@@ -83,6 +81,7 @@ public class IntegralCalculator extends WorkCalculator {
 //		long rounded = (long)(integral*10000);
 		BigDecimal value = new BigDecimal(integral);
 		value = value.setScale(4,BigDecimal.ROUND_HALF_UP);
+		progn.setAutoItog(period);
 		progn.setValue(value);
 //		rounded = ((long)complete*10000)/count;
 		value = new BigDecimal((double)complete/count); //BigDecimal.valueOf(rounded,4);

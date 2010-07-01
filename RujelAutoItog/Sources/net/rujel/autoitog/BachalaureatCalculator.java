@@ -296,37 +296,15 @@ public class BachalaureatCalculator extends WorkCalculator {
 			//dict.setObjectForKey(student,"student");
 			Prognosis progn = Prognosis.getPrognosis(student, course, 
 					period.itogContainer(), !noWorks);
-			if(noWorks) {
-				if(progn != null) {
-					ec.deleteObject(progn);
-					progn = null;
-				}
-			} else {
-				initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
-			}
-			/*try {
-				progn = (Prognosis)EOUtilities.objectMatchingValues(ec,"Prognosis",dict);
-			} catch (EOObjectNotAvailableException onaex) {
-				progn = (Prognosis)EOUtilities.createAndInsertInstance(ec,"Prognosis");
-				progn.takeValuesFromDictionary(dict);
-			} catch (EOUtilities.MoreThanOneException mtoex) {
-				Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
-						"Multiple prognoses found for dictionary",dict);
+			if(progn == null)
 				continue;
-			}
-//			calculator.updatePrognosis(progn,agregatedMarks,agregatedWorks);
-			double integral = getIntegral(agregatedMarks,agregatedWorks);
-			long rounded = (long)(integral*10000);
-			BigDecimal value = BigDecimal.valueOf(rounded,4);//new BigDecimal(integral,new MathContext(4));
-			//if(progn.value() == null || progn.value().compareTo(value) != 0) {
-				progn.setValue(value);
-			//}
-			value = getComplete(agregatedMarks,agregatedWorks);
-			if(progn.complete() == null || progn.complete().compareTo(value) != 0) {
-				progn.setComplete(value);
-			}*/
-			if(progn != null)
+			if(noWorks) {
+				ec.deleteObject(progn);
+			} else {
+				progn.setAutoItog(period);
+				initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
 				result.setObjectForKey(progn,student);
+			}
 		}
 		return new PerPersonLink.Dictionary(result);
 	}
@@ -359,13 +337,10 @@ public class BachalaureatCalculator extends WorkCalculator {
 		//return progn;
 	}
 
-	public Prognosis calculateForStudent(Student student, EduCourse course, AutoItog period) {
-/*		NSMutableDictionary dict = new NSMutableDictionary(period,"eduPeriod");
-		dict.setObjectForKey(course,"eduCourse");
-		dict.setObjectForKey(student,"student");*/
+	public Prognosis calculateForStudent(Student student, EduCourse course, 
+			AutoItog period, NSArray works) {
 		EOEditingContext ec = course.editingContext();
 		
-		NSArray works = period.relatedForCourse(course);//works(course, period);
 		if(works.count() == 0) {
 			return null;
 		}
@@ -387,6 +362,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 				ec.deleteObject(progn);
 			return null;
 		}
+		progn.setAutoItog(period);
 		initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
 		return progn;
 	}

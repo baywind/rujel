@@ -346,7 +346,8 @@ public class AutoItogModule {
 					}
 				}
 			} else { // specific student
-				Prognosis progn = ai.calculator().calculateForStudent(student, course, ai);
+				Prognosis progn = ai.calculator().calculateForStudent(student, course, ai,
+						ai.relatedForCourse(course));
 				if(progn != null) {
 					progn.updateFireDate();
 					if(ifArchive) {

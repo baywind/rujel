@@ -64,14 +64,16 @@ public abstract class Calculator {
 		//return BachalaureatCalculator.sharedInstance;
 	}
 
-	public abstract Prognosis calculateForStudent(Student student, EduCourse course, AutoItog itog);
+	public abstract Prognosis calculateForStudent(Student student, EduCourse course,
+			AutoItog itog, NSArray related);
 
 	public PerPersonLink calculatePrognoses(EduCourse course, AutoItog itog) {
 		Enumeration enu = course.groupList().objectEnumerator();
 		NSMutableDictionary result = new NSMutableDictionary();
+		NSArray related = itog.relatedForCourse(course);
 		while (enu.hasMoreElements()) {
 			Student student = (Student)enu.nextElement();
-			Prognosis progn = calculateForStudent(student, course, itog);
+			Prognosis progn = calculateForStudent(student, course, itog, related);
 			if(progn != null)
 				result.setObjectForKey(progn,student);
 		}
@@ -81,6 +83,10 @@ public abstract class Calculator {
 	public NSMutableDictionary describeObject(Object object) {
 		return new NSMutableDictionary( new String[] {"???", "?? ?? ??", "#ffffff", "null"},
 				new String[] {"title","description","color","hover"});
+	}
+	
+	public EduCourse courseForObject(Object object) {
+		return (EduCourse)NSKeyValueCoding.Utility.valueForKey(object, "course");
 	}
 
 //	public abstract NSArray reliesOn();
