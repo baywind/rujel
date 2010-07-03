@@ -29,6 +29,7 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.MyUtility;
 import net.rujel.reusables.Various;
 
 import com.webobjects.foundation.*;
@@ -45,6 +46,11 @@ public class PageWrapper extends WOComponent {
 		super.appendToResponse(aResponse, aContext);
 		if(aContext.hasSession())
 			aContext.session().takeValueForKey(null, "message");
+	}
+	
+	public String eduYear() {
+		Integer year = (Integer)session().valueForKey("eduYear");
+		return MyUtility.presentEduYear(year);
 	}
 	
 	public WOComponent chooseRegime() {

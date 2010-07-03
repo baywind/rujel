@@ -66,8 +66,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			if(os == null)
 				os = DataBaseConnector.objectStoreForTag(eduYear().toString());
 			if(_defaultEC == null || _defaultEC.rootObjectStore() != os) {
-				if(_defaultEC != null)
-					_defaultEC.unlock();
+//				if(_defaultEC != null)
+//					_defaultEC.unlock();
 				_defaultEC = new SessionedEditingContext(os,this);
 //				_defaultEC.lock();
 			}
@@ -282,7 +282,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 				return null;
 			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
 			if(defaultDate == null) {
-				today = new NSTimestamp();
+				_eduYear = (Integer)WOApplication.application().valueForKey("year");
+				today = MyUtility.dayInEduYear(_eduYear.intValue());
 			} else {
 				try {
 					today = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
@@ -303,18 +304,18 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		Integer nextYear = (day instanceof Integer)?(Integer)day:
 			MyUtility.eduYearForDate((NSTimestamp)day);
 		if(!nextYear.equals(_eduYear)) {
-			_eduYear = nextYear;
-			logger.log(WOLogLevel.INFO,"Switching eduYear to " + _eduYear);
+			logger.log(WOLogLevel.INFO,"Switching eduYear to " + nextYear);
 			if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
-				EOObjectStore os = DataBaseConnector.objectStoreForTag(_eduYear.toString());
+				EOObjectStore os = DataBaseConnector.objectStoreForTag(nextYear.toString());
 				if(os == null) {
 					String msg = (String)WOApplication.application().valueForKeyPath(
 					"strings.Strings.messages.unavailableYearlyDb");
-					msg = String.format(msg, MyUtility.presentEduYear(_eduYear.intValue()));
+					msg = String.format(msg, MyUtility.presentEduYear(nextYear.intValue()));
 					setMessage(msg);
 					logger.log(WOLogLevel.INFO,msg);
 					return;
 				}
+				_eduYear = nextYear;
 				setObjectForKey(os, "objectStore");
 				if(persList != null && persList.count() > 0) {
 					persList.removeAllObjects();
@@ -334,8 +335,12 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	
 	protected Integer _eduYear;
 	public Integer eduYear() {
-		if(_eduYear == null)
-			_eduYear = MyUtility.eduYearForDate(today()); 
+		if(_eduYear == null) {
+			today();
+			if(_eduYear == null) {
+				_eduYear = MyUtility.eduYearForDate(today());
+			}
+		}
 		return _eduYear;
 	}
 	

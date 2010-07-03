@@ -43,7 +43,6 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.GregorianCalendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -91,38 +90,64 @@ public class MyUtility {
 	}
 
 	public static Integer eduYearForDate(Date date) {
-		GregorianCalendar gcal = new GregorianCalendar();
+		Calendar gcal = Calendar.getInstance();
 		if(date != null)
 			gcal.setTime(date);
-		int year = gcal.get(GregorianCalendar.YEAR);
-		int month = gcal.get(GregorianCalendar.MONTH);
-		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+		int year = gcal.get(Calendar.YEAR);
+		int month = gcal.get(Calendar.MONTH);
+		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",Calendar.JULY);
 		if(month < newYearMonth) {
 			 year--;
 		} else if (month == newYearMonth){
 			int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
-			if (gcal.get(GregorianCalendar.DAY_OF_MONTH) < newYearDay)
+			if (gcal.get(Calendar.DAY_OF_MONTH) < newYearDay)
 				year--;
 		}
 		return new Integer(year);
 	}
+	
+	public static NSTimestamp dayInEduYear(int eduYear) {
+		Calendar cal = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR);
+		boolean ok = (year >= eduYear && year <= eduYear +1);
+		int month = cal.get(Calendar.MONTH);
+		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",Calendar.JULY);
+		ok = ok && ((eduYear == year)?month >= newYearMonth : month <= newYearMonth);
+		int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
+		if(ok && month == newYearMonth) {
+			int day = cal.get(Calendar.DAY_OF_MONTH);
+			ok = ((year == eduYear)?day >= newYearDay: day < newYearDay);
+		}
+		if(!ok) {
+			cal.set(Calendar.MONTH, newYearMonth);
+			cal.set(Calendar.DAY_OF_MONTH, newYearDay);
+			if(year > eduYear) {
+				cal.set(Calendar.YEAR, eduYear +1);
+				cal.add(Calendar.DATE, -1);
+			} else {
+				cal.set(Calendar.YEAR, eduYear);
+			}
+		}
+		return new NSTimestamp(cal.getTimeInMillis());
+	}
 
 	public static Date dateToEduYear(Date date, Integer eduYear) {
 		if(!eduYear.equals(eduYearForDate(date))) {
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.setTime(date);
+			Calendar cal = Calendar.getInstance();
+			if(date != null)
+				cal.setTime(date);
 			int year = eduYear.intValue();
-			int month = cal.get(GregorianCalendar.MONTH);
-			int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+			int month = cal.get(Calendar.MONTH);
+			int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",Calendar.JULY);
 			if(month < newYearMonth) {
 				year++;
 			} else if (month == newYearMonth) {
 				int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
-				int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
+				int day = cal.get(Calendar.DAY_OF_MONTH);
 				if(day < newYearDay)
 					year++;
 			}
-			cal.set(GregorianCalendar.YEAR, year);
+			cal.set(Calendar.YEAR, year);
 			return cal.getTime();
 		}
 		return date;
@@ -137,13 +162,13 @@ public class MyUtility {
 		buf.append(year);
 		return buf.toString();
 	}
-
+/*
 	public static java.util.Date yearStart(int eduYear) {
-		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY);
+		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",Calendar.JULY);
 		int newYearDay = SettingsReader.intForKeyPath("edu.newYearDay",1);
-		GregorianCalendar cal = new GregorianCalendar(eduYear,newYearMonth,newYearDay);
+		Calendar cal = new java.util.GregorianCalendar(eduYear,newYearMonth,newYearDay);
 		return cal.getTime();
-	}
+	}*/
 
 	public static NSTimestamp validateDateInEduYear(Object aDate, Integer eduYear, String key) 
 	throws NSValidation.ValidationException {
@@ -186,23 +211,24 @@ public class MyUtility {
 		// TODO: review validation localisation
 		//String attributeName = attr.substring(attr.lastIndexOf('.') + 1);
 		if(value == null) {
-			if(notNull)
+			if(notNull) {
 				throw new NSValidation.ValidationException(String.format(
 						stringForPath("Strings.messages.nullProhibit"),
 						stringForPath(namePath)),value,attr);
-			else
+			} else {
 				return value;
+			}
 		}
-		if(valueType != null && !(valueType.isInstance(value)))
+		if(valueType != null && !(valueType.isInstance(value))){
 			throw new NSValidation.ValidationException(String.format(
 					stringForPath("Strings.messages.invalidValue"),
 					stringForPath(namePath)),value,attr);
-
-		if(maxLenth > 0 && ((String)value).length() > maxLenth)
+		}
+		if(maxLenth > 0 && ((String)value).length() > maxLenth) {
 			throw new NSValidation.ValidationException(String.format(
 					stringForPath("Strings.messages.longString"),
 					stringForPath(namePath),maxLenth),value,attr);
-
+		}
 		return value;
 	}
 

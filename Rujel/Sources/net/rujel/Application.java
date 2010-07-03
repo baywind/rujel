@@ -48,6 +48,7 @@ public class Application extends UTF8Application {
 	protected StringStorage _strings;
 	protected static Logger logger = Logger.getLogger("rujel");
 	protected Timer timer;
+	public Integer year;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -94,11 +95,26 @@ public class Application extends UTF8Application {
 					today = new NSTimestamp();
 				}
 			}
-			Integer year = MyUtility.eduYearForDate(today);
-			DataBaseConnector.makeConnections(
-					EOObjectStoreCoordinator.defaultCoordinator(), year.toString());
+			year = MyUtility.eduYearForDate(today);
+			if(!DataBaseConnector.makeConnections(
+					EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
+				year = new Integer(year.intValue() -1);
+				logger.log(WOLogLevel.INFO,"Trying to connect to previous year database:" + year);
+				if(!DataBaseConnector.makeConnections(
+						EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
+					logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
+					System.err.println("Could not connect to database!");
+					terminate();
+					return;
+				}
+			}
 		} else {
-			DataBaseConnector.makeConnections();
+			if(!DataBaseConnector.makeConnections()) {
+				logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
+				System.err.println("Could not connect to database!");
+				terminate();
+				return;
+			}
 		}
 		NSDictionary access = (NSDictionary)PlistReader.readPlist("access.plist", null, null);
 		ReadAccess.mergeDefaultAccess(access);
