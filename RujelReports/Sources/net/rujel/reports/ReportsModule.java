@@ -28,7 +28,6 @@
 package net.rujel.reports;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -118,12 +117,7 @@ public class ReportsModule {
     	NSMutableArray reports = new NSMutableArray();
     	File reportsDir = new File(reportsFolder, dir);
     	if (reportsDir.isDirectory()) {
-    		File[] files = reportsDir.listFiles(new FileFilter() {
-    			public boolean accept(File file) {
-    				return (file.isFile() && file.getName().endsWith(
-    				".plist"));
-    			}
-    		});
+    		File[] files = reportsDir.listFiles(PlistReader.Filter);
     		WOSession session = context.session();
   		NSKeyValueCodingAdditions readAccess = 
   					(NSKeyValueCodingAdditions)session.valueForKey("readAccess");

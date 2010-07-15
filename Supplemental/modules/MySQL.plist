@@ -6,8 +6,10 @@
 	<dict>
 		<key>serverURL</key>
 		<string>jdbc:mysql://127.0.0.1/</string>
-		<key>urlSuffix</key>
+		<key>_urlSuffix</key>
 		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull</string>
+		<key>urlSuffix</key>
+		<string>?capitalizeTypeNames=true&amp;useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;socketFactory=org.newsclub.net.mysql.AFUNIXDatabaseSocketFactory</string>
 		<key>username</key>
 		<string>rujel</string>
 		<key>password</key>

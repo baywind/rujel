@@ -56,7 +56,7 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 	});
 	
 	/**
-	 *Should return this
+	 *Should return <tt>this</tt>
 	 */
 	public Person person();
 	
@@ -78,7 +78,8 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 	public NSTimestamp birthDate();
 	public void setBirthDate(NSTimestamp newDate);
 	
-	/** should return new String (new char[] {firstName().charAt(0),'.',' ',secondName().charAt(0),'.'}); */
+	/** should return 
+	 * <tt>new String (new char[] {firstName().charAt(0),'.',' ',secondName().charAt(0),'.'});</tt> */
 	public String initials();
 	
 	public static class Utility {

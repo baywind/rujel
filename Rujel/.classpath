@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="Sources"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Authentication"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelArchiving"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelAutoItog"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelBase"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelComplete"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelContacts"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelCriterial"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelCurriculum"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelDiary"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduPlan"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduResults"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelReports"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelStats"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelVseLists"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelUsers"/>
 	<classpathentry kind="con" path="WOFramework/Authentication"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/RujelArchiving"/>

@@ -35,16 +35,16 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSForwardException;
 
+/** Should implement static method 
+ * <tt>public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec)</tt>
+ * Could implement static method 
+ * <tt>public static NSArray cyclesForEduGroup(EduGroup group)</tt>  */
+
 public interface EduCycle extends com.webobjects.eocontrol.EOEnterpriseObject {
 	public static final String className = net.rujel.reusables.SettingsReader.
 				stringForKeyPath("interfaces.EduCycle","net.rujel.base.PrimitiveEduCycle");
 	public static final String entityName = className.substring(1 +
 			className.lastIndexOf('.'));
-
-	/** Should implement static method 
-	 * <tt>public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec)</tt>  */
-	/** Could implement static method 
-	 * <tt>public static NSArray cyclesForEduGroup(EduGroup group)</tt>  */
 	
 	public String subject();
 	public void setSubject(String newSubject);

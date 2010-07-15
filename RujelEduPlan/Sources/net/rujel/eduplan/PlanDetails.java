@@ -660,9 +660,10 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults selectTeacher() {
 		if(rowItem.valueForKey("course") == null) {
-			WOComponent selector = TeacherSelector.selectorPopup(context().page(), "teacher", ec);
-			selector.takeValueForKey(new TeacherGetter(rowItem,ec,
-					(PlanCycle)cycleItem.valueForKey("cycle"),session()), "resultGetter");
+			TeacherGetter getter = new TeacherGetter(rowItem,ec,
+					(PlanCycle)cycleItem.valueForKey("cycle"),session());
+			WOComponent selector = TeacherSelector.selectorPopup(context().page(), getter,
+					"teacher", ec);
 			return selector;
 		}
 		WOComponent result = pageWithName("CourseInspector");

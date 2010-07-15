@@ -261,12 +261,21 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 
 	public static WOComponent selectorPopup(WOComponent returnPage, 
 			String resultPath, EOEditingContext ec) {
+		return selectorPopup(returnPage,null,resultPath,ec);
+	}
+	
+	public static WOComponent selectorPopup(WOComponent returnPage, Object resultGetter,
+			String resultPath, EOEditingContext ec) {
 		WOComponent selector = returnPage.pageWithName("SelectorPopup");
+		if(resultGetter == null)
+			resultGetter = returnPage;
+		else
+			selector.takeValueForKey(resultGetter, "resultGetter");
 		selector.takeValueForKey(returnPage, "returnPage");
 		selector.takeValueForKey(resultPath, "resultPath");
 		Object teacher = null;
 		try {
-			teacher = returnPage.valueForKeyPath(resultPath);
+			teacher = NSKeyValueCodingAdditions.Utility.valueForKeyPath(resultGetter,resultPath);
 		} catch (UnknownKeyException e) {
 			;
 		}
