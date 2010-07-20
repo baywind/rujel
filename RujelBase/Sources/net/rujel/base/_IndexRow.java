@@ -1,4 +1,4 @@
-// _Indexer.java
+// _IndexRow.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Indexer.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to IndexRow.java instead.
 
 package net.rujel.base;
 
@@ -37,64 +37,47 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _Indexer extends EOGenericRecord {
-	public static final String ENTITY_NAME = "Indexer";
+public abstract class _IndexRow extends EOGenericRecord {
+	public static final String ENTITY_NAME = "IndexRow";
 
 	// Attributes
-	public static final String DEFAULT_VALUE_KEY = "defaultValue";
-	public static final String FORMAT_STRING_KEY = "formatString";
-	public static final String TITLE_KEY = "title";
-	public static final String TYPE_KEY = "type";
+	public static final String IDX_KEY = "idx";
+	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String INDEX_ROWS_KEY = "indexRows";
+	public static final String COMMENT_EO_KEY = "commentEO";
+	public static final String INDEXER_KEY = "indexer";
 
-  public String defaultValue() {
-    return (String) storedValueForKey(DEFAULT_VALUE_KEY);
+  public Integer idx() {
+    return (Integer) storedValueForKey(IDX_KEY);
   }
 
-  public void setDefaultValue(String value) {
-    takeStoredValueForKey(value, DEFAULT_VALUE_KEY);
+  public void setIdx(Integer value) {
+    takeStoredValueForKey(value, IDX_KEY);
   }
 
-  public String formatString() {
-    return (String) storedValueForKey(FORMAT_STRING_KEY);
+  public String value() {
+    return (String) storedValueForKey(VALUE_KEY);
   }
 
-  public void setFormatString(String value) {
-    takeStoredValueForKey(value, FORMAT_STRING_KEY);
+  public void setValue(String value) {
+    takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public String title() {
-    return (String) storedValueForKey(TITLE_KEY);
+  public EOGenericRecord commentEO() {
+    return (EOGenericRecord)storedValueForKey(COMMENT_EO_KEY);
   }
 
-  public void setTitle(String value) {
-    takeStoredValueForKey(value, TITLE_KEY);
-  }
-
-  public Integer type() {
-    return (Integer) storedValueForKey(TYPE_KEY);
-  }
-
-  public void setType(Integer value) {
-    takeStoredValueForKey(value, TYPE_KEY);
-  }
-
-  public NSArray indexRows() {
-    return (NSArray)storedValueForKey(INDEX_ROWS_KEY);
-  }
- 
-  public void setIndexRows(NSArray value) {
-    takeStoredValueForKey(value, INDEX_ROWS_KEY);
+  public void setCommentEO(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, COMMENT_EO_KEY);
   }
   
-  public void addToIndexRows(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, INDEX_ROWS_KEY);
+  public net.rujel.base.Indexer indexer() {
+    return (net.rujel.base.Indexer)storedValueForKey(INDEXER_KEY);
   }
 
-  public void removeFromIndexRows(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, INDEX_ROWS_KEY);
+  public void setIndexer(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, INDEXER_KEY);
   }
-
+  
 }

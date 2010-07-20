@@ -29,11 +29,18 @@
 
 package net.rujel.base;
 
+import java.util.logging.Logger;
+
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 
@@ -77,7 +84,27 @@ public class BaseModule {
 	}
 
 	public static void init() {
-		;
+		EOEditingContext ec = new EOEditingContext();
+		ec.lock();
+		try {
+			NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
+					Indexer.ENTITY_NAME, Indexer.TYPE_KEY, new Integer((int)Short.MIN_VALUE));
+			if(list == null || list.count() == 0) {
+				EOEnterpriseObject typeIndex = EOUtilities.createAndInsertInstance(
+						ec,Indexer.ENTITY_NAME);
+				typeIndex.takeValueForKey(new Integer((int)Short.MIN_VALUE), Indexer.TYPE_KEY);
+				typeIndex.takeValueForKey("index types",Indexer.TITLE_KEY);
+				ec.saveChanges();
+				Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,
+						"Automatically generated type index");
+				Indexer.setTipesGID(ec.globalIDForObject(typeIndex));
+			}
+		} catch (Exception e) {
+			Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
+					"Error autogenerating type index",e);
+		} finally {
+			ec.unlock();
+		}
 	}
 	
 	public static Object deleteCourse(WOContext ctx) {
