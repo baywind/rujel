@@ -177,16 +177,15 @@ public class Session extends WOSession implements MultiECLockManager.Session {
     protected StringBuffer message = new StringBuffer();
 	public EOGlobalID userPersonGID() {
 		if (personGID != null) return personGID;
-		//UserPresentation user = (UserPresentation)session().valueForKey("user");
-		//Person result = null;
-		Object pid = user.propertyNamed("teacherID");//.toString();
+		personGID = (EOGlobalID)user.propertyNamed("personGID");
+		if (personGID != null) return personGID;
+		
+		Object pid = user.propertyNamed("teacherID");
 		String className = Teacher.entityName;
 		if (pid == null) {
-			pid = user.propertyNamed("studentID");//.toString();
+			pid = user.propertyNamed("studentID");
 			className = Student.entityName;
-//			isStudent = true;
 		}
-		
 		if (pid == null) return null;
 		
 		Object pKey = null;
@@ -256,6 +255,15 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	
 	private NSMutableArray persList = new NSMutableArray();
 	public NSMutableArray personList() {
+		if(persList.count() == 0) {
+			EOGlobalID gid = userPersonGID();
+			if(gid != null) {
+				EOEnterpriseObject up = defaultEditingContext().faultForGlobalID(
+						gid, defaultEditingContext());
+				if(up != null)
+					persList.addObject(up);
+			}
+		}
 		return persList;
 	}
 	public NSArray sortedPersList(NSArray sorter){

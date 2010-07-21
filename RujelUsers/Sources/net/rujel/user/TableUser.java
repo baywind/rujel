@@ -42,6 +42,8 @@ import net.rujel.auth.UserPresentation;
 import net.rujel.auth.UserPresentation.DefaultImplementation;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
+import net.rujel.interfaces.Student;
+import net.rujel.interfaces.Teacher;
 
 public class TableUser extends DefaultImplementation implements
 		UserPresentation {
@@ -116,6 +118,19 @@ public class TableUser extends DefaultImplementation implements
 	}
 	
 	public Object propertyNamed(String property) {
+		if(property.equals("personGID"))
+			return personGID;
+		if(property.equals("teacherID")) {
+			if(personGID != null && personGID instanceof EOKeyGlobalID &&
+					((EOKeyGlobalID)personGID).entityName().equals(Teacher.entityName))
+				return ((EOKeyGlobalID)personGID).keyValues()[0];
+		}
+		if(property.equals("studentID")) {
+			if(personGID != null && personGID instanceof EOKeyGlobalID &&
+					((EOKeyGlobalID)personGID).entityName().equals(Student.entityName))
+				return ((EOKeyGlobalID)personGID).keyValues()[0];
+		}
+			
 		Object result = (properties == null)?null:properties.valueForKey(property);
 		if(result == null && parent != null)
 			result = parent.propertyNamed(property);
