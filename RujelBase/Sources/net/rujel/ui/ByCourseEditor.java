@@ -52,7 +52,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 	
 	public WOComponent returnPage;
 	protected SettingsBase base;
-	public NSMutableArray baseByCourse;
+	public NSMutableArray editList;
 	protected NSKeyValueCoding byCourse;
 	public NSArray grades;
 	protected NSMutableDictionary groupsByGrade;
@@ -351,21 +351,21 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 				bc.takeValuesFromDictionary((NSDictionary)byCourse);
 				byCourse = bc;
 			} // create from dict
-			if(baseByCourse != null) {
-				if(baseByCourse.containsObject(byCourse)) {
-					baseByCourse.sortUsingComparator(comparator);
+			if(editList != null) {
+				if(editList.containsObject(byCourse)) {
+					editList.sortUsingComparator(comparator);
 				} else {
 					boolean done = false;
-					for (int i = 0; i < baseByCourse.count(); i++) {
-						int res = comparator.compare(baseByCourse.objectAtIndex(i), byCourse);
+					for (int i = 0; i < editList.count(); i++) {
+						int res = comparator.compare(editList.objectAtIndex(i), byCourse);
 						if(res == NSComparator.OrderedDescending) {
-							baseByCourse.insertObjectAtIndex(byCourse, i);
+							editList.insertObjectAtIndex(byCourse, i);
 							done = true;
 							break;
 						}
 					}
 					if(!done)
-						baseByCourse.addObject(byCourse);
+						editList.addObject(byCourse);
 				} // insert into list
 			}
 			if(pushToKeyPath != null) {

@@ -1,0 +1,6 @@
+SetsTabs : Tabs {
+  currTab = currSet;
+  tablist = sets;
+  vertical = true;
+  titleAttribute = "comment";
+}

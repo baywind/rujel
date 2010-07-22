@@ -66,10 +66,10 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     			base = SettingsBase.baseForKey(key, ec, false);
     		}
     		/*
-			NSArray baseByCourse = base.byCourse();
+			NSArray editList = base.byCourse();
 			byCourse = new NSMutableArray();
-	    	if(baseByCourse != null && baseByCourse.count() > 0) {
-	    		Enumeration enu = baseByCourse.objectEnumerator();
+	    	if(editList != null && editList.count() > 0) {
+	    		Enumeration enu = editList.objectEnumerator();
 	    		Object eduYear = session().valueForKey("eduYear");
 	    		while (enu.hasMoreElements()) {
 	    			EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
@@ -176,7 +176,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     public WOActionResults addByCourse() {
     	WOComponent editor = pageWithName("ByCourseEditor");
     	editor.takeValueForKey(context().page(), "returnPage");
-    	editor.takeValueForKey(byCourse, "baseByCourse");
+    	editor.takeValueForKey(byCourse, "editList");
     	editor.takeValueForKey(base, "base");
     	editor.takeValueForKeyPath(currList, "byCourse.textValue");
     	editor.takeValueForKeyPath(currNum, "byCourse.numericValue");

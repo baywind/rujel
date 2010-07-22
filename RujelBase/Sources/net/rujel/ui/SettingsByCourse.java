@@ -76,6 +76,8 @@ public class SettingsByCourse extends WOComponent {
     }
     
 	public NSArray byCourse() {
+		if(hasBinding("editList"))
+			return (NSArray)valueForBinding("editList");
 		if(_byCourse == null) {
 			SettingsBase base = base();
 			if(base == null)
@@ -110,7 +112,7 @@ public class SettingsByCourse extends WOComponent {
     public WOActionResults addByCourse() {
     	WOComponent editor = pageWithName("ByCourseEditor");
     	editor.takeValueForKey(context().page(), "returnPage");
-//    	editor.takeValueForKey(byCourse, "baseByCourse");
+//    	editor.takeValueForKey(byCourse, "editList");
     	editor.takeValueForKey(base(), "base");
     	if(hasBinding("defaultText")) {
     		Object value = valueForBinding("defaultText");

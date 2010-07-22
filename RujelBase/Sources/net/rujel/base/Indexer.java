@@ -32,11 +32,16 @@ package net.rujel.base;
 import java.math.RoundingMode;
 import java.util.Enumeration;
 
+import net.rujel.reusables.Various;
+
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFaultHandler;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
@@ -283,7 +288,18 @@ public class Indexer extends _Indexer
 	
 	public static NSArray indexersOfType(EOEditingContext ec, String type) {
 		Indexer typeIndex = (Indexer)ec.faultForGlobalID(typesGID, ec);
-		Integer typeIdx = typeIndex.indexForValue(type, true);
-		return EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME, TYPE_KEY, typeIdx);
+		if(type.indexOf('*') < 0 && type.indexOf('?') < 0) {
+			Integer typeIdx = typeIndex.indexForValue(type, true);
+			return EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME, TYPE_KEY, typeIdx);
+		}
+		EOQualifier qual = new EOKeyValueQualifier(IndexRow.VALUE_KEY, 
+				EOQualifier.QualifierOperatorCaseInsensitiveLike, type);
+		NSArray found = EOQualifier.filteredArrayWithQualifier(typeIndex.indexRows(), qual);
+		if(found == null || found.count() == 0)
+			return found;
+		found = (NSArray)found.valueForKey(IndexRow.IDX_KEY);
+		qual = Various.getEOInQualifier(TYPE_KEY, found);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, qual, null);
+		return ec.objectsWithFetchSpecification(fs);
 	}
 }

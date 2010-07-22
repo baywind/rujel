@@ -73,6 +73,15 @@
 			<key>compulsory</key>
 			<string>обязат.</string>
 		</dict>
+		<key>CritreriaSet</key>
+		<dict>
+			<key>title</key>
+			<string>Критерии оценивания</string>
+			<key>component</key>
+			<string>SetupCriteria</string>
+			<key>sort</key>
+			<string>30</string>
+		</dict>
 	</dict>
 	<key>messages</key>
 	<dict>

@@ -127,7 +127,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		WOComponent editor = pageWithName("ByCourseEditor");
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(bc(), "byCourse");
-		editor.takeValueForKey(valueForBinding("editList"), "baseByCourse");
+		editor.takeValueForKey(valueForBinding("editList"), "editList");
     	if(hasBinding("pushByCourse")) {
     		editor.takeValueForKey(this, "resultGetter");
     		editor.takeValueForKey("^pushByCourse", "pushToKeyPath");

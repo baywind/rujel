@@ -100,7 +100,7 @@ public class ModuleInit {
 							new String[] {"entity","coursePath","studentPath"}) });
 		} else if("adminModules".equals(obj)) {
 			return WOApplication.application().valueForKeyPath(
-					"strings.RujelCriterial_Strings.setup.WorkType");
+					"strings.RujelCriterial_Strings.setup.allValues");
 		}
 		return null;
 	}
