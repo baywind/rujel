@@ -63,15 +63,15 @@ public class SrcMark extends WOComponent {
     public SrcMark(WOContext context) {
         super(context);
 		ec = new SessionedEditingContext(session());
-		ec.lock();
 		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SrcMark");
 		EOGlobalID gid = (EOGlobalID)session().valueForKey("userPersonGID");
-		EOEnterpriseObject pLink = ec.faultForGlobalID(gid, ec);
-		if(pLink instanceof Teacher) {
-			currTeacher = (Teacher)pLink;
-			coursesForTeacher(currTeacher);
+		if(gid != null) {
+			EOEnterpriseObject pLink = ec.faultForGlobalID(gid, ec);
+			if(pLink instanceof Teacher) {
+				currTeacher = (Teacher)pLink;
+				coursesForTeacher(currTeacher);
+			}
 		}
-		ec.unlock();
     }
 	
 	public void setCurrClass(EduGroup newClass) {

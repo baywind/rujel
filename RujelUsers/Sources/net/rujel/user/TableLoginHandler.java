@@ -43,11 +43,13 @@ import net.rujel.reusables.WOLogLevel;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.foundation.NSArray;
 
 public class TableLoginHandler implements LoginHandler {
 	protected static Logger logger = Logger.getLogger("user");
 	protected LoginHandler parentHandler;
+	protected static Boolean noUsers;
 	public static final String HASH_PREFIX = "pwhash: ";
 	
 	public TableLoginHandler() {
@@ -67,17 +69,49 @@ public class TableLoginHandler implements LoginHandler {
 		}
 	}
 
+	protected boolean noUsers() {
+		if(noUsers == null) {
+			if(SettingsReader.stringForKeyPath("auth.parentLoginHandler", null) == null) {
+				EOEditingContext ec = new EOEditingContext();
+				try {
+					ec.lock();
+					EOFetchSpecification fs = new EOFetchSpecification(
+							AutUser.ENTITY_NAME,null,null);
+					fs.setFetchLimit(1);
+					NSArray users = ec.objectsWithFetchSpecification(fs);
+					noUsers = Boolean.valueOf(users == null || users.count() == 0);
+				} catch (Exception e) {
+					noUsers = Boolean.FALSE;
+				} finally {
+					ec.unlock();
+				}
+			} else {
+				noUsers = Boolean.FALSE;
+			}
+		}
+		return noUsers.booleanValue();
+	}
 	
 	public String[] args() {
+		if(noUsers())
+			return new String[0];
 		return new String[] {"username", "password"};
 	}
 	
 	public String identityArg() {
+		if(noUsers())
+			return null;
 		return "username";
 	}
 
 	public UserPresentation authenticate (Object [] args) 
 			throws AuthenticationFailedException, IllegalArgumentException {
+		if(noUsers()) {
+			logger.log(WOLogLevel.WARNING,
+					"No users found. Allowing anonymous user with full access");
+			noUsers = null;
+			return new UserPresentation.DummyUser(true);
+		}
 		String user;
 		String password;
 		try {
