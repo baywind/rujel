@@ -123,8 +123,8 @@ GroupsList : WORepetition {
   item = item;
 }
 
-GroupRow : OnClickContainer {
-  elementName = "tr";
+GroupCell : OnClickContainer {
+  elementName = "td";
   disabled = session.readAccess._edit.UserGroup;
   invokeAction = selectGroup;
   onclick = session.checkRun;

@@ -43,8 +43,13 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableArray;
 
 public class UserModule {
+	
+	public static final String[] presetGroups = new String[] {
+		"root","zavuch","zav_kaf","tutor","teacher"};
+ 	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			try {
@@ -53,8 +58,7 @@ public class UserModule {
 			} catch (NSKeyValueCoding.UnknownKeyException e) {
 				// default access not supported
 			}
-			if(SettingsReader.stringForKeyPath("auth.parentLoginHandler", null) != null)
-				generateGroups();
+			generateGroups();
 		} else if("adminModules".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelUsers_UserStrings.adminModule");
 		} else if("accessModifier".equals(obj)) {
@@ -64,37 +68,56 @@ public class UserModule {
 	}
 	
 	public static void generateGroups() {
-		SettingsReader mappings = SettingsReader.settingsForPath("auth.groupMapping", false);
-		if(mappings == null)
-			return;
+//		if(mappings == null)
+//			return;
 		EOEditingContext ec = new EOEditingContext();
 		ec.lock();
 		try {
+			NSMutableArray preset = new NSMutableArray(presetGroups);
 			NSArray exists = EOUtilities.objectsForEntityNamed(ec, "UserGroup");
-			if(exists != null && exists.count() > 0)
+			if(exists != null && exists.count() > 0) {
+				if(SettingsReader.stringForKeyPath("auth.parentLoginHandler", null) == null)
+					return;
 				exists = (NSArray)exists.valueForKey("groupName");
-			Enumeration enu = mappings.keyEnumerator();
-			int count = 0;
-			while (enu.hasMoreElements()) {
-				String key = (String) enu.nextElement();
-				if(exists != null && exists.containsObject(key))
-					continue;
-				String value = mappings.get(key, null);
-				if(value == null || value.equals("*"))
-					continue;
-				count++;
-				EOEnterpriseObject gr = EOUtilities.createAndInsertInstance(ec, "UserGroup");
-				gr.takeValueForKey(key, "groupName");
-				gr.takeValueForKey(value, "externalEquivalent");
+				preset.removeObjectsInArray(exists);
 			}
-			if(count > 0) {
+			SettingsReader mappings = SettingsReader.settingsForPath("auth.groupMapping", false);
+			if(mappings != null) {
+				Enumeration enu = mappings.keyEnumerator();
+				int count = 0;
+				while (enu.hasMoreElements()) {
+					String key = (String) enu.nextElement();
+					if(exists != null && exists.containsObject(key))
+						continue;
+					String value = mappings.get(key, null);
+					if(value == null || value.equals("*"))
+						continue;
+					count++;
+					EOEnterpriseObject gr = EOUtilities.createAndInsertInstance(ec, "UserGroup");
+					gr.takeValueForKey(key, "groupName");
+					gr.takeValueForKey(value, "externalEquivalent");
+					preset.removeObject(key);
+				}
+				if(count > 0) {
+					Logger logger = Logger.getLogger("rujel.users");
+					ec.saveChanges();
+					logger.log(WOLogLevel.COREDATA_EDITING,"Generated UserGroups from mappings");
+				}
+			}
+			if(preset.count() > 0 && (exists == null || exists.count() == 0)) {
+				Enumeration enu = preset.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					String key = (String) enu.nextElement();
+					EOEnterpriseObject gr = EOUtilities.createAndInsertInstance(ec, "UserGroup");
+					gr.takeValueForKey(key, "groupName");
+				}
 				Logger logger = Logger.getLogger("rujel.users");
 				ec.saveChanges();
-				logger.log(WOLogLevel.COREDATA_EDITING,"Generated UserGroups from mappings");
+				logger.log(WOLogLevel.COREDATA_EDITING,"Generated UserGroups from preset");
 			}
 		} catch (Exception e) {
 			Logger logger = Logger.getLogger("rujel.users");
-			logger.log(WOLogLevel.WARNING,"Error generating UserGroups from mappings",e);
+			logger.log(WOLogLevel.WARNING,"Error generating UserGroups from mappings/preset",e);
 		} finally {
 			ec.unlock();
 		}
