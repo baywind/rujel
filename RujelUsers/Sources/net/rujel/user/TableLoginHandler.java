@@ -69,6 +69,10 @@ public class TableLoginHandler implements LoginHandler {
 		}
 	}
 
+	public static void flush() {
+		noUsers = null;
+	}
+	
 	protected boolean noUsers() {
 		if(noUsers == null) {
 			if(SettingsReader.stringForKeyPath("auth.parentLoginHandler", null) == null) {
@@ -109,7 +113,7 @@ public class TableLoginHandler implements LoginHandler {
 		if(noUsers()) {
 			logger.log(WOLogLevel.WARNING,
 					"No users found. Allowing anonymous user with full access");
-			noUsers = null;
+//			noUsers = null;
 			return new UserPresentation.DummyUser(true);
 		}
 		String user;

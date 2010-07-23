@@ -92,14 +92,18 @@ public class ManageUsers extends WOComponent {
 						passw2 = null;
 					}
 				}
+				TableLoginHandler.flush();
 			} else {
 				return null;
 			}
 			ec.saveChanges();
 			logger.log(WOLogLevel.UNOWNED_EDITING,"User changes saved",
 					new Object[] {session(),list.selectedObject()});
-			if(match)
+			if(match) {
 				list.clearSelection();
+				passw1 = null;
+				passw2 = null;
+			}
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error changing User ",
 					new Object[] {session(),list.selectedObject(),e});
@@ -120,12 +124,16 @@ public class ManageUsers extends WOComponent {
 			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting user " + NSKeyValueCoding.Utility.
 					valueForKey(list.selectedObject(), AutUser.USER_NAME_KEY),
 					new Object[] {session(),list.selectedObject()});
+			TableLoginHandler.flush();
 		} else {
 			return null;
 		}
 		try {
 			list.delete();
 			ec.saveChanges();
+			passw1 = null;
+			passw2 = null;
+			list.clearSelection();
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error deleting",
 					new Object[] {session(),list.selectedObject(),e});
@@ -207,6 +215,8 @@ public class ManageUsers extends WOComponent {
 		}
 		groupsList.selectObject(item);
 		usersList.clearSelection();
+		passw1 = null;
+		passw2 = null;
 		return null;
 	}
 	

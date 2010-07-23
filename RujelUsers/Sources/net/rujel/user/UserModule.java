@@ -44,6 +44,7 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSDictionary;
 
 public class UserModule {
 	
@@ -75,11 +76,12 @@ public class UserModule {
 		try {
 			NSMutableArray preset = new NSMutableArray(presetGroups);
 			NSArray exists = EOUtilities.objectsForEntityNamed(ec, "UserGroup");
+			NSDictionary existing = NSDictionary.EmptyDictionary;
 			if(exists != null && exists.count() > 0) {
 				if(SettingsReader.stringForKeyPath("auth.parentLoginHandler", null) == null)
 					return;
-				exists = (NSArray)exists.valueForKey("groupName");
-				preset.removeObjectsInArray(exists);
+				existing = new NSDictionary(exists,(NSArray)exists.valueForKey("groupName"));
+				preset.removeObjectsInArray(existing.allKeys());
 			}
 			SettingsReader mappings = SettingsReader.settingsForPath("auth.groupMapping", false);
 			if(mappings != null) {
@@ -87,13 +89,17 @@ public class UserModule {
 				int count = 0;
 				while (enu.hasMoreElements()) {
 					String key = (String) enu.nextElement();
-					if(exists != null && exists.containsObject(key))
-						continue;
 					String value = mappings.get(key, null);
 					if(value == null || value.equals("*"))
 						continue;
+					EOEnterpriseObject gr = (EOEnterpriseObject)existing.valueForKey(key);
+					if(gr != null) {
+						if(gr.valueForKey("externalEquivalent") == null)
+							gr.takeValueForKey(value, "externalEquivalent");
+						continue;
+					}
 					count++;
-					EOEnterpriseObject gr = EOUtilities.createAndInsertInstance(ec, "UserGroup");
+					gr = EOUtilities.createAndInsertInstance(ec, "UserGroup");
 					gr.takeValueForKey(key, "groupName");
 					gr.takeValueForKey(value, "externalEquivalent");
 					preset.removeObject(key);
