@@ -287,6 +287,8 @@ public class Indexer extends _Indexer
 	}
 	
 	public static NSArray indexersOfType(EOEditingContext ec, String type) {
+		if(typesGID == null)
+			return null;
 		Indexer typeIndex = (Indexer)ec.faultForGlobalID(typesGID, ec);
 		if(type.indexOf('*') < 0 && type.indexOf('?') < 0) {
 			Integer typeIdx = typeIndex.indexForValue(type, true);

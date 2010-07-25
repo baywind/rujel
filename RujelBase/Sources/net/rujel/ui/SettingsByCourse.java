@@ -32,18 +32,22 @@ package net.rujel.ui;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableArray;
 
 public class SettingsByCourse extends WOComponent {
 	protected NSArray _byCourse;
 	public EOEnterpriseObject item;
 //	public EOEditingContext ec;
+	protected Object selector;
 	
     public SettingsByCourse(WOContext context) {
         super(context);
@@ -76,12 +80,38 @@ public class SettingsByCourse extends WOComponent {
     }
     
 	public NSArray byCourse() {
-		if(hasBinding("editList"))
-			return (NSArray)valueForBinding("editList");
+		String sel = (String)valueForBinding("selector");
+		if(sel != null) {
+			Object val = valueForBinding(sel);
+	    	if(_byCourse != null && (val == null)?selector == null : val.equals(selector))
+	    		return _byCourse;
+			selector = val;
+			SettingsBase base = base();
+	    	_byCourse = base.allForSetting(sel, val, session().valueForKey("eduYear"));
+	    	if(sel.equals(SettingsBase.TEXT_VALUE_KEY))
+	    		sel = SettingsBase.NUMERIC_VALUE_KEY;
+	    	else
+	    		sel = SettingsBase.TEXT_VALUE_KEY;	
+	    	if(canSetValueForBinding(sel)) {
+	    		if(_byCourse.count() > 0) {
+	    			EOEnterpriseObject bc = (EOEnterpriseObject)_byCourse.objectAtIndex(0);
+	    			val = bc.valueForKey(sel);
+	    		} else {
+	    			val = null;
+	    		}
+    			setValueForBinding(val, sel);
+	    	}
+		}
+		if(hasBinding("editList")) {
+			if(sel == null)
+				_byCourse = (NSArray)valueForBinding("editList");
+			else
+				setValueForBinding(_byCourse, "editList");
+		}
 		if(_byCourse == null) {
 			SettingsBase base = base();
 			if(base == null)
-				_byCourse = NSArray.EmptyArray;
+				_byCourse = new NSMutableArray();
 			else
 				_byCourse = base.byCourse((Integer)session().valueForKey("eduYear"));
 		}
@@ -112,16 +142,16 @@ public class SettingsByCourse extends WOComponent {
     public WOActionResults addByCourse() {
     	WOComponent editor = pageWithName("ByCourseEditor");
     	editor.takeValueForKey(context().page(), "returnPage");
-//    	editor.takeValueForKey(byCourse, "editList");
+    	editor.takeValueForKey(_byCourse, "editList");
     	editor.takeValueForKey(base(), "base");
-    	if(hasBinding("defaultText")) {
-    		Object value = valueForBinding("defaultText");
+    	if(hasBinding("textValue")) {
+    		Object value = valueForBinding("textValue");
     		if(value == null)
     			value = NullValue;
     		editor.takeValueForKeyPath(value, "byCourse.textValue");
     	}
-    	if(hasBinding("defaultNumeric")) {
-    		Object value = valueForBinding("defaultNumeric");
+    	if(hasBinding("numericValue")) {
+    		Object value = valueForBinding("numericValue");
     		if(value == null)
     			value = NullValue;
     		editor.takeValueForKeyPath(value, "byCourse.numericValue");
@@ -147,13 +177,55 @@ public class SettingsByCourse extends WOComponent {
     	else
     		return (Boolean)session().valueForKeyPath("readAccess.create.SettingByCourse");
     }
-	
+
+	public Boolean cantSetBase() {
+		if(!Various.boolForObject(valueForBinding("canSetBase")))
+			return Boolean.TRUE;
+		if(Various.boolForObject(valueForBinding("readOnly")))
+			return Boolean.TRUE;
+		NamedFlags access = (NamedFlags)valueForBinding("access");
+		if(access != null && !access.flagForKey("edit"))
+			return Boolean.TRUE;
+		String sel = (String)valueForBinding("selector");
+		if(sel == null)
+			return Boolean.TRUE;
+		Object val = valueForBinding(sel);
+		Object bs = base().valueForKey(sel);
+		if((val==null)?bs==null:val.equals(bs))
+			return Boolean.TRUE;
+		return (Boolean)session().valueForKeyPath("readAccess._edit.SettingsBase");
+	}
+
+	public WOActionResults makeBase() {
+		String sel = (String)valueForBinding("selector");
+		base().takeValueForKey(valueForBinding(sel), sel);
+		EOEditingContext ec = base().editingContext();
+		try {
+			ec.saveChanges();
+			((NSMutableArray)_byCourse).insertObjectAtIndex(base(), 0);
+			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Changed BaseSettings",
+					new Object[] {session(),base()});
+		} catch (Exception e) {
+			ec.revert();
+			session().takeValueForKey(e.getMessage(), "message");
+			ByCourseEditor.logger.log(WOLogLevel.WARNING,"Error modifying BaseSettings",
+					new Object[] {session(),base(),e});
+		}
+		return null;
+	}
+
     public boolean synchronizesVariablesWithBindings() {
         return false;
 	}
 	
 	public boolean isStateless() {
-		return true;
+		return false;
+	}
+	
+	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		if(Various.boolForObject(valueForBinding("readOnly")))
+			_byCourse = null;
+		super.appendToResponse(aResponse, aContext);
 	}
 	
 	public void reset() {

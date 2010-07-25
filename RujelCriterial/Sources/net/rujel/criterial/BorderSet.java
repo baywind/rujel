@@ -40,6 +40,11 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 {
 	protected static final EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("least",EOSortOrdering.CompareAscending);
 
+	public static final int TEXT = 0;
+	public static final int COLOR = 1;
+	public static final int IMAGE = 2;
+	public static final int HTML = 3;
+	
 	public BorderSet() {
         super();
     }
@@ -56,7 +61,12 @@ public class BorderSet extends _BorderSet implements FractionPresenter
     }
 */
 	
-	public static FractionPresenter fractionPresenterForTitle(EOEditingContext ec, String title) {
+    public void awakeFromInsertion(EOEditingContext ec) {
+    	setValueType(new Integer(0));
+    	setExclude(Boolean.FALSE);
+    }
+
+    public static FractionPresenter fractionPresenterForTitle(EOEditingContext ec, String title) {
 		if(title.charAt(0)=='%') {
 			if(title.length()==1) return PERCENTAGE;
 			int precision = Integer.parseInt(title.substring(1));

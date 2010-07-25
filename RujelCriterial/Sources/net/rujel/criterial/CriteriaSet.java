@@ -31,11 +31,15 @@ package net.rujel.criterial;
 
 
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
@@ -46,6 +50,9 @@ public class CriteriaSet extends _CriteriaSet
         super();
     }
 	
+    public static final NSArray flagNames = new NSArray(
+    		new String[] {"fixMax","fixWeight","fixList","onlyCriter"});
+    
 	/*
 	 // If you add instance variables to store property values you
 	 // should add empty implementions of the Serialization methods
@@ -57,6 +64,10 @@ public class CriteriaSet extends _CriteriaSet
 	 private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
 	 }
 	 */
+    
+    public void awakeFromInsertion(EOEditingContext ec) {
+    	setFlags(new Integer(0));
+    }
 	
 	public NSArray sortedCriteria() {
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(criteria(),sorter);
@@ -106,12 +117,14 @@ public class CriteriaSet extends _CriteriaSet
 		return (crit == null)?null:(Integer)crit.valueForKey("criterion");
 	}
 	
-	public void addCriterion() {
-		EOEnterpriseObject criterion = EOUtilities.createAndInsertInstance(editingContext(),"Criterion");
-		addObjectToBothSidesOfRelationshipWithKey(criterion,"criteria");
-		Number num = (Number)criteria().valueForKeyPath("@max.sort");
+	public EOEnterpriseObject addCriterion() {
+		EOEnterpriseObject criterion = EOUtilities.createAndInsertInstance(
+				editingContext(),"Criterion");
+		Number num = (Number)criteria().valueForKeyPath("@max.criterion");
 		num = (num==null)?new Integer(1):new Integer(num.intValue() + 1);
-		criterion.takeValueForKey(num,"sort");
+		criterion.takeValueForKey(num,"criterion");
+		addObjectToBothSidesOfRelationshipWithKey(criterion,"criteria");
+		return criterion;
 	}
 	
 	public static CriteriaSet critSetForCourse(EduCourse course) {
@@ -177,4 +190,57 @@ public class CriteriaSet extends _CriteriaSet
 		}
 		return max;
 	}
+	
+	private NamedFlags _flags;
+    public NamedFlags namedFlags() {
+    	if(_flags==null) {
+    		_flags = new NamedFlags(flags().intValue(),flagNames);
+    		try{
+    			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
+    					NamedFlags.class));
+    		} catch (Exception e) {
+    			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+						"Could not get syncMethod for Work flags",e);
+			}
+    	}
+    	return _flags;
+    }
+    
+    public void setNamedFlags(NamedFlags flags) {
+    	if(flags != null)
+    		super.setFlags(flags.toInteger());
+    	_flags = flags;
+    }
+
+    public void setFlags(Integer flags) {
+    	_flags = null;
+    	super.setFlags(flags);
+    }
+    
+    public void validateForSave() {
+    	super.validateForSave();
+    	NSArray criteria = criteria();
+    	if(namedFlags().flagForKey("fixList") || namedFlags().flagForKey("onlyCriter")) {
+    		if(criteria == null || criteria.count() == 0)
+    			throw new ValidationException((String)
+    					WOApplication.application().valueForKeyPath(
+    					"strings.RujelCriterial_Strings.messages.criteriaRequired"));
+    	}
+    	if(namedFlags().flagForKey("fixMax") || namedFlags().flagForKey("fixWeight")) {
+    		Enumeration enu = criteria.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+				EOEnterpriseObject cr = (EOEnterpriseObject) enu.nextElement();
+				if(namedFlags().flagForKey("fixMax") && 
+						cr.valueForKey("dfltMax") == null)
+	    			throw new ValidationException((String)
+	    					WOApplication.application().valueForKeyPath(
+	    					"strings.RujelCriterial_Strings.messages.maxsRequired"));
+				if(namedFlags().flagForKey("fixWeight") &&
+						cr.valueForKey("dfltWeight") == null)
+	    			throw new ValidationException((String)
+	    					WOApplication.application().valueForKeyPath(
+	    					"strings.RujelCriterial_Strings.messages.weightsRequired"));
+			}
+    	}
+    }
 }

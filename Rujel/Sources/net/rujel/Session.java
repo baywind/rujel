@@ -378,21 +378,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	}
 	
     public String confirmMessage() {
-/*		WOApplication app = WOApplication.application();
-		String formatter = (String)app.valueForKeyPath("strings.Strings.messages.areYouShure");
-		Object action = app.valueForKeyPath("strings.Reusables_Strings.uiElements.Delete");
-		String msg = "Are you shure?";
-		if(formatter != null && action != null) {
-			try {
-				msg = String.format(formatter,action);
-			} catch (Exception ex) {
-				; // oops
-			}
-		}
-		return "return (tryLoad(false) && confirm('" + msg + "'));";
-*/	
 		String href = context().componentActionURL();
-		return "if(confirmAction(null,event) && tryLoad())window.location = '" + href +"';";
+		return "if(confirmAction(null,event) && tryLoad())window.location = '"
+			+ href +"'; else return false;";
     }
 
 	public NSMutableArray pathStack = new NSMutableArray();

@@ -127,6 +127,8 @@
 		<string>(все)</string>
 		<key>addByCourse</key>
 		<string>уточнить для отдельных курсов</string>
+		<key>setDefault</key>
+		<string>установить &quot;для всех&quot;</string>
 	</dict>
 	<key>newPerson</key>
 	<dict>

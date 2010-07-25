@@ -153,12 +153,13 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 			String path = (String)valueForBinding("pushByCourse");
 			if(path != null) {
 				WOComponent getter = parent();
-	    		while (path.charAt(0) == '^') {
+	    		while (path != null && path.charAt(0) == '^') {
 	    			path = path.substring(1);
 					path = (String)getter.valueForBinding(path);
 					getter = getter.parent();
 				}
-	    		getter.takeValueForKeyPath(bc, path);
+	    		if(path != null)
+	    			getter.takeValueForKeyPath(bc, path);
 			}
 			ec.saveChanges();
 			NSMutableArray list = (NSMutableArray)valueForBinding("editList");

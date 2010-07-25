@@ -89,16 +89,19 @@ public class BaseModule {
 		try {
 			NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
 					Indexer.ENTITY_NAME, Indexer.TYPE_KEY, new Integer((int)Short.MIN_VALUE));
+			EOEnterpriseObject typeIndex = null;
 			if(list == null || list.count() == 0) {
-				EOEnterpriseObject typeIndex = EOUtilities.createAndInsertInstance(
+				typeIndex = EOUtilities.createAndInsertInstance(
 						ec,Indexer.ENTITY_NAME);
 				typeIndex.takeValueForKey(new Integer((int)Short.MIN_VALUE), Indexer.TYPE_KEY);
 				typeIndex.takeValueForKey("index types",Indexer.TITLE_KEY);
 				ec.saveChanges();
 				Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,
 						"Automatically generated type index");
-				Indexer.setTipesGID(ec.globalIDForObject(typeIndex));
+			} else {
+				typeIndex = (EOEnterpriseObject)list.objectAtIndex(0);
 			}
+			Indexer.setTipesGID(ec.globalIDForObject(typeIndex));
 		} catch (Exception e) {
 			Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
 					"Error autogenerating type index",e);

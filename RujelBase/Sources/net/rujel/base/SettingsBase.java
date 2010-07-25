@@ -253,6 +253,29 @@ public class SettingsBase extends _SettingsBase {
 		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
 	}
 	
+	public NSArray allForSetting(String selector, Object value, Object eduYear) {
+    	NSArray byCourse = byCourse();
+    	NSMutableArray usage = new NSMutableArray();
+		Object val = valueForKey(selector);
+    	if((val == null)?value == null : val.equals(value))
+			usage.addObject(this);
+    	if(byCourse != null && byCourse.count() > 0) {
+    		Enumeration enu = byCourse.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+    			EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
+    			if(eduYear != null) {
+    				val = bc.valueForKey("eduYear");
+    				if(val != null && !val.equals(eduYear))
+    					continue;
+    			}
+    			val = bc.valueForKey(selector);
+    	    	if((val == null)?value == null : val.equals(value))
+    				usage.addObject(bc);
+    		}
+    	}
+    	return usage;
+	}
+	
     public NSMutableArray byCourse(Integer eduYear) {
 		NSArray baseByCourse = byCourse();
 		NSMutableArray byCourse = new NSMutableArray(this);

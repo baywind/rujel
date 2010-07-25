@@ -45,11 +45,11 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
 	
 	protected NSMutableArray _lists;
 	protected SettingsBase base;
-	public NSMutableArray byCourse;
+//	public NSMutableArray byCourse;
 	public EOEditingContext ec;
 	public Object currList;
-	public Integer currNum;
-	public NSMutableArray usage;
+//	public Integer currNum;
+//	public NSMutableArray usage;
 	public Object item;
 	
     public ListSettings(WOContext context) {
@@ -85,9 +85,9 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
 					e.printStackTrace();
 				}
     		}*/
-    		byCourse = base.byCourse((Integer)session().valueForKey("eduYear"));
+//    		byCourse = base.byCourse((Integer)session().valueForKey("eduYear"));
         	if(hasBinding("currNum")) {
-        		currNum = base.numericValue();
+        		Integer currNum = base.numericValue();
         		setValueForBinding(currNum, "currNum");
         	}
 		}
@@ -97,6 +97,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     public NSMutableArray lists() {
     	if(_lists == null) {
     		_lists = new NSMutableArray(base().textValue());
+    		NSArray byCourse = base.byCourse();
     		if(byCourse != null && byCourse.count() > 0) {
     			Enumeration enu = byCourse.objectEnumerator();
     			while (enu.hasMoreElements()) {
@@ -132,18 +133,20 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		return;
     	currList = list;
     	setValueForBinding(currList, "currList");
+    	/*
     	if(hasBinding("currNum")) {
     		updateUsage();
     		if(usage == null || usage.count() == 0) {
-    			currNum = null;
+        		setValueForBinding(null,"currNum");
+    			currNum = (Integer)valueForBinding("currNum");
     		} else {
     			EOEnterpriseObject bc = (EOEnterpriseObject)usage.objectAtIndex(0);
     			currNum = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+        		setValueForBinding(currNum,"currNum");
     		}
-    		setValueForBinding(currNum,"currNum");
-    	}
+    	}*/
     }
-    
+    /*
     public void updateUsage() {
     	if(usage == null)
     		usage = new NSMutableArray();
@@ -151,38 +154,29 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		usage.removeAllObjects();
     	if(currList == null) 
     		return;
-//    	if(currList.equals(base().textValue()))
-//    		usage.addObject(base);
+    	if(currList.equals(base().textValue()))
+    		usage.addObject(base);
+    	NSArray byCourse = base.byCourse();
     	if(byCourse != null && byCourse.count() > 0) {
     		Enumeration enu = byCourse.objectEnumerator();
-//    		Object eduYear = session().valueForKey("eduYear");
+    		Object eduYear = session().valueForKey("eduYear");
     		while (enu.hasMoreElements()) {
     			EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
-//    			if(bc.valueForKey("eduYear") != null && 
-//    					!eduYear.equals(bc.valueForKey("eduYear")))
-//    				continue;
+    			if(bc.valueForKey("eduYear") != null && 
+    					!eduYear.equals(bc.valueForKey("eduYear")))
+    				continue;
     			if(currList.equals(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
     				usage.addObject(bc);
     		}
     	}
-    }
+    }*/
     
     public void createList() {
     	if(!lists().contains(currList)) {
     		lists().addObject(currList);
     	}
     }
-    
-    public WOActionResults addByCourse() {
-    	WOComponent editor = pageWithName("ByCourseEditor");
-    	editor.takeValueForKey(context().page(), "returnPage");
-    	editor.takeValueForKey(byCourse, "editList");
-    	editor.takeValueForKey(base, "base");
-    	editor.takeValueForKeyPath(currList, "byCourse.textValue");
-    	editor.takeValueForKeyPath(currNum, "byCourse.numericValue");
-    	return editor;
-    }
-    
+
     public String listName() {
     	StringBuilder buf = new StringBuilder();
     	if(item == null) {
@@ -210,7 +204,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     			base();
     		}
     	}
-    	updateUsage();
+//    	updateUsage();
     	super.appendToResponse(aResponse, aContext);
     }
     

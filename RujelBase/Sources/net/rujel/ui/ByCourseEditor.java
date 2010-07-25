@@ -83,7 +83,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     public void setPushToKeyPath(String path) {
     	if(resultGetter instanceof WOComponent) {
     		WOComponent getter = (WOComponent)resultGetter;
-    		while (path.charAt(0) == '^') {
+    		while (path != null && path.charAt(0) == '^') {
     			path = path.substring(1);
 				path = (String)getter.valueForBinding(path);
 				getter = getter.parent();
@@ -328,9 +328,9 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		} // search for same
 			if(byCourse instanceof NSMutableDictionary) {
 				EOEnterpriseObject bc = EOUtilities.createAndInsertInstance(ec,"SettingByCourse");
-				String text = (String)byCourse.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-				Integer num = (Integer)byCourse.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-				if(text == null || null == null) {
+				Object text = byCourse.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				Object num = byCourse.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				if(text == null || num == null) {
 					Integer year = (Integer)byCourse.valueForKey("eduYear");
 					if(year == null)
 						year = (Integer)session().valueForKey("eduYear");
@@ -339,11 +339,11 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 						value = byCourse;
 					EOEnterpriseObject parent = base.forValue(value, year);
 					if(text == null) {
-						text = (String)parent.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+						text = parent.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 						bc.takeValueForKey(text, SettingsBase.TEXT_VALUE_KEY);
 					}
 					if(num == null) {
-						num = (Integer)parent.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+						num = parent.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
 						bc.takeValueForKey(num, SettingsBase.NUMERIC_VALUE_KEY);
 					}					
 				}

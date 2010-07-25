@@ -42,6 +42,8 @@ public abstract class _CriteriaSet extends EOGenericRecord {
 
 	// Attributes
 	public static final String COMMENT_KEY = "comment";
+	public static final String FLAGS_KEY = "flags";
+	public static final String SET_NAME_KEY = "setName";
 
 	// Relationships
 	public static final String CRITERIA_KEY = "criteria";
@@ -52,6 +54,22 @@ public abstract class _CriteriaSet extends EOGenericRecord {
 
   public void setComment(String value) {
     takeStoredValueForKey(value, COMMENT_KEY);
+  }
+
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
+  }
+
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
+  }
+
+  public String setName() {
+    return (String) storedValueForKey(SET_NAME_KEY);
+  }
+
+  public void setSetName(String value) {
+    takeStoredValueForKey(value, SET_NAME_KEY);
   }
 
   public NSArray criteria() {

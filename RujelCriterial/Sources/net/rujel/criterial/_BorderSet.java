@@ -45,6 +45,7 @@ public abstract class _BorderSet extends EOGenericRecord {
 	public static final String FORMAT_STRING_KEY = "formatString";
 	public static final String TITLE_KEY = "title";
 	public static final String USE_CLASS_KEY = "useClass";
+	public static final String VALUE_TYPE_KEY = "valueType";
 	public static final String ZERO_VALUE_KEY = "zeroValue";
 
 	// Relationships
@@ -80,6 +81,14 @@ public abstract class _BorderSet extends EOGenericRecord {
 
   public void setUseClass(String value) {
     takeStoredValueForKey(value, USE_CLASS_KEY);
+  }
+
+  public Integer valueType() {
+    return (Integer) storedValueForKey(VALUE_TYPE_KEY);
+  }
+
+  public void setValueType(Integer value) {
+    takeStoredValueForKey(value, VALUE_TYPE_KEY);
   }
 
   public String zeroValue() {
