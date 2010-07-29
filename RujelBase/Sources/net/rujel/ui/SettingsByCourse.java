@@ -87,7 +87,7 @@ public class SettingsByCourse extends WOComponent {
 	    		return _byCourse;
 			selector = val;
 			SettingsBase base = base();
-	    	_byCourse = base.allForSetting(sel, val, session().valueForKey("eduYear"));
+	    	_byCourse = base.settingUsage(sel, val, session().valueForKey("eduYear"));
 	    	if(sel.equals(SettingsBase.TEXT_VALUE_KEY))
 	    		sel = SettingsBase.NUMERIC_VALUE_KEY;
 	    	else

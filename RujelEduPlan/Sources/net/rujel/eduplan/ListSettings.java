@@ -133,43 +133,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		return;
     	currList = list;
     	setValueForBinding(currList, "currList");
-    	/*
-    	if(hasBinding("currNum")) {
-    		updateUsage();
-    		if(usage == null || usage.count() == 0) {
-        		setValueForBinding(null,"currNum");
-    			currNum = (Integer)valueForBinding("currNum");
-    		} else {
-    			EOEnterpriseObject bc = (EOEnterpriseObject)usage.objectAtIndex(0);
-    			currNum = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-        		setValueForBinding(currNum,"currNum");
-    		}
-    	}*/
     }
-    /*
-    public void updateUsage() {
-    	if(usage == null)
-    		usage = new NSMutableArray();
-    	else
-    		usage.removeAllObjects();
-    	if(currList == null) 
-    		return;
-    	if(currList.equals(base().textValue()))
-    		usage.addObject(base);
-    	NSArray byCourse = base.byCourse();
-    	if(byCourse != null && byCourse.count() > 0) {
-    		Enumeration enu = byCourse.objectEnumerator();
-    		Object eduYear = session().valueForKey("eduYear");
-    		while (enu.hasMoreElements()) {
-    			EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
-    			if(bc.valueForKey("eduYear") != null && 
-    					!eduYear.equals(bc.valueForKey("eduYear")))
-    				continue;
-    			if(currList.equals(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
-    				usage.addObject(bc);
-    		}
-    	}
-    }*/
     
     public void createList() {
     	if(!lists().contains(currList)) {

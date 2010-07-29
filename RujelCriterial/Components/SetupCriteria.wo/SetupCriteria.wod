@@ -30,14 +30,9 @@ ItemName : WOString {
   value = item.textValue;
 }
 
-Criteria : DynamicTableRow {
+Criteria : WORepetition {
   item = item;
   list = criteria;
-  elementName = "tr";
-  useStyles = true;
-  onClick = session.checkRun;
-  selectAction = selectCriter;
-  selection = criterion;
 }
 
 CritTitle : WOString {
@@ -56,9 +51,12 @@ CritComment : WOString {
   value = item.comment;
 }
 
-ShowCriter : WOConditional {
-  condition = isSelected;
-  negate = true;
+CriterRow : OnClickContainer {
+  elementName = "tr";
+  hide = isSelected;
+  invokeAction = selectCriter;
+  onClick = session.checkRun;
+  class = "ungerade";
 }
 
 EditCriter : WOConditional {
@@ -174,7 +172,8 @@ RenamePrompt : WOString {
 }
 
 FormSet : WOForm {
-  action = saveCritSet;
+  action = saveName;
+  id = "nameForm";
 }
 
 SetName : WOTextField {
@@ -325,4 +324,55 @@ NewCritIndexer : WOPopUpButton {
 
 CritIndexTitle : WOString {
   value = ^dict.index;
+}
+
+Tabs : Tabs {
+  currTab = tab;
+  tablist = ^dict.tabs;
+  numeric = true;
+  selectAction = changeTab;
+}
+
+Regime0 : WOConditional {
+  condition = tab;
+  negate = true;
+}
+
+Regime1 : WOConditional {
+  condition = tab;
+}
+
+Indices : WORepetition {
+  list = indices;
+  item = item2;
+}
+
+SelectIndex : OnClickContainer {
+  elementName = "td";
+}
+
+IndexTitle : WOString {
+  value = item2.title;
+}
+
+AddIdx : OnClickContainer {
+  elementName = "span";
+  onclick = "createIndex();";
+  class = "green";
+  style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
+  title = session.strings.Reusables_Strings.uiElements.Add;
+}
+
+RadioButton : WORadioButton {
+  checked = radio;
+  name = item.title;
+}
+
+CreateIndexPrompt : WOString {
+  value = ^dict.createIndexPrompt;
+  valueWhenEmpty = "new index name";
+}
+EditIndex : EditIndex {
+  indexer = criterion;
+  forceType = "criteria"; 
 }

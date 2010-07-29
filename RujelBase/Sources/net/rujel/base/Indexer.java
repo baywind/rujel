@@ -75,8 +75,16 @@ public class Indexer extends _Indexer
     			minIndex = row.idx();
     			row = (IndexRow)indexCache.lastObject();
     			maxIndex = row.idx();
+    		} else {
+    			maxIndex = null;
+    			minIndex = null;
     		}
     	}
+    }
+    
+    public NSArray sortedIndex() {
+    	initIndex();
+    	return indexCache.immutableClone();
     }
     
     public Integer minIndex() {
@@ -165,7 +173,10 @@ public class Indexer extends _Indexer
 	public Integer indexForValue(String value, boolean ignoreCase, boolean add) {
 		Integer result = indexForValue(value, ignoreCase);
 		if(add && result == null) {
-			result = new Integer(maxIndex().intValue() +1);
+			int newIdx = 1;
+			if(maxIndex() != null)
+				newIdx += maxIndex.intValue();
+			result = new Integer(newIdx);
 			IndexRow row = (IndexRow)EOUtilities.createAndInsertInstance(
 					editingContext(), IndexRow.ENTITY_NAME);
 			row.setIdx(result);
@@ -207,6 +218,10 @@ public class Indexer extends _Indexer
 		indexType = null;
 	}
 	
+	public void sort() {
+		EOSortOrdering.sortArrayUsingKeyOrderArray(indexCache, MyUtility.numSorter);
+	}
+	
 	public void turnIntoFault(EOFaultHandler handler) {
 		nullify();
 		super.turnIntoFault(handler);
@@ -222,32 +237,33 @@ public class Indexer extends _Indexer
 		if(indexCache != null) {
 			indexCache.addObject(object);
     		EOSortOrdering.sortArrayUsingKeyOrderArray(indexCache, MyUtility.numSorter);
+    		Integer idx = (Integer)object.valueForKey(IndexRow.IDX_KEY);
+    		if(minIndex == null || minIndex.compareTo(idx) > 0)
+    			minIndex = idx;
+    		if(maxIndex == null || maxIndex.compareTo(idx) < 0)
+    			maxIndex = idx;
 		}
-		Integer idx = (Integer)object.valueForKey(IndexRow.IDX_KEY);
-		if(minIndex != null && minIndex.compareTo(idx) > 0)
-			minIndex = idx;
-		if(maxIndex != null && maxIndex.compareTo(idx) < 0)
-			maxIndex = idx;
 	}
 
 	public void removeFromIndexRows(EOEnterpriseObject object) {
 		excludeObjectFromPropertyWithKey(object, INDEX_ROWS_KEY);
-		if(indexCache != null) {
-			indexCache.removeObject(object);
-			if(indexCache.count() == 0) {
-				minIndex = null;
-				maxIndex = null;
-				return;
+		if(indexCache == null)
+			return;
+		indexCache.removeObject(object);
+		if(indexCache.count() == 0) {
+			minIndex = null;
+			maxIndex = null;
+
+		} else {
+			Integer idx = (Integer)object.valueForKey(IndexRow.IDX_KEY);
+			if(idx.equals(minIndex)) {
+				IndexRow row = (IndexRow)indexCache.objectAtIndex(0);
+				minIndex = row.idx();
 			}
-		}
-		Integer idx = (Integer)object.valueForKey(IndexRow.IDX_KEY);
-		if(idx.equals(minIndex)) {
-			IndexRow row = (IndexRow)indexCache.objectAtIndex(0);
-			minIndex = row.idx();
-		}
-		if(idx.equals(maxIndex)) {
-			IndexRow row = (IndexRow)indexCache.lastObject();
-			maxIndex = row.idx();
+			if(idx.equals(maxIndex)) {
+				IndexRow row = (IndexRow)indexCache.lastObject();
+				maxIndex = row.idx();
+			}
 		}
 	}
 	
@@ -284,6 +300,55 @@ public class Indexer extends _Indexer
 	public void setType(Integer type) {
 		indexType = null;
 		super.setType(type);
+	}
+	
+	public String comment() {
+		return (String)valueForKeyPath("commentEO.storedText");
+	}
+
+	public void setComment(String cmnt) {
+		EOEnterpriseObject text = commentEO();
+		if(cmnt == null) {
+			if(text != null)
+				removeObjectFromBothSidesOfRelationshipWithKey(text, COMMENT_EO_KEY);
+ 		} else {
+ 			if(text == null) {
+ 				text = EOUtilities.createAndInsertInstance(editingContext(), "StaticTextStore");
+ 				text.takeValueForKey(EntityIndex.indexForObject(this), "entityIndex");
+ 			}
+ 			text.takeValueForKey(cmnt, "storedText");
+		}
+//		comment = cmnt;
+	}
+	
+	public int assumeNextIndex() {
+		initIndex();
+		if(indexCache == null || indexCache.count() == 0)
+			return 1;
+		if(indexCache.count() < 2)
+			return maxIndex.intValue() + 1;
+		int prevIndex = minIndex.intValue();
+		if(indexCache.count() > 2) {
+			IndexRow prevRow = (IndexRow)indexCache.objectAtIndex(indexCache.count() -2);
+			prevIndex = prevRow.num();
+		}
+		int diff = maxIndex.intValue() - prevIndex;
+		return maxIndex.intValue() + diff;
+	}
+	
+	public void validateForSave() {
+		initIndex();
+		if(indexCache.count() > 1) {
+			Enumeration enu = indexCache.objectEnumerator();
+			Integer idx = null;
+			while (enu.hasMoreElements()) {
+				IndexRow row = (IndexRow) enu.nextElement();
+				if(row.idx().equals(idx))
+					throw new ValidationException("");
+				idx = row.idx();
+			}
+		}
+		super.validateForSave();
 	}
 	
 	public static NSArray indexersOfType(EOEditingContext ec, String type) {

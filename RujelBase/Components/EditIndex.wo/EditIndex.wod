@@ -1,0 +1,50 @@
+Rows : WORepetition {
+  list = indexer.sortedIndex;
+  item = rowItem;
+}
+
+RowIdx : WOTextField {
+  value = rowItem.idx;
+  numberformat = "0";
+  size = 3;
+  onkeypress = "return isNumberInput(event);";
+  class = "checkChanges";  
+}
+
+Form : WOForm {
+}
+
+RowValue : WOTextField {
+  value = rowItem.value;
+  size = 10;
+}
+
+RowCommentText : WOString {
+  value = rowItem.comment;
+  valueWhenEmpty = "-=-";
+}
+
+DefaultValue : WOTextField {
+  value = indexer.defaultValue;
+  size = 10;
+}
+
+DefautCommentText : WOString {
+  value = indexer.comment;
+}
+
+IndexTitle : WOTextField {
+  value = indexer.title;
+}
+
+FormatString : WOTextField {
+  value = indexer.formatString;
+}
+
+DeleteCell : OnClickContainer {
+  elementName = "td";
+  invokeAction = delete;
+  onclick = session.confirmMessage;
+  title = session.strings.Reusables_Strings.uiElements.Delete;
+  style = "color:#cc3333;";
+}

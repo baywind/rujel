@@ -13,21 +13,31 @@ function rename(aform) {
 		aform.submit();
 	}
 }
+function createIndex() {
+	var val = prompt("<webobject name = "CreateIndexPrompt"/>","");
+	if(val) {
+		var aform = document.getElementById('nameForm');
+		aform.csTitle.value = "$idx$" + val;
+		aform.submit();
+	}
+}
 </script>
 <h1><webobject name = "Title"/></h1>
+<webobject name = "Tabs"/>
 <table width = "100%" cellspacing = "0"  class = "selectionBorder" style = "border-style:solid none none none;">
 <tr valign = "top">
-	<td><strong><webobject name = "CritSet"/></strong>
+	<td width = "15%"><strong><webobject name = "CritSet"/></strong>
 	<hr/>
 	<webobject name = "SetsTabs"/>
 	<webobject name = "FormSet"><webobject name = "SetName"/>
 	<table width = "100%" cellspacing = "0" style = "margin:5px 0px;">
 		<tr><webobject name = "CriteriaAvailable">
 		<td align = "length"><webobject name = "DeleteSet">x</webobject></td>
-		<td align = "center"><webobject name = "RenameSet"><webobject name = "RenameTitle"/></webobject></td></webobject>
+		<td align = "center"><webobject name = "RenameSet">
+			<webobject name = "RenameTitle"/></webobject></td></webobject>
 		<td align = "right"><webobject name = "AddSet">+</webobject></td>
 	</tr></table></webobject>
-	</td>
+	</td><webobject name = "Regime0">
 	<td class = "backfield2 selectionBorder" style = "border-style:none solid;min-width:8em;">
 	<webobject name = "ByCourse"></webobject>
 	<div>&nbsp;</div>
@@ -56,7 +66,7 @@ function rename(aform) {
 			<th>max</th>
 			<th><webobject name = "CritWeightTitle"/></th><webobject name = "CanIndex">
 			<th><webobject name = "CritIndexTitle"/></th></webobject>
-			<th><webobject name = "CommentTitle"/></th>
+			<th><webobject name = "CommentTitle"/></th></tr>
 	</thead>
 	<tfoot><webobject name = "CanCreateCrit">
 	<webobject name = "AddCriterion">
@@ -73,24 +83,40 @@ function rename(aform) {
 			<webobject name = "DeleteCriter"/></td>
 	</webobject>
 	</tfoot>
-	<tbody><webobject name = "Criteria"><webobject name = "ShowCriter">
+	<tbody><webobject name = "Criteria"><webobject name = "CriterRow">
 		<td align = "center"><webobject name = "CritTitle"/></td>
 		<td align = "center"><webobject name = "CritMax"/></td>
 		<td align = "center"><webobject name = "CritWeight"/></td><webobject name = "CanIndex">
 		<td><webobject name = "CritIndex"/></td></webobject>
 		<td><webobject name = "CritComment"/></td>
-	</webobject><webobject name = "EditCriter">
+	</webobject><webobject name = "EditCriter"><tr class = "selection">
 		<td align = "center"><webobject name = "EditCritTitle"/></td>
 		<td align = "center"><webobject name = "EditCritMax"/></td>
 		<td align = "center"><webobject name = "EditCritWeight"/></td><webobject name = "CanIndex">
 		<td><webobject name = "EditCritIndexer"/></td></webobject>
-		<td><webobject name = "EditCritComment"/></td>
+		<td><webobject name = "EditCritComment"/></td></tr>
 	</webobject>
 	</webobject></tbody></table></webobject></webobject></td>
-</tr><tr>
+</webobject><webobject name = "Regime1">
+<td  class = "backfield2 selectionBorder" style = "border-style:none solid;min-width:8em;">
+<table><thead><tr><webobject name = "Criteria"><th style = "width:3ex;">
+		<webobject name = "CritTitle"/></th>
+	</webobject></tr></thead>
+	<tfoot><tr><webobject name = "Criteria"><th><webobject name = "CritTitle"/></th>
+	</webobject><td><webobject name = "AddIdx">+</webobject></td></tr></tfoot>
+	<tbody><tr><tr class = "grey"><webobject name = "Criteria">
+		<td><webobject name = "RadioButton"/></td></webobject><td>none</td></tr>
+	</tr><webobject name = "Indices">
+	<tr class = "gerade"><webobject name = "Criteria">
+		<td><webobject name = "RadioButton"/></td>
+	</webobject><webobject name = "SelectIndex"><webobject name = "IndexTitle"/></webobject></tr>
+</webobject></tbody></table>
+</td><td>
+	<webobject name = "EditIndex"/>
+</td></webobject>
+</tr><webobject name = "Regime0"><tr>
 	<td colspan = "2" style = "border:1px #666666;background-color:#ffffff;border-style:solid solid none none;">
 		<webobject name = "ByCourseReview">
 			<td><webobject name = "ItemName"/></td>
 		</webobject></td>
-</tr>
-	
+</tr></webobject></table>

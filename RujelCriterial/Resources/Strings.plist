@@ -93,6 +93,8 @@
 			<string>Удалить активный набор критериев</string>
 			<key>createPrompt</key>
 			<string>Название нового набора критериев</string>
+			<key>createIndexPrompt</key>
+			<string>Название нового представления</string>
 			<key>renamePrompt</key>
 			<string>Переименовать активный набор критериев</string>
 			<key>usage</key>
@@ -110,6 +112,11 @@
 				<key>onlyCriter</key>
 				<string>запретить бескритериальные отметки</string>
 			</dict>
+			<key>tabs</key>
+			<array>
+				<string>Наборы критериев</string>
+				<string>Представления</string>
+			</array>
 		</dict>
 	</dict>
 	<key>messages</key>

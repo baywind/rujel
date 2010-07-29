@@ -253,7 +253,7 @@ public class SettingsBase extends _SettingsBase {
 		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
 	}
 	
-	public NSArray allForSetting(String selector, Object value, Object eduYear) {
+	public NSArray settingUsage(String selector, Object value, Object eduYear) {
     	NSArray byCourse = byCourse();
     	NSMutableArray usage = new NSMutableArray();
 		Object val = valueForKey(selector);

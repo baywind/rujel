@@ -77,6 +77,7 @@ public class SetupCriteria extends WOComponent {
     public EOEnterpriseObject criterion;
     public NSMutableDictionary critDict = new NSMutableDictionary();
     public String nameOfCritSet;
+    public int tab = 0;
     
 	public void setNameOfCritSet(String nameOfCritSet) {
 		if(nameOfCritSet != null)
@@ -189,7 +190,7 @@ public class SetupCriteria extends WOComponent {
 		return null;
 	}
     
-    public WOActionResults saveCritSet() {
+    public WOActionResults saveName() {
     	if(nameOfCritSet == null)
     		return null;
     	boolean create = nameOfCritSet.startsWith("$new$");
@@ -197,26 +198,43 @@ public class SetupCriteria extends WOComponent {
     		nameOfCritSet = nameOfCritSet.substring(5);
     		currSet = EOUtilities.createAndInsertInstance(ec, CriteriaSet.ENTITY_NAME);
     	}
-		currSet.takeValueForKey(nameOfCritSet, CriteriaSet.SET_NAME_KEY);
-		try {
-			NSArray usage = base.allForSetting(SettingsBase.NUMERIC_VALUE_KEY, currID, null);
+    	boolean idx = nameOfCritSet.startsWith("$idx$");
+    	if(idx) {
+    		criterion = EOUtilities.createAndInsertInstance(ec, Indexer.ENTITY_NAME);
+    		criterion.takeValueForKey(nameOfCritSet.substring(5), "title");
+    		criterion.takeValueForKey("criteria", "indexType");
+    	} else {
+    		currSet.takeValueForKey(nameOfCritSet, CriteriaSet.SET_NAME_KEY);
+			NSArray usage = base.settingUsage(SettingsBase.NUMERIC_VALUE_KEY, currID, null);
 			if(usage != null && usage.count() > 0) {
 				EOEnterpriseObject bc = (EOEnterpriseObject)usage.objectAtIndex(0);
 				if(!nameOfCritSet.equals(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
 					usage.takeValueForKey(nameOfCritSet, SettingsBase.TEXT_VALUE_KEY);
 			}
+    	}
+		try {
 			ec.saveChanges();
 			if(create) {
 				setCurrSet(currSet);
 				sets.addObject(currSet);
 			}
-			logger.log(WOLogLevel.UNOWNED_EDITING,"CriteriaSet " + ((create)?"created":"renamed"),
-					new Object[] {session(),currSet});
+			if(idx) {
+				logger.log(WOLogLevel.UNOWNED_EDITING,"Indexer created",
+						new Object[] {session(),criterion});
+				indices = indices.arrayByAddingObject(criterion);
+			} else {
+				logger.log(WOLogLevel.UNOWNED_EDITING,"CriteriaSet " + 
+						((create)?"created":"renamed"), new Object[] {session(),currSet});
+			}
 		} catch (Exception e) {
 			if(create)
 				currSet = null;
-			logger.log(WOLogLevel.INFO,"Error saving CriteriaSet",
-					new Object[] {session(),currSet,e});
+			if(idx)
+				logger.log(WOLogLevel.INFO,"Error creating Indexer " + 
+						nameOfCritSet.substring(5), new Object[] {session(),e});
+			else
+				logger.log(WOLogLevel.INFO,"Error saving CriteriaSet",
+						new Object[] {session(),currSet,e});
 			session().takeValueForKey(e.getMessage(), "message");
 			currSet.takeValueForKey(currSet.valueForKey("flags"), "flags");
 			ec.revert();
@@ -227,7 +245,7 @@ public class SetupCriteria extends WOComponent {
 	public WOActionResults deleteCritSet() {
 		if(currSet instanceof CriteriaSet) {
 			try {
-				NSArray usage = base.allForSetting(SettingsBase.NUMERIC_VALUE_KEY, currID, null);
+				NSArray usage = base.settingUsage(SettingsBase.NUMERIC_VALUE_KEY, currID, null);
 				if(currID.equals(base.numericValue())) {
 					usage.takeValueForKey(null, SettingsBase.NUMERIC_VALUE_KEY);
 			        String noneTitle = (String)session().valueForKeyPath(
@@ -251,6 +269,34 @@ public class SetupCriteria extends WOComponent {
 				session().takeValueForKey(e.getMessage(), "message");
 			}
 		}
+		return null;
+	}
+	
+	public WOActionResults changeTab() {
+		if(ec.hasChanges())
+			ec.revert();
+		criterion = null;
+		return null;
+	}
+	
+	public boolean radio() {
+		if(item == null)
+			return false;
+		Object idx = NSKeyValueCoding.Utility.valueForKey(item, "indexer");
+		if(item2 instanceof Indexer)
+			return (idx == item2);
+		else
+			return (idx == null);
+	}
+	
+	public WOActionResults selectIndex() {
+		criterion = (EOEnterpriseObject)item2;
+		return null;
+	}
+	
+	public String indexCellClass() {
+		if(criterion == item2)
+			return "selection";
 		return null;
 	}
 

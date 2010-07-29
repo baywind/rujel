@@ -47,6 +47,7 @@ public abstract class _Indexer extends EOGenericRecord {
 	public static final String TYPE_KEY = "type";
 
 	// Relationships
+	public static final String COMMENT_EO_KEY = "commentEO";
 	public static final String INDEX_ROWS_KEY = "indexRows";
 
   public String defaultValue() {
@@ -81,6 +82,14 @@ public abstract class _Indexer extends EOGenericRecord {
     takeStoredValueForKey(value, TYPE_KEY);
   }
 
+  public EOGenericRecord commentEO() {
+    return (EOGenericRecord)storedValueForKey(COMMENT_EO_KEY);
+  }
+
+  public void setCommentEO(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, COMMENT_EO_KEY);
+  }
+  
   public NSArray indexRows() {
     return (NSArray)storedValueForKey(INDEX_ROWS_KEY);
   }
