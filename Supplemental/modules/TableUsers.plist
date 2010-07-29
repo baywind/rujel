@@ -11,13 +11,15 @@
 		<key>loginHandlerClass</key>
 		<string>net.rujel.user.TableLoginHandler</string>
 		<key>parentLoginHandler</key>
-		<string>net.rujel.auth.PrefsDrivenUser</string>
+		<string>net.rujel.auth.ldap.LdapAuthentication</string>
 		<key>autoAddUsers</key>
 		<string>true</string>
 		<key>readFromParent</key>
 		<string>true</string>
 		<key>passwordDigestAlgorithm</key>
 		<string>MD5</string>
+		<key>tryUnmappedGroups</key>
+		<true/>
 	</dict>
 </dict>
 </plist>
