@@ -70,7 +70,7 @@ function createIndex() {
 	</thead>
 	<tfoot><webobject name = "CanCreateCrit">
 	<webobject name = "AddCriterion">
-		<td colspan = "4" align = "center"><webobject name = "AddTitle"/></td>
+		<td colspan = "5" align = "center"><webobject name = "AddTitle"/></td>
 	</webobject><tr class = "selection" id = "newRow" style = "display:none;">
 		<td align = "center"><webobject name = "NewCritTitle"/></td>
 		<td align = "center"><webobject name = "NewCritMax"/></td>
@@ -78,7 +78,7 @@ function createIndex() {
 		<td><webobject name = "NewCritIndexer"/></td></webobject>
 		<td><webobject name = "NewCritComment"/></td>
 	</tr></webobject><webobject name = "SaveCritRow">
-		<td colspan = "4"><webobject name = "SaveCriter"/>
+		<td colspan = "5" align = "center"><webobject name = "SaveCriter"/>
 			<webobject name = "UnselectCriter"/>
 			<webobject name = "DeleteCriter"/></td>
 	</webobject>
@@ -94,24 +94,31 @@ function createIndex() {
 		<td align = "center"><webobject name = "EditCritMax"/></td>
 		<td align = "center"><webobject name = "EditCritWeight"/></td><webobject name = "CanIndex">
 		<td><webobject name = "EditCritIndexer"/></td></webobject>
-		<td><webobject name = "EditCritComment"/></td></tr>
-	</webobject>
+		<td><webobject name = "EditCritComment"/></td></tr></webobject>
 	</webobject></tbody></table></webobject></webobject></td>
 </webobject><webobject name = "Regime1">
-<td  class = "backfield2 selectionBorder" style = "border-style:none solid;min-width:8em;">
-<table><thead><tr><webobject name = "Criteria"><th style = "width:3ex;">
+<td  class = "backfield2 selectionBorder" style = "border-style:none solid;min-width:8em;" align = "center">
+<webobject name = "IndicesForm">
+<h3><webobject name = "CurrName"/></h3>
+<table align = "center"><thead><tr><webobject name = "Criteria"><th style = "width:3ex;">
 		<webobject name = "CritTitle"/></th>
-	</webobject></tr></thead>
+	</webobject>
+		<th><webobject name = "CritIndexTitle"/></th>
+	</tr></thead>
 	<tfoot><tr><webobject name = "Criteria"><th><webobject name = "CritTitle"/></th>
-	</webobject><td><webobject name = "AddIdx">+</webobject></td></tr></tfoot>
+	</webobject><td><webobject name = "DeleteIdx">x</webobject>
+	<webobject name = "AddIdx">+</webobject></td></tr></tfoot>
 	<tbody><tr><tr class = "grey"><webobject name = "Criteria">
-		<td><webobject name = "RadioButton"/></td></webobject><td>none</td></tr>
+		<td><webobject name = "RadioButton"/></td></webobject>
+			<webobject name = "SelectIndex"><webobject name = "NoIndexTitle"/></webobject></tr>
 	</tr><webobject name = "Indices">
 	<tr class = "gerade"><webobject name = "Criteria">
 		<td><webobject name = "RadioButton"/></td>
 	</webobject><webobject name = "SelectIndex"><webobject name = "IndexTitle"/></webobject></tr>
 </webobject></tbody></table>
-</td><td>
+<webobject name = "SaveIndices"/></webobject>
+</td><td width = "50%">
+	<h3><webobject name = "IndexerEditTitle"/></h3>
 	<webobject name = "EditIndex"/>
 </td></webobject>
 </tr><webobject name = "Regime0"><tr>

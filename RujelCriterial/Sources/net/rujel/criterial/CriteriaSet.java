@@ -33,6 +33,7 @@ package net.rujel.criterial;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.Indexer;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
@@ -216,6 +217,25 @@ public class CriteriaSet extends _CriteriaSet
     	_flags = null;
     	super.setFlags(flags);
     }
+    
+	public boolean setMaxes() {
+		NSArray rows = criteria();
+		if(rows == null || rows.count() == 0)
+			return false;
+		boolean result = false;
+		Enumeration enu = rows.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject cr = (EOEnterpriseObject) enu.nextElement();
+			Indexer idx = (Indexer)cr.valueForKey("indexer");
+			if(idx == null || idx.maxIndex() == null)
+				continue;
+			if(idx.maxIndex().equals(cr.valueForKey("dfltMax")))
+				continue;
+			cr.takeValueForKey(idx.maxIndex(), "dfltMax");
+			result = true;
+		}
+		return result;
+	}
     
     public void validateForSave() {
     	super.validateForSave();

@@ -323,7 +323,7 @@ NewCritIndexer : WOPopUpButton {
 }
 
 CritIndexTitle : WOString {
-  value = ^dict.index;
+  value = session.strings.RujelBase_Base.Indexer.indexer;
 }
 
 Tabs : Tabs {
@@ -349,6 +349,9 @@ Indices : WORepetition {
 
 SelectIndex : OnClickContainer {
   elementName = "td";
+  invokeAction = selectIndex;
+  onclick = session.checkRun;
+  class = indexCellClass;
 }
 
 IndexTitle : WOString {
@@ -359,8 +362,18 @@ AddIdx : OnClickContainer {
   elementName = "span";
   onclick = "createIndex();";
   class = "green";
-  style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
+  style = "float:right;padding:0px 4px;margin:1px 2px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
   title = session.strings.Reusables_Strings.uiElements.Add;
+}
+
+DeleteIdx : OnClickContainer {
+  elementName = "span";
+  onclick = session.confirmMessage;
+  invokeAction = deleteIndex;
+  class = "female";
+  style = "float:right;margin:1px 2px;padding:0px 4px;font-weight:bold;border:double 3px #cc6666;color:#cc3333;";
+  title = session.strings.Reusables_Strings.uiElements.Delete;
+  hide = noIndexSelected;
 }
 
 RadioButton : WORadioButton {
@@ -372,7 +385,23 @@ CreateIndexPrompt : WOString {
   value = ^dict.createIndexPrompt;
   valueWhenEmpty = "new index name";
 }
+
 EditIndex : EditIndex {
   indexer = criterion;
   forceType = "criteria"; 
+}
+
+IndicesForm : WOForm {
+}
+
+SaveIndices : WOSubmitButton {
+  action = saveIndices;
+  value = session.strings.Reusables_Strings.uiElements.Save;
+}
+IndexerEditTitle : WOString {
+  value = ^dict.index;
+}
+
+NoIndexTitle : WOString {
+  value = ^dict.noIndex;
 }

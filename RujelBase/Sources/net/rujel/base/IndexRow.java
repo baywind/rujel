@@ -63,6 +63,13 @@ public class IndexRow extends _IndexRow {
 			comment = (String)valueForKeyPath("commentEO.storedText");
 		return comment;
 	}
+	
+	public void setIdx(Integer idx) {
+		if (idx() != null && !editingContext().globalIDForObject(this).isTemporary())
+			throw new UnsupportedOperationException(
+					"Idx is primary key for IndexRow and may not be changed");
+		super.setIdx(idx);
+	}
 
 	public void setComment(String cmnt) {
 		EOEnterpriseObject text = commentEO();

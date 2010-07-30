@@ -32,11 +32,13 @@
     primaryKeyAttributes = (indID); 
     relationships = (
         {
+            deleteRule = EODeleteRuleCascade; 
             destination = StaticTextStore; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = tID; sourceAttribute = commentID; }); 
             name = commentEO; 
+            ownsDestination = Y; 
         }, 
         {
             deleteRule = EODeleteRuleCascade; 

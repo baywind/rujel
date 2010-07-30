@@ -84,7 +84,7 @@
 			<key>critSet</key>
 			<string>набор критериев</string>
 			<key>none</key>
-			<string>без критериев</string>
+			<string>свободные критерии</string>
 			<key>name</key>
 			<string>имя</string>
 			<key>rename</key>
@@ -100,7 +100,9 @@
 			<key>usage</key>
 			<string>использование наборов критериев</string>
 			<key>index</key>
-			<string>Представление</string>
+			<string>Внешнее представление</string>
+			<key>noIndex</key>
+			<string>как есть</string>
 			<key>flags</key>
 			<dict>
 				<key>fixMax</key>
@@ -155,6 +157,8 @@
 		<string>нельзя зафиксировать максимумы, пока они не указаны во всех критериях</string>
 		<key>weightsRequired</key>
 		<string>нельзя зафиксировать веса, пока они не указаны во всех критериях</string>
+		<key>indexIsUsed</key>
+		<string>Это представление используется в критериях %d раз</string>
 	</dict>
 	<key>worksTab</key>
 	<dict>

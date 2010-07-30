@@ -126,9 +126,14 @@ public class SetupCriteria extends WOComponent {
     	boolean create = (criterion == null);
     	if(create) {
     		criterion = ((CriteriaSet)currSet).addCriterion();
+    		criterion.takeValueForKey(new Integer(0), "flags");
     		criterion.takeValuesFromDictionary(critDict);
     	}
     	try {
+    		Indexer idx = (Indexer)criterion.valueForKey("indexer");
+			if(idx != null && idx.maxIndex() != null &&
+					!idx.maxIndex().equals(criterion.valueForKey("dfltMax")))
+				criterion.takeValueForKey(idx.maxIndex(), "dfltMax");
 			ec.saveChanges();
 			logger.log(WOLogLevel.COREDATA_EDITING,"Criterion saved",
 					new Object[] {session(),criterion});
@@ -289,14 +294,78 @@ public class SetupCriteria extends WOComponent {
 			return (idx == null);
 	}
 	
+	public void setRadio(Boolean value) {
+		if(value == null || !value.booleanValue())
+			return;
+		Indexer idx = null;
+		if(item2 instanceof Indexer)
+			idx = (Indexer)item2;
+		EOEnterpriseObject cr = (EOEnterpriseObject)item;
+		cr.takeValueForKey(idx, "indexer");
+		if(idx != null && idx.maxIndex() != null && 
+				!idx.maxIndex().equals(cr.valueForKey("dfltMax")))
+			cr.takeValueForKey(idx.maxIndex(), "dfltMax");
+	}
+	
+	public WOActionResults saveIndices() {
+		try {
+			ec.saveChanges();
+			logger.log(WOLogLevel.COREDATA_EDITING,"Saved Indexer bindings in CriteriaSet "
+					+ nameOfCritSet, new Object[] {session(),currSet});
+		} catch (Exception e) {
+			ec.revert();
+			logger.log(WOLogLevel.COREDATA_EDITING,
+					"Error savin Indexer bindings in CriteriaSet " + nameOfCritSet
+					,new Object[] {session(),currSet,e});
+			session().takeValueForKey(e.getMessage(), "message");
+		}
+		return null;
+	}
+	
 	public WOActionResults selectIndex() {
-		criterion = (EOEnterpriseObject)item2;
+		if(item2 instanceof Indexer)
+			criterion = (EOEnterpriseObject)item2;
+		else
+			criterion = null;
+		item2 = null;
 		return null;
 	}
 	
 	public String indexCellClass() {
-		if(criterion == item2)
+		if(criterion != null && criterion == item2)
 			return "selection";
+		return null;
+	}
+	
+	public boolean noIndexSelected() {
+		return !(criterion instanceof Indexer);
+	}
+	
+	public WOActionResults deleteIndex() {
+		if(noIndexSelected())
+			return null;
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, "Criterion", "indexer", criterion);
+		if(list != null && list.count() > 0) {
+			String message = (String)session().valueForKeyPath(
+				"strings.RujelCriterial_Strings.messages.indexIsUsed");
+			message = String.format(message, list.count());
+			session().takeValueForKey(message, "message");
+			return null;
+		}
+		ec.deleteObject(criterion);
+		try {
+			String name = (String)criterion.valueForKey("title");
+	   		ec.saveChanges();
+    		criterion = null;
+	   		indices = Indexer.indexersOfType(ec, "criteria*");
+			logger.log(WOLogLevel.UNOWNED_EDITING,"Criterion Indexer '" + name + 
+					"' deleted", session());
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error deleting CriterionIndexer",
+					new Object[] {session(),criterion,e});
+			session().takeValueForKey(e.getMessage(), "message");
+			ec.revert();
+		}
 		return null;
 	}
 

@@ -10,6 +10,7 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOElement;
+import com.webobjects.eoaccess.EOUtilities;
 
 public class EditIndex extends WOComponent {
 	
@@ -34,7 +35,36 @@ public class EditIndex extends WOComponent {
     	_ind = (Indexer)valueForBinding("indexer");
     	if(_ind == null)
     		return null;
+    	newIdx = indexer().assumeNextIndex();
     	return super.template();
+    }
+    
+    public String newValue() {
+    	return null;
+    }
+    
+    public void setNewValue(String value) {
+    	if(value == null || newIdx == null)
+    		return;
+    	IndexRow row = (IndexRow)EOUtilities.createAndInsertInstance
+    		(indexer().editingContext(), IndexRow.ENTITY_NAME);
+    	row.setIdx(newIdx);
+    	row.setValue(value);
+    	indexer().addObjectToBothSidesOfRelationshipWithKey(row, Indexer.INDEX_ROWS_KEY);
+    }
+    
+    public WOActionResults save() {
+    	try {
+    		indexer().editingContext().saveChanges();
+    		logger.log(WOLogLevel.UNOWNED_EDITING,"Saved changes in Indexer",
+    				new Object[] {session(), indexer()});
+		} catch (Exception e) {
+			logger.log(WOLogLevel.INFO, "Error saving Indexer changes",
+					new Object[] {session(),rowItem,e});
+			indexer().editingContext().revert();
+			session().takeValueForKey(e.getMessage(), "message");
+		}
+		return null;
     }
 
     public WOActionResults delete() {
