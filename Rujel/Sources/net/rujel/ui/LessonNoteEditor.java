@@ -339,7 +339,7 @@ public class LessonNoteEditor extends WOComponent {
 						changes.addObjectsFromArray((NSArray)ec.insertedObjects().valueForKey("entityName"));
 						changes.addObjectsFromArray((NSArray)ec.deletedObjects().valueForKey("entityName"));
 						ec.saveChanges();
-						WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
+						WOLogLevel level = WOLogLevel.EDITING;
 						if(newLesson) {
 							logger.log(level,"Created new lesson. " + changes,
 									new Object[] {session(),currPerPersonLink});
@@ -349,7 +349,7 @@ public class LessonNoteEditor extends WOComponent {
 						} else {
 							//						if(currPerPersonLink instanceof UseAccess && 
 							//								((UseAccess)currPerPersonLink).isOwned())
-							level = WOLogLevel.OWNED_EDITING;
+							level = WOLogLevel.EDITING;
 							if(changes.count() > 0)
 								logger.log(level,"Lesson changed: " + changes,
 										new Object[] {session(),currPerPersonLink});
@@ -384,7 +384,7 @@ public class LessonNoteEditor extends WOComponent {
 					}
 				} else { // no lesson
 					ec.saveChanges();
-					logger.log(WOLogLevel.UNOWNED_EDITING,
+					logger.log(WOLogLevel.EDITING,
 							"Course comment modified",new Object[] {session(),course});
 				}
 			}// ec.hasChanges
@@ -416,13 +416,13 @@ public class LessonNoteEditor extends WOComponent {
 		EOFetchSpecification fs = new EOFetchSpecification(
 				currLesson().entityName(),qual,EduLesson.sorter);
 		NSArray allLessons = ec.objectsWithFetchSpecification(fs);
-		WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
+		WOLogLevel level = WOLogLevel.EDITING;
 		if(currLesson().notes().count() > 0)
 			level = WOLogLevel.MASS_EDITING;
 		ec.lock();
 		try {
 			if(ec.insertedObjects().contains(currLesson())) { //just inserted
-				level = WOLogLevel.OWNED_EDITING;
+				level = WOLogLevel.EDITING;
 				logger.log(level,"Undo lesson creation: ",new Object[] {session(),currLesson()});
 				ec.revert();
 				NSMutableArray tmp = lessonsList.mutableClone();

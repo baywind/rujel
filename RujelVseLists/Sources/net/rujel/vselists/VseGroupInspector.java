@@ -135,7 +135,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 				currGroup.setLastYear(year);
 			if(ec.hasChanges()) {
 				ec.saveChanges();
-				ListsEditor.logger.log(WOLogLevel.UNOWNED_EDITING,"VseEduGroup changes saved",
+				ListsEditor.logger.log(WOLogLevel.EDITING,"VseEduGroup changes saved",
 						new Object[] {session(),currGroup});
 				if(create) {
 					returnPage.valueForKey("switchMode");

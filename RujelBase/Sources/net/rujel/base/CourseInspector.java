@@ -125,7 +125,7 @@ public class CourseInspector extends WOComponent {
 		if(course.editingContext().hasChanges()) {
 			try {
 				course.editingContext().saveChanges();
-				logger.log(WOLogLevel.UNOWNED_EDITING,"Saved changes in course",
+				logger.log(WOLogLevel.EDITING,"Saved changes in course",
 						new Object[] {session(),course});
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Error saving course changes",

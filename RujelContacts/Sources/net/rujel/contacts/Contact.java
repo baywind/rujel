@@ -98,13 +98,13 @@ public class Contact extends _Contact {
 		} catch (EOObjectNotAvailableException nax) {
 			pEnt = EOUtilities.createAndInsertInstance(editingContext(),"PersonEntity");
 			pEnt.takeValueForKey(entityName,"personEntityName");
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding new personEntity '" + entityName + "' to list",pEnt);
+			logger.log(WOLogLevel.EDITING,"Adding new personEntity '" + entityName + "' to list",pEnt);
 		}*/
 		EOEnterpriseObject pEnt = EntityIndex.indexForObject(person,true);
 		/*if(pEnt == null) {
 			pEnt = EOUtilities.createAndInsertInstance(editingContext(),"PersonEntity");
 			pEnt.takeValueForKey(entityName,"personEntityName");
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding new personEntity '" + entityName + "' to list for person",person);
+			logger.log(WOLogLevel.EDITING,"Adding new personEntity '" + entityName + "' to list for person",person);
 		}*/
 		setPersonEntity(pEnt);
 		setPersID(idForPerson(person));

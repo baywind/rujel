@@ -143,14 +143,14 @@ public class EduPlanEditor extends WOComponent {
 			if(newCycle) {
 				if(!access().flagForKey("create")) {
 					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-					logger.logp(WOLogLevel.OWNED_EDITING,"EduPlanEditor","save","Denied to create new cycle",session());
+					logger.logp(WOLogLevel.EDITING,"EduPlanEditor","save","Denied to create new cycle",session());
 					return;
 				}
 			} else {
 				Boolean allowEdit = (Boolean)currCycle.valueForKeyPath("access.edit");
 				if(!((allowEdit == null && access().flagForKey("edit")) || (allowEdit != null && allowEdit.booleanValue()))) {
 					session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
-					logger.logp(WOLogLevel.OWNED_EDITING,"EduPlanEditor","save","Denied cycle editing",new Object[] {session(),currCycle});
+					logger.logp(WOLogLevel.EDITING,"EduPlanEditor","save","Denied cycle editing",new Object[] {session(),currCycle});
 					return;
 				}
 			}				
@@ -158,10 +158,10 @@ public class EduPlanEditor extends WOComponent {
 			try {
 				ec.saveChanges();
 				if(newCycle) { //log creation
-					logger.logp(WOLogLevel.UNOWNED_EDITING,"EduPlanEditor","save","Created new cycle",new Object[] {session(),currCycle});
+					logger.logp(WOLogLevel.EDITING,"EduPlanEditor","save","Created new cycle",new Object[] {session(),currCycle});
 					NSNotificationCenter.defaultCenter().postNotification("Own created object",session().valueForKey("user"),new NSDictionary(currCycle,"EO"));
 				} else { //log change
-					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
+					WOLogLevel level = WOLogLevel.EDITING;
 //					if(currCycle instanceof UseAccess && ((UseAccess)currCycle).isOwned())
 //						level = WOLogLevel.OWNED_EDITING;
 					logger.logp(level,"EduPlanEditor","save","Saved changes in cycle",new Object[] {session(),currCycle});

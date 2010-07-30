@@ -112,7 +112,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
     	}
     	try {
     		item.editingContext().saveChanges();
-    		logger.log(WOLogLevel.UNOWNED_EDITING,message, new Object[] {session(),item});
+    		logger.log(WOLogLevel.EDITING,message, new Object[] {session(),item});
     		changed = true;
     	} catch (Exception e) {
     		logger.log(WOLogLevel.WARNING,"Error " + message, 
@@ -144,7 +144,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
 					if(Various.boolForObject(session().valueForKeyPath(
 							"readAccess._delete.item")))
 						return;
-					logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting Reprimand",
+					logger.log(WOLogLevel.EDITING,"Deleting Reprimand",
 							new Object[] {session(),item});
 					ec.deleteObject(item);
 					list = null;
@@ -163,7 +163,7 @@ public class ReprimList extends com.webobjects.appserver.WOComponent {
 			}
 			ec.saveChanges();
 			if(text != null)
-				logger.log(WOLogLevel.UNOWNED_EDITING,text,
+				logger.log(WOLogLevel.EDITING,text,
 						new Object[] {session(),item});
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error " + text, new Object[] {

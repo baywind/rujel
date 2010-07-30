@@ -359,7 +359,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
 		if(substitute != null && substitute.editingContext() != null) {
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting substitute",substitute);
+			logger.log(WOLogLevel.EDITING,"Deleting substitute",substitute);
 			if(others != null && others.count() > 1) {
 				Enumeration enu = others.objectEnumerator();
 				while (enu.hasMoreElements()) {
@@ -391,7 +391,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		try {
 			ec.saveChanges();
 			Object[] args = new Object[] {session(),lesson};
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Substitute for lesson " + action,args);
+			logger.log(WOLogLevel.EDITING,"Substitute for lesson " + action,args);
 		} catch (NSValidation.ValidationException vex) {
 			ec.revert();
 	    	others = (NSArray)lesson.valueForKey("substitutes");

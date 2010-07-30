@@ -97,7 +97,7 @@ public class ManageUsers extends WOComponent {
 				return null;
 			}
 			ec.saveChanges();
-			logger.log(WOLogLevel.UNOWNED_EDITING,"User changes saved",
+			logger.log(WOLogLevel.EDITING,"User changes saved",
 					new Object[] {session(),list.selectedObject()});
 			if(match) {
 				list.clearSelection();
@@ -116,12 +116,12 @@ public class ManageUsers extends WOComponent {
 		WODisplayGroup list = null;
 		if(groupsList.selectedObject() != null) {
 			list = groupsList;
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting group " + NSKeyValueCoding.Utility.
+			logger.log(WOLogLevel.EDITING,"Deleting group " + NSKeyValueCoding.Utility.
 					valueForKey(list.selectedObject(), "groupName"),
 					new Object[] {session(),list.selectedObject()});
 		} else if(usersList.selectedObject() != null) {
 			list = usersList;
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting user " + NSKeyValueCoding.Utility.
+			logger.log(WOLogLevel.EDITING,"Deleting user " + NSKeyValueCoding.Utility.
 					valueForKey(list.selectedObject(), AutUser.USER_NAME_KEY),
 					new Object[] {session(),list.selectedObject()});
 			TableLoginHandler.flush();

@@ -278,7 +278,7 @@ public class SrcMark extends WOComponent {
 					}
 					courses = tmp.immutableClone();
 				} else { //log change
-					WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
+					WOLogLevel level = WOLogLevel.EDITING;
 //					if(aCourse instanceof UseAccess && ((UseAccess)aCourse).isOwned())
 //						level = WOLogLevel.OWNED_EDITING;
 					logger.logp(level,"SrcMark","save","Saved changes in course",new Object[] {session(),aCourse});

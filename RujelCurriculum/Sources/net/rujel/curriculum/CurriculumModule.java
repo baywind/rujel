@@ -185,7 +185,7 @@ public class CurriculumModule {
 						ec = new EOEditingContext(lesson.editingContext().rootObjectStore());
 					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
 					sub.setDate(lesson.date());
-					Logger.getLogger("rujel.curriculum").log(WOLogLevel.OWNED_EDITING,
+					Logger.getLogger("rujel.curriculum").log(WOLogLevel.EDITING,
 							"Correcting substitute date", new Object[] {ctx.session(),sub});
 				}
 			} // Enumeration senu = subs.objectEnumerator();

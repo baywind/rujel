@@ -231,7 +231,7 @@ public class TimeoutPopup extends WOComponent {
 					}
 				}
 				ec.saveChanges();
-				logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save","Timeout is changed",new Object[] {session(),timeout});
+				logger.logp(WOLogLevel.EDITING,getClass().getName(),"save","Timeout is changed",new Object[] {session(),timeout});
 			} catch (Exception ex) {
 				logger.logp(WOLogLevel.WARNING,getClass().getName(),"save","Failed to save timeout",new Object[] {session(),timeout,ex});
 				session().takeValueForKey(ex.getMessage(),"message");

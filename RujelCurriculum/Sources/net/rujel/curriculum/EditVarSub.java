@@ -148,7 +148,7 @@ public class EditVarSub extends WOComponent {
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 		try {
 			ec.saveChanges();
-	       	Curriculum.logger.log(WOLogLevel.UNOWNED_EDITING,"VarSub Variation saved",
+	       	Curriculum.logger.log(WOLogLevel.EDITING,"VarSub Variation saved",
 	       			new Object[] {session(),variation});
 			if(!noRelieve) {
 				String usr = (String)session().valueForKeyPath("user.present");
@@ -186,7 +186,7 @@ public class EditVarSub extends WOComponent {
     		var.setValue(new Integer(-val));
     		try {
     			ec.saveChanges();
-    	       	Curriculum.logger.log(WOLogLevel.UNOWNED_EDITING,
+    	       	Curriculum.logger.log(WOLogLevel.EDITING,
     	       			"VarSub reverse Variation created",
     	       			new Object[] {session(),var});
     			if(!noRelieve) {

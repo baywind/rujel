@@ -224,7 +224,7 @@ public class ItogPopup extends WOComponent {
 
 				ec.saveChanges();
 				String message = (newItog)?"New Itog created":"Itog is changed";
-				logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
+				logger.logp(WOLogLevel.EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
 				if (!same) {
 					ModuleInit.prepareStats(eduCourse, itogContainer,true);
 				}
@@ -270,7 +270,7 @@ public class ItogPopup extends WOComponent {
 			}
 			ec.deleteObject(itog);
 			ec.saveChanges();
-			logger.logp(WOLogLevel.UNOWNED_EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
+			logger.logp(WOLogLevel.EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
 			ModuleInit.prepareStats(course(), itogContainer,true);
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});

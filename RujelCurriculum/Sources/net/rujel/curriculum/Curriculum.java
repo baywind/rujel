@@ -350,7 +350,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     		}
 			ec.saveChanges();
 			Object[] args = new Object[] {session(),currReason};
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Reason is saved",args);
+			logger.log(WOLogLevel.EDITING,"Reason is saved",args);
 		} catch (Exception ex) {
 			if(!ec.globalIDForObject(currReason).isTemporary())
 				ec.revert();
@@ -540,7 +540,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 				Object[] args = new Object[] {session(),ec.globalIDForObject(currReason)};
 				ec.deleteObject(currReason);
 				ec.saveChanges();
-				logger.log(WOLogLevel.UNOWNED_EDITING,"Reason deleted",args);
+				logger.log(WOLogLevel.EDITING,"Reason deleted",args);
 			}
 		} catch (Exception e) {
 			Object[] args = new Object[] {session(),currReason,e};

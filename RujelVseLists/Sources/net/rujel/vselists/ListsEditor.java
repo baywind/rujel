@@ -319,7 +319,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 					newEntry.addObjectToBothSidesOfRelationshipWithKey(
 							aStudent, "student");
 					newEntry.takeValueForKey(date, "enter");
-					logger.log(WOLogLevel.UNOWNED_EDITING, "Added person to group",
+					logger.log(WOLogLevel.EDITING, "Added person to group",
 							new Object[] {session(),person,selection});
 				} else {
 					Integer grade = aStudent.absGrade();
@@ -367,7 +367,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		ec.lock();
 		try {
 			ec.saveChanges();
-			logger.log(WOLogLevel.UNOWNED_EDITING, "Changed enter/leave dates",
+			logger.log(WOLogLevel.EDITING, "Changed enter/leave dates",
 					new Object[] {session(),selection});
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING, "Error saving enter/leave dates changes",

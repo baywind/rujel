@@ -193,7 +193,7 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 			if(ec.hasChanges())
 				ec.saveChanges();
 			addOn.calculate();
-			AutoItogModule.logger.log(WOLogLevel.UNOWNED_EDITING,"Changed related list",
+			AutoItogModule.logger.log(WOLogLevel.EDITING,"Changed related list",
 					new Object[] {session(),autoItog});
 		} catch (Exception e) {
 			session().takeValueForKey(e.getMessage(), "message");

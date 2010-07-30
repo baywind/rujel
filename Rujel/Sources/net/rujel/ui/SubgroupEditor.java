@@ -190,7 +190,7 @@ public class SubgroupEditor extends WOComponent {
 //		if(ec.hasChanges()) {
 			ec.lock();
 			course.setSubgroup(subgroup.allObjects());
-			WOLogLevel level = WOLogLevel.UNOWNED_EDITING;
+			WOLogLevel level = WOLogLevel.EDITING;
 			try {
 				ec.saveChanges();
 //				if(course instanceof UseAccess && ((UseAccess)course).isOwned())

@@ -186,16 +186,16 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    			bonus = (Bonus)EOUtilities.createAndInsertInstance(ec, Bonus.ENTITY_NAME);
 //    	    			bonus.initBonus(prognosis, true);
     	    			args[1] = bonus;
-    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Adding bonus to prognosis",args);
+    	    			logger.log(WOLogLevel.EDITING,"Adding bonus to prognosis",args);
     	    		} else if(!bonus.submitted()) {
     	    			bonus.calculateValue(prognosis, true);
-    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Submitting bonus for prognosis",args);
+    	    			logger.log(WOLogLevel.EDITING,"Submitting bonus for prognosis",args);
     	    		}
     	    	} else {
     	    		if(bonus != null) {
     	    			bonus.zeroBonus();
     	    			prognosis.updateMarkFromValue();
-    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Unsubmitting bonus from prognosis",args);
+    	    			logger.log(WOLogLevel.EDITING,"Unsubmitting bonus from prognosis",args);
     	    		}
 	    			flags.setFlagForKey(false, "keepBonus");
     			}
@@ -207,7 +207,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    					Prognosis.BONUS_KEY);
     	    			Bonus.calculateBonus(prognosis, bonus, false);
     	    			args[1] = bonus;
-    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Requesting bonus for prognosis",args);
+    	    			logger.log(WOLogLevel.EDITING,"Requesting bonus for prognosis",args);
     	    		}
     	    		bonus.setReason(bonusText);
     	    	} else if(bonus != null) {
@@ -218,7 +218,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    		} else {
     	    			prognosis.removeObjectFromBothSidesOfRelationshipWithKey(bonus, "bonus");
     	    			ec.deleteObject(bonus);
-    	    			logger.log(WOLogLevel.UNOWNED_EDITING,"Removing bonus from prognosis",args);  
+    	    			logger.log(WOLogLevel.EDITING,"Removing bonus from prognosis",args);  
     	    		}
     	    	}
    			prognosis.setNamedFlags(flags);

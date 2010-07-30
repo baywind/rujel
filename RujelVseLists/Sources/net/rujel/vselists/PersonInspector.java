@@ -218,7 +218,7 @@ public class PersonInspector extends com.webobjects.appserver.WOComponent {
 		}
 		try {
 			ec.saveChanges();
-			ListsEditor.logger.log(WOLogLevel.UNOWNED_EDITING, "Saved changes with person",
+			ListsEditor.logger.log(WOLogLevel.EDITING, "Saved changes with person",
 					new Object[] {session(),person,currUsage.valueForKey("entity")});
 		} catch (Exception e) {
 			ListsEditor.logger.log(WOLogLevel.WARNING, "Error saving changes with person",

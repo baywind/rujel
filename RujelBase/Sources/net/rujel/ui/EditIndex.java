@@ -56,7 +56,7 @@ public class EditIndex extends WOComponent {
     public WOActionResults save() {
     	try {
     		indexer().editingContext().saveChanges();
-    		logger.log(WOLogLevel.UNOWNED_EDITING,"Saved changes in Indexer",
+    		logger.log(WOLogLevel.EDITING,"Saved changes in Indexer",
     				new Object[] {session(), indexer()});
 		} catch (Exception e) {
 			logger.log(WOLogLevel.INFO, "Error saving Indexer changes",
@@ -77,7 +77,7 @@ public class EditIndex extends WOComponent {
     	indexer().editingContext().deleteObject(rowItem);
     	try {
     		indexer().editingContext().saveChanges();
-    		logger.log(WOLogLevel.UNOWNED_EDITING,"Deleted indexRow " + 
+    		logger.log(WOLogLevel.EDITING,"Deleted indexRow " + 
     				idx + ": " + value, new Object[] {session(), indexer()});
 		} catch (Exception e) {
 			logger.log(WOLogLevel.INFO, "Error deleting indexRow " + idx,

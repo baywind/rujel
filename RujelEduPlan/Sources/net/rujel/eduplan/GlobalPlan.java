@@ -335,7 +335,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			}
 			Object[] args = new Object[] {session(),changes};*/
 			ec.saveChanges();
-			EduPlan.logger.log(WOLogLevel.UNOWNED_EDITING,"Saved changes in EduPlan",session());
+			EduPlan.logger.log(WOLogLevel.EDITING,"Saved changes in EduPlan",session());
 		} catch (Exception ex) {
 			Object[] args = new Object[] {session(),ex};
 			EduPlan.logger.log(WOLogLevel.WARNING,"Failed to save changes",args);

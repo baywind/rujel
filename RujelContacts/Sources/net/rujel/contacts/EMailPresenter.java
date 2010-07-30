@@ -84,7 +84,7 @@ public class EMailPresenter extends WOComponent {
 		if(ec().hasChanges()) {
 			try {
 				ec().saveChanges();
-				logger.logp(WOLogLevel.OWNED_EDITING,"EMailPresenter","save","Saved email address",new Object[] {session(),item});
+				logger.logp(WOLogLevel.EDITING,"EMailPresenter","save","Saved email address",new Object[] {session(),item});
 				setValueForBinding(null,"selection");
 			} catch (Exception ex) {
 				logger.logp(WOLogLevel.FINER,"SubgroupEditor","save","Failed to save email address",new Object[] {session(),item,ex});
@@ -163,7 +163,7 @@ public class EMailPresenter extends WOComponent {
 			item.setPersID(new Integer(-id));
 			try {
 				ec().saveChanges();
-				logger.logp(WOLogLevel.OWNED_EDITING,"EMailPresenter","save","Removed email address",new Object[] {session(),item});
+				logger.logp(WOLogLevel.EDITING,"EMailPresenter","save","Removed email address",new Object[] {session(),item});
 			} catch (Exception ex) {
 				logger.logp(WOLogLevel.FINER,"SubgroupEditor","save","Failed to remove email address",new Object[] {session(),item,ex});
 				session().takeValueForKey(ex.toString(),"message");

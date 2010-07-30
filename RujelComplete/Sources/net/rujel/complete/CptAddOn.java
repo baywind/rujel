@@ -312,7 +312,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 			ec.saveChanges();
 			if(global != null && global.editingContext() != ec)
 				global = null;
-			CompletePopup.logger.log(WOLogLevel.UNOWNED_EDITING,"Student Completions saved",
+			CompletePopup.logger.log(WOLogLevel.EDITING,"Student Completions saved",
 					new Object[] {course,cd.allKeys()});
 		} catch (Exception e) {
 			ec.revert();

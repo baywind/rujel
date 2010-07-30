@@ -326,7 +326,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = lesson.editingContext(); 
 		ec.lock();
 		if(substitute != null && substitute.editingContext() != null) {
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Deleting substitute",substitute);
+			logger.log(WOLogLevel.EDITING,"Deleting substitute",substitute);
 			ec.deleteObject(substitute);
 		}
 		return done("deleted");
@@ -337,7 +337,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		try {
 			ec.saveChanges();
 			Object[] args = new Object[] {session(),selLesson};
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Join for lesson " + action,args);
+			logger.log(WOLogLevel.EDITING,"Join for lesson " + action,args);
 		} catch (NSValidation.ValidationException vex) {
 			ec.revert();
 			String message = vex.getMessage();

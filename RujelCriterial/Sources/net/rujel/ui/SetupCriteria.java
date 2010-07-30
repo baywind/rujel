@@ -224,11 +224,11 @@ public class SetupCriteria extends WOComponent {
 				sets.addObject(currSet);
 			}
 			if(idx) {
-				logger.log(WOLogLevel.UNOWNED_EDITING,"Indexer created",
+				logger.log(WOLogLevel.EDITING,"Indexer created",
 						new Object[] {session(),criterion});
 				indices = indices.arrayByAddingObject(criterion);
 			} else {
-				logger.log(WOLogLevel.UNOWNED_EDITING,"CriteriaSet " + 
+				logger.log(WOLogLevel.EDITING,"CriteriaSet " + 
 						((create)?"created":"renamed"), new Object[] {session(),currSet});
 			}
 		} catch (Exception e) {
@@ -358,7 +358,7 @@ public class SetupCriteria extends WOComponent {
 	   		ec.saveChanges();
     		criterion = null;
 	   		indices = Indexer.indexersOfType(ec, "criteria*");
-			logger.log(WOLogLevel.UNOWNED_EDITING,"Criterion Indexer '" + name + 
+			logger.log(WOLogLevel.EDITING,"Criterion Indexer '" + name + 
 					"' deleted", session());
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error deleting CriterionIndexer",
