@@ -95,14 +95,18 @@ public class SetupCriteria extends WOComponent {
     	if(set instanceof CriteriaSet) {
     		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject((CriteriaSet)currSet);
     		currID = (Integer)gid.keyValues()[0];
-    		criteria = ((CriteriaSet)set).criteria().mutableClone();
-    		if(criteria.count() == 0)
+    		critDict.removeAllObjects();
+    		NSArray crits = ((CriteriaSet)set).criteria();
+    		if(crits == null || crits.count() == 0) {
+    			criteria = new NSMutableArray();
+    			critDict.takeValueForKey("A", "title");
     			return;
+    		}
+    		criteria = crits.mutableClone();
     		EOSortOrdering.sortArrayUsingKeyOrderArray(criteria, CriteriaSet.sorter);
     		criterion = (EOEnterpriseObject)criteria.lastObject();
     		String title = (String)criterion.valueForKey("title");
     		criterion = null;
-    		critDict.removeAllObjects();
     		if(title.length() == 1) {
     			char t = title.charAt(0);
     			t++;
@@ -234,6 +238,8 @@ public class SetupCriteria extends WOComponent {
 		} catch (Exception e) {
 			if(create)
 				currSet = null;
+			else
+				currSet.takeValueForKey(currSet.valueForKey("flags"), "flags");
 			if(idx)
 				logger.log(WOLogLevel.INFO,"Error creating Indexer " + 
 						nameOfCritSet.substring(5), new Object[] {session(),e});
@@ -241,7 +247,6 @@ public class SetupCriteria extends WOComponent {
 				logger.log(WOLogLevel.INFO,"Error saving CriteriaSet",
 						new Object[] {session(),currSet,e});
 			session().takeValueForKey(e.getMessage(), "message");
-			currSet.takeValueForKey(currSet.valueForKey("flags"), "flags");
 			ec.revert();
 		}
     	return null;
@@ -307,15 +312,16 @@ public class SetupCriteria extends WOComponent {
 			cr.takeValueForKey(idx.maxIndex(), "dfltMax");
 	}
 	
-	public WOActionResults saveIndices() {
+	public WOActionResults save() {
+		String saving = (tab == 0)?"CriteriaSet ":"Indexer bindings in CriteriaSet ";
 		try {
 			ec.saveChanges();
-			logger.log(WOLogLevel.COREDATA_EDITING,"Saved Indexer bindings in CriteriaSet "
+			logger.log(WOLogLevel.COREDATA_EDITING,"Saved " + saving
 					+ nameOfCritSet, new Object[] {session(),currSet});
 		} catch (Exception e) {
 			ec.revert();
 			logger.log(WOLogLevel.COREDATA_EDITING,
-					"Error savin Indexer bindings in CriteriaSet " + nameOfCritSet
+					"Error saving " + saving + nameOfCritSet
 					,new Object[] {session(),currSet,e});
 			session().takeValueForKey(e.getMessage(), "message");
 		}

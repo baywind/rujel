@@ -189,12 +189,14 @@ DeleteSet : OnClickContainer {
   class = "female";
   style = "padding:0px 4px;font-weight:bold;border:double 3px #cc6666;color:#cc3333;";
   title = ^dict.delete;
+  hide = session.readAccess._delete.CriteriaSet;
 }
 
 AddSet : OnClickContainer {
   elementName = "span";
   onclick = "create(get(this,'form'));";
   class = "green";
+  hide = session.readAccess._create.CriteriaSet;
   style = "padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
   title = session.strings.Reusables_Strings.uiElements.Add;
 }
@@ -205,6 +207,7 @@ RenameSet : OnClickContainer {
   class = "grey";
   style = "padding:0px 4px;font-weight:bold;border:double 3px #666666;color:#333333;";
   title = ^dict.renamePrompt;
+  hide = session.readAccess._edit.CriteriaSet;
 }
 
 CriteriaAvailable : WOConditional {
@@ -289,8 +292,8 @@ OnlyCriterTitle : WOString {
   escapeHTML = false;
 }
 
-SaveComments : WOSubmitButton {
-  action = saveCritSet;
+Save : WOSubmitButton {
+  action = save;
   value = session.strings.Reusables_Strings.uiElements.Save;
 }
 
@@ -394,10 +397,6 @@ EditIndex : EditIndex {
 IndicesForm : WOForm {
 }
 
-SaveIndices : WOSubmitButton {
-  action = saveIndices;
-  value = session.strings.Reusables_Strings.uiElements.Save;
-}
 IndexerEditTitle : WOString {
   value = ^dict.index;
 }

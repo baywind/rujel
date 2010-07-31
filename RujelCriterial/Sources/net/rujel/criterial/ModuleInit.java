@@ -38,6 +38,7 @@ import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.eoaccess.EOJoin;
@@ -47,6 +48,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOSession;
 
 public class ModuleInit {
 
@@ -99,8 +101,7 @@ public class ModuleInit {
 					new NSDictionary(new String[] {"Mark","work.course","student"},
 							new String[] {"entity","coursePath","studentPath"}) });
 		} else if("adminModules".equals(obj)) {
-			return WOApplication.application().valueForKeyPath(
-					"strings.RujelCriterial_Strings.setup.allValues");
+			return adminModules(ctx);
 		}
 		return null;
 	}
@@ -206,5 +207,19 @@ public class ModuleInit {
 				"strings.RujelCriterial_Strings.messages.courseHasWorks");
 		ctx.session().takeValueForKey(message, "message");
 		return message;
+	}
+	
+	public static Object adminModules(WOContext ctx) {
+		WOSession ses = ctx.session();
+		NSDictionary setup = (NSDictionary)ses.valueForKeyPath(
+			"strings.RujelCriterial_Strings.setup");
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = setup.keyEnumerator();
+		while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			if(Various.boolForObject(ses.valueForKeyPath("readAccess.read." + key)))
+				result.addObject(setup.valueForKey(key));
+		}
+		return result;
 	}
 }

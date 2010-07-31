@@ -121,8 +121,14 @@ public class CriteriaSet extends _CriteriaSet
 	public EOEnterpriseObject addCriterion() {
 		EOEnterpriseObject criterion = EOUtilities.createAndInsertInstance(
 				editingContext(),"Criterion");
-		Number num = (Number)criteria().valueForKeyPath("@max.criterion");
-		num = (num==null)?new Integer(1):new Integer(num.intValue() + 1);
+		NSArray criteria = criteria();
+		Number num = null;
+		if(criteria == null || criteria.count() == 0) {
+			num = new Integer(1);
+		} else {
+			num = (Number)criteria().valueForKeyPath("@max.criterion");
+			num = new Integer(num.intValue() + 1);
+		}
 		criterion.takeValueForKey(num,"criterion");
 		addObjectToBothSidesOfRelationshipWithKey(criterion,"criteria");
 		return criterion;

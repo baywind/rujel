@@ -120,6 +120,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 	
 	public void reset() {
 		_bc = null;
+		_access = null;
 		super.reset();
 	}
 

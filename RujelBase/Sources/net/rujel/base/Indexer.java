@@ -315,6 +315,7 @@ public class Indexer extends _Indexer
  			if(text == null) {
  				text = EOUtilities.createAndInsertInstance(editingContext(), "StaticTextStore");
  				text.takeValueForKey(EntityIndex.indexForObject(this), "entityIndex");
+ 				addObjectToBothSidesOfRelationshipWithKey(text, COMMENT_EO_KEY);
  			}
  			text.takeValueForKey(cmnt, "storedText");
 		}
