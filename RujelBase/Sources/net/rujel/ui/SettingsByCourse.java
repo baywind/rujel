@@ -83,7 +83,7 @@ public class SettingsByCourse extends WOComponent {
 		String sel = (String)valueForBinding("selector");
 		if(sel != null) {
 			Object val = valueForBinding(sel);
-	    	if(_byCourse != null && (val == null)?selector == null : val.equals(selector))
+	    	if(_byCourse != null && ((val == null)?selector == null : val.equals(selector)))
 	    		return _byCourse;
 			selector = val;
 			SettingsBase base = base();
@@ -197,8 +197,12 @@ public class SettingsByCourse extends WOComponent {
 	}
 
 	public WOActionResults makeBase() {
-		String sel = (String)valueForBinding("selector");
-		base().takeValueForKey(valueForBinding(sel), sel);
+//		String sel = (String)valueForBinding("selector");
+//		base().takeValueForKey(valueForBinding(sel), sel);
+    	if(hasBinding("textValue"))
+    		base().takeValueForKey(valueForBinding("textValue"), "textValue");
+    	if(hasBinding("numericValue"))
+    		base().takeValueForKey(valueForBinding("numericValue"), "numericValue");
 		EOEditingContext ec = base().editingContext();
 		try {
 			ec.saveChanges();

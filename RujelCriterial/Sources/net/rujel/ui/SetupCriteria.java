@@ -212,14 +212,18 @@ public class SetupCriteria extends WOComponent {
     		criterion = EOUtilities.createAndInsertInstance(ec, Indexer.ENTITY_NAME);
     		criterion.takeValueForKey(nameOfCritSet.substring(5), "title");
     		criterion.takeValueForKey("criteria", "indexType");
+    		nameOfCritSet = (currSet == null)?null:
+    				(String)currSet.valueForKey(CriteriaSet.SET_NAME_KEY);
     	} else {
     		currSet.takeValueForKey(nameOfCritSet, CriteriaSet.SET_NAME_KEY);
-			NSArray usage = base.settingUsage(SettingsBase.NUMERIC_VALUE_KEY, currID, null);
-			if(usage != null && usage.count() > 0) {
-				EOEnterpriseObject bc = (EOEnterpriseObject)usage.objectAtIndex(0);
-				if(!nameOfCritSet.equals(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
-					usage.takeValueForKey(nameOfCritSet, SettingsBase.TEXT_VALUE_KEY);
-			}
+    		if(!create) {
+    			NSArray usage = base.settingUsage(SettingsBase.NUMERIC_VALUE_KEY, currID, null);
+    			if(usage != null && usage.count() > 0) {
+    				EOEnterpriseObject bc = (EOEnterpriseObject)usage.objectAtIndex(0);
+    				if(!nameOfCritSet.equals(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
+    					usage.takeValueForKey(nameOfCritSet, SettingsBase.TEXT_VALUE_KEY);
+    			}
+    		}
     	}
 		try {
 			ec.saveChanges();
