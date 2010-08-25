@@ -224,6 +224,10 @@ public class CriteriaSet extends _CriteriaSet
     	super.setFlags(flags);
     }
     
+    /** Automatically sets dfltMax field of every criterion in CriteriaSet to
+     * maxIndex of the attached Indexer (if exists)
+     * 
+     *  @return true if any changes were made */
 	public boolean setMaxes() {
 		NSArray rows = criteria();
 		if(rows == null || rows.count() == 0)

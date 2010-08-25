@@ -193,6 +193,14 @@ public class SetupCriteria extends WOComponent {
     	return (Boolean)session().valueForKeyPath("readAccess.edit.CriteriaSet");
     }
     
+    public Boolean cantDeleteCriter() {
+    	if(criterion == null)
+    		return Boolean.TRUE;
+    	if(criterion == criteria.lastObject())
+    		return Boolean.FALSE;
+    	return Boolean.TRUE;
+    }
+    
     public String styleCritSave() {
 		if(criterion == null)
 			return "visibility:hidden;";

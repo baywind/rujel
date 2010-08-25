@@ -337,7 +337,10 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 			BigDecimal weight = (num == null)?((weightToMax.booleanValue())?
 					max : BigDecimal.ONE) : new BigDecimal(num.intValue());
 			if(marks[i] != null) {
-				BigDecimal value = new BigDecimal(marks[i].value().intValue());
+				Number val = marks[i].value();
+				if(val == null || val.intValue() > max.intValue())
+					return null;
+				BigDecimal value = new BigDecimal(val.intValue());
 				value = (value.multiply(weight)).divide(max,6,BigDecimal.ROUND_CEILING);
 				sum = sum.add(value);
 			}
@@ -666,6 +669,12 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 			for (int i = 0; i < maxs.length; i++) {
 				if(marks[i] == null)
 					continue;
+				if(marks[i].value() == null) {
+					String message = (String)WOApplication.application().valueForKeyPath(
+								"strings.RujelCriterial_Strings.messages.illegalMark");
+					message = String.format(message, criterName(marks[i].criterion()));
+					throw new NSValidation.ValidationException(message);
+				}
 				if(marks[i].value().intValue() > maxs[i]) {
 					String message = (String)WOApplication.application().valueForKeyPath(
 								"strings.RujelCriterial_Strings.messages.markValueOverMax");

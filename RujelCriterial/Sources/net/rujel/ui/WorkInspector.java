@@ -62,7 +62,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	public Integer minutes;
 	public NSMutableDictionary dict;
 	public EduCourse course;
-	protected CriteriaSet critSet;
+	public CriteriaSet critSet;
 	public NamedFlags namedFlags;
 
     public WorkInspector(WOContext context) {
@@ -159,16 +159,24 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(work.load() == null || work.load().intValue() != load)
     		work.setLoad(new Integer(load));
     	WORequest req = context().request();
-    	NSNumberFormatter frmt = new NSNumberFormatter("0");
-    	Number critCount = req.numericFormValueForKey("critCount", frmt);
-    	if(critCount == null)
-    		critCount = new Integer(0);
-    	for (int i = 0; i <= critCount.intValue(); i++) { // prepare criter mask
+//    	NSNumberFormatter frmt = new NSNumberFormatter("0");
+    	int critCount = 0;
+    	String crCnt = req.stringFormValueForKey("critCount");
+    	if(crCnt != null)
+    		critCount = new Integer(crCnt);
+    	for (int i = 0; i <= critCount; i++) { // prepare criter mask
     		Integer criterion = new Integer(i);
 			EOEnterpriseObject mask = work.getCriterMask(criterion);
-			Number val = req.numericFormValueForKey("m" + i, frmt);
-			if(val != null && !(val instanceof Integer))
-				val = new Integer(val.intValue());
+			String value = req.stringFormValueForKey("m" + i);
+			Integer val = null;
+			if(value != null) {
+				try {
+					val = new Integer(value);
+				} catch (NumberFormatException e) {
+					EOEnterpriseObject cr = critSet.criterionForNum(criterion);
+					val = (Integer)cr.valueForKey("dfltMax");
+				}
+			}
 			if(val == null) {
 				if(mask != null) {
 					work.removeObjectFromBothSidesOfRelationshipWithKey
@@ -187,7 +195,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 					mask.takeValueForKey(val, "max");
 			}
 			if(mask != null) {
-				val = req.numericFormValueForKey("w" + i, frmt);
+				value = req.stringFormValueForKey("w" + i);
+				val = (value == null)? null : new Integer(value);
 				Number mWeight = (Number)mask.valueForKey("weight");
 				if(mWeight == null || val == null || mWeight.intValue() != val.intValue())
 					mask.takeValueForKey(val, "weight");
@@ -293,8 +302,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     public String onChange() {
     	if(critIdx < 0)
     		return "return isNumberInput(event);";
-    	if(critSet != null)
+    	if(critSet != null) {
+    		if(critSet.namedFlags().flagForKey("fixMax") || critItem() != null &&
+        			critItem().valueForKey("indexer") != null)
+    			return null;
     		return "return isNumberInput(event);";
+    	}
     	Integer count = (Integer)valueForKeyPath("work.criterMask.@max.criterion");
     	if(count != null && critIdx < count.intValue())
     		return "return isNumberInput(event);";
@@ -320,6 +333,25 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	return buf.toString();
     }
 
+    public String inputType() {
+    	if(critSet == null || critItem() == null || critItem().valueForKey("dfltMax") == null)
+    		return "text";
+    	if(critSet.namedFlags().flagForKey("fixMax") ||
+    			critItem().valueForKey("indexer") != null)
+    		return "checkbox";
+    	return "text";
+    }
+    
+    public String checked() {
+    	if(critSet == null || critItem() == null || 
+    			critItem().valueForKey("dfltMax") == null || itemMask() == null)
+    		return null;
+    	if(critSet.namedFlags().flagForKey("fixMax") ||
+    			critItem().valueForKey("indexer") != null)
+    		return "checked";
+    	return null;
+    }
+    
     protected EOEnterpriseObject itemMask() {
     	if(work == null)
     		return null;

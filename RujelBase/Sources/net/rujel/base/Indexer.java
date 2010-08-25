@@ -200,6 +200,10 @@ public class Indexer extends _Indexer
 				if(value.equals(row.value()))
 					return row.idx();
 			}
+			if(formatString() != null && value.length() >= formatString().length() -8 &&
+					value.equals(String.format(formatString(),
+					row.idx(), row.value(), row.comment())))
+				return row.idx();
 		}
 		return null;
 	}

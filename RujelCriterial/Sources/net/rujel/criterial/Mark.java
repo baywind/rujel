@@ -29,6 +29,7 @@
 
 package net.rujel.criterial;
 
+import net.rujel.base.Indexer;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
@@ -104,8 +105,12 @@ public class Mark extends _Mark {
 	}*/
 	
 	public Integer validateValue(Number aValue) throws NSValidation.ValidationException {
-		if (aValue == null)
-			throw new NSValidation.ValidationException("Mark value can not be null");
+		if (aValue == null) {
+			String message = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelCriterial_Strings.messages.illegalMark");
+					message = String.format(message, work().criterName(criterion()));
+			throw new NSValidation.ValidationException(message);
+		}
 		EOEnterpriseObject criterMask = work().getCriterMask(criterion());
 		String message = null;
 		if(criterMask == null) {
@@ -142,10 +147,11 @@ public class Mark extends _Mark {
 	}
 	
 	public void setValue(Integer aValue) {
-        if(value() == null || value().intValue() != aValue.intValue()) {
+        if(value() == null || aValue == null || value().intValue() != aValue.intValue()) {
 			NSTimestamp today = null;
 			if(editingContext() instanceof SessionedEditingContext) {
-				today = (NSTimestamp)((SessionedEditingContext)editingContext()).session().valueForKey("today");
+				today = (NSTimestamp)((SessionedEditingContext)
+						editingContext()).session().valueForKey("today");
 			}
 			if(today == null)
 				today = new NSTimestamp();
@@ -153,6 +159,50 @@ public class Mark extends _Mark {
 			setDateSet(today);
 		}
     }
+	
+	public Indexer indexer() {
+		CriteriaSet cset = work().critSet();
+		if(cset == null)
+			return null;
+		EOEnterpriseObject cr = cset.criterionForNum(criterion());
+		return (Indexer)cr.valueForKey("indexer");
+	}
+	
+	public String present() {
+		Indexer idx = indexer();
+		Integer value = value();
+		if(value == null)
+			return "?";
+		if(idx == null)
+			return value.toString();
+		String result = idx.formattedForIndex(value.intValue(), null);
+		if(result == null)
+			return value.toString();
+		return result;
+	}
+	
+	public boolean setPresent(String present) {
+		if(present == null) {
+			setValue(null);
+			return false;
+		}
+		Integer value = null;
+		Indexer idx = indexer();
+		if(idx != null)
+			value = idx.indexForValue(present, true);
+		if(value == null) {
+			try {
+				value = new Integer(present);
+			} catch (NumberFormatException e) {
+				setValue(null);
+				return false;
+			}
+		}
+		if(value.equals(value()))
+			return false;
+		setValue(value);
+		return true;
+	}
 	
 	@Deprecated
 	public Object handleQueryWithUnboundKey(String key) {

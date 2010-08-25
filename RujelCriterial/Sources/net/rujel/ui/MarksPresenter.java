@@ -142,12 +142,12 @@ public class MarksPresenter extends NotePresenter {
 		if(single()) {
 			if(critItem == null)
 				return super.hasValue();
-			if (mark() == null)
+			if (mark() == null || mark().value() == null)
 				return false;
 			EOEditingContext ec = mark().editingContext();
 			if(ec == null)
 				return false;
-			EOGlobalID gid = mark().editingContext().globalIDForObject(mark());
+			EOGlobalID gid = ec.globalIDForObject(mark());
 			return (gid != null && !gid.isTemporary());
 		}
 		Integer activeCriterion = activeCriterion();
@@ -196,8 +196,18 @@ public class MarksPresenter extends NotePresenter {
 				return ".";
 			else return null;
 		}
-		return mark().value().toString();
+		return mark().present();
     }
+	
+	public String onkeypress() {
+		CriteriaSet set = lesson().critSet();
+		if(set != null) {
+			EOEnterpriseObject cr = set.criterionForNum(critItem());
+			if(cr != null && cr.valueForKey("indexer") != null)
+				return null;
+		}
+		return "return isNumberInput(event);";
+	}
 	
     protected NSMutableDictionary identifierDictionary() {
 		NSMutableDictionary ident = super.identifierDictionary();
@@ -244,13 +254,21 @@ public class MarksPresenter extends NotePresenter {
 			_mark = null;
 			return;
 		}
-        int value = 0;
-        if(newMarkValue instanceof Number)
-        	value = ((Number)newMarkValue).intValue();
-        else
-        	value = Integer.parseInt(newMarkValue.toString());
-        if (mark().value() == null || value != mark().value().intValue()) {
-			mark().setValue(new Integer(value));
+        boolean archive = (mark().value() == null);
+        if(newMarkValue instanceof Number) {
+        	int value = ((Number)newMarkValue).intValue();
+        	archive = (archive || value != mark().value().intValue());
+        	if(archive)
+        		mark().setValue(new Integer(value));
+        } else {
+        	try {
+        		archive = mark().setPresent(newMarkValue.toString());
+        	} catch (IllegalArgumentException e) {
+				session().takeValueForKey(e.getMessage(), "message");
+				return;
+			}
+        }
+        if(archive) {
 			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
 		}
 		/*if(mark().value() == null || mark().value().intValue() != newMarkValue.intValue()) {
@@ -270,7 +288,7 @@ public class MarksPresenter extends NotePresenter {
 					Mark mark = marks[i];
 					if(mark == null) continue;
 					String crit = lesson().criterName(mark.criterion());
-					_archive.takeValueForKey(mark.value(), '@' + crit);
+					_archive.takeValueForKey(mark.present(), '@' + crit);
 				}
 			}
 			if(noteForStudent() != null)
@@ -370,7 +388,7 @@ public class MarksPresenter extends NotePresenter {
 				return null;
 			if(lesson().usedCriteria().contains(activeCriterion)) {
 				Mark mark = lesson().markForStudentAndCriterion(student(),new Integer(0));
-				return (mark == null)?".":mark.value().toString();
+				return (mark == null)?".":mark.present();
 			}
 			return lesson().integralForStudent(student(),lesson().integralPresenter());
 		} else if(activeCriterion.intValue() < 0) {
@@ -383,7 +401,7 @@ public class MarksPresenter extends NotePresenter {
 			else
 				return null;
 		} else {
-			return mark().value().toString();
+			return mark().present();
 		}
     }
 
