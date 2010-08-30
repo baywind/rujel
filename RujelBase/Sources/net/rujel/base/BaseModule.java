@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.PlistReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOApplication;
@@ -40,6 +41,8 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
@@ -79,6 +82,8 @@ public class BaseModule {
 			NSDictionary diaryTabs = (NSDictionary)WOApplication.application().
 					valueForKeyPath("strings.RujelBase_Base.diaryTab");
 			return PlistReader.cloneDictionary(diaryTabs, true);
+		} else if("deleteStudents".equals(obj)) {
+			return deleteStudents(ctx);
 		}
 		return null;
 	}
@@ -118,5 +123,21 @@ public class BaseModule {
 				"strings.RujelBase_Base.courseHasLessons");
 		ctx.session().takeValueForKey(message, "message");
 		return message;
+	}
+	
+	public static Object deleteStudents(WOContext ctx) {
+		NSArray students = (NSArray)ctx.session().objectForKey("deleteStudents");
+		if(students == null || students.count() == 0)
+			return null;
+		EOQualifier qual = Various.getEOInQualifier("student", students);
+		EOFetchSpecification fs = new EOFetchSpecification("BaseNote",qual,null);
+		fs.setFetchLimit(1);
+		EOEnterpriseObject student = (EOEnterpriseObject)students.objectAtIndex(0);
+		NSArray found = student.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			return ctx.session().valueForKeyPath(
+					"strings.RujelBase_Base.relatedNotesFound");
+		}
+		return null;
 	}
 }

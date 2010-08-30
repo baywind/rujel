@@ -43,6 +43,7 @@ import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class VseEduGroup extends _VseEduGroup implements EduGroup {
@@ -109,13 +110,20 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	protected long since;
 	protected long to = Long.MAX_VALUE;
 	public NSArray list() {
-		NSArray list = vseList();
+		return list(date());
+	}
+	public NSArray list(NSTimestamp date) {
+		NSArray list = vseList(date);
 		if(list != null && list.count() > 0)
 			list = (NSArray)list.valueForKey("student");
 		return list;
 	}
+	
 	public NSArray vseList() {
-		NSTimestamp date = date();
+		return vseList(date());
+	}
+	
+	public NSArray vseList(NSTimestamp date) {
 		long now = date.getTime();
 		if(_list != null && now > since && now < to)
 			return _list;
@@ -166,6 +174,32 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 			EOSortOrdering.sortArrayUsingKeyOrderArray(result, VseList.sorter);
 		_list = result.immutableClone();
 		return _list;
+	}
+	
+	public VseList addStudent(VseStudent student, NSTimestamp date) {
+		if(lists().count() > 0) {
+			Enumeration enu = lists().objectEnumerator();
+			while (enu.hasMoreElements()) {
+				VseList l = (VseList) enu.nextElement();
+				if(l.student() != student)
+					continue;
+				if(date == null) {
+					l.setEnter(null);
+					l.setLeave(null);
+					return l;
+				} else if(l.leave() == null || l.leave().after(date)) {
+					if(l.enter().after(date))
+						l.setEnter(date);
+					return l;
+				}
+			}
+		}
+		VseList l = (VseList)EOUtilities.createAndInsertInstance(editingContext(),
+				VseList.ENTITY_NAME);
+		addObjectToBothSidesOfRelationshipWithKey(l, LISTS_KEY);
+		l.addObjectToBothSidesOfRelationshipWithKey(student, VseList.STUDENT_KEY);
+		l.setEnter(date);
+		return l;
 	}
 	
 	public void setLists(NSArray value) {
