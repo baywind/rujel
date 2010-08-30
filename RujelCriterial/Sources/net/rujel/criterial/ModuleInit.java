@@ -102,6 +102,8 @@ public class ModuleInit {
 							new String[] {"entity","coursePath","studentPath"}) });
 		} else if("adminModules".equals(obj)) {
 			return adminModules(ctx);
+		} else if("deleteStudents".equals(obj)) {
+			return deleteStudents(ctx);
 		}
 		return null;
 	}
@@ -221,5 +223,21 @@ public class ModuleInit {
 				result.addObject(setup.valueForKey(key));
 		}
 		return result;
+	}
+	
+	public static Object deleteStudents(WOContext ctx) {
+		NSArray students = (NSArray)ctx.session().objectForKey("deleteStudents");
+		if(students == null || students.count() == 0)
+			return null;
+		EOQualifier qual = Various.getEOInQualifier("student", students);
+		EOFetchSpecification fs = new EOFetchSpecification("Mark",qual,null);
+		fs.setFetchLimit(1);
+		EOEnterpriseObject student = (EOEnterpriseObject)students.objectAtIndex(0);
+		NSArray found = student.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			return ctx.session().valueForKeyPath(
+					"strings.RujelCriterial_Strings.messages.relatedMarksFound");
+		}
+		return null;
 	}
 }

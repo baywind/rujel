@@ -72,6 +72,8 @@ public class ModuleInit {
 			return new NSDictionary(
 					new String[] {ItogMark.ENTITY_NAME,"student","cycle","cycle"},
 					new String[] {"entity","studentPath","checkPath","checkCourse"});
+		} else if("deleteStudents".equals(obj)) {
+			return deleteStudents(ctx);
 		}
 		return null;
 	}
@@ -255,5 +257,24 @@ public class ModuleInit {
 		}
 //		ec.unlock();
 		return result;
+	}
+	
+	public static Object deleteStudents(WOContext ctx) {
+		NSArray students = (NSArray)ctx.session().objectForKey("deleteStudents");
+		if(students == null || students.count() == 0)
+			return null;
+		EOQualifier qual = Various.getEOInQualifier("student", students);
+		EOFetchSpecification fs = new EOFetchSpecification("ItogMark",qual,null);
+		fs.setFetchLimit(1);
+		EOEnterpriseObject student = (EOEnterpriseObject)students.objectAtIndex(0);
+		NSArray found = student.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			Object result = ctx.session().valueForKeyPath(
+					"strings.RujelEduResults_EduResults.relatedItogsFound");
+			if(result == null)
+				result = "Related itogs found";
+			return result;
+		}
+		return null;
 	}
 }

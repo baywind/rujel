@@ -52,7 +52,7 @@ public class CriteriaSet extends _CriteriaSet
     }
 	
     public static final NSArray flagNames = new NSArray(
-    		new String[] {"fixMax","fixWeight","fixList","onlyCriter"});
+    		new String[] {"fixMax","fixWeight","fixList","onlyCriter","allowNumbers"});
     
 	/*
 	 // If you add instance variables to store property values you

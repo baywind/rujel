@@ -192,7 +192,8 @@ public class Mark extends _Mark {
 			value = idx.indexForValue(present, true);
 		if(value == null) {
 			try {
-				value = new Integer(present);
+				if(idx == null || work().critSet().namedFlags().flagForKey("allowNumbers"))
+					value = new Integer(present);
 			} catch (NumberFormatException e) {
 				setValue(null);
 				return false;

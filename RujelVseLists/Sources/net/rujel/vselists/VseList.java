@@ -41,14 +41,14 @@ public class VseList extends _VseList {
 	public void setEnter(NSTimestamp value) {
 		super.setEnter(value);
 		eduGroup().nullify();
-		if(student().enter() != null && student().enter().after(value))
+		if(value != null && student().enter() != null && student().enter().after(value))
 			student().setEnter(value);
 	}
 
 	public void setLeave(NSTimestamp value) {
 		super.setLeave(value);
 		eduGroup().nullify();
-		if(student().leave() != null && student().leave().before(value))
+		if(value != null && student().leave() != null && student().leave().before(value))
 			student().setLeave(value);
 	}
 	

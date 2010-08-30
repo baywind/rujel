@@ -97,7 +97,10 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	public NSArray categories;
 	public Object selection;
 	public Boolean cantAddClass;
-	protected NSTimestamp date;
+	public NSTimestamp date;
+	public NSMutableSet ticks = new NSMutableSet();
+	public NSArray targets;
+	public VseEduGroup target;
     
     public ListsEditor(WOContext context) {
         super(context);
@@ -107,22 +110,27 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	NSTimestamp sesDate = (NSTimestamp)session().valueForKey("today");
-    	if(!sesDate.equals(date)) {
+    	if(!sesDate.equals(date) && categories == null) {
     		date = sesDate;
     		switchMode();
     	}
+		date = sesDate;
     	super.appendToResponse(aResponse, aContext);
     }
     
     public void toggleAll() {
     	showAll = !showAll;
     	setSelection(selection);
+    	ticks.removeAllObjects();
     }
     
     public void switchMode() {
     	if(mode == null)
     		mode = new Integer(0);
     	selection = null;
+    	target = null;
+    	targets = null;
+    	ticks.removeAllObjects();
     	list = NSArray.EmptyArray;
      	if(mode.intValue() > 0) {
 //    		agregate = TeacherSelector.populate(ec, session());
@@ -141,6 +149,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     }
     
     public void setSelection(Object sel) {
+    	ticks.removeAllObjects();
     	if(sel == null) {
     		list = NSArray.EmptyArray;
     	} else if(sel instanceof VseEduGroup) {
@@ -193,6 +202,32 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				}
 			}
     	}
+    	targets = targets();
+    }
+    
+    protected NSArray targets() {
+    	if(selection == null || mode != null && mode.intValue() > 0)
+    		return null;
+    	Integer absGrade = (Integer)NSKeyValueCoding.Utility.valueForKey(selection,"absGrade");
+    	if(absGrade == null)
+    		return null;
+    	NSMutableArray result = new NSMutableArray();
+    	Enumeration enu = categories.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+			Object cat = enu.nextElement();
+			if(cat == selection)
+				continue;
+			if(cat instanceof VseEduGroup) {
+				Integer ag = ((VseEduGroup)cat).absGrade();
+				if(ag.equals(absGrade))
+					result.addObject(cat);
+				else if(ag.compareTo(absGrade) < 0)
+					break;
+			}
+		}
+    	if(result.count() == 0)
+    		return null;
+    	return result;
     }
     
     public VseEduGroup group() {
@@ -364,6 +399,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void save() {
+		if(!ec.hasChanges())
+			return;
 		ec.lock();
 		try {
 			ec.saveChanges();
@@ -504,6 +541,87 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				return (Number)item.valueForKey("count");
 		}
 		return (Number)item.valueForKey((showAll)?"allCount":"currCount");
+	}
+
+	public boolean tick() {
+		if(item == null)
+			return false;
+		return ticks.containsObject(item);
+	}
+
+	public void setTick(boolean tick) {
+		if(item == null)
+			return;
+		if(tick)
+			ticks.addObject(item);
+		else
+			ticks.removeObject(item);
+	}
+	
+	public String actionTitle() {
+		StringBuilder buf = new StringBuilder();
+		if(selection instanceof VseEduGroup) {
+			buf.append(session().valueForKeyPath(
+					"strings.RujelVseLists_VseStrings.actions.transfer"));
+		} else {
+			buf.append(session().valueForKeyPath(
+					"strings.RujelVseLists_VseStrings.actions.employ"));
+		}
+		buf.append(' ').append(item.valueForKey("name"));
+		return buf.toString();
+	}
+	
+	public WOActionResults act() {
+		if(ticks.count() == 0)
+			return null;
+		if(target == null && !(selection instanceof VseEduGroup)) {
+			session().setObjectForKey(ticks.allObjects(), "deleteStudents");
+			NSArray objections = (NSArray)session().valueForKeyPath("modules.deleteStudents");
+			session().removeObjectForKey("deleteStudents");
+			if(objections != null && objections.count() > 0) {
+				session().takeValueForKey(
+						objections.componentsJoinedByString("<br/>\n"), "message");
+				return null;
+			}
+		}
+		Enumeration enu = ticks.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject row = (EOEnterpriseObject) enu.nextElement();
+			if(target == null) {
+				if(date == null) {
+					ec.deleteObject(row);
+				} else {
+					row.takeValueForKey(date, VseStudent.LEAVE_KEY);
+				}
+				continue;
+			}
+			if(row instanceof VseList) {
+				if(date == null) {
+					ec.deleteObject(row);
+				} else {
+					row.takeValueForKey(date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0),
+							VseStudent.LEAVE_KEY);
+				}
+				target.addStudent((VseStudent)row.valueForKey(VseList.STUDENT_KEY), date);
+			} else if(row instanceof VseStudent){
+				target.addStudent((VseStudent)row, date);
+			}
+		}
+		ticks.removeAllObjects();
+		save();
+		if(date == null)
+			date = (NSTimestamp)session().valueForKey("today");
+		Object sel = selection;
+		switchMode();
+		setSelection(sel);
+		return null;
+	}
+	
+	public boolean showTicks() {
+		if(mode != null && mode.intValue() > 0)
+			return false;
+		return list != null && list.count() > 0 && 
+			(access == null || access.flagForKey("edit"));
 	}
 	
 	/*
