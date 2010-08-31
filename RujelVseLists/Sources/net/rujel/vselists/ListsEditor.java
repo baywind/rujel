@@ -96,6 +96,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 //	public NSMutableDictionary agregate;
 	public NSArray categories;
 	public Object selection;
+	protected NSTimestamp agrDate;
 	public Boolean cantAddClass;
 	public NSTimestamp date;
 	public NSMutableSet ticks = new NSMutableSet();
@@ -110,8 +111,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	NSTimestamp sesDate = (NSTimestamp)session().valueForKey("today");
-    	if(!sesDate.equals(date) && categories == null) {
-    		date = sesDate;
+    	if(!sesDate.equals(agrDate)) {
+    		agrDate = sesDate;
     		switchMode();
     	}
 		date = sesDate;
@@ -135,12 +136,12 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
      	if(mode.intValue() > 0) {
 //    		agregate = TeacherSelector.populate(ec, session());
 //    		categories = (NSArray)agregate.removeObjectForKey("subjects");
-    		categories = (NSArray)VseTeacher.agregatedList(ec, date);
+    		categories = (NSArray)VseTeacher.agregatedList(ec, agrDate);
         	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseTeacher");
         	cantAddClass = Boolean.FALSE;
     	} else {
 //    		agregate = VseStudent.studentsAgregate(ec, date);
-    		categories = VseStudent.agregatedList(ec, date);
+    		categories = VseStudent.agregatedList(ec, agrDate);
         	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseStudent");
         	cantAddClass = (Boolean)session().valueForKeyPath(
         			"readAccess._create.VseEduGroup");
@@ -176,7 +177,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     		}
     		if(list != null && list.count() != 0) {
 				if(!showAll) {
-					NSArray args = new NSArray(new Object[] {date,date});
+					NSArray args = new NSArray(new Object[] {agrDate,agrDate});
 					EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
 					  "(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
 					list = EOQualifier.filteredArrayWithQualifier(list,qual);
@@ -339,6 +340,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				}
 			}
 		}
+		if(date == null)
+			date = agrDate;
 		ec.lock();
 		try {
 			if (student) {
@@ -609,8 +612,6 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		}
 		ticks.removeAllObjects();
 		save();
-		if(date == null)
-			date = (NSTimestamp)session().valueForKey("today");
 		Object sel = selection;
 		switchMode();
 		setSelection(sel);
