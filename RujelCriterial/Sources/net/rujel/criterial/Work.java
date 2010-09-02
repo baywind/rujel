@@ -782,16 +782,8 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		EOEnterpriseObject prevType = workType();
 		if(workType == prevType)
 			return;
-		if(prevType != null) {
-			Integer useCount = (Integer)prevType.valueForKey("useCount");
-			useCount = new Integer(useCount.intValue() -1);
-			prevType.takeValueForKey(useCount, "useCount");
-		}
 		super.setWorkType(workType);
 		if(workType != null) {
-			Integer useCount = (Integer)workType.valueForKey("useCount");
-			useCount = new Integer(useCount.intValue() +1);
-			workType.takeValueForKey(useCount, "useCount");
 			Integer flags = (Integer)workType.valueForKey("dfltFlags");
 			if(flags == null) {
 				flags = new Integer(0);

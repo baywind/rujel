@@ -47,7 +47,6 @@ public abstract class _WorkType extends EOGenericRecord {
 	public static final String DFLT_WEIGHT_KEY = "dfltWeight";
 	public static final String SORT_KEY = "sort";
 	public static final String TYPE_NAME_KEY = "typeName";
-	public static final String USE_COUNT_KEY = "useCount";
 
 	// Relationships
 
@@ -97,14 +96,6 @@ public abstract class _WorkType extends EOGenericRecord {
 
   public void setTypeName(String value) {
     takeStoredValueForKey(value, TYPE_NAME_KEY);
-  }
-
-  public Integer useCount() {
-    return (Integer) storedValueForKey(USE_COUNT_KEY);
-  }
-
-  public void setUseCount(Integer value) {
-    takeStoredValueForKey(value, USE_COUNT_KEY);
   }
 
 }

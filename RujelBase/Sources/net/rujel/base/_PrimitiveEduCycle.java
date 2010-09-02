@@ -46,7 +46,6 @@ public abstract class _PrimitiveEduCycle extends EOGenericRecord {
 	public static final String SUBJECT_KEY = "subject";
 
 	// Relationships
-	public static final String COURSES_KEY = "courses";
 
   public Integer grade() {
     return (Integer) storedValueForKey(GRADE_KEY);
@@ -70,22 +69,6 @@ public abstract class _PrimitiveEduCycle extends EOGenericRecord {
 
   public void setSubject(String value) {
     takeStoredValueForKey(value, SUBJECT_KEY);
-  }
-
-  public NSArray courses() {
-    return (NSArray)storedValueForKey(COURSES_KEY);
-  }
- 
-  public void setCourses(NSArray value) {
-    takeStoredValueForKey(value, COURSES_KEY);
-  }
-  
-  public void addToCourses(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, COURSES_KEY);
-  }
-
-  public void removeFromCourses(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, COURSES_KEY);
   }
 
 }

@@ -37,6 +37,7 @@ import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class WorkType extends _WorkType {
@@ -66,6 +67,23 @@ public class WorkType extends _WorkType {
 		return null;
 	}
 
+	public int useCount() {
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(editingContext(),
+				Work.ENTITY_NAME, Work.WORK_TYPE_KEY, this);
+		if(found == null)
+			return 0;
+		return found.count();
+	}
+	
+	public boolean isUsed() {
+		EOQualifier qual = new EOKeyValueQualifier(Work.WORK_TYPE_KEY, 
+				EOQualifier.QualifierOperatorEqual, this);
+		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME, qual, null);
+		fs.setFetchLimit(1);
+		NSArray found = editingContext().objectsWithFetchSpecification(fs);
+		return (found != null && found.count() > 0);
+	}
+	
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {
     	if(_flags==null) {
@@ -97,7 +115,6 @@ public class WorkType extends _WorkType {
 		super.awakeFromInsertion(ec);
 		super.setDfltFlags(new Integer(0));
 		setDfltWeight(BigDecimal.ZERO);
-		setUseCount(new Integer(0));
 	}
 
 	

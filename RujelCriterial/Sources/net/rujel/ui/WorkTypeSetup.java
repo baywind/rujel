@@ -136,7 +136,7 @@ public class WorkTypeSetup extends WOComponent {
     	EOEditingContext ec = currType.editingContext();
     	if(ec.globalIDForObject(currType).isTemporary())
     		return Boolean.FALSE;
-    	if(currType.useCount().intValue() > 0)
+    	if(currType.isUsed())
     		return Boolean.TRUE;
     	return (Boolean)session().valueForKeyPath("readAccess._delete.currType");
     }

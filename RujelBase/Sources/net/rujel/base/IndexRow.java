@@ -78,7 +78,7 @@ public class IndexRow extends _IndexRow {
 				removeObjectFromBothSidesOfRelationshipWithKey(text, COMMENT_EO_KEY);
  		} else {
  			if(text == null) {
- 				text = EOUtilities.createAndInsertInstance(editingContext(), "StaticTextStore");
+ 				text = EOUtilities.createAndInsertInstance(editingContext(), "TextStore");
  				text.takeValueForKey(EntityIndex.indexForObject(this), "entityIndex");
  			}
  			text.takeValueForKey(cmnt, "storedText");
