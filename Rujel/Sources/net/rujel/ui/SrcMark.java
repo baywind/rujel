@@ -99,11 +99,19 @@ public class SrcMark extends WOComponent {
     	currClass = null;
 		popupCycles = null;
 		NSArray args = new NSArray(new Object[] {session().valueForKey("eduYear"),teacher});
-		NSArray result =  EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,
+		NSArray found =  EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,
 				"eduYear = %d AND teacher = %@",args);
+		if(found == null || found.count() == 0) {
+			courses = NSArray.EmptyArray;
+			return;
+		}
+		NSMutableArray result = found.mutableClone();
 		EOQualifier qual = new EOKeyValueQualifier("cycle.school",
 				EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
-		courses = EOQualifier.filteredArrayWithQualifier(result, qual);
+		EOQualifier.filterArrayWithQualifier(result, qual);
+		if(result.count() > 1)
+			EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduCourse.sorter);
+		courses = result;
 	}
 	
     public WOComponent selectClass() {

@@ -577,7 +577,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	public WOActionResults act() {
 		if(ticks.count() == 0)
 			return null;
-		if(target == null && !(selection instanceof VseEduGroup)) {
+		if(target == null && date == null && !(selection instanceof VseEduGroup)) {
 			session().setObjectForKey(ticks.allObjects(), "deleteStudents");
 			NSArray objections = (NSArray)session().valueForKeyPath("modules.deleteStudents");
 			session().removeObjectForKey("deleteStudents");
