@@ -326,10 +326,24 @@ public class SrcMark extends WOComponent {
  			return "green";
     }
     
+	public String fullname() {
+		Object teacher = dict.valueForKey("teacher");
+		if(teacher instanceof Teacher)
+			return Person.Utility.fullName((Teacher)teacher,false,2,2,2);
+		return null;
+	}
+
+	public String currFullname() {
+		if(currTeacher instanceof Teacher) {
+			return Person.Utility.fullName((Teacher)currTeacher,false,2,2,2);
+		}
+		return null;
+	}
+	
 	public String currTeacherName() {
 		return teacherName(currTeacher);
 	}
-	
+		
 	public String teacherName() {
 		return teacherName(dict.valueForKey("teacher"));
 	}

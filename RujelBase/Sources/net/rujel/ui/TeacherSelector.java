@@ -301,4 +301,11 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		}
 		return (String)session().valueForKey("tryLoad");
 	}
+	
+	public String fullname() {
+		if(item instanceof Teacher) {
+			return Person.Utility.fullName((Teacher)item, false, 2, 2, 2);
+		}
+		return null;
+	}
 }

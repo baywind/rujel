@@ -58,8 +58,9 @@ import com.webobjects.foundation.*;
 public class CurriculumModule {
 		
 	public static boolean isAvailable(NSArray active) {
-		boolean res = (active.containsObject("net.rujel.eduplan.PlanCycle") &&
-				active.containsObject("net.rujel.base.BaseModule"));
+		boolean res = (active.containsObject("net.rujel.base.BaseModule") &&
+				(active.containsObject("net.rujel.eduplan.EduPlan") ||
+					active.containsObject("net.rujel.eduplan.PlanCycle")));
 		if(!res)
 			Logger.getLogger("rujel.curriculum").log(WOLogLevel.INFO,
 					"Curriculum module requires EduPlan and Base modules");

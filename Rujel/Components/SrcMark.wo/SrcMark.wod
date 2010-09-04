@@ -190,6 +190,7 @@ SelectTeacher : OnClickContainer {
   elementName = "em";
   invokeAction = chooseTeacherForDict;
   onclick = "ajaxPost(get(this,'form'),event);";
+  title = fullname;
 }
 
 CommentField : WOTextField {
@@ -213,6 +214,7 @@ TeacherCell : OnClickContainer {
   invokeAction = selectTeacher;
   onclick = teacherOnClick;
   class = teacherRowClass;
+  title = currFullname;
 }
 
 CurrTeacherName : WOString {

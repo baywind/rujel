@@ -40,6 +40,7 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.*;
 
 import net.rujel.auth.ReadAccess;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Various;
@@ -181,8 +182,14 @@ public class ClosingLock implements ReadAccess.Modifier {
 		aspects = null;
 		allStudents = null;
 		diffStudents = null;
-		if(crs == null)
+		if(crs == null) {
 			return;
+		} else {
+			String active = SettingsBase.stringSettingForCourse(
+					Completion.SETTINGS_BASE, course, course.editingContext());
+			if(!Boolean.toString(true).equalsIgnoreCase(active))
+				return;
+		}
 		NSArray completions = EOUtilities.objectsMatchingKeyAndValue(crs.editingContext(),
 				Completion.ENTITY_NAME, "course", crs);
 		if(completions == null || completions.count() == 0)
