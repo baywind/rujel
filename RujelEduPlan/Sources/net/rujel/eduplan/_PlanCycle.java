@@ -45,11 +45,9 @@ public abstract class _PlanCycle extends EOGenericRecord {
 	public static final String LEVEL_KEY = "level";
 	public static final String SCHOOL_KEY = "school";
 	public static final String SUBJECT_KEY = "subject";
-	public static final String TOTAL_HOURS_KEY = "totalHours";
-	public static final String WEEKLY_HOURS_KEY = "weeklyHours";
-	public static final String YEAR_KEY = "year";
 
 	// Relationships
+	public static final String PLAN_HOURS_KEY = "planHours";
 	public static final String SUBJECT_EO_KEY = "subjectEO";
 
   public Integer grade() {
@@ -84,30 +82,6 @@ public abstract class _PlanCycle extends EOGenericRecord {
     takeStoredValueForKey(value, SUBJECT_KEY);
   }
 
-  public Integer totalHours() {
-    return (Integer) storedValueForKey(TOTAL_HOURS_KEY);
-  }
-
-  public void setTotalHours(Integer value) {
-    takeStoredValueForKey(value, TOTAL_HOURS_KEY);
-  }
-
-  public Integer weeklyHours() {
-    return (Integer) storedValueForKey(WEEKLY_HOURS_KEY);
-  }
-
-  public void setWeeklyHours(Integer value) {
-    takeStoredValueForKey(value, WEEKLY_HOURS_KEY);
-  }
-
-  public Integer year() {
-    return (Integer) storedValueForKey(YEAR_KEY);
-  }
-
-  public void setYear(Integer value) {
-    takeStoredValueForKey(value, YEAR_KEY);
-  }
-
   public net.rujel.eduplan.Subject subjectEO() {
     return (net.rujel.eduplan.Subject)storedValueForKey(SUBJECT_EO_KEY);
   }
@@ -116,4 +90,20 @@ public abstract class _PlanCycle extends EOGenericRecord {
     	takeStoredValueForKey(value, SUBJECT_EO_KEY);
   }
   
+  public NSArray planHours() {
+    return (NSArray)storedValueForKey(PLAN_HOURS_KEY);
+  }
+ 
+  public void setPlanHours(NSArray value) {
+    takeStoredValueForKey(value, PLAN_HOURS_KEY);
+  }
+  
+  public void addToPlanHours(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, PLAN_HOURS_KEY);
+  }
+
+  public void removeFromPlanHours(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, PLAN_HOURS_KEY);
+  }
+
 }

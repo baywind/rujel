@@ -29,17 +29,14 @@
 
 package net.rujel.eduplan;
 
-import java.util.Date;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EORelationship;
@@ -48,45 +45,19 @@ import com.webobjects.eocontrol.*;
 
 public class PlanCycle extends _PlanCycle implements EduCycle
 {
+	@Deprecated
 	public static Object init(Object obj, WOContext ctx) {
-		if(obj == null || obj.equals("init")) {
-			//init();
-			try {
-				Object access = PlistReader.readPlist("access.plist", "RujelEduPlan", null);
-				WOApplication.application().takeValueForKey(access, "defaultAccess");
-			} catch (NSKeyValueCoding.UnknownKeyException e) {
-				// default access not supported
-			}
-			EOSortOrdering.ComparisonSupport.setSupportForClass(
-					new SubjectComparator.ComparisonSupport(), Subject.class);
-			EOSortOrdering.ComparisonSupport.setSupportForClass(
-					new PlanCycle.ComparisonSupport(), PlanCycle.class);
-		} else if(obj.equals("regimes")) {
-//			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.EduPlan")))
-//				return null;
-			return WOApplication.application().valueForKeyPath(
-					"strings.RujelEduPlan_EduPlan.planRegime");
-		} else if("planTabs".equals(obj)) {
-			return WOApplication.application().valueForKeyPath(
-				"strings.RujelEduPlan_EduPlan.planTabs");
-		} else if("lessonTabs".equals(obj)) {
-			return EduPeriod.lessonTabs(ctx);
-		} else if("periods".equals(obj)) {
-			return EduPeriod.periods(ctx);
-		}
-		return null;
+		return EduPlan.init(obj, ctx);
 	}
 	
 	public static void init() {
-		EOInitialiser.initialiseRelationship("PlanCycle",SPEC_CLASS_KEY,false,"classID","EduGroup")
+		EOInitialiser.initialiseRelationship("PlanHours","specClass",false,"classID","EduGroup")
 				.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		EORelationship back = EOInitialiser.initialiseRelationship(
 				"PlanDetail","course",false,"courseID","EduCourse").anyInverseRelationship();
 		back.setPropagatesPrimaryKey(true);
 		back.setDeleteRule(EOClassDescription.DeleteRuleCascade);
 	}
-	
-	public static String SPEC_CLASS_KEY = "specClass";
 	
     public PlanCycle() {
         super();
@@ -98,48 +69,12 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			return value = new Integer(0);
 		return value;
 	}
-	
-	public EduGroup specClass() {
-		return (EduGroup)storedValueForKey(SPEC_CLASS_KEY);
-	}
-	public void setSpecClass(EduGroup specClass) {
-		takeStoredValueForKey(specClass,SPEC_CLASS_KEY);
-		if(specClass != null) {
-			setGrade(specClass.grade());
-			/*WOSession ses = session();
-			if(ses != null) {
-				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Adding spec class");
-			}*/
-		}
-	}
-	
-	public void setYear (Integer year) {
-		int val = (year==null)?0:year.intValue();
-		if(val > 100 || year == null) {
-			val = val%100;
-			year = new Integer(val);
-		}
-		super.setYear(year);
-	}
-	
-	public void setEduYear(Integer eduYear) {
-		setYear(eduYear);
-	}
-	public Integer eduYear() {
-		Integer year = year();
-		if(year == null || year.intValue() == 0)
-			return null;
-		return new Integer(2000 + year.intValue());
-	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 		Integer zero = new Integer(0);
-		setTotalHours(zero);
-		setWeeklyHours(zero);
-		setLevel(zero);
 		setGrade(zero);
-		setYear(zero);
+		setLevel(zero);
 		setSchool(school(ec));
 	}
 	
@@ -148,7 +83,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		if(ec instanceof SessionedEditingContext) {
 			WOSession ses = (WOSession)((SessionedEditingContext)ec).session();
 			school = (Integer)ses.valueForKey("school");
-		} else {
+		}
+		if(school == null) {
 			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
 		}
 		return school;
@@ -186,57 +122,41 @@ public class PlanCycle extends _PlanCycle implements EduCycle
     }
 */
 
-	public static NSArray cyclesForSubjectAndYear(EOEditingContext ec, 
-			EOEnterpriseObject subject, int eduYear) {
-		if (eduYear > 100)
-			eduYear = eduYear%100;
-		Integer year = new Integer (eduYear);
-		EOQualifier qual = null;
-		NSMutableArray quals = new NSMutableArray();
-		if(eduYear > 0) {
-			quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual,new Integer(0)));
-			quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
-					EOQualifier.QualifierOperatorGreaterThan,year));
-			qual = new EOOrQualifier(quals);
-			quals.removeAllObjects();
-			quals.addObject(qual);
-			quals.addObject(new EOKeyValueQualifier(SPEC_CLASS_KEY,
-					EOQualifier.QualifierOperatorEqual,NullValue));
-			qual = new EOAndQualifier(quals);
-			quals.removeAllObjects();
-			quals.addObject(qual);
-			quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual,year));
-			qual = new EOOrQualifier(quals);
-		} else {
-			qual = new EOKeyValueQualifier(YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual,year);
+	public static NSArray cyclesForSubject(Subject subject) {
+		EOEditingContext ec = subject.editingContext();
+		NSArray found = allCyclesFor(null, subject, school(ec), ec);
+		if(found == null || found.count() == 0)
+			return NSArray.EmptyArray;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = found.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			PlanCycle cycle = (PlanCycle) enu.nextElement();
+			NSArray hours = cycle.planHours();
+			if(hours != null && hours.count() > 0)
+				result.addObject(cycle);
 		}
-		quals.removeAllObjects();
-		quals.addObject(qual);
-		quals.addObject(new EOKeyValueQualifier("school",
-				EOQualifier.QualifierOperatorEqual,school(ec)));
-		if(subject != null) {
-			quals.addObject(new EOKeyValueQualifier(SUBJECT_EO_KEY,
-					EOQualifier.QualifierOperatorEqual,subject));
+		try {
+			result.sortUsingComparator(AdaptingComparator.sharedInstance);
+		} catch (ComparisonException e) {
+			e.printStackTrace();
 		}
-		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",qual,null);
-		return ec.objectsWithFetchSpecification(fs);
+		return result;
 	}
 	
-	public static NSArray subjectsForYear(EOEditingContext ec, int eduYear) {
-		NSArray cycles = cyclesForSubjectAndYear(ec, null, eduYear);
+	public static NSArray allSubjects(EOEditingContext ec) {
+		NSArray cycles = EOUtilities.objectsMatchingKeyAndValue(ec,
+				ENTITY_NAME, SCHOOL_KEY, school(ec));
 		if(cycles == null || cycles.count() == 0)
 			return null;
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enu = cycles.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			PlanCycle cycle = (PlanCycle) enu.nextElement();
-			if(!result.containsObject(cycle.subjectEO()) && 
-					cycle.hours() != null && cycle.hours().intValue() > 0)
-			result.addObject(cycle.subjectEO());
+			NSArray hours = cycle.planHours();
+			if(hours == null || hours.count() == 0)
+				continue;
+			if(!result.containsObject(cycle.subjectEO()))
+				result.addObject(cycle.subjectEO());
 		}
 		try {
 			SubjectComparator comparator = new SubjectComparator();
@@ -247,82 +167,51 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return result;
 	}
 
+	public static NSArray allCyclesFor(Integer grade, Subject subject, 
+				Integer school, EOEditingContext ec) {
+		NSMutableArray  quals = new NSMutableArray();
+		if(school != null)
+			quals.addObject(new EOKeyValueQualifier(SCHOOL_KEY,
+					EOQualifier.QualifierOperatorEqual,school));
+		if(grade != null)
+			quals.addObject(new EOKeyValueQualifier(GRADE_KEY,
+					EOQualifier.QualifierOperatorEqual,grade));
+		if(subject != null)
+			quals.addObject(new EOKeyValueQualifier(SUBJECT_EO_KEY,
+					EOQualifier.QualifierOperatorEqual,subject));
+		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",
+				new EOAndQualifier(quals),null);
+		return ec.objectsWithFetchSpecification(fs);		
+	}
+	
 	public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec) {
-		Integer year = null;
-		Integer school = null;
-		if(ec instanceof SessionedEditingContext) {
-			WOSession ses = (WOSession)((SessionedEditingContext)ec).session();
-			year = (Integer)ses.valueForKey("eduYear");
-			year = new Integer(year.intValue()%100);
-			school = (Integer)ses.valueForKey("school");
-		} 
-		if(school == null)
-			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
-		if(year == null) {
-			int eduYear = MyUtility.eduYearForDate(new Date());
-			year = new Integer(eduYear%100);
+		NSArray found = allCyclesFor(grade,null, school(ec), ec);
+		if(found == null || found.count() == 0)
+			return NSArray.EmptyArray;
+		Enumeration enu = found.objectEnumerator();
+		NSMutableArray result = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			PlanCycle cycle = (PlanCycle) enu.nextElement();
+			if(cycle.planHours(null) != null)
+				result.addObject(cycle);
 		}
-		EOQualifier qual = null;
-		NSMutableArray quals = new NSMutableArray();
-		quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
-				EOQualifier.QualifierOperatorEqual,new Integer(0)));
-		quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,year));
-		qual = new EOOrQualifier(quals);
-		quals.removeAllObjects();
-		quals.addObject(qual);
-		quals.addObject(new EOKeyValueQualifier(SPEC_CLASS_KEY,
-				EOQualifier.QualifierOperatorEqual,NullValue));
-		quals.addObject(new EOKeyValueQualifier(SCHOOL_KEY,
-				EOQualifier.QualifierOperatorEqual,school));
-		quals.addObject(new EOKeyValueQualifier(GRADE_KEY,
-				EOQualifier.QualifierOperatorEqual,grade));		
-		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",qual,null);
-		NSArray result = ec.objectsWithFetchSpecification(fs);
-		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,SubjectComparator.sorter);
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result,SubjectComparator.sorter);
+		return result;
 	}
 	
 	public static NSArray cyclesForEduGroup(EduGroup group) {
 		EOEditingContext ec = group.editingContext();
-		NSMutableArray result = cyclesForGrade(group.grade(), ec).mutableClone();
-		Integer year = null;
-		Integer school = null;;
-		if(ec instanceof SessionedEditingContext) {
-			WOSession ses = (WOSession)((SessionedEditingContext)ec).session();
-			year = (Integer)ses.valueForKey("eduYear");
-			year = new Integer(year.intValue()%100);
-			school = (Integer)ses.valueForKey("school");
-		} 
-		if(year == null) {
-			int eduYear = MyUtility.eduYearForDate(new Date());
-			year = new Integer(eduYear%100);
-			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
+		NSArray found = allCyclesFor(group.grade(),null, school(ec), ec);
+		if(found == null || found.count() == 0)
+			return NSArray.EmptyArray;
+		Enumeration enu = found.objectEnumerator();
+		NSMutableArray result = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			PlanCycle cycle = (PlanCycle) enu.nextElement();
+			if(cycle.planHours(group) != null)
+				result.addObject(cycle);
 		}
-
-		EOQualifier qual = new EOKeyValueQualifier(SPEC_CLASS_KEY,
-				EOQualifier.QualifierOperatorEqual,group);
-		NSMutableArray quals = new NSMutableArray(qual);
-		quals.addObject(new EOKeyValueQualifier(YEAR_KEY,
-				EOQualifier.QualifierOperatorEqual,year));
-		quals.addObject(new EOKeyValueQualifier(SCHOOL_KEY,
-				EOQualifier.QualifierOperatorEqual,school));
-		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
-		NSArray spec = ec.objectsWithFetchSpecification(fs);
-		if(spec != null && spec.count() > 0) {
-			quals.removeAllObjects();
-			Enumeration enu = spec.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				PlanCycle sc = (PlanCycle) enu.nextElement();
-				quals.addObject(new EOKeyValueQualifier(SUBJECT_EO_KEY,
-						EOQualifier.QualifierOperatorNotEqual,sc.subjectEO()));
-			}
-			qual = new EOAndQualifier(quals);
-			EOQualifier.filterArrayWithQualifier(result, qual);
-			result.addObjectsFromArray(spec);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(result, SubjectComparator.sorter);
-		}
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result,SubjectComparator.sorter);
 		return result;
 	}
 	
@@ -378,9 +267,12 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		if (course.cycle() instanceof PlanCycle) {
 			PlanCycle cycle = (PlanCycle) course.cycle();
-			Integer w = cycle.weeklyHours();
+			EOEnterpriseObject planHours = cycle.planHours(course.eduGroup());
+			if(planHours == null)
+				return 0;
+			Integer w = (Integer)planHours.valueForKey("weeklyHours");
 			if(w == null)
-				w = cycle.weeklyHours(MyUtility.eduYearForDate(date))[0];
+				w = cycle.weeklyHours(course)[0];
 			return w;
 		}
 		return 0;
@@ -402,12 +294,59 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		if (course.cycle() instanceof PlanCycle) {
 			PlanCycle cycle = (PlanCycle) course.cycle();
-			Integer w = cycle.weeklyHours();
+			EOEnterpriseObject planHours = cycle.planHours(course.eduGroup());
+			if(planHours == null)
+				return 0;
+			Integer w = (Integer)planHours.valueForKey("weeklyHours");
 			if(w == null)
-				w = cycle.weeklyHours(period.eduYear())[0];
+				w = cycle.weeklyHours(course)[0];
 			return w;
 		}
 		return 0;
+	}
+	
+	public EOEnterpriseObject planHours(EduGroup grp, boolean strict) {
+		NSArray hrs = planHours();
+		if(hrs == null || hrs.count() == 0)
+			return null;
+		Enumeration enu = hrs.objectEnumerator();
+		EOEnterpriseObject result = null;
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject hr = (EOEnterpriseObject) enu.nextElement();
+			EduGroup gr = (EduGroup)hr.valueForKey("specClass");
+			if(gr == grp)
+				return hr;
+			if(!strict && gr == null)
+				result = hr;
+		}
+		return result;
+
+	}
+	
+	public EOEnterpriseObject planHours(EduGroup grp) {
+		return planHours(grp, false);
+	}
+	
+	public EOEnterpriseObject createPlanHours(EduGroup grp) {
+		EOEnterpriseObject hr = planHours(grp, true); 
+		if(hr != null)
+			return hr;
+		hr = EOUtilities.createAndInsertInstance(editingContext(), "PlanHours");
+		Integer zero = new Integer(0);
+		hr.takeValueForKey(zero, "weeklyHours");
+		hr.takeValueForKey(zero, "totalHours");
+		hr.addObjectToBothSidesOfRelationshipWithKey(grp, "specClass");
+		addObjectToBothSidesOfRelationshipWithKey(hr, PLAN_HOURS_KEY);
+		return hr;
+	}
+	
+	public boolean deletePlanHours(EduGroup grp) {
+		EOEnterpriseObject hr = planHours(grp, true); 
+		if(hr == null)
+			return false;
+		removeObjectFromBothSidesOfRelationshipWithKey(hr, PLAN_HOURS_KEY);
+		editingContext().deleteObject(hr);
+		return true;
 	}
 
 	public int[] weeksAndDays(Integer eduYear) {
@@ -437,13 +376,22 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 	}
 	
-	
-	public int[] weeklyHours(Integer eduYear) {
-		int[] weeksAndDays = weeksAndDays(eduYear);
-		int[] weeklyHours = new int[2]; 
-		int hours = totalHours().intValue();
+	protected int[] weeklyHours(EduCourse course) {
+		int hours = 0;
+		{
+			EOEnterpriseObject ph = planHours(course.eduGroup());
+			if(ph != null) {
+				Integer hrs = (Integer)ph.valueForKey("totalHours");
+				if(hrs != null)
+					hours = hrs.intValue();
+			} else {
+				return new int[] {0, 0};
+			}
+		}
+		int[] weeksAndDays = weeksAndDays(course.eduYear());
 		if(weeksAndDays[0] == 0)
 			return new int[] {0, hours};
+		int[] weeklyHours = new int[2];
 		weeklyHours[0] = hours / weeksAndDays[0];
 		weeklyHours[1] = hours % weeksAndDays[0];
 		if(weeklyHours[1] > weeklyHours[0]) {
@@ -453,27 +401,39 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return weeklyHours;
 	}
 
-	public Integer weekly() {
-		Integer w = weeklyHours();
-		if(w != null && w.intValue() > 0)
-			return w;
-		return new Integer(weeklyHours(null)[0]);
+	public int weekly(EduCourse course) {
+		EOEnterpriseObject ph = planHours(course.eduGroup());
+		if(ph != null) {
+			Integer hrs = (Integer)ph.valueForKey("weeklyHours");
+			if(hrs != null)
+				return hrs.intValue();
+		}
+		return weeklyHours(course)[0];
 	}
 	
-	public boolean calculatedTotal() {
-		Integer t = totalHours();
+	public boolean calculatedTotal(EduGroup group) {
+		EOEnterpriseObject ph = planHours(group);
+		if(ph == null)
+			return false;
+		Integer t = (Integer)ph.valueForKey("totalHours");
 		return (t == null || t.intValue() <= 0);
 	}
 
-	public Integer hours() {
-		Integer h = totalHours();
-		if(h != null && h.intValue() > 0)
-			return h;
-		h = weeklyHours();
-		if(h == null || h.intValue() <= 0)
-			return new Integer(0);
+	public Integer hours(NSKeyValueCoding course) {
+		EOEnterpriseObject ph = planHours((course==null)?null:
+			(EduGroup)course.valueForKey("eduGroup"));
+		Integer h = null;
+		if(ph != null) {
+			h = (Integer)ph.valueForKey("totalHours");
+			if(h != null && h.intValue() > 0)
+				return h;
+			h = (Integer)ph.valueForKey("weeklyHours");
+			if(h == null || h.intValue() <= 0)
+				return new Integer(0);
+		}
 		int count = h.intValue();
-		int[] wd = weeksAndDays(null);
+		int[] wd = weeksAndDays((course==null)?null:
+			(Integer)course.valueForKey("eduYear"));
 		if(count > 1) {
 			count = wd[0]*count + count*wd[1]/wd[2];
 		} else {

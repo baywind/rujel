@@ -88,8 +88,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	
 	public NSArray subjects() {
 		if(subjects == null) {
-			Integer eduYear = (Integer)session().valueForKey("eduYear");
-	        subjects = PlanCycle.subjectsForYear(ec, eduYear.intValue());
+	        subjects = PlanCycle.allSubjects(ec);
 		}
 		return subjects;
 	}
@@ -125,7 +124,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 //				groups = new NSArray(sel);
 			} else if (sel instanceof Subject) {
 				Subject subject = (Subject) sel;
-				cycles = PlanCycle.cyclesForSubjectAndYear(ec, subject, eduYear.intValue());
+				cycles = PlanCycle.cyclesForSubject(subject);
 				EOSortOrdering so =new EOSortOrdering("grade",EOSortOrdering.CompareAscending);
 				cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, new NSArray(so));
 				NSTimestamp date = (NSTimestamp)session().valueForKey("today");
@@ -199,18 +198,18 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	protected NSMutableDictionary courseRow(NSKeyValueCodingAdditions course) {
 		NSMutableDictionary listSetting = observeValue(course,null);
 		NSMutableDictionary result = new NSMutableDictionary(listSetting, "listSetting");
-		result.takeValueForKey(course.valueForKey("eduGroup"), "eduGroup");
-		boolean calculatedTotal = Various.boolForObject(course.valueForKeyPath(
-				"cycle.calculatedTotal"));
-		int weekly = 0;
-		int total = 0;
+		EduGroup group = (EduGroup)course.valueForKey("eduGroup");
+		result.takeValueForKey(group, "eduGroup");
+		PlanCycle cycle = (PlanCycle)course.valueForKey("cycle");
+		EOEnterpriseObject planHours = cycle.planHours(group);
+		Integer hours = (Integer)planHours.valueForKey("weeklyHours");
+		int weekly = (hours == null)?0:hours.intValue();
+		hours = (Integer)planHours.valueForKey("totalHours");
+		int total = (hours == null)?0:hours.intValue();
+		boolean calculatedTotal = (total <= 0);
 //		String indication = "grey";
 		result.takeValueForKey("grey", "defaultIndication");
-		if(calculatedTotal) {
-			weekly = ((Integer)course.valueForKeyPath("cycle.weekly")).intValue();
-		} else {
-			Integer hours = (Integer)course.valueForKeyPath("cycle.hours");
-			total = hours.intValue();
+		if(weekly <= 0) {
 			result.takeValueForKey(hours,"planTotal");
 			int weeks = ((Integer)listSetting.valueForKey("weeks")).intValue();
 			if(weeks > 0)
@@ -474,6 +473,10 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public Integer totalHours() {
+		if(periodItem() == null) {
+			PlanCycle cycle = (PlanCycle) cycleItem.valueForKey("cycle");
+			return cycle.hours((NSKeyValueCoding)rowItem.valueForKey("course"));
+		}
 		if(pdItem == null)
 			return null;
 		Integer hours = (Integer)pdItem.valueForKey("hours");
@@ -586,14 +589,18 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		int minPlan = 0;
 		int planCap = 0;
 		PlanCycle cycle = (PlanCycle) cycleItem.valueForKey("cycle");
-		if(cycle.calculatedTotal()) {
-			planCap = cycle.weekly().intValue();
+		EduGroup group = (EduGroup)row.valueForKey("eduGroup");
+		EOEnterpriseObject planHours = cycle.planHours(group);
+		Integer hours = (Integer)planHours.valueForKey("weeklyHours");
+		if(hours != null && hours.intValue() > 0) {
+			planCap = hours.intValue();
 			int weeks = ((Integer)listSetting.valueForKey("weeks")).intValue();
 			minPlan = weeks * planCap;
 			if(!Various.boolForObject(listSetting.valueForKey("extraDays")))
 				planCap = 0;
 		} else {
-			minPlan = cycle.hours().intValue();
+			hours = (Integer)planHours.valueForKey("totalHours");
+			minPlan = hours.intValue();
 		}
 		if(min > minPlan + planCap)
 			row.takeValueForKey("highlight2","indication");

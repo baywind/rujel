@@ -315,7 +315,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			}
 		} else {  // no details
 			PlanCycle cl = (PlanCycle)course.cycle();
-			maxDev = cl.weekly();
+			maxDev = cl.weekly(course);
 			minPlan = maxDev * weeks;
 			plan = minPlan;
 			/*
