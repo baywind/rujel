@@ -114,7 +114,7 @@ public class TableUser extends DefaultImplementation implements
 	public boolean isInGroup (Object group) {
 		return (group.equals(username) ||
 				(groups != null && super.isInGroup(group)) ||
-				parent != null && parent.isInGroup(group));
+				(parent != null && parent.isInGroup(group)));
 	}
 	
 	public Object propertyNamed(String property) {

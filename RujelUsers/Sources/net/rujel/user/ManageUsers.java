@@ -50,6 +50,9 @@ public class ManageUsers extends WOComponent {
 
 	public ManageUsers(WOContext aContext) {
 		super(aContext);
+		if(SettingsReader.boolForKeyPath("auth.readFromParent", false) && 
+				SettingsReader.boolForKeyPath("auth.tryUnmappedGroups", false))
+			mapping = SettingsReader.settingsForPath("auth.groupMapping", false);
 	}
 	
 	protected EOEditingContext ec;
@@ -61,6 +64,7 @@ public class ManageUsers extends WOComponent {
 			"auth.parentLoginHandler", null);
 	public String passw1;
 	public String passw2;
+	protected SettingsReader mapping;
 	
 	public EOEditingContext _ec() {
 		if(ec == null)
@@ -191,6 +195,13 @@ public class ManageUsers extends WOComponent {
 		NSArray groups = (NSArray)valueForKeyPath("usersList.selectedObject.groups");
 		if(groups == null) return false;
 		return groups.containsObject(item);
+	}
+	
+	public Boolean disableGroup() {
+		if(mapping == null)
+			return Boolean.FALSE;
+		String name = (String)item.valueForKey("groupName");
+		return Boolean.valueOf(!name.equals(mapping.get(name, name)));
 	}
 	
 	public void setIsInGroup(boolean is) {

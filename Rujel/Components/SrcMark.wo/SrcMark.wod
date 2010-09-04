@@ -115,8 +115,9 @@ Selected: WOConditional {
 }
 
 TeacherName: WOString {
-	value = teacherName;
-	escapeHTML = false;
+  value = teacherName;
+  escapeHTML = false;
+  valueWhenEmpty = session.strings.Reusables_Strings.uiElements.Select;
 }
 
 SubmitName: WOImageButton {
@@ -217,9 +218,14 @@ TeacherCell : OnClickContainer {
 CurrTeacherName : WOString {
   value = currTeacherName;
   escapeHTML = false;
+  valueWhenEmpty = session.strings.Reusables_Strings.uiElements.Select;
 }
 
 SelectorTitle : WOString {
   value = session.strings.Strings.ChooseRegime.SrcMark;
   escapeHTML = false;
+}
+
+TeacherIsSelected : WOConditional {
+  condition = teacherName;
 }

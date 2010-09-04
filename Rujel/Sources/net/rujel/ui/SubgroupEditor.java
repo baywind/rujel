@@ -337,7 +337,10 @@ public class SubgroupEditor extends WOComponent {
 	}
 	
 	public String rowspan() {
-		int count = studentsList().count();
+		NSArray list = studentsList();
+		if(list == null)
+			return null;
+		int count = list.count();
 		if(count == 0)
 			return null;
 		return String.valueOf(count +2);

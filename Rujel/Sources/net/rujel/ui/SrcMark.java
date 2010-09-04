@@ -336,8 +336,8 @@ public class SrcMark extends WOComponent {
 	
 	public String teacherName(Object teacher) {
 		if(teacher == null)
-			return (String)session().valueForKeyPath(
-					"strings.Reusables_Strings.uiElements.Select");
+			return null;//(String)session().valueForKeyPath(
+					//"strings.Reusables_Strings.uiElements.Select");
 		if(teacher == NullValue)
 			return (String)session().valueForKeyPath(
 					"strings.RujelBase_Base.vacant");
