@@ -109,7 +109,7 @@ public class MyUtility {
 	public static NSTimestamp dayInEduYear(int eduYear) {
 		Calendar cal = Calendar.getInstance();
 		int year = cal.get(Calendar.YEAR);
-		boolean ok = (year >= eduYear && year <= eduYear +1);
+		boolean ok = (year == eduYear  || year == eduYear +1);
 		int month = cal.get(Calendar.MONTH);
 		int newYearMonth = SettingsReader.intForKeyPath("edu.newYearMonth",Calendar.JULY);
 		ok = ok && ((eduYear == year)?month >= newYearMonth : month <= newYearMonth);

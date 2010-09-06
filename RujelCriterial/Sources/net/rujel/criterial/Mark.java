@@ -164,8 +164,7 @@ public class Mark extends _Mark {
 		CriteriaSet cset = work().critSet();
 		if(cset == null)
 			return null;
-		EOEnterpriseObject cr = cset.criterionForNum(criterion());
-		return (Indexer)cr.valueForKey("indexer");
+		return cset.indexerForCriter(criterion());
 	}
 	
 	public String present() {

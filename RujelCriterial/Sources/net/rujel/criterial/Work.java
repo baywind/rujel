@@ -31,6 +31,7 @@ package net.rujel.criterial;
 
 import net.rujel.reusables.*;
 import net.rujel.base.BaseLesson;
+import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.base.BaseLesson.TaskDelegate;
@@ -185,6 +186,25 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 				return crit;
 		}
 		return null;
+	}
+	
+	public Object maxForCriter(Integer criter) {
+		EOEnterpriseObject mask = getCriterMask(criter);
+		if(mask == null)
+			return null;
+		Integer max = (Integer)mask.valueForKey("max");
+		if(critSet() == null)
+			return max;
+		Indexer indexer = critSet().indexerForCriter(criter);
+		if(indexer == null)
+			return max;
+		String value = indexer.valueForIndex(max.intValue(), null);
+		if(value == null)
+			return max;
+		if(value.length() <= 3 || 
+				(value.charAt(0) == '&' && value.length() < 10))
+			return value;
+		return "&bull;";
 	}
 	
 	/*

@@ -99,6 +99,13 @@ public class CriteriaSet extends _CriteriaSet
 		return (criter==null)?null:(String)criter.valueForKey("title");
 	}
 	
+	public Indexer indexerForCriter(Integer criterion) {
+		EOEnterpriseObject criter = criterionForNum(criterion);
+		if(criter == null)
+			return null;
+		return (Indexer)criter.valueForKey("indexer");
+	}
+	
 	public EOEnterpriseObject criterionForNum(Integer criterion) {
 		if(criteria() == null || criteria().count() == 0)
 			return null;

@@ -33,6 +33,7 @@ import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
+import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 
@@ -182,10 +183,33 @@ public class MarksPresenter extends NotePresenter {
 				result.append(CriteriaSet.titleForCriterion(critItem().intValue()));
 			result.append("</big>");
 			if(lesson() != null) {
-				EOEnterpriseObject mask = lesson().getCriterMask(critItem());
-				result.append("<br/><small>(");
-				result.append((mask == null)?"?":mask.valueForKey("max"));
-				result.append(")</small>");
+				CriteriaSet cs = lesson().critSet();
+				String max = null;
+				if(cs != null) {
+					Indexer idx = cs.indexerForCriter(critItem());
+					if(idx != null) {
+						Integer mIndex = idx.maxIndex();
+						if(mIndex != null) {
+							max = idx.valueForIndex(mIndex.intValue(), null);
+							if(max.length() > 3 && 
+									!(max.charAt(0)=='&' && max.length() < 10))
+								return result.toString();
+						}
+					}
+				}
+				if(max == null) {
+					EOEnterpriseObject mask = lesson().getCriterMask(critItem());
+					if(mask != null) {
+						Integer maxInt = (Integer)mask.valueForKey("max");
+						if(maxInt != null)
+						max = maxInt.toString();
+					}
+				}
+				if(max != null) {
+					result.append("<br/><small>(");
+					result.append(max);
+					result.append(")</small>");
+				}
 			}
 			return result.toString();
 		}
@@ -201,10 +225,8 @@ public class MarksPresenter extends NotePresenter {
 	
 	public String onkeypress() {
 		CriteriaSet set = lesson().critSet();
-		if(set != null) {
-			EOEnterpriseObject cr = set.criterionForNum(critItem());
-			if(cr != null && cr.valueForKey("indexer") != null)
-				return null;
+		if(set != null && set.indexerForCriter(critItem()) != null) {
+			return null;
 		}
 		return "return isNumberInput(event);";
 	}

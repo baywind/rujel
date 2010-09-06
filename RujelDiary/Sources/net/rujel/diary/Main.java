@@ -198,8 +198,19 @@ public class Main extends WOComponent {
 				while (enu.hasMoreElements()) {
 					EduGroup gr = (EduGroup) enu
 							.nextElement();
-					NSMutableDictionary grDict = new NSMutableDictionary(gr.name(),"name");
-					grDict.takeValueForKey(gr.grade(), "grade");
+					NSMutableDictionary grDict = new NSMutableDictionary();
+					Integer grYear = gr.eduYear();
+					Integer grade = gr.grade();
+					if(grYear == null || grade == null || grYear.equals(year)) {
+						grDict.takeValueForKey(gr.name(),"name");
+					} else {
+						grade = new Integer(grade.intValue() + 
+								year.intValue() - grYear.intValue());
+						StringBuilder name = new StringBuilder(6);
+						name.append(grade).append(' ').append(gr.title());
+						grDict.takeValueForKey(name.toString(),"name");
+					}
+					grDict.takeValueForKey(grade, "grade");
 					grDict.takeValueForKey(gr.title(), "title");
 					EOKeyGlobalID gid = (EOKeyGlobalID)gr.editingContext().globalIDForObject(gr);
 					grDict.takeValueForKey(gid.keyValues()[0], "grID");

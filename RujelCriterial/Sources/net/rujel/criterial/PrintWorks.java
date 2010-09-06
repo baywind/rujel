@@ -30,18 +30,17 @@
 package net.rujel.criterial;
 
 import java.util.Date;
-import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.Period;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOAndQualifier;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 
@@ -52,7 +51,7 @@ public class PrintWorks extends com.webobjects.appserver.WOComponent {
 	public Period period;
 	public NSArray list;
 	public Work work;
-	public EOEnterpriseObject critItem;
+	public Object critItem;
 	
     public PrintWorks(WOContext context) {
         super(context);
@@ -99,18 +98,13 @@ public class PrintWorks extends com.webobjects.appserver.WOComponent {
     }
 
 	public Object critMax() {
+		if(work == null)
+			return null;
 		if(critItem == null)
-			return null;
-		NSArray mask = (NSArray)valueForKeyPath("work.criterMask");
-		if(mask == null || mask.count() == 0)
-			return null;
-		Enumeration enu = mask.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			EOEnterpriseObject crit = (EOEnterpriseObject) enu.nextElement();
-			if(critItem == crit.valueForKey("criterion"))
-				return crit.valueForKey("max");
-		}
-		return null;
+			critItem = new Integer(0);
+		else if(critItem instanceof NSKeyValueCoding)
+			critItem = ((NSKeyValueCoding)critItem).valueForKey("criterion");
+		return work.maxForCriter((Integer)critItem);
 	}
 
 	private String colspan;

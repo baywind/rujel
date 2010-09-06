@@ -49,8 +49,12 @@ public class PageWrapper extends WOComponent {
 	}
 	
 	public String eduYear() {
+		if(!context().hasSession())
+			return null;
 		Integer year = (Integer)session().valueForKey("eduYear");
-		return MyUtility.presentEduYear(year);
+		if(year.equals(MyUtility.eduYearForDate(null)))
+			return null;
+		return " " + MyUtility.presentEduYear(year);
 	}
 	
 	public WOComponent chooseRegime() {

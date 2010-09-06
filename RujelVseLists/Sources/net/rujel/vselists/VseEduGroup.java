@@ -61,14 +61,16 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+		setFlags(new Integer(0));
 		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
 		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
-		Integer year = MyUtility.eduYearForDate(date());
+		Integer year = eduYear();
+		if(year == null)
+			return;
 		setFirstYear(year);
 		setAbsGrade(new Integer(year.intValue()-minGrade));
 		year = new Integer(year.intValue() + maxGrade - minGrade);
 		setLastYear(year);
-		setFlags(new Integer(0));
 	}
 
 	protected NSTimestamp date() {
@@ -76,17 +78,34 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		if (editingContext() instanceof SessionedEditingContext) {
 			WOSession ses = ((SessionedEditingContext)editingContext()).session();
 			date = (NSTimestamp)ses.valueForKey("today");
+			if(date == null) {
+				Integer eduYear = (Integer)ses.valueForKey("eduYear");
+				if(eduYear != null)
+					date = MyUtility.dayInEduYear(eduYear.intValue());
+			}
 		}
 		if(date == null)
 			date = new NSTimestamp();
 		return date;
 	}
 
+	protected Integer currYear() {
+		if (editingContext() instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)editingContext()).session();
+			Integer eduYear = (Integer)ses.valueForKey("eduYear");
+			return eduYear;
+		}
+		return null;
+	}
+
+	
 	public Integer grade() {
 		Integer absGrade = absGrade();
 		if(absGrade == null)
 			return absGrade;
-		Integer year = MyUtility.eduYearForDate(date());
+		Integer year = currYear();
+		if(year == null)
+			year = MyUtility.eduYearForDate(null);
 		return new Integer(year.intValue() - absGrade.intValue());
 	}
 	
@@ -95,7 +114,9 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 			setAbsGrade(null);
 			return;
 		}
-		Integer year = MyUtility.eduYearForDate(date());
+		Integer year = currYear();
+		if(year == null)
+			year = MyUtility.eduYearForDate(null);
 		Integer absGrade = new Integer(year.intValue() - grade.intValue());
 		setAbsGrade(absGrade);
 	}
@@ -232,7 +253,9 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	public Integer eduYear() {
-		return null;
+		if(currYear() != null)
+			return null;
+		return MyUtility.eduYearForDate(null);
 	}
 	
 	public static NSArray flagNames = new NSArray(new String[] {"spec"});

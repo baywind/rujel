@@ -298,10 +298,10 @@ public class StudentMarks extends WOComponent {
 	public static NSArray formatWorks(NSArray works,NSArray criteria, boolean hideMax) {
 		if(works == null || works.count() ==0) return null;
 		NSArray blanc = null;
+		final String empty = "";
 		if(criteria != null && criteria.count() > 0) {
-			Object[] arr = new Object[criteria.count()];
-			String empty = "";
-			for (int i = 0; i < criteria.count(); i++) {
+			Object[] arr = new Object[criteria.count() +1];
+			for (int i = 0; i <= criteria.count(); i++) {
 				arr[i] = empty;
 			}
 			blanc = new NSArray(arr);
@@ -321,15 +321,17 @@ public class StudentMarks extends WOComponent {
 					Enumeration critEnum = currMask.objectEnumerator();
 					while(critEnum.hasMoreElements()) {
 						EOEnterpriseObject mask = (EOEnterpriseObject)critEnum.nextElement();
-						int idx = ((Integer)mask.valueForKey("criterion")).intValue() -1;
-						if(idx < 0)
+						Integer idx = (Integer)mask.valueForKey("criterion");
+						if(idx.intValue() < 0 || idx.intValue() >= critMask.count())
 							continue;
-						Number max = (Number)mask.valueForKey("max");
-						critMask.replaceObjectAtIndex(max,idx);
+						Object max = currWork.maxForCriter(idx);
+						if(max == null)
+							continue;
+						critMask.replaceObjectAtIndex(max,idx.intValue());
 						if(status != 2) {
-							Object titleMax = maxValues.objectAtIndex(idx);
-							if(titleMax instanceof Number) {
-								if(max.intValue() != ((Number)titleMax).intValue()){
+							Object titleMax = maxValues.objectAtIndex(idx.intValue());
+							if(titleMax != empty) {
+								if(!max.equals(titleMax)){
 									status = 2;
 								}
 							} else {
@@ -345,7 +347,7 @@ public class StudentMarks extends WOComponent {
 					} else if(status == 1) {
 						for (int i = 0; i < critMask.count(); i++) {
 							Object value = critMask.objectAtIndex(i);
-							if(value instanceof Number)
+							if(value != empty)
 								maxValues.replaceObjectAtIndex(value,i);
 						}
 					}
