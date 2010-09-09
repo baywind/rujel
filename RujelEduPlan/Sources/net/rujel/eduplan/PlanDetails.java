@@ -274,6 +274,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	protected NSMutableDictionary observeValue(Object value, Integer eduYear) {
 		NSKeyValueCoding sb = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
 				value, eduYear, ec);
+		if(sb == null)
+			return null;
 		String listName = (String)sb.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 		Integer week = (Integer)sb.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
 		if(week == null)

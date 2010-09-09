@@ -175,33 +175,33 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				if(hrs != null && hrs.count() > 0)
 					dict.takeValueForKeyPath(new Integer(hrs.count()), "counter.add");
 			}
-			enu = agregate.objectEnumerator();
-			EOEnterpriseObject currarea = null;
-			boolean hidden = false;
-			boolean gerade = true;
-			while (enu.hasMoreElements()) { //analyse
-				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
-				Subject subjectEO = (Subject)dict.valueForKey("subjectEO");
-				boolean has = Various.boolForObject(dict.valueForKeyPath("counter"));
-				if(subjectEO.area() != currarea) {
-					hidden = !has;
-					dict.takeValueForKey(Boolean.TRUE, "showArea");
-					if(has)
-						gerade = !gerade;
-					currarea = subjectEO.area();
-				} else if(hidden && has) {
-					dict.takeValueForKey(Boolean.FALSE, "showArea");
+		}
+		enu = agregate.objectEnumerator();
+		EOEnterpriseObject currarea = null;
+		boolean hidden = false;
+		boolean gerade = true;
+		while (enu.hasMoreElements()) { //analyse
+			NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+			Subject subjectEO = (Subject)dict.valueForKey("subjectEO");
+			boolean has = Various.boolForObject(dict.valueForKeyPath("counter"));
+			if(subjectEO.area() != currarea) {
+				hidden = !has;
+				dict.takeValueForKey(Boolean.TRUE, "showArea");
+				if(has)
 					gerade = !gerade;
-				}
-				String styleClass = "unused";
-				if(has) {
-					if(gerade)
-						styleClass = "gerade";
-					else
-						styleClass = "ungerade";
-				}
-				dict.takeValueForKey(styleClass, "styleClass");
+				currarea = subjectEO.area();
+			} else if(hidden && has) {
+				dict.takeValueForKey(Boolean.FALSE, "showArea");
+				gerade = !gerade;
 			}
+			String styleClass = "unused";
+			if(has) {
+				if(gerade)
+					styleClass = "gerade";
+				else
+					styleClass = "ungerade";
+			}
+			dict.takeValueForKey(styleClass, "styleClass");
 		}
 		return agregate;
 	}

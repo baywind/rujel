@@ -102,16 +102,21 @@ public class HomeWorkDelegate extends TaskDelegate {
 					"Lesson not in EditingContext");
 			return null;
 		}
-		if(ec.insertedObjects().containsObject(lesson )) {
-//			if(!create)
-				return null;
+		if(ec.globalIDForObject(lesson).isTemporary()) {
+			return null;
 		}
 		EOQualifier[] quals = new EOQualifier[3];
 		quals[0] = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual,lesson.course());
 		quals[1] = new EOKeyValueQualifier(Work.FLAGS_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, new Integer(16));
-		NSTimestamp date = lesson.date();
+		NSDictionary stored = ec.committedSnapshotForObject(lesson);
+		NSTimestamp date = (NSTimestamp)stored.valueForKey("date");//lesson.date();
+		if(!date.equals(lesson.date()) && ec instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)ec).session();
+			ses.takeValueForKey(ses.valueForKeyPath(
+					"strings.RujelCriterial_Strings.messages.checkWorks"), "message");
+		}
 		quals[2] = new EOKeyValueQualifier(Work.ANNOUNCE_KEY,
 				EOQualifier.QualifierOperatorEqual,date);
 		quals[2] = new EOAndQualifier(new NSArray(quals));
@@ -164,7 +169,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 				for (int i = 0; i < found.count(); i++) {
 					NSKeyValueCoding dict = (NSKeyValueCoding)found.objectAtIndex(i);
 					NSTimestamp assume = (NSTimestamp)dict.valueForKey("date");
-					if(assume != null) {
+					if(assume != null && assume.after(date)) {
 						date = assume;
 						break;
 					}

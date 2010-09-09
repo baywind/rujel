@@ -182,7 +182,7 @@ public class ModuleInit {
 				,lessonsList.valueForKey("@min.date"));
 		quals.addObject(qual);
 		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,null);
+		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,qual,null);
 		NSArray works = ec.objectsWithFetchSpecification(fs);
 		NSDictionary props = new NSDictionary("font-weight:bold;","style");
 		Enumeration enu = lessonsList.objectEnumerator();
