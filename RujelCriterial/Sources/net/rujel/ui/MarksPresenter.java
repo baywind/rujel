@@ -283,12 +283,19 @@ public class MarksPresenter extends NotePresenter {
         	if(archive)
         		mark().setValue(new Integer(value));
         } else {
-        	try {
-        		archive = mark().setPresent(newMarkValue.toString());
-        	} catch (IllegalArgumentException e) {
-				session().takeValueForKey(e.getMessage(), "message");
-				return;
-			}
+        	Boolean tmp = mark().setPresent(newMarkValue.toString());
+        	if(tmp == null) {
+        		if(hasBinding("archive")) {
+        			String message = (String)session().valueForKeyPath(
+							"strings.RujelCriterial_Strings.messages.illegalMark");
+					message = String.format(message, lesson().criterName(critItem()));
+        			session().takeValueForKey(message, "message");
+//        			lesson().editingContext().revert();
+        		}
+    			return;
+        	} else {
+        		archive = tmp.booleanValue();
+        	}
         }
         if(archive) {
 			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));

@@ -180,28 +180,32 @@ public class Mark extends _Mark {
 		return result;
 	}
 	
-	public boolean setPresent(String present) {
+	public Boolean setPresent(String present) {
 		if(present == null) {
 			setValue(null);
-			return false;
+			return null;
 		}
 		Integer value = null;
 		Indexer idx = indexer();
-		if(idx != null)
+		if(idx != null) {
 			value = idx.indexForValue(present, true);
-		if(value == null) {
-			try {
-				if(idx == null || work().critSet().namedFlags().flagForKey("allowNumbers"))
-					value = new Integer(present);
-			} catch (NumberFormatException e) {
+			if(value == null && !work().critSet().namedFlags().flagForKey("allowNumbers")) {
 				setValue(null);
-				return false;
+				return null;
 			}
 		}
-		if(value.equals(value()))
-			return false;
+		if(value == null) {
+			try {
+				value = new Integer(present);
+			} catch (NumberFormatException e) {
+				setValue(null);
+				return null;
+			}
+		}
+		if(value != null && value.equals(value()))
+			return Boolean.FALSE;
 		setValue(value);
-		return true;
+		return Boolean.TRUE;
 	}
 	
 	@Deprecated

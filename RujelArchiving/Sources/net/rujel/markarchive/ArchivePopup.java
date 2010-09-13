@@ -206,6 +206,13 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 			} finally {
 				ec.unlock();
 			}
+		} else {
+			try {
+				EOEditingContext ec = (EOEditingContext)returnPage.valueForKey("ec");
+				ec.revert();
+			} catch (Exception e) {
+				;
+			}
 		}
 		returnPage.ensureAwakeInContext(context());
 		return returnPage;
