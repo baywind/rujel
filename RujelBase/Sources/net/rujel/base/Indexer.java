@@ -63,40 +63,40 @@ public class Indexer extends _Indexer
     	}
     }*/
     
-    protected Indexer _typeIndex;
-    public Indexer typeIndex() {
-    	if(_typeIndex != null)
-    		return _typeIndex;
+    protected Indexer typeIndex() {
     	EOEditingContext ec = editingContext();
     	if(ec.hasChanges()) {
     		ec = new EOEditingContext(editingContext().rootObjectStore());
     		ec.lock();
     	}
+    	Indexer typeIndex = null;
 		try {
 			NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
 					ENTITY_NAME, TYPE_KEY, new Integer((int)Short.MIN_VALUE));
 			if(list == null || list.count() == 0) {
-				_typeIndex = (Indexer)EOUtilities.createAndInsertInstance(ec,ENTITY_NAME);
-				_typeIndex.takeValueForKey(new Integer((int)Short.MIN_VALUE), TYPE_KEY);
-				_typeIndex.takeValueForKey("index types",TITLE_KEY);
+				typeIndex = (Indexer)EOUtilities.createAndInsertInstance(ec,ENTITY_NAME);
+				typeIndex.takeValueForKey(new Integer((int)Short.MIN_VALUE), TYPE_KEY);
+				typeIndex.takeValueForKey("index types",TITLE_KEY);
 				ec.saveChanges();
 				Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,
 						"Automatically generated type index");
 			} else {
-				_typeIndex = (Indexer)list.objectAtIndex(0);
+				typeIndex = (Indexer)list.objectAtIndex(0);
+			}
+			if(ec != editingContext()) {
+				typeIndex = (Indexer)EOUtilities.localInstanceOfObject(
+						editingContext(), typeIndex);
 			}
 		} catch (Exception e) {
 			Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
 					"Error autogenerating type index",e);
-			_typeIndex = null;
+			typeIndex = null;
 		} finally {
 			if(ec != editingContext()) {
-				_typeIndex = (Indexer)EOUtilities.localInstanceOfObject(
-						editingContext(), _typeIndex);
 				ec.unlock();
 			}
 		}
-		return _typeIndex;
+		return typeIndex;
     }
     
     protected Integer minIndex;
@@ -328,18 +328,20 @@ public class Indexer extends _Indexer
 	}
 	
 	public String indexType() {
-		if(typeIndex() == null)
-			return null;
 		if(indexType == null) {
-			indexType = typeIndex().valueForIndex(type().intValue(), null);
+			Indexer typeIndex = typeIndex();
+			if(typeIndex == null)
+				return null;
+			indexType = typeIndex.valueForIndex(type().intValue(), null);
 		}
 		return indexType;
 	}
 	
 	public void setIndexType(String type) {
-		if(typeIndex() == null)
+		Indexer typeIndex = typeIndex();
+		if(typeIndex == null)
 			return;
-		Integer idx = typeIndex().indexForValue(type, true,true);
+		Integer idx = typeIndex.indexForValue(type, true,true);
 		super.setType(idx);
 		indexType = type;
 	}
