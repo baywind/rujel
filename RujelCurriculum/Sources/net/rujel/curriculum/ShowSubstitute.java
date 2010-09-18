@@ -210,6 +210,7 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 			Substitute sub = (Substitute) subsList().objectAtIndex(0);
 			if(sub.fromLesson() != null)
 				editor.takeValueForKey(new Integer(1), "idx");
+			editor = (WOComponent)editor.valueForKey("initial");
 		}
 		return editor;
 	}

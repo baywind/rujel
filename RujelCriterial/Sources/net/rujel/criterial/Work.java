@@ -305,13 +305,13 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 
 	public Mark markForStudentAndCriterion(Student student,Integer criterion) {
 		int idx = usedCriteria().indexOf(criterion);
-		Mark[] marks = forPersonLink(student);
 		if(idx == NSArray.NotFound) {
 			if(_oddMarksIndex==null) return null;
 			NSDictionary oddMarks = (NSDictionary)_oddMarksIndex.objectForKey(criterion);
 			if(oddMarks==null) return null;
 			return (Mark)oddMarks.objectForKey(student);
 		} else {
+			Mark[] marks = forPersonLink(student);
 			if(marks == null) return null;
 			return marks[idx];
 		}

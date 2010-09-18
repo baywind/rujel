@@ -48,6 +48,8 @@ Teacher : PersonDisplay {
   last = 2;
   first = 2;
   second = 2;
+  valueWhenEmpty = session.strings.Reusables_Strings.uiElements.Select;
+  emptyStyle = "font-style:italic;";
 }
 
 Form : WOForm {
@@ -183,3 +185,12 @@ JoinType : WOString {
   escapeHTML = false;
 }
 
+
+SelectTeacher : OnClickContainer {
+  elementName = "td";
+  disabled = cantSelect;
+  class = "orange";
+  style = "font-size:larger;";
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = selectTeacher;
+}

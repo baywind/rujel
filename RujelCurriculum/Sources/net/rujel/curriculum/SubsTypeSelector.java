@@ -53,7 +53,7 @@ public class SubsTypeSelector extends com.webobjects.appserver.WOComponent {
 		editor.takeValueForKey(returnPage, "returnPage");
 		editor.takeValueForKey(lesson, "lesson");	    	
 		editor.takeValueForKey(null, "substitute");
-		return editor;
+		return (WOActionResults)editor.valueForKey("initial");
     }
     
     public WOActionResults addJoinSub() {

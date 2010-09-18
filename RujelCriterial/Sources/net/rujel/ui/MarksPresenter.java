@@ -402,7 +402,6 @@ public class MarksPresenter extends NotePresenter {
 	}
 	
     public String integralTitle() {
-		Integer activeCriterion = activeCriterion();
 		if(lesson() == null) {
 			return "?";
 		}
@@ -412,26 +411,19 @@ public class MarksPresenter extends NotePresenter {
 			return lessonTitle();
 		}
 		if(!access().flagForKey("read")) return "#";
-		if(activeCriterion.intValue() == 0) {
-			if(lesson().usedCriteria().count() == 0)
-				return null;
-			if(lesson().usedCriteria().contains(activeCriterion)) {
-				Mark mark = lesson().markForStudentAndCriterion(student(),new Integer(0));
-				return (mark == null)?".":mark.present();
-			}
-			return lesson().integralForStudent(student(),lesson().integralPresenter());
-		} else if(activeCriterion.intValue() < 0) {
+		Integer activeCriterion = activeCriterion();
+		if(activeCriterion.intValue() < 0)
 			return shortNoteForStudent();
-		}
-		critItem = activeCriterion;
-		if(mark() == null) {
-			if(lesson().usedCriteria().contains(activeCriterion))
-				return ".";
-			else
-				return null;
-		} else {
-			return mark().present();
-		}
+		if(lesson().usedCriteria().count() == 0)
+			return null;
+		Mark mark = lesson().markForStudentAndCriterion(student(),activeCriterion);
+		if(mark != null)
+			return mark.present();
+		if(lesson().usedCriteria().contains(activeCriterion))
+			return ".";
+		if(activeCriterion.intValue() == 0)
+			return lesson().integralForStudent(student(),lesson().integralPresenter());
+		return null;
     }
 
     public String integralColor() {
@@ -550,14 +542,25 @@ public class MarksPresenter extends NotePresenter {
 		String title = null;
 		if(student() == null){ 
 			title = (String)valueForKeyPath("lesson.theme");
-		} else if(activeCriterion().intValue() != 0) {
+		} else //if(activeCriterion().intValue() != 0) {
 			if(activeCriterion().intValue() < 0) {
 				title = fullNoteForStudent();
 			} else {
-				critItem = activeCriterion();
-				return markTitle();
+				if(lesson().usedCriteria().count() == 0)
+					return null;
+				Integer activeCriterion = activeCriterion();
+				Mark mark = lesson().markForStudentAndCriterion(student(),activeCriterion);
+				if(mark != null)
+					return dateFormat.format(mark.dateSet());
+				if(lesson().usedCriteria().contains(activeCriterion))
+					return null;
+				if(activeCriterion.intValue() == 0) {
+					BigDecimal integral = lesson().integralForStudent(student());
+					if(integral != null)
+						return integral.toPlainString();
+				}
 			}
-		} else {
+/*		} else {
 			Mark[] marks = lesson().forPersonLink(student());
 			if (marks != null) {
 				NSTimestamp date = null;
@@ -572,7 +575,7 @@ public class MarksPresenter extends NotePresenter {
 						return dateFormat.format(date);
 					}
 			}
-		}
+		}*/
 		if(title == null)
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(title);
