@@ -154,7 +154,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			NSArray list = gr.list();
 			Enumeration stenu = list.objectEnumerator();
 			NSArray args = new NSArray(new Object[] {year, gr });
-			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
+			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(tmpEC,
 					EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
 			idx[0]++;
 			idx[1] = 0;
