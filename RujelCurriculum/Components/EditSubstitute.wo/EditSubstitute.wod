@@ -26,19 +26,6 @@ SubstitutorTitle : WOString {
   value = application.strings.RujelInterfaces_Names.Teacher.this;
 }
 
-SubstitutorSelect : PersListing {
-	entity = "Teacher";
-	useAjaxPost = true;
-	showPopup = true;
-	forcedList = forcedList;
-	selection = teacher;
-}
-
-CanSelect : WOConditional {
-  condition = cantSelect;
-  negate = true;
-}
-
 CantSelect : WOConditional {
   condition = cantSelect;
 }
