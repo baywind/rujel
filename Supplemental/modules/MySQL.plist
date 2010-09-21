@@ -16,6 +16,13 @@
 		<string></string>
 		<key>prototypes</key>
 		<string>MySQL</string>
+		<key>_dbMapping</key>
+		<dict>
+			<key>RujelStatic</key>
+			<string>sunfl_static</string>
+			<key>RujelYear%s</key>
+			<string>sunfl_year%s</string>
+		</dict>
 	</dict>
 </dict>
 </plist>

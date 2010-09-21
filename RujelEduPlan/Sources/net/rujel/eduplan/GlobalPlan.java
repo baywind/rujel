@@ -55,7 +55,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public GlobalPlan(WOContext context) {
         super(context);
         	session().savePageInPermanentCache(this);
-        showTotal = SettingsReader.intForKeyPath("edu.totalPlan", 0);
+        showTotal = SettingsReader.intForKeyPath("edu.showTotal", 0);
     }
 	
     public boolean synchronizesVariablesWithBindings() {
@@ -191,6 +191,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					gerade = !gerade;
 				currarea = subjectEO.area();
 			} else if(hidden && has) {
+				hidden = false;
 				dict.takeValueForKey(Boolean.FALSE, "showArea");
 				gerade = !gerade;
 			}

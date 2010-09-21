@@ -24,5 +24,10 @@
 		<key>EduCycle</key>
 		<string>net.rujel.eduplan.PlanCycle</string>
 	</dict>
+	<key>_edu</key>
+	<dict>
+		<key>totalPlan</key>
+		<integer>1</integer>
+	</dict>
 </dict>
 </plist>
