@@ -121,19 +121,43 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     			EOQualifier.QualifierOperatorEqual,teacher);
     	quals[1] = new EOKeyValueQualifier("eduYear",
     			EOQualifier.QualifierOperatorEqual,lesson.course().eduYear());
-    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	quals[1] = new EOAndQualifier(new NSArray(quals));
     	EOFetchSpecification fs = new EOFetchSpecification(
-    			EduCourse.entityName,quals[0],null);
+    			EduCourse.entityName,quals[1],null);
     	EOEditingContext ec = lesson.editingContext();
     	fromList = ec.objectsWithFetchSpecification(fs);
+    	quals[1] = new EOKeyValueQualifier("date",
+    			EOQualifier.QualifierOperatorEqual,lesson.date());
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	fs.setEntityName(Substitute.ENTITY_NAME);
+    	fs.setQualifier(quals[0]);
+    	NSArray subs = ec.objectsWithFetchSpecification(fs);
     	if(fromList != null && fromList.count() > 0) {
     		quals[0] = Various.getEOInQualifier("course", fromList);
-        	quals[1] = new EOKeyValueQualifier("date",
-        			EOQualifier.QualifierOperatorEqual,lesson.date());
         	quals[0] = new EOAndQualifier(new NSArray(quals));
         	fs.setEntityName(EduLesson.entityName);
         	fs.setQualifier(quals[0]);
         	fromList = ec.objectsWithFetchSpecification(fs);
+    	}
+    	if(subs != null && subs.count() > 0) {
+    		NSMutableArray result = (fromList == null)?
+    				new NSMutableArray() : fromList.mutableClone();
+    		Enumeration enu = subs.objectEnumerator();
+    		while (enu.hasMoreElements()) {
+				Substitute sub = (Substitute) enu.nextElement();
+				EduLesson subLesson = sub.lesson();
+				EduLesson subFrom = sub.fromLesson();
+				if(subFrom == null) {
+					if(subLesson != lesson && !result.containsObject(subLesson))
+						result.addObject(subLesson);
+				} else if(subFrom != lesson && !result.containsObject(subFrom)) {
+					result.addObject(subFrom);
+				}
+			}
+    		subs = new NSArray(EOSortOrdering.sortOrderingWithKey("course", 
+    				EOSortOrdering.CompareAscending));
+    		EOSortOrdering.sortArrayUsingKeyOrderArray(result, subs);
+    		fromList = result.immutableClone();
     	}
     	if(fromList == null || fromList.count() == 0) {
     		fromList = NSArray.EmptyArray;
