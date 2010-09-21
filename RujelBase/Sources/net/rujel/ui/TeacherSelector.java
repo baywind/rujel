@@ -77,7 +77,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			dict = populate(editingContext,session());
 			subjects = (NSArray)dict.removeObjectForKey("subjects");
 			currSubject = (String)valueForBinding("subject");
-			if(!subjects.containsObject(currSubject))
+			if(subjects == null || !subjects.containsObject(currSubject))
 				currSubject = null;
 		}
 	}

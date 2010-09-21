@@ -47,7 +47,6 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 
 import net.rujel.interfaces.Teacher;
-import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.TeacherSelector;
@@ -168,8 +167,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     			!item.course().cycle().subject().equals(lesson.course().cycle().subject()))
     		buf.append(item.course().cycle().subject()).append(' ');
     	if(item.course().comment() != null) {
-    		buf.append("<em>(").append(WOMessage.stringByEscapingHTMLString(
-    				item.course().comment())).append(")</em>");
+    		buf.append("<em style = \"white-space:nowrap;\">(").append(
+    			WOMessage.stringByEscapingHTMLString(item.course().comment())).append(")</em>");
     	}
 //    	buf.append(':').append(' ');
 //    	buf.append(WOMessage.stringByEscapingHTMLString(item.theme()));
@@ -193,8 +192,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		return substitute.factor().stripTrailingZeros().toString();
     	BigDecimal factor = BigDecimal.ONE;
     	if(idx > 0)
-    		factor = new BigDecimal(SettingsReader.stringForKeyPath(
-    			"edu.joinFactor", "0.5"));
+    		factor = Substitute.joinFactor();
     	if(others != null && others.count() > 0) {
     		factor = factor.divide(new BigDecimal(others.count() +1),
     				2,BigDecimal.ROUND_HALF_UP);
@@ -266,8 +264,13 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		return;
     	}
     	if(aTeacher != null) {
-    		String path = "readAccess." + ((substitute==null)?"_create.S":"_edit.s") +"ubstitute";
-    		cantEdit = (Boolean)session().valueForKeyPath(path);
+    		if(substitute == null) {
+    			cantEdit = (Boolean)session().valueForKeyPath("readAccess._create.Substitute");
+    		} else {
+    			session().setObjectForKey(substitute, "readAccess");
+    			cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.session");
+    			session().removeObjectForKey("readAccess");
+    		}
     	} else {
     		cantEdit = Boolean.TRUE;
     	}
@@ -313,8 +316,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		substitute.setDate(lesson.date());
 		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
 		BigDecimal subFactor = BigDecimal.ONE;
-		BigDecimal joinFactor = new BigDecimal(SettingsReader.stringForKeyPath(
-				"edu.joinFactor", "0.5"));
+		BigDecimal joinFactor = Substitute.joinFactor();
 		if(idx > 0)
 			substitute.addObjectToBothSidesOfRelationshipWithKey(fromLesson, "fromLesson");
 		else
@@ -342,8 +344,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			if(!joins.containsObject(substitute))
 				joins = joins.arrayByAddingObject(substitute);
 			if(joins != null && joins.count() > 1) {
-				BigDecimal factor = new BigDecimal(SettingsReader.stringForKeyPath(
-						"edu.joinFactor", "0.5"));
+				BigDecimal factor = Substitute.joinFactor();
 				factor = factor.divide(new BigDecimal(joins.count()),
 						2,BigDecimal.ROUND_HALF_UP);
 				Enumeration enu = joins.objectEnumerator();

@@ -119,14 +119,14 @@ public class Substitute extends _Substitute implements Reason.Event {
 	}
 
    public EduCourse course() {
-    	return lesson().course();
+    	return (EduCourse)valueForKeyPath("lesson.course");
     }
 
 	public void validateForSave() throws ValidationException { 
 		if(teacher() == null || teacher() == lesson().course().teacher()) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.messages.wrongTeacher");
-			throw new ValidationException(message,teacher(),"teacher");
+			throw new ValidationException(message,this,"teacher");
 		}
 		super.validateForSave();
 	}
@@ -172,9 +172,12 @@ public class Substitute extends _Substitute implements Reason.Event {
 		return Math.max(to, from);
 	}
 	
+	public static BigDecimal joinFactor() {
+		return new BigDecimal(SettingsReader.stringForKeyPath("edu.joinFactor", "0.5"));
+	}
+	
 	public BigDecimal updateFactor(int relatedCount) {
-		BigDecimal factor = (fromLesson() == null)?BigDecimal.ONE:
-			new BigDecimal(SettingsReader.stringForKeyPath("edu.joinFactor", "0.5"));
+		BigDecimal factor = (fromLesson() == null)?BigDecimal.ONE:joinFactor();
 		if(relatedCount > 1)
 			factor = factor.divide(new BigDecimal(relatedCount), 2,BigDecimal.ROUND_HALF_UP);
 		setFactor(factor);

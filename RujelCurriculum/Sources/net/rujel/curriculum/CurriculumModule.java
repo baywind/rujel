@@ -125,7 +125,6 @@ public class CurriculumModule {
 		NSArray lessonsList = (NSArray)ctx.session().objectForKey("lessonsList");
 		if(lessonsList == null || lessonsList.count() == 0)
 			return null;
-		EOEditingContext ec = null;
 		NSMutableDictionary result = new NSMutableDictionary();
 		NSArray vars = null;
 		if(showVars) {
@@ -170,6 +169,8 @@ public class CurriculumModule {
 			Enumeration senu = subs.objectEnumerator();
 			StringBuffer title = new StringBuffer();
 			String sTitle = null;
+			EOEditingContext ec = null;
+			try {
 			while(senu.hasMoreElements()) {
 				Substitute sub = (Substitute)senu.nextElement();
 				if(!sub.title().equals(sTitle)) {
@@ -182,14 +183,29 @@ public class CurriculumModule {
 				}
 				title.append(Person.Utility.fullName(sub.teacher(), true, 2, 1, 1));
 				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
-					if(ec == null)
+					if(ec == null) {
 						ec = new EOEditingContext(lesson.editingContext().rootObjectStore());
+						ec.lock();
+					}
 					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
 					sub.setDate(lesson.date());
 					Logger.getLogger("rujel.curriculum").log(WOLogLevel.EDITING,
 							"Correcting substitute date", new Object[] {ctx.session(),sub});
 				}
 			} // Enumeration senu = subs.objectEnumerator();
+			} finally {
+			if(ec != null) {
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
+							"Error saving substitute corrections",
+							new Object[] {ctx.session(),ec.updatedObjects(),e});
+				} finally {
+					ec.unlock();
+				}
+			}
+			}
 			sTitle = (String)props.valueForKey("title");
 			if(sTitle != null) {
 				title.append(" -+- ").append(sTitle);
@@ -199,15 +215,6 @@ public class CurriculumModule {
 		}
 		if(result.count() == 0)
 			return null;
-		if(ec != null) {
-			try {
-				ec.saveChanges();
-			} catch (Exception e) {
-				Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
-						"Error saving substitute corrections",
-						new Object[] {ctx.session(),ec.updatedObjects(),e});
-			}
-		}
 		return result;
 	}
 	

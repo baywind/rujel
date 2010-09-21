@@ -38,7 +38,6 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
-import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -273,8 +272,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		substitute.addObjectToBothSidesOfRelationshipWithKey(selLesson, "lesson");
 		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
 		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, Substitute.REASON_KEY);
-		BigDecimal factor = new BigDecimal(SettingsReader.stringForKeyPath(
-				"edu.joinFactor", "0.5"));
+		BigDecimal factor = Substitute.joinFactor();
 		if(others != null) {
 			if(!others.containsObject(substitute))
 				others = others.arrayByAddingObject(substitute);
@@ -308,8 +306,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 				others = others.arrayByAddingObject(substitute);
 			int div = others.count();
 			if(div > 1) {
-				factor = new BigDecimal(SettingsReader.stringForKeyPath(
-						"edu.joinFactor", "0.5"));
+				factor = Substitute.joinFactor();
 				factor = factor.divide(new BigDecimal(div), 2,BigDecimal.ROUND_HALF_UP);
 				Enumeration enu = others.objectEnumerator();
 				while (enu.hasMoreElements()) {
