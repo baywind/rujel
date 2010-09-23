@@ -69,6 +69,8 @@ public class SettingsBase extends _SettingsBase {
 		NSArray byCourse = byCourse();
 		if(byCourse == null || byCourse.count() == 0)
 			return this;
+		if(course.editingContext() != editingContext())
+			course = (EduCourse)EOUtilities.localInstanceOfObject(editingContext(), course);
 		EOEnterpriseObject result = this;
 		Enumeration en = byCourse.objectEnumerator();
 		int matches = 0;
@@ -113,6 +115,10 @@ public class SettingsBase extends _SettingsBase {
 		NSArray byCourse = byCourse();
 		if(byCourse == null || byCourse.count() == 0)
 			return this;
+		if(value instanceof EOEnterpriseObject && 
+				((EOEnterpriseObject)value).editingContext() != editingContext()) {
+			value = EOUtilities.localInstanceOfObject(editingContext(), (EOEnterpriseObject)value);
+		}
 		Object[] vals = new Object[keys.length];
 		if(value instanceof Number) {
 			vals[0] = value;
@@ -134,6 +140,11 @@ public class SettingsBase extends _SettingsBase {
 				}
 				if(vals[i] != null) {
 					count++;
+					if( i > 0 && 
+							((EOEnterpriseObject)vals[i]).editingContext() != editingContext()) {
+						vals[i] = EOUtilities.localInstanceOfObject(editingContext(),
+								((EOEnterpriseObject)vals[i]));
+					}
 					if(vals[0] == null && (i==1 || i==2))
 						vals[0] = NSKeyValueCoding.Utility.valueForKey(vals[i], keys[0]);
 				}
