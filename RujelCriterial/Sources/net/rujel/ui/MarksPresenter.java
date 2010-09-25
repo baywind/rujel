@@ -34,7 +34,6 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
 import net.rujel.base.Indexer;
-import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
@@ -43,7 +42,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
 import java.math.BigDecimal;
-import java.text.Format;
 import java.util.logging.Logger;
 
 public class MarksPresenter extends NotePresenter {
@@ -481,14 +479,14 @@ public class MarksPresenter extends NotePresenter {
 			return 6;
 		return len;
 	}	
-	protected static Format dateFormat = MyUtility.dateFormat();
+/*	protected static Format dateFormat = MyUtility.dateFormat();
 	
 	public void awake() {
 		super.awake();
 		synchronized (dateFormat) {
 			dateFormat = MyUtility.dateFormat();
 		}
-	}
+	}*/
 	
 	public String markTitle() {
 		if(student() == null) {
@@ -513,13 +511,12 @@ public class MarksPresenter extends NotePresenter {
 			}*/
 			return null;
 		} else {
+			if(hasBinding("data")) return null;
 			if(mark() == null) return null;
 			if(!access().flagForKey("read"))
 				return (String)application().valueForKeyPath(
 						"strings.Strings.messages.noAccess");
-			synchronized (dateFormat) {
-				return dateFormat.format(mark().dateSet());
-			}
+			return mark().hover();
 		}
 	}
 	
@@ -550,8 +547,9 @@ public class MarksPresenter extends NotePresenter {
 					return null;
 				Integer activeCriterion = activeCriterion();
 				Mark mark = lesson().markForStudentAndCriterion(student(),activeCriterion);
-				if(mark != null)
-					return dateFormat.format(mark.dateSet());
+				if(mark != null) {
+					return mark.hover();
+				}
 				if(lesson().usedCriteria().contains(activeCriterion))
 					return null;
 				if(activeCriterion.intValue() == 0) {

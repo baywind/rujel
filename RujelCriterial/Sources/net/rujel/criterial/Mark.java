@@ -30,6 +30,7 @@
 package net.rujel.criterial;
 
 import net.rujel.base.Indexer;
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
@@ -165,6 +166,16 @@ public class Mark extends _Mark {
 		if(cset == null)
 			return null;
 		return cset.indexerForCriter(criterion());
+	}
+	
+	public String hover() {
+		if(indexer() == null)
+			return MyUtility.dateFormat().format(dateSet());
+		StringBuilder buf = new StringBuilder (8);
+		buf.append(value()).append('/');
+		EOEnterpriseObject mask = work().getCriterMask(criterion());
+		buf.append(mask.valueForKey("max"));
+		return buf.toString();
 	}
 	
 	public String present() {

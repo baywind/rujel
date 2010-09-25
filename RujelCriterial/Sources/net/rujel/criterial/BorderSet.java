@@ -38,23 +38,12 @@ import java.util.Enumeration;
 
 public class BorderSet extends _BorderSet implements FractionPresenter
 {
-	protected static final EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("least",EOSortOrdering.CompareAscending);
+	protected static final EOSortOrdering so = EOSortOrdering.sortOrderingWithKey(
+			"least",EOSortOrdering.CompareAscending);
 	
 	public BorderSet() {
         super();
     }
-
-/*
-    // If you add instance variables to store property values you
-    // should add empty implementions of the Serialization methods
-    // to avoid unnecessary overhead (the properties will be
-    // serialized for you in the superclass).
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
-    }
-*/
 	
     public void awakeFromInsertion(EOEditingContext ec) {
     	setValueType(new Integer(0));
@@ -76,22 +65,49 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		if(found == null || found.count() == 0)
 			return PERCENTAGE;
 		BorderSet result = (BorderSet)found.objectAtIndex(0);
-		if(result.useClass() !=null && result.useClass().length() > 0) {
-			try {
-				Class resClass = Class.forName(result.useClass());
-				return (FractionPresenter)resClass.getConstructor((Class[])null).newInstance();
-			} catch (Exception e) {
-				throw new NSForwardException(e,"Error constructing FractionPresenter with title '" + title + "' and class '" + result.useClass() + '\'');
-			}
-		}
-		return result;
+		return result;//.getPresenter();
 	}
 	
+    private FractionPresenter _presenter;
+    public FractionPresenter getPresenter() {
+    	if(_presenter != null) return _presenter;
+    	String useClass = useClass();
+    	if(useClass == null || useClass.length() == 0) {
+    		_presenter = this;
+    		return this;
+    	}
+		try {
+			Class resClass = Class.forName(useClass);
+			_presenter = (FractionPresenter)resClass.getConstructor((Class[])null).newInstance();
+		} catch (Exception e) {
+			throw new NSForwardException(e,"Error constructing FractionPresenter with title '" 
+					+ title() + "' and class '" + useClass + '\'');
+		}
+		return _presenter;
+    }
+    /*
+    public void setPresenter(FractionPresenter presenter) {
+    	_presenter = presenter;
+    	super.setUseClass(presenter.getClass().getCanonicalName());
+    }*/
+    
+    public void setUseClass(String useClass) {
+    	_presenter = null;
+    	super.setUseClass(useClass);
+    }
 
+	public void turnIntoFault(EOFaultHandler handler) {
+		super.turnIntoFault(handler);
+		_sortedBorders = null;
+		_presenter = null;
+	}
+
+    
 	private transient NSArray _sortedBorders;
 	public NSArray sortedBorders() {
 		if(_sortedBorders == null) {
-			_sortedBorders = EOSortOrdering.sortedArrayUsingKeyOrderArray(borders(),new NSArray(so)).immutableClone();
+			_sortedBorders = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+					borders(),new NSArray(so)).immutableClone();
 		}
 		return _sortedBorders;
 	}
@@ -121,6 +137,7 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		return (EOEnterpriseObject)result.objectAtIndex(0);
 	}
 	public BigDecimal borderForKey(String key) {
+		if(_presenter != this) return getPresenter().borderForKey(key);
 		EOEnterpriseObject border = borderEOForKey(key);
 		if(border == null)
 			throw new IllegalArgumentException("No such key - '" + key +'\'');
@@ -137,6 +154,7 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		border.takeValueForKey(value,"least");
 	}
 	public String presentFraction(double fraction) {
+		if(_presenter != this) return getPresenter().presentFraction(fraction);
 		MathContext mc = new MathContext(6);
 		BigDecimal fract = new BigDecimal(fraction,mc);
 		return presentFraction(fract);
@@ -145,6 +163,7 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 	}
 	
 	public String presentFraction(BigDecimal fraction) {
+		if(_presenter != this) return getPresenter().presentFraction(fraction);
 		EOEnterpriseObject border = borderForFraction(fraction);
 		String title = (border == null)?zeroValue():
 			(String)border.valueForKey("title");
