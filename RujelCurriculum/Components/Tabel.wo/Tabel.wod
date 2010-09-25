@@ -70,7 +70,7 @@ Details : WORepetition {
 HeaderCell : OnClickContainer {
   elementName = "td";
   colspan = item.colspan;
-  title = item.course.cycle.subject;
+  title = item.hover;
   disabled  = item.colspan;
   onclick = session.tryLoad;
   invokeAction = openCourse;
@@ -139,4 +139,9 @@ CanCreate : WOConditional {
 
 CanEdit : WOConditional {
   condition = session.readAccess.edit.Tabel;
+}
+
+Cell : WOGenericContainer {
+  elementName = "td";
+  title = cellHover;
 }

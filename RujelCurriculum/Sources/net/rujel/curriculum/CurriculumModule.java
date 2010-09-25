@@ -159,58 +159,17 @@ public class CurriculumModule {
 			}
 			if(!showSubs)
 				continue;
-			NSArray subs = (NSArray)lesson.valueForKey("substitutes");
-			if(subs == null || subs.count() == 0)
+			String sTitle = Substitute.subsTitleForLesson(lesson);
+			if(sTitle == null)
 				continue;
 			if(props == null)
 				props = new NSMutableDictionary("highlight2","class");
 			else
 				props.takeValueForKey("highlight2","class");
-			Enumeration senu = subs.objectEnumerator();
-			StringBuffer title = new StringBuffer();
-			String sTitle = null;
-			EOEditingContext ec = null;
-			try {
-			while(senu.hasMoreElements()) {
-				Substitute sub = (Substitute)senu.nextElement();
-				if(!sub.title().equals(sTitle)) {
-					if(sTitle != null)
-						title.append(';').append(' ');
-					sTitle = sub.title();
-						title.append(sTitle).append(" : ");
-				} else {
-					title.append(',').append(' ');
-				}
-				title.append(Person.Utility.fullName(sub.teacher(), true, 2, 1, 1));
-				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
-					if(ec == null) {
-						ec = new EOEditingContext(lesson.editingContext().rootObjectStore());
-						ec.lock();
-					}
-					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
-					sub.setDate(lesson.date());
-					Logger.getLogger("rujel.curriculum").log(WOLogLevel.EDITING,
-							"Correcting substitute date", new Object[] {ctx.session(),sub});
-				}
-			} // Enumeration senu = subs.objectEnumerator();
-			} finally {
-			if(ec != null) {
-				try {
-					ec.saveChanges();
-				} catch (Exception e) {
-					Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
-							"Error saving substitute corrections",
-							new Object[] {ctx.session(),ec.updatedObjects(),e});
-				} finally {
-					ec.unlock();
-				}
-			}
-			}
-			sTitle = (String)props.valueForKey("title");
-			if(sTitle != null) {
-				title.append(" -+- ").append(sTitle);
-			}
-			props.setObjectForKey(title.toString(),"title");
+			String title = (String)props.valueForKey("title");
+			if(title != null)
+				sTitle = sTitle + " -+- " + title;
+			props.setObjectForKey(sTitle,"title");
 			result.setObjectForKey(props, lesson);
 		}
 		if(result.count() == 0)

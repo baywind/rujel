@@ -97,6 +97,17 @@
 			<key>itemClass</key>
 			<string>gerade</string>
 		</dict>
+		<key>extraLessons</key>
+		<dict>
+			<key>colspan</key>
+			<string>2</string>
+			<key>class</key>
+			<string>backfield2</string>
+			<key>subject</key>
+			<string>Дополнительно</string>
+			<key>hover</key>
+			<string>уроки сверх плана</string>
+		</dict>
 		<key>subsTotal</key>
 		<dict>
 			<key>colspan</key>
@@ -107,6 +118,17 @@
 			<string>Замены и совмещения:</string>
 			<key>itemClass</key>
 			<string>gerade</string>
+		</dict>
+		<key>varSub</key>
+		<dict>
+			<key>colspan</key>
+			<string>2</string>
+			<key>class</key>
+			<string>backfield2</string>
+			<key>subject</key>
+			<string>Замена урока</string>
+			<key>hover</key>
+			<string>уроки, проведенные вместо другого предмета</string>
 		</dict>
 	</dict>
 	<key>Reprimand</key>

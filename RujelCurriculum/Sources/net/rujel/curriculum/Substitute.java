@@ -246,4 +246,51 @@ public class Substitute extends _Substitute implements Reason.Event {
 		}
 		return new Integer(result);    	
     }
+    
+    public static String subsTitleForLesson(EduLesson lesson) {
+		NSArray subs = (NSArray)lesson.valueForKey("substitutes");
+		if(subs == null || subs.count() == 0)
+			return null;
+		Enumeration senu = subs.objectEnumerator();
+		StringBuilder title = new StringBuilder();
+		String sTitle = null;
+		EOEditingContext ec = null;
+		try {
+			while(senu.hasMoreElements()) {
+				Substitute sub = (Substitute)senu.nextElement();
+				if(!sub.title().equals(sTitle)) {
+					if(sTitle != null)
+						title.append(';').append(' ');
+					sTitle = sub.title();
+					title.append(sTitle).append(" : ");
+				} else {
+					title.append(',').append(' ');
+				}
+				title.append(Person.Utility.fullName(sub.teacher(), true, 2, 1, 1));
+				if(lesson.date() != null && !lesson.date().equals(sub.date())) {
+					if(ec == null) {
+						ec = new EOEditingContext(lesson.editingContext().rootObjectStore());
+						ec.lock();
+					}
+					Logger.getLogger("rujel.curriculum").log(WOLogLevel.EDITING,
+							"Correcting substitute date", new Object[] {sub});
+					sub = (Substitute)EOUtilities.localInstanceOfObject(ec, sub);
+					sub.setDate(lesson.date());
+				}
+			} // Enumeration senu = subs.objectEnumerator();
+		} finally {
+			if(ec != null) {
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
+							"Error saving substitute corrections",
+							new Object[] {ec.updatedObjects(),e});
+				} finally {
+					ec.unlock();
+				}
+			}
+		}
+		return title.toString();
+    }
 }
