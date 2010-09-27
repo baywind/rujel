@@ -182,7 +182,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				int day = cal.get(Calendar.DAY_OF_MONTH);
 				if(val < 0) {  // negative
 					if(sbt[day] > 0) {
-						Teacher teacher = var.course().teacher();
+						Teacher teacher = var.course().teacher(var.date());
 						Counter cnt = (Counter)plusByTeacher.objectForKey(teacher);
 						if(cnt != null) {
 							cnt.add(val);
@@ -489,6 +489,8 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     		details.addObject(row);
     		String itemClass = (String)row.valueForKey("itemClass");
     		Enumeration coursEnu = list.objectEnumerator();
+			NSArray sorter = new NSArray(new EOSortOrdering(Variation.VALUE_KEY,
+					EOSortOrdering.CompareAscending));
     		while (coursEnu.hasMoreElements()) {
     			NSDictionary dict = (NSDictionary)coursEnu.nextElement();
 				EduCourse course = (EduCourse) dict.valueForKey("course");
@@ -504,6 +506,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 						EOQualifier.QualifierOperatorEqual,course);
 	    		fs.setEntityName(EduLesson.entityName);
 				fs.setQualifier(new EOAndQualifier(new NSArray(quals)));
+				fs.setSortOrderings(null);
 				list = ec.objectsWithFetchSpecification(fs);
 				if(list != null && list.count() > 0) {  //lessons
 					Enumeration lEnu = list.objectEnumerator();
@@ -526,9 +529,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 						}
 					}
 				} //lessons
-				list = new NSArray(new EOSortOrdering(Variation.VALUE_KEY,
-						EOSortOrdering.CompareAscending));
-				fs.setSortOrderings(list);
+				fs.setSortOrderings(sorter);
 				fs.setEntityName(Variation.ENTITY_NAME);
 				list = ec.objectsWithFetchSpecification(fs);
 				if(list != null && list.count() > 0) {  //variations
@@ -673,7 +674,10 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			row.takeValueForKey(course.eduGroup().name(), "eduGroup");
 			row.takeValueForKey(Person.Utility.fullName(course.teacher(), true, 2, 1, 1),
 					(sorter==null)?"hover":"subject");
-			row.takeValueForKey(course.subjectWithComment(), (sorter==null)?"subject":"hover");
+			if(sorter == null)
+				row.takeValueForKey(course.subjectWithComment(),"subject");
+			else
+				row.takeValueForKey(course.cycle().subject(),"hover");
 //			row.takeValueForKey(course.cycle().subject(),"hover");
 			row.takeValueForKey(itemClass, "class");
     		row.setObjectForKey(byCourse.objectForKey(course), "values");

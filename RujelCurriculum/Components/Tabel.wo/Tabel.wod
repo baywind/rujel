@@ -74,7 +74,7 @@ HeaderCell : OnClickContainer {
   disabled  = item.colspan;
   onclick = session.tryLoad;
   invokeAction = openCourse;
-  style = "overflow:hidden;width:10em;";
+  align = "center";
 }
 
 SubjectString : WOString {
