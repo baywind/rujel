@@ -45,6 +45,7 @@ SelectTeacher : OnClickContainer {
   class = "button";
   invokeAction = selectTeacher;
   onclick = session.ajaxPopup;
+  hide = cantSelect;
 }
 
 TeacherName : PersonDisplay {
@@ -137,11 +138,8 @@ CanCreate : WOConditional {
   condition = session.readAccess.create.Tabel;
 }
 
-CanEdit : WOConditional {
-  condition = session.readAccess.edit.Tabel;
-}
-
 Cell : WOGenericContainer {
   elementName = "td";
   title = cellHover;
+  class = cellClass;
 }

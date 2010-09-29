@@ -6,6 +6,7 @@ import java.util.Enumeration;
 import java.util.GregorianCalendar;
 
 import net.rujel.base.BaseCourse;
+import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
@@ -30,6 +31,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public Teacher currTeacher;
 	public NSMutableArray details;
 	public Integer index;
+	public Boolean cantSelect;
 	
     public Tabel(WOContext context) {
         super(context);
@@ -58,6 +60,11 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			cal.add(Calendar.MONTH, 1);
 		}
         months = new NSArray(mns);
+        EOKeyGlobalID gid = (EOKeyGlobalID)context.session().valueForKey("userPersonGID");
+        if(gid != null && gid.entityName().equals(Teacher.entityName)) {
+        	setCurrTeacher((Teacher)ec.faultForGlobalID(gid, ec));
+        	cantSelect = (Boolean)context.session().valueForKeyPath("readAccess._edit.Tabel");
+        }
     }
     
     public String title() {
@@ -406,7 +413,9 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	fs.setRefreshesRefetchedObjects(true);
     	NSArray list = ec.objectsWithFetchSpecification(fs);
        	NSTimestamp[] dates = new NSTimestamp[2];
+       	int weekly = 0;
 		details = new NSMutableArray();
+		final NSMutableArray clear = new NSMutableArray();
     	if(list != null && list.count() > 0) {
 	    	quals[1] = new EOKeyValueQualifier("date",
 	    			EOQualifier.QualifierOperatorLessThanOrEqualTo,lastDay);
@@ -416,11 +425,21 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				EOEnterpriseObject ct = course.teacherChange(lastDay,dates);
 				if(ct != null)
 					continue;
+				PlanCycle cycle = (PlanCycle)course.cycle();
+				int hours = cycle.weekly(course);
+				weekly += hours;
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
+				dict.takeValueForKey(new Integer(hours), "hours");
 				if(dates[0] != null && dates[0].compare(firstDay) > 0) {
 			    	quals[0] = new EOKeyValueQualifier("date",
 			    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,dates[0]);
 			    	dict.takeValueForKey(new EOAndQualifier(new NSArray(quals)),"qual");
+			    	NSMutableArray[] info = new NSMutableArray[days +1];
+			    	cal.setTime(dates[0]);
+			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) -1; i > 0; i--) {
+						info[i] = clear;
+					}
+			    	dict.takeValueForKey(info, "info");
 				} else {
 			    	dict.takeValueForKey(monthQual,"qual");
 				}
@@ -448,12 +467,31 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				NSTimestamp begin = dates[0];
 				if(begin != null && begin.compare(lastDay) > 0)
 					continue;
-				if(begin == null || begin.compare(firstDay) < 0)
+		    	NSMutableArray[] info = null;
+				if(begin == null || begin.compare(firstDay) < 0) {
 					begin = firstDay;
+				} else {
+					info = new NSMutableArray[days +1];
+			    	cal.setTime(begin);
+			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) -1; i > 0; i--) {
+						info[i] = clear;
+					}
+				}
 				if(end.compare(lastDay) > 0) {
 					end = lastDay;
+				} else {
+					if(info == null)
+						info = new NSMutableArray[days +1];
+			    	cal.setTime(end);
+			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) +1; i < info.length; i++) {
+						info[i] = clear;
+					}
 				}
+				PlanCycle cycle = (PlanCycle)course.cycle();
+				int hours = cycle.weekly(course);
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
+		    	dict.takeValueForKey(info, "info");
+				dict.takeValueForKey(new Integer(hours), "hours");
 		    	quals[0] = new EOKeyValueQualifier("date",
 		    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin);
 		    	quals[1] = new EOKeyValueQualifier("date",
@@ -498,8 +536,9 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				row.takeValueForKey(course.eduGroup().name(), "eduGroup");
 				row.takeValueForKey(course.subjectWithComment(),"subject");
 				row.takeValueForKey(itemClass, "class");
+				row.takeValueForKey(dict.valueForKey("hours"), "hours");
 				BigDecimal[] allHours = new BigDecimal[days + 1];
-	        	NSMutableArray[] info = null;
+	        	NSMutableArray[] info = (NSMutableArray[])dict.valueForKey("info");
 				row.setObjectForKey(allHours, "values");
 				quals[0] = (EOQualifier)dict.valueForKey("qual");
 				quals[1] = new EOKeyValueQualifier("course",
@@ -735,6 +774,16 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		return WOMessage.stringByEscapingHTMLAttributeValue(buf.toString());
+	}
+	
+	public String cellClass() {
+		if(item == null || index == null)
+			return null;
+		NSArray[] values = (NSArray[])((NSDictionary)item).valueForKey("info");
+		if(values != null && values[index.intValue() +1] != null &&
+				values[index.intValue() +1].count() == 0)
+			return "green";
+		return null;
 	}
 	
 	public String sum() {
