@@ -30,9 +30,9 @@ Year : WOString {
   escapeHTML = false;
 }
 
-ExportLink : WOHyperlink {
+ExportLink : WOSubmitButton {
   action = export;
-  string = application.strings.RujelReports_Reports.export;
+  value = application.strings.RujelReports_Reports.export;
 }
 
 ExportDetails : WOHyperlink {
@@ -142,4 +142,18 @@ Cell : WOGenericContainer {
   elementName = "td";
   title = cellHover;
   class = cellClass;
+}
+
+TotalForm : WOForm {
+  style = "position:absolute;top:3em;right:1ex;padding:1ex;";
+}
+
+ShowDetailsTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Tabel.showDetails;
+  valueWhenEmpty = "show details";
+  escapeHTML = false;
+}
+
+ShowDetails : WOCheckBox {
+  checked = showDetails;
 }

@@ -32,6 +32,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public NSMutableArray details;
 	public Integer index;
 	public Boolean cantSelect;
+	public boolean showDetails = false;
 	
     public Tabel(WOContext context) {
         super(context);
@@ -126,12 +127,15 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 //    	fs.setPrefetchingRelationshipKeyPaths(list);
     	NSArray list = ec.objectsWithFetchSpecification(fs);
     	if(list == null || list.count() == 0) {
-			WOResponse response = WOApplication.application().createResponseInContext(context());
-    		response.appendContentString((String)session().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.Tabel.noData"));
+    		String message = (String)session().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.Tabel.noData");
+    		session().takeValueForKey(message, "message");
+    		return null;
+/*			WOResponse response = WOApplication.application().createResponseInContext(context());
+    		response.appendContentString(message);
         	response.setHeader("application/octet-stream","Content-Type");
         	response.setHeader("attachment; filename=\"noData.txt\"","Content-Disposition");
-        	return response;
+        	return response;*/
     	}
     	NSMutableDictionary byTeacher = new NSMutableDictionary();
     	NSMutableDictionary subsByTeacher = new NSMutableDictionary();
@@ -263,9 +267,11 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	exportPage.beginRow();
     	exportPage.addValue(currMonth.valueForKey("name"));
     	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-		for (int i = 1; i <= days; i++) {
-			exportPage.addValue(Integer.toString(i));
-		}
+    	if(showDetails) {
+    		for (int i = 1; i <= days; i++) {
+    			exportPage.addValue(Integer.toString(i));
+    		}
+    	}
 		exportPage.addValue(application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.total"));
 		if(subsByTeacher.count() > 0)
@@ -290,15 +296,25 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				exportPage.addValue(session().valueForKeyPath(
 						"strings.RujelBase_Base.vacant"));
 			BigDecimal[] allHours = (BigDecimal[]) byTeacher.objectForKey(teacher); 
-			for (int i = 0; i <= days; i++) {
-				BigDecimal value = allHours[(i==days)?0:i + 1];
+			if(showDetails) {
+				for (int i = 0; i <= days; i++) {
+					BigDecimal value = allHours[(i==days)?0:i + 1];
+					if(value != null) { // TODO : make BigDecimal formatting reusable
+						value = value.stripTrailingZeros();
+						if(value.scale() < 0)
+							value = value.setScale(0);
+					}
+					exportPage.addValue(formatter.format(value));
+				}
+	    	} else {
+				BigDecimal value = allHours[0];
 				if(value != null) {
 					value = value.stripTrailingZeros();
 					if(value.scale() < 0)
 						value = value.setScale(0);
 				}
 				exportPage.addValue(formatter.format(value));
-			}
+	    	}
 			if(subsByTeacher.count() > 0) {
 				BigDecimal value = (BigDecimal)subsByTeacher.objectForKey(teacher);
 				if(value != null) {
@@ -633,6 +649,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 					"strings.RujelCurriculum_Curriculum.Tabel.extraLessons")).mutableClone();
 			row.takeValueForKey(extras,"values");
 			details.insertObjectAtIndex(row, 2);
+//			details.addObject(row);
     	}
 		row = ((NSDictionary)application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.subsTotal")).mutableClone();

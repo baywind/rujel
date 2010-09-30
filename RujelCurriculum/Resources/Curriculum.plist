@@ -77,6 +77,8 @@
 		<string>Сводка по всей школе</string>
 		<key>noData</key>
 		<string>нет данных для сохранения</string>
+		<key>showDetails</key>
+		<string>детализация по дням</string>
 		<key>grandTotal</key>
 		<dict>
 			<key>colspan</key>
@@ -102,9 +104,9 @@
 			<key>colspan</key>
 			<string>2</string>
 			<key>class</key>
-			<string>backfield2</string>
+			<string>ungerade</string>
 			<key>subject</key>
-			<string>Дополнительно</string>
+			<string>Дополнительно *</string>
 			<key>hover</key>
 			<string>уроки сверх плана</string>
 		</dict>
@@ -126,7 +128,7 @@
 			<key>class</key>
 			<string>backfield2</string>
 			<key>subject</key>
-			<string>Замена урока</string>
+			<string>Замена предмета *</string>
 			<key>hover</key>
 			<string>уроки, проведенные вместо другого предмета</string>
 		</dict>
