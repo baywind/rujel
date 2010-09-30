@@ -74,10 +74,17 @@ public class WorkList extends LessonList {
 	}
 
 	
-    public Number criterMax() {
+    public Object criterMax() {
         if(_itemMask == null) return null;
-		return (Number)_itemMask.valueForKey("max");
-    }
+//		if(work() == null)
+//			return null;
+//		Integer criterion = null;
+//		if(critItem == null)
+//			criterion = new Integer(0);
+//		else 
+		Integer criterion = (Integer)critItem.valueForKey("criterion");
+		return work().maxForCriter(criterion);
+   }
     
     /*
     public void setCriterMax(Number newCriterMax) {

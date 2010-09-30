@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.Export;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
@@ -362,5 +363,29 @@ public class SubgroupEditor extends WOComponent {
 		nextPage.takeValueForKey(session().valueForKeyPath(
 				"strings.Strings.SubgroupEditor.popup"), "dict");
 		return nextPage;
+	}
+	
+	public WOActionResults export() {
+		NSArray list = course.groupList();
+		if(list == null || list.count() == 0) {
+			return null;
+		}
+		Export export = new Export(context(), "grouplist");
+		Enumeration enu = list.objectEnumerator();
+		int num = 1;
+		while (enu.hasMoreElements()) {
+			Student student = (Student) enu.nextElement();
+			export.beginRow();
+			export.addValue(Integer.toString(num));
+			num++;
+			export.addValue(Person.Utility.fullName(student, true, 2, 0, 0));
+			Person person = student.person();
+			if(person != null) {
+				export.addValue(person.firstName());
+				export.addValue(person.secondName());
+				export.addValue(MyUtility.dateFormat().format(person.birthDate()));
+			}
+		}
+		return export;
 	}
 }

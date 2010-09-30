@@ -36,6 +36,7 @@ import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 import java.text.Format;
@@ -265,14 +266,32 @@ public class StudentMarks extends WOComponent {
 	public static NSMutableDictionary formatCourse(EduCourse course) {
 		NSMutableDictionary result = new NSMutableDictionary();
 		EOEditingContext ec = course.editingContext();
-		String integral = SettingsBase.stringSettingForCourse(
-				"presenters.workIntegral", course, ec);
+		{
+			EOEnterpriseObject integral = SettingsBase.settingForCourse(
+					"presenters.workIntegral", course, ec);
 			//SettingsReader.stringForKeyPath("edu.presenters.workIntegral","~");
-		result.takeValueForKey(integral, "integral");
-
+			String title = null;
+			if(integral != null) {
+				Integer pKey = (Integer)integral.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				if(pKey != null) {
+					try {
+						BorderSet bset = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
+								ec, BorderSet.ENTITY_NAME, pKey);
+						title = bset.title();
+					} catch (Exception e) {
+						;
+					}
+				}
+				if(title == null)
+					title = (String)integral.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+			}
+			if(title == null)
+				title = "%";
+			result.takeValueForKey(title, "integral");
+		}
 		NSArray criteria = CriteriaSet.criteriaForCourse(course);
-		NSMutableArray critDicts = new NSMutableArray();
-//		if(criteria != null && criteria.count() > 0) {
+/*		NSMutableArray critDicts = new NSMutableArray();
+		if(criteria != null && criteria.count() > 0) {
 			Enumeration en = criteria.objectEnumerator();
 			while (en.hasMoreElements()) {
 				NSKeyValueCoding criter = (NSKeyValueCoding)en.nextElement();
@@ -281,7 +300,7 @@ public class StudentMarks extends WOComponent {
 				critDict.takeValueForKey(criter.valueForKey("comment"), "comment");
 				critDicts.addObject(critDict);
 			}
-/*		} else {
+		} else {
 			int maxCriter = CriteriaSet.maxCriterionForCourse(course);
 			char first = 'A';
 			for (int i = 0; i < maxCriter; i++) {
@@ -290,7 +309,7 @@ public class StudentMarks extends WOComponent {
 				critDicts.addObject(critDict);
 			}
 		}*/
-		result.setObjectForKey(critDicts,"criteria");
+		result.setObjectForKey(criteria,"criteria");
 		
 		return result;
 	}
@@ -300,13 +319,14 @@ public class StudentMarks extends WOComponent {
 		NSArray blanc = null;
 		final String empty = "";
 		if(criteria != null && criteria.count() > 0) {
-			Object[] arr = new Object[criteria.count() +1];
-			for (int i = 0; i <= criteria.count(); i++) {
+			Object[] arr = new Object[criteria.count()];
+			for (int i = 0; i < arr.length; i++) {
 				arr[i] = empty;
 			}
 			blanc = new NSArray(arr);
 		}
 		NSMutableArray maxValues = null;
+		Object bcMax = null;
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enu = EOSortOrdering.sortedArrayUsingKeyOrderArray(
 				works,Work.sorter).objectEnumerator();
@@ -322,14 +342,27 @@ public class StudentMarks extends WOComponent {
 					while(critEnum.hasMoreElements()) {
 						EOEnterpriseObject mask = (EOEnterpriseObject)critEnum.nextElement();
 						Integer idx = (Integer)mask.valueForKey("criterion");
-						if(idx.intValue() < 0 || idx.intValue() >= critMask.count())
+						if(idx.intValue() < 0 || idx.intValue() > critMask.count())
 							continue;
 						Object max = currWork.maxForCriter(idx);
 						if(max == null)
 							continue;
-						critMask.replaceObjectAtIndex(max,idx.intValue());
+						if(idx.intValue() == 0) {
+							if(bcMax == null || !bcMax.equals(max)) {
+								NSMutableDictionary maxRow = new NSMutableDictionary("max","kind");
+								bcMax = max;
+								maxRow.setObjectForKey(max,"title");
+								result.addObject(maxRow);
+							}
+							status = 0;
+							maxValues = null;
+							break;
+						} else {
+							bcMax = null;
+						}
+						critMask.replaceObjectAtIndex(max,idx.intValue() -1);
 						if(status != 2) {
-							Object titleMax = maxValues.objectAtIndex(idx.intValue());
+							Object titleMax = maxValues.objectAtIndex(idx.intValue() -1);
 							if(titleMax != empty) {
 								if(!max.equals(titleMax)){
 									status = 2;
@@ -338,11 +371,11 @@ public class StudentMarks extends WOComponent {
 								status = 1;
 							}
 						}
-					}
+					} // criteria enumeration
 					if(status == 2 && !hideMax) {
 						maxValues = critMask;
 						NSMutableDictionary maxRow = new NSMutableDictionary("max","kind");
-						maxRow.setObjectForKey(critMask,"values");
+						maxRow.setObjectForKey(maxValues,"values");
 						result.addObject(maxRow);
 					} else if(status == 1) {
 						for (int i = 0; i < critMask.count(); i++) {
@@ -493,7 +526,6 @@ public class StudentMarks extends WOComponent {
 		if(workItem == null) return false;
 		return "max".equals(workItem.valueForKey("kind"));
 	}
-
 
 	public boolean isStateless() {
 		return true;

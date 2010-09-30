@@ -121,18 +121,33 @@ public class MarksPresenter extends NotePresenter {
 			if(hasBinding("initData")) {
 				NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
 				_usedCriteria = (NSArray)data.valueForKey("criteria");
-			} else if(Various.boolForObject(valueForBinding("full"))) {
-				_usedCriteria = allCriteria();
 			} else {
 				if(lesson() != null) {
 					_usedCriteria = lesson().usedCriteria();
 				} else {
+					_usedCriteria = NSArray.EmptyArray;
 					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",session());
+				}
+				if(Various.boolForObject(valueForBinding("full"))) {
+					if(_usedCriteria.count() != 1 ||
+							((Integer)_usedCriteria.objectAtIndex(0)).intValue() != 0)
+					_usedCriteria = allCriteria();
 				}
 			}
 			if(_usedCriteria == null) _usedCriteria = NSArray.EmptyArray;
 		}
 		return _usedCriteria;
+	}
+	
+	public String colspan() {
+		if(!Various.boolForObject(valueForBinding("full")))
+			return null;
+		if(usedCriteria().count() > 1)
+			return null;
+		NSArray all = allCriteria();
+		if(all.count() > 1)
+			return Integer.toString(all.count());
+		return null;
 	}
 	
 	protected boolean hasValue() {
@@ -409,6 +424,8 @@ public class MarksPresenter extends NotePresenter {
 			return lessonTitle();
 		}
 		if(!access().flagForKey("read")) return "#";
+		if(single())
+			return lesson().integralForStudent(student(),lesson().integralPresenter());
 		Integer activeCriterion = activeCriterion();
 		if(activeCriterion.intValue() < 0)
 			return shortNoteForStudent();

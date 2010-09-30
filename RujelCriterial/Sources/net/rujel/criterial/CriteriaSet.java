@@ -159,7 +159,8 @@ public class CriteriaSet extends _CriteriaSet
 	
 	public static NSArray criteriaForMax(int maxCriter) {
 		if(maxCriter == 0)
-			return NSArray.EmptyArray;
+			return new NSArray(new NSDictionary(
+					new Object[] {"&bull;",new Integer(0)}, new String[] {"title","criterion"}));
 		char first = 'A';
 		NSDictionary[] result = new NSDictionary[maxCriter];
 		for (int i = 0; i < maxCriter; i++) {

@@ -143,7 +143,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	
 	public static NSArray allCriteria(int max) {
 		if(max <= 0)
-			return NSArray.EmptyArray;
+			return new NSArray(new Integer(0));
 		Integer[] result = new Integer[max];
 		for (int i = 0; i < max; i++) {
 			result[i] = new Integer(i + 1);
