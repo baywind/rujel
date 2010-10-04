@@ -29,10 +29,10 @@
 
 package net.rujel.curriculum;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Period;
 
@@ -112,10 +112,7 @@ public class PrintCurriculum extends com.webobjects.appserver.WOComponent {
     				Substitute sub = (Substitute)subs.objectAtIndex(i);
     				NSMutableDictionary dict = new NSMutableDictionary(Person.Utility.
     						fullName(sub.teacher(), true, 2, 2, 2), "teacher");
-    				BigDecimal factor = sub.factor().stripTrailingZeros();
-    				if(factor.scale() < 0)
-    					factor.setScale(0);
-    				dict.takeValueForKey(factor.toString(),"factor");
+    				dict.takeValueForKey(MyUtility.formatDecimal(sub.factor()),"factor");
     				dict.takeValueForKey(sub.reason(), "reason");
     				if(sub.reason().unverified())
     					dict.takeValueForKey("font-style:italic;", "reasonStyle");

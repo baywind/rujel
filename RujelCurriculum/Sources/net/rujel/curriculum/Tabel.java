@@ -6,6 +6,7 @@ import java.util.Enumeration;
 import java.util.GregorianCalendar;
 
 import net.rujel.base.BaseCourse;
+import net.rujel.base.MyUtility;
 import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
@@ -15,9 +16,11 @@ import net.rujel.reusables.Counter;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Export;
+import net.rujel.reusables.Various;
 import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -28,11 +31,11 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public NSArray months;
 	public NSDictionary currMonth;
 	public NSDictionary item;
-	public Teacher currTeacher;
+	public Object currTeacher;
 	public NSMutableArray details;
 	public Integer index;
 	public Boolean cantSelect;
-	public boolean showDetails = false;
+	public NSMutableDictionary options = new NSMutableDictionary();
 	
     public Tabel(WOContext context) {
         super(context);
@@ -186,7 +189,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				if(sbt == null) {
 					if(val < 0)
 						continue;
-					sbt = new int[cal.getActualMaximum(Calendar.DATE)];
+					sbt = new int[cal.getActualMaximum(Calendar.DAY_OF_MONTH) +1];
 					byCourse.setObjectForKey(sbt, var.course());
 				}
 				cal.setTime(var.date());
@@ -253,6 +256,50 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				} //val > 0
 			} // variations enumeration
     	} // have variatins
+    	NSMutableDictionary loads = null;
+    	if(Various.boolForObject(options.valueForKey("showLoad"))) {
+    		cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
+    		cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
+    		cal.set(Calendar.DAY_OF_MONTH, 1);
+    		NSTimestamp firstDay = new NSTimestamp(cal.getTimeInMillis());
+    		int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+    		cal.set(Calendar.DAY_OF_MONTH, days);
+    		NSTimestamp lastDay = new NSTimestamp(cal.getTimeInMillis());
+    		list = EOUtilities.objectsMatchingKeyAndValue(ec, 
+    				EduCourse.entityName, "eduYear", session().valueForKey("eduYear"));
+    		enu = list.objectEnumerator();
+    		Integer school = (Integer)session().valueForKey("school");
+    		loads = new NSMutableDictionary();
+    		while (enu.hasMoreElements()) {
+    			EduCourse course = (EduCourse) enu.nextElement();
+    			if(!school.equals(course.cycle().school()))
+    				continue;
+    			PlanCycle cycle = (PlanCycle)course.cycle();
+    			int hours = cycle.weekly(course);
+    			Object startTeacher = course.teacher(firstDay);
+    			if(startTeacher == null) startTeacher = NSDictionary.EmptyDictionary;
+    			int[] load = (int[])loads.objectForKey(startTeacher);
+    			if(load == null) {
+    				load = new int[] {hours, 0};
+    				loads.setObjectForKey(load, startTeacher);
+    			} else {
+    				load[0] += hours;
+    			}
+    			Object endTeacher = course.teacher(lastDay);
+    			if(endTeacher == null) endTeacher = NSDictionary.EmptyDictionary;
+    			if(startTeacher == endTeacher)
+    				continue;
+    			load[1] -= hours;
+    			load = (int[])loads.objectForKey(endTeacher);
+    			if(load == null) {
+    				load = new int[] {0, hours};
+    				loads.setObjectForKey(load, endTeacher);
+    			} else {
+    				load[1] += hours;
+    			}
+    		}
+    	} // show load
+    	
     	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(
     			byTeacher.allKeys(),Person.sorter);
     	StringBuilder buf = new StringBuilder("tabel");
@@ -267,10 +314,14 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	exportPage.beginRow();
     	exportPage.addValue(currMonth.valueForKey("name"));
     	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-    	if(showDetails) {
+    	if(Various.boolForObject(options.valueForKey("showDetails"))) {
     		for (int i = 1; i <= days; i++) {
     			exportPage.addValue(Integer.toString(i));
     		}
+    	}
+    	if(loads != null) {
+    		exportPage.addValue(application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.Tabel.load"));
     	}
 		exportPage.addValue(application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.total"));
@@ -281,10 +332,6 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			exportPage.addValue(application().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.Tabel.extraLessons.subject"));
 		exportPage.endRow();
-    	
-    	NSNumberFormatter formatter = new NSNumberFormatter();
-    	formatter.setDecimalSeparator(",");
-    	formatter.setThousandSeparator(" ");
     	enu = list.objectEnumerator();
     	while (enu.hasMoreElements()) {
 			Object teacher = enu.nextElement();
@@ -296,33 +343,30 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				exportPage.addValue(session().valueForKeyPath(
 						"strings.RujelBase_Base.vacant"));
 			BigDecimal[] allHours = (BigDecimal[]) byTeacher.objectForKey(teacher); 
-			if(showDetails) {
-				for (int i = 0; i <= days; i++) {
-					BigDecimal value = allHours[(i==days)?0:i + 1];
-					if(value != null) { // TODO : make BigDecimal formatting reusable
-						value = value.stripTrailingZeros();
-						if(value.scale() < 0)
-							value = value.setScale(0);
-					}
-					exportPage.addValue(formatter.format(value));
+			if(Various.boolForObject(options.valueForKey("showDetails"))) {
+				for (int i = 1; i <= days; i++) {
+					exportPage.addValue(MyUtility.formatDecimal(allHours[i]));
 				}
-	    	} else {
-				BigDecimal value = allHours[0];
-				if(value != null) {
-					value = value.stripTrailingZeros();
-					if(value.scale() < 0)
-						value = value.setScale(0);
-				}
-				exportPage.addValue(formatter.format(value));
 	    	}
+	    	if(loads != null) {
+	    		int[] load = (int[])loads.objectForKey(teacher);
+	    		if(load == null) {
+	    			exportPage.addValue("0");
+	    		} else if (load[1] == 0) {
+	    			exportPage.addValue(Integer.toString(load[0]));
+	    		} else {
+	    			buf = new StringBuilder(5);
+	    			buf.append(load[0]);
+	    			if(load[1] >= 0)
+	    				buf.append('+');
+	    			buf.append(load[1]);
+	    			exportPage.addValue(buf);
+	    		}
+	    	}			
+			exportPage.addValue(MyUtility.formatDecimal(allHours[0]));
 			if(subsByTeacher.count() > 0) {
 				BigDecimal value = (BigDecimal)subsByTeacher.objectForKey(teacher);
-				if(value != null) {
-					value = value.stripTrailingZeros();
-					if(value.scale() < 0)
-						value = value.setScale(0);
-				}
-				exportPage.addValue(formatter.format(value));
+				exportPage.addValue(MyUtility.formatDecimal(value));
 			}
 			if(plusByTeacher.count() > 0)
 				exportPage.addValue(plusByTeacher.objectForKey(teacher));
@@ -352,7 +396,10 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		int days = ((Integer)currMonth.valueForKey("days")).intValue();
 		export.beginRow();
 //		export.addValue(currMonth.valueForKey("name"));
-		export.addValue(Person.Utility.fullName(currTeacher, true, 2, 2, 2));
+		if(currTeacher instanceof Teacher)
+			export.addValue(Person.Utility.fullName((Teacher)currTeacher, true, 2, 2, 2));
+		else
+			export.addValue(session().valueForKeyPath("strings.RujelBase_Base.vacant"));
 		export.addValue(null);
 		for (int i = 1; i <= days; i++) {
 			export.addValue(Integer.toString(i));
@@ -374,12 +421,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			NSMutableArray[] info = (NSMutableArray[])row.valueForKey("info");
 			for (int i = 0; i <= days; i++) {
 				BigDecimal value = values[(i==days)?0:i + 1];
-				if(value != null) {
-					value = value.stripTrailingZeros();
-					if(value.scale() < 0)
-						value = value.setScale(0);
-				}
-				String val = formatter.format(value);
+				String val = MyUtility.formatDecimal(value);
 				if(i < days && info != null && info[i+1] != null && info[i+1].count() > 0)
 					val = val + '*';
 				export.addValue(val);
@@ -389,7 +431,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		return export;
 	}
     
-    public void setCurrTeacher(Teacher teacher) {
+    public void setCurrTeacher(Object teacher) {
     	currTeacher = teacher;
     	go();
     }
@@ -430,22 +472,24 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	NSArray list = ec.objectsWithFetchSpecification(fs);
        	NSTimestamp[] dates = new NSTimestamp[2];
        	int weekly = 0;
+       	int change = 0;
 		details = new NSMutableArray();
 		final NSMutableArray clear = new NSMutableArray();
-    	if(list != null && list.count() > 0) {
+    	if(list != null && list.count() > 0) {  // recent cources
 	    	quals[1] = new EOKeyValueQualifier("date",
 	    			EOQualifier.QualifierOperatorLessThanOrEqualTo,lastDay);
     		Enumeration enu = list.objectEnumerator();
+    		Integer school = (Integer)session().valueForKey("school");
     		while (enu.hasMoreElements()) {
 				BaseCourse course = (BaseCourse) enu.nextElement();
+				if(!school.equals(course.cycle().school()))
+					continue;
 				EOEnterpriseObject ct = course.teacherChange(lastDay,dates);
 				if(ct != null)
 					continue;
 				PlanCycle cycle = (PlanCycle)course.cycle();
 				int hours = cycle.weekly(course);
-				weekly += hours;
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
-				dict.takeValueForKey(new Integer(hours), "hours");
 				if(dates[0] != null && dates[0].compare(firstDay) > 0) {
 			    	quals[0] = new EOKeyValueQualifier("date",
 			    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,dates[0]);
@@ -456,12 +500,18 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 						info[i] = clear;
 					}
 			    	dict.takeValueForKey(info, "info");
+			    	StringBuilder buf = new StringBuilder(3);
+			    	buf.append('+').append(hours);
+			    	dict.takeValueForKey(buf.toString(), "hours");
+			    	change += hours;
 				} else {
 			    	dict.takeValueForKey(monthQual,"qual");
+					weekly += hours;
+					dict.takeValueForKey(new Integer(hours), "hours");
 				}
 		    	details.addObject(dict);
-    		}
-    	}
+    		} // courses enumeration
+    	} // recent cources
     	quals[0] = teacherQual;
     	quals[1] = new EOKeyValueQualifier("date",
     			EOQualifier.QualifierOperatorGreaterThan,firstDay);
@@ -470,13 +520,16 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	fs.setEntityName("TeacherChange");
     	list = ec.objectsWithFetchSpecification(fs);
      	
-    	if(list != null && list.count() > 0) {
+    	if(list != null && list.count() > 0) {   // changed courses
     		Enumeration enu = list.objectEnumerator();
     		while (enu.hasMoreElements()) {
 				EOEnterpriseObject ct = (EOEnterpriseObject) enu.nextElement();
 				NSTimestamp end = (NSTimestamp)ct.valueForKey("date");
 				end = end.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
 				BaseCourse course = (BaseCourse) ct.valueForKey("course");
+				PlanCycle cycle = (PlanCycle)course.cycle();
+				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
+				int hours = cycle.weekly(course);
 				ct = course.teacherChange(end, dates);
 				if(ct == null)
 					continue;
@@ -486,15 +539,22 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		    	NSMutableArray[] info = null;
 				if(begin == null || begin.compare(firstDay) < 0) {
 					begin = firstDay;
+					weekly += hours;
 				} else {
 					info = new NSMutableArray[days +1];
 			    	cal.setTime(begin);
 			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) -1; i > 0; i--) {
 						info[i] = clear;
 					}
+			    	StringBuilder buf = new StringBuilder(3);
+			    	buf.append('+').append(hours);
+			    	dict.takeValueForKey(buf.toString(), "hours");
+			    	change += hours;
 				}
 				if(end.compare(lastDay) > 0) {
 					end = lastDay;
+					if(begin == firstDay)
+						dict.takeValueForKey(new Integer(hours), "hours");
 				} else {
 					if(info == null)
 						info = new NSMutableArray[days +1];
@@ -502,20 +562,25 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) +1; i < info.length; i++) {
 						info[i] = clear;
 					}
+			    	change -= hours;
+			    	StringBuilder buf = new StringBuilder(3);
+					if(begin == firstDay) {
+				    	buf.append('-');
+					} else {
+						buf.append("&plusmn;");
+					}
+					buf.append(hours);
+			    	dict.takeValueForKey(buf.toString(), "hours");
 				}
-				PlanCycle cycle = (PlanCycle)course.cycle();
-				int hours = cycle.weekly(course);
-				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
 		    	dict.takeValueForKey(info, "info");
-				dict.takeValueForKey(new Integer(hours), "hours");
 		    	quals[0] = new EOKeyValueQualifier("date",
 		    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin);
 		    	quals[1] = new EOKeyValueQualifier("date",
 		    			EOQualifier.QualifierOperatorLessThanOrEqualTo,end);
 		    	dict.takeValueForKey(new EOAndQualifier(new NSArray(quals)),"qual");
 		    	details.addObject(dict);
-			}
-    	}
+			} // changes enumeration
+    	} //changed courses
 
     	if(details.count() > 1) {
            	NSArray sorter = new NSArray(new EOSortOrdering[] {
@@ -532,6 +597,16 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	NSMutableDictionary row = ((NSDictionary)application().valueForKeyPath(
     			"strings.RujelCurriculum_Curriculum.Tabel.grandTotal")).mutableClone();
     	row.setObjectForKey(totals, "values");
+    	if(change == 0) {
+    		row.takeValueForKey(new Integer(weekly), "hours");
+    	} else {
+    		StringBuilder buf = new StringBuilder(5);
+    		buf.append(weekly);
+    		if(change >= 0)
+    			buf.append('+');
+    		buf.append(change);
+    		row.takeValueForKey(buf.toString(), "hours");
+    	}
     	details = new NSMutableArray(row);
 		NSMutableDictionary byCourse = new NSMutableDictionary();
 // main courses
@@ -702,7 +777,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				factorCounts = new BigDecimal[days + 1];
 				row = new NSMutableDictionary("2","colspan");
 				row.takeValueForKey("backfield2","class");
-				row.takeValueForKey(sub.title() + " - " + factor.stripTrailingZeros()
+				row.takeValueForKey(sub.title() + " - " + MyUtility.formatDecimal(factor)
 						, "subject");
 				row.takeValueForKey(factorCounts,"values");
 				details.addObject(row);
@@ -726,7 +801,11 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	Enumeration enu = list.objectEnumerator();
     	while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
+			PlanCycle cycle = (PlanCycle)course.cycle();
+			int hours = cycle.weekly(course);
 			NSMutableDictionary row = new NSMutableDictionary(course,"course");
+			row.takeValueForKey("<span style = \"color:#999999;\">"
+					+ hours + "</span>", "hours");
 			row.takeValueForKey(course.eduGroup().name(), "eduGroup");
 			row.takeValueForKey(Person.Utility.fullName(course.teacher(), true, 2, 1, 1),
 					(sorter==null)?"hover":"subject");
@@ -744,7 +823,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     
 	public WOActionResults selectTeacher() {
 		WOComponent selector = TeacherSelector.selectorPopup(this, "currTeacher", ec);
-		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.hideVacant");
+//		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.hideVacant");
 		return selector;
 	}
 	
@@ -762,12 +841,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				&& infos[index.intValue() +1].count() > 0);
 		if(value == null)
 			return (info)?"*":null;
-		if(value != null) {
-			value = value.stripTrailingZeros();
-			if(value.scale() < 0)
-				value = value.setScale(0);
-		}
-		return (info)? value.toString() + '*' : value.toString();
+		return (info)? MyUtility.formatDecimal(value) + '*' : MyUtility.formatDecimal(value);
 	}
 	
 	public String cellHover() {

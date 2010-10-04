@@ -29,9 +29,13 @@
 
 package net.rujel.base;
 
+import java.util.Calendar;
+
 import net.rujel.interfaces.*;
+import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.*;
@@ -195,6 +199,35 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public NSTimestamp validateDate(Object aDate) throws NSValidation.ValidationException {
 		if(course() == null)
 			return null;
+		Integer lag = SettingsBase.numericSettingForCourse("restrictFutureLessonDays",
+				course(), editingContext());
+		if(lag != null) {
+			Calendar cal = Calendar.getInstance();
+			if(cal.get(Calendar.HOUR_OF_DAY) < 
+					SettingsReader.intForKeyPath("edu.midnightHour", 5)) {
+				cal.add(Calendar.DATE, -1);
+			}
+			int day = cal.get(Calendar.DAY_OF_YEAR);
+			int year = cal.get(Calendar.YEAR);
+			cal.setTime((NSTimestamp)aDate);
+			year -= cal.get(Calendar.YEAR);
+			day -= cal.get(Calendar.DAY_OF_YEAR);
+			if(year != 0) {
+				day += year*cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+			}
+			if(day < lag.intValue()) {
+				String message = null;
+				if(lag.intValue() > 0) {
+					message = (String)WOApplication.application().valueForKeyPath(
+							"strings.RujelBase_Base.limitedFutureLesson");
+					message = String.format(message, lag);
+				} else {
+					message = (String)WOApplication.application().valueForKeyPath(
+							"strings.RujelBase_Base.futureLessonForbidden");
+				}
+				throw new NSValidation.ValidationException(message);
+			}
+		}
 		return MyUtility.validateDateInEduYear(aDate,course().eduYear(),DATE_KEY);
 	}
 }

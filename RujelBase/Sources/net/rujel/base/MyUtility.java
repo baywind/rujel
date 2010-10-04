@@ -38,6 +38,7 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WOSession;
 
+import java.math.BigDecimal;
 import java.text.Format;
 import java.text.ParseException;
 import java.util.Calendar;
@@ -54,9 +55,29 @@ public class MyUtility {
 			new EOSortOrdering("num",EOSortOrdering.CompareAscending));
 	public static NSArray dateSorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
 			"date", EOSortOrdering.CompareAscending));
-
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
 
+	
+	protected static NSNumberFormatter _numformat;
+	
+	public static NSNumberFormatter numberFormat() {
+		if(_numformat == null) {
+			_numformat = new NSNumberFormatter();
+			_numformat.setDecimalSeparator(",");
+			_numformat.setThousandSeparator(" ");
+		}
+		return _numformat;
+	}
+	
+	public static String formatDecimal(BigDecimal value) {
+		if(value == null)
+			return null;
+		value = value.stripTrailingZeros();
+		if(value.scale() < 0)
+			value = value.setScale(0);
+		return numberFormat().format(value);
+	}
+	
 	protected static Format _format;
 	@SuppressWarnings("deprecation")
 	public static Format dateFormat() {
@@ -339,4 +360,12 @@ public class MyUtility {
 		if(System.currentTimeMillis() < cal.getTimeInMillis())
 			timer.schedule(task, cal.getTime());
 	}
+	
+    public static boolean isEvening(Date time) {
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTime(time);
+    	int eveningHour = SettingsReader.intForKeyPath("edu.eveningHour", 17);
+    	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
+    }
+
 }

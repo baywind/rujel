@@ -130,8 +130,9 @@ CurrLessonDateField: WOTextField {
 	size = lessonTitle.length;
 	value = lessonTitle;
 	disabled = access._edit;
-	onChange = "checkChanges(this);";
-	onFocus = "if(!tryLoad(false)) blur();";
+	onchange = "checkChanges(this);";
+	onfocus = "if(!tryLoad(false)) blur();";
+	onkeypress = "isNumberInput(event,true)";
 	style = "text-align:center;";
 	id = dateFieldID;
 	tabindex = "1";

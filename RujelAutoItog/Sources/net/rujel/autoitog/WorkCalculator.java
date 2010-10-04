@@ -30,16 +30,20 @@
 package net.rujel.autoitog;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.Mark;
 import net.rujel.criterial.Work;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogType;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Student;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 
 import com.webobjects.eoaccess.EOUtilities;
@@ -144,11 +148,23 @@ public abstract class WorkCalculator extends Calculator {
 				forNum = new NSMutableDictionary(already,
 						(NSArray)already.valueForKey("relKey"));
 		}
+		NSTimestamp border = null;
+		Integer lag = SettingsBase.numericSettingForCourse("countMarklessWorkAfter", course, ec);
+		if(lag != null) {
+			Calendar cal = Calendar.getInstance();
+			if(cal.get(Calendar.HOUR_OF_DAY) < 
+					SettingsReader.intForKeyPath("edu.midnightHour", 5))
+				cal.add(-1, Calendar.DATE);
+			cal.set(Calendar.HOUR_OF_DAY, 23);
+			cal.add(Calendar.DATE, -lag.intValue() -1);
+			border = new NSTimestamp(cal.getTimeInMillis());
+		}
 		Enumeration enu = works.objectEnumerator();
 		NSMutableArray result = new NSMutableArray();
 		while (enu.hasMoreElements()) {
 			Work work = (Work) enu.nextElement();
-			if(work.marks() == null || work.marks().count() == 0)
+			if((work.marks() == null || work.marks().count() == 0) && 
+					border == null || work.date().after(border))
 				continue;
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(work);
 			Object key = gid.keyValues()[0];
@@ -217,9 +233,14 @@ public abstract class WorkCalculator extends Calculator {
 		try {
 			Work work = (Work)EOUtilities.objectWithPrimaryKeyValue(ec,
 					Work.ENTITY_NAME, relKey);
-			if(work.marks().count() == 0 ||
-					work.weight().compareTo(BigDecimal.ZERO) == 0)
+			if(work.weight().compareTo(BigDecimal.ZERO) == 0)
 				return true;
+			if(work.marks() == null || work.marks().count() == 0) {
+				Integer lag = SettingsBase.numericSettingForCourse("countMarklessWorkAfter", 
+						work.course(), ec);
+				return (lag == null || 
+						EOPeriod.Utility.countDays(work.date(), null) <= lag.intValue());
+			}
 		} catch (Exception e) {
 			return true;
 		}

@@ -54,6 +54,7 @@ TeacherName : PersonDisplay {
   first = 2;
   second = 2;
   startWithLast = true;
+  valueWhenEmpty = session.strings.RujelBase_Base.vacant;
 }
 
 Row : WOGenericContainer {
@@ -155,5 +156,26 @@ ShowDetailsTitle : WOString {
 }
 
 ShowDetails : WOCheckBox {
-  checked = showDetails;
+  checked = options.showDetails;
+}
+
+ShowLoad : WOCheckBox {
+  checked = options.showLoad;
+}
+
+ShowLoadTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Tabel.load;
+  valueWhenEmpty = "show details";
+  escapeHTML = false;
+}
+
+Hours : WOString {
+  value = item.hours;
+  escapeHTML = false;
+}
+
+HoursTitle : WOString {
+  value = application.strings.RujelCurriculum_Curriculum.Tabel.loadShort;
+  valueWhenEmpty = "load";
+  escapeHTML = false;
 }

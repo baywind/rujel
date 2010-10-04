@@ -32,6 +32,7 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.criterial.BorderSet;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.Various;
@@ -104,10 +105,10 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject bd = (EOEnterpriseObject) enu.nextElement();
 				BigDecimal value = (BigDecimal)bd.valueForKey("least");
-				value = value.stripTrailingZeros();
+				/*value = value.stripTrailingZeros();
 				if(value.scale() < 0)
-					value = value.setScale(0);
-				buf.append('\r').append(value).append("% : ");
+					value = value.setScale(0);*/
+				buf.append('\r').append(MyUtility.formatDecimal(value)).append("% : ");
 				buf.append(bd.valueForKey("title"));
 			}
 		}

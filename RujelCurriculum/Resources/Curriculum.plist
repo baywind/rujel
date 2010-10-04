@@ -79,6 +79,10 @@
 		<string>нет данных для сохранения</string>
 		<key>showDetails</key>
 		<string>детализация по дням</string>
+		<key>load</key>
+		<string>нагрузка</string>
+		<key>loadShort</key>
+		<string>нед</string>
 		<key>grandTotal</key>
 		<dict>
 			<key>colspan</key>

@@ -2,7 +2,8 @@
 <webobject name = "CanCreate">
 <webobject name = "TotalForm">
 		<strong><webobject name = "WholeSchool"/>:</strong><br/>
-		 <webobject name = "ShowDetails"/><webobject name = "ShowDetailsTitle"/>
+		<webobject name = "ShowDetails"/><webobject name = "ShowDetailsTitle"/><br/>
+		<webobject name = "ShowLoad"/><webobject name = "ShowLoadTitle"/>
 			 &nbsp; <webobject name = "ExportLink"></webobject>
 </webobject>
 <h1><webobject name = "Title"/></h1>
@@ -32,11 +33,14 @@
 			</webobject></webobject></webobject>
 		</tbody></table></div>
 	</td><td><div style = "overflow:auto;overflow-x:scroll;">
-		<table class = "backfield1"><thead><tr><webobject name = "Days">
+		<table class = "backfield1"><thead><tr>
+			<th  style = "border-right: 1px dotted #666666;"><div style = "width:2em;">
+				<webobject name = "HoursTitle"/></div></th><webobject name = "Days">
 			<th><div style = "width:2em;"><webobject name = "Value"/></div></th></webobject>
 		</tr></thead>
 		<tbody><webobject name = "Details">
-			<webobject name = "Row">
+			<webobject name = "Row"><td style = "border-right: 1px dotted #666666">
+				<webobject name = "Hours"/></td>
 			<webobject name = "Days"><webobject name = "Cell">
 				<webobject name = "Value"/></webobject></webobject>
 		</webobject></webobject>

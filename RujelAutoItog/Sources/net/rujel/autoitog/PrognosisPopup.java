@@ -274,10 +274,10 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public static String fractionToPercent(BigDecimal decimal) {
     	if(decimal == null || decimal.compareTo(BigDecimal.ZERO) == 0)
     		return "0";
-    	decimal = decimal.movePointRight(2).stripTrailingZeros();
+    	/*decimal = decimal.movePointRight(2).stripTrailingZeros();
     	if(decimal.scale() < 0)
-    		decimal = decimal.setScale(0);
-    	return decimal.toString() + " %";
+    		decimal = decimal.setScale(0); */
+    	return MyUtility.formatDecimal(decimal) + " %";
     }
     
     public String completePercent() {
