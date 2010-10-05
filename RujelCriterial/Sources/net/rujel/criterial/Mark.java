@@ -174,7 +174,10 @@ public class Mark extends _Mark {
 		StringBuilder buf = new StringBuilder (8);
 		buf.append(value()).append('/');
 		EOEnterpriseObject mask = work().getCriterMask(criterion());
-		buf.append(mask.valueForKey("max"));
+		if(mask == null)
+			buf.append('?');
+		else
+			buf.append(mask.valueForKey("max"));
 		return buf.toString();
 	}
 	

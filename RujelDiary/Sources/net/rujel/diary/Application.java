@@ -199,4 +199,8 @@ public class Application extends UTF8Application {
 			return ec;
 		}
 	};
+	
+	public String schoolName() {
+		return SettingsReader.stringForKeyPath("schoolName", null);
+	}
 }

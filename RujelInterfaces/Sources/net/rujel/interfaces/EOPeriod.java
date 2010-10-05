@@ -39,6 +39,7 @@ import com.webobjects.foundation.NSLocking;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.reusables.Period;
+import net.rujel.reusables.SettingsReader;
 
 public interface EOPeriod extends Period,EOEnterpriseObject {
  	public static final NSArray sorter = new NSArray(new Object[] {
@@ -112,28 +113,49 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			Calendar cal1 = Calendar.getInstance();
 			if(begin != null)
 				cal1.setTime(begin);
+			else if(cal1.get(Calendar.HOUR_OF_DAY) < 
+					SettingsReader.intForKeyPath("edu.midnightHour", 5))
+				cal1.add(Calendar.DATE, -1);
+			
 			Calendar cal2 = Calendar.getInstance();
 			if(end != null)
 				cal2.setTime(end);
+			else if(cal2.get(Calendar.HOUR_OF_DAY) < 
+					SettingsReader.intForKeyPath("edu.midnightHour", 5))
+				cal2.add(Calendar.DATE, -1);
+			
 			int days = cal2.get(Calendar.DAY_OF_YEAR) - cal1.get(Calendar.DAY_OF_YEAR);
-			while (cal1.get(Calendar.YEAR) < cal2.get(Calendar.YEAR)) {
-				days += cal1.getActualMaximum(Calendar.DAY_OF_YEAR);
-				cal1.add(Calendar.YEAR, 1);
+			while (cal1.get(Calendar.YEAR) != cal2.get(Calendar.YEAR)) {
+				if(cal1.getTimeInMillis() > cal2.getTimeInMillis()) {
+					days -= cal2.getActualMaximum(Calendar.DAY_OF_YEAR);
+					cal2.add(Calendar.YEAR, 1);
+				} else {
+					days += cal1.getActualMaximum(Calendar.DAY_OF_YEAR);
+					cal1.add(Calendar.YEAR, 1);
+				}
 			}
 			return days +1;
 		}
 		
 		public static int compareDates(Date first, Date second) {
-			long a = first.getTime() - second.getTime();
+			long firstLong = (first == null)?System.currentTimeMillis():first.getTime();
+			long secondLong = (second == null)?System.currentTimeMillis():second.getTime();
+			long a = firstLong - secondLong;
 			if(a==0)
 				return 0;
 			int v = (a>0)? 1: -1;
 			if(Math.abs(a) > 2*NSLocking.OneDay)
 				return v;
 			Calendar cal = Calendar.getInstance();
-			cal.setTime(first);
+			cal.setTimeInMillis(firstLong);
 			int day = cal.get(Calendar.DAY_OF_YEAR);
-			cal.setTime(second);
+			if(first == null && cal.get(Calendar.HOUR_OF_DAY) < 
+					SettingsReader.intForKeyPath("edu.midnightHour", 5))
+				day--;
+			cal.setTimeInMillis(secondLong);
+			if(second == null && cal.get(Calendar.HOUR_OF_DAY) < 
+					SettingsReader.intForKeyPath("edu.midnightHour", 5))
+				day++;
 			if(day == cal.get(Calendar.DAY_OF_YEAR))
 				return 0;
 			return v;

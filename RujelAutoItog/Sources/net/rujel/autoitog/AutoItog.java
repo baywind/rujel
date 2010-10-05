@@ -34,13 +34,13 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
-import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
@@ -298,10 +298,7 @@ public class AutoItog extends _AutoItog {
     }
     
     public boolean evening() {
-    	Calendar cal = Calendar.getInstance();
-    	cal.setTime(fireTime());
-    	int eveningHour = SettingsReader.intForKeyPath("edu.eveningHour", 17);
-    	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
+    	return MyUtility.isEvening(fireTime());
     }
     
     public NSTimestamp fireDateForCourse(EduCourse course) {

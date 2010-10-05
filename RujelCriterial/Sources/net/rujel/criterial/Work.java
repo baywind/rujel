@@ -766,10 +766,26 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	public boolean isCompulsory() {
 		return isFlag(8);
 	}
-	
+		
 	public void setIsCompulsory(boolean is) {
 		if(Various.boolForObject(valueForKeyPath("workType.namedFlags._fixCompulsory")))
 			setIsFlag(is,8);
+	}
+	
+	public boolean isOptional() {
+		if(!isCompulsory())
+			return true;
+		if(EOPeriod.Utility.compareDates(date(), null) > 0)
+			return true;
+		if(marks() == null || marks().count() == 0) {
+			Integer lag = SettingsBase.numericSettingForCourse("countMarklessWorkAfter", 
+					course(), editingContext());
+			if(lag != null) {
+				return (EOPeriod.Utility.countDays(date(), null) <= lag.intValue());
+			}
+			return true;
+		}
+		return false;
 	}
 /*
 	private NamedFlags _flags;

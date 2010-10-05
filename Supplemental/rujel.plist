@@ -9,7 +9,7 @@
 	<key>loggingProperties</key>
 	<string>LOCALROOT/Library/WebObjects/Configuration/logging.properties</string>
 	<key>schoolName</key>
-	<string>Тестирование</string>
+	<string>Гимназия № 45</string>
 	<key>edu</key>
 	<dict>
 		<key>minGrade</key>

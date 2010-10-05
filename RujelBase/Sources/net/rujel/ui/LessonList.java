@@ -65,7 +65,7 @@ public class LessonList extends WOComponent {
         super(context);
     }
 	
-	public void selectLesson() {
+	public WOActionResults selectLesson() {
 		if(hasBinding("currLesson"))
 			setValueForBinding(lessonItem,"currLesson");
 		if(hasBinding("selector"))
@@ -75,7 +75,24 @@ public class LessonList extends WOComponent {
 			if (ec.hasChanges()) ec.revert();
 			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.lessonItem");
 		}
-    }	
+		return null;
+    }
+	
+	public boolean disableCell() {
+		if(Various.boolForObject(valueForBinding("wide")))
+			return true;
+		if(canEdit())
+			return false;
+		if(!BaseLesson.getTaskDelegate().hasPopup())
+			return true;
+		return false;
+	}
+	
+	public boolean disableRow() {
+		if(Various.boolForObject(valueForBinding("wide")))
+			return false;
+		return (BaseLesson.getTaskDelegate().hasPopup());
+	}
 	
 	public String rowClass() {
 		if(lessonItem == valueForBinding("currLesson")) return "selection";
@@ -344,18 +361,21 @@ public class LessonList extends WOComponent {
 	}
 	
 	public String showHomeTaskOnClick() {
-		if(lessonItem == null || lessonItem != valueForBinding("currLesson"))
+		if(lessonItem == null)
 			return null;
-		if(BaseLesson.getTaskDelegate().hasPopup() && lessonItem.homeTask() == null)
+		if(BaseLesson.getTaskDelegate().hasPopup())
 			return (String)session().valueForKey("ajaxPopup");
 		if(Various.boolForObject(valueForBinding("wide")))
 			return null;
+		if(lessonItem != valueForBinding("currLesson"))
+			return (String)session().valueForKey("checkRun");
 		return "returnField=document.getElementById('homeTask');myPrompt(htTitle,null,this);";
 	}
 	
 	public WOActionResults popupHomeTask() {
-		if(!BaseLesson.getTaskDelegate().hasPopup())
-			return null;
+		if(!BaseLesson.getTaskDelegate().hasPopup()) {
+			return selectLesson();
+		}
 		return BaseLesson.getTaskDelegate().homeWorkPopupForLesson(context(), lessonItem);
 	}
 	
