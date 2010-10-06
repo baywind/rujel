@@ -72,7 +72,7 @@ public class LessonList extends WOComponent {
 			setValueForBinding(lessonItem,"selector");
 		if(lessonItem != null) {
 			EOEditingContext ec = lessonItem.editingContext();
-			if (ec.hasChanges()) ec.revert();
+			if (ec != null && ec.hasChanges()) ec.revert();
 			_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.lessonItem");
 		}
 		return null;
