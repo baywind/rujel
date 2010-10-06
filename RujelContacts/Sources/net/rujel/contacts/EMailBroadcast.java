@@ -83,6 +83,10 @@ public class EMailBroadcast implements Runnable{
 				return null;
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelContacts_Contacts.contactsRegime");
+		} else if("journalPlugins".equals(obj)) {
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.SendMailForm")))
+				return null;
+			return ctx.session().valueForKeyPath("strings.RujelContacts_Contacts.dashboard");
 		}
 		return null;
 	}
@@ -91,7 +95,7 @@ public class EMailBroadcast implements Runnable{
 		NSMutableArray result = new NSMutableArray();
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.SendMailForm");
 		if(access.getFlag(0)) {
-			result.addObject(WOApplication.application().valueForKeyPath(
+			result.addObject(ctx.session().valueForKeyPath(
 					"strings.RujelContacts_Contacts.sendmailAction"));
 		}
 		if(result.count() > 0)

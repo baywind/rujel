@@ -219,6 +219,6 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	public Boolean canAttach() {
 		if(dict.valueForKey("reporter") == null)
 			return Boolean.FALSE;
-		return (Boolean)session().valueForKeyPath("readAccess.edit");
+		return (Boolean)session().valueForKeyPath("readAccess.create");
 	}
 }
