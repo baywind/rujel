@@ -383,7 +383,10 @@ public class SubgroupEditor extends WOComponent {
 			if(person != null) {
 				export.addValue(person.firstName());
 				export.addValue(person.secondName());
-				export.addValue(MyUtility.dateFormat().format(person.birthDate()));
+				if(person.birthDate() != null)
+					export.addValue(MyUtility.dateFormat().format(person.birthDate()));
+				else
+					export.addValue(null);
 			}
 		}
 		return export;

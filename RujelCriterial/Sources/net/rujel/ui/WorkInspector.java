@@ -173,8 +173,20 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 				try {
 					val = new Integer(value);
 				} catch (NumberFormatException e) {
-					EOEnterpriseObject cr = critSet.criterionForNum(criterion);
-					val = (Integer)cr.valueForKey("dfltMax");
+					if(critSet != null) {
+						EOEnterpriseObject cr = critSet.criterionForNum(criterion);
+						val = (Integer)cr.valueForKey("dfltMax");
+					} else if(mask != null) {
+						val = (Integer)mask.valueForKey("max");
+					}
+					Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+							"Can't read criter max " + criterion + " = " + value,
+							new Object[] {session(),work});
+					StringBuilder buf = new StringBuilder(); 
+					buf.append(session().valueForKeyPath("strings.messages.illegalFormat"));
+					buf.append(' ').append(session().valueForKeyPath(
+							"strings.RujelCriterial_Strings.Max"));
+					session().takeValueForKey(buf.toString(), "message");
 				}
 			}
 			if(val == null) {
