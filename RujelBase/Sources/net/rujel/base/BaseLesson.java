@@ -164,7 +164,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		}
 		
 		public boolean hasPopup() {
-			return true;
+			return false;
 		}
 		
 		public WOComponent homeWorkPopupForLesson(WOContext context, EduLesson lesson) {

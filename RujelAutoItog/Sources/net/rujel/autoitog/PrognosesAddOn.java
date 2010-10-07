@@ -424,8 +424,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(grouping != null) {
 //			NSDictionary stats = PrognosesAddOn.statCourse(_course, prognoses.allValues());
 //				grouping.takeValueForKey(stats, "dict");
-				NSArray list = MyUtility.filterByGroup(prognoses.allValues(),
-						"student", _course.groupList(), true);
+				NSArray list = (prognoses == null)?null:MyUtility.filterByGroup(
+						prognoses.allValues(),"student", _course.groupList(), true);
 				grouping.takeValueForKey(list, "array");
 			}
 			ec.saveChanges();
@@ -434,8 +434,9 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
 					"Error saving calculated prognoses",ex);
 			session.takeValueForKey(ex.getMessage(), "message");
+		} finally {
+			ec.unlock();
 		}
-		ec.unlock();
 	}
 	
 	public static NSDictionary statCourse(EduCourse course, ItogContainer period) {

@@ -49,21 +49,6 @@ public class BachalaureatCalculator extends WorkCalculator {
 	protected static final int WEIGHT = 0;
 	protected static final int VALUE = 1;
 	protected static final int MAX = 2;
-	/*
-	public OldFormulaStatsCalculator(Student student) {
-		_student = student;
-	}*/
-	/*
-	public double integralForCourseAndPeriod(EduCourse course, Period period) {
-	
-		
-		EOEditingContext ec = course.editingContext();
-		
-		NSMutableArray args = new NSMutableArray(new Object[] {student,course.cycle(),period.begin(),period.end()});
-		String qualifierFormat = "student = %@ AND work.course.cycle = %@ AND (work.date >= %@ AND work.date <= %@)";
-		NSArray allMarks = EOUtilities.objectsWithQualifierFormat(ec,"Mark",qualifierFormat,args);
-	}*/
-	
 	
 	public NSDictionary agregateMarks(NSArray allMarks) {
 		if(allMarks == null || allMarks.count() == 0)
@@ -98,8 +83,10 @@ public class BachalaureatCalculator extends WorkCalculator {
 			if(value == null || max == null)
 				continue;
 			agregator[WEIGHT] = agregator[WEIGHT].add(weightValue);
-			agregator[VALUE] = agregator[VALUE].add(weightValue.multiply(new BigDecimal(value.intValue())));
-			agregator[MAX] = agregator[MAX].add(weightValue.multiply(new BigDecimal(max.intValue())));
+			agregator[VALUE] = agregator[VALUE].add(
+					weightValue.multiply(new BigDecimal(value.intValue())));
+			agregator[MAX] = agregator[MAX].add(
+					weightValue.multiply(new BigDecimal(max.intValue())));
 		}
 		if(optWorks.count() > 0) {
 			dict.setObjectForKey(agregateWorks(optWorks.allObjects(), false), "optionalWorks");
@@ -140,17 +127,8 @@ public class BachalaureatCalculator extends WorkCalculator {
 				if(max == null)
 					continue;
 				agregator[WEIGHT] = agregator[WEIGHT].add(weightValue);
-				//agregator[VALUE] = agregator[VALUE].add(weightValue.multiply(new BigDecimal(value.intValue())));
-				agregator[MAX] = agregator[MAX].add(weightValue.multiply(new BigDecimal(max.intValue())));
-				
-/*
-				BigDecimal agregator = (BigDecimal)dict.objectForKey(crit);
-				if(agregator == null) {
-					agregator = work.weight();
-				} else {
-					agregator = agregator.add(work.weight());
-				}
-				dict.setObjectForKey(agregator,crit);*/
+				agregator[MAX] = agregator[MAX].add(weightValue.multiply(
+						new BigDecimal(max.intValue())));
 			}
 		}
 		return dict;
@@ -191,8 +169,11 @@ public class BachalaureatCalculator extends WorkCalculator {
 			Object crit = enu.nextElement();
 			BigDecimal[] wagr = (BigDecimal[])agregatedWorks.objectForKey(crit);
 			BigDecimal[] optAgr = (optWorks == null)?null:(BigDecimal[])optWorks.objectForKey(crit);
-			if(wagr == null || BigDecimal.ZERO.compareTo(wagr[WEIGHT]) == 0 || BigDecimal.ZERO.compareTo(wagr[MAX]) == 0) {
-				if(optAgr == null || BigDecimal.ZERO.compareTo(optAgr[WEIGHT].add(wagr[WEIGHT])) == 0
+			if(wagr == null
+					|| BigDecimal.ZERO.compareTo(wagr[WEIGHT]) == 0
+					|| BigDecimal.ZERO.compareTo(wagr[MAX]) == 0) {
+				if(optAgr == null
+						|| BigDecimal.ZERO.compareTo(optAgr[WEIGHT].add(wagr[WEIGHT])) == 0
 						|| BigDecimal.ZERO.compareTo(optAgr[MAX].add(wagr[MAX])) == 0)
 				continue;
 			}
@@ -250,20 +231,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			}
 		}
 		return complete;
-	}
-	/*
-	public void updatePrognosis(Prognosis prognosis, NSDictionary agregatedMarks, NSDictionary agregatedWorks) {
-		double integral = getIntegral(agregatedMarks,agregatedWorks);
-		BigDecimal value = new BigDecimal(integral,new MathContext(4));
-		if(prognosis.value() == null || prognosis.value().compareTo(value) != 0){
-			prognosis.setValue(value);
-		}
-		value = getComplete(agregatedMarks,agregatedWorks);
-		if(prognosis.complete() == null || prognosis.complete().compareTo(value) != 0) {
-			prognosis.setComplete(value);
-		}		
-	}*/
-	
+	}	
 	
 	public PerPersonLink calculatePrognoses(EduCourse course, AutoItog period) {
 			//return prognosesForCourseAndPeriod(course,period);
@@ -272,14 +240,13 @@ public class BachalaureatCalculator extends WorkCalculator {
 		EOEditingContext ec = course.editingContext();
 		
 		NSArray works = period.relatedForCourse(course);//works(course, period);
-		if(works.count() == 0) {
-			return null;
-		}
+
 		NSDictionary agregatedWorks = agregateWorks(works);
 		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
 		
-		NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("work",works));//allWorks));
-		quals.addObject(NSKeyValueCoding.NullValue);
+		EOQualifier[] quals = new EOQualifier[2];
+		if(!noWorks)
+			quals[0] = Various.getEOInQualifier("work",works);
 		
 		EOFetchSpecification fs = new EOFetchSpecification("Mark",null,null);
 		fs.setRefreshesRefetchedObjects(true);
@@ -287,24 +254,22 @@ public class BachalaureatCalculator extends WorkCalculator {
 		NSMutableDictionary result = new NSMutableDictionary();
 		while (enu.hasMoreElements()) {
 			Student student = (Student)enu.nextElement();
-			
-			quals.replaceObjectAtIndex(new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student),1);
-			fs.setQualifier(new EOAndQualifier(quals));
-			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
-			NSDictionary agregatedMarks = agregateMarks(allMarks);
-			
-			//dict.setObjectForKey(student,"student");
 			Prognosis progn = Prognosis.getPrognosis(student, course, 
 					period.itogContainer(), !noWorks);
 			if(progn == null)
 				continue;
-			if(noWorks) {
+			if(noWorks)
 				ec.deleteObject(progn);
-			} else {
-				progn.setAutoItog(period);
-				initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
-				result.setObjectForKey(progn,student);
-			}
+			
+			quals[1] = new EOKeyValueQualifier("student",
+					EOQualifier.QualifierOperatorEqual,student);
+			fs.setQualifier(new EOAndQualifier(new NSArray(quals)));
+			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
+			NSDictionary agregatedMarks = agregateMarks(allMarks);
+			
+			progn.setAutoItog(period);
+			initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
+			result.setObjectForKey(progn,student);
 		}
 		return new PerPersonLink.Dictionary(result);
 	}
@@ -339,21 +304,11 @@ public class BachalaureatCalculator extends WorkCalculator {
 
 	public Prognosis calculateForStudent(Student student, EduCourse course, 
 			AutoItog period, NSArray works) {
-		EOEditingContext ec = course.editingContext();
-		
-		if(works.count() == 0) {
+		if(works == null || works.count() == 0) {
 			return null;
 		}
+		EOEditingContext ec = course.editingContext();
 		NSDictionary agregatedWorks = agregateWorks(works);
-		
-		NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("work",works));//allWorks));
-		quals.addObject(new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student));
-		
-		EOFetchSpecification fs = new EOFetchSpecification("Mark",new EOAndQualifier(quals),null);
-		fs.setRefreshesRefetchedObjects(true);
-		NSArray allMarks = ec.objectsWithFetchSpecification(fs);
-		NSDictionary agregatedMarks = agregateMarks(allMarks);
-		
 		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
 		Prognosis progn = Prognosis.getPrognosis(student, course, 
 				period.itogContainer(), !noWorks);
@@ -362,6 +317,14 @@ public class BachalaureatCalculator extends WorkCalculator {
 				ec.deleteObject(progn);
 			return null;
 		}
+		EOQualifier[] quals = new EOQualifier[] { Various.getEOInQualifier("work",works),
+				new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student) };
+		EOFetchSpecification fs = new EOFetchSpecification("Mark",
+				new EOAndQualifier(new NSArray(quals)),null);
+		fs.setRefreshesRefetchedObjects(true);
+		NSArray allMarks = ec.objectsWithFetchSpecification(fs);
+		NSDictionary agregatedMarks = agregateMarks(allMarks);
+
 		progn.setAutoItog(period);
 		initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
 		return progn;
