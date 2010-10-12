@@ -513,8 +513,25 @@ public class StudentMarks extends WOComponent {
 			}
 			if(tmp != null) {
 				if(crits)
-					aResponse.appendContentString(", ");
-				aResponse.appendContentHTMLString(tmp);
+					aResponse.appendContentCharacter(',');
+				int idx = tmp.indexOf("http");
+				if(idx < 0) {
+					aResponse.appendContentCharacter(' ');
+					aResponse.appendContentHTMLString(tmp);
+				} else {
+					if(idx > 0)
+						aResponse.appendContentHTMLString(tmp.substring(0,idx));
+					aResponse.appendContentString(" <a href = \"");
+					int idx2 = tmp.indexOf(' ', idx);
+					if(idx2 < 0) {
+						aResponse.appendContentString(tmp.substring(idx));
+					} else {
+						aResponse.appendContentString(tmp.substring(idx,idx2));
+					}
+					aResponse.appendContentString("\" target = \"_blank\">&gt;&gt;</a>");
+					if(idx2 > 0)
+						aResponse.appendContentHTMLString(tmp.substring(idx2));
+				}
 			}
 			if(crits)
 				aResponse.appendContentCharacter(']');

@@ -131,6 +131,7 @@ public class ModuleInit {
 	public static NSKeyValueCoding extendLesson(WOContext ctx) {
 		EduLesson lesson = (EduLesson)ctx.session().objectForKey("currentLesson");
 		EOEditingContext ec = lesson.editingContext();
+		if(ec == null) return null;
 		EOQualifier qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,lesson.course());
 		NSMutableArray quals = new NSMutableArray(qual);
 		NSTimestamp date = lesson.date();
