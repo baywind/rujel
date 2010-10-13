@@ -41,8 +41,8 @@ public abstract class _Indexer extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Indexer";
 
 	// Attributes
+	public static final String COMMON_STRING_KEY = "commonString";
 	public static final String DEFAULT_VALUE_KEY = "defaultValue";
-	public static final String FORMAT_STRING_KEY = "formatString";
 	public static final String TITLE_KEY = "title";
 	public static final String TYPE_KEY = "type";
 
@@ -50,20 +50,20 @@ public abstract class _Indexer extends EOGenericRecord {
 	public static final String COMMENT_EO_KEY = "commentEO";
 	public static final String INDEX_ROWS_KEY = "indexRows";
 
+  public String commonString() {
+    return (String) storedValueForKey(COMMON_STRING_KEY);
+  }
+
+  public void setCommonString(String value) {
+    takeStoredValueForKey(value, COMMON_STRING_KEY);
+  }
+
   public String defaultValue() {
     return (String) storedValueForKey(DEFAULT_VALUE_KEY);
   }
 
   public void setDefaultValue(String value) {
     takeStoredValueForKey(value, DEFAULT_VALUE_KEY);
-  }
-
-  public String formatString() {
-    return (String) storedValueForKey(FORMAT_STRING_KEY);
-  }
-
-  public void setFormatString(String value) {
-    takeStoredValueForKey(value, FORMAT_STRING_KEY);
   }
 
   public String title() {

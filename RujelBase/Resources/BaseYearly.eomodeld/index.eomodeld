@@ -338,6 +338,7 @@
         {className = EOGenericRecord; name = TeacherChange; }, 
         {className = EOGenericRecord; name = TextStore; }
     ); 
+    internalInfo = {"_deletedEntityNamesInObjectStore" = (Indexer); }; 
     userInfo = {
         "_EntityModeler" = {
             activeDatabaseConfigName = Default; 

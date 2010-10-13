@@ -7,13 +7,13 @@
             prototypeName = integer; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
+        {columnName = "FORMAT_STRING"; name = commonString; prototypeName = string; }, 
         {
             columnName = "DEFAULT_VALUE"; 
             name = defaultValue; 
             prototypeName = string; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
         }, 
-        {columnName = "FORMAT_STRING"; name = formatString; prototypeName = string; }, 
         {columnName = "IND_ID"; name = indID; prototypeName = short; }, 
         {columnName = "INDEX_NAME"; name = title; prototypeName = word; }, 
         {
@@ -23,9 +23,9 @@
             prototypeName = short; 
         }
     ); 
-    attributesUsedForLocking = (type, title, defaultValue, formatString, commentID); 
+    attributesUsedForLocking = (type, title, defaultValue, commentID, commonString); 
     className = "net.rujel.base.Indexer"; 
-    classProperties = (type, title, defaultValue, indexRows, formatString, commentEO); 
+    classProperties = (type, title, defaultValue, indexRows, commentEO, commonString); 
     externalName = "BASE_INDEXER"; 
     fetchSpecificationDictionary = {}; 
     name = Indexer; 

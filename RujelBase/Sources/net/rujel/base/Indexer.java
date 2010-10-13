@@ -63,6 +63,8 @@ public class Indexer extends _Indexer
     	}
     }*/
     
+    // allowed types: text|color|image|media
+    
     protected Indexer typeIndex() {
     	EOEditingContext ec = editingContext();
     	if(ec.hasChanges()) {
@@ -206,6 +208,24 @@ public class Indexer extends _Indexer
 		return row.value();
 	}
 	
+	public String formatString() {
+		String type = indexType();
+		if(type == null)
+			return commonString();
+		int idx = type.indexOf(':');
+		if(idx < 0)
+			return commonString();
+		type = type.substring(idx + 1);
+		if(type.equals("image")) {
+			StringBuilder buf = new StringBuilder("<img alt=\"%1$d\" src=\"");
+			buf.append(commonString());
+			if(buf.charAt(buf.length() -1) != '/')
+				buf.append('/');
+			buf.append("%2$s\" title = \"%3$s\" />");
+		}
+		return commonString();
+	}
+	
 	public String formattedForIndex(int index, RoundingMode round) {
 		if(formatString() == null)
 			return valueForIndex(index, round);
@@ -236,6 +256,7 @@ public class Indexer extends _Indexer
     	if(indexCache.count() == 0)
     		return null;
 		Enumeration enu = indexCache.objectEnumerator();
+		String formatString = formatString();
 		while (enu.hasMoreElements()) {
 			IndexRow row = (IndexRow) enu.nextElement();
 			if(ignoreCase) {
@@ -245,9 +266,8 @@ public class Indexer extends _Indexer
 				if(value.equals(row.value()))
 					return row.idx();
 			}
-			if(formatString() != null && value.length() >= formatString().length() -8 &&
-					value.equals(String.format(formatString(),
-					row.idx(), row.value(), row.comment())))
+			if(formatString != null && value.length() >= formatString.length() -8 &&
+					value.equals(String.format(formatString,row.idx(), row.value(), row.comment())))
 				return row.idx();
 		}
 		return null;
