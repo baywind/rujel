@@ -273,6 +273,7 @@ public class AutoItog extends _AutoItog {
     					AutoItogModule.logger.log(WOLogLevel.WARNING,
     							"Could not get related object: " + entName + ':' + relKey
     							,new Object[] {this,e});
+    					tmpEc.deleteObject(ir);
     				}
     			}
     			found = (related == null)? null : related.immutableClone();
