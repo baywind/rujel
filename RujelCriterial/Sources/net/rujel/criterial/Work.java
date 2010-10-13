@@ -577,7 +577,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	
 	public String taskUrl() {
 		String result = homeTask();
-		if(!(result == null || result.charAt(0) == '/' || result.contains("://")))
+		if(result != null && result.charAt(0) != '/' && !result.contains("://"))
 			result = "http://" + result;
 		return result;
 	}

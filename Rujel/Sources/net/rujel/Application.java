@@ -34,12 +34,14 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.*;
 
+import com.apress.practicalwo.practicalutilities.WORequestAdditions;
 import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
 import java.util.Calendar;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -49,6 +51,7 @@ public class Application extends UTF8Application {
 	protected static Logger logger = Logger.getLogger("rujel");
 	protected Timer timer;
 	public Integer year;
+	protected String serverUrl;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -144,6 +147,16 @@ public class Application extends UTF8Application {
 				cal.add(Calendar.DATE, 1);
 			timer.scheduleAtFixedRate(task, cal.getTime(), NSLocking.OneDay);
 			ModulesInitialiser.useModules(null, "scheduleTask");
+		}
+		serverUrl = SettingsReader.stringForKeyPath("ui.serverURL", null);
+		if(serverUrl == null) {
+			SettingsReader reader = SettingsReader.settingsForPath(
+					"auth.customURL", false);
+			if(reader != null) {
+				serverUrl = (String)reader.valueForKeyPath("insecure.default");
+				if(serverUrl == null)
+					serverUrl = (String)reader.valueForKeyPath("secure.default");
+			}
 		}
 		logger.log(WOLogLevel.INFO,"Rujel started. Version:"
 				+ System.getProperty("RujelVersion"), webserverConnectURL());
@@ -256,6 +269,33 @@ public class Application extends UTF8Application {
 		logger.info("Application is terminating");
 		super.terminate();
 	}
+
+	public String serverUrl() {
+		if(serverUrl.charAt(0) == '?')
+			return serverUrl.substring(1);
+		return serverUrl;
+	}
+	
+	public WORequest createRequest(String aMethod, String aURL, String anHTTPVersion, 
+			Map someHeaders, NSData aContent, Map someInfo) {
+		WORequest result = super.createRequest(
+				aMethod, aURL, anHTTPVersion, someHeaders, aContent, someInfo);
+		if(serverUrl == null || serverUrl.charAt(0) == '?') {
+			String url = WORequestAdditions.hostName(result);
+            if(url != null) {
+            	if(!url.startsWith("http"))
+            		url = "http://" + url;
+            	if(url.contains("//localhost") || url.contains("//127.0.0.1") ||
+            			url.contains("//192.168.") || url.contains("//10.")) {
+            		serverUrl = '?' + url;
+            	} else {
+            		serverUrl = url;
+            	}
+            }
+		}
+		return result;
+	}
+
 	
 	public WOSession createSessionForRequest(WORequest aRequest) {
 		WOSession result = super.createSessionForRequest(aRequest);

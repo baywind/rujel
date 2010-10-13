@@ -260,5 +260,25 @@ public class WorkList extends LessonList {
 		return new Boolean((work().criterMask() == null || work().criterMask().count() == 0) &&
 				work().noteForStudent(student) == null);
 	}
+	
+	public String criterlessMax() {
+		if(work() == null)
+			return null;
+		if(!work().noCriteria())
+			return null;
+		StringBuilder buf = new StringBuilder("<td");
+		if(criteria() != null && criteria().count() > 1)
+			buf.append(" colspan = \"").append(criteria().count()).append('"');
+		else
+			buf.append(" style = \"font-weight:bold;\"");
+		buf.append('>');
+		Object max = work().maxForCriter(new Integer(0));
+		if(max == null)
+			buf.append('-');
+		else
+			buf.append(max);
+		buf.append("</td>");
+		return buf.toString();
+	}
 }
 	

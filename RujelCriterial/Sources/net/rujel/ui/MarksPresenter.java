@@ -635,9 +635,9 @@ public class MarksPresenter extends NotePresenter {
 				link = note.substring(pre, post);
 			else if(pre > 0)
 				link = note.substring(pre);
-			buf.append("<a href = \"");
+			buf.append(" <a href = \"");
 			buf.append(link).append("\" target = \"_blank\">");
-			buf.append(link).append("</a>");
+			buf.append(link).append("</a> ");
 			if(post > 0)
 				buf.append(note.substring(post));
 			return buf.toString();

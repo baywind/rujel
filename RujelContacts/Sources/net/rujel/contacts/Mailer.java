@@ -65,17 +65,30 @@ public class Mailer {
 	
 	public Mailer() {
 		if(!dontSend) {
-			Properties props = System.getProperties();
-			//Properties props = new Properties();
+			java.security.Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+			
+//			http://java.sun.com/products/javamail/javadocs/com/sun/mail/smtp/package-summary.html
+			String tmp = settings.get("propertiesFile", null);
+			Properties props = new Properties();
+			if(tmp != null) {
+				try {
+					FileInputStream in = new FileInputStream(Various.convertFilePath(tmp));
+					props.load(in);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Error loading initial properties file",e);
+				}
+			}
 			if(settings.getBoolean("secure", false))
 				prot = "smtps";
 			if(mailhost != null)
-			props.put("mail." + prot + ".host", mailhost);
+				props.put("mail." + prot + ".host", mailhost);
+			tmp = settings.get("smtpPort", null);
+			if(tmp != null)
+				props.put("mail." + prot + ".port", tmp);
 		    if (user != null)
-			props.put("mail." + prot + ".auth", "true");
+		    	props.put("mail." + prot + ".auth", "true");
 		    
 		    mailSession = Session.getInstance(props, null);
-		    mailSession.setDebug(settings.getBoolean("debug", false));
 		    logger.finer("Constructed mailer");
 		}
 	}
@@ -118,7 +131,7 @@ public class Mailer {
 				t.connect();
 			t.sendMessage(msg, msg.getAllRecipients());
 		} finally {
-			if (settings.getBoolean("debug", false))
+			if (mailSession.getDebug())
 				logger.log(WOLogLevel.FINE,"SMTP responded:",t.getLastServerResponse());
 			t.close();
 		}
@@ -219,8 +232,11 @@ public class Mailer {
 			String filePath = settings.get("messageFilePath", null);
 			if(filePath != null) {
 				filePath = Various.convertFilePath(filePath);
+				File file = new File(filePath);
 				try {
-					InputStream strm = new FileInputStream(filePath);
+					if(file.length() <= 0)
+						return _defaultMessage;
+					InputStream strm = new FileInputStream(file);
 					InputStreamReader reader = new InputStreamReader(strm,"utf8");
 					int size = strm.available();
 					char[] cbuf = new char[size];
@@ -243,13 +259,15 @@ public class Mailer {
 				FileOutputStream fos = new FileOutputStream(messageFile);
 				message.writeToStream(fos);
 				fos.close();
+				logger.log(WOLogLevel.FINER,"Mail written to file: " + filename);
 				return true;
 			} catch (Exception ex) {
 				logger.log(WOLogLevel.WARNING,"Failed to write result for " + filename,new Object[] {ex});
 				return false;
 			}
 		} else {
-			logger.log(WOLogLevel.FINE,"Mail written to file: " + filename);
+			logger.log(WOLogLevel.WARNING,"Could not write file '" + filename +
+					"' because target directory not specified");
 			return false;
 		}
 	}

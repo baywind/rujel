@@ -107,7 +107,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			Work work = (Work)en.nextElement();
 			BigDecimal weightValue = work.weight();
 			if(filter) {
-				if(!work.isOptional())
+				if(work.isOptional())
 					continue;
 				if(weightValue == null || weightValue.compareTo(BigDecimal.ZERO) == 0)
 					continue;

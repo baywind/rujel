@@ -389,7 +389,17 @@ public class StudentMarks extends WOComponent {
 			curr.takeValueForKey(dateFormat.format(currWork.announce()),"announce");
 			curr.takeValueForKey(dateFormat.format(currWork.date()),"date");
 			curr.takeValueForKey(currWork.valueForKeyPath("workType.typeName"), "type");
-			String theme = currWork.theme();
+			String theme  = currWork.taskUrl();
+			if(theme != null) {
+				if(theme.charAt(0) == '/') {
+					String host = (String)WOApplication.application().valueForKey(
+							"serverURL");
+					if(host != null)
+						theme = host + theme;
+				}
+				curr.takeValueForKey(theme, "url");
+			}
+			theme = currWork.theme();
 			if(theme == null) {
 				theme = "- - -";
 			} else {
@@ -451,15 +461,22 @@ public class StudentMarks extends WOComponent {
 			BigDecimal weight = (BigDecimal)workItem.valueForKey("weight");
 			aResponse.appendContentString("<span");
 			aResponse.appendContentString(" style = \"");
+			String tmp = (String)workItem.valueForKey("url");
+			if(tmp != null)
+				aResponse.appendContentString("cursor:pointer;color:blue;");
 			if(weight.equals(BigDecimal.ZERO))
-				aResponse.appendContentString("font-style:italic;\"");
-			String tmp = (String)workItem.valueForKey("kind");
+				aResponse.appendContentString("font-style:italic;");
 			if(tmp != null) {
-				aResponse.appendContentString(" class = \"");
+				aResponse.appendContentString("\" onclick = \"window.open('");
 				aResponse.appendContentString(tmp);
-				aResponse.appendContentCharacter('"');
+				aResponse.appendContentString("','_blank');");
 			}
- 			aResponse.appendContentString(" title = \"");
+ 			tmp = (String)workItem.valueForKey("kind");
+			if(tmp != null) {
+				aResponse.appendContentString("\" class = \"");
+				aResponse.appendContentString(tmp);
+			}
+			aResponse.appendContentString("\" title = \"");
 			tmp = (String)workItem.valueForKey("date");
 			aResponse.appendContentHTMLAttributeValue(tmp);
 			aResponse.appendContentHTMLAttributeValue(": ");
