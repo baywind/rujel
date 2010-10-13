@@ -138,11 +138,17 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	}
 	
 	public void setUser(UserPresentation aUser) {
+		StringBuilder buf = new StringBuilder();
 		if(user == null) {
-			logger.log(WOLogLevel.SESSION,"Session created for user: " + aUser,new Object[] {this});
+			buf.append("Session created for user: ");
+			buf.append(aUser);
 		} else if (user != aUser) {
-			logger.log(WOLogLevel.SESSION,"Session user changed from " + user + " to " + aUser ,new Object[] {this});
+			buf.append("Session user changed from ").append(user);
+			buf.append(" to ").append(aUser);		
 		}
+		if(!aUser.toString().equals(aUser.present()))
+			buf.append(" (").append(aUser.present()).append(')');
+		logger.log(WOLogLevel.SESSION, buf.toString(), this);
 		user = aUser;
 		_readAccess = new ReadAccess(this);
 	}
