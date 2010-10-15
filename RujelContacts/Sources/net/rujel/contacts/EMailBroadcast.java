@@ -139,12 +139,12 @@ public class EMailBroadcast implements Runnable{
 		if(period == null) {
 			String listName = listBase.textValue();
 			period = EduPeriod.getCurrentPeriod(moment, listName, ec);
-			if(listBase.byCourse() != null && listBase.byCourse().count() > 0) {
-			if(period == null) {
-				periodsByList = new NSMutableDictionary(NSKeyValueCoding.NullValue,listName);
-			} else {
-				periodsByList = new NSMutableDictionary(period,listName);
-			}
+			if(!listBase.isSingle()) {
+				if(period == null) {
+					periodsByList = new NSMutableDictionary(NSKeyValueCoding.NullValue,listName);
+				} else {
+					periodsByList = new NSMutableDictionary(period,listName);
+				}
 			} else if (period == null) {
 				return;
 			}
@@ -179,7 +179,9 @@ gr:		while (eduGroups.hasMoreElements()) {
 			params.takeValueForKey(students,"students");
 			params.takeValueForKey(existingCourses,"courses");
 			if(periodsByList != null) {
-				EOEnterpriseObject bc = listBase.forValue(eduGroup, eduYear);
+				EOEnterpriseObject bc = listBase.forCourse(new NSDictionary(
+						new Object[] {eduGroup, eduYear},
+						new String[] {"eduGroup", "eduYear"}));
 				String listName = (bc == null)?null:
 					(String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 				if(listName != null) {

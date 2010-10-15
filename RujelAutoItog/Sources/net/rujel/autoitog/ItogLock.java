@@ -3,6 +3,7 @@ package net.rujel.autoitog;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.foundation.NSDictionary;
 
 import net.rujel.auth.ReadAccess.Modifier;
 import net.rujel.base.SettingsBase;
@@ -49,7 +50,10 @@ public class ItogLock implements Modifier {
 					container.editingContext(),false);
 			if(obj instanceof ItogMark) {
 				Object val = ((ItogMark)obj).cycle(); // assumeCourse();
-				EOEnterpriseObject bc = settings.forValue(val, container.eduYear());
+				NSDictionary dict = new NSDictionary(
+						new Object[] {val,container.eduYear()},
+						new String[] {"cycle","eduYear"});
+				EOEnterpriseObject bc = settings.forCourse(dict);
 				listName = (String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 			} else {
 				listName = settings.textValue();

@@ -33,13 +33,9 @@ import java.util.Enumeration;
 
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduCycle;
-import net.rujel.interfaces.EduGroup;
-import net.rujel.interfaces.Teacher;
-import net.rujel.reusables.Various;
+import net.rujel.reusables.ModulesInitialiser;
 
 import com.webobjects.foundation.*;
-import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -63,34 +59,29 @@ public class SettingsBase extends _SettingsBase {
 		super.awakeFromInsertion(ec);
 	}
 
-	public EOEnterpriseObject forCourse(EduCourse course) {
+	public EOEnterpriseObject forCourse(NSKeyValueCodingAdditions course) {
 		if(course == null)
 			return this;
-		NSArray byCourse = byCourse();
+		NSArray byCourse = qualifiedSettings();
 		if(byCourse == null || byCourse.count() == 0)
 			return this;
-		if(course.editingContext() != editingContext())
-			course = (EduCourse)EOUtilities.localInstanceOfObject(editingContext(), course);
+		if(course instanceof EduCourse)
+			course = EOUtilities.localInstanceOfObject(editingContext(), (EduCourse)course);
 		EOEnterpriseObject result = this;
 		Enumeration en = byCourse.objectEnumerator();
-		int matches = 0;
-		Integer eduYear = course.eduYear();
+		int match = 0;
 		while (en.hasMoreElements()) {
-			EOEnterpriseObject bc = (EOEnterpriseObject) en.nextElement();
-			Integer year = (Integer)bc.valueForKey("eduYear");
-			if(year != null && !year.equals(eduYear))
+			QualifiedSetting bc = (QualifiedSetting) en.nextElement();
+			if(match > 0 && match > bc.sort().intValue())
 				continue;
-			if(bc.valueForKey("course") == course)
-				return bc;
-			int match = match(bc, course);
-			if(match > matches) {
-				matches = match;
+			if(bc.evaluateWithObject(course)) {
+				match = bc.sort().intValue();
 				result = bc;
 			}
 		}
 		return result;
 	}
-	
+	/*
 	protected int match(EOEnterpriseObject bc, EduCourse course) {
 		int match = 0;
 		for (int i = 1; i < keys.length; i++) {
@@ -112,7 +103,7 @@ public class SettingsBase extends _SettingsBase {
 			return this;
 		if(value instanceof EduCourse)
 			return forCourse((EduCourse)value);
-		NSArray byCourse = byCourse();
+		NSArray byCourse = qualifiedSettings();
 		if(byCourse == null || byCourse.count() == 0)
 			return this;
 		if(value instanceof EOEnterpriseObject && 
@@ -186,7 +177,7 @@ public class SettingsBase extends _SettingsBase {
 		}
 		return result;
 	}
-	
+	*/
 	public void updateNumValuesForText(String textValue, Integer numValue) {
 		if(textValue.equals(textValue()))
 			setNumericValue(numValue);
@@ -197,7 +188,7 @@ public class SettingsBase extends _SettingsBase {
 		if(subs != null && subs.count() > 0)
 			subs.takeValueForKey(numValue, NUMERIC_VALUE_KEY);
 	}
-
+/*
 	public static EOEnterpriseObject settingForValue(String key, Object value, 
 			Integer eduYear, EOEditingContext ec) {
 		try {
@@ -207,12 +198,12 @@ public class SettingsBase extends _SettingsBase {
 		} catch (Exception e) {
 			return null;
 		}
-	}
+	}*/
 	
-	public static EOEnterpriseObject settingForCourse(String key, EduCourse course, 
-			EOEditingContext ec) {
-		if(ec == null && course != null)
-			ec = course.editingContext();
+	public static EOEnterpriseObject settingForCourse(String key, 
+			NSKeyValueCodingAdditions course, EOEditingContext ec) {
+		if(ec == null && course instanceof EduCourse)
+			ec = ((EduCourse)course).editingContext();
 		try {
 			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
 					ENTITY_NAME, KEY_KEY, key);
@@ -265,7 +256,7 @@ public class SettingsBase extends _SettingsBase {
 	}
 	
 	public NSArray settingUsage(String selector, Object value, Object eduYear) {
-    	NSArray byCourse = byCourse();
+    	NSArray byCourse = qualifiedSettings();
     	NSMutableArray usage = new NSMutableArray();
 		Object val = valueForKey(selector);
     	if((val == null)?value == null : val.equals(value))
@@ -288,7 +279,7 @@ public class SettingsBase extends _SettingsBase {
 	}
 	
     public NSMutableArray byCourse(Integer eduYear) {
-		NSArray baseByCourse = byCourse();
+		NSArray baseByCourse = qualifiedSettings();
 		NSMutableArray byCourse = new NSMutableArray(this);
 		if(baseByCourse == null || baseByCourse.count() == 0)
 			return byCourse;
@@ -304,15 +295,11 @@ public class SettingsBase extends _SettingsBase {
 			}
 		}
 		if(byCourse.count() > 2) {
-			try {
-				byCourse.sortUsingComparator(new SettingsBase.Comparator());
-			} catch (ComparisonException e) {
-				e.printStackTrace();
-			}
+			EOSortOrdering.sortArrayUsingKeyOrderArray(byCourse, ModulesInitialiser.sorter);
 		}
     	return byCourse;
     }
-	
+	/*
 	public static EOQualifier byCourseQualifier(EOEnterpriseObject byCourse) {
 		if(!byCourse.entityName().equals("SettingByCourse"))
 			return null;
@@ -344,7 +331,7 @@ public class SettingsBase extends _SettingsBase {
 			quals.addObject(new EOKeyValueQualifier("eduYear",
 					EOQualifier.QualifierOperatorEqual,param));
 		return new EOAndQualifier(quals);
-	}
+	} */
 	
 	public NSArray coursesForSetting(String text, Integer numeric, Integer eduYear) {
 		NSArray allCourses = EOUtilities.objectsMatchingKeyAndValue(editingContext(),
@@ -368,9 +355,10 @@ public class SettingsBase extends _SettingsBase {
 		}
 		return result;
 	}
-	
+	/*
 	public static class Comparator extends NSComparator {
-		public int compare(Object arg0, Object arg1) throws ComparisonException {
+		public int compare(Object arg0, Object arg1)
+			throws com.webobjects.foundation.NSComparator.ComparisonException {
 			if(arg0 == null && arg1 == null)
 				return OrderedSame;
 			try {
@@ -415,7 +403,8 @@ public class SettingsBase extends _SettingsBase {
 				if(order < 0)
 					return OrderedAscending;
 			} catch (RuntimeException e) {
-				throw new ComparisonException("Illegal arguments to compare");
+				throw new com.webobjects.foundation.NSComparator.ComparisonException(
+				"Illegal arguments to compare");
 			}
 			return OrderedSame;
 		}
@@ -440,5 +429,9 @@ public class SettingsBase extends _SettingsBase {
 					return OrderedAscending;
 			}
 		}		
+	}
+	*/
+	public boolean isSingle() {
+		return (qualifiedSettings() == null || qualifiedSettings().count() == 0);
 	}
 }

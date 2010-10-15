@@ -140,7 +140,9 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			while (enu.hasMoreElements()) {
 				PlanCycle cycle = (PlanCycle) enu.nextElement();
 				values.takeValueForKey(cycle, "cycle");
-				NSMutableDictionary dict = observeValue(cycle, eduYear);
+				NSMutableDictionary dict = observeValue(new NSDictionary(
+						new Object[] {cycle,eduYear},
+						new String[] {"cycle","eduYear"}));
 				dict = new NSMutableDictionary(dict, "listName");
 				dict.takeValueForKey(cycle,"cycle");
 //				dict.takeValueForKey(new Integer(cycle.weekly()), "weekly");
@@ -196,7 +198,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	protected NSMutableDictionary courseRow(NSKeyValueCodingAdditions course) {
-		NSMutableDictionary listSetting = observeValue(course,null);
+		NSMutableDictionary listSetting = observeValue(course);
 		NSMutableDictionary result = new NSMutableDictionary(listSetting, "listSetting");
 		EduGroup group = (EduGroup)course.valueForKey("eduGroup");
 		result.takeValueForKey(group, "eduGroup");
@@ -271,9 +273,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		return result;
 	}
 	
-	protected NSMutableDictionary observeValue(Object value, Integer eduYear) {
-		NSKeyValueCoding sb = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
-				value, eduYear, ec);
+	protected NSMutableDictionary observeValue(NSKeyValueCodingAdditions course) {
+		NSKeyValueCoding sb = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,course, ec);
 		if(sb == null)
 			return null;
 		String listName = (String)sb.valueForKey(SettingsBase.TEXT_VALUE_KEY);

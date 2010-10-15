@@ -81,8 +81,11 @@ public class CriterSelector extends WOComponent {
 				if(cycle != null) {
 					Integer eduYear = (Integer)session().valueForKey("eduYear");
 					EOEditingContext ec = cycle.editingContext();
-					EOEnterpriseObject setting = SettingsBase.settingForValue(
-							CriteriaSet.ENTITY_NAME, cycle,eduYear, ec);
+					NSDictionary crs = new NSDictionary(
+							new Object[] {cycle,eduYear},
+							new String[] {"cycle","eduYear"});
+					EOEnterpriseObject setting = SettingsBase.settingForCourse(
+							CriteriaSet.ENTITY_NAME, crs, ec);
 					if(setting != null) {
 						Integer set = (Integer)setting.valueForKey(
 								SettingsBase.NUMERIC_VALUE_KEY);
@@ -123,17 +126,20 @@ public class CriterSelector extends WOComponent {
     	if(_integral == null) {
     		_integral = (String)valueForBinding("integralPresenter");
     		if(_integral == null) {
-    			EOEnterpriseObject c = (EduCourse)valueForBinding("course");
-    			Integer eduYear = null;
+    			NSKeyValueCodingAdditions c = (EduCourse)valueForBinding("course");
+    			EOEditingContext ec = null;
     			if(c == null) {
-    				c = (EduCycle)valueForBinding("cycle");
-    				eduYear = (Integer)session().valueForKey("eduYear");
+    				EduCycle cycle = (EduCycle)valueForBinding("cycle");
+    				Object eduYear = session().valueForKey("eduYear");
+    				ec = cycle.editingContext();
+       				c = new NSDictionary(
+    						new Object[] {cycle,eduYear},
+    						new String[] {"cycle","eduYear"});
     			} else {
-    				eduYear = ((EduCourse)c).eduYear();
+        			ec = ((EduCourse)c).editingContext();
     			}
-    			EOEditingContext ec = c.editingContext();
-    			EOEnterpriseObject setting = SettingsBase.settingForValue(
-    					"presenters.workIntegral", c,eduYear, ec);
+    			EOEnterpriseObject setting = SettingsBase.settingForCourse(
+    					"presenters.workIntegral", c, ec);
     			if(setting != null) {
     				_integral = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
     				if(_integral != null)

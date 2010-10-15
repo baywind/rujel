@@ -48,6 +48,7 @@ public class SettingsByCourse extends WOComponent {
 	public EOEnterpriseObject item;
 //	public EOEditingContext ec;
 	protected Object selector;
+	protected SettingsBase base;
 	
     public SettingsByCourse(WOContext context) {
         super(context);
@@ -68,7 +69,9 @@ public class SettingsByCourse extends WOComponent {
     }*/
     
     public SettingsBase base() {
-    	SettingsBase base = (SettingsBase)valueForBinding("base");
+    	if(base != null)
+    		return base;
+    	base = (SettingsBase)valueForBinding("base");
     	if(base == null && hasBinding("key")) {
     		String key = (String)valueForBinding("key");
     		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
@@ -86,8 +89,7 @@ public class SettingsByCourse extends WOComponent {
 	    	if(_byCourse != null && ((val == null)?selector == null : val.equals(selector)))
 	    		return _byCourse;
 			selector = val;
-			SettingsBase base = base();
-	    	_byCourse = base.settingUsage(sel, val, session().valueForKey("eduYear"));
+	    	_byCourse = base().settingUsage(sel, val, session().valueForKey("eduYear"));
 	    	if(sel.equals(SettingsBase.TEXT_VALUE_KEY))
 	    		sel = SettingsBase.NUMERIC_VALUE_KEY;
 	    	else
@@ -109,11 +111,10 @@ public class SettingsByCourse extends WOComponent {
 				setValueForBinding(_byCourse, "editList");
 		}
 		if(_byCourse == null) {
-			SettingsBase base = base();
-			if(base == null)
+			if(base() == null)
 				_byCourse = new NSMutableArray();
 			else
-				_byCourse = base.byCourse((Integer)session().valueForKey("eduYear"));
+				_byCourse = base().byCourse((Integer)session().valueForKey("eduYear"));
 		}
 		return _byCourse;
 	}
@@ -234,7 +235,7 @@ public class SettingsByCourse extends WOComponent {
 	
 	public void reset() {
 		super.reset();
-//		base = null;
+		base = null;
 		_byCourse = null;
 		item = null;
 		setValueForBinding(null, "item");

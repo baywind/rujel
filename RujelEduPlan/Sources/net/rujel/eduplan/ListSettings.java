@@ -97,7 +97,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     public NSMutableArray lists() {
     	if(_lists == null) {
     		_lists = new NSMutableArray(base().textValue());
-    		NSArray byCourse = base.byCourse();
+    		NSArray byCourse = base.qualifiedSettings();
     		if(byCourse != null && byCourse.count() > 0) {
     			Enumeration enu = byCourse.objectEnumerator();
     			while (enu.hasMoreElements()) {

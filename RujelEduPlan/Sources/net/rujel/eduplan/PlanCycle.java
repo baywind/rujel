@@ -353,8 +353,10 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOEditingContext ec = editingContext();
 		int days = 0;
 		int weekDays = 7;
-		EOEnterpriseObject setting = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
-				this, eduYear, ec);
+		NSDictionary crs = new NSDictionary(
+				new Object[] {this,eduYear},
+				new String[] {"cycle","eduYear"});
+		EOEnterpriseObject setting = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,crs, ec);
 		if(setting != null) {
 			String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 			days = EduPeriod.daysForList(listName, null, ec);
@@ -363,7 +365,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 				weekDays = h.intValue();
 		}
 		if(days <= 0) {
-			setting = SettingsBase.settingForValue("defaultWeeks", this, eduYear, ec);
+			setting = SettingsBase.settingForCourse("defaultWeeks", crs, ec);
 			if(setting == null) {
 				days = 34;
 			} else {

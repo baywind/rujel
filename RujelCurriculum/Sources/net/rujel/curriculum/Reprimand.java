@@ -105,8 +105,7 @@ public class Reprimand extends _Reprimand {
 		try {
 			SettingsBase weekStart = SettingsBase.baseForKey("weekStart", ec, false);
 			int testDay = Calendar.MONDAY;
-			if(weekStart != null && 
-					(weekStart.byCourse() == null || weekStart.byCourse().count() == 0)) {
+			if(weekStart != null && weekStart.isSingle()) {
 				Integer num = weekStart.numericValue();
 				if(num != null)
 					testDay = num.intValue();

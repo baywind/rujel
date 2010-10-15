@@ -1,4 +1,4 @@
-// _SettingsBase.java
+// _QualifiedSetting.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to SettingsBase.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to QualifiedSetting.java instead.
 
 package net.rujel.base;
 
@@ -37,23 +37,34 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _SettingsBase extends EOGenericRecord {
-	public static final String ENTITY_NAME = "SettingsBase";
+public abstract class _QualifiedSetting extends EOGenericRecord {
+	public static final String ENTITY_NAME = "QualifiedSetting";
 
 	// Attributes
-	public static final String KEY_KEY = "key";
+	public static final String ARGUMENTS_STRING_KEY = "argumentsString";
+	public static final String EDU_YEAR_KEY = "eduYear";
 	public static final String NUMERIC_VALUE_KEY = "numericValue";
+	public static final String QUALIFIER_STRING_KEY = "qualifierString";
+	public static final String SORT_KEY = "sort";
 	public static final String TEXT_VALUE_KEY = "textValue";
 
 	// Relationships
-	public static final String QUALIFIED_SETTINGS_KEY = "qualifiedSettings";
+	public static final String SETTINGS_BASE_KEY = "settingsBase";
 
-  public String key() {
-    return (String) storedValueForKey(KEY_KEY);
+  public String argumentsString() {
+    return (String) storedValueForKey(ARGUMENTS_STRING_KEY);
   }
 
-  public void setKey(String value) {
-    takeStoredValueForKey(value, KEY_KEY);
+  public void setArgumentsString(String value) {
+    takeStoredValueForKey(value, ARGUMENTS_STRING_KEY);
+  }
+
+  public Integer eduYear() {
+    return (Integer) storedValueForKey(EDU_YEAR_KEY);
+  }
+
+  public void setEduYear(Integer value) {
+    takeStoredValueForKey(value, EDU_YEAR_KEY);
   }
 
   public Integer numericValue() {
@@ -64,6 +75,22 @@ public abstract class _SettingsBase extends EOGenericRecord {
     takeStoredValueForKey(value, NUMERIC_VALUE_KEY);
   }
 
+  public String qualifierString() {
+    return (String) storedValueForKey(QUALIFIER_STRING_KEY);
+  }
+
+  public void setQualifierString(String value) {
+    takeStoredValueForKey(value, QUALIFIER_STRING_KEY);
+  }
+
+  public Integer sort() {
+    return (Integer) storedValueForKey(SORT_KEY);
+  }
+
+  public void setSort(Integer value) {
+    takeStoredValueForKey(value, SORT_KEY);
+  }
+
   public String textValue() {
     return (String) storedValueForKey(TEXT_VALUE_KEY);
   }
@@ -72,20 +99,12 @@ public abstract class _SettingsBase extends EOGenericRecord {
     takeStoredValueForKey(value, TEXT_VALUE_KEY);
   }
 
-  public NSArray qualifiedSettings() {
-    return (NSArray)storedValueForKey(QUALIFIED_SETTINGS_KEY);
+  public net.rujel.base.SettingsBase settingsBase() {
+    return (net.rujel.base.SettingsBase)storedValueForKey(SETTINGS_BASE_KEY);
   }
- 
-  public void setQualifiedSettings(NSArray value) {
-    takeStoredValueForKey(value, QUALIFIED_SETTINGS_KEY);
+
+  public void setSettingsBase(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, SETTINGS_BASE_KEY);
   }
   
-  public void addToQualifiedSettings(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, QUALIFIED_SETTINGS_KEY);
-  }
-
-  public void removeFromQualifiedSettings(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, QUALIFIED_SETTINGS_KEY);
-  }
-
 }
