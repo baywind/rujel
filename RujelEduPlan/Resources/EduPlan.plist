@@ -173,5 +173,48 @@
 		<key>noPeriods</key>
 		<string>Не описано ни одного учебного периода.&lt;br/&gt; Детализация невозможна.</string>
 	</dict>
+	<key>settingQualifiers</key>
+	<array>
+		<dict>
+			<key>keyPath</key>
+			<string>cycle.subjectEO</string>
+			<key>title</key>
+			<string>Предмет</string>
+			<key>presentPath</key>
+			<string>subject</string>
+			<key>field</key>
+			<string>subject</string>
+			<key>styleClass</key>
+			<string>gerade</string>
+			<key>style</key>
+			<string>border:double 3px #cccccc;</string>
+		</dict>
+		<dict>
+			<key>keyPath</key>
+			<string>cycle.subjectEO.area</string>
+			<key>title</key>
+			<string>Предметная область</string>
+			<key>presentPath</key>
+			<string>areaName</string>
+			<key>field</key>
+			<string>subject</string>
+			<key>styleClass</key>
+			<string>gerade</string>
+			<key>style</key>
+			<string>border:double 3px #cccccc;font-style:italic;</string>
+		</dict>
+		<dict>
+			<key>keyPath</key>
+			<string>cycle.level</string>
+			<key>title</key>
+			<string>уровень</string>
+			<key>field</key>
+			<string>other</string>
+			<key>styleClass</key>
+			<string>orange</string>
+			<key>style</key>
+			<string>font-weight:bold;</string>
+		</dict>
+	</array>
 </dict>
 </plist>

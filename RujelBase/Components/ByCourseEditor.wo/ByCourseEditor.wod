@@ -25,22 +25,6 @@ Grade : WOString {
   numberformat = "0";
 }
 
-Groups : WORepetition {
-  list = groups;
-  item = groupItem;
-}
-
-GroupCell : OnClickContainer {
-  elementName = "div";
-  onclick = onclick;
-  invokeAction = selectGroup;
-  class = groupClass;
-}
-
-GroupName : WOString {
-  value = groupItem.name;
-}
-
 Cycles : WORepetition {
   list = cycles;
   item = cycleItem;
@@ -75,10 +59,6 @@ CourseCell : WOGenericContainer {
   class = courseClass;
 }
 
-ByCoursePresenter : ByCoursePresenter {
-  value = byCourse;
-}
-
 CourseComment : WOString {
   value = courseItem.comment;
 }
@@ -104,7 +84,7 @@ SubmitButton : WOSubmitButton {
 CurrYear : WOCheckBox {
   value = session.eduYear;
   selection = byCourse.eduYear;
-  disabled = forceEduYear;
+  disabled = forceEduYear.count;
 }
 
 Year : WOString {
@@ -112,5 +92,106 @@ Year : WOString {
 }
 
 HasSelection : WOConditional {
-  condition = byCourse.grade;
+  condition = currQ;
+}
+
+NoSelection : WOConditional {
+  condition = currQ;
+  negate = false;
+}
+
+QList : WORepetition {
+  list = qList;
+  item = qItem;
+}
+
+Matrix : WORepetition {
+  count = 4;
+  index = index;
+}
+
+MatrixCell : OnClickContainer {
+  elementName = "td";
+  class = cellClass;
+  style = dict.style;
+  title = dict.hover;
+  onclick = onclick;
+  invokeAction = selectCell;
+}
+
+IsValue : WOConditional {
+  condition = index;
+}
+
+Value : DisplayAny {
+  value = dict.value;
+  dict = dict.dict;
+}
+
+OtherList : WORepetition {
+  list = dict.list;
+  item = item;
+}
+
+EduGroupLabel: WOString {
+	value = application.strings.RujelInterfaces_Names.EduGroup.this;
+	valueWhenEmpty = "Class";
+	escapeHTML = false;
+}
+
+EduPlanLabel: WOString {
+	value = application.strings.RujelInterfaces_Names.EduCycle.subject;
+	valueWhenEmpty = "Subject";
+	escapeHTML = false;
+}
+
+TeacherLabel: WOString {
+	value = application.strings.RujelInterfaces_Names.EduCourse.teacher;
+	valueWhenEmpty = "Teacher";
+	escapeHTML = false;
+}
+
+Editors : WORepetition {
+  list = editors;
+  item = item;
+}
+
+SelectEditor : OnClickContainer {
+  elementName = "div";
+  onclick = onclick;
+  invokeAction = selectEditor;
+  class = editorClass;
+}
+
+EditorItemTitle : WOString {
+  value = item.title;
+}
+
+IfGrade : WOConditional {
+  condition = currEditor.showGrade;
+}
+IfSubject : WOConditional {
+  condition = currEditor.showSubject;
+}
+IfCycle : WOConditional {
+  condition = currEditor.showCycle;
+}
+IfPresent : WOConditional {
+  condition = currEditor.editorPresent;
+}
+
+GradeSelector : WOPopUpButton {
+  list = grades;
+  name = "grade";
+  selectedValue = value;
+}
+
+
+SubjectRegex : WOTextField {
+  value = value;
+}
+
+EditorPresent : DisplayAny {
+  value = value;
+  dict = currEditor.editorPresent;
 }

@@ -35,6 +35,7 @@ import net.rujel.reusables.WOLogFormatter;
 
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
@@ -43,52 +44,82 @@ import com.webobjects.foundation.NSPropertyListSerialization;
 public class QualifiedSetting extends _QualifiedSetting {
 
 	protected EOQualifier qualifier;
-	protected NSMutableArray courses;
+	protected NSArray courses;
+	
+	public void setQualifierString(String string) {
+		nullufy();
+		super.setQualifierString(string);
+	}
+	
+	public void setArgumentsString(String string) {
+		nullufy();
+		super.setArgumentsString(string);
+	}
 	
 	public void setQualifier(EOQualifier qual) {
 		StringBuilder buf = new StringBuilder();
 		NSMutableArray args = new NSMutableArray();
 		Various.formatQualifier(qual, buf, args);
-		qualifier = qual;
 		setQualifierString(buf.toString());
 		setArgumentsString(NSPropertyListSerialization.stringFromPropertyList(args));
-		courses = null;
+		qualifier = qual;
 	}
 	
 	public void setCourse(EduCourse course) {
 		String format = WOLogFormatter.formatEO(course);
 		setQualifierString("IS");
 		setArgumentsString(format);
-		courses = new NSMutableArray(EOUtilities.localInstanceOfObject(editingContext(), course));
-		qualifier = null;
+		courses = new NSArray(EOUtilities.localInstanceOfObject(editingContext(), course));
 	}
 	
+	public void setCourses(NSArray newCourses) {
+		setQualifierString("IN");
+		setArgumentsString(Various.stringFromArguments(newCourses));
+		courses = EOUtilities.localInstancesOfObjects(editingContext(), newCourses);
+	}
+
 	public void addCourse(EduCourse course) {
 		course = (EduCourse)EOUtilities.localInstanceOfObject(editingContext(), course);
 		if(courses == null)
-			courses = new NSMutableArray(course);
+			courses = new NSArray(course);
 		else
-			courses.addObject(course);
-		setQualifierString("IN");
-		setArgumentsString(Various.stringFromArguments(courses));
+			courses = courses.arrayByAddingObject(course);
+		super.setQualifierString("IN");
+		super.setArgumentsString(Various.stringFromArguments(courses));
 		qualifier = null;
+	}
+	
+	public EOQualifier getQualifier() {
+		if(courses == null && qualifier == null)
+			read();
+		return qualifier;
+	}
+	
+	public NSArray getCourses() {
+		if(courses == null && qualifier == null)
+			read();
+		return (courses == null)?null:courses.immutableClone();
+	}
+	
+	protected void read() {
+		String qualifierString = qualifierString();
+		if(qualifierString.equals("IS")) {
+			courses = new NSArray(Various.parseEO(qualifierString, editingContext()));
+			qualifier = null;
+		} else {
+			courses = Various.argumentsFromString(argumentsString(), editingContext());
+			if(qualifierString.equals("IN")) {
+				qualifier = null;
+			} else {
+				qualifier = EOQualifier.qualifierWithQualifierFormat(qualifierString,courses);
+				courses = null;
+			}
+		}
 	}
 	
 	public boolean evaluateWithObject(NSKeyValueCodingAdditions object) {
 		if(courses == null && qualifier == null) {
-			String qualifierString = qualifierString();
-			if(qualifierString.equals("IS")) {
-				courses = new NSMutableArray(Various.parseEO(qualifierString, editingContext()));
-				qualifier = null;
-			} else {
-				courses = Various.argumentsFromString(qualifierString, editingContext());
-				if(qualifierString.equals("IN")) {
-					qualifier = null;
-				} else {
-					qualifier = EOQualifier.qualifierWithQualifierFormat(qualifierString,courses);
-					courses = null;
-				}
-			}
+			read();
 		}
 		if(object instanceof EduCourse) {
 			object = EOUtilities.localInstanceOfObject(editingContext(),
@@ -119,6 +150,6 @@ public class QualifiedSetting extends _QualifiedSetting {
 	}
 	
 	public int compare(NSKeyValueCoding other) {
-		return 0;
+		return 0; // TODO: write comparison
 	}
 }

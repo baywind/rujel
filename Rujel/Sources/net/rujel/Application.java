@@ -122,7 +122,7 @@ public class Application extends UTF8Application {
 		NSDictionary access = (NSDictionary)PlistReader.readPlist("access.plist", null, null);
 		ReadAccess.mergeDefaultAccess(access);
 		
-		SettingsBase.init();
+//		SettingsBase.init();
 		net.rujel.interfaces.EOInitialiser.initAll();
 //		SettingsReader node = SettingsReader.settingsForPath("modules",true);
 		ModulesInitialiser.initModules("init");

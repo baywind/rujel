@@ -30,10 +30,11 @@
 package net.rujel.base;
 
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
-import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
@@ -43,17 +44,6 @@ import com.webobjects.eocontrol.*;
 public class SettingsBase extends _SettingsBase {
 
 	protected static final String[] keys = new String[] {"grade","eduGroup","cycle","teacher"};
-	
-	public static void init() {
-		EOInitialiser.initialiseRelationship("SettingByCourse",
-				"course",false,"courseID","EduCourse");
-		EOInitialiser.initialiseRelationship("SettingByCourse",
-				"cycle",false,"cycleID","EduCycle");
-		EOInitialiser.initialiseRelationship("SettingByCourse",
-				"eduGroup",false,"groupID","EduGroup");
-		EOInitialiser.initialiseRelationship("SettingByCourse",
-				"teacher",false,"teacherID","Teacher");
-	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -74,9 +64,14 @@ public class SettingsBase extends _SettingsBase {
 			QualifiedSetting bc = (QualifiedSetting) en.nextElement();
 			if(match > 0 && match > bc.sort().intValue())
 				continue;
-			if(bc.evaluateWithObject(course)) {
-				match = bc.sort().intValue();
-				result = bc;
+			try {
+				if(bc.evaluateWithObject(course)) {
+					match = bc.sort().intValue();
+					result = bc;
+				}
+			} catch (Exception e) {
+				Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
+						"Error reading QualifiedSetting from " + key(), new Object[] {bc,e});
 			}
 		}
 		return result;
@@ -433,5 +428,9 @@ public class SettingsBase extends _SettingsBase {
 	*/
 	public boolean isSingle() {
 		return (qualifiedSettings() == null || qualifiedSettings().count() == 0);
+	}
+	
+	public Integer _sort() {
+		return new Integer(0);
 	}
 }

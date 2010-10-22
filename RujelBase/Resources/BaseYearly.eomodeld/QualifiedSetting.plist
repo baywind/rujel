@@ -27,7 +27,7 @@
         }, 
         {
             allowsNull = N; 
-            columnName = settingsID; 
+            columnName = "SETTING_ID"; 
             name = settingsID; 
             prototypeName = short; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 

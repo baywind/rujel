@@ -1,21 +1,27 @@
-<webobject name = "IsBase"><tr class = "highlight2"><td colspan = "3" align = "center">
+<webobject name = "IsBase"><tr class = "highlight2"><td colspan = "4" align = "center">
 	<webobject name = "BaseString"/></td>
 	<webobject name = "EditorHead"/>
 	<webobject name = "ComponentContent"/></tr></webobject>
-<webobject name = "NotBase"><webobject name = "HasCourse"><tr class = "green">
-	<td><webobject name = "CourseGroup"/></td>
-	<td><webobject name = "CourseSubject"/></td>
-	<td><webobject name = "CourseTeacher"/></td>
+<webobject name = "NotBase"><webobject name = "HasCourse">
+	<tr><webobject name = "SpanCell"></webobject><td colspan = "3" style = "height:0px;" />
 	<webobject name = "CanEdit"><webobject name = "EditCell"><webobject name = "EditImage"/>
 	</webobject><webobject name = "DeleteCell"><webobject name = "Cross"/></webobject></webobject>
 	<webobject name = "ComponentContent"/></tr>
-</webobject><webobject name = "NoCourse">
-<webobject name = "Row">
-		<webobject name = "GroupCell"><webobject name = "Group"/></webobject>
-		<webobject name = "SubjCell"><webobject name = "Subject"/></webobject>
-		<webobject name = "TeacherCell"><webobject name = "Teacher"/></webobject>
+	<webobject name = "Listing"><tr class = "green">
+	<td><webobject name = "CourseGroup"/></td>
+	<td><webobject name = "CourseSubject"/></td>
+	<td><webobject name = "CourseTeacher"/></td>
+	</tr></webobject>
+</webobject><webobject name = "NoCourse"><webobject name = "HasOther">
+	<tr class = "backfield2"><td colspan = "4"><webobject name = "Others">
+	<webobject name = "OtherSpan"><strong><webobject name = "OtherTitle"/>:</strong>
+		<webobject name = "OtherValue"></webobject></webobject>
+	</webobject></td></tr></webobject>
+<webobject name = "Row"><webobject name = "Matrix">
+	<webobject name = "MatrixCell"><webobject name = "Value"></webobject></webobject></webobject>
 		<webobject name = "CanEdit"><webobject name = "EditCell"><webobject name = "EditImage"/>
 		</webobject><webobject name = "DeleteCell"><webobject name = "Cross"/></webobject></webobject>
 		<webobject name = "ComponentContent"/>
 </webobject>
+<webobject name = "Listing"><webobject name = "SubPresenter"></webobject></webobject>
 </webobject></webobject>

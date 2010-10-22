@@ -361,7 +361,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 			days = EduPeriod.daysForList(listName, null, ec);
 			Integer h = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-			if(h != null)
+			if(h != null && h.intValue() > 0)
 				weekDays = h.intValue();
 		}
 		if(days <= 0) {

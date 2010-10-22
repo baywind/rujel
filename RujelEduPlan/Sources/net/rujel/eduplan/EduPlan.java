@@ -113,6 +113,10 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 			return EduPeriod.lessonTabs(ctx);
 		} else if("periods".equals(obj)) {
 			return EduPeriod.periods(ctx);
+		} else if("settingQualifiers".equals(obj)) {
+			Object result = WOApplication.application().valueForKeyPath(
+				"strings.RujelEduPlan_EduPlan.settingQualifiers");
+			return result;
 		}
 		return null;
 	}

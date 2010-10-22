@@ -135,6 +135,120 @@
 		<string>уточнить для отдельных курсов</string>
 		<key>setDefault</key>
 		<string>установить &quot;для всех&quot;</string>
+		<key>otherDesc</key>
+		<dict>
+			<key>styleClass</key>
+			<string>grey</string>
+			<key>field</key>
+			<string>other</string>
+		</dict>
+		<key>cycle</key>
+		<dict>
+			<key>title</key>
+			<string>Учебный цикл</string>
+			<key>keyPath</key>
+			<string>cycle</string>
+			<key>styleClass</key>
+			<string>highlight</string>
+			<key>presentPath</key>
+			<string>subject</string>
+			<key>style</key>
+			<string>border: 3px #cccc99; border-style: double double double none</string>
+			<key>styleGrade</key>
+			<string>border: 3px #cccc99; border-style: double none double double</string>
+			<key>showCycle</key>
+			<true/>
+		</dict>
+		<key>subject</key>
+		<dict>
+			<key>title</key>
+			<string>Название предмета</string>
+			<key>keyPath</key>
+			<string>cycle.subject</string>
+			<key>styleClass</key>
+			<string>gerade</string>
+			<key>style</key>
+			<string>border: 3px #cccc99 double;</string>
+			<key>showCycle</key>
+			<true/>
+		</dict>
+		<key>eduGroup</key>
+		<dict>
+			<key>title</key>
+			<string>Указать класс</string>
+			<key>field</key>
+			<string>group</string>
+			<key>keyPath</key>
+			<string>eduGroup</string>
+			<key>editor</key>
+			<string>eduGroup</string>
+			<key>styleClass</key>
+			<string>ungerade</string>
+			<key>style</key>
+			<string>border:double 3px #ccccff;</string>
+			<key>showEduGroup</key>
+			<true/>
+			<key>editorPresent</key>
+			<dict>
+				<key>presenter</key>
+				<string>ClassListing</string>
+				<key>presenterBindings</key>
+				<dict>
+					<key>editingContext</key>
+					<string>$ec</string>
+					<key>selection</key>
+					<string>.</string>
+					<key>onclick</key>
+					<string>$onclick</string>
+				</dict>
+			</dict>
+		</dict>
+		<key>grade</key>
+		<dict>
+			<key>title</key>
+			<string>Поток</string>
+			<key>field</key>
+			<string>group</string>
+			<key>editor</key>
+			<string>grade</string>
+			<key>styleClass</key>
+			<string>gerade</string>
+			<key>keyPath</key>
+			<string>cycle.grade</string>
+			<key>style</key>
+			<string>border:double 3px #cccc99;</string>
+			<key>showGrade</key>
+			<true/>
+		</dict>
+		<key>teacher</key>
+		<dict>
+			<key>field</key>
+			<string>teacher</string>
+			<key>styleClass</key>
+			<string>female</string>
+			<key>keyPath</key>
+			<string>teacher</string>
+			<key>style</key>
+			<string>border:double 3px #cc9999;</string>
+			<key>dict</key>
+			<dict>
+				<key>presenter</key>
+				<string>PersonDisplay</string>
+				<key>presenterBindings</key>
+				<dict>
+					<key>person</key>
+					<string>.</string>
+					<key>last</key>
+					<string>2</string>
+					<key>first</key>
+					<string>1</string>
+					<key>second</key>
+					<string>1</string>
+					<key>valueWhenEmpty</key>
+					<string>Вакансия</string>
+				</dict>
+			</dict>
+		</dict>
 	</dict>
 	<key>newPerson</key>
 	<dict>
