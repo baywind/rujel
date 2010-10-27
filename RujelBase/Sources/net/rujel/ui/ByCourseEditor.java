@@ -355,12 +355,35 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     }
     
     public Object value() {
-    	NSMutableDictionary dict = dict();
+    	if(currQ == null || crIdx == null)
+    		return null;
+    	NSMutableDictionary dict = currQ[crIdx.intValue()];
     	if(dict == null || currEditor == null ||
     			!currEditor.valueForKey("editor").equals(dict.valueForKey("editor")))
     		return null;
     	EOKeyValueQualifier q = (EOKeyValueQualifier)dict.valueForKey("qualifier");
     	return q.value();
+    }
+    
+    public void setValue(Object value) {
+    	if(currEditor == null || currQ == null || crIdx == null)
+    		return;
+    	NSMutableDictionary dict = currQ[crIdx.intValue()];
+    	if(dict == null || !currEditor.valueForKey(
+    			"editor").equals(dict.valueForKey("editor"))) {
+    		//TODO: dict getting method
+    		dict = ((NSDictionary)currEditor).mutableClone();
+    		currQ[crIdx.intValue()] = dict;
+    	}
+    	String key = (String)dict.valueForKey("operator");
+    	NSSelector sel = (key==null)?EOQualifier.QualifierOperatorEqual:
+    		EOQualifier.operatorSelectorForString(key);
+    	key = (String)dict.valueForKey("keyPath");
+    	dict.takeValueForKey(new EOKeyValueQualifier(key,sel,value), "qualifier");
+    	key = (String)dict.valueForKey("presentPath");
+    	if(key != null)
+    		value = NSKeyValueCodingAdditions.Utility.valueForKeyPath(value, key);
+    	dict.takeValueForKey(value,"value");
     }
     
     public String editorClass() {

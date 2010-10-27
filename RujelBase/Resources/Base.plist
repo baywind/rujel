@@ -182,6 +182,8 @@
 			<string>eduGroup</string>
 			<key>editor</key>
 			<string>eduGroup</string>
+			<key>presentPath</key>
+			<string>name</string>
 			<key>styleClass</key>
 			<string>ungerade</string>
 			<key>style</key>
@@ -192,13 +194,15 @@
 			<dict>
 				<key>presenter</key>
 				<string>ClassListing</string>
+				<key>invokeAction</key>
+				<true/>
 				<key>presenterBindings</key>
 				<dict>
 					<key>editingContext</key>
 					<string>$ec</string>
 					<key>selection</key>
 					<string>.</string>
-					<key>onclick</key>
+					<key>onClick</key>
 					<string>$onclick</string>
 				</dict>
 			</dict>
