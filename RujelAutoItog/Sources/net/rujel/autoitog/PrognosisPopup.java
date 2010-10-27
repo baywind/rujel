@@ -277,7 +277,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	/*decimal = decimal.movePointRight(2).stripTrailingZeros();
     	if(decimal.scale() < 0)
     		decimal = decimal.setScale(0); */
-    	return MyUtility.formatDecimal(decimal) + " %";
+    	return MyUtility.formatDecimal(decimal.movePointRight(2)) + " %";
     }
     
     public String completePercent() {
