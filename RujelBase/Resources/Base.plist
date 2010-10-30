@@ -146,6 +146,8 @@
 		<dict>
 			<key>title</key>
 			<string>Учебный цикл</string>
+			<key>editor</key>
+			<string>cycle</string>
 			<key>keyPath</key>
 			<string>cycle</string>
 			<key>styleClass</key>
@@ -163,13 +165,15 @@
 		<dict>
 			<key>title</key>
 			<string>Название предмета</string>
+			<key>editor</key>
+			<string>subject</string>
 			<key>keyPath</key>
 			<string>cycle.subject</string>
 			<key>styleClass</key>
 			<string>gerade</string>
 			<key>style</key>
 			<string>border: 3px #cccc99 double;</string>
-			<key>showCycle</key>
+			<key>showSubject</key>
 			<true/>
 		</dict>
 		<key>eduGroup</key>
@@ -204,6 +208,8 @@
 					<string>.</string>
 					<key>onClick</key>
 					<string>$onclick</string>
+					<key>selectAction</key>
+					<string>$doneEditing</string>
 				</dict>
 			</dict>
 		</dict>

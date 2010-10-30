@@ -445,7 +445,7 @@ public class MarkArchive extends _MarkArchive
 	
 	public void setArchiveDict (NSDictionary newDict) {
 		dict = newDict.mutableClone();
-		setData(NSPropertyListSerialization.stringFromPropertyList(dict));
+		setData(NSPropertyListSerialization.stringFromPropertyList(dict,false));
 	}
 	
 	public NSDictionary getArchiveDictionary() {
@@ -489,7 +489,7 @@ public class MarkArchive extends _MarkArchive
 			}
 		} else
 			dict.setObjectForKey(value, key);
-		setData(NSPropertyListSerialization.stringFromPropertyList(dict));
+		setData(NSPropertyListSerialization.stringFromPropertyList(dict,false));
 	}
 	
 	public Object valueForKey(String key) {
@@ -521,13 +521,13 @@ public class MarkArchive extends _MarkArchive
 			return 0;
 		return all.count();
 	}
-	
+	/*
 	public void validateForSave() {
 		if(dict != null) {
-			setData(NSPropertyListSerialization.stringFromPropertyList(dict));
+			setData(NSPropertyListSerialization.stringFromPropertyList(dict,false));
 		}
 		super.validateForSave();
-	}
+	}*/
 	
 	public void turnIntoFault(EOFaultHandler handler) {
 		dict = null;

@@ -193,3 +193,9 @@ OtherValue : DisplayAny {
   value = item.value;
   dict = item.dict;
 }
+
+CondCell : WOGenericContainer {
+  elementName = "td";
+  rowspan = rowspan;
+  omitTags = omitCell;
+}

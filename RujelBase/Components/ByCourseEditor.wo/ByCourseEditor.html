@@ -7,7 +7,7 @@
 			<th><webobject name = "EduPlanLabel"/></th>
 			<th><webobject name = "TeacherLabel"/></th>
 	</tr></thead><tbody><webobject name = "QList">
-	<tr class = "grey"><webobject name = "Matrix">
+	<tr class = "grey" style = "min-height:1em;"><webobject name = "Matrix">
 		<webobject name = "MatrixCell"><webobject name = "IsValue">
 			<webobject name = "Value"/></webobject></webobject><webobject name = "OtherList"></webobject>
 			</webobject>
@@ -16,18 +16,19 @@
 <webobject name = "HasSelection"><tr>
 <td width = "40%"><webobject name = "Editors"><webobject name = "SelectEditor">
 	<webobject name = "EditorItemTitle"/></webobject></webobject></td>
-<td width = "60%"><webobject name = "IfGrade"><webobject name = "GradeSelector"/>
+<td width = "60%"><webobject name = "IfGrade"><webobject name = "GradeForm">
+		= <webobject name = "GradeSelector"/><br/>
+		<webobject name = "GradeMin"/> ... <webobject name = "GradeMax"/><br/>
+		<input type = "button" onclick  = "ajaxPost(form);" value = "OK"/>
+	</webobject>
 	</webobject><webobject name = "IfSubject"><webobject name = "SubjectRegex"/>
 	</webobject><webobject name = "IfCycle"><table><tr>
 	<td style = "min-width:6em;" valign = "top"><table width = "100%"><webobject name = "Grades">
-		<tr><webobject name = "GradeCell"><webobject name = "Grade"/></webobject>
-	</tr></webobject></table></td>
+		<td><webobject name = "Grade"/></td>
+	</webobject></table></td>
 	<td style = "min-width:16em;" valign = "top"><table width = "100%"><webobject name = "Cycles">
-	<webobject name = "CycleRow"><webobject name = "CycleCell"><webobject name = "Subject"/></webobject>
-		<td class = "grey"><webobject name = "Courses">
-			<webobject name = "CourseCell"><em><webobject name = "CourseComment"/></em>
-				<webobject name = "CourseTeacher"/></webobject>
-		</webobject></td>
+	<webobject name = "CycleRow"><td><webobject name = "Subject"/></td>
+			<webobject name = "HasExtra"><td><webobject name = "CycleInfo"/></td></webobject>
 		</webobject></webobject></table></td>
 </tr></table>
 	</webobject><webobject name = "IfPresent"><webobject name = "EditorPresent"></webobject>	

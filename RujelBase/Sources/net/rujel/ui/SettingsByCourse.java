@@ -49,6 +49,7 @@ public class SettingsByCourse extends WOComponent {
 //	public EOEditingContext ec;
 	protected Object selector;
 	protected SettingsBase base;
+	public Integer rowspan;
 	
     public SettingsByCourse(WOContext context) {
         super(context);
@@ -149,13 +150,13 @@ public class SettingsByCourse extends WOComponent {
     		Object value = valueForBinding("textValue");
     		if(value == null)
     			value = NullValue;
-    		editor.takeValueForKeyPath(value, "byCourse.textValue");
+    		editor.takeValueForKeyPath(value, "tmpValues.textValue");
     	}
     	if(hasBinding("numericValue")) {
     		Object value = valueForBinding("numericValue");
     		if(value == null)
     			value = NullValue;
-    		editor.takeValueForKeyPath(value, "byCourse.numericValue");
+    		editor.takeValueForKeyPath(value, "tmpValues.numericValue");
     	}
     	if(hasBinding("pushByCourse")) {
     		editor.takeValueForKey(this, "resultGetter");
@@ -218,6 +219,20 @@ public class SettingsByCourse extends WOComponent {
 		}
 		return null;
 	}
+	
+	public Boolean canSort() {
+		if(Various.boolForObject(valueForBinding("cantSort")))
+			return Boolean.FALSE;
+    	NamedFlags access = (NamedFlags)valueForBinding("access");
+    	if(access != null)
+    		return Boolean.valueOf(access.flagForKey("edit"));
+    	else
+    		return (Boolean)session().valueForKeyPath("readAccess.edit.SettingByCourse");
+ 	}
+	
+    public boolean omitCell() {
+    	return hasBinding("rowspan");
+    }
 
     public boolean synchronizesVariablesWithBindings() {
         return false;
@@ -230,6 +245,8 @@ public class SettingsByCourse extends WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(Various.boolForObject(valueForBinding("readOnly")))
 			_byCourse = null;
+    	if(hasBinding("rowspan"))
+    		setValueForBinding(rowspan, "rowspan");
 		super.appendToResponse(aResponse, aContext);
 	}
 	
@@ -238,6 +255,7 @@ public class SettingsByCourse extends WOComponent {
 		base = null;
 		_byCourse = null;
 		item = null;
+		rowspan = null;
 		setValueForBinding(null, "item");
 	}
 }

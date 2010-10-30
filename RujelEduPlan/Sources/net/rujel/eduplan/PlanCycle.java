@@ -31,6 +31,7 @@ package net.rujel.eduplan;
 
 import java.util.Enumeration;
 
+import net.rujel.base.Indexer;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
@@ -447,5 +448,14 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	public void setSubjectEO(EOEnterpriseObject value) {
 		super.setSubjectEO(value);
 		setSubject((value==null)?null:(String)value.valueForKey(Subject.SUBJECT_KEY));
+	}
+	
+	public String extraInfo() {
+		NSArray list = Indexer.indexersOfType(editingContext(), "eduLevel");
+		if(list == null || list.count() == 0)
+			throw new UnknownKeyException("eduLevel not defined can't return extraInfo",
+					this,"extraInfo");
+		Indexer idx = (Indexer)list.objectAtIndex(0);
+		return idx.formattedForIndex(level().intValue(), null);
 	}
 }

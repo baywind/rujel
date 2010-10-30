@@ -8,67 +8,35 @@ Cross : WOImage {
   style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
 }
 
-Grades : WORepetition {
+Grades : DynamicTableRow {
   list = grades;
-  item = gradeItem;
-}
-
-GradeCell : OnClickContainer {
-  elementName = "td";
-  onclick = onclick;
-  invokeAction = selectGrade;
-  class = gradeClass;
+  item = item;
+  selectAction = pickGrade;
+  selection = tmpValues.currGrade;
+  class = "ungerade";
+  onClick = onclick;
 }
 
 Grade : WOString {
-  value = gradeItem;
+  value = item;
   numberformat = "0";
 }
 
 Cycles : WORepetition {
-  list = cycles;
-  item = cycleItem;
+  list = tmpValues.cycles;
+  item = item;
 }
 
-CycleRow : WOGenericContainer {
+CycleRow : OnClickContainer {
   elementName = "tr";
-  class = cycleClass;
-}
-
-CycleCell : OnClickContainer {
-  elementName = "td";
+  class = item.styleClass;
   invokeAction = selectCycle;
   onclick = onclick;
 }
 
+
 Subject : WOString {
-  value = cycleItem.subject;
-}
-
-Courses : WORepetition {
-  list = courses;
-  item = courseItem;
-}
-
-CourseCell : WOGenericContainer {
-  elementName = "div";
-  onmouseover = "dim(this);dim(get(this,'tr'));";
-  onmouseout = "unDim(this);unDim(get(this,'tr'));";
-  onclick = onclick;
-  invokeAction = selectCourse;
-  class = courseClass;
-}
-
-CourseComment : WOString {
-  value = courseItem.comment;
-}
-
-CourseTeacher : PersonDisplay {
-  person = courseItem.teacher;
-  last = 2;
-  first = 1;
-  second = 1;
-  startWithLast = true;
+  value = item.subject;
 }
 
 Form : WOForm {
@@ -83,7 +51,7 @@ SubmitButton : WOSubmitButton {
 
 CurrYear : WOCheckBox {
   value = session.eduYear;
-  selection = byCourse.eduYear;
+  selection = tmpValues.eduYear;
   disabled = forceEduYear.count;
 }
 
@@ -97,7 +65,7 @@ HasSelection : WOConditional {
 
 NoSelection : WOConditional {
   condition = currQ;
-  negate = false;
+  negate = true;
 }
 
 QList : WORepetition {
@@ -126,6 +94,7 @@ IsValue : WOConditional {
 Value : DisplayAny {
   value = dict.value;
   dict = dict.dict;
+  valueWhenEmpty = "?";
 }
 
 OtherList : WORepetition {
@@ -183,7 +152,9 @@ IfPresent : WOConditional {
 GradeSelector : WOPopUpButton {
   list = grades;
   name = "grade";
-  selectedValue = value;
+  selection = tmpValues.value;
+  noSelectionString = "-?-";
+  onchange = "form.grMin.selectedIndex=0;form.grMax.selectedIndex=0;";
 }
 
 
@@ -194,4 +165,31 @@ SubjectRegex : WOTextField {
 EditorPresent : DisplayAny {
   value = value;
   dict = currEditor.editorPresent;
+}
+
+GradeForm : WOForm {
+  action = selectGrade;
+}
+
+GradeMin : WOPopUpButton {
+  list = grades;
+  name = "grMin";
+  selection = tmpValues.min;
+  noSelectionString = "-?-";
+  onchange = "form.grade.selectedIndex=0;if(form.grMax.selectedIndex<selectedIndex)form.grMax.selectedIndex=0;";
+}
+GradeMax : WOPopUpButton {
+  list = grades;
+  name = "grMax";
+  selection = tmpValues.max;
+  noSelectionString = "-?-";
+  onchange = "form.grade.selectedIndex=0;if(form.grMin.selectedIndex>selectedIndex)form.grMin.selectedIndex=0;";
+}
+
+CycleInfo : WOString {
+  value = item.extraInfo;
+}
+
+HasExtra : WOConditional {
+  condition = tmpValues.hasExtra;
 }

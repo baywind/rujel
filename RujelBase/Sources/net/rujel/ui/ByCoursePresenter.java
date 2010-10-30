@@ -79,6 +79,8 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	prepare();
+    	if(hasBinding("rowspan"))
+    		setValueForBinding(rowspan, "rowspan");
     	super.appendToResponse(aResponse, aContext);
     }
     
@@ -96,6 +98,10 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     	}
     	EOQualifier qual = qs.getQualifier();
     	analyseQualifier(qual, false);
+    }
+    
+    public boolean omitCell() {
+    	return hasBinding("rowspan");
     }
     
     protected void analyseQualifier(EOQualifier qual, boolean negate) {
@@ -150,10 +156,34 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 					sel == EOQualifier.QualifierOperatorGreaterThanOrEqualTo) {
     			matrix[GROUP].takeValueForKey(value, "min");
     			matrix[GROUP].takeValueForKey(qual, "qualifierLow");
+    			Object max = matrix[GROUP].valueForKey("max");
+    			StringBuilder buf = new StringBuilder(8);
+    			if(max == null) {
+    				if(sel == EOQualifier.QualifierOperatorGreaterThan)
+    					buf.append("&gt;");
+    				else
+    					buf.append("&ge;");
+    				buf.append(value);
+    			} else {
+    				buf.append(value).append("...").append(max);
+    			}
+				matrix[GROUP].takeValueForKey(buf.toString(), "value");
 			} else if(sel == EOQualifier.QualifierOperatorLessThan || 
 					sel == EOQualifier.QualifierOperatorLessThanOrEqualTo) {
     			matrix[GROUP].takeValueForKey(value, "max");
     			matrix[GROUP].takeValueForKey(qual, "qualifierHigh");
+    			Object min = matrix[GROUP].valueForKey("min");
+    			StringBuilder buf = new StringBuilder(8);
+    			if(min == null) {
+    				if(sel == EOQualifier.QualifierOperatorLessThan)
+    					buf.append("&lt;");
+    				else
+    					buf.append("&le;");
+    				buf.append(value);
+    			} else {
+    				buf.append(min).append("...").append(value);
+    			}
+				matrix[GROUP].takeValueForKey(buf.toString(), "value");
 			}
 		} else if(key.equals("cycle.subject")) {
 			matrix[SUBJECT] = ((NSDictionary)ses.valueForKeyPath(

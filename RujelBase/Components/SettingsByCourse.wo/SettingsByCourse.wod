@@ -75,3 +75,39 @@ BaseTitle : WOString {
   valueWhenEmpty = "set base";
   escapeHTML = false;
 }
+
+CondCell : WOGenericContainer {
+  elementName = "td";
+  rowspan = rowspan;
+  omitTags = omitCell;
+}
+
+CanSort : WOConditional {
+  condition = canSort;
+}
+
+SortCell : WOGenericContainer {
+  elementName = "td";
+  rowspan = rowspan;
+}
+
+MoveUp: WOImage {
+	filename = "up.png";
+	framework ="RujelBase";
+	align = "center";
+	valign = "top";
+	onclick="up(get(this,'table',0));";
+	style = "cursor:pointer;";
+}
+MoveDown: WOImage {
+	align = "center";
+	filename = "down.png";
+	framework ="RujelBase";
+	onclick= "down(get(this,'table',0));";
+	style = "cursor:pointer;";
+}
+ItemSorting : WOTextField {
+  value = item.sort;
+  numberformat = "0";
+  class = "sorting";
+}

@@ -409,6 +409,8 @@ public class Indexer extends _Indexer
 		Indexer typeIndex = (Indexer)list.objectAtIndex(0);
 		if(type.indexOf('*') < 0 && type.indexOf('?') < 0) {
 			Integer typeIdx = typeIndex.indexForValue(type, true);
+			if(typeIdx == null)
+				return null;
 			return EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME, TYPE_KEY, typeIdx);
 		}
 		EOQualifier qual = new EOKeyValueQualifier(IndexRow.VALUE_KEY, 

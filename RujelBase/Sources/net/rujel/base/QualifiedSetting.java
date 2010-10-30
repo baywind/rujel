@@ -61,7 +61,7 @@ public class QualifiedSetting extends _QualifiedSetting {
 		NSMutableArray args = new NSMutableArray();
 		Various.formatQualifier(qual, buf, args);
 		setQualifierString(buf.toString());
-		setArgumentsString(NSPropertyListSerialization.stringFromPropertyList(args));
+		setArgumentsString(NSPropertyListSerialization.stringFromPropertyList(args,false));
 		qualifier = qual;
 	}
 	
@@ -137,7 +137,7 @@ public class QualifiedSetting extends _QualifiedSetting {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
-		setSort(new Integer(0));
+		setSort(new Integer(1));
 	}
 
 	public void nullufy() {
