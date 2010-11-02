@@ -119,6 +119,10 @@
 				<string>Наборы критериев</string>
 				<string>Представления</string>
 			</array>
+			<key>framework</key>
+			<string>RujelBase</string>
+			<key>scriptResource</key>
+			<string>sorting.js</string>
 		</dict>
 	</dict>
 	<key>messages</key>

@@ -202,13 +202,13 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 				if(matrix != common && common[i] != null)
 					continue;
 				EOQualifier qual = (EOQualifier)matrix[i].valueForKey("qualifier");
-				if(qual != null)
+				if(qual != null && !quals.containsObject(qual))
 					quals.addObject(qual);
 				qual = (EOQualifier)matrix[i].valueForKey("qualifierLow");
-				if(qual != null)
+				if(qual != null && !quals.containsObject(qual))
 					quals.addObject(qual);
 				qual = (EOQualifier)matrix[i].valueForKey("qualifierHigh");
-				if(qual != null)
+				if(qual != null && !quals.containsObject(qual))
 					quals.addObject(qual);
 			}
 		}

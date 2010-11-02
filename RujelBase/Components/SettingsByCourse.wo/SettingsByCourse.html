@@ -1,4 +1,4 @@
-<table align = "center" style = "text-align:center;" cellpadding = "2">
+<webobject name = "SortForm"><table align = "center" style = "text-align:center;" cellpadding = "2">
 	<webobject name = "CanEdit"><caption align = "bottom" valign = "bottom">
 			&nbsp;<webobject name = "SetBase"><webobject name = "BaseTitle"/></webobject>
 			<webobject name = "AddByCourse">+</webobject>
@@ -8,9 +8,17 @@
 			<th><webobject name = "EduPlanLabel"/></th>
 			<th><webobject name = "TeacherLabel"/></th>
 			<webobject name = "EditorHead"/><webobject name = "CanSort">
-			<th width = "24">sort</th></webobject>
-	</webobject><webobject name = "CondCell"><webobject name = "Content"/></webobject>
-	</tr></thead>
+			<th width = "24" rowspan = "2"><webobject name = "SaveSort"/></th>
+			</webobject><webobject name = "Title"/>
+	</webobject>
+	</tr>
+	<webobject name = "ShowBase"><tr class = "highlight2"><webobject name = "ShowDetails">
+		<td colspan = "4" align = "center">
+		<webobject name = "BaseString"/></td>
+		<webobject name = "EditorHead"/></webobject>
+		<webobject name = "CondCell"><webobject name = "Content"/></webobject>
+	</tr></webobject>
+	</thead>
 	<tbody>
 	<webobject name = "ByCourseList"><webobject name = "ShowDetails">
 		<webobject name = "ByCoursePresenter"><webobject name = "CanSort">
@@ -21,4 +29,4 @@
 	</webobject></webobject><webobject name = "HideDetais">
 	<webobject name = "CondCell"><webobject name = "Content"/></webobject>
 	</webobject></webobject></tbody>
-</table>
+</table></webobject>

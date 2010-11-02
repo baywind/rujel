@@ -29,6 +29,8 @@
 
 package net.rujel.ui;
 
+import java.util.Enumeration;
+
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
@@ -112,10 +114,11 @@ public class SettingsByCourse extends WOComponent {
 				setValueForBinding(_byCourse, "editList");
 		}
 		if(_byCourse == null) {
-			if(base() == null)
+			if(base() != null)
+				_byCourse = base().byCourseSorted(
+						(Integer)session().valueForKey("eduYear"));
+			if(_byCourse == null)
 				_byCourse = new NSMutableArray();
-			else
-				_byCourse = base().byCourse((Integer)session().valueForKey("eduYear"));
 		}
 		return _byCourse;
 	}
@@ -134,9 +137,9 @@ public class SettingsByCourse extends WOComponent {
     		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
     	if(access.flagForKey("edit") || access.flagForKey("delete")) {
     		if(access.flagForKey("edit") && access.flagForKey("delete"))
-    			return "<td colspan = \"2\"/>";
+    			return "<td colspan = \"2\" />";
     		else
-    			return "<td/>";
+    			return "<td />";
     	}
     	return null;
 	}
@@ -208,7 +211,7 @@ public class SettingsByCourse extends WOComponent {
 		EOEditingContext ec = base().editingContext();
 		try {
 			ec.saveChanges();
-			((NSMutableArray)_byCourse).insertObjectAtIndex(base(), 0);
+//			((NSMutableArray)_byCourse).insertObjectAtIndex(base(), 0);
 			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Changed BaseSettings",
 					new Object[] {session(),base()});
 		} catch (Exception e) {
@@ -221,7 +224,10 @@ public class SettingsByCourse extends WOComponent {
 	}
 	
 	public Boolean canSort() {
-		if(Various.boolForObject(valueForBinding("cantSort")))
+		if(Various.boolForObject(valueForBinding("cantSort")) || 
+				valueForBinding("selector") != null)
+			return Boolean.FALSE;
+		if(byCourse() == null || byCourse().count() < 2)
 			return Boolean.FALSE;
     	NamedFlags access = (NamedFlags)valueForBinding("access");
     	if(access != null)
@@ -230,8 +236,68 @@ public class SettingsByCourse extends WOComponent {
     		return (Boolean)session().valueForKeyPath("readAccess.edit.SettingByCourse");
  	}
 	
+	public WOActionResults saveSort() {
+		EOEditingContext ec = base().editingContext();
+		if(!ec.hasChanges())
+			return null;
+		try {
+			ec.saveChanges();
+			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,
+					"QualifiedSetttings order saved", new Object[] {session(),base()});
+		} catch (Exception e) {
+			ec.revert();
+			ByCourseEditor.logger.log(WOLogLevel.WARNING,
+					"Error saving QualifiedSetttings order",
+					new Object[] {session(),base(),e});
+		}
+		return null;
+	}
+	
     public boolean omitCell() {
-    	return hasBinding("rowspan");
+    	return hasBinding("rowspan") || !hasBinding("title");
+    }
+    
+    public void setRowspan(Integer value) {
+    	if(canSetValueForBinding("rowspan"))
+    		setValueForBinding(value, "rowspan");
+    	rowspan = value;
+    }
+    
+    public String cellClass() {
+    	if(item == null || item == base)
+    		return "orange";
+    	return null;
+    }
+    
+    public String title() {
+    	Object binding = valueForBinding("title");
+    	if(binding == null)
+    		return null;
+    	if(binding instanceof CharSequence) {
+    		String title = binding.toString();
+    		if(title.charAt(0) == '<')
+    			return title;
+    		return "<th>" + title + "</th>";
+    	}
+    	if(binding instanceof NSArray) {
+    		StringBuilder buf = new StringBuilder();
+    		Enumeration enu = ((NSArray)binding).objectEnumerator();
+    		while (enu.hasMoreElements()) {
+				Object object = enu.nextElement();
+				buf.append("<th>").append(object).append("</th>");
+			}
+    		return buf.toString();
+    	}
+    	return binding.toString();
+    }
+    
+    public Boolean showBase() {
+    	String sel = (String)valueForBinding("selector");
+    	if(sel == null)
+    		return Boolean.TRUE;
+    	Object val = valueForBinding(sel);
+    	Object bVal = base().valueForKey(sel);
+    	return Boolean.valueOf((val==null)?bVal==null:val.equals(bVal));
     }
 
     public boolean synchronizesVariablesWithBindings() {
@@ -243,7 +309,7 @@ public class SettingsByCourse extends WOComponent {
 	}
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		if(Various.boolForObject(valueForBinding("readOnly")))
+//		if(Various.boolForObject(valueForBinding("readOnly")))
 			_byCourse = null;
     	if(hasBinding("rowspan"))
     		setValueForBinding(rowspan, "rowspan");

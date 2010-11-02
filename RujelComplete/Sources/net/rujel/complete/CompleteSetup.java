@@ -166,7 +166,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     
     public Boolean getClosed() {
     	if(item == null)
-    		return null;
+    		return Boolean.valueOf(base.textValue());
     	/*if(item == base) {
     		Integer eduYear = (Integer)session().valueForKey("eduYear");
     		Integer settingYear = base.numericValue();
@@ -186,7 +186,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     
     public void setClosed(Boolean closed) {
     	if(item == null)
-    		return;
+    		item = base;
 		Integer eduYear = (Integer)session().valueForKey("eduYear");
     	if(item == base)
     		base.setNumericValue(eduYear);
@@ -224,6 +224,14 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     	return buf.toString();
     }
     
+	public String stamp() {
+		StringBuilder buf = new StringBuilder(" <img src = \"");
+		buf.append(application().resourceManager().urlForResourceNamed(
+				"stamp.gif", "RujelComplete", null, context().request()));
+		buf.append("\" height = \"24\" width = \"24\" />");
+		return buf.toString();
+	}
+
     public boolean synchronizesVariablesWithBindings() {
         return false;
 	}

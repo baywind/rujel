@@ -134,3 +134,6 @@
 	vertical-align:middle;
 }
 
+input.sorting {
+	display:none;
+}

@@ -25,9 +25,11 @@ ByCourseReview : SettingsByCourse {
   item = item;
   ec = ec;
   readOnly = true;
+  title = ^dict.critSet;
 }
 ItemName : WOString {
   value = item.textValue;
+  valueWhenEmpty = base.textValue;
 }
 
 Criteria : WORepetition {

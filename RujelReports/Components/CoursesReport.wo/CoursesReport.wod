@@ -2,7 +2,6 @@ PageWrapper : PageWrapper {
 	title = title;
 	resourcesFramework = "RujelBase";
 	scriptResource = "sorting.js";
-	styles = ".sorting {display:none;}";
 }
 Title : WOString {
   value = title;

@@ -65,8 +65,9 @@ CanCreate : WOConditional {
 }
 
 BcListName : WOString {
-  value = listName;
-  escapeHTML = false;
+  value = item.textValue;
+  valueWhenEmpty = base.textValue;
+  escapeHTML = true;
 }
 
 BaseTextValue : WOString {
@@ -80,6 +81,7 @@ SettingsByCourse : SettingsByCourse {
   textValue = currList;
   ec = ec;
   readOnly = true;
+  title = session.strings.RujelEduPlan_EduPlan.properties.listName;
 }
 
 UsageSettings : SettingsByCourse {

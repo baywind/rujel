@@ -2,7 +2,6 @@ PageWrapper : PageWrapper {
   title = application.strings.RujelReports_Reports.CustomReport.title;
   resourcesFramework = "RujelBase";
   scriptResource = "sorting.js";
-  styles = ".sorting {display:none;}";
   onLoad = "scrollToObj('curr','highlight2');";
 }
 Title : WOString {

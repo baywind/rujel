@@ -50,6 +50,7 @@ SettingsByCourse : SettingsByCourse {
   numericValue = session.eduYear;
   pushByCourse = "pushByCourse";
   access = session.readAccess.FLAGS.CompleteSetup;
+  title = stamp;
 }
 
 Hide : WOConditional {
@@ -78,19 +79,11 @@ CoursesTitle : WOString {
   escapeHTML = false;
 }
 
-IsTitle : WOConditional {
-  condition = item;
-  negate = true;
-}
-
 Stamp : WOImage {
   framework = "RujelComplete";
   filename = "stamp.gif";
   height = 24;
   width = 24;
-}
-IsRow : WOConditional {
-  condition = item;
 }
 
 ClosedTick : WOCheckBox {

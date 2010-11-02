@@ -101,7 +101,8 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     }
     
     public boolean omitCell() {
-    	return hasBinding("rowspan");
+    	boolean result = hasBinding("rowspan");
+    	return result;
     }
     
     protected void analyseQualifier(EOQualifier qual, boolean negate) {

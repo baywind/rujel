@@ -120,6 +120,10 @@
 			<string>Учебные Периоды</string>
 			<key>sort</key>
 			<string>20</string>
+			<key>resourcesFramework</key>
+			<string>RujelBase</string>
+			<key>scriptResource</key>
+			<string>sorting.js</string>
 		</dict>
 	</array>
 	<key>regimeTabs</key>

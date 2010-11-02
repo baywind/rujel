@@ -273,11 +273,11 @@ public class SettingsBase extends _SettingsBase {
     	return usage;
 	}
 	
-    public NSMutableArray byCourse(Integer eduYear) {
+    public NSMutableArray byCourseSorted(Integer eduYear) {
 		NSArray baseByCourse = qualifiedSettings();
-		NSMutableArray byCourse = new NSMutableArray(this);
 		if(baseByCourse == null || baseByCourse.count() == 0)
-			return byCourse;
+			return null;
+		NSMutableArray byCourse = new NSMutableArray();
 		Enumeration enu = baseByCourse.objectEnumerator();
 		if(eduYear == null) {
 			byCourse.addObjectsFromArray(baseByCourse);
@@ -289,7 +289,7 @@ public class SettingsBase extends _SettingsBase {
 					byCourse.addObject(bc);
 			}
 		}
-		if(byCourse.count() > 2) {
+		if(byCourse.count() > 1) {
 			EOSortOrdering.sortArrayUsingKeyOrderArray(byCourse, ModulesInitialiser.sorter);
 		}
     	return byCourse;

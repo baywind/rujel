@@ -140,7 +140,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		lists().addObject(currList);
     	}
     }
-
+/*
     public String listName() {
     	StringBuilder buf = new StringBuilder();
     	if(item == null) {
@@ -156,7 +156,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		buf.append(WOMessage.stringByEscapingHTMLString(text)).append("</td>");
     	}
     	return buf.toString();
-    }
+    }*/
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object cl = valueForBinding("currList");
