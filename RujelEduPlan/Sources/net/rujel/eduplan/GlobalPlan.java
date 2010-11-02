@@ -159,6 +159,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
 						dict.valueForKey("planHours");
 				idx = grades.indexOf(cycle.grade());
+				if(idx < 0)
+					continue;
 				cycles[idx] = cycle;
 				planHours[idx] = cycle.planHours(null);
 				idx++;

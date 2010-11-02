@@ -630,6 +630,9 @@ public class MarksPresenter extends NotePresenter {
 	}
 	
 	public String shortNoteForStudent() {
+		if(student() == null)
+			return (String)session().valueForKeyPath(
+					"strings.Reusables_Strings.dataTypes.text");
 		String note = noteForStudent();
 		if(note == null)
 			return null;
