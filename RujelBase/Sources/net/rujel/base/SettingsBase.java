@@ -269,6 +269,7 @@ public class SettingsBase extends _SettingsBase {
     	    	if((val == null)?value == null : val.equals(value))
     				usage.addObject(bc);
     		}
+    		EOSortOrdering.sortArrayUsingKeyOrderArray(usage, ModulesInitialiser.sorter);
     	}
     	return usage;
 	}

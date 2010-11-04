@@ -189,7 +189,9 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		} else if(key.equals("cycle.subject")) {
 			matrix[SUBJECT] = ((NSDictionary)ses.valueForKeyPath(
 					"strings.RujelBase_Base.SettingsBase.subject")).mutableClone();
-			matrix[SUBJECT].takeValueForKey(value, "value");
+			StringBuilder buf = new StringBuilder();
+			buf.append('"').append(value).append('"');
+			matrix[SUBJECT].takeValueForKey(buf.toString(), "value");
 			matrix[SUBJECT].takeValueForKey(qual, "qualifier");
 		} else if(key.equals("cycle")) {
 			matrix[SUBJECT] = ((NSDictionary)ses.valueForKeyPath(

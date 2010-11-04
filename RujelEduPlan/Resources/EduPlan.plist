@@ -178,7 +178,8 @@
 		<string>Не описано ни одного учебного периода.&lt;br/&gt; Детализация невозможна.</string>
 	</dict>
 	<key>settingQualifiers</key>
-	<array>
+	<dict>
+		<key>subject</key>
 		<dict>
 			<key>keyPath</key>
 			<string>cycle.subjectEO</string>
@@ -186,6 +187,8 @@
 			<string>Предмет</string>
 			<key>presentPath</key>
 			<string>subject</string>
+			<key>editor</key>
+			<string>selectSubject</string>
 			<key>field</key>
 			<string>subject</string>
 			<key>styleClass</key>
@@ -193,6 +196,7 @@
 			<key>style</key>
 			<string>border:double 3px #cccccc;</string>
 		</dict>
+		<key>area</key>
 		<dict>
 			<key>keyPath</key>
 			<string>cycle.subjectEO.area</string>
@@ -200,6 +204,8 @@
 			<string>Предметная область</string>
 			<key>presentPath</key>
 			<string>areaName</string>
+			<key>editor</key>
+			<string>selectSubject</string>
 			<key>field</key>
 			<string>subject</string>
 			<key>styleClass</key>
@@ -207,6 +213,7 @@
 			<key>style</key>
 			<string>border:double 3px #cccccc;font-style:italic;</string>
 		</dict>
+		<key>level</key>
 		<dict>
 			<key>keyPath</key>
 			<string>cycle.level</string>
@@ -219,6 +226,33 @@
 			<key>style</key>
 			<string>font-weight:bold;</string>
 		</dict>
-	</array>
+	</dict>
+	<key>subjectSelector</key>
+	<dict>
+		<key>title</key>
+		<string>Выбрать предмет</string>
+		<key>editor</key>
+		<string>selectSubject</string>
+		<key>field</key>
+		<string>subject</string>
+		<key>editorPresent</key>
+		<dict>
+			<key>presenter</key>
+			<string>SubjectSelector</string>
+			<key>invokeAction</key>
+			<true/>
+			<key>presenterBindings</key>
+			<dict>
+				<key>ec</key>
+				<string>$ec</string>
+				<key>selection</key>
+				<string>.</string>
+				<key>onclick</key>
+				<string>$onclick</string>
+				<key>currDict</key>
+				<string>^currDict</string>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

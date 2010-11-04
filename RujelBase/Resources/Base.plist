@@ -232,6 +232,8 @@
 		</dict>
 		<key>teacher</key>
 		<dict>
+			<key>title</key>
+			<string>Выбрать</string>
 			<key>field</key>
 			<string>teacher</string>
 			<key>styleClass</key>
@@ -255,7 +257,33 @@
 					<key>second</key>
 					<string>1</string>
 					<key>valueWhenEmpty</key>
-					<string>Вакансия</string>
+					<string>&lt;em&gt;Вакансия&lt;/em&gt;</string>
+				</dict>
+			</dict>
+			<key>editor</key>
+			<string>teacherSelector</string>
+			<key>editorPresent</key>
+			<dict>
+				<key>presenter</key>
+				<string>TeacherSelector</string>
+				<key>invokeAction</key>
+				<true/>
+				<key>takeValuesFromRequest</key>
+				<true/>
+				<key>presenterBindings</key>
+				<dict>
+					<key>useAjaxPost</key>
+					<true/>
+					<key>ajaxReturn</key>
+					<true/>
+					<key>editingContext</key>
+					<string>$ec</string>
+					<key>selection</key>
+					<string>.</string>
+					<key>onclick</key>
+					<string>$onclick</string>
+					<key>selectAction</key>
+					<string>$doneEditing</string>
 				</dict>
 			</dict>
 		</dict>

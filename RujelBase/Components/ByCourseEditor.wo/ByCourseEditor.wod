@@ -39,7 +39,7 @@ Subject : WOString {
   value = item.subject;
 }
 
-Form : WOForm {
+SubmitForm : WOForm {
   style = "padding:1ex; min-width:8em;white-space:nowrap;";
 }
 
@@ -130,6 +130,7 @@ SelectEditor : OnClickContainer {
   onclick = onclick;
   invokeAction = selectEditor;
   class = editorClass;
+  style = "margin: 2px;";
 }
 
 EditorItemTitle : WOString {
@@ -165,6 +166,7 @@ SubjectRegex : WOTextField {
 EditorPresent : DisplayAny {
   value = value;
   dict = currEditor.editorPresent;
+  currDict = currDict;
 }
 
 GradeForm : WOForm {
@@ -192,4 +194,8 @@ CycleInfo : WOString {
 
 HasExtra : WOConditional {
   condition = tmpValues.hasExtra;
+}
+
+RegexForm : WOForm {
+  action = doneEditing;
 }

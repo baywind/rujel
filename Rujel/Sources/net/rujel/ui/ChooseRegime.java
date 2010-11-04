@@ -149,9 +149,15 @@ public class ChooseRegime extends WOComponent {
     	return returnPage;
     }
     
-    public WOActionResults flush() {
+    public WOActionResults flushStrings() {
     	StringStorage str = (StringStorage)application().valueForKey("strings");
     	str.flush();
+    	returnPage.ensureAwakeInContext(context());
+    	return returnPage;
+    }
+    
+    public WOActionResults flushDB() {
+    	session().defaultEditingContext().rootObjectStore().invalidateAllObjects();
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }

@@ -297,6 +297,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 		case ByCoursePresenter.GROUP:
 			editors.addObject(strings.valueForKey("grade"));
 			editors.addObject(strings.valueForKey("eduGroup"));
+			editors.addObject(strings.valueForKey("cycle"));
 			editors.addObjectsFromArray((NSArray)session().valueForKeyPath(
 					"modules.settingEditorsGROUP"));
 			break;
@@ -338,6 +339,10 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     }
     
     public WOActionResults selectEditor() {
+    	if(item == null) {
+    		setCurrDict(null);
+    		return null;
+    	}
 		currEditor = (NSKeyValueCoding)item;
 		editorPreload();
     	return null;
@@ -380,6 +385,11 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     	return currQ[crIdx.intValue()];
     }
     
+    public void setCurrDict(NSMutableDictionary dict) {
+    	currQ[crIdx.intValue()] = dict;
+    	doneEditing();
+    }
+    
     public Object value() {
     	NSMutableDictionary dict = currDict();
     	if(dict == null || currEditor == null ||
@@ -404,9 +414,15 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		EOQualifier.operatorSelectorForString(key);
     	key = (String)dict.valueForKey("keyPath");
     	dict.takeValueForKey(new EOKeyValueQualifier(key,sel,value), "qualifier");
-    	key = (String)dict.valueForKey("presentPath");
-    	if(key != null)
-    		value = NSKeyValueCodingAdditions.Utility.valueForKeyPath(value, key);
+    	if(key.equals("cycle.subject")) {
+			StringBuilder buf = new StringBuilder();
+			buf.append('"').append(value).append('"');
+			value = buf.toString();
+    	} else {
+    		key = (String)dict.valueForKey("presentPath");
+    		if(key != null)
+    			value = NSKeyValueCodingAdditions.Utility.valueForKeyPath(value, key);
+    	}
     	dict.takeValueForKey(value,"value");
     }
     
@@ -648,17 +664,22 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     
 	public WOActionResults selectCycle() {
     	EduCycle value = (EduCycle)NSKeyValueCoding.Utility.valueForKey(item,"cycle");
-    	NSMutableDictionary dict = currDict();
-    	if(dict == null || !"cycle".equals(dict.valueForKeyPath("editor"))
-    			|| currQ != common) {
-    		dict = ((NSDictionary)currEditor).mutableClone();
-    		currQ[crIdx.intValue()] = dict;
-    	}
+    	NSMutableDictionary dict = ((NSDictionary)currEditor).mutableClone();
 		dict.takeValueForKey(value.subject(), "value");
 		dict.takeValueForKey(new EOKeyValueQualifier("cycle", 
 				EOQualifier.QualifierOperatorEqual, value), "qualifier");
+		currQ[2] = dict;
+		if(crIdx.intValue() == 1 || currQ[1] == null || 
+				((String)currQ[1].valueForKey("keyPath")).startsWith("cycle")) {
+			dict = dict.mutableClone();
+			dict.takeValueForKey(currEditor.valueForKey("styleGrade"),"style");
+			dict.takeValueForKey("grade","presentPath");
+			dict.takeValueForKey(value.grade(),"value");
+			currQ[1] = dict;
+		}
+		/* //TODO: clean Other qualifiers
 		for (int i = 0; i < currQ.length; i++) {
-			if(i == crIdx.intValue() || currQ[i] == null)
+			if(i == 2 || currQ[i] == null)
 				continue;
 			String path = (String)currQ[i].valueForKey("keyPath");
 			if(path.startsWith("cycle")) {
@@ -671,7 +692,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 				} else
 					currQ[i] = null;
 			}
-		}
+		}*/
 		return doneEditing();
 	}
 }
