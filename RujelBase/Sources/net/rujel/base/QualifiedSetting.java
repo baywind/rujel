@@ -148,8 +148,8 @@ public class QualifiedSetting extends _QualifiedSetting {
 		nullufy();
 		super.turnIntoFault(handler);
 	}
-	
+	/*
 	public int compare(NSKeyValueCoding other) {
 		return 0; // TODO: write comparison
-	}
+	}*/
 }

@@ -3,12 +3,28 @@
 			&nbsp;<webobject name = "SetBase"><webobject name = "BaseTitle"/></webobject>
 			<webobject name = "AddByCourse">+</webobject>
 	</caption></webobject>
-	<thead><tr><webobject name = "ShowDetails"><td/>
+	<thead><webobject name = "ShowCourse">
+		<tr class = "selection"><td></td>
+			<td><webobject name = "CourseClass"/></td>
+			<td><webobject name = "CourseSubject"/></td>
+			<td><webobject name = "CourseTeacher"/></td>
+			<webobject name = "EditorHead"/><td>...</td>
+			<td><webobject name = "Content"/></td>
+		</tr>
+	</webobject><tr><webobject name = "ShowDetails"><td/>
 			<th><webobject name = "EduGroupLabel"/></th>
 			<th><webobject name = "EduPlanLabel"/></th>
 			<th><webobject name = "TeacherLabel"/></th>
 			<webobject name = "EditorHead"/><webobject name = "CanSort">
-			<th width = "24" rowspan = "2"><webobject name = "SaveSort"/></th>
+			<script language = "JavaScript">
+			function reorder() {
+				hideObj('testSort');
+				showObj('saveSort');
+			}
+			</script>
+			<th width = "24" rowspan = "2" id = "saveSort" style = "display:none;">
+				<webobject name = "SaveSort"/></th>
+			<webobject name = "TestSort">?</webobject>
 			</webobject><webobject name = "Title"/>
 	</webobject>
 	</tr>

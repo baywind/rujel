@@ -31,7 +31,9 @@ package net.rujel.ui;
 
 import java.util.Enumeration;
 
+import net.rujel.base.QualifiedSetting;
 import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -49,7 +51,7 @@ public class SettingsByCourse extends WOComponent {
 	protected NSArray _byCourse;
 	public EOEnterpriseObject item;
 //	public EOEditingContext ec;
-	protected Object selector;
+	public Object selector;
 	protected SettingsBase base;
 	public Integer rowspan;
 	
@@ -264,13 +266,22 @@ public class SettingsByCourse extends WOComponent {
     }
     
     public String cellClass() {
-    	if(item == null || item == base)
-    		return "orange";
+    	if(selector instanceof EduCourse) {
+    		if(item == null || item == base) {
+    			if(base.forCourse((EduCourse)selector) == base)
+    				return "selection";
+    		} else if (((QualifiedSetting)item).evaluateWithObject((EduCourse)selector)) {
+    			if(item == base.forCourse((EduCourse)selector))
+    				return "selection";
+    			return "highlight";
+    		}
+    	}
     	return null;
     }
     
     public String title() {
     	Object binding = valueForBinding("title");
+    	setItem(null);
     	if(binding == null)
     		return null;
     	if(binding instanceof CharSequence) {
@@ -299,6 +310,14 @@ public class SettingsByCourse extends WOComponent {
     	Object bVal = base().valueForKey(sel);
     	return Boolean.valueOf((val==null)?bVal==null:val.equals(bVal));
     }
+    
+    public WOActionResults testCourse() {
+    	WOComponent result = CourseSelector.selectorPopup(context().page(), this,
+    			"selector", base.editingContext());
+    	result.takeValueForKey(session().valueForKeyPath(
+    			"strings.RujelBase_Base.SettingsBase.testSettings"), "title");
+    	return result;
+    }
 
     public boolean synchronizesVariablesWithBindings() {
         return false;
@@ -313,7 +332,13 @@ public class SettingsByCourse extends WOComponent {
 			_byCourse = null;
     	if(hasBinding("rowspan"))
     		setValueForBinding(rowspan, "rowspan");
+    	if (selector instanceof EduCourse)
+    		setItem(base().forCourse((EduCourse)selector));
+    	else
+    		setItem(null);
 		super.appendToResponse(aResponse, aContext);
+		if (selector instanceof EduCourse)
+			selector = null;
 	}
 	
 	public void reset() {

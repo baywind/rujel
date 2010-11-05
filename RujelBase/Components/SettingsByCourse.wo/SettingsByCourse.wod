@@ -98,14 +98,14 @@ MoveUp: WOImage {
 	framework ="RujelBase";
 	align = "center";
 	valign = "top";
-	onclick="up(get(this,'tr',0));";
+	onclick="up(get(this,'tr',0));reorder();";
 	style = "cursor:pointer;";
 }
 MoveDown: WOImage {
 	align = "center";
 	filename = "down.png";
 	framework ="RujelBase";
-	onclick= "down(get(this,'tr',0));";
+	onclick= "down(get(this,'tr',0));reorder();";
 	style = "cursor:pointer;";
 }
 ItemSorting : WOTextField {
@@ -141,4 +141,39 @@ Title : WOString {
 ShowBase : WOConditional {
   condition = ^selector;
   negate = true;
+}
+
+TestSort : OnClickContainer {
+  elementName = "th";
+  width = "24";
+  rowspan = "2";
+  onclick = session.ajaxPopup;
+  invokeAction = testCourse;
+  id = "testSort";
+  style = "font-size:150%;";
+  title = session.strings.RujelBase_Base.SettingsBase.testSettings;
+  class = "button";
+}
+
+ShowCourse : WOConditional {
+  condition = item;
+}
+
+CourseClass : WOString {
+  value = selector.eduGroup.name;
+}
+
+CourseSubject : WOString {
+  value = selector.subjectWithComment;
+  escapeHTML = false;
+}
+
+CourseTeacher : PersonDisplay {
+  person = selector.teacher;
+  startWithLast = true;
+  last = 2;
+  first = 1;
+  second = 1;
+  emptyStyle = "font-style:italic;";
+  valueWhenEmpty = session.strings.RujelBase_Base.vacant;
 }

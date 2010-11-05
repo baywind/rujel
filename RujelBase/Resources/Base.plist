@@ -82,6 +82,26 @@
 			<true/>
 		</dict>
 	</dict>
+	<key>selectCourse</key>
+	<dict>
+		<key>title</key>
+		<string>Выберите курс</string>
+		<key>style</key>
+		<string>min-width:20em</string>
+		<key>wrapper</key>
+		<string>CourseSelector</string>
+		<key>takeValuesFromRequest</key>
+		<false/>
+		<key>invokeAction</key>
+		<true/>
+		<key>wrapperBindings</key>
+		<dict>
+			<key>selection</key>
+			<string>.</string>
+			<key>useAjax</key>
+			<true/>
+		</dict>
+	</dict>
 	<key>notMoreXwords</key>
 	<string>Можно использовать не более %d слов</string>
 	<key>newLesson</key>
@@ -135,6 +155,8 @@
 		<string>уточнить для отдельных курсов</string>
 		<key>setDefault</key>
 		<string>установить &quot;для всех&quot;</string>
+		<key>testSettings</key>
+		<string>Определение настройки для курса</string>
 		<key>otherDesc</key>
 		<dict>
 			<key>styleClass</key>
@@ -169,6 +191,8 @@
 			<string>subject</string>
 			<key>keyPath</key>
 			<string>cycle.subject</string>
+			<key>operator</key>
+			<string>caseInsensitiveLike</string>
 			<key>styleClass</key>
 			<string>gerade</string>
 			<key>style</key>
