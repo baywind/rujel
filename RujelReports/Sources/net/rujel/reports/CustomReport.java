@@ -32,6 +32,7 @@ package net.rujel.reports;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -100,6 +101,17 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 					quals.addObject(qual);
 				} else {
 					String rel = (String)in.valueForKey("relationship");
+					try {
+						NSArray inList = (NSArray)DisplayAny.ValueReader.evaluateValue(
+								in.valueForKey("list"), params, this);
+						if(inList.count() > 0)
+							quals.addObject(Various.getEOInQualifier(rel, inList));
+						continue;
+					} catch (Exception e) {
+						logger.log(WOLogLevel.WARNING,
+								"Error reaging allowed value list for " + rel,
+								new Object[] {session(),e});
+					}
 					NSMutableDictionary inDict = (NSMutableDictionary)
 							inQuals.valueForKey(rel);
 					if(inDict == null) {

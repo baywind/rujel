@@ -107,10 +107,8 @@ public class EMailBroadcast implements Runnable{
 //		WOContext ctx = MyUtility.dummyContext(null);
 //		WOSession ses = ctx.session();
 
-		NSTimestamp moment = null;
-		if(period == null) {
-			moment = new NSTimestamp();
-		} else {
+		NSTimestamp moment = new NSTimestamp();
+		if(period != null && !period.contains(moment)) {
 			java.util.Date fin = period.end();
 			if(fin instanceof NSTimestamp)
 				moment = (NSTimestamp)fin;
@@ -205,6 +203,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			params.takeValueForKey(eduGroup.name(),"groupName");
 			params.takeValueForKey("Finished mailing for eduGroup","logMessage");
 			params.takeValueForKey(eduGroup,"logParam");
+			params.takeValueForKey(moment, "date");
 //			params.takeValueForKey(ctx,"ctx");
 //			params.takeValueForKey(ec,"editingContext");
 //			params.takeValueForKey(ses,"tmpsession");
@@ -327,7 +326,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 				if(date == null)
 					date = (NSTimestamp)params.valueForKey("to");
 				if(date == null && period != null)
-					new NSTimestamp(period.end());
+					date = new NSTimestamp(period.end());
 				if(date != null)
 					ses.takeValueForKey(date, "today");
 //				ses.takeValueForKey(Boolean.TRUE,"dummyUser");

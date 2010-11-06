@@ -145,23 +145,23 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		}
 	}
 	
-	public void send() {
+	public WOActionResults send() {
 		if(adrSet.count() <= 0) {
 			message = (String)application().valueForKeyPath(
 					"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
-			return;
+			return null;
 		}
 		
 		//InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(adrSet, true);
 		if(adrSet == null || adrSet.count() == 0) {
 			message = (String)application().valueForKeyPath(
 						"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
-			return;
+			return null;
 		}
 		if((text == null || text.length() == 0) && !attach) {
 			message = (String)application().valueForKeyPath(
 					"strings.RujelContacts_Contacts.SendMailForm.noText");
-			return;
+			return null;
 		}
 		NSMutableDictionary param = new NSMutableDictionary();
 		param.takeValueForKey(dict.valueForKey("students"), "students");
@@ -178,6 +178,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		EduGroup eduGroup = (EduGroup)dict.valueForKey("eduGroup");
 		if(eduGroup != null)
 			param.takeValueForKey(eduGroup.name(), "groupName");
+		param.takeValueForKey(session().valueForKey("today"), "date");
 		param.takeValueForKey(text, "messageText");
 		param.takeValueForKey(subject, "subject");
 		logParam.takeValueForKey(eduGroup,WOLogFormatter.EO);
@@ -189,6 +190,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		EMailBroadcast.broadcastMarks(param);
 		message = (String)application().valueForKeyPath(
 				"strings.RujelContacts_Contacts.broadcastInitiated");
+		return null;
 	}
 	
 	public NSArray periods = (NSArray)session().valueForKeyPath("modules.periods");;
