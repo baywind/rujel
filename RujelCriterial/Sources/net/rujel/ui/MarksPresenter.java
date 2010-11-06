@@ -124,6 +124,9 @@ public class MarksPresenter extends NotePresenter {
 			} else {
 				if(lesson() != null) {
 					_usedCriteria = lesson().usedCriteria();
+				} else if(Various.boolForObject(valueForBinding("full"))) {
+					_usedCriteria = allCriteria();
+					return _usedCriteria;
 				} else {
 					_usedCriteria = NSArray.EmptyArray;
 					NSMutableDictionary dict = new NSMutableDictionary();
