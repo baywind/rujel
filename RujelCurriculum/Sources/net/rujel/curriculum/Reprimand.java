@@ -537,7 +537,8 @@ public class Reprimand extends _Reprimand {
 				Holiday hd = (Holiday)holidays.objectAtIndex(i);
 				if(hd.begin().after(day))
 					break;
-				day = hd.end();
+				if(hd.end().after(day))
+					day = hd.end();
 			}
 			cal.setTime(day);
 			cal.set(Calendar.HOUR_OF_DAY, 13);

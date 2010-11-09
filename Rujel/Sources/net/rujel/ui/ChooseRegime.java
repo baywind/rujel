@@ -152,12 +152,14 @@ public class ChooseRegime extends WOComponent {
     public WOActionResults flushStrings() {
     	StringStorage str = (StringStorage)application().valueForKey("strings");
     	str.flush();
+    	logger.log(WOLogLevel.INFO,"Localised strings cache flushed",session());
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }
     
     public WOActionResults flushDB() {
     	session().defaultEditingContext().rootObjectStore().invalidateAllObjects();
+    	logger.log(WOLogLevel.INFO,"Database cache flushed",session());
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }

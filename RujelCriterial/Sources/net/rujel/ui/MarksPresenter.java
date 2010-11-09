@@ -129,21 +129,9 @@ public class MarksPresenter extends NotePresenter {
 					return _usedCriteria;
 				} else {
 					_usedCriteria = NSArray.EmptyArray;
-					NSMutableDictionary dict = new NSMutableDictionary();
-					dict.takeValueForKey(context().page().name(), "page");
-					dict.takeValueForKey(parent().name(), "parent");
-					dict.takeValueForKey(valueForBinding("full"), "full");
-					dict.takeValueForKey(valueForBinding("single"), "single");
-					dict.takeValueForKey(valueForBinding("initData"), "initData");
-					dict.takeValueForKey(context().senderID(),"senderID");
-					try {
-						dict.takeValueForKey(context().page().valueForKey("course"),
-								"course");
-					} catch (Exception e) {
-						dict.takeValueForKey(e.toString(),"course");
-					}
 					Logger.getAnonymousLogger().log(WOLogLevel.WARNING,"Lesson is null",
-							new Object[] {session(),dict,new NullPointerException()});
+							new Object[] {session(),context().elementID(),
+							new NullPointerException()});
 				}
 				if(Various.boolForObject(valueForBinding("full"))) {
 					if(_usedCriteria.count() != 1 ||

@@ -180,6 +180,7 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = autoItog.editingContext();
 		ec.lock();
 		try {
+			int count = 0;
 			while (enu.hasMoreElements()) {
 				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
 				Object object = dict.valueForKey("relKey");
@@ -187,15 +188,34 @@ public class PrognosisInspector extends com.webobjects.appserver.WOComponent {
 					object = dict.valueForKey("object");
 				if(Various.boolForObject(dict.valueForKey("related"))) {
 					autoItog.addRelatedObject(object, course);
+					count++;
 				} else {
 					autoItog.removeRelatedObject(object, course);
 				}
 			}
+			if(count == 0) {
+				NSArray found = Prognosis.prognosesArrayForCourseAndPeriod(course, 
+						autoItog.itogContainer(), false);
+				if(found.count() > 0) {
+					enu = found.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						EOEnterpriseObject progn = (EOEnterpriseObject) enu.nextElement();
+						ec.deleteObject(progn);
+					}
+				}
+			}
 			if(ec.hasChanges())
 				ec.saveChanges();
-			addOn.calculate();
-			AutoItogModule.logger.log(WOLogLevel.EDITING,"Changed related list",
-					new Object[] {session(),autoItog});
+			if(count > 0) {
+				addOn.calculate();
+				AutoItogModule.logger.log(WOLogLevel.EDITING,"Changed related list",
+						new Object[] {session(),autoItog,course});
+			} else {
+				addOn.reset();
+				AutoItogModule.logger.log(WOLogLevel.EDITING,
+						"Removed all objects from autoItog, prognoses deleted",
+						new Object[] {session(),autoItog, course});
+			}
 		} catch (Exception e) {
 			session().takeValueForKey(e.getMessage(), "message");
 			AutoItogModule.logger.log(WOLogLevel.WARNING,"Error saving related objects",
