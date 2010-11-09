@@ -60,9 +60,11 @@ public class SubjectSelector extends WOComponent {
     			EOKeyValueQualifier qual = (EOKeyValueQualifier)dict.valueForKey("qualifier");
     			if(qual == null)
     				return null;
-    			_selection = (EOEnterpriseObject)qual.value();
-    			if(_selection instanceof PlanCycle)
-    				_selection = ((PlanCycle)_selection).subjectEO();
+    			Object value = qual.value();
+    			if(value instanceof PlanCycle)
+    				_selection = ((PlanCycle)value).subjectEO();
+    			else if (value instanceof EOEnterpriseObject)
+    				_selection = (EOEnterpriseObject)value;
     		} else {
     			_selection = (EOEnterpriseObject)valueForBinding("selection");
     		}

@@ -230,7 +230,7 @@
 	<key>subjectSelector</key>
 	<dict>
 		<key>title</key>
-		<string>Выбрать предмет</string>
+		<string>Выбор предмета /&lt;br/&gt;предметной области</string>
 		<key>editor</key>
 		<string>selectSubject</string>
 		<key>field</key>

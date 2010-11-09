@@ -135,6 +135,7 @@ SelectEditor : OnClickContainer {
 
 EditorItemTitle : WOString {
   value = item.title;
+  escapeHTML = false;
 }
 
 IfGrade : WOConditional {
