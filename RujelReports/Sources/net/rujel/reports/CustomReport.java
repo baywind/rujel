@@ -102,14 +102,28 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 				} else {
 					String rel = (String)in.valueForKey("relationship");
 					try {
-						NSArray inList = (NSArray)DisplayAny.ValueReader.evaluateValue(
-								in.valueForKey("list"), params, this);
-						if(inList.count() > 0)
-							quals.addObject(Various.getEOInQualifier(rel, inList));
-						continue;
+						Object inList = in.valueForKey("list");
+						if(inList != null) {
+							inList = DisplayAny.ValueReader.evaluateValue(
+									inList, params, this);
+							if(inList != null && ((NSArray)inList).count() > 0) {
+								quals.addObject(Various.getEOInQualifier(rel, (NSArray)inList));
+								continue;
+							} else {
+								String message = (String)session().valueForKeyPath(
+									"strings.RujelReports_Reports.CustomReport.restrictingParam");
+								if(message == null)
+									message = (String)dict.valueForKey("title");
+								else
+									message = String.format(message,dict.valueForKey("title"));
+								session().takeValueForKey(message, "message");
+								return;
+							}
+						}
 					} catch (Exception e) {
 						logger.log(WOLogLevel.WARNING,
-								"Error reaging allowed value list for " + rel,
+								"Error reading allowed value list for relationship \"" + rel +
+								'"' + "in report '" + currReport.valueForKey("title") + '\'',
 								new Object[] {session(),e});
 					}
 					NSMutableDictionary inDict = (NSMutableDictionary)
@@ -343,7 +357,7 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 	public WOActionResults alert() {
 		WOResponse response = WOApplication.application().createResponseInContext(context());
 		response.appendContentString(
-	"<div id = \"ajaxPopup\" class=\"warning\" style=\"cursor:pointer;\" onclick=\"closePopup()\">");
+"<div id = \"ajaxPopup\" class=\"warning\" style=\"cursor:pointer;\" onclick=\"closePopup()\">");
 		response.appendContentString("OOPS!");
 		NSDictionary formValues = context().request().formValues();
 		response.appendContentString(WOResponse.stringByEscapingHTMLString(formValues.toString()));
