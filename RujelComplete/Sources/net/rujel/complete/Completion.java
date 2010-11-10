@@ -227,14 +227,18 @@ public class Completion extends _Completion {
 	public static NSArray findCompletions(Object course, Object student,
 			String aspect, Boolean closed, EOEditingContext ec) {
 		NSMutableArray quals = new NSMutableArray();
-		if(course instanceof NSArray) 
+		if(course instanceof NSArray)  {
+			if(((NSArray)course).count() == 0)
+				return null;
 			quals.addObject(Various.getEOInQualifier("course", (NSArray)course));
-		else if(course != null)
+		} else if(course != null)
 			quals.addObject(new EOKeyValueQualifier("course",
 					EOQualifier.QualifierOperatorEqual,course));
-		if(student instanceof NSArray) 
+		if(student instanceof NSArray)  {
+			if(((NSArray)student).count() == 0)
+				return null;
 			quals.addObject(Various.getEOInQualifier("student", (NSArray)student));
-		else if(student != null)
+		} else if(student != null)
 			quals.addObject(new EOKeyValueQualifier("student",
 					EOQualifier.QualifierOperatorEqual,student));
 		if(aspect != null)
@@ -245,7 +249,10 @@ public class Completion extends _Completion {
 	EOQualifier.QualifierOperatorNotEqual:EOQualifier.QualifierOperatorEqual,NullValue));
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,
 				new EOAndQualifier(quals), null);
-		return ec.objectsWithFetchSpecification(fs); // course open Completion
+		NSArray result = ec.objectsWithFetchSpecification(fs);
+		if(result == null)
+			result = NSArray.EmptyArray;
+		return result; // course open Completion
 	}
 	
 	public static NSMutableDictionary courseCompletion(EduCourse course,
@@ -338,6 +345,8 @@ public class Completion extends _Completion {
 					courses.addObject(crs);
 			}
 		}
+		if(gr == null)
+			gr = student.recentMainEduGroup();
 		if(gr != null) { //wide courses
 			found = EOUtilities.objectsWithQualifierFormat(ec, EduCourse.entityName,
 					"eduGroup = %@ AND eduYear = %d", new NSArray(new Object[] {gr,year}));

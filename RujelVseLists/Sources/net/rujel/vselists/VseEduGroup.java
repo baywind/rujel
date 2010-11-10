@@ -42,7 +42,6 @@ import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
-import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
@@ -72,38 +71,12 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		year = new Integer(year.intValue() + maxGrade - minGrade);
 		setLastYear(year);
 	}
-
-	protected NSTimestamp date() {
-		NSTimestamp date = null;
-		if (editingContext() instanceof SessionedEditingContext) {
-			WOSession ses = ((SessionedEditingContext)editingContext()).session();
-			date = (NSTimestamp)ses.valueForKey("today");
-			if(date == null) {
-				Integer eduYear = (Integer)ses.valueForKey("eduYear");
-				if(eduYear != null)
-					date = MyUtility.dayInEduYear(eduYear.intValue());
-			}
-		}
-		if(date == null)
-			date = new NSTimestamp();
-		return date;
-	}
-
-	protected Integer currYear() {
-		if (editingContext() instanceof SessionedEditingContext) {
-			WOSession ses = ((SessionedEditingContext)editingContext()).session();
-			Integer eduYear = (Integer)ses.valueForKey("eduYear");
-			return eduYear;
-		}
-		return null;
-	}
-
 	
 	public Integer grade() {
 		Integer absGrade = absGrade();
 		if(absGrade == null)
 			return absGrade;
-		Integer year = currYear();
+		Integer year = MyUtility.eduYear(editingContext());
 		if(year == null)
 			year = MyUtility.eduYearForDate(null);
 		return new Integer(year.intValue() - absGrade.intValue());
@@ -114,7 +87,7 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 			setAbsGrade(null);
 			return;
 		}
-		Integer year = currYear();
+		Integer year = MyUtility.eduYear(editingContext());
 		if(year == null)
 			year = MyUtility.eduYearForDate(null);
 		Integer absGrade = new Integer(year.intValue() - grade.intValue());
@@ -131,17 +104,17 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	protected long since;
 	protected long to = Long.MAX_VALUE;
 	public NSArray list() {
-		return list(date());
+		return list(MyUtility.date(editingContext()));
 	}
 	public NSArray list(NSTimestamp date) {
 		NSArray list = vseList(date);
 		if(list != null && list.count() > 0)
-			list = (NSArray)list.valueForKey("student");
-		return list;
+			return (NSArray)list.valueForKey("student");
+		return NSArray.EmptyArray;
 	}
 	
 	public NSArray vseList() {
-		return vseList(date());
+		return vseList(MyUtility.date(editingContext()));
 	}
 	
 	public NSArray vseList(NSTimestamp date) {
@@ -253,7 +226,7 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	public Integer eduYear() {
-		if(currYear() != null)
+		if(editingContext() instanceof SessionedEditingContext)
 			return null;
 		return MyUtility.eduYearForDate(null);
 	}
@@ -298,7 +271,8 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	public static NSArray listGroups(NSTimestamp date, EOEditingContext ec) {
-		Integer year = MyUtility.eduYearForDate(date);
+		Integer year = (date == null)?MyUtility.eduYear(ec)
+				:MyUtility.eduYearForDate(date);
 		EOQualifier[] quals = new EOQualifier[2];
 		quals[0] = new EOKeyValueQualifier(FIRST_YEAR_KEY,
 				EOQualifier.QualifierOperatorLessThanOrEqualTo,year);

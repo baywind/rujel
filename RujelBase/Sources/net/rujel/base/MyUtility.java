@@ -48,6 +48,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 
 public class MyUtility {
@@ -101,14 +102,14 @@ public class MyUtility {
 		}
 		return null;
 	}
-
+/*
 	public static Integer eduYearForSession(WOSession session,String dateKey) {
 		NSTimestamp today = null;
 		if(dateKey != null)
 			today = (NSTimestamp)session.valueForKey(dateKey);
 		if(today == null) today = new NSTimestamp();
 		return eduYearForDate(today);
-	}
+	}*/
 
 	public static Integer eduYearForDate(Date date) {
 		Calendar gcal = Calendar.getInstance();
@@ -125,6 +126,33 @@ public class MyUtility {
 				year--;
 		}
 		return new Integer(year);
+	}
+	
+	public static Integer eduYear(EOEditingContext ec) {
+		Integer eduYear = null;
+		if (ec instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)ec).session();
+			eduYear = (Integer)ses.valueForKey("eduYear");
+		}
+		if(eduYear == null)
+			eduYear = eduYearForDate(null);
+		return eduYear;
+	}
+	
+	public static NSTimestamp date(EOEditingContext ec) {
+		NSTimestamp date = null;
+		if (ec instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)ec).session();
+			date = (NSTimestamp)ses.valueForKey("today");
+			if(date == null) {
+				Integer eduYear = (Integer)ses.valueForKey("eduYear");
+				if(eduYear != null)
+					date = MyUtility.dayInEduYear(eduYear.intValue());
+			}
+		}
+		if(date == null)
+			date = new NSTimestamp();
+		return date;
 	}
 	
 	public static NSTimestamp dayInEduYear(int eduYear) {
