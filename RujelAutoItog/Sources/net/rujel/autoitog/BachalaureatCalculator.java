@@ -89,7 +89,9 @@ public class BachalaureatCalculator extends WorkCalculator {
 					weightValue.multiply(new BigDecimal(max.intValue())));
 		}
 		if(optWorks.count() > 0) {
-			dict.setObjectForKey(agregateWorks(optWorks.allObjects(), false), "optionalWorks");
+			NSDictionary optionalWorks = agregateWorks(optWorks.allObjects(), false);
+			optionalWorks.takeValueForKey(optWorks, "list");
+			dict.setObjectForKey(optionalWorks, "optionalWorks");
 		}
 		return dict;
 	}
@@ -159,11 +161,11 @@ public class BachalaureatCalculator extends WorkCalculator {
 	}*/
 	
 	public double getIntegral(NSDictionary agregatedMarks, NSDictionary agregatedWorks) {
-		if(agregatedWorks == null) return 0;
 		if(agregatedMarks == null) return 0;
+		NSDictionary optWorks = (NSDictionary)agregatedMarks.valueForKey("optionalWorks");
+		if(agregatedWorks == null && optWorks == null) return 0;
 		double valSum = 0;
 		double maxSum = 0;
-		NSDictionary optWorks = (NSDictionary)agregatedMarks.valueForKey("optionalWorks");
 		Enumeration enu = agregatedMarks.keyEnumerator();
 		while (enu.hasMoreElements()) {
 			Object crit = enu.nextElement();
@@ -197,8 +199,9 @@ public class BachalaureatCalculator extends WorkCalculator {
 	}*/
 	
 	public BigDecimal getComplete(NSDictionary agregatedMarks, NSDictionary agregatedWorks) {
-		if(agregatedWorks == null) return null;
 		if(agregatedMarks == null) return BigDecimal.ZERO;
+		NSDictionary optWorks = (NSDictionary)agregatedMarks.valueForKey("optionalWorks");
+		if(agregatedWorks == null) return (optWorks == null)?null:BigDecimal.ONE;;
 		BigDecimal sumMarks = null;
 		BigDecimal sumWorks = null;
 		boolean equals = true;
@@ -219,7 +222,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 				equals = false;
 			}
 		}
-		if(sumWorks == null) return null;
+		if(sumWorks == null) return (optWorks == null)?null:BigDecimal.ONE;
 		if(sumMarks == null) return BigDecimal.ZERO;
 		
 		BigDecimal complete = sumMarks.divide(sumWorks,4,BigDecimal.ROUND_HALF_UP);
@@ -256,17 +259,23 @@ public class BachalaureatCalculator extends WorkCalculator {
 			Student student = (Student)enu.nextElement();
 			Prognosis progn = Prognosis.getPrognosis(student, course, 
 					period.itogContainer(), !noWorks);
-			if(progn == null)
+			if(agregatedWorks == null) {
+				if(progn != null)
+					ec.deleteObject(progn);
 				continue;
-			if(noWorks)
-				ec.deleteObject(progn);
+			}
 			
 			quals[1] = new EOKeyValueQualifier("student",
 					EOQualifier.QualifierOperatorEqual,student);
 			fs.setQualifier(new EOAndQualifier(new NSArray(quals)));
 			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
 			NSDictionary agregatedMarks = agregateMarks(allMarks);
-			
+			if(progn == null) {
+				if(agregatedMarks == null || agregatedMarks.valueForKey("optionalWorks") == null)
+					continue;
+				else
+					progn = Prognosis.getPrognosis(student, course, period.itogContainer(), true);
+			}
 			progn.setAutoItog(period);
 			initPrognosis(progn, ec, agregatedMarks, agregatedWorks);
 			result.setObjectForKey(progn,student);
@@ -296,6 +305,8 @@ public class BachalaureatCalculator extends WorkCalculator {
 		progn.setValue(value);
 		//}
 		value = getComplete(agregatedMarks,agregatedWorks);
+		if(value == null)
+			value = BigDecimal.ZERO;
 		if(progn.complete() == null || progn.complete().compareTo(value) != 0) {
 			progn.setComplete(value);
 		}

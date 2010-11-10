@@ -168,6 +168,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		Integer criterion = new Integer(i);
 			EOEnterpriseObject mask = work.getCriterMask(criterion);
 			String value = req.stringFormValueForKey("m" + i);
+			value = value.trim();
 			Integer val = null;
 			if(value != null) {
 				try {
@@ -181,7 +182,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 							val = (Integer)mask.valueForKey("max");
 						}
 						Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-								"Can't read criter max " + criterion + " = " + value,
+								"Can't read criter max: " + criterion + " = '" + value + '\'',
 								new Object[] {session(),work});
 						StringBuilder buf = new StringBuilder(); 
 						buf.append(session().valueForKeyPath("strings.Strings.messages.illegalFormat"));
