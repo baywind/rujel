@@ -672,5 +672,9 @@
                 }; 
             }; 
         }; 
+        schemaVersion = {
+        	number = 1;
+        	title = "0.8.9";
+        };
     }; 
 }
