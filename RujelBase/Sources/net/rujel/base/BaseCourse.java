@@ -428,8 +428,21 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	
 	public static NSArray coursesForStudent(NSArray initialCourses, Student student) {
 		NSMutableArray result = new NSMutableArray();
-		Enumeration enu = initialCourses.objectEnumerator();
 		Integer eduYear = null;
+		if(initialCourses == null) {
+			EduGroup gr = student.recentMainEduGroup();
+			EOEditingContext ec = student.editingContext();
+			if(ec instanceof SessionedEditingContext) {
+				eduYear = (Integer)((SessionedEditingContext)ec).session().valueForKey("eduYear");
+				initialCourses = EOUtilities.objectsWithQualifierFormat(ec,
+						EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+						new NSArray(new Object[] {gr, eduYear}));
+			} else {
+				initialCourses = EOUtilities.objectsMatchingKeyAndValue(ec,
+						EduCourse.entityName, "eduGroup", gr);
+			}
+		}
+		Enumeration enu = initialCourses.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduCourse crs = (EduCourse) enu.nextElement();
 			if(eduYear==null)

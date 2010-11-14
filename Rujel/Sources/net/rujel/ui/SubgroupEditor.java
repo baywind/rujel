@@ -108,12 +108,14 @@ public class SubgroupEditor extends WOComponent {
 			EduGroup gr = student.recentMainEduGroup();
 			if(gr == null) {
 				if(dangling == null)
-					dangling = new NSMutableArray();
-				dangling.addObject(student);
+					dangling = new NSMutableArray(student);
+				else
+					dangling.addObject(student);
+				left.removeObjectAtIndex(0);
+				continue;
 			}
 			if(left.count() == 1) {
-				byGroup.setObjectForKey(new NSMutableArray(student), gr);
-				left.removeAllObjects();
+				byGroup.setObjectForKey(left, gr);
 				break;
 			}
 			NSMutableArray list = new NSMutableArray();
@@ -126,6 +128,7 @@ public class SubgroupEditor extends WOComponent {
 			byGroup.setObjectForKey(list, gr);			
 		}
 		if(dangling != null) {
+			EOSortOrdering.sortArrayUsingKeyOrderArray(dangling, Person.sorter);
 			NSDictionary dict = new NSDictionary("???","name");
 			byGroup.setObjectForKey(dangling,dict);
 		}

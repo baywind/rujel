@@ -256,6 +256,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 				dic.takeValueForKey(Boolean.FALSE, "checked");
 				dic.takeValueForKey(user, "hover");
 			} else { 
+//				toClose = new NSArray(releaseStudent);
 				toClose = course.groupList().mutableClone();
 				((NSMutableArray)toClose).removeObject(releaseStudent);
 			}
@@ -325,8 +326,13 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		Executor.Task executor = new Executor.Task();
 		executor.date = session.valueForKey("eduYear");
 		executor.setCourse(course);
-		if(cd.valueForKey("toClose") == null)
-			toClose = course.groupList();
+		if(cd.valueForKey("toClose") == null) {
+			Object releaseStudent = cd.valueForKey("releaseStudent");
+			if(releaseStudent == null)
+				toClose = course.groupList();
+			else
+				toClose = new NSArray(releaseStudent);
+		}
 		executor.setStudents(toClose);
 		Executor.exec(executor);
 	}

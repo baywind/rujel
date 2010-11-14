@@ -93,20 +93,20 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setCourses(NSArray list) {
-		if(list == null) {
-			courses = null;
-			return;
-		}
-		Enumeration enu = list.objectEnumerator();
-		mainGroup = null;
-		while (enu.hasMoreElements()) {
-			EduCourse crs = (EduCourse) enu.nextElement();
-			if(mainGroup == null) {
-				mainGroup = crs.eduGroup();
-			} else if(mainGroup != crs.eduGroup()) {
-				mainGroup = null;
-				break;
+		if(list != null) {
+			Enumeration enu = list.objectEnumerator();
+			mainGroup = null;
+			while (enu.hasMoreElements()) {
+				EduCourse crs = (EduCourse) enu.nextElement();
+				if(mainGroup == null) {
+					mainGroup = crs.eduGroup();
+				} else if(mainGroup != crs.eduGroup()) {
+					mainGroup = null;
+					break;
+				}
 			}
+		} else {
+			mainGroup = student.recentMainEduGroup();
 		}
 		courses = BaseCourse.coursesForStudent(list, student);
 	}

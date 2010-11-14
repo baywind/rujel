@@ -36,10 +36,8 @@ import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Counter;
-import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 
-import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
@@ -61,24 +59,13 @@ public class VseStudent extends _VseStudent implements Student {
 		setAbsGrade(new Integer(0));
 	}
 
-	protected NSTimestamp date() {
-		NSTimestamp date = null;
-		if (editingContext() instanceof SessionedEditingContext) {
-			WOSession ses = ((SessionedEditingContext)editingContext()).session();
-			date = (NSTimestamp)ses.valueForKey("today");
-		}
-		if(date == null)
-			date = new NSTimestamp();
-		return date;
-	}
-
 	protected static final NSArray flagsSorter = new NSArray(
 			new EOSortOrdering("eduGroup.flags",EOSortOrdering.CompareAscending));
 	public VseEduGroup recentMainEduGroup() {
 		NSArray lists = lists();
 		if(lists == null || lists.count() == 0)
 			return null;
-		NSTimestamp date = date();
+		NSTimestamp date = MyUtility.date(editingContext());
 		NSArray args = new NSArray(new Object[] {date,date});
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
 				"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
@@ -132,7 +119,7 @@ public class VseStudent extends _VseStudent implements Student {
 		Integer absGrade = absGrade();
 		if(absGrade == null || absGrade.intValue() == 0)
 			return 0;
-		Integer year = MyUtility.eduYearForDate(date());
+		Integer year = MyUtility.eduYear(editingContext());
 		if(year == null)
 			return -1;
 		return year.intValue() - absGrade.intValue();

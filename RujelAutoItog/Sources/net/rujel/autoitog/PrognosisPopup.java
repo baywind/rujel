@@ -156,19 +156,23 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	if(prognosis !=null || mark != null) {
     		EOEditingContext ec = course.editingContext();
 	    	Logger logger = Logger.getLogger("rujel.autoitog");
-    		ec.lock();
-    		if(mark == null && !calculation) {
-    			if(ec.globalIDForObject(prognosis).isTemporary())
-    				ec.revert();
-    			else
-    				ec.deleteObject(prognosis);
-    			prognosis = null;
-    		} else {
-    			if(mark == null) {
+    		if(mark == null) {
+    			if(calculation) {
     				prognosis = eduPeriod.calculator().calculateForStudent(student, course, 
     						eduPeriod, eduPeriod.relatedForCourse(course));
     				changeReason = eduPeriod.calculatorName();
-    			} else if(prognosis == null) {
+    				if(prognosis != null)
+    					mark = prognosis.mark();
+    			} else {
+    				if(ec.globalIDForObject(prognosis).isTemporary())
+    					ec.revert();
+    				else
+    					ec.deleteObject(prognosis);
+    				prognosis = null;
+    			}
+    		}
+    		if(mark != null) {
+    			if(prognosis == null) {
     				prognosis = (Prognosis)EOUtilities.createAndInsertInstance(ec, "Prognosis");
        				prognosis.setStudent(student);
        				prognosis.setCourse(course);
@@ -221,7 +225,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	    			logger.log(WOLogLevel.EDITING,"Removing bonus from prognosis",args);  
     	    		}
     	    	}
-   			prognosis.setNamedFlags(flags);
+    	    	prognosis.setNamedFlags(flags);
     		} //  if !(mark == null && !calculation)
     		try {
     			if(ec.hasChanges()) {
@@ -257,8 +261,6 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     			logger.log(WOLogLevel.WARNING,"Error saving prognosis",e);
     			session().takeValueForKey(e.getMessage(), "message");
 				ec.revert();
-			} finally {
-				ec.unlock();
 			}
     	}
     	returnPage.ensureAwakeInContext(context());

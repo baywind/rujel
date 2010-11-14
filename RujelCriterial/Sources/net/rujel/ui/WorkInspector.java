@@ -64,6 +64,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	public EduCourse course;
 	public CriteriaSet critSet;
 	public NamedFlags namedFlags;
+	public String disableMax;
+	public String disableWeight;
 
     public WorkInspector(WOContext context) {
         super(context);
@@ -74,6 +76,14 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		course = (EduCourse)returnPage.valueForKey("course");
     	EOEditingContext ec = course.editingContext();
     	critSet = CriteriaSet.critSetForCourse(course);
+    	if(critSet != null) {
+    		NamedFlags critFlags = critSet.namedFlags();
+    		disableMax = (critFlags.flagForKey("fixList"))?"disabled":null;
+    		disableWeight = (critFlags.flagForKey("fixWeight"))?"disabled":null;
+    	} else {
+    		disableMax = null;
+    		disableWeight = null;
+    	}
     	if(dict == null)
     		dict = new NSMutableDictionary();
     	if(dict.valueForKey("trimmedWeight") == null)
@@ -96,6 +106,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
    				WorkType.activeQualifier, ModulesInitialiser.sorter);
     		types = ec.objectsWithFetchSpecification(fs);
     	}
+    	critIdx = -1;
     	super.appendToResponse(aResponse, aContext);
     }
     
@@ -163,25 +174,27 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	int critCount = 0;
     	String crCnt = req.stringFormValueForKey("critCount");
     	if(crCnt != null)
-    		critCount = new Integer(crCnt);
+    		critCount = Integer.parseInt(crCnt);
     	for (int i = 0; i <= critCount; i++) { // prepare criter mask
     		Integer criterion = new Integer(i);
 			EOEnterpriseObject mask = work.getCriterMask(criterion);
 			String value = req.stringFormValueForKey("m" + i);
 			Integer val = null;
-			if(value != null) {
+			if(critSet != null) {
+				EOEnterpriseObject cr = critSet.criterionForNum(criterion);
+				val = (Integer)cr.valueForKey("dfltMax");
+			}
+			if(value != null && disableMax == null) {
+				value = value.trim();
 				try {
 					val = new Integer(value);
 				} catch (NumberFormatException e) {
-					if(critSet != null) {
-						EOEnterpriseObject cr = critSet.criterionForNum(criterion);
-						val = (Integer)cr.valueForKey("dfltMax");
-					} else {
+					if(val == null) {
 						if(mask != null) {
 							val = (Integer)mask.valueForKey("max");
 						}
 						Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
-								"Can't read criter max " + criterion + " = " + value,
+								"Can't read criter max: " + criterion + " = '" + value + '\'',
 								new Object[] {session(),work});
 						StringBuilder buf = new StringBuilder(); 
 						buf.append(session().valueForKeyPath("strings.Strings.messages.illegalFormat"));
@@ -210,7 +223,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 			}
 			if(mask != null) {
 				value = req.stringFormValueForKey("w" + i);
-				val = (value == null)? null : new Integer(value);
+				if(value != null) value = value.trim();
+				try {
+					val = (value == null)? null : new Integer(value);
+				} catch (NumberFormatException e) {
+					val = null;
+				}
 				Number mWeight = (Number)mask.valueForKey("weight");
 				if(mWeight == null || val == null || mWeight.intValue() != val.intValue())
 					mask.takeValueForKey(val, "weight");
@@ -357,8 +375,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public String checked() {
-    	if(critSet == null || critItem() == null || 
-    			critItem().valueForKey("dfltMax") == null || itemMask() == null)
+    	if(critSet == null || critItem() == null || critItem().valueForKey("dfltMax") == null ||
+    			 (itemMask() == null && disableMax == null))
     		return null;
     	if(critSet.namedFlags().flagForKey("fixMax") ||
     			critItem().valueForKey("indexer") != null)
@@ -375,63 +393,26 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
 	
     public Number criterMax() {
+    	if(critIdx < 0)
+    		return null;
     	EOEnterpriseObject _itemMask = itemMask();
         if(_itemMask == null)  {
         	EOEnterpriseObject cr = critItem();
         	if(cr == null)
         		return null;
-        	if(critSet.namedFlags().flagForKey("fixMax") ||
-        			cr.valueForKey("indexer") != null)
+        	if(critSet.namedFlags().flagForKey("fixMax") || cr.valueForKey("indexer") != null ||
+        			critSet.namedFlags().flagForKey("fixList"))
         		return (Number)cr.valueForKey("dfltMax");
         	return null;
         }
 		return (Number)_itemMask.valueForKey("max");
     }
-    
-/*    private boolean shouldNullify = false;
-    public void setCriterMax(Number newCriterMax) {
-		boolean weightToMax = SettingsReader.boolForKeyPath("edu.weightToMax",true);
-		EOEnterpriseObject _itemMask = itemMask();
-        if(_itemMask == null) { // create new criterMask
-			if(newCriterMax == null) return;
-			_itemMask = EOUtilities.createAndInsertInstance(work.editingContext(),"CriterMask");
-			work.addObjectToBothSidesOfRelationshipWithKey(_itemMask,"criterMask");
-			_itemMask.takeValueForKey(critItem,"criterion");
-			if(weightToMax)
-				_itemMask.takeValueForKey(newCriterMax,"weight");
-			else
-				_itemMask.takeValueForKey(new Integer(1),"weight");
-			
-			_itemMask.takeValueForKey(newCriterMax,"max");
-			shouldNullify = true;
-		} else if(newCriterMax == null) { // remove criter max
-			work.removeObjectFromBothSidesOfRelationshipWithKey(_itemMask,"criterMask");
-			_itemMask = null;
-			shouldNullify = true;
-			return;
-		} else if(newCriterMax.intValue() != criterMax().intValue()){  // update criter max
-			Object oldWeight = _itemMask.valueForKey("weight");
-			Object oldMax = _itemMask.valueForKey("max");
-			if(weightToMax && (oldWeight == null || oldMax == null || oldWeight.equals(oldMax)))
-				_itemMask.takeValueForKey(newCriterMax,"weight");
-			_itemMask.takeValueForKey(newCriterMax,"max");
-		}
-    }*/
 
     public Number criterWeight() {
     	EOEnterpriseObject _itemMask = itemMask();
     	if(_itemMask == null) return null;
     	return (Number)_itemMask.valueForKey("weight");
     }
-    
-/*    public void setCriterWeight(Number newCriterWeight) {
-    	EOEnterpriseObject _itemMask = itemMask();
-    	if(_itemMask == null || newCriterWeight == null) {
-    		return;
-    	}
-    	if(newCriterWeight.intValue() != criterWeight().intValue())
-    		_itemMask.takeValueForKey(newCriterWeight,"weight");
-    }*/
 
     public Boolean cantSave() {
     	if(work != null)

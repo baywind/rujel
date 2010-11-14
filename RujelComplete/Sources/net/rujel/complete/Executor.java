@@ -237,40 +237,64 @@ public class Executor implements Runnable {
 	
 	protected void writeStudents(EduCourse course, EOEditingContext ec) {
 		EduGroup gr = course.eduGroup();
-		NSArray courses = EOUtilities.objectsWithQualifierFormat(ec,
-				EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
-				new NSArray(new Object[] {gr, task.year}));
-		NSArray found = Completion.findCompletions(courses, 
-				NSKeyValueCoding.NullValue, "student", Boolean.FALSE, ec);
-		if(found != null && found.count() > 0) {
-			Enumeration enu = found.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				Completion cpt = (Completion) enu.nextElement();
-				NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
-				if(aud == null || aud.count() == 0) {
-					return;
+		NSArray courses = null;
+		if(gr != null) {
+			courses = EOUtilities.objectsWithQualifierFormat(ec,
+					EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+					new NSArray(new Object[] {gr, task.year}));
+			NSArray found = Completion.findCompletions(courses, 
+					NSKeyValueCoding.NullValue, "student", Boolean.FALSE, ec);
+			if(found != null && found.count() > 0) {
+				Enumeration enu = found.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Completion cpt = (Completion) enu.nextElement();
+					NSArray aud = (NSArray)cpt.valueForKeyPath("course.audience");
+					if(aud == null || aud.count() == 0) {
+						return;
+					}
 				}
 			}
 		}
 		FileWriterUtil folder = completeFolder(task.year, STUDENTS, false, false, true);
 		folder.ctx = ctx;
 		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());
-		String grDir = StudentCatalog.groupDirName(gr,false);
-		NSMutableDictionary grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
-		if(grDict == null) {
-			grDict = new NSMutableDictionary();
-		}
 		NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
 				"modules.studentReporter");
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
 //		File groupDir = new File(folder,grDir);
-		folder.enterDir(grDir, true);
+		NSMutableDictionary grDict = null;
+		if(gr != null) {
+			String grDir = StudentCatalog.groupDirName(gr,false);
+			grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
+			if(grDict == null)
+				grDict = new NSMutableDictionary();
+			folder.enterDir(grDir, true);
+		}
+		boolean updateList = false;
 		for (int i = 0; i < task.studentIDs.length; i++) {
 			Student student = (Student)ec.faultForGlobalID(task.studentIDs[i], ec);
+			if(gr == null || !gr.list().containsObject(student)) {
+				gr = student.recentMainEduGroup();
+				if(grDict != null) {
+					folder.leaveDir();
+					if(grDict.count() > 0) {
+						catalog.takeValueForKey(grDict, folder.currDir().getName());
+						updateList = true;
+					}
+				}
+				String grDir = StudentCatalog.groupDirName(gr,false);
+				courses = EOUtilities.objectsWithQualifierFormat(ec,
+						EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+						new NSArray(new Object[] {gr, task.year}));
+				grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
+				if(grDict == null)
+					grDict = new NSMutableDictionary();
+				folder.enterDir(grDir, true);
+			}
 			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
 //			File stDir = new File(groupDir,key);
-			if(Completion.studentIsReady(student, null, task.year)) {
+			if(Completion.studentIsReady(student, gr, task.year)) {
 				StudentCatalog.completeStudent(gr, student, reports,
 						courses, folder, true);
 				grDict.takeValueForKey(Boolean.TRUE, key);
@@ -286,9 +310,14 @@ public class Executor implements Runnable {
 				}
 			}
 		}
-		folder.leaveDir();
-		if(grDict.count() > 0) {
-			catalog.takeValueForKey(grDict, grDir);
+		if(grDict != null) {
+			if(grDict.count() > 0) {
+				catalog.takeValueForKey(grDict, folder.currDir().getName());
+				updateList = true;
+			}
+			folder.leaveDir();
+		}
+		if(updateList) {
 			File file = new File(folder.getBase(),"index.html");
 			if(!file.exists())
 				prepareFolder(folder,"list.html");
