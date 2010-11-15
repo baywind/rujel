@@ -51,7 +51,7 @@ public class SubgroupEditor extends WOComponent {
 	public boolean cantEdit;
 	public EduGroup currGroup;
 	public NSArray groups;
-	public EduGroup groupItem;
+	public NSKeyValueCoding groupItem;
 	public NSMutableDictionary byGroup;
 	
     public SubgroupEditor(WOContext context) {
@@ -311,7 +311,7 @@ public class SubgroupEditor extends WOComponent {
 	}
 	
 	public WOActionResults selectGroup() {
-		currGroup = groupItem;
+		currGroup = (EduGroup)groupItem;
 		return null;
 	}
 
@@ -327,9 +327,13 @@ public class SubgroupEditor extends WOComponent {
 		StringBuilder buf = new StringBuilder(25);
 		if(currGroup == groupItem)
 			buf.append("selectionBorder ");
-		if(!groupItem.grade().equals(course.cycle().grade()))
-			buf.append("un");
-		buf.append("gerade");
+		if(groupItem instanceof EduGroup) {
+			if(!((EduGroup)groupItem).grade().equals(course.cycle().grade()))
+				buf.append("un");			
+			buf.append("gerade");
+		} else {
+			buf.append("warning");
+		}
 		return buf.toString();
 	}
 	
