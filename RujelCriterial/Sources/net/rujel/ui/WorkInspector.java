@@ -180,9 +180,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 			EOEnterpriseObject mask = work.getCriterMask(criterion);
 			String value = req.stringFormValueForKey("m" + i);
 			Integer val = null;
-			if(critSet != null) {
+			if(disableMax != null && mask == null) {
 				EOEnterpriseObject cr = critSet.criterionForNum(criterion);
-				val = (Integer)cr.valueForKey("dfltMax");
+				if(cr != null)
+					val = (Integer)cr.valueForKey("dfltMax");
 			}
 			if(value != null && disableMax == null) {
 				value = value.trim();
@@ -192,6 +193,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 					if(val == null) {
 						if(mask != null) {
 							val = (Integer)mask.valueForKey("max");
+						} else if (critSet != null) {
+							EOEnterpriseObject cr = critSet.criterionForNum(criterion);
+							if(cr != null)
+								val = (Integer)cr.valueForKey("dfltMax");
 						}
 						Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
 								"Can't read criter max: " + criterion + " = '" + value + '\'',
