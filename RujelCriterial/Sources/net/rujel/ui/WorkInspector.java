@@ -66,12 +66,18 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	public NamedFlags namedFlags;
 	public String disableMax;
 	public String disableWeight;
+	public EduLesson lesson;
+	protected boolean done = false;
 
     public WorkInspector(WOContext context) {
         super(context);
     }
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(done) {
+    		aResponse.appendContentString(aContext.componentActionURL());
+    		return;
+    	}
     	if(course == null)
     		course = (EduCourse)returnPage.valueForKey("course");
     	EOEditingContext ec = course.editingContext();
@@ -108,6 +114,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	}
     	critIdx = -1;
     	super.appendToResponse(aResponse, aContext);
+    	session().takeValueForKey(null, "message");
     }
     
     public void setWork(Work newWork) {
@@ -160,8 +167,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 				work.takeValueForKey(value, key);
 		}
 //    	work.takeValuesFromDictionary(dict);
-    	if(created)
+    	if(created) {
     		MyUtility.setNumberToNewLesson(work);
+    		dict.takeValueForKey(work.number(), "number");
+    	}
     	int load = 0;
     	if(hours != null)
     		load = hours.intValue() * 60;
@@ -239,8 +248,6 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 					mask.takeValueForKey(val, "weight");
 			}
 		} // prepare criter mask
-    	returnPage.ensureAwakeInContext(context());
-    	WOActionResults result = null;
     	try {
     		if(work.workType() == null) {
     			work.setWorkType((EOEnterpriseObject)types.objectAtIndex(0));
@@ -249,15 +256,14 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		}
     		if(!created)
        			work.nullify();
-			returnPage.takeValueForKey(work, "currLesson");
-    		result = (WOActionResults)returnPage.valueForKey("saveNoreset");
+			work.validateForSave();
+	    	returnPage.ensureAwakeInContext(context());
+			WOActionResults result = (WOActionResults)returnPage.valueForKey("saveNoreset");
+			if(result instanceof WOComponent)
+				returnPage = (WOComponent)result;
 //    		ec.saveChanges();
-    		if(Work.ENTITY_NAME.equals(returnPage.valueForKeyPath("present.entityName"))) {
-    			if(!ec.hasChanges())
-    				returnPage.valueForKey("updateLessonList");
-    		} else {
-    			returnPage.takeValueForKeyPath("MarksPresenter", "present.tmpPresenter");
-    		}
+    	} catch (NSValidation.ValidationException ve) {
+    		session().takeValueForKey(ve.getMessage(), "message");
     	} catch (NSKeyValueCoding.UnknownKeyException e) {
     		session().takeValueForKey(application().valueForKeyPath
     				("strings.RujelCriterial_Strings.messages.notSaved"), "message");
@@ -266,12 +272,35 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING, "error saving", 
     				new Object[] {session(),work,e});
     	}
-    	if(result == null)
-    		result = returnPage;
-		session().removeObjectForKey("lessonProperies");
-    	return result;
+    	done = (!ec.hasChanges());
+       	if(done) {
+       		if(lesson != null && lesson != work) {
+       			returnPage.takeValueForKey(lesson, "currLesson");
+       			returnPage.takeValueForKey(lesson, "selector");
+       		}
+    		if(Work.ENTITY_NAME.equals(returnPage.valueForKeyPath("present.entityName"))) {
+    			if(!ec.hasChanges())
+    				returnPage.valueForKey("updateLessonList");
+    		} else {
+    			returnPage.takeValueForKeyPath("MarksPresenter", "present.tmpPresenter");
+    		}
+       	}
+ 		session().removeObjectForKey("lessonProperies");
+    	return this;
     }
-
+    
+    public WOActionResults returnPage() {
+    	if(course.editingContext().hasChanges())
+    		course.editingContext().revert();
+    	returnPage.ensureAwakeInContext(context());
+    	return returnPage;
+    }
+    
+	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
+    	if(aContext.elementID().equals(aContext.senderID()))
+    		return returnPage();
+		return super.invokeAction(aRequest, aContext);
+	}
 /*	private NSArray _criteria;
     public NSArray criteria() {
 		if(_criteria == null) {
@@ -368,6 +397,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	StringBuilder buf = new StringBuilder("if(!value){value=(");
     	buf.append(crit).append(");blockCriters(event);}select();");
     	return buf.toString();
+    }
+    
+    public String close() {
+    	if(course.editingContext().hasChanges())
+    		return (String)session().valueForKey("tryLoad");
+    	return "closePopup();";
     }
 
     public String inputType() {

@@ -222,14 +222,14 @@ public class WorkList extends LessonList {
     		nextPage.takeValueForKey(valueForBinding("currLesson"), "work");
     	return nextPage;
     }
-    
+    /*
     public boolean lessonIsNew() {
     	lessonItem = (Work)valueForBinding("currLesson");
     	if(lessonItem == null)
     		return false;
     	EOEditingContext ec = lessonItem.editingContext();
     	return (ec.globalIDForObject(lessonItem).isTemporary());
-    }
+    }*/
 
 	public String dateStyle() {
 		StringBuffer buf = new StringBuffer("text-align:center;width:");

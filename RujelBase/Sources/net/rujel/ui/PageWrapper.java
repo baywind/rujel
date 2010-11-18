@@ -71,6 +71,11 @@ public class PageWrapper extends WOComponent {
 	
     public WOComponent goTo() {
         NSMutableArray list = (NSMutableArray)session().valueForKey("pathStack");
+        if(pathItem == null) {
+        	list.removeAllObjects();
+    		session().takeValueForKey(Boolean.FALSE,"prolong");
+        	return pageWithName("SrcMark");
+        }
 		int idx = list.indexOfIdenticalObject(pathItem);
 		pathItem.ensureAwakeInContext(context());
 		if(idx > 0) {

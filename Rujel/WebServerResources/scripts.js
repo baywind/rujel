@@ -438,6 +438,11 @@ function ajaxRequest() {
 
 function onReadyStateChange(pos) {
 	//debug(pos);
+	var text = xmlHttp.responseText;
+	if(text.charAt(0) == '/' || text.substring(0,4) == 'http') {
+		window.location = text;
+		return;
+	}
 	timeout = startTimeout;
 	container = document.getElementById('ajaxMask');
 	container.style.height = pos.h + 'px';
@@ -778,7 +783,7 @@ function pagePreflight() {
 		if(ins[i].type == "text") {
 			if(ins[i].disabled)
 				ins[i].style.backgroundColor='#cccccc';
-			else if(ins[i].className = 'checkChanges')
+			else if(ins[i].className == 'checkChanges')
 				ins[i].onchange = function() {checkChanges(this);};
 		}
 	}
