@@ -314,43 +314,71 @@ public class LessonNoteEditor extends WOComponent {
 		save(true);
 		//return this;
 	}
+	
+	public WOActionResults saveComment() {
+		try {
+			ec.saveChanges();
+			logger.log(WOLogLevel.EDITING,
+					"Course comment modified",new Object[] {session(),course});
+		} catch (Exception ex) {
+			logger.log(WOLogLevel.WARNING,"Error saving comment",
+					new Object[] {session(),currPerPersonLink,ex});
+			session().takeValueForKey(ex.getMessage(),"message");
+			ec.revert();
+		}
+		return null;
+	}
 
 	protected void save(boolean reset) {
-		if(currPerPersonLink instanceof EOEnterpriseObject) {
-			String entityName = ((EOEnterpriseObject)currPerPersonLink).entityName();
-			String presentEntity = (String)valueForKeyPath("present.entityName");
-			if(entityName.equals((presentEntity == null)?EduLesson.entityName:presentEntity))
-				selector = currPerPersonLink;
-		}
 		student = null;
-		ec.lock();
-		try {
-			if(ec.hasChanges()) {
-				if(currPerPersonLink != null) {
-					boolean newLesson = (ec.globalIDForObject((EOEnterpriseObject)
-							currPerPersonLink).isTemporary());
+		boolean newLesson = currPerPersonLink == null;
+		if(ec.hasChanges()) {
+			NSMutableSet changes = new NSMutableSet();
+			NSArray objects = ec.insertedObjects();
+			if(objects != null && objects.count() > 0) {
+				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
+				if(currPerPersonLink == null) {
+					Enumeration enu = objects.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+						if(obj instanceof EduLesson) {
+							currPerPersonLink = (EduLesson)obj;
+							break;
+						}
+					}
+				} else {
+					newLesson = objects.containsObject(currPerPersonLink);
+				}
+			}
+			if(currPerPersonLink instanceof EOEnterpriseObject) {
+				String entityName = ((EOEnterpriseObject)currPerPersonLink).entityName();
+				String presentEntity = (String)valueForKeyPath("present.entityName");
+				if(entityName.equals((presentEntity == null)?EduLesson.entityName:presentEntity))
+					selector = currPerPersonLink;
+			}
+			objects = ec.updatedObjects();
+			if(objects != null && objects.count() > 0)
+				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
+			objects = ec.deletedObjects();
+			if(objects != null && objects.count() > 0)
+				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
+			try {
+				if(currPerPersonLink != null)
 					((EOEnterpriseObject)currPerPersonLink).validateForSave();
 					if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
 						if(newLesson) {
 							MyUtility.setNumberToNewLesson(currLesson());
 						}
-						NSMutableSet changes = new NSMutableSet();
-						changes.addObjectsFromArray((NSArray)ec.updatedObjects().valueForKey("entityName"));
-						changes.addObjectsFromArray((NSArray)ec.insertedObjects().valueForKey("entityName"));
-						changes.addObjectsFromArray((NSArray)ec.deletedObjects().valueForKey("entityName"));
 						ec.saveChanges();
 						WOLogLevel level = WOLogLevel.EDITING;
 						if(newLesson) {
 							logger.log(level,"Created new lesson. " + changes,
 									new Object[] {session(),currPerPersonLink});
+							/*
 							NSNotificationCenter.defaultCenter().postNotification(
 									"Own created object",session().valueForKey(
-									"user"),new NSDictionary(currPerPersonLink,"EO"));
-						} else {
-							//						if(currPerPersonLink instanceof UseAccess && 
-							//								((UseAccess)currPerPersonLink).isOwned())
-							level = WOLogLevel.EDITING;
-							if(changes.count() > 0)
+									"user"),new NSDictionary(currPerPersonLink,"EO"));*/
+						} else if(changes.count() > 0) {
 								logger.log(level,"Lesson changed: " + changes,
 										new Object[] {session(),currPerPersonLink});
 						}
@@ -382,31 +410,28 @@ public class LessonNoteEditor extends WOComponent {
 							refresh();
 						}
 					}
-				} else { // no lesson
-					ec.saveChanges();
-					logger.log(WOLogLevel.EDITING,
-							"Course comment modified",new Object[] {session(),course});
+				//session().takeValueForKey(Boolean.FALSE,"prolong");
+			} catch (NSValidation.ValidationException vex) {
+				logger.log(WOLogLevel.FINE,"Failed to save lesson",
+						new Object[] {session(),currPerPersonLink,vex.toString()});
+				session().takeValueForKey(vex.getMessage(),"message");
+				if(!newLesson) {
+					ec.revert();
+					ec.refaultObject(currLesson());
 				}
-			}// ec.hasChanges
-			//session().takeValueForKey(Boolean.FALSE,"prolong");
-			if(reset)
-				currPerPersonLink = null;
-		} catch (NSValidation.ValidationException vex) {
-			logger.log(WOLogLevel.FINER,"Failed to save lesson",
-					new Object[] {session(),currPerPersonLink,vex});
-			session().takeValueForKey(vex.getMessage(),"message");
-		} catch (Exception ex) {
-			logger.log(WOLogLevel.WARNING,"Failed to save lesson",
-					new Object[] {session(),currPerPersonLink,ex});
-			session().takeValueForKey(ex.getMessage(),"message");
-			ec.revert();
-			if(currPerPersonLink instanceof EOEnterpriseObject &&
-					((EOEnterpriseObject)currPerPersonLink).editingContext() != ec) {
-				currPerPersonLink = null;
+			} catch (Exception ex) {
+				logger.log(WOLogLevel.WARNING,"Failed to save lesson",
+						new Object[] {session(),currPerPersonLink,ex});
+				session().takeValueForKey(ex.getMessage(),"message");
+				ec.revert();
+				if(currPerPersonLink instanceof EOEnterpriseObject &&
+						((EOEnterpriseObject)currPerPersonLink).editingContext() != ec) {
+					currPerPersonLink = null;
+				}
 			}
-		} finally {
-			ec.unlock();
-		}
+		}// ec.hasChanges
+		if(reset)
+			currPerPersonLink = null;
 	}
 
 	public void delete() {
@@ -495,10 +520,10 @@ public class LessonNoteEditor extends WOComponent {
 		}
 	}
 
-	public void addLesson() {
+	public EduLesson addLesson() {
 		save(false);
 		if(session().valueForKey("message") != null)
-			return;
+			return null;
 
 		ec.lock();
 		try {
@@ -528,6 +553,7 @@ public class LessonNoteEditor extends WOComponent {
 		} finally {
 			ec.unlock();
 		}
+		return currLesson();
 	}
 
 	protected static void makeDateFromNum(EduLesson les) {

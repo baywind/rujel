@@ -88,6 +88,7 @@ public class HomeWorkDelegate extends TaskDelegate {
     		if(((NSDictionary)init).valueForKey(Work.WORK_TYPE_KEY) == null)
     			nextPage.takeValueForKey(new NamedFlags(16,WorkType.flagNames), "namedFlags");
     	}
+    	nextPage.takeValueForKey(lesson, "lesson");
     	return nextPage;
 	}
 	

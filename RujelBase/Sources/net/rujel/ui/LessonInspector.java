@@ -30,13 +30,20 @@
 package net.rujel.ui;
 
 import java.util.Date;
+import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSTimestamp;
+import com.webobjects.foundation.NSValidation;
 
 public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	public String newTitle;
@@ -44,6 +51,8 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	public NSTimestamp newDate;
 	
 	public WOComponent returnPage;
+	protected EduLesson lesson;
+	protected boolean done = false;
 	//protected EOEditingContext ec;
 
     public LessonInspector(WOContext context) {
@@ -57,23 +66,35 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     } */
 
     public WOActionResults save() {
-		returnPage.ensureAwakeInContext(context());
     	if(newTitle == null || newTheme == null) {
     		appendMessage("strings.RujelBase_Base.dateAndThemeRequired");
-    		return returnPage;
+    		return this;
     	}
-    	Date date = (Date)MyUtility.dateFormat().parseObject(
+    	Date date = null;
+    	try {
+    		date = (Date)MyUtility.dateFormat().parseObject(
 				newTitle, new java.text.ParsePosition(0));
-		returnPage.valueForKey("addLesson");
-		EduLesson lesson = (EduLesson)returnPage.valueForKey("currLesson");
-		if(lesson != null) {
+    	} catch (Exception e) {
+    		;
+    	}
+//		returnPage.ensureAwakeInContext(context());
+//		EduLesson lesson = (EduLesson)returnPage.valueForKey("addLesson");
+    	
+    	if(lesson == null) {
+    		EduCourse course = (EduCourse)returnPage.valueForKey("course");
+    		lesson = (EduLesson)EOUtilities.createAndInsertInstance(
+    				course.editingContext(), EduLesson.entityName);
+    		lesson.addObjectToBothSidesOfRelationshipWithKey(course,"course");
+    	}
 			lesson.setTheme(newTheme);
 			if(date != null) {
 				newDate = (date instanceof NSTimestamp)?
 						(NSTimestamp)date:new NSTimestamp(date);
 						newTitle = null;
-						lesson.setDate(newDate);
+			} else {
+				newDate = (NSTimestamp)session().valueForKey("today");
 			}
+			lesson.setDate(newDate);
 			lesson.setTitle(newTitle);
 			MyUtility.setNumberToNewLesson(lesson);
 			EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
@@ -83,26 +104,32 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 				returnPage.takeValueForKey(null, "currPerPersonLink");
 				returnPage.valueForKey("refresh");
 				appendMessage("strings.RujelBase_Base.notInTab");
-				return returnPage;
+				done = true;
+				return this;
 			}
-			//		Object oldMessage = session().valueForKey("message");
-			//    	session().setObjectForKey(lesson.date(), "recentDate");
-			returnPage.valueForKey("saveNoreset");
-			/*    	Object newMessage = session().valueForKey("message");
-    	if(oldMessage != null && !oldMessage.equals(newMessage)) {
-    		if(newMessage != null) {
-    			StringBuilder buf = new StringBuilder();
-    			buf.append("<p>").append(oldMessage).append("</p>\n<p>").
-    			append(newMessage).append("</p>");
-    			session().takeValueForKey(buf.toString(), "message");
-    		} else {
-    			session().takeValueForKey(oldMessage, "message");
-    		}
-    	} */
-		} else {
-			session().setObjectForKey(this, "LessonInspector");
-		}
-		return returnPage;
+			try {
+				lesson.validateForSave();
+		    	returnPage.ensureAwakeInContext(context());
+				WOActionResults result = (WOActionResults)returnPage.valueForKey("saveNoreset");
+				if(result instanceof WOComponent)
+					returnPage = (WOComponent)result;
+
+			} catch (NSValidation.ValidationException ve) {
+	    		session().takeValueForKey(ve.getMessage(), "message");
+	    	} catch (NSKeyValueCoding.UnknownKeyException e) {
+	    		session().takeValueForKey(application().valueForKeyPath
+	    				("strings.RujelCriterial_Strings.messages.notSaved"), "message");
+	    	} catch (Exception e) {
+	    		session().takeValueForKey(e.getMessage(), "message");
+	    		Logger.getLogger("rujel.base").log(WOLogLevel.WARNING, "error saving", 
+	    				new Object[] {session(),lesson,e});
+	    	}
+	    	done = (!lesson.editingContext().hasChanges());
+	       	if(done) {
+//				returnPage.takeValueForKey(lesson, "currPerPersonLink");
+				returnPage.valueForKey("updateLessonList");
+			}
+		return this;
     }
 
     protected void appendMessage(String keyPath) {
@@ -122,12 +149,30 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 			session().takeValueForKey(message, "message");
    }
     
-    public WOActionResults back() {
-       	returnPage.ensureAwakeInContext(context());
-    	return returnPage;
-    }
-    
     public EduLesson currLesson() {
     	return (EduLesson)returnPage.valueForKey("currLesson");
     }
+    
+    public WOActionResults returnPage() {
+    	returnPage.ensureAwakeInContext(context());
+    	EOEditingContext ec = (EOEditingContext)returnPage.valueForKey("ec");
+    	if(ec != null && ec.hasChanges())
+    		ec.revert();
+    	return returnPage;
+    }
+    
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(done) {
+    		aResponse.appendContentString(aContext.componentActionURL());
+    	} else {
+    		super.appendToResponse(aResponse, aContext);
+        	session().takeValueForKey(null, "message");
+    	}
+    }
+
+    public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
+    	if(aContext.elementID().equals(aContext.senderID()))
+    		return returnPage();
+		return super.invokeAction(aRequest, aContext);
+	}
 }
