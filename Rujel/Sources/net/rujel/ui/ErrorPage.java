@@ -29,6 +29,7 @@
 
 package net.rujel.ui;
 
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogFormatter;
 
 import com.webobjects.appserver.*;
@@ -39,27 +40,45 @@ public class ErrorPage extends com.webobjects.appserver.WOComponent {
         super(context);
     }
     public Throwable throwable;
+    public StringBuffer message;
+    public String details;
     
-    public String details() {
-    	if(throwable == null)
-    		return null;
-    	return WOLogFormatter.formatTrowableHTML(throwable);
-/*    	StringBuffer result = new StringBuffer();
-    	WOLogFormatter.formatTrowable(throwable,result);
-    	int idx =  result.indexOf("<") + result.indexOf(">") + result.indexOf("&");
-    	if(idx == -3) {
-    		idx = result.indexOf("\n");
-    		String br = "<br/>";
-    		while (idx > 0) {
-    			result.insert(idx, br);
-    			idx = result.indexOf("\n",idx + 6);
-    		}
-    		return result.toString();
-    	} else {
-    		String resultString = result.toString();
-    		resultString = WOMessage.stringByEscapingHTMLString(resultString);
-    		resultString = resultString.replace("\n", "\n<br/>");
-    		return resultString;
-    	}*/
+    WOActionResults result;
+    
+    public void setThrowable(Throwable value) {
+    	throwable = value;
+    	if(throwable != null)
+    		details = WOLogFormatter.formatTrowableHTML(throwable);
     }
+    
+    public String prepareFile() {
+    	if(message.indexOf("\n") > 0)
+    		return message.toString();
+    	message.append('\n');
+    	WOLogFormatter.formatTrowable(throwable, message);
+    	message.append('\r');
+    	message.append("school: ").append(SettingsReader.stringForKeyPath("schoolName", "???"));
+    	message.append('\r');
+    	message.append("url: ").append(context().request().applicationURLPrefix());
+    	String info = context().request().stringFormValueForKey("errorInfo");
+    	if(info != null) {
+    		message.append('\r').append("info: ").append(info);
+    	}
+    	return message.toString();
+    }
+
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(result != null) {
+    		aResponse.appendContentString(aContext.componentActionURL());
+    	} else {
+    		super.appendToResponse(aResponse, aContext);
+        	session().takeValueForKey(null, "message");
+    	}
+    }
+
+    public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
+    	if(aContext.elementID().equals(aContext.senderID()))
+    		return result;
+		return super.invokeAction(aRequest, aContext);
+	}
 }
