@@ -415,7 +415,10 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	
 	public WOComponent pullComponent() {
 		WOComponent result = (WOComponent)pathStack.removeLastObject();
-		result.ensureAwakeInContext(context());
+		if(result == null)
+			result = WOApplication.application().pageWithName("SrcMark", context());
+		else
+			result.ensureAwakeInContext(context());
 		return result;
 	}
     /*

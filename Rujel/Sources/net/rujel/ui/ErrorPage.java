@@ -29,7 +29,6 @@
 
 package net.rujel.ui;
 
-import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogFormatter;
 
 import com.webobjects.appserver.*;
@@ -40,7 +39,7 @@ public class ErrorPage extends com.webobjects.appserver.WOComponent {
         super(context);
     }
     public Throwable throwable;
-    public StringBuffer message;
+    public String message;
     public String details;
     
     WOActionResults result;
@@ -51,34 +50,11 @@ public class ErrorPage extends com.webobjects.appserver.WOComponent {
     		details = WOLogFormatter.formatTrowableHTML(throwable);
     }
     
-    public String prepareFile() {
-    	if(message.indexOf("\n") > 0)
-    		return message.toString();
-    	message.append('\n');
-    	WOLogFormatter.formatTrowable(throwable, message);
-    	message.append('\r');
-    	message.append("school: ").append(SettingsReader.stringForKeyPath("schoolName", "???"));
-    	message.append('\r');
-    	message.append("url: ").append(context().request().applicationURLPrefix());
-    	String info = context().request().stringFormValueForKey("errorInfo");
-    	if(info != null) {
-    		message.append('\r').append("info: ").append(info);
-    	}
-    	return message.toString();
+    public String onclick() {
+    	StringBuilder buf = new StringBuilder("getAjaxPopup(event,'");
+    	buf.append(context().directActionURLForActionNamed("report", null));
+    	buf.append("','report=' + document.getElementById('errorInfo').value);");
+    	return buf.toString();
     }
 
-    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    	if(result != null) {
-    		aResponse.appendContentString(aContext.componentActionURL());
-    	} else {
-    		super.appendToResponse(aResponse, aContext);
-        	session().takeValueForKey(null, "message");
-    	}
-    }
-
-    public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
-    	if(aContext.elementID().equals(aContext.senderID()))
-    		return result;
-		return super.invokeAction(aRequest, aContext);
-	}
 }

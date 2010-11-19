@@ -440,6 +440,7 @@ function onReadyStateChange(pos) {
 	//debug(pos);
 	var text = xmlHttp.responseText;
 	if(text.charAt(0) == '/' || text.substring(0,4) == 'http') {
+		loading = true;
 		window.location = text;
 		return;
 	}

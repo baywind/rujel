@@ -247,7 +247,7 @@ public class Application extends UTF8Application {
 
 		WOComponent errorPage = pageWithName("ErrorPage", aContext);
 		errorPage.takeValueForKey(anException, "throwable");
-		errorPage.takeValueForKey(msg, "message");
+		errorPage.takeValueForKey(msg.toString(), "message");
 		return errorPage.generateResponse();
 		//return super.handleException(anException,aContext);
 	}
