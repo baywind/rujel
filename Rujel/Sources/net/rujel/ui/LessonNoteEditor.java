@@ -337,16 +337,15 @@ public class LessonNoteEditor extends WOComponent {
 			NSArray objects = ec.insertedObjects();
 			if(objects != null && objects.count() > 0) {
 				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
-				if(currPerPersonLink == null) {
-					Enumeration enu = objects.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
-						if(obj instanceof EduLesson) {
-							currPerPersonLink = (EduLesson)obj;
-							break;
-						}
+				Enumeration enu = objects.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+					if(obj instanceof EduLesson) {
+						currPerPersonLink = (EduLesson)obj;
+						break;
 					}
-				} else {
+				}
+				if(currPerPersonLink != null) {
 					newLesson = objects.containsObject(currPerPersonLink);
 				}
 			}
@@ -435,7 +434,8 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void delete() {
-		selector = null;
+		if(currPerPersonLink == selector)
+			selector = null;
 		EOQualifier qual = new EOKeyValueQualifier(
 				"course",EOQualifier.QualifierOperatorEqual,course);
 		EOFetchSpecification fs = new EOFetchSpecification(

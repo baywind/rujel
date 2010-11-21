@@ -385,10 +385,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(critIdx >= 0 && crit == null)
     		crit = valueForKeyPath("critItem.dfltMax");
     	if(crit == null && critIdx < 0) {
-    		crit = SettingsBase.stringSettingForCourse(CriteriaSet.ENTITY_NAME,
-    				course, course.editingContext());
-        	if(crit == null)
-        		crit = "5";
+    		int max = SettingsBase.numericSettingForCourse("CriterlessMax",
+    				course, course.editingContext(),5);
+    		crit = Integer.toString(max);
     	} else if(crit != null && crit.equals(" ")) {
     		crit = null;
     	}
@@ -433,8 +432,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
 	
     public Number criterMax() {
-    	if(critIdx < 0)
-    		return null;
+//    	if(critIdx < 0) 
+//    		return null;
     	EOEnterpriseObject _itemMask = itemMask();
         if(_itemMask == null)  {
         	EOEnterpriseObject cr = critItem();
