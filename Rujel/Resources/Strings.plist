@@ -260,6 +260,17 @@
 			<key>component</key>
 			<string>Maintenance</string>
 			<key>sort</key>
+			<string>98</string>
+		</dict>
+		<key>bugReport</key>
+		<dict>
+			<key>title</key>
+			<string>Отчет об ошибке</string>
+			<key>component</key>
+			<string>BugReport</string>
+			<key>getFile</key>
+			<string>Получить файл</string>
+			<key>sort</key>
 			<string>99</string>
 		</dict>
 		<key>title</key>

@@ -1,0 +1,12 @@
+Title : WOString {
+  value = ^dict.title;
+}
+
+GetFile : WOHyperlink {
+  action = enironment;
+}
+
+FileTitle : WOString {
+  value = ^dict.getFile;
+  valueWhenEmpty = "Get file";
+}

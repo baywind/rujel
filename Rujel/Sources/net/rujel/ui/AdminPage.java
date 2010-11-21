@@ -51,12 +51,14 @@ public class AdminPage extends com.webobjects.appserver.WOComponent {
         if(Various.boolForObject(session().valueForKeyPath("readAccess.read.Maintenance"))) {
         	Object maintance = application().valueForKeyPath(
         			"strings.Strings.AdminPage.maintenance"); 
+        	Object bugReport = application().valueForKeyPath(
+					"strings.Strings.AdminPage.bugReport"); 
         	if(modules == null)
-        		modules = new NSArray(maintance);
-        	else if (modules instanceof NSMutableArray)
-        		((NSMutableArray)modules).addObject(maintance);
-        	else
-        		modules = modules.arrayByAddingObject(maintance);
+        		modules = new NSMutableArray(maintance);
+        	if (!(modules instanceof NSMutableArray))
+        		modules = modules.mutableClone();
+        	((NSMutableArray)modules).addObject(maintance);
+        	((NSMutableArray)modules).addObject(bugReport);
         }
         if(modules != null && modules.count() > 0) {
         	currModule = (NSKeyValueCodingAdditions)modules.objectAtIndex(0);
