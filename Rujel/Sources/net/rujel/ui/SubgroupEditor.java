@@ -66,7 +66,8 @@ public class SubgroupEditor extends WOComponent {
 		course = aCourse;
 		subgroup = new NSMutableSet(course.groupList());
 		currGroup = course.eduGroup();
-		if(course.namedFlags().flagForKey("mixedGroup")) {
+		if(course.namedFlags().flagForKey("mixedGroup") || currGroup == null
+				 || currGroup.list() == null || currGroup.list().count() == 0) {
 			if(subgroup.count() > 0)
 				currGroup = null;
 			prepareByGroup();
@@ -161,7 +162,18 @@ public class SubgroupEditor extends WOComponent {
 		else
 			subgroup.removeObject(studentItem);
     }
+    
+    public Boolean cantToggle() {
+		NSArray list = (NSArray)course.valueForKeyPath("eduGroup.list");
+		if(list == null || list.count() == 0)
+    		return Boolean.TRUE;
+    	return (Boolean)session().valueForKeyPath("readAccess._delete.CourseAudience");
+    }
 	
+    /** 
+     * automatically turn off "mixedGroup" on course if applicable
+     * @return true if "mixedGroup" was switched off
+     */
     protected boolean autoUnmix() {
 		int dfltFlags = SettingsBase.numericSettingForCourse("defaultCourseFlags",
 				course, course.editingContext(), 0);
@@ -170,17 +182,21 @@ public class SubgroupEditor extends WOComponent {
 			if(flags.flagForKey("mixedGroup"))
 				return false;
 		}
-		NSArray list = course.eduGroup().list();
-		Enumeration enu = subgroup.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			Student student = (Student) enu.nextElement();
-			if(!list.containsObject(student))
-				return false;
+		NSArray list = (NSArray)course.valueForKeyPath("eduGroup.list");
+		if(list != null && list.count() > 0) {
+			Enumeration enu = subgroup.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Student student = (Student) enu.nextElement();
+				if(!list.containsObject(student))
+					return false;
+			}
+		} else {
+			return false;
 		}
 		course.namedFlags().setFlagForKey(false, "mixedGroup");
+		currGroup = course.eduGroup();
 		byGroup = null;
 		groups = null;
-		currGroup = course.eduGroup();
 		return true;
     }
     
@@ -206,7 +222,8 @@ public class SubgroupEditor extends WOComponent {
 					nextPage = (WOComponent)session().valueForKey("pullComponent");
 				} else if(autoUnmix()) {
 					ec.saveChanges();
-				} else {
+				} else if(currGroup != null && currGroup.list() != null){ 
+					// work with mixed group
 					NSMutableArray list = new NSMutableArray();
 					Enumeration grlist = currGroup.list().objectEnumerator();
 					while (grlist.hasMoreElements()) {
@@ -214,6 +231,7 @@ public class SubgroupEditor extends WOComponent {
 						if(subgroup.containsObject(stu))
 							list.addObject(stu);
 					}
+					course.namedFlags().setFlagForKey(true,"mixedGroup");
 					byGroup.setObjectForKey(list, currGroup);
 					currGroup = null;
 					if(byGroup.count() > groups.count())
