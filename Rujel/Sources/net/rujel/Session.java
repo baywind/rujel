@@ -426,7 +426,12 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	public void */
 	public void terminate() {
 		logger.log(WOLogLevel.SESSION,"Session terminated",this);
-		ecLockManager.fullyUnlock();
+		_modules = null;
+		_strings = null;
+		clientIdentity = null;
+		_defaultEC = null;
+		ecLockManager.unregisterAll();
+		ecLockManager = null;
 		super.terminate();
 	}
 		
