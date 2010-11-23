@@ -138,12 +138,45 @@ public class Mailer {
 	}
 
 	public void sendTextMessage(String subject, String text, InternetAddress[] to)
-																	throws MessagingException{
+															throws MessagingException{
+		sendMessage(subject, text, to, null, null);
+	}
+	public void sendMessage(String subject, String text, InternetAddress[] to, 
+				NSData attachment, String attachName) throws MessagingException{
 		if(!dontSend) {
 			//try {
 				MimeMessage msg = constructMessage(to);
 				msg.setSubject(subject,"UTF-8");
-				msg.setText(text,"UTF-8");
+				if(attachment == null) {
+					msg.setText(text,"UTF-8");
+				} else {
+					MimeBodyPart mbp1 = new MimeBodyPart();
+					if(text == null)
+						text = defaultMessageText();
+					mbp1.setText(text,"UTF-8");
+					//mbp1.setDataHandler(new DataHandler(text, "text/plain; charset=\"UTF-8\""));
+					StringBuilder mime = new StringBuilder();
+					if(attachName == null) {
+						attachName = "file";
+						mime.append("application/octet-stream");
+					} else {
+						mime.append(WOApplication.application().resourceManager()
+								.contentTypeForResourceNamed(attachName));
+					}
+					MimeBodyPart mbp2 = new MimeBodyPart();
+					DataSource ds = new NSDataSource(attachName,attachment);
+				    mbp2.setDataHandler(new DataHandler(ds));
+				    mbp2.setFileName(attachName);
+				    mime.append("; name=\"").append(attachName).append('"');
+					mbp2.setHeader("Content-Type", mime.toString());
+				    Multipart mp = new MimeMultipart();
+				    mp.addBodyPart(mbp1);
+				    mp.addBodyPart(mbp2);
+
+				    // add the Multipart to the message
+				    msg.setContent(mp);
+
+				}
 				//msg.setDataHandler(new DataHandler(text, "text/plain; charset=\"UTF-8\""));
 				//msg.setHeader("Content-Language","ru");
 				sendMessage(msg);
@@ -155,6 +188,8 @@ public class Mailer {
 		if(writeToFile) {
 			NSData message = new NSData(text,"utf8");
 			writeToFile(subject + ".txt", message);
+			if(attachment != null)
+				writeToFile(subject + '_' + attachName,attachment);
 		}
 	}
 	
@@ -187,8 +222,9 @@ public class Mailer {
 			}
 		}
 		name.append((zip)?".zip":".html");
+		sendMessage(subject, text, to, content, name.toString());
+		/*
 		if(!dontSend) {
-			//try {
 				MimeMessage msg = constructMessage(to);
 				msg.setSubject(subject,"UTF-8");
 
@@ -213,14 +249,10 @@ public class Mailer {
 			    sendMessage(msg);
 				Object[] args = new Object[] {ses,subject};
 				logger.log(WOLogLevel.FINER,"Message was sent",args);
-			/*} catch (MessagingException e) {
-				Object[] args = new Object[] {ses,subject,e};
-				logger.log(WOLogLevel.WARNING,"Error sending message",args);
-			}*/
 		}
 		if(writeToFile) {
 			writeToFile(subject + ((zip)?".zip":".html"), content);
-		}
+		}*/
 	}
 
 	protected String _defaultMessage;

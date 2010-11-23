@@ -35,7 +35,6 @@ import net.rujel.auth.LoginProcessor;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
-import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
 public class DirectAction extends WODirectAction {
@@ -107,19 +106,24 @@ public class DirectAction extends WODirectAction {
 	} */
 	
 	public WOActionResults reportAction() {
+		WOResponse response = WOApplication.application().createResponseInContext(context());
 		WOSession ses = existingSession();
 		String report = request().stringFormValueForKey("report");
 		if(report != null && report.length() > 0) 
 			Logger.getLogger("rujel").log(WOLogLevel.INFO,"Error report: \n" + report,ses);
+		if(ses == null) {
+			response.appendContentString(context().directActionURLForActionNamed("logout", null));
+		} else {
+			response.appendContentString(context().directActionURLForActionNamed("resume", null));
+		}
+		return response;
+	}
+	
+	public WOActionResults resumeAction() {
+		WOSession ses = existingSession();
 		if(ses == null)
 			return logoutAction();
-		WOComponent last = null;
-		NSMutableArray pathStack = (NSMutableArray)session().valueForKey("pathStack");
-		if(pathStack == null || pathStack.count() == 0)
-			last = pageWithName("SrcMark");
-		else
-			last = (WOComponent)pathStack.removeLastObject();
-		last.ensureAwakeInContext(context());
+		WOComponent last = (WOComponent)ses.valueForKey("pullComponent");
 		ses.takeValueForKey(Boolean.FALSE,"prolong");
 		return last;
 	}

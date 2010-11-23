@@ -31,7 +31,6 @@ package net.rujel;
 
 import net.rujel.auth.ReadAccess;
 import net.rujel.base.MyUtility;
-import net.rujel.base.SettingsBase;
 import net.rujel.reusables.*;
 
 import com.apress.practicalwo.practicalutilities.WORequestAdditions;
@@ -247,6 +246,7 @@ public class Application extends UTF8Application {
 
 		WOComponent errorPage = pageWithName("ErrorPage", aContext);
 		errorPage.takeValueForKey(anException, "throwable");
+		errorPage.takeValueForKey(msg.toString(), "message");
 		return errorPage.generateResponse();
 		//return super.handleException(anException,aContext);
 	}

@@ -188,7 +188,8 @@ public class LessonNoteEditor extends WOComponent {
 
 		if(accessInterface().flagForKey("rightSide") && !accessInterface().flagForKey("leftSide"))
 			regime = LONGLIST;
-		else if(!accessInterface().flagForKey("rightSide") && accessInterface().flagForKey("leftSide"))
+		else if(!accessInterface().flagForKey("rightSide") 
+				&& accessInterface().flagForKey("leftSide"))
 			regime = BIGTABLE;
 		else
 			regime = NORMAL;
@@ -337,18 +338,16 @@ public class LessonNoteEditor extends WOComponent {
 			NSArray objects = ec.insertedObjects();
 			if(objects != null && objects.count() > 0) {
 				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
-				if(currPerPersonLink == null) {
-					Enumeration enu = objects.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
-						if(obj instanceof EduLesson) {
-							currPerPersonLink = (EduLesson)obj;
-							break;
-						}
+				Enumeration enu = objects.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+					if(obj instanceof EduLesson) {
+						currPerPersonLink = (EduLesson)obj;
+						break;
 					}
-				} else {
-					newLesson = objects.containsObject(currPerPersonLink);
 				}
+			} else {
+				newLesson = false;
 			}
 			if(currPerPersonLink instanceof EOEnterpriseObject) {
 				String entityName = ((EOEnterpriseObject)currPerPersonLink).entityName();
@@ -365,51 +364,52 @@ public class LessonNoteEditor extends WOComponent {
 			try {
 				if(currPerPersonLink != null)
 					((EOEnterpriseObject)currPerPersonLink).validateForSave();
-					if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
-						if(newLesson) {
-							MyUtility.setNumberToNewLesson(currLesson());
-						}
-						ec.saveChanges();
-						WOLogLevel level = WOLogLevel.EDITING;
-						if(newLesson) {
-							logger.log(level,"Created new lesson. " + changes,
-									new Object[] {session(),currPerPersonLink});
-							/*
+				if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
+					if(newLesson && currLesson() != null) {
+						MyUtility.setNumberToNewLesson(currLesson());
+					}
+					ec.saveChanges();
+					WOLogLevel level = WOLogLevel.EDITING;
+					if(newLesson) {
+						logger.log(level,"Created new lesson. " + changes,
+								new Object[] {session(),currPerPersonLink});
+						/*
 							NSNotificationCenter.defaultCenter().postNotification(
 									"Own created object",session().valueForKey(
 									"user"),new NSDictionary(currPerPersonLink,"EO"));*/
-						} else if(changes.count() > 0) {
-								logger.log(level,"Lesson changed: " + changes,
-										new Object[] {session(),currPerPersonLink});
-						}
-						if(currPerPersonLink != null) {
-							NSMutableDictionary dict = new NSMutableDictionary(currPerPersonLink,"object");
-							if(currPerPersonLink instanceof EduLesson)
-								dict.takeValueForKey(currPerPersonLink, "lesson");
-							String entityName = currLesson().entityName();
-							dict.takeValueForKey(entityName, "entityName");
-							session().setObjectForKey(dict, "objectSaved");
-							session().valueForKeyPath("modules.objectSaved");
-							session().removeObjectForKey("objectSaved");
-						}
-						if(reset) {
-							if(_currTab != null && currLesson() != null
-									&& !_currTab.qualifier().evaluateWithObject(currLesson()))
-								_currTab = null;
-							refresh();
-						}
-					} else { // check access to edited data
-						String message = (String)session().valueForKeyPath("readAccess.message");
-						if(message != null)
-							session().takeValueForKey(message, "message");
-						logger.log(WOLogLevel.FINER,"Saving forbidden for lesson", new Object[] 
-						                                                                      {session(),currPerPersonLink,message});
-						ec.revert();
-						if(newLesson) {
-							currPerPersonLink = null;
-							refresh();
-						}
+					} else if(changes.count() > 0) {
+						logger.log(level,"Lesson changed: " + changes,
+								new Object[] {session(),currPerPersonLink});
 					}
+					if(currPerPersonLink != null) {
+						NSMutableDictionary dict = new NSMutableDictionary(
+								currPerPersonLink,"object");
+						if(currPerPersonLink instanceof EduLesson)
+							dict.takeValueForKey(currPerPersonLink, "lesson");
+						String entityName = currLesson().entityName();
+						dict.takeValueForKey(entityName, "entityName");
+						session().setObjectForKey(dict, "objectSaved");
+						session().valueForKeyPath("modules.objectSaved");
+						session().removeObjectForKey("objectSaved");
+					}
+					if(reset) {
+						if(_currTab != null && currLesson() != null
+								&& !_currTab.qualifier().evaluateWithObject(currLesson()))
+							_currTab = null;
+						refresh();
+					}
+				} else { // check access to edited data
+					String message = (String)session().valueForKeyPath("readAccess.message");
+					if(message != null)
+						session().takeValueForKey(message, "message");
+					logger.log(WOLogLevel.FINER,"Saving forbidden for lesson",
+							new Object[] {session(),currPerPersonLink,message});
+					ec.revert();
+					if(newLesson) {
+						currPerPersonLink = null;
+						refresh();
+					}
+				}
 				//session().takeValueForKey(Boolean.FALSE,"prolong");
 			} catch (NSValidation.ValidationException vex) {
 				logger.log(WOLogLevel.FINE,"Failed to save lesson",
@@ -435,7 +435,8 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void delete() {
-		selector = null;
+		if(currPerPersonLink == selector)
+			selector = null;
 		EOQualifier qual = new EOKeyValueQualifier(
 				"course",EOQualifier.QualifierOperatorEqual,course);
 		EOFetchSpecification fs = new EOFetchSpecification(
@@ -509,7 +510,8 @@ public class LessonNoteEditor extends WOComponent {
 			session().takeValueForKey(vex.toString(),"message");
 			ec.revert();
 		} catch (Exception ex) {
-			logger.log(WOLogLevel.WARNING,"Deletion failed: ",new Object[] {session(),currLesson(),ex});
+			logger.log(WOLogLevel.WARNING,"Deletion failed: ",
+					new Object[] {session(),currLesson(),ex});
 			String message = (String)application().valueForKeyPath(
 					"strings.Strings.messages.error") + " : " + application().valueForKeyPath(
 							"strings.Strings.messages.cantDelete") + " : " + ex;
@@ -703,9 +705,11 @@ public class LessonNoteEditor extends WOComponent {
 			return null;
 		int idx = lessonsList.indexOf(currPerPersonLink);
 		if(idx > 0)
-			return (String)application().valueForKeyPath("strings.Strings.LessonNoteEditor.addTab");
+			return (String)application().valueForKeyPath(
+					"strings.Strings.LessonNoteEditor.addTab");
 		if(idx == 0)
-			return (String)application().valueForKeyPath("strings.Strings.LessonNoteEditor.removeTab");
+			return (String)application().valueForKeyPath(
+					"strings.Strings.LessonNoteEditor.removeTab");
 		return null;
 	}
 

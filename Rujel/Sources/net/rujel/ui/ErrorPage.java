@@ -39,27 +39,22 @@ public class ErrorPage extends com.webobjects.appserver.WOComponent {
         super(context);
     }
     public Throwable throwable;
+    public String message;
+    public String details;
     
-    public String details() {
-    	if(throwable == null)
-    		return null;
-    	return WOLogFormatter.formatTrowableHTML(throwable);
-/*    	StringBuffer result = new StringBuffer();
-    	WOLogFormatter.formatTrowable(throwable,result);
-    	int idx =  result.indexOf("<") + result.indexOf(">") + result.indexOf("&");
-    	if(idx == -3) {
-    		idx = result.indexOf("\n");
-    		String br = "<br/>";
-    		while (idx > 0) {
-    			result.insert(idx, br);
-    			idx = result.indexOf("\n",idx + 6);
-    		}
-    		return result.toString();
-    	} else {
-    		String resultString = result.toString();
-    		resultString = WOMessage.stringByEscapingHTMLString(resultString);
-    		resultString = resultString.replace("\n", "\n<br/>");
-    		return resultString;
-    	}*/
+    WOActionResults result;
+    
+    public void setThrowable(Throwable value) {
+    	throwable = value;
+    	if(throwable != null)
+    		details = WOLogFormatter.formatTrowableHTML(throwable);
     }
+    
+    public String onclick() {
+    	StringBuilder buf = new StringBuilder("getAjaxPopup(event,'");
+    	buf.append(context().directActionURLForActionNamed("report", null));
+    	buf.append("','report=' + document.getElementById('errorInfo').value);");
+    	return buf.toString();
+    }
+
 }

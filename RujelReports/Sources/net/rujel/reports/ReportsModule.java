@@ -53,10 +53,6 @@ import com.webobjects.foundation.NSPropertyListSerialization;
 
 public class ReportsModule {
 	
-	static {
-		System.out.println ("Initialising ReportsModule");
-	}
-	
 	protected static File reportsFolder;
 
 	public static Object init(Object obj, WOContext ctx) {

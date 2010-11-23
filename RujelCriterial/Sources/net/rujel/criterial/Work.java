@@ -600,6 +600,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	
 	public void validateForSave() throws NSValidation.ValidationException {
 		super.validateForSave();
+		marksIndex();
 		if(announce() == null || date() == null) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 			"strings.RujelCriterial_Strings.messages.nullDate");
