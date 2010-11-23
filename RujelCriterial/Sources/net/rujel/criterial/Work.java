@@ -473,6 +473,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		_allCriteria=null;
 		_integralPresenter = null;
 		weightToMax = null;
+		_critSet = null;
 	}
 	
 	public void setMarks(NSArray aValue) {

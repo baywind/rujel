@@ -75,6 +75,35 @@
 		</dict>
 		<dict>
 			<key>title</key>
+			<string>Тип работы</string>
+			<key>active</key>
+			<false/>
+			<key>attribute</key>
+			<string>work.workType</string>
+			<key>select</key>
+			<dict>
+				<key>className</key>
+				<string>com.webobjects.eoaccess.EOUtilities</string>
+				<key>methodName</key>
+				<string>objectsForEntityNamed</string>
+				<key>cacheResult</key>
+				<true/>
+				<key>paramClasses</key>
+				<array>
+					<string>com.webobjects.eocontrol.EOEditingContext</string>
+					<string>java.lang.String</string>
+				</array>
+				<key>paramValues</key>
+				<array>
+					<string>^editingContext</string>
+					<string>&apos;WorkType</string>
+				</array>
+			</dict>
+			<key>displayString</key>
+			<string>.typeName</string>
+		</dict>
+		<dict>
+			<key>title</key>
 			<string>Класс</string>
 			<key>attribute</key>
 			<string>eduGroup</string>
@@ -172,6 +201,14 @@
 					<true/>
 				</dict>
 			</dict>
+		</dict>
+		<dict>
+			<key>title</key>
+			<string>Констатирующая</string>
+			<key>qualifierFormat</key>
+			<string>work.weight &gt; 0</string>
+			<key>comment</key>
+			<string>учитывается в рассчете прогноза</string>
 		</dict>
 	</array>
 	<key>prefetch</key>
@@ -283,13 +320,47 @@
 		</dict>
 		<dict>
 			<key>title</key>
+			<string>Тип работы</string>
+			<key>keyPath</key>
+			<string>work.workType</string>
+			<key>titlePath</key>
+			<string>typeName</string>
+			<key>sortKey</key>
+			<string>work.workType.sort</string>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<false/>
+			<key>sort</key>
+			<string>48</string>
+		</dict>
+		<dict>
+			<key>title</key>
 			<string>Тема работы</string>
 			<key>keyPath</key>
 			<string>work.theme</string>
+			<key>comparison</key>
+			<string>CompareAscending</string>
 			<key>active</key>
 			<false/>
 			<key>sort</key>
 			<string>50</string>
+		</dict>
+		<dict>
+			<key>title</key>
+			<string>Вес работы</string>
+			<key>short</key>
+			<string>вес</string>
+			<key>keyPath</key>
+			<string>work.trimmedWeight</string>
+			<key>sortKey</key>
+			<string>work.weight</string>
+			<key>comparison</key>
+			<string>CompareDescending</string>
+			<key>active</key>
+			<false/>
+			<key>sort</key>
+			<string>52</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -323,6 +394,8 @@
 			<string>Оценка</string>
 			<key>keyPath</key>
 			<string>present</string>
+			<key>itemHover</key>
+			<string>$itemRow.hover</string>
 			<key>sortKey</key>
 			<string>value</string>
 			<key>comparison</key>
@@ -331,6 +404,33 @@
 			<true/>
 			<key>sort</key>
 			<string>70</string>
+		</dict>
+		<dict>
+			<key>title</key>
+			<string>Максимум</string>
+			<key>short</key>
+			<string>max</string>
+			<key>value</key>
+			<dict>
+				<key>object</key>
+				<string>.work</string>
+				<key>methodName</key>
+				<string>maxForCriter</string>
+				<key>paramClasses</key>
+				<array>
+					<string>java.lang.Integer</string>
+				</array>
+				<key>paramValues</key>
+				<array>
+					<string>.criterion</string>
+				</array>
+			</dict>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<false/>
+			<key>sort</key>
+			<string>72</string>
 		</dict>
 		<dict>
 			<key>title</key>
@@ -350,6 +450,33 @@
 			<string>CompareAscending</string>
 			<key>sort</key>
 			<string>80</string>
+		</dict>
+		<dict>
+			<key>short</key>
+			<string>.</string>
+			<key>title</key>
+			<string>по критериям</string>
+			<key>keyPath</key>
+			<string>work</string>
+			<key>presenter</key>
+			<string>MarksPresenter</string>
+			<key>presenterBindings</key>
+			<dict>
+				<key>lesson</key>
+				<string>.</string>
+				<key>student</key>
+				<string>$itemRow.student</string>
+				<key>full</key>
+				<true/>
+				<key>readOnly</key>
+				<true/>
+			</dict>
+			<key>comparison</key>
+			<string>CompareAscending</string>
+			<key>active</key>
+			<false/>
+			<key>sort</key>
+			<string>30</string>
 		</dict>
 	</array>
 </dict>
