@@ -292,6 +292,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     public WOActionResults returnPage() {
     	if(course.editingContext().hasChanges())
     		course.editingContext().revert();
+    	if(work != null)
+    		work.nullify();
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }

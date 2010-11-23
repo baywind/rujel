@@ -415,10 +415,11 @@ public class LessonNoteEditor extends WOComponent {
 				logger.log(WOLogLevel.FINE,"Failed to save lesson",
 						new Object[] {session(),currPerPersonLink,vex.toString()});
 				session().takeValueForKey(vex.getMessage(),"message");
-				if(!newLesson) {
+				reset = false;
+			/*	if(!newLesson) {
 					ec.revert();
 					ec.refaultObject(currLesson());
-				}
+				}*/
 			} catch (Exception ex) {
 				logger.log(WOLogLevel.WARNING,"Failed to save lesson",
 						new Object[] {session(),currPerPersonLink,ex});
