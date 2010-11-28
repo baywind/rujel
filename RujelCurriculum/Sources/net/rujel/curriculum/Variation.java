@@ -29,6 +29,7 @@
 
 package net.rujel.curriculum;
 
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -39,6 +40,8 @@ public class Variation extends _Variation implements Reason.Event {
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship(ENTITY_NAME,"course",false,"courseID","EduCourse");
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"relatedLesson",false,
+				"lessonID","EduLesson");
 	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
@@ -54,6 +57,23 @@ public class Variation extends _Variation implements Reason.Event {
 		takeStoredValueForKey(newCourse, "course");
 	}
 	
+	public EduLesson relatedLesson() {
+		return (EduLesson)storedValueForKey("relatedLesson");
+	}
+	
+	public void setRelatedLesson(EduLesson lesson) {
+		takeStoredValueForKey(lesson, "relatedLesson");
+		if(lesson == null)
+			return;
+		setDate(lesson.date());
+		if(course() == null) {
+			setCourse(lesson.course());
+			setValue(new Integer(1));
+		} else {
+			setValue(new Integer((course() == lesson.course())?1:-1));
+		}
+	}
+
 	public static NSArray variations(EduCourse course, 
 			NSTimestamp begin, NSTimestamp end) {
 		EOQualifier qual = new EOKeyValueQualifier("course",
@@ -127,7 +147,7 @@ public class Variation extends _Variation implements Reason.Event {
     	}
     	return "text-align:center;";
     }
-    
+    /*
     public NSArray getAllPaired(boolean byReason) {
     	Integer value = value();
     	if(value == null || value.intValue() == 0)
@@ -154,10 +174,15 @@ public class Variation extends _Variation implements Reason.Event {
        	if(found == null || found.count() == 0)
        		return null;
        	return found;
-    }
+    }*/
     
     public Variation getPaired() {
-    	NSArray found = getAllPaired(true);
+    	if(relatedLesson() == null || course() == null)
+    		return null;
+    	NSArray args = new NSArray(new Object[] {relatedLesson(),course()});
+    	NSArray found = EOUtilities.objectsWithQualifierFormat(editingContext(), ENTITY_NAME, 
+    			"relatedLesson = %@ and course != %@", args);
+    	//getAllPaired(true);
        	if(found == null || found.count() == 0)
        		return null;
        	if(found.count() > 0) {

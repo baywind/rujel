@@ -103,7 +103,7 @@ public class QualifiedSetting extends _QualifiedSetting {
 	protected void read() {
 		String qualifierString = qualifierString();
 		if(qualifierString.equals("IS")) {
-			courses = new NSArray(Various.parseEO(qualifierString, editingContext()));
+			courses = new NSArray(Various.parseEO(argumentsString(), editingContext()));
 			qualifier = null;
 		} else {
 			courses = Various.argumentsFromString(argumentsString(), editingContext());

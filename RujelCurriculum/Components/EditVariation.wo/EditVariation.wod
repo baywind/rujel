@@ -39,14 +39,14 @@ TrueRadio : WORadioButton {
 	name = "negative";
 	selection = negative;
 	value = true;
-	disabled = onlyChooseReason;
+	disabled = true;
 }
 
 FalseRadio : WORadioButton {
 	name = "negative";
 	selection = negative;
 	value = false;
-	disabled = onlyChooseReason;
+	disabled = true;
 }
 
 ValueField : WOTextField {

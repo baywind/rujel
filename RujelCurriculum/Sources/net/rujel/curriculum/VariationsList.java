@@ -144,6 +144,7 @@ public class VariationsList extends WOComponent {
     	} else {
     		nextPage.takeValueForKey(value, "value");
     		nextPage.takeValueForKey(aDate, "date");
+    		nextPage.takeValueForKey(Boolean.TRUE, "negative");
     	}
     	return nextPage;
     }
@@ -164,5 +165,16 @@ public class VariationsList extends WOComponent {
     	//message = null;
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
+    }
+    
+    public String varSub() {
+    	EduCourse vsC = (EduCourse)valueForKeyPath("item.getPaired.course");
+    	if(vsC == null)
+    		return null;
+    	StringBuilder buf = new StringBuilder("(<em>");
+    	buf.append(session().valueForKeyPath(
+    			"strings.RujelCurriculum_Curriculum.Substitute.Substitute"));
+    	buf.append("</em>: ").append(vsC.subjectWithComment()).append(')');
+    	return buf.toString();
     }
 }

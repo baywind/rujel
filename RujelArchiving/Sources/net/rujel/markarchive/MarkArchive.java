@@ -348,6 +348,8 @@ public class MarkArchive extends _MarkArchive
 		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), ec);
 		//EOUtilities.objectMatchingKeyAndValue(ec,"UsedEntity","usedEntity",eo.entityName());
 		EOQualifier qual = archiveQualifier(usedEntity,pKey);
+		if(qual == null)
+			return null;
 		EOSortOrdering so = EOSortOrdering.sortOrderingWithKey(
 				"timestamp", EOSortOrdering.CompareAscending);
 		EOFetchSpecification fs = new EOFetchSpecification("MarkArchive",qual,new NSArray(so));

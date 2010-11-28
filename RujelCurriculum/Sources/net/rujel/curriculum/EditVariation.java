@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
@@ -53,6 +54,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 	public Reason reason;
 	public NSTimestamp date;
 	protected String oldDate;
+	public EduLesson lesson;
 	
 	public Integer abs;
 	public boolean negative;
@@ -73,13 +75,33 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(var instanceof Variation) {
     		variation = (Variation)var;
     		reason = variation.reason();
-    		session().setObjectForKey(variation, "readAccess");
-    		if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.session")))
-    			onlyChooseReason = true;
-    		session().removeObjectForKey("readAccess");
+    		lesson = variation.relatedLesson();
+    		course = variation.course();
+    		onlyChooseReason = (lesson != null);
+    		if(!onlyChooseReason) {
+    			session().setObjectForKey(variation, "readAccess");
+    			if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.session")))
+    				onlyChooseReason = true;
+    			session().removeObjectForKey("readAccess");
+    		}
     	}
    		date = (NSTimestamp)NSKeyValueCoding.Utility.valueForKey(var,Variation.DATE_KEY);
 		setValue((Integer)NSKeyValueCoding.Utility.valueForKey(var,Variation.VALUE_KEY));
+    }
+    
+    public void setLesson(EduLesson lesson) {
+    	this.lesson = lesson;
+    	if(lesson != null)
+    		onlyChooseReason = true;
+    	abs = new Integer(1);
+    	negative = false;
+    	if(lesson == null)
+    		return;
+    	date = lesson.date();
+    	if(course == null)
+    		course = lesson.course();
+    	else if(lesson.course() != course)
+    		negative = true;
     }
     
     public void setValue(Integer value) {
@@ -155,6 +177,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	variation.setValue(value);
     	variation.setDate(date);
     	variation.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
+    	variation.setRelatedLesson(lesson);
     	try {
 			ec.saveChanges();
 			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")

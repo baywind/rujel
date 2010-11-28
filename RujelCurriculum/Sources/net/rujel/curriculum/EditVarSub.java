@@ -10,12 +10,7 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOAndQualifier;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOKeyValueQualifier;
-import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSTimestamp;
 
@@ -25,7 +20,8 @@ public class EditVarSub extends WOComponent {
     public WOComponent returnPage;
     public EduCourse toCourse;
     public EduCourse fromCourse;
-    public Integer value = new Integer(1);
+    protected EduLesson lesson;
+//    public Integer value = new Integer(1);
     public NSArray courses;
     public EduCourse item;
     public Reason reason;
@@ -37,38 +33,31 @@ public class EditVarSub extends WOComponent {
     }
     
     public void setLesson(EduLesson lesson) {
+    	this.lesson = lesson;
     	if(lesson == null)
     		return;
     	date = lesson.date();
     	setToCourse(lesson.course());
-    	EOQualifier[] quals = new EOQualifier[3];
+    	EOQualifier[] quals = new EOQualifier[4];
     	quals[0] = new EOKeyValueQualifier(Variation.DATE_KEY,
     			EOQualifier.QualifierOperatorEqual, date);
     	quals[1] = new EOKeyValueQualifier(Variation.VALUE_KEY,
     		EOQualifier.QualifierOperatorGreaterThan, new Integer(0));
        	quals[2] = new EOKeyValueQualifier("course",
     			EOQualifier.QualifierOperatorEqual, toCourse);
+       	quals[3] = new EOKeyValueQualifier("relatedLesson",
+    			EOQualifier.QualifierOperatorEqual, lesson);
        	quals[0] = new EOAndQualifier(new NSArray(quals));
        	EOFetchSpecification fs = new EOFetchSpecification(
        			Variation.ENTITY_NAME,quals[0],null);
        	NSArray found = lesson.editingContext().objectsWithFetchSpecification(fs);
        	if(found != null && found.count() > 0) {
-       		for (int i = 0; i < found.count(); i++) {
-				Variation var = (Variation)found.objectAtIndex(i);
-				NSArray backVars = var.getAllPaired(true);
-				if(backVars != null) {
-					if(backVars.count() == 0) {
-						backVars = null;
-						continue;
-					}
-					variation = var;
-					var = (Variation)backVars.objectAtIndex(0);
-					fromCourse = var.course();
-					reason = var.reason();
-					value = variation.value();
-					break;
-				}
-			}
+       		variation = (Variation)found.objectAtIndex(0);
+			reason = variation.reason();
+//			value = variation.value();
+       		Variation back = variation.getPaired();
+			if(back != null)
+				fromCourse = back.course();
        	}
     }
     
@@ -98,15 +87,6 @@ public class EditVarSub extends WOComponent {
     	EOQualifier[] quals = new EOQualifier[3];
     	quals[0] = new EOKeyValueQualifier("course",
     			EOQualifier.QualifierOperatorEqual, item);
-    	/*
-       	if(variation != null && backVars != null) {
-       		backVars = EOQualifier.filteredArrayWithQualifier(backVars, quals[0]);
-       		if(backVars == null || backVars.count() == 0)
-       			variation = null;
-       		else
-       			return;
-       	}*/
-    	variation = null;
     	quals[1] = new EOKeyValueQualifier(Variation.DATE_KEY,
     			EOQualifier.QualifierOperatorEqual, date);
     	quals[2] = new EOKeyValueQualifier(Variation.VALUE_KEY,
@@ -115,13 +95,16 @@ public class EditVarSub extends WOComponent {
     	EOFetchSpecification fs = new EOFetchSpecification(
     			Variation.ENTITY_NAME,quals[1],null);
     	NSArray found = fromCourse.editingContext().objectsWithFetchSpecification(fs);
+    	reason = null;
     	if(found != null && found.count() > 0) {
-//    		backVars = found;
-    		Variation var = (Variation)found.objectAtIndex(0);
-    		reason = var.reason();
-    	} else {
-//    		backVars = null;
-    		reason = null;
+    		for (int i = 0; i < found.count(); i++) {
+        		Variation var = (Variation)found.objectAtIndex(0);
+        		if(var.relatedLesson() == null || var.relatedLesson().course() == toCourse) {
+        			reason = var.reason();
+        			if(var.relatedLesson() != null)
+        				break;
+        		}
+			}
     	}
     }
     
@@ -132,18 +115,13 @@ public class EditVarSub extends WOComponent {
 			ec.revert();
 			return returnPage;
 		}
-		int val = (value == null)?1:value.intValue();
-		if(val < 0) {
-			val = -val;
-			value = new Integer(val); 
-		}
+
 		if(variation == null)
-		variation = (Variation)EOUtilities.createAndInsertInstance(
-				ec, Variation.ENTITY_NAME);
-		variation.addObjectToBothSidesOfRelationshipWithKey(toCourse, "course");
+			variation = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
+		variation.setRelatedLesson(lesson);
 		variation.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
-		variation.setDate(date);
-		variation.setValue(value);
+//		variation.setDate(date);
+//		variation.setValue(new Integer(-1));
 		boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 		try {
@@ -164,31 +142,59 @@ public class EditVarSub extends WOComponent {
 					new Object[] {session(),variation,toCourse});
 			return returnPage;
 		}
-    	EOQualifier[] quals = new EOQualifier[4];
+    	EOQualifier[] quals = new EOQualifier[3];
        	quals[0] = new EOKeyValueQualifier("course",
     			EOQualifier.QualifierOperatorEqual, fromCourse);
     	quals[1] = new EOKeyValueQualifier(Variation.DATE_KEY,
     			EOQualifier.QualifierOperatorEqual, date);
     	quals[2] = new EOKeyValueQualifier(Variation.VALUE_KEY,
     		EOQualifier.QualifierOperatorLessThan, new Integer(0));
-    	quals[3] = new EOKeyValueQualifier(Variation.REASON_KEY,
-    			EOQualifier.QualifierOperatorEqual, reason);
+//    	quals[3] = new EOKeyValueQualifier(Variation.REASON_KEY,
+//    			EOQualifier.QualifierOperatorEqual, reason);
        	quals[1] = new EOAndQualifier(new NSArray(quals));
        	EOFetchSpecification fs = new EOFetchSpecification(
        			Variation.ENTITY_NAME,quals[1],null);
        	NSArray found = fromCourse.editingContext().objectsWithFetchSpecification(fs);
+       	Variation back = null;
        	if(found == null || found.count() == 0) {
-       		Variation var = (Variation)EOUtilities.createAndInsertInstance(
-    				ec, Variation.ENTITY_NAME);
-    		var.addObjectToBothSidesOfRelationshipWithKey(fromCourse, "course");
-    		var.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
-    		var.setDate(date);
-    		var.setValue(new Integer(-val));
+       		back = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
+    		back.addObjectToBothSidesOfRelationshipWithKey(fromCourse, "course");
+    		back.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
+       	} else {
+       		int lvl = 0;
+       		for (int i = 0; i < found.count(); i++) {
+				Variation var = (Variation)found.objectAtIndex(i);
+				if(var.relatedLesson() == lesson) {
+			       	session().removeObjectForKey("lessonProperies");
+					return returnPage;
+				}
+				if(var.reason() == reason && lvl < 4) {
+					lvl = 3;
+					back = var;
+					if(var.value().intValue() == -1)
+						lvl++;
+				} else if(var.value().intValue() == -1 && lvl < 2) {
+					lvl = 2;
+					back = var;
+				} else if(lvl == 0) {
+					lvl = 1;
+					back = var;
+				}
+			}
+       		if(back.value().intValue() < -1) {
+       			back.setValue(new Integer(back.value().intValue() +1));
+           		back = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
+        		back.addObjectToBothSidesOfRelationshipWithKey(fromCourse, "course");
+        		back.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
+       		}
+       	}
+       	back.setRelatedLesson(lesson);
+       	if(ec.hasChanges()) {
     		try {
     			ec.saveChanges();
     	       	Curriculum.logger.log(WOLogLevel.EDITING,
     	       			"VarSub reverse Variation created",
-    	       			new Object[] {session(),var});
+    	       			new Object[] {session(),back});
     			if(!noRelieve) {
     				String usr = (String)session().valueForKeyPath("user.present");
     				if(usr == null)
@@ -201,11 +207,11 @@ public class EditVarSub extends WOComponent {
     			session().takeValueForKey(e.getMessage(), "message");
     			Curriculum.logger.log(WOLogLevel.WARNING,
     					"Error saving reverse VarSub Variation",
-    					new Object[] {session(),var,variation});
+    					new Object[] {session(),back,variation});
     			return returnPage;
     		}
        	}
-		session().removeObjectForKey("lessonProperies");
+       	session().removeObjectForKey("lessonProperies");
 		return returnPage;
 	}
 	

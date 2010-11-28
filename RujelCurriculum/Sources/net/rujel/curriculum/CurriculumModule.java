@@ -131,7 +131,7 @@ public class CurriculumModule {
 			EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(0);
 			NSArray args = new NSArray(lesson.course());
 			vars = EOUtilities.objectsWithQualifierFormat(lesson.editingContext(),
-					Variation.ENTITY_NAME, "course = %@ AND value >= 1", args);
+					Variation.ENTITY_NAME, "course = %@ AND value >= 1 ", args);
 			showVars = (vars != null && vars.count() > 0);
 		}
 		if(showSubs) {
@@ -147,8 +147,8 @@ public class CurriculumModule {
 			EduLesson lesson = (EduLesson) enu.nextElement();
 			NSMutableDictionary props = null;
 			if(showVars) {
-				EOQualifier qual = new EOKeyValueQualifier(Variation.DATE_KEY,
-						EOQualifier.QualifierOperatorEqual,lesson.date());
+				EOQualifier qual = new EOKeyValueQualifier("relatedLesson",
+						EOQualifier.QualifierOperatorEqual,lesson);
 				NSArray filtered = EOQualifier.filteredArrayWithQualifier(vars, qual);
 				if(filtered != null && filtered.count() > 0) {
 					props = new NSMutableDictionary("color:#006600;","style");
@@ -446,6 +446,11 @@ public class CurriculumModule {
 				return null;
 			course = lesson.course();
 			date = lesson.date();
+			NSArray related = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
+					Variation.ENTITY_NAME, "relatedLesson", lesson);
+			if(related != null && related.count() > 0) {
+				related.takeValueForKey(lesson.date(), Variation.DATE_KEY);
+			}
 		}
 		if(course != null) {
 			String usr = (String)ctx.session().valueForKeyPath("user.present");

@@ -240,9 +240,9 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 	public Variation variation() {
 		if(_variation == null) {
    		EduLesson lesson = (EduLesson)valueForBinding("lesson");
-		NSArray args = new NSArray(new Object[] {lesson.course(),lesson.date()});
+		NSArray args = new NSArray(new Object[] {lesson.course(),lesson});
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
-				"course = %@ AND date = %@ AND value >= 1", args);
+				"course = %@ AND relatedLesson = %@", args);
 		EOFetchSpecification fs = new EOFetchSpecification(Variation.ENTITY_NAME,qual,null);
 		NSArray found = lesson.editingContext().objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0)
@@ -267,15 +267,16 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 	public WOComponent addedLesson() {
 		WOComponent nextPage = pageWithName("EditVariation");
 		nextPage.takeValueForKey(Boolean.TRUE, "returnNormaly");
-		nextPage.takeValueForKey(Boolean.TRUE, "onlyChooseReason");
+//		nextPage.takeValueForKey(Boolean.TRUE, "onlyChooseReason");
    		EduLesson lesson = (EduLesson)valueForBinding("lesson");
    		nextPage.takeValueForKey(context().page(), "returnPage");
-    	nextPage.takeValueForKey(lesson.course(), "course");
+//    	nextPage.takeValueForKey(lesson.course(), "course");
 		if(variation() != null) {
 			nextPage.takeValueForKey(variation(), "variation");
 		} else {
-	   		nextPage.takeValueForKey(lesson.date(),"date");
-	   		nextPage.takeValueForKey(new Integer(1),"value");
+	    	nextPage.takeValueForKey(lesson, "lesson");
+//	   		nextPage.takeValueForKey(lesson.date(),"date");
+//	   		nextPage.takeValueForKey(new Integer(1),"value");
 		}
 		return nextPage;
 	}

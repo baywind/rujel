@@ -226,3 +226,8 @@ SuggestionsTitle : WOString {
   value = session.strings.RujelCurriculum_Curriculum.titles.suggest;
   escapeHTML = false;
 }
+
+BackTitle : WOString {
+  value = varSub;
+  escapeHTML = false;
+}

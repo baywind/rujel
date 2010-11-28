@@ -197,13 +197,13 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				if(val < 0) {  // negative
 					if(sbt[day] > 0) {
 						Teacher teacher = var.course().teacher(var.date());
-						Counter cnt = (Counter)plusByTeacher.objectForKey(teacher);
-						if(cnt != null) {
+/*						Counter cnt = (Counter)plusByTeacher.objectForKey(teacher);
+						if(cnt != null) { // annihilate extra lessons count
 							cnt.add(val);
 							val = cnt.intValue();
 							if(val <= 0)
 								plusByTeacher.removeObjectForKey(teacher);
-						}
+						}*/
 						if(val < 0) {
 							BigDecimal bySub = (BigDecimal)subsByTeacher.objectForKey(teacher);
 							if(bySub == null)
@@ -224,29 +224,16 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 						val = sbt[day];
 					Object teacher = var.course().teacher();
 					if(teacher == null) teacher = NSDictionary.EmptyDictionary;
-					NSArray paired = var.getAllPaired(true);
-					if(paired != null) {
-						if(paired.count() > 1) {
-							list = new NSArray(new EOSortOrdering(Variation.VALUE_KEY,
-									EOSortOrdering.CompareAscending));
-							paired = EOSortOrdering.sortedArrayUsingKeyOrderArray(
-									paired, list);
+					Variation paired = var.getPaired();
+					if(paired != null) { // is a varSub
+						BigDecimal cnt = new BigDecimal(paired.value().intValue());
+						BigDecimal bySub = (BigDecimal)subsByTeacher.objectForKey(teacher);
+						if(bySub == null) {
+							subsByTeacher.setObjectForKey(cnt, teacher);
+						} else {
+							subsByTeacher.setObjectForKey(bySub.add(cnt), teacher);
 						}
-						Enumeration pEnu = paired.objectEnumerator();
-						while (pEnu.hasMoreElements() && val > 0) {
-							Variation pr = (Variation) pEnu.nextElement();
-							int pv = -pr.value().intValue();
-							BigDecimal cnt = new BigDecimal(pv);
-							BigDecimal bySub = (BigDecimal)subsByTeacher.objectForKey(teacher);
-							if(bySub == null) {
-								subsByTeacher.setObjectForKey(cnt, teacher);
-							} else {
-								subsByTeacher.setObjectForKey(bySub.add(cnt), teacher);
-							}
-							val -= pv;
-						} // paired enumeration
-					} // paired != null 
-					if(val > 0) {
+					} else { // is just extra lesson
 						Counter cnt = (Counter)plusByTeacher.objectForKey(teacher);
 						if(cnt == null)
 							plusByTeacher.setObjectForKey(new Counter(val), teacher);
@@ -687,28 +674,14 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 						if(val <= 0)
 							continue;
 						addHoursToKey(null, new BigDecimal(-val), cal, mainTotals);
-						NSArray paired = var.getAllPaired(true);
+						Variation paired = var.getPaired();
 						if(paired != null) {
-							if(paired.count() > 1) {
-//								list = new NSArray(new EOSortOrdering(Variation.VALUE_KEY,
-//										EOSortOrdering.CompareAscending));
-								paired = EOSortOrdering.sortedArrayUsingKeyOrderArray(
-										paired, fs.sortOrderings());
-							}
-							Enumeration pEnu = paired.objectEnumerator();
-							while (pEnu.hasMoreElements() && val > 0) {
-								Variation pr = (Variation) pEnu.nextElement();
-								int pv = -pr.value().intValue();
-								BigDecimal cnt = new BigDecimal(pv);
-								addHoursToKey(byCourse, cnt, cal, pr.course());
-								if(factorCounts == null)
-									factorCounts = new BigDecimal[days + 1];
-								addHoursToKey(null, cnt, cal, factorCounts);
-								addHoursToKey(null, cnt, cal, subsTotals);
-								val -= pv;
-							}
-						}
-						if(val > 0) {
+							addHoursToKey(byCourse, BigDecimal.ONE, cal, paired.course());
+							if(factorCounts == null)
+								factorCounts = new BigDecimal[days + 1];
+							addHoursToKey(null, BigDecimal.ONE, cal, factorCounts);
+							addHoursToKey(null, BigDecimal.ONE, cal, subsTotals);
+						} else {
 							if(extras == null)
 								extras = new BigDecimal[days + 1];
 							addHoursToKey(null, new BigDecimal(val), cal, extras);
@@ -861,7 +834,18 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				Variation var = (Variation)obj;
 				if(var.value().intValue() > 0)
 					buf.append('+');
-				buf.append(var.value()).append(" : ").append(var.reason().title()).append('\n');
+				buf.append(var.value()).append(" : ").append(var.reason().title());
+				if(var.getPaired() != null) {
+					EduCourse bc = var.relatedLesson().course();
+					if(bc == var.course()) {
+						bc = var.getPaired().course();
+					}
+					buf.append(' ').append('(');
+					buf.append(session().valueForKeyPath(
+							"strings.RujelCurriculum_Curriculum.Substitute.Substitute"));
+					buf.append(':').append(' ').append(bc.cycle().subject()).append(')');
+				}
+				buf.append('\n');
 			}
 		}
 		return WOMessage.stringByEscapingHTMLAttributeValue(buf.toString());
