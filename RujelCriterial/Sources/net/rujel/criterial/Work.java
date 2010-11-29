@@ -52,7 +52,6 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		super();
 	}
 
-	protected static EOGlobalID defaultType;
 	public void awakeFromInsertion(EOEditingContext ctx) {
 		super.awakeFromInsertion(ctx);
 		super.setWeight(BigDecimal.ZERO);
@@ -60,7 +59,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		setLoad(zero);
 		setFlags(zero);
 		setAnnounce(new NSTimestamp());
-		setWorkType(WorkType.defaultType(ctx));
+//		setWorkType(WorkType.defaultType(ctx));
 	}
 	
 	public FractionPresenter integralPresenter() {
