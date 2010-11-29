@@ -50,6 +50,10 @@ public class BachalaureatCalculator extends WorkCalculator {
 	protected static final int VALUE = 1;
 	protected static final int MAX = 2;
 	
+	protected BigDecimal[] newAgregate() {
+		return new BigDecimal[] {BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO};
+	}
+	
 	public NSDictionary agregateMarks(NSArray allMarks) {
 		if(allMarks == null || allMarks.count() == 0)
 			return null;
@@ -74,7 +78,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			}
 			BigDecimal[] agregator = (BigDecimal[])dict.objectForKey(crit);
 			if(agregator == null) {
-				agregator = new BigDecimal[] {BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO};
+				agregator = newAgregate();
 				dict.setObjectForKey(agregator,crit);
 			}
 			//double weight = weightValue.doubleValue();
@@ -121,7 +125,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 
 				BigDecimal[] agregator = (BigDecimal[])dict.objectForKey(crit);
 				if(agregator == null) {
-					agregator = new BigDecimal[] {BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO};
+					agregator = newAgregate();
 					dict.setObjectForKey(agregator,crit);
 				}
 				//Number value = (Number)currMask.valueForKey("weight");
@@ -174,8 +178,11 @@ public class BachalaureatCalculator extends WorkCalculator {
 			if(wagr == null
 					|| BigDecimal.ZERO.compareTo(wagr[WEIGHT]) == 0
 					|| BigDecimal.ZERO.compareTo(wagr[MAX]) == 0) {
-				if(optAgr == null
-						|| BigDecimal.ZERO.compareTo(optAgr[WEIGHT].add(wagr[WEIGHT])) == 0
+				if(optAgr == null)
+					continue;
+				if(wagr == null)
+					wagr = newAgregate();
+				if(BigDecimal.ZERO.compareTo(optAgr[WEIGHT].add(wagr[WEIGHT])) == 0
 						|| BigDecimal.ZERO.compareTo(optAgr[MAX].add(wagr[MAX])) == 0)
 				continue;
 			}

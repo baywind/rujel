@@ -45,14 +45,11 @@ public class WorkType extends _WorkType {
 	public static final NSArray flagNames = new NSArray (new String[] {
 			"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","-32-","unused"});
 
-	public static EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
+	public static final EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
 			EOQualifier.QualifierOperatorLessThan,new Integer(64));
 
 	
-	protected static EOGlobalID defaultType;
 	public static WorkType defaultType(EOEditingContext ctx) {
-		if(defaultType != null)
-			return (WorkType)ctx.faultForGlobalID(defaultType, ctx);
 		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
 				EOQualifier.QualifierOperatorLessThan, new Integer(16));
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,
@@ -61,7 +58,6 @@ public class WorkType extends _WorkType {
 		NSArray found = ctx.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
 			WorkType type = (WorkType)found.objectAtIndex(0);
-			defaultType = ctx.globalIDForObject(type);
 			return type;
 		}
 		return null;
