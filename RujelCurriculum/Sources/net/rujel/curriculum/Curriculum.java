@@ -664,4 +664,15 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public String title() {
 		return (String)plist.valueForKey("title");
 	}
+	
+	public String variationEditor() {
+		if (itemRow instanceof Variation) {
+			Integer value = (Integer)NSKeyValueCoding.Utility.valueForKey(itemRow, "value");
+			if(value.intValue() > 0)
+				return "EditVarSub";
+			else
+				return "EditVariation";
+		}
+		return null;
+	}
 }
