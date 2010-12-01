@@ -22,7 +22,7 @@ SubstituteTD : OnClickContainer {
 
 AddSubstitute : OnClickContainer {
   elementName = "td";
-  invokeAction = edit;
+  invokeAction = add;
   disabled = cantCreate;
   onclick = session.ajaxPopup;
 }
@@ -36,8 +36,13 @@ ShowAny : WOConditional {
   condition = show;
 }
 
-showEmptyRow : WOConditional {
-  condition = empty;
+EmptyRow : OnClickContainer {
+  elementName = "tr";
+  hide = notEmpty;
+  invokeAction = edit;
+  disabled = cantCreate;
+  onclick = session.ajaxPopup;
+  class = emptyRowClass;
 }
 
 InspectorImage : WOImage {
@@ -101,4 +106,9 @@ CanAdd : WOConditional {
 CantAdd : WOConditional {
   condition = canAdd;
   negate = true;
+}
+
+SubsSubject : WOString {
+  value = variation.getPaired.course.subjectWithComment;
+  escapeHTML = false;
 }

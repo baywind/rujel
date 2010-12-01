@@ -114,16 +114,8 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		nextPage.takeValueForKey(nextPage.valueForKey("currLesson"),"selector");
 		session().takeValueForKey(context().page(),"pushComponent");
 		return nextPage;
-
     }
-/*    public EduCourse eduCourse() {
-    	if(_course == null) {
-    		EduLesson lesson = (EduLesson)valueForBinding("lesson");
-    		_course = lesson.course();
-    	}
-    	return _course;
-    }*/
-    
+
     public Boolean cantCreate() {
     	if(cantCreate==null)
     		cantCreate = (Boolean)session().valueForKeyPath("readAccess._create.Substitute");
@@ -131,13 +123,13 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
     }
     
     public boolean show() {
-    	return (!cantCreate().booleanValue() || !empty() || variation() != null ||
+    	return (!cantCreate().booleanValue() || notEmpty() || variation() != null ||
     			Various.boolForObject(session().valueForKeyPath("readAccess.create.Variation")));
     }
     
-    public boolean empty() {
-    	return ((joins() == null || joins().count() == 0) &&
-    			(subsList() == null || subsList().count() == 0));
+    public boolean notEmpty() {
+    	return ((joins() != null && joins().count() > 0) ||
+    			(subsList() != null && subsList().count() > 0));
     }
     
    /*
@@ -189,14 +181,24 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 	} */
 
 	public WOActionResults edit() {
+		if(substitute == null && variation() == null)
+			return add();
+		WOComponent editor = pageWithName((substitute == null)?
+				"EditVarSub":"EditSubstitute");
+		editor.takeValueForKey(context().page(), "returnPage");
+		if(substitute == null)
+			editor.takeValueForKey(variation(), "variation");
+		else
+			editor.takeValueForKey(substitute, "substitute");
+		return editor;
+	}
+	
+	public WOActionResults add() {
 		String pageName = "SubsTypeSelector";
 		Object lesson = valueForBinding("lesson");
-		if(substitute != null) {
-//			if((substitute.fromLesson() == lesson))
-//				pageName = "EditJoin";
-//			else
+		/*if(substitute != null) {
 				pageName = "EditSubstitute";
-		} else if(joins() != null && joins().count() > 0) {
+		} else*/ if(joins() != null && joins().count() > 0) {
 			pageName = "EditJoin";
 		} else if(subsList() != null && subsList().count() > 0) {
 			pageName = "EditSubstitute";
@@ -204,8 +206,8 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		WOComponent editor = pageWithName(pageName);
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(lesson, "lesson");
-		if(substitute != null)
-			editor.takeValueForKey(substitute, "substitute");
+//		if(substitute != null)
+//			editor.takeValueForKey(substitute, "substitute");
 		if(substitute == null && pageName.equals("EditSubstitute")) {
 			Substitute sub = (Substitute) subsList().objectAtIndex(0);
 			if(sub.fromLesson() != null)
@@ -265,19 +267,21 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public WOComponent addedLesson() {
-		WOComponent nextPage = pageWithName("EditVariation");
-		nextPage.takeValueForKey(Boolean.TRUE, "returnNormaly");
-//		nextPage.takeValueForKey(Boolean.TRUE, "onlyChooseReason");
-   		EduLesson lesson = (EduLesson)valueForBinding("lesson");
+		WOComponent nextPage = pageWithName("EditVarSub");
    		nextPage.takeValueForKey(context().page(), "returnPage");
-//    	nextPage.takeValueForKey(lesson.course(), "course");
 		if(variation() != null) {
 			nextPage.takeValueForKey(variation(), "variation");
 		} else {
+	   		EduLesson lesson = (EduLesson)valueForBinding("lesson");
 	    	nextPage.takeValueForKey(lesson, "lesson");
-//	   		nextPage.takeValueForKey(lesson.date(),"date");
-//	   		nextPage.takeValueForKey(new Integer(1),"value");
+	   		nextPage.takeValueForKey(Boolean.FALSE,"cantSave");
 		}
 		return nextPage;
+	}
+	
+	public String emptyRowClass() {
+		if(valueForKeyPath("variation.getPaired") != null)
+			return "green";
+		return "grey";
 	}
 }

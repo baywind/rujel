@@ -75,7 +75,9 @@ public class SubsTypeSelector extends com.webobjects.appserver.WOComponent {
 	public WOActionResults addVariarion() {
 		WOComponent editor = pageWithName("EditVarSub");
 		editor.takeValueForKey(returnPage, "returnPage");
-		editor.takeValueForKey(lesson, "lesson");	    	
+		editor.takeValueForKey(lesson, "lesson");
+		if(editor.valueForKey("fromCourse") == null)
+			editor.valueForKey("prepareCourses");
 		return editor;
 	}
 }

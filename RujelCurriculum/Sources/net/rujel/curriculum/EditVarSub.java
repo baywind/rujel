@@ -3,6 +3,7 @@ package net.rujel.curriculum;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
@@ -21,12 +22,13 @@ public class EditVarSub extends WOComponent {
     public EduCourse toCourse;
     public EduCourse fromCourse;
     protected EduLesson lesson;
-//    public Integer value = new Integer(1);
     public NSArray courses;
     public EduCourse item;
     public Reason reason;
-//    protected NSArray backVars;
     protected Variation variation;
+    public Boolean cantSave = Boolean.TRUE;
+	public boolean returnNormaly = true;
+	public NamedFlags access;
     
     public EditVarSub(WOContext context) {
         super(context);
@@ -37,49 +39,71 @@ public class EditVarSub extends WOComponent {
     	if(lesson == null)
     		return;
     	date = lesson.date();
-    	setToCourse(lesson.course());
-    	EOQualifier[] quals = new EOQualifier[4];
-    	quals[0] = new EOKeyValueQualifier(Variation.DATE_KEY,
-    			EOQualifier.QualifierOperatorEqual, date);
+    	toCourse = lesson.course();
+    	EOQualifier[] quals = new EOQualifier[3];
+       	quals[0] = new EOKeyValueQualifier("relatedLesson",
+    			EOQualifier.QualifierOperatorEqual, lesson);
     	quals[1] = new EOKeyValueQualifier(Variation.VALUE_KEY,
     		EOQualifier.QualifierOperatorGreaterThan, new Integer(0));
        	quals[2] = new EOKeyValueQualifier("course",
     			EOQualifier.QualifierOperatorEqual, toCourse);
-       	quals[3] = new EOKeyValueQualifier("relatedLesson",
-    			EOQualifier.QualifierOperatorEqual, lesson);
        	quals[0] = new EOAndQualifier(new NSArray(quals));
        	EOFetchSpecification fs = new EOFetchSpecification(
        			Variation.ENTITY_NAME,quals[0],null);
        	NSArray found = lesson.editingContext().objectsWithFetchSpecification(fs);
        	if(found != null && found.count() > 0) {
-       		variation = (Variation)found.objectAtIndex(0);
-			reason = variation.reason();
-//			value = variation.value();
-       		Variation back = variation.getPaired();
-			if(back != null)
-				fromCourse = back.course();
+       		setVariation((Variation)found.objectAtIndex(0));
+       	} else {
+       		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Variation");
+       		access = access.mutableClone();
+       		access.setFlagForKey(false, "delete");
+       		access.setFlagForKey(access.flagForKey("create"), "edit");
        	}
     }
     
-    public void setToCourse(EduCourse course) {
-    	toCourse = course;
-    	if(course == null)
+    public void setVariation(Variation var) {
+   		variation = var;
+		reason = variation.reason();
+   		Variation back = variation.getPaired();
+		if(back != null) {
+			fromCourse = back.course();
+		}
+		if(lesson == null) {
+			lesson = variation.relatedLesson();
+			toCourse = variation.course();
+			date = variation.date();
+		}
+		cantSave = Boolean.FALSE;
+		session().setObjectForKey(variation, "readAccess");
+		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.session");
+		session().removeObjectForKey("readAccess");
+    }
+    
+    public void prepareCourses() {
+    	if(toCourse == null)
     		return;
     	EOQualifier[] quals = new EOQualifier[3];
     	quals[0] = new EOKeyValueQualifier("eduYear",
-    			EOQualifier.QualifierOperatorEqual, course.eduYear());
+    			EOQualifier.QualifierOperatorEqual, toCourse.eduYear());
     	quals[1] = new EOKeyValueQualifier("eduGroup",
-    			EOQualifier.QualifierOperatorEqual, course.eduGroup());
+    			EOQualifier.QualifierOperatorEqual, toCourse.eduGroup());
     	quals[2] = new EOKeyValueQualifier("cycle",
-    			EOQualifier.QualifierOperatorNotEqual, course.cycle());
+    			EOQualifier.QualifierOperatorNotEqual, toCourse.cycle());
     	quals[0] = new EOAndQualifier(new NSArray(quals));
     	EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName
     			, quals[0], null);
-    	courses = course.editingContext().objectsWithFetchSpecification(fs);
+    	courses = toCourse.editingContext().objectsWithFetchSpecification(fs);
     	quals[1] = new EOKeyValueQualifier("cycle.school",
     			EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
     	courses = EOQualifier.filteredArrayWithQualifier(courses, quals[1]);
     	courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);
+    	if(fromCourse != null && cantSave != null && !cantSave.booleanValue()) {
+    		cantSave = null;
+    	} else if(variation != null && fromCourse == null
+    			&& !access.flagForKey("edit") && access.flagForKey("create")) {
+    		access = access.mutableClone();
+    		access.setFlagForKey(true, "edit");
+    	}
     }
 
     public void selectCourse() {
@@ -97,23 +121,61 @@ public class EditVarSub extends WOComponent {
     	NSArray found = fromCourse.editingContext().objectsWithFetchSpecification(fs);
     	reason = null;
     	if(found != null && found.count() > 0) {
-    		for (int i = 0; i < found.count(); i++) {
-        		Variation var = (Variation)found.objectAtIndex(0);
-        		if(var.relatedLesson() == null || var.relatedLesson().course() == toCourse) {
-        			reason = var.reason();
-        			if(var.relatedLesson() != null)
-        				break;
-        		}
-			}
+    		Variation back = chooseBack(found);
+    		if(back != null)
+    			reason = back.reason();
     	}
+    	cantSave = Boolean.FALSE;
     }
     
-	public WOActionResults save() {
+    public void selectNoCourse() {
+    	fromCourse = null;
+    	reason = null;
+    	cantSave = null;
+    }
+    
+    public String onsubmit() {
+    	if(returnNormaly)
+    		return null;
+    	else
+    		return "ajaxPost(this);return false;";
+    }
+    
+    public String onDelete() {
+    	if(returnNormaly)
+    		return (String)session().valueForKey("confirmMessage");
+		String href = context().componentActionURL();
+   	return "if(confirmAction(this.value,event))ajaxPopupAction('" + href + "');";
+    }
+    
+    public String onCancel() {
+       	if(returnNormaly)
+    		return "closePopup();";
+    	else
+    		return (String)session().valueForKey("ajaxPopupNoPos");    	
+    }
+
+    public WOActionResults done() {
+    	return done(false);
+    }
+
+    public WOActionResults done(boolean hasChanges) {
+    	returnPage.ensureAwakeInContext(context());
+    	if(hasChanges && (returnPage instanceof VariationsList)) {
+    		returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
+    		returnPage.takeValueForKey(null,"planFact");
+    	}
+    	if(hasChanges)
+			session().removeObjectForKey("lessonProperies");
+       	return returnPage;
+    }
+
+    public WOActionResults save() {
 		EOEditingContext ec = toCourse.editingContext();
 		returnPage.ensureAwakeInContext(context());
 		if(reason == null) {
 			ec.revert();
-			return returnPage;
+			return done(false);
 		}
 
 		if(variation == null)
@@ -121,12 +183,14 @@ public class EditVarSub extends WOComponent {
 		variation.setRelatedLesson(lesson);
 		variation.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
 //		variation.setDate(date);
-//		variation.setValue(new Integer(-1));
+		variation.setValue(new Integer(1));
 		boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+		boolean changed = ec.hasChanges();
+		if(changed) {
 		try {
 			ec.saveChanges();
-	       	Curriculum.logger.log(WOLogLevel.EDITING,"VarSub Variation saved",
+	       	Curriculum.logger.log(WOLogLevel.EDITING,"Positive Variation saved",
 	       			new Object[] {session(),variation});
 			if(!noRelieve) {
 				String usr = (String)session().valueForKeyPath("user.present");
@@ -138,49 +202,67 @@ public class EditVarSub extends WOComponent {
 		} catch (Exception e) {
 			ec.revert();
 			session().takeValueForKey(e.getMessage(), "message");
-			Curriculum.logger.log(WOLogLevel.WARNING,"Error saving VarSub Variation",
+			Curriculum.logger.log(WOLogLevel.WARNING,"Error saving positive Variation",
 					new Object[] {session(),variation,toCourse});
-			return returnPage;
+			return done(true);
+		}
 		}
     	EOQualifier[] quals = new EOQualifier[3];
-       	quals[0] = new EOKeyValueQualifier("course",
-    			EOQualifier.QualifierOperatorEqual, fromCourse);
+       	quals[0] = new EOKeyValueQualifier("relatedLesson",
+    			EOQualifier.QualifierOperatorEqual, lesson);
     	quals[1] = new EOKeyValueQualifier(Variation.DATE_KEY,
     			EOQualifier.QualifierOperatorEqual, date);
     	quals[2] = new EOKeyValueQualifier(Variation.VALUE_KEY,
     		EOQualifier.QualifierOperatorLessThan, new Integer(0));
 //    	quals[3] = new EOKeyValueQualifier(Variation.REASON_KEY,
 //    			EOQualifier.QualifierOperatorEqual, reason);
-       	quals[1] = new EOAndQualifier(new NSArray(quals));
+       	quals[0] = new EOAndQualifier(new NSArray(quals));
        	EOFetchSpecification fs = new EOFetchSpecification(
-       			Variation.ENTITY_NAME,quals[1],null);
-       	NSArray found = fromCourse.editingContext().objectsWithFetchSpecification(fs);
+       			Variation.ENTITY_NAME,quals[0],null);
+       	NSArray found = ec.objectsWithFetchSpecification(fs);
+       	if(lesson != null && found != null && found.count() > 0) {
+   			boolean gotcha = false;
+       		for (int i = 0; i < found.count(); i++) {
+				Variation var = (Variation)found.objectAtIndex(i);
+				gotcha = (var.course() == fromCourse);
+				if(!gotcha) {
+					var.setRelatedLesson(null);
+					Curriculum.logger.log(WOLogLevel.EDITING,"Detaching variation from lesson",
+							new Object[] {session(),var});
+				}
+       		}
+       		if(gotcha) {
+       			if(ec.hasChanges()) {
+       				try {
+						ec.saveChanges();
+					} catch (Exception e) {
+		    			ec.revert();
+		    			session().takeValueForKey(e.getMessage(), "message");
+		    			Curriculum.logger.log(WOLogLevel.WARNING,
+		    					"Error Detaching Variations from lesson",
+		    					new Object[] {session(),lesson});
+		    			return done(changed);
+					}
+       			}
+       			return done(changed);
+       		}
+       	}
+		if(fromCourse == null)
+			return done(changed);
+       	quals[0] = new EOKeyValueQualifier("course",
+    			EOQualifier.QualifierOperatorEqual, fromCourse);
+       	fs.setQualifier(new EOAndQualifier(new NSArray(quals)));
+       	found = ec.objectsWithFetchSpecification(fs);
        	Variation back = null;
        	if(found == null || found.count() == 0) {
        		back = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
     		back.addObjectToBothSidesOfRelationshipWithKey(fromCourse, "course");
     		back.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
+    		back.setValue(new Integer(-1));
        	} else {
-       		int lvl = 0;
-       		for (int i = 0; i < found.count(); i++) {
-				Variation var = (Variation)found.objectAtIndex(i);
-				if(var.relatedLesson() == lesson) {
-			       	session().removeObjectForKey("lessonProperies");
-					return returnPage;
-				}
-				if(var.reason() == reason && lvl < 4) {
-					lvl = 3;
-					back = var;
-					if(var.value().intValue() == -1)
-						lvl++;
-				} else if(var.value().intValue() == -1 && lvl < 2) {
-					lvl = 2;
-					back = var;
-				} else if(lvl == 0) {
-					lvl = 1;
-					back = var;
-				}
-			}
+       		back = chooseBack(found);
+       		if(back.relatedLesson() == lesson)
+       			return done(changed);
        		if(back.value().intValue() < -1) {
        			back.setValue(new Integer(back.value().intValue() +1));
            		back = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
@@ -192,8 +274,7 @@ public class EditVarSub extends WOComponent {
        	if(ec.hasChanges()) {
     		try {
     			ec.saveChanges();
-    	       	Curriculum.logger.log(WOLogLevel.EDITING,
-    	       			"VarSub reverse Variation created",
+    	       	Curriculum.logger.log(WOLogLevel.EDITING,"VarSub reverse Variation created",
     	       			new Object[] {session(),back});
     			if(!noRelieve) {
     				String usr = (String)session().valueForKeyPath("user.present");
@@ -205,20 +286,50 @@ public class EditVarSub extends WOComponent {
     		} catch (Exception e) {
     			ec.revert();
     			session().takeValueForKey(e.getMessage(), "message");
-    			Curriculum.logger.log(WOLogLevel.WARNING,
-    					"Error saving reverse VarSub Variation",
+    			Curriculum.logger.log(WOLogLevel.WARNING, "Error saving reverse VarSub Variation",
     					new Object[] {session(),back,variation});
-    			return returnPage;
+    			return done(changed);
     		}
        	}
        	session().removeObjectForKey("lessonProperies");
-		return returnPage;
+		return done(changed);
 	}
 	
+    protected Variation chooseBack(NSArray found) {
+   		int lvl = 0;
+   		Variation back = null;
+   		for (int i = 0; i < found.count(); i++) {
+			Variation var = (Variation)found.objectAtIndex(i);
+			if(var.relatedLesson() == lesson) {
+		       	session().removeObjectForKey("lessonProperies");
+				return var;
+			}
+			if(var.reason() == reason && lvl < 4) {
+				lvl = 3;
+				back = var;
+				if(var.value().intValue() == -1)
+					lvl++;
+			} else if(var.value().intValue() == -1 && lvl < 2) {
+				lvl = 2;
+				back = var;
+			} else if(lvl == 0) {
+				lvl = 1;
+				back = var;
+			}
+		}
+   		return back;
+    }
+    
 	public String listStyle() {
-		if(fromCourse == null)
+		if(courses != null && (fromCourse == null ^ cantSave == null))
 			return null;
 		return "display:none;";
+	}
+	
+	public String selectOnClick() {
+		if(courses == null)
+			return (String)session().valueForKey("ajaxPopupNoPos");
+		return "hideObj('curCourse');showObj('selectCourse');fitWindow();";
 	}
 	
 	public String rowOnClick() {
@@ -232,4 +343,66 @@ public class EditVarSub extends WOComponent {
 			return "selection";
 		return "green";
 	}
+	
+	public EduCourse reasonCourse() {
+		if(fromCourse == null)
+			return toCourse;
+		return fromCourse;
+	}
+	
+    public WOActionResults goToRelated() {
+		WOComponent nextPage = pageWithName("LessonNoteEditor");
+		nextPage.takeValueForKey(fromCourse,"course");
+		WOComponent toPush = returnPage;
+		if(returnPage instanceof VariationsList)
+			toPush = (WOComponent)returnPage.valueForKey("returnPage");
+		session().takeValueForKey(toPush,"pushComponent");
+		return nextPage;
+    }
+    
+    public WOActionResults delete() {
+    	EOEditingContext ec = toCourse.editingContext();
+    	if(lesson != null) {
+    	EOQualifier[] quals = new EOQualifier[2];
+       	quals[0] = new EOKeyValueQualifier("relatedLesson",
+    			EOQualifier.QualifierOperatorEqual, lesson);
+    	quals[1] = new EOKeyValueQualifier(Variation.VALUE_KEY,
+    		EOQualifier.QualifierOperatorLessThan, new Integer(0));
+       	quals[0] = new EOAndQualifier(new NSArray(quals));
+       	EOFetchSpecification fs = new EOFetchSpecification(
+       			Variation.ENTITY_NAME,quals[0],null);
+       	NSArray found = ec.objectsWithFetchSpecification(fs);
+       	if(found != null && found.count() > 0) {
+       		for (int i = 0; i < found.count(); i++) {
+				Variation var = (Variation)found.objectAtIndex(i);
+				var.setRelatedLesson(null);
+				Curriculum.logger.log(WOLogLevel.EDITING,"Detaching variation from lesson",
+						new Object[] {session(),var});
+       		}
+       	}
+    	}
+    	ec.deleteObject(variation);
+    	try {
+			ec.saveChanges();
+	       	Curriculum.logger.log(WOLogLevel.EDITING,"Positive Variation deleted",
+	       			new Object[] {session(),lesson});
+			boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
+				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+			if(!noRelieve) {
+				String usr = (String)session().valueForKeyPath("user.present");
+				if(usr == null)
+					usr = "??" + Person.Utility.fullName(
+							toCourse.teacher(), true, 2, 1, 1);
+				Reprimand.autoRelieve(toCourse, date, usr);
+			}
+		} catch (Exception e) {
+			ec.revert();
+			session().takeValueForKey(e.getMessage(), "message");
+			Curriculum.logger.log(WOLogLevel.WARNING,"Error deleting positive Variation",
+					new Object[] {session(),variation,toCourse});
+			return done(true);
+		}
+    	return done(true);
+    }
+    
 }

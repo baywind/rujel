@@ -51,9 +51,9 @@
 	<key>Variation</key>
 	<dict>
 		<key>minus</key>
-		<string>Пропущено</string>
+		<string>Пропущено уроков</string>
 		<key>plus</key>
-		<string>Добавлено</string>
+		<string>Дополнительный урок</string>
 		<key>Variation</key>
 		<string>Поправка</string>
 		<key>external</key>
@@ -213,6 +213,8 @@
 		<string>Указать присоединенную группу</string>
 		<key>addVariation</key>
 		<string>Указать курс, вместо которого проводится урок</string>
+		<key>varSub</key>
+		<string>урок проведен вместо занятия по курсу</string>
 		<key>chooseLesson</key>
 		<string>Укажите совместный урок:</string>
 		<key>selectTeacher</key>
@@ -227,8 +229,10 @@
 		<string>Конец периода</string>
 		<key>suggest</key>
 		<string>Предлагаемые поправки</string>
-		<key>varSubValue</key>
-		<string>Количество уроков</string>
+		<key>noSubstitute</key>
+		<string>Это не замена</string>
+		<key>deletePlus</key>
+		<string>Снять пометку доп. урока</string>
 	</dict>
 	<key>regimes</key>
 	<array>

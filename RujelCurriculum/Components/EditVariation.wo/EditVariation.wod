@@ -4,7 +4,12 @@ Cross : WOImage {
   align = "right";
   height = 10;
   width = 10;
-  onclick = "closePopup();";
+}
+
+CrossBox : OnClickContainer {
+  elementName = "span";
+  onclick = onCancel;
+  invokeAction = done;
   style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
 }
 
@@ -98,12 +103,27 @@ MinusTitle : WOString {
   escapeHTML = false;
 }
 
-PlusTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.Variation.plus;
-  valueWhenEmpty = "Added";
+ReturnNormaly : WOConditional {
+  condition = returnNormaly;
+}
+
+HasLesson : WOConditional {
+  condition = lesson;
+}
+
+SubstituteTitle : WOString {
+  value = session.strings.RujelCurriculum_Curriculum.Substitute.Substitute;
   escapeHTML = false;
 }
 
-ReturnNormaly : WOConditional {
-  condition = returnNormaly;
+ShowLesson : OnClickContainer {
+  elementName = "td";
+  onclick = session.checkRun;
+  class = "orange";
+  invokeAction = showLesson;
+}
+
+SubsSubject : WOString {
+  value = lesson.course.subjectWithComment;
+  escapeHTML = false;
 }

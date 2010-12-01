@@ -83,12 +83,14 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     	EOGlobalID userGID = (EOGlobalID)session().valueForKey("userPersonGID");
     	if(userGID != null) {
        	   	PersonLink userPerson = (PersonLink)ec.faultForGlobalID(userGID,ec);
-       	   	if(userPerson instanceof Teacher && !(userPerson == lesson.course().teacher())) {
+       	   	if(userPerson instanceof Teacher && userPerson != lesson.course().teacher()) {
        	   		forcedList = new NSArray(userPerson);
        	   		setTeacher((Teacher)userPerson);
        	   		cantSelect = (Boolean)session().valueForKeyPath("readAccess._edit.Substitute");
        	   	}
     	}
+    	if(cantSelect == null)
+    		cantSelect = (Boolean)session().valueForKeyPath("readAccess._create.Substitute");
     	others = (NSArray)lesson.valueForKey("substitutes");
     }
     
@@ -233,6 +235,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     public void setSubstitute(Substitute sub) {
     	substitute = sub;
     	if(sub != null) {
+    		if(lesson == null)
+    			setLesson(sub.lesson());
     		teacher = sub.teacher();
     		if(forcedList == null || !forcedList.contains(teacher)) {
     			if(forcedList == null)

@@ -46,7 +46,7 @@ public class ReporterSetup extends WOComponent {
         path = path + "/StudentReport";
         File folder = new File(Various.convertFilePath(path));
         if(folder.exists()) {
-        	File[] files = folder.listFiles();
+        	File[] files = folder.listFiles(PlistReader.Filter);
         	if(files != null && files.length > 0) {
         		for (int i = 0; i < files.length; i++) {
 					try {

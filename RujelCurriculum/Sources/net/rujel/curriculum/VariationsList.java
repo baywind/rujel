@@ -131,14 +131,21 @@ public class VariationsList extends WOComponent {
     public WOActionResults editVariation() {
     	//message = null;
     	NSTimestamp aDate = null;
+    	boolean plus = false;
     	if(item == null) {
     		aDate = MyUtility.parseDate(date);
     		if(aDate == null)
     			return this;
+    	} else {
+    		Integer val = (Integer)item.valueForKey("value");
+    		plus = (val.intValue() > 0);
     	}
-    	WOComponent nextPage = pageWithName("EditVariation");
+    	WOComponent nextPage = pageWithName((plus)?"EditVarSub":"EditVariation");
     	nextPage.takeValueForKey(this, "returnPage");
-    	nextPage.takeValueForKey(course, "course");
+    	if(plus)
+    		nextPage.takeValueForKey(Boolean.FALSE, "returnNormaly");
+    	else
+    		nextPage.takeValueForKey(course, "course");
     	if(item != null) {
     		nextPage.takeValueForKey(item, "variation");
     	} else {

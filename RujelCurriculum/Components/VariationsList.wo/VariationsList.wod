@@ -4,7 +4,12 @@ Cross : WOImage {
   align = "right";
   height = 10;
   width = 10;
-  onclick = "closePopup();";
+}
+
+CrossBox : OnClickContainer {
+  elementName = "span";
+  onclick = buttonOnClick;
+  invokeAction = done;
   style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
 }
 

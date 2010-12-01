@@ -29,8 +29,6 @@
 
 package net.rujel.curriculum;
 
-import java.util.logging.Logger;
-
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
@@ -180,6 +178,8 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	variation.setRelatedLesson(lesson);
     	try {
 			ec.saveChanges();
+			Curriculum.logger.log(WOLogLevel.EDITING,"Negative variation saved",
+					new Object[] {session(),variation});
 			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
 			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!disable) {
@@ -192,8 +192,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 		} catch (Exception e) {
 			ec.revert();
 			Object[] args = new Object[] {session(),e,variation}; 
-			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
-					"Error saving Variation",args);
+			Curriculum.logger.log(WOLogLevel.WARNING,"Error saving negative Variation",args);
 			session().takeValueForKey(e.getMessage(), "message");
 		} finally {
 			ec.unlock();
@@ -215,6 +214,9 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	ec.deleteObject(variation);
     	try {
     		ec.saveChanges();
+			Curriculum.logger.log(WOLogLevel.EDITING,"Negative variation deleted (" + 
+					MyUtility.dateFormat().format(date) + ')',
+					new Object[] {session(),course});
 			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
 			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!disable) {
@@ -227,8 +229,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
  		} catch (Exception e) {
 			ec.revert();
 			Object[] args = new Object[] {session(),e,variation}; 
-			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
-					"Error deleting Variation",args);
+			Curriculum.logger.log(WOLogLevel.WARNING, "Error deleting negative Variation",args);
 			session().takeValueForKey(e.getMessage(), "message");
 		} finally {
 			ec.unlock();
@@ -255,5 +256,17 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     		return "closePopup();";
     	else
     		return (String)session().valueForKey("ajaxPopupNoPos");    	
+    }
+    
+    public WOActionResults showLesson() {
+		WOComponent nextPage = pageWithName("LessonNoteEditor");
+		nextPage.takeValueForKey(lesson,"currLesson");
+		nextPage.takeValueForKey(lesson.course(),"course");
+		nextPage.takeValueForKey(nextPage.valueForKey("currLesson"),"selector");
+		WOComponent toPush = returnPage;
+		if(returnPage instanceof VariationsList)
+			toPush = (WOComponent)returnPage.valueForKey("returnPage");
+		session().takeValueForKey(toPush,"pushComponent");
+		return nextPage;
     }
 }
