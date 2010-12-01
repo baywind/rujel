@@ -148,6 +148,7 @@ public class StudentMarks extends WOComponent {
 		
 		NSMutableArray extraWorks = new NSMutableArray();
 		if(level >= 1) { //add works with marks
+			boolean dateSet = Various.boolForObject(options.valueForKey("dateSet"));
 			args.removeAllObjects();
 //			args.addObjects(new Object[] { student,since,to,since,to });
 //			String qualifierFormat = "student = %@ AND ";
@@ -161,21 +162,31 @@ public class StudentMarks extends WOComponent {
 			} else if(since != null || to != null) {
 				EOQualifier[] or = new EOQualifier[2];
 				if(since != null) {
-					or[0] = new EOKeyValueQualifier("work.date",
-							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
-					or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
-							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
-					args.addObject(new EOOrQualifier(new NSArray(or)));
+					if(dateSet) {
+						or[0] = new EOKeyValueQualifier("work.date",
+								EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+						or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
+								EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+						args.addObject(new EOOrQualifier(new NSArray(or)));
+					} else {
+						args.addObject(new EOKeyValueQualifier("work.date",
+								EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+					}
 				}
 				if(to != null) {
-					or[0] = new EOKeyValueQualifier("work.date",
-							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
-					or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
-							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
-					args.addObject(new EOOrQualifier(new NSArray(or)));
+					if(dateSet) {
+						or[0] = new EOKeyValueQualifier("work.date",
+								EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+						or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
+								EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+						args.addObject(new EOOrQualifier(new NSArray(or)));
+					} else {
+						args.addObject(new EOKeyValueQualifier("work.date",
+								EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+					}
 				}
 			}
-			EOFetchSpecification fs = new EOFetchSpecification("Mark",
+			EOFetchSpecification fs = new EOFetchSpecification(Mark.ENTITY_NAME,
 					new EOAndQualifier(args),null);
 			fs.setRefreshesRefetchedObjects(true);
 			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
