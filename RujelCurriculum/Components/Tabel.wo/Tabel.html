@@ -2,9 +2,10 @@
 <webobject name = "CanCreate">
 <webobject name = "TotalForm">
 		<strong><webobject name = "WholeSchool"/>:</strong><br/>
+		<webobject name = "OmitUnsubmitted"/> <webobject name = "UnsubmittedTitle"/><br/>
 		<webobject name = "ShowDetails"/><webobject name = "ShowDetailsTitle"/><br/>
 		<webobject name = "ShowLoad"/><webobject name = "ShowLoadTitle"/>
-			 &nbsp; <webobject name = "ExportLink"></webobject>
+		 &nbsp; <webobject name = "SubmitButton"/>
 </webobject>
 <h1><webobject name = "Title"/></h1>
 
@@ -54,5 +55,38 @@
 		</tbody></table></div>
 </td></tr>
 </tbody></webobject>
+</table>
+<table cellpadding = "3" align = "center" style = "margin-top:3em;">
+<thead>
+<tr><th colspan = "5" style = "padding:6px;font-size:180%;"><webobject name = "TitleZPU"/></th>
+	<td colspan = "2"><webobject name = "CanCreate"><webobject name = "FormZPU">
+	<strong><webobject name = "WholeSchool"/>:</strong><br/>
+	<webobject name = "OmitUnsubmitted"/>&nbsp;<webobject name = "UnsubmittedTitle"/><br/>
+	<webobject name = "IncludeAdded"/>&nbsp;<webobject name = "AddedTitle"/>
+	<webobject name = "SubmitButton"/>
+	</webobject></webobject></td><webobject name = "HasJournalZPU">
+	<td align = "right" valign = "bottom"><webobject name = "ExportZPU"></webobject></td>
+</webobject></tr>
+<webobject name = "HasJournalZPU"><tr class = "backfield1">
+	<th><webobject name = "DateTitle"/></th>
+	<th><webobject name = "OrigTitle"/></th>
+	<th><webobject name = "SubjectTitle"/></th>
+	<th><webobject name = "GroupTitle"/></th>
+	<th><webobject name = "ReasonTitle"/></th>
+	<th><webobject name = "SustitutorTitle"/></th>
+	<th><webobject name = "SubjectTitle"/></th>
+	<th><webobject name = "FactorTitle"/></th></tr></webobject>
+</thead><webobject name = "HasJournalZPU">
+<tbody><webobject name = "JournalZPU"><webobject name = "JRow">
+	<td><webobject name = "JDate"/></td>
+	<td style = "white-space:nowrap;"><webobject name = "JHasCourse">
+		<webobject name = "MinusTeacher"/></webobject></td>
+	<td><webobject name = "MinusSubject"/></td>
+	<td style = "white-space:nowrap;" align = "center"><webobject name = "JEduGrop"/></td>
+	<webobject name = "ReasonCell"><webobject name = "Reason"/></webobject>
+	<td style = "white-space:nowrap;"><webobject name = "PlusTeacher"/></td>
+	<td><webobject name = "PlusSubject"/></td>
+	<td align = "center"><webobject name = "JValue"/></td>
+</webobject></webobject></tbody></webobject>
 </table>
 </webobject>

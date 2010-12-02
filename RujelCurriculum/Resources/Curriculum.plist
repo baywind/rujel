@@ -83,6 +83,12 @@
 		<string>нагрузка</string>
 		<key>loadShort</key>
 		<string>нед</string>
+		<key>journalZPU</key>
+		<string>Журнал учета пропущенных и замещенных уроков</string>
+		<key>includeAdded</key>
+		<string>включить дополнительные</string>
+		<key>omitUnsubmitted</key>
+		<string>исключить неподтверждённые</string>
 		<key>grandTotal</key>
 		<dict>
 			<key>colspan</key>

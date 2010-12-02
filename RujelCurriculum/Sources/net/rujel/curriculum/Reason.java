@@ -408,6 +408,7 @@ public class Reason extends _Reason {
 		public NSTimestamp date();
 		public EduCourse course();
 		public Reason reason();
+		public Number value();
 	}
 	
 	public static class Props {

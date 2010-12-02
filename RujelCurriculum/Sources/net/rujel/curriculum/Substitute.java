@@ -183,6 +183,16 @@ public class Substitute extends _Substitute implements Reason.Event {
 		setFactor(factor);
 		return factor;
 	}
+	
+	public BigDecimal value() {
+		BigDecimal value = factor();
+		if(value == null)
+			return null;
+		value = value.stripTrailingZeros();
+		if(value.scale() < 0)
+			value = value.setScale(0);
+		return value;
+	}
 
 	public static int checkSubstitutes(NSArray subs) {
 		int s = 0;

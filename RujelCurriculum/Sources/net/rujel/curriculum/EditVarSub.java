@@ -224,11 +224,12 @@ public class EditVarSub extends WOComponent {
    			boolean gotcha = false;
        		for (int i = 0; i < found.count(); i++) {
 				Variation var = (Variation)found.objectAtIndex(i);
-				gotcha = (var.course() == fromCourse);
-				if(!gotcha) {
+				if(var.course() != fromCourse) {
 					var.setRelatedLesson(null);
 					Curriculum.logger.log(WOLogLevel.EDITING,"Detaching variation from lesson",
 							new Object[] {session(),var});
+				} else {
+					gotcha = true;
 				}
        		}
        		if(gotcha) {
