@@ -64,7 +64,7 @@ public class MyUtility {
 	public static NSNumberFormatter numberFormat() {
 		if(_numformat == null) {
 			_numformat = new NSNumberFormatter();
-			_numformat.setDecimalSeparator(",");
+//			_numformat.setDecimalSeparator(",");
 			_numformat.setThousandSeparator(" ");
 		}
 		return _numformat;

@@ -274,9 +274,9 @@
 						<key>id</key>
 						<string>markable</string>
 						<key>title</key>
-						<string>возможны оценки</string>
+						<string>оцениваемые</string>
 						<key>hover</key>
-						<string>все работы, предусматривающие оценку</string>
+						<string>работы, предусматривающие оценку</string>
 						<key>value</key>
 						<integer>2</integer>
 					</dict>
@@ -284,9 +284,9 @@
 						<key>id</key>
 						<string>marked</string>
 						<key>title</key>
-						<string>выставлены оценки</string>
+						<string>с оценками</string>
 						<key>hover</key>
-						<string>все оценки, полученные учащимся</string>
+						<string>работы с выставленными оценками</string>
 						<key>value</key>
 						<integer>1</integer>
 					</dict>
@@ -294,7 +294,7 @@
 						<key>id</key>
 						<string>required</string>
 						<key>title</key>
-						<string>только важные</string>
+						<string>весомые</string>
 						<key>hover</key>
 						<string>работы, влияющие на итоговую</string>
 						<key>value</key>
@@ -312,9 +312,9 @@
 				<key>id</key>
 				<string>dateSet</string>
 				<key>title</key>
-				<string>искать по дате выставления</string>
+				<string>оценки по дате выставления</string>
 				<key>hover</key>
-				<string>включать в выборку не только оценки за работы, проведенные в выбранный период, но и оценки, выставленные в течение периода за работы, проведенные ранее</string>
+				<string>включать работы, оценки за которые были выставлены в искомый период</string>
 				<key>active</key>
 				<true/>
 			</dict>

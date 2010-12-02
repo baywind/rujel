@@ -124,11 +124,12 @@ public class TabelReporter extends WOComponent {
 		}
 		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,qual,null);
 		NSArray allMarks = ec.objectsWithFetchSpecification(fs);
-		if(allMarks == null || allMarks.count() == 0)
-			return;
+//		if(allMarks == null || allMarks.count() == 0)
+//			return;
 		marksAgregate = new NSMutableDictionary();
 		if(perlist == null)
 			perlist = new NSMutableArray();
+		if(allMarks != null && allMarks.count() > 0) {
 		Enumeration enu = allMarks.objectEnumerator();
 		while (enu.hasMoreElements()) { //agregate Marks
 			ItogMark currMark = (ItogMark)enu.nextElement();
@@ -146,7 +147,7 @@ public class TabelReporter extends WOComponent {
 			if(!perlist.containsObject(perItem))
 				perlist.addObject(perItem);
 		} //agregate Marks
-
+		}
 		fs.setEntityName("ItogComment");
 		allMarks = ec.objectsWithFetchSpecification(fs);
 
@@ -157,7 +158,7 @@ public class TabelReporter extends WOComponent {
 			});
 			allMarks = EOSortOrdering.sortedArrayUsingKeyOrderArray(allMarks, sorter);
 			comments = new NSMutableArray();
-			enu = allMarks.objectEnumerator();
+			Enumeration enu = allMarks.objectEnumerator();
 			int i = 1;
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject comment = (EOEnterpriseObject) enu.nextElement();
@@ -197,7 +198,7 @@ public class TabelReporter extends WOComponent {
 			;
 		}
 		// convert cycles list to subjects list
-		enu = cycles.objectEnumerator();
+		Enumeration enu = cycles.objectEnumerator();
 		cycles = new NSMutableArray();
 		while (enu.hasMoreElements()) {
 			EduCycle cycle = (EduCycle) enu.nextElement();
