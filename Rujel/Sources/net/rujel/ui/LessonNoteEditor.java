@@ -332,7 +332,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	protected void save(boolean reset) {
 		student = null;
-		boolean newLesson = currPerPersonLink == null;
+		boolean newLesson = (currPerPersonLink == null);
 		if(ec.hasChanges()) {
 			NSMutableSet changes = new NSMutableSet();
 			NSArray objects = ec.insertedObjects();
@@ -343,6 +343,7 @@ public class LessonNoteEditor extends WOComponent {
 					EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
 					if(obj instanceof EduLesson) {
 						currPerPersonLink = (EduLesson)obj;
+						newLesson = true;
 						break;
 					}
 				}
@@ -692,26 +693,53 @@ public class LessonNoteEditor extends WOComponent {
 			makeDateFromNum(currLesson());
 	}
 	
-	public boolean canAddTab() {
-		if(currLesson() == null)
-			return false;
-		if(Various.boolForObject(session().valueForKeyPath("readAccess._edit.currLesson")))
-			return false;
+	public Boolean cantAddTab() {
+		if(currLesson() == null || lessonsList == null)
+			return Boolean.TRUE;
+		if(currLesson().number().intValue() <= 1)
+			return Boolean.TRUE;
+		if(!(_currTab instanceof BaseTab.Tab) && lessonsList.indexOf(currPerPersonLink) <= 0)
+			return Boolean.TRUE;
+		return (Boolean)session().valueForKeyPath("readAccess._edit.currLesson");
+	}
+	
+	protected Boolean splitCreate() {
+		if(lessonsList == null || currLesson() == null || currLesson().number().intValue() <= 1)
+			return null;
 		int idx = lessonsList.indexOf(currPerPersonLink);
-		return (idx > 0);
+		if(_currTab instanceof BaseTab.Tab) {
+			if(idx < 0)
+				return null;
+			return Boolean.valueOf(idx > 0);
+		}
+		if(idx <=0 )
+			return null;
+		return Boolean.TRUE;
+//		BaseTab tab = BaseTab.tabForLesson(currLesson(), false);
+//		return Boolean.valueOf(tab == null || 
+//				!tab.firstLessonNumber().equals(currLesson().number()));
+	}
+	
+	public String splitSign() {
+		Boolean splitCreate = splitCreate();
+		if(splitCreate == null)
+			return null;
+		if(splitCreate.booleanValue())
+			return "+";
+		else
+			return "-";
 	}
 	
 	public String splitTitle() {
-		if(lessonsList == null || currPerPersonLink == null)
+		Boolean splitCreate = splitCreate();
+		if(splitCreate == null)
 			return null;
-		int idx = lessonsList.indexOf(currPerPersonLink);
-		if(idx > 0)
+		if(splitCreate.booleanValue())
 			return (String)application().valueForKeyPath(
 					"strings.Strings.LessonNoteEditor.addTab");
-		if(idx == 0)
+		else
 			return (String)application().valueForKeyPath(
 					"strings.Strings.LessonNoteEditor.removeTab");
-		return null;
 	}
 
 	public void splitTab() {
