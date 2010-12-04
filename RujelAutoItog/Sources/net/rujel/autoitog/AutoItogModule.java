@@ -104,6 +104,8 @@ public class AutoItogModule {
 		} else if("completionLock".equals(obj)) {
 			return new NSDictionary(new String[] {Prognosis.ENTITY_NAME,"course","student"},
 					new String[] {"entity","coursePath","studentPath"});
+		} else if("deleteItogContainer".equals(obj)) {
+			return deleteItogContainer(ctx);
 		}
 		return null;
 	}
@@ -128,6 +130,10 @@ public class AutoItogModule {
 				Enumeration enu = found.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					final AutoItog ai = (AutoItog) enu.nextElement();
+					if(ai.inactive()) {
+						alreadyScheduled.addObject(ai);
+						continue;
+					}
 					NSTimestamp fire =  ai.fireDateTime();
 					if(fire.getTime() - System.currentTimeMillis() < 10000) {
 						automateItog(ai);
@@ -199,6 +205,8 @@ public class AutoItogModule {
 				if(alreadyScheduled.containsObject(ai))
 					continue;
 				alreadyScheduled.addObject(ai);
+				if(ai.inactive())
+					continue;
 				NSTimestamp fire = AutoItog.combineDateAndTime(day, ai.fireTime());
 				if(fire.getTime() - System.currentTimeMillis() < 10000)
 					automateTimedOutPrognoses(ai);
@@ -233,6 +241,11 @@ public class AutoItogModule {
 		enu = ais.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			AutoItog autoItog = (AutoItog) enu.nextElement();
+			if(autoItog.inactive()) {
+				if(!alreadyScheduled.containsObject(autoItog))
+					alreadyScheduled.addObject(autoItog);
+				continue;
+			}
 			NSTimestamp fire = AutoItog.combineDateAndTime(date, autoItog.fireDateTime());
 			if(fire.getTime() - System.currentTimeMillis() < 10000) {
 				Enumeration ctos = timeouts.objectEnumerator();
@@ -924,5 +937,27 @@ cycleCourses:
 			sort++;
 		}
 		return result;
+	}
+	
+	public static Object deleteItogContainer(WOContext ctx) {
+		ItogContainer itog = (ItogContainer)ctx.session().objectForKey("deleteItogContainer");
+		deleteWithContainer(itog, Prognosis.ENTITY_NAME);
+		deleteWithContainer(itog, StudentTimeout.ENTITY_NAME);
+		deleteWithContainer(itog, CourseTimeout.ENTITY_NAME);
+		deleteWithContainer(itog, "ItogRelated");
+		deleteWithContainer(itog, AutoItog.ENTITY_NAME);
+		return null;
+	}
+	
+	private static void deleteWithContainer (ItogContainer itog, String entity) {
+		EOEditingContext ec = itog.editingContext();
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, entity, "itogContainer", itog);
+		if(found == null || found.count() == 0)
+			return;
+		Enumeration enu = found.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+			ec.deleteObject(obj);
+		}
 	}
 }

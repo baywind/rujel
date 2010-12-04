@@ -108,6 +108,9 @@ public class CourseTimeout extends _CourseTimeout  implements Timeout {
         takeStoredValueForKey(aValue, "eduGroup");
     }
 
+    public NSTimestamp _fireTime() {
+    	return null;
+    }
     
     private NamedFlags _flags;
     public NamedFlags namedFlags() {

@@ -348,10 +348,28 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 	
+	public Boolean cantDeleteContainer() {
+		if(item == null)
+			return null;
+		Boolean acc = (Boolean)session().valueForKeyPath("readAccess._delete.item");
+		if(acc != null && acc.booleanValue())
+			return acc;
+		EOQualifier qual = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY,
+				EOQualifier.QualifierOperatorEqual,item);
+		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,qual,null);
+		fs.setFetchLimit(1);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		return Boolean.valueOf(found != null && found.count() > 0);
+	}
+	
 	public WOActionResults deleteContainer() {
-		ec.lock();
-		StringBuilder desc = new StringBuilder();
 		ItogContainer itog = (ItogContainer)item;
+		session().setObjectForKey(itog, "deleteItogContainer");
+		NSArray mods = (NSArray)session().valueForKeyPath("modules.deleteItogContainer");
+		session().removeObjectForKey("deleteItogContainer");
+		if(mods != null && mods.count() > 0)
+			return null;
+		StringBuilder desc = new StringBuilder();
 		desc.append(itog.name()).append(' ').append('(');
 		desc.append(MyUtility.presentEduYear(itog.eduYear())).append(')');
 		try {
@@ -368,8 +386,6 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 					+ desc, new Object[] {session(),currType,e});
 			session().takeValueForKey(e.getMessage(), "message");
 			ec.revert();
-		} finally {
-			ec.unlock();
 		}
 		return null;
 	}
