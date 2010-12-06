@@ -104,6 +104,8 @@ public class AutoItogModule {
 		} else if("completionLock".equals(obj)) {
 			return new NSDictionary(new String[] {Prognosis.ENTITY_NAME,"course","student"},
 					new String[] {"entity","coursePath","studentPath"});
+		} else if("deleteItogContainer".equals(obj)) {
+			return deleteItogContainer(ctx);
 		}
 		return null;
 	}
@@ -128,6 +130,10 @@ public class AutoItogModule {
 				Enumeration enu = found.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					final AutoItog ai = (AutoItog) enu.nextElement();
+					if(ai.inactive()) {
+						alreadyScheduled.addObject(ai);
+						continue;
+					}
 					NSTimestamp fire =  ai.fireDateTime();
 					if(fire.getTime() - System.currentTimeMillis() < 10000) {
 						automateItog(ai);
@@ -199,6 +205,8 @@ public class AutoItogModule {
 				if(alreadyScheduled.containsObject(ai))
 					continue;
 				alreadyScheduled.addObject(ai);
+				if(ai.inactive())
+					continue;
 				NSTimestamp fire = AutoItog.combineDateAndTime(day, ai.fireTime());
 				if(fire.getTime() - System.currentTimeMillis() < 10000)
 					automateTimedOutPrognoses(ai);
@@ -233,6 +241,11 @@ public class AutoItogModule {
 		enu = ais.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			AutoItog autoItog = (AutoItog) enu.nextElement();
+			if(autoItog.inactive()) {
+				if(!alreadyScheduled.containsObject(autoItog))
+					alreadyScheduled.addObject(autoItog);
+				continue;
+			}
 			NSTimestamp fire = AutoItog.combineDateAndTime(date, autoItog.fireDateTime());
 			if(fire.getTime() - System.currentTimeMillis() < 10000) {
 				Enumeration ctos = timeouts.objectEnumerator();
@@ -440,7 +453,7 @@ public class AutoItogModule {
 	
 	protected static class AutoItogAutomator extends TimerTask {
 		protected EOGlobalID gid;
-		boolean skip;
+		protected boolean skip;
 		public AutoItogAutomator(AutoItog autoItog,boolean onlyTimeout) {
 			super();
 			gid = autoItog.editingContext().globalIDForObject(autoItog);
@@ -452,6 +465,11 @@ public class AutoItogModule {
 			ec.lock();
 			try {
 				AutoItog autoItog = (AutoItog)ec.faultForGlobalID(gid,ec);
+				if(autoItog == null || autoItog.inactive()) {
+					logger.log(WOLogLevel.INFO,
+						"Canceled AutoItog automation as it was found inactive",autoItog);
+					return;
+				}
 				NSTimestamp fire = autoItog.fireDate();
 				if(fire.getTime() > System.currentTimeMillis()) {
 					logger.log(WOLogLevel.INFO,"Cancelling autoItog execution",
@@ -602,10 +620,16 @@ public class AutoItogModule {
 			}
 		}
 		public void run() {
-			EOEditingContext ec = new EOEditingContext();
+			EOEditingContext ec = new EOEditingContext(
+					EOObjectStoreCoordinator.defaultCoordinator());
 			ec.lock();
 			try {
 				AutoItog autoItog = (AutoItog)ec.faultForGlobalID(aiGID,ec);
+				if(autoItog == null || autoItog.inactive()) {
+					logger.log(WOLogLevel.INFO,
+						"Canceled CourseTimeout automation as AutoItog found inactive",autoItog);
+					return;
+				}
 				Enumeration enu = timeouts.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					EOGlobalID gid = (EOGlobalID) enu.nextElement();
@@ -924,5 +948,27 @@ cycleCourses:
 			sort++;
 		}
 		return result;
+	}
+	
+	public static Object deleteItogContainer(WOContext ctx) {
+		ItogContainer itog = (ItogContainer)ctx.session().objectForKey("deleteItogContainer");
+		deleteWithContainer(itog, Prognosis.ENTITY_NAME);
+		deleteWithContainer(itog, StudentTimeout.ENTITY_NAME);
+		deleteWithContainer(itog, CourseTimeout.ENTITY_NAME);
+		deleteWithContainer(itog, "ItogRelated");
+		deleteWithContainer(itog, AutoItog.ENTITY_NAME);
+		return null;
+	}
+	
+	private static void deleteWithContainer (ItogContainer itog, String entity) {
+		EOEditingContext ec = itog.editingContext();
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, entity, "itogContainer", itog);
+		if(found == null || found.count() == 0)
+			return;
+		Enumeration enu = found.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+			ec.deleteObject(obj);
+		}
 	}
 }

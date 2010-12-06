@@ -38,6 +38,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
+import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
@@ -141,7 +142,7 @@ public class AutoItog extends _AutoItog {
     	fs.setSortOrderings(null);
     	found = ec.objectsWithFetchSpecification(fs);
     	NSMutableSet types = new NSMutableSet();
-    	if(found != null && found.count() > 0) {
+    	if(found != null && found.count() > 0) { // CourseTimeouts
     		Enumeration enu = found.objectEnumerator();
     		while (enu.hasMoreElements()) {
 				CourseTimeout cto = (CourseTimeout) enu.nextElement();
@@ -155,16 +156,16 @@ public class AutoItog extends _AutoItog {
     		types.removeAllObjects();
      	}
     	if (result.count() > 1) {
-     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, typeSorter);
+     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, dateTimeSorter);
 		}
+    	NSArray allowedTypes = ItogType.typesForList(listName, ec);
     	Enumeration enu = result.objectEnumerator();
     	result.removeAllObjects();// = new NSMutableArray();
     	while (enu.hasMoreElements()) {
     		EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
 			Object type = obj.valueForKeyPath("itogContainer.itogType");
-			if(types.containsObject(type))
+			if(type == null || types.containsObject(type) || !allowedTypes.contains(type))
 				continue;
-			
 			AutoItog ai = null;
 			if(obj instanceof AutoItog) {
 				ai = (AutoItog)obj;
@@ -424,5 +425,21 @@ public class AutoItog extends _AutoItog {
 			}
 		}
 		return result;
+    }
+    
+    public boolean inactive() {
+    	if(flags().intValue() >= 32)
+    		return true;
+    	Object type = itogContainer().itogType();
+    	if(type == null)
+    		return true;
+    	NSArray list = new NSArray(new EOQualifier[] {
+    		new EOKeyValueQualifier("itogType", EOQualifier.QualifierOperatorEqual, type),
+    		new EOKeyValueQualifier("listName", EOQualifier.QualifierOperatorEqual, listName()),
+    	});
+    	EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",
+    			new EOAndQualifier(list),null);
+    	list = editingContext().objectsWithFetchSpecification(fs);
+    	return (list == null || list.count() == 0);
     }
 }
