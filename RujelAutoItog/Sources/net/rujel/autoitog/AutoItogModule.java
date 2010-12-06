@@ -453,7 +453,7 @@ public class AutoItogModule {
 	
 	protected static class AutoItogAutomator extends TimerTask {
 		protected EOGlobalID gid;
-		boolean skip;
+		protected boolean skip;
 		public AutoItogAutomator(AutoItog autoItog,boolean onlyTimeout) {
 			super();
 			gid = autoItog.editingContext().globalIDForObject(autoItog);
@@ -465,6 +465,11 @@ public class AutoItogModule {
 			ec.lock();
 			try {
 				AutoItog autoItog = (AutoItog)ec.faultForGlobalID(gid,ec);
+				if(autoItog == null || autoItog.inactive()) {
+					logger.log(WOLogLevel.INFO,
+						"Canceled AutoItog automation as it was found inactive",autoItog);
+					return;
+				}
 				NSTimestamp fire = autoItog.fireDate();
 				if(fire.getTime() > System.currentTimeMillis()) {
 					logger.log(WOLogLevel.INFO,"Cancelling autoItog execution",
@@ -615,10 +620,16 @@ public class AutoItogModule {
 			}
 		}
 		public void run() {
-			EOEditingContext ec = new EOEditingContext();
+			EOEditingContext ec = new EOEditingContext(
+					EOObjectStoreCoordinator.defaultCoordinator());
 			ec.lock();
 			try {
 				AutoItog autoItog = (AutoItog)ec.faultForGlobalID(aiGID,ec);
+				if(autoItog == null || autoItog.inactive()) {
+					logger.log(WOLogLevel.INFO,
+						"Canceled CourseTimeout automation as AutoItog found inactive",autoItog);
+					return;
+				}
 				Enumeration enu = timeouts.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					EOGlobalID gid = (EOGlobalID) enu.nextElement();
