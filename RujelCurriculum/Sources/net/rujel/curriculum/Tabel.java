@@ -37,6 +37,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public Boolean cantSelect;
 	public NSMutableDictionary options = new NSMutableDictionary();
 	public NSArray journalZPU;
+	protected int firstWeekday;
 	
     public Tabel(WOContext context) {
         super(context);
@@ -121,7 +122,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	return quals;
     }
     
-    public WOActionResults export() {
+    public WOActionResults exportTabel() {
     	Calendar cal = Calendar.getInstance();
     	NSMutableArray quals = monthQual(cal);
     	EOFetchSpecification fs = new EOFetchSpecification(
@@ -451,6 +452,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
     	cal.set(Calendar.DAY_OF_MONTH, 1);
     	NSTimestamp firstDay = new NSTimestamp(cal.getTimeInMillis());
+    	firstWeekday = cal.get(Calendar.DAY_OF_WEEK);
     	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
     	cal.set(Calendar.DAY_OF_MONTH, days);
     	NSTimestamp lastDay = new NSTimestamp(cal.getTimeInMillis());
@@ -593,6 +595,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	}
     	list = details.immutableClone();
     	BigDecimal[] totals = new BigDecimal[days + 1];
+    	totals[0] = BigDecimal.ZERO;
     	BigDecimal[] subsTotals = new BigDecimal[days + 1];
 		BigDecimal[] factorCounts = null;
     	BigDecimal[] extras = null;
@@ -743,7 +746,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	fs.setSortOrderings(list);
     	list = ec.objectsWithFetchSpecification(fs);
     	if(list == null || list.count() == 0) {
-    		journalZPU = prepareJournalZPU(enu(substitutes), enu(variations));
+    		journalZPU = JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations));
     		return;
     	} else if(factorCounts == null) {
     		details.addObject(row);
@@ -784,7 +787,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		} // substitutes
 		if(byCourse.count() > 0)
 			appendCourses(byCourse, sorter, itemClass);
-		journalZPU = prepareJournalZPU(enu(substitutes), enu(variations));
+		journalZPU = JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations));
     }
     
     private void appendCourses(NSMutableDictionary byCourse,
@@ -824,9 +827,14 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String value() {
-		if(item == null) {
-			if(index!=null)
-				return Integer.toString(index.intValue() + 1);
+		if(item == null && index!=null) {
+			int idx = index.intValue();
+			if((firstWeekday + idx)%7 == Calendar.SUNDAY) {
+				StringBuilder buf = new StringBuilder("<span style = \"color:#cc0000;\">");
+				buf.append(idx + 1).append("</span>");
+				return buf.toString();
+			}
+			return Integer.toString(idx + 1);
 		}
 		BigDecimal[] values = (BigDecimal[])((NSDictionary)item).valueForKey("values");
 		if(values == null)
@@ -908,211 +916,19 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 	
-	protected static NSArray prepareJournalZPU(Enumeration substitutes, Enumeration variations) {
-		NSMutableArray result = new NSMutableArray();
-		NSMutableSet lessons = new NSMutableSet();
-		if(variations != null) {
-			while (variations.hasMoreElements()) {
-				Variation var = (Variation) variations.nextElement();
-				EduLesson lesson = var.relatedLesson();
-				if(lesson != null) {
-					if(lessons.containsObject(lesson))
-						continue;
-					lessons.addObject(lesson);
-				}
-				NSMutableDictionary dict = convertEvent(var);
-				NSArray multiply = (NSArray)dict.valueForKey("multiply");
-				if(multiply != null) {
-					Enumeration mul = multiply.objectEnumerator();
-					while (mul.hasMoreElements()) {
-						Substitute sub = (Substitute) mul.nextElement();
-						NSMutableDictionary clon = dict.mutableClone();
-						clon.takeValueForKey(sub.teacher(), "plusTeacher");
-						clon.takeValueForKey(sub.value(), "value");
-						result.addObject(clon);
-					}
-				} else {
-					result.addObject(dict);
-				}
-			}
-		}
-		if(substitutes != null) {
-			while (substitutes.hasMoreElements()) {
-				Substitute sub = (Substitute) substitutes.nextElement();
-				if(lessons.containsObject(sub.lesson()))
-						continue;
-//				lessons.addObject(sub.lesson());
-				NSMutableDictionary dict = convertEvent(sub);
-				result.addObject(dict);
-			}
-		}
-		NSArray sorter = new NSArray(new EOSortOrdering[] {
-				new EOSortOrdering("date",EOSortOrdering.CompareAscending),
-				new EOSortOrdering("minusTeacher",EOSortOrdering.CompareAscending),
-				new EOSortOrdering("grade",EOSortOrdering.CompareAscending),
-				new EOSortOrdering("eduGroup",EOSortOrdering.CompareAscending),
-				new EOSortOrdering("plusTeacher",EOSortOrdering.CompareAscending)
-		});
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result, sorter);
-		return result;
-	}
-	
-	protected static NSMutableDictionary convertEvent(Reason.Event event) {
-		NSMutableDictionary dict = new NSMutableDictionary(event.reason(),"reason");
-		if(event.reason().verification() == null)
-			dict.takeValueForKey("grey", "cellClass");
-		dict.takeValueForKey(event.date(), "date");
-		EduCourse course = event.course();
-		dict.takeValueForKey(course.eduGroup(), "eduGroup");
-		dict.takeValueForKey(course.cycle().grade(), "grade");
-		Substitute sub = null;
-		if (event instanceof Variation) {
-			Variation var = (Variation) event;
-			dict.takeValueForKey(var.relatedLesson(), "lesson");
-			Variation back = var.getPaired();
-			NSArray subs = (NSArray)var.valueForKeyPath("relatedLesson.substitutes");
-			if(subs != null && subs.count() > 0) {
-				if(subs.count() == 1) {
-					sub = (Substitute)subs.objectAtIndex(0);
-				} else {
-					dict.takeValueForKey(subs, "multiply");
-				}
-			}
-			if(var.value().intValue() > 0) {
-				dict.takeValueForKey(var.course(), "plusCourse");
-				if(back != null) {
-					dict.takeValueForKey(back.course(), "minusCourse");
-					dict.takeValueForKey(back.course().teacher(), "minusTeacher");
-				}
-				if(sub == null) {
-					dict.takeValueForKey(var.value(), "value");
-					dict.takeValueForKey(var.course().teacher(), "plusTeacher");
-				}
-			} else {
-				dict.takeValueForKey(var.course(), "minusCourse");
-				dict.takeValueForKey(var.course().teacher(), "minusTeacher");
-				if(back != null) {
-					dict.takeValueForKey(back.course(), "plusCourse");
-					if(sub == null) {
-						dict.takeValueForKey(back.course().teacher(), "plusTeacher");
-						dict.takeValueForKey(back.value(), "value");
-					}
-				} else if(sub == null) {
-					dict.takeValueForKey(new Integer(-var.value().intValue()), "value");
-				}
-			}
-		} else if(event instanceof Substitute) {
-			sub = (Substitute)event;
-			dict.takeValueForKey(sub.course(), "minusCourse");
-			dict.takeValueForKey(sub.course(), "plusCourse");
-			dict.takeValueForKey(sub.course().teacher(), "minusTeacher");
-			dict.takeValueForKey(sub.lesson(), "lesson");
-		}
-		if(sub != null) {
-			dict.takeValueForKey(sub.teacher(), "plusTeacher");
-			dict.takeValueForKey(sub.value(), "value");
-		}
-		return dict;
-	}
-	
-	public String jrowClass() {
-		if(item.valueForKey("minusTeacher") == currTeacher)
-			return "female";
-		if(item.valueForKey("plusTeacher") == currTeacher)
-			return "male";
-		return "grey";
-	}
-	
-	public WOActionResults exportJournalZPU(NSArray journal) {
-		if(journal == null || journal.count() == 0) {
-			WOResponse response = WOApplication.application().createResponseInContext(context());
-    		response.appendContentString((String)session().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.Tabel.noData"));
-        	response.setHeader("application/octet-stream","Content-Type");
-        	response.setHeader("attachment; filename=\"noData.txt\"","Content-Disposition");
-        	return response;
-		}
-    	StringBuilder buf = new StringBuilder("journal");
+	public WOActionResults exportTeacherZPU() {
+    	StringBuilder buf = new StringBuilder("journalT");
     	buf.append(currMonth.valueForKey("year"));
     	int month = ((Integer)currMonth.valueForKey("month")).intValue();
     	month++;
     	if(month < 10)
     		buf.append('0');
     	buf.append(month);
-		Export export = new Export(context(),buf.toString());
-		export.beginRow();
-		export.addValue(session().valueForKeyPath(
-				"strings.Reusables_Strings.dataTypes.Date"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.OrigTeacher"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelInterfaces_Names.EduCycle.subject"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelInterfaces_Names.EduGroup.this"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.Reason.Reason"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.Substitute.Substitutor"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelInterfaces_Names.EduCycle.subject"));
-		export.addValue(session().valueForKeyPath(
-				"strings.RujelCurriculum_Curriculum.Substitute.factor"));
-		Enumeration enu = journal.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			NSDictionary dict = (NSDictionary) enu.nextElement();
-			export.beginRow();
-			export.addValue(MyUtility.dateFormat().format(dict.valueForKey("date")));
-			EduCourse course = (EduCourse)dict.valueForKey("minusCourse");
-			if(course != null) {
-				Teacher teacher = (Teacher)dict.valueForKey("minusTeacher");
-				if(teacher != null)
-					export.addValue(Person.Utility.fullName(teacher, true, 2, 1, 1));
-				else
-					export.addValue(session().valueForKeyPath("strings.RujelBase_Base.vacant"));
-				if(course.comment() == null) {
-					export.addValue(course.cycle().subject());
-				} else {
-					buf.delete(0, buf.length());
-					buf.append(course.cycle().subject());
-					buf.append(' ').append('(').append(course.comment()).append(')');
-					export.addValue(buf.toString());
-				}
-			} else {
-				export.addValue(null);
-				export.addValue(null);
-			}
-			if(dict.valueForKey("eduGroup") != null)
-				export.addValue(dict.valueForKeyPath("eduGroup.name"));
-			else
-				export.addValue(dict.valueForKey("grade"));
-			export.addValue(dict.valueForKeyPath("reason.title"));
-			course = (EduCourse)dict.valueForKey("plusCourse");
-			if(course != null) {
-				Teacher teacher = (Teacher)dict.valueForKey("plusTeacher");
-				export.addValue(Person.Utility.fullName(teacher, true, 2, 1, 1));
-				if(course.comment() == null) {
-					export.addValue(course.cycle().subject());
-				} else {
-					buf.delete(0, buf.length());
-					buf.append(course.cycle().subject());
-					buf.append(' ').append('(').append(course.comment()).append(')');
-					export.addValue(buf.toString());
-				}
-			} else {
-				export.addValue(null);
-				export.addValue(null);
-			}
-			export.addValue(dict.valueForKey("value"));
-		}
-		return export;
+		return JournalZPU.exportJournalZPU(journalZPU,context(),buf.toString());
 	}
 	
-	public WOActionResults exportTeacherZPU() {
-		return exportJournalZPU(journalZPU);
-	}
-	
-	public WOActionResults exportFullZPU() {
-    	Calendar cal = Calendar.getInstance();
+	protected NSArray fullZPU() {
+	   	Calendar cal = Calendar.getInstance();
 		NSMutableArray quals = monthQual(cal);
 		if(Various.boolForObject(options.valueForKey("omitUnsubmitted")))
 			quals.addObject(new EOKeyValueQualifier("reason.verification",
@@ -1126,13 +942,28 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	if(!Various.boolForObject(options.valueForKey("includeAdded"))) {
     		quals.addObject(new EOKeyValueQualifier(Variation.VALUE_KEY,
     				EOQualifier.QualifierOperatorLessThanOrEqualTo,new Integer(0)));
-    	/*	if(level.intValue() == 0) {
-    			quals.addObject(new EOKeyValueQualifier("relatedLesson",
-    					EOQualifier.QualifierOperatorNotEqual,NullValue));
-    		} */
     		fs.setQualifier(new EOAndQualifier(quals));
     	}
     	NSArray variations = ec.objectsWithFetchSpecification(fs);
-    	return exportJournalZPU(prepareJournalZPU(enu(substitutes), enu(variations)));
+    	return JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations));
+	}
+	
+	public WOActionResults showFullZPU() {
+     	WOComponent result = pageWithName("JournalZPU");
+    	result.takeValueForKey(currMonth, "currMonth");
+//    	result.takeValueForKey(currTeacher, "currTeacher");
+    	result.takeValueForKey(fullZPU(), "journalZPU");
+    	return result;
+	}
+	
+	public WOActionResults exportFullZPU() {
+	   	StringBuilder buf = new StringBuilder("Journal");
+    	buf.append(currMonth.valueForKey("year"));
+    	int month = ((Integer)currMonth.valueForKey("month")).intValue();
+    	month++;
+    	if(month < 10)
+    		buf.append('0');
+    	buf.append(month);
+		return JournalZPU.exportJournalZPU(fullZPU(),context(),buf.toString());
 	}
 }

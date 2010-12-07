@@ -66,9 +66,7 @@
 	<key>Tabel</key>
 	<dict>
 		<key>title</key>
-		<string>Табель (бух)</string>
-		<key>extTitle</key>
-		<string>Табель учета занятий</string>
+		<string>Учет занятий</string>
 		<key>total</key>
 		<string>всего</string>
 		<key>bySubs</key>
@@ -80,13 +78,19 @@
 		<key>showDetails</key>
 		<string>детализация по дням</string>
 		<key>load</key>
-		<string>нагрузка</string>
+		<string>недельная нагрузка</string>
 		<key>loadShort</key>
 		<string>нед</string>
+		<key>tabel</key>
+		<string>Табель учета занятий</string>
+		<key>tabelShort</key>
+		<string>Табель (бух)</string>
 		<key>journalZPU</key>
 		<string>Журнал учета пропущенных и замещенных уроков</string>
+		<key>journalZPUshort</key>
+		<string>Журнал замен</string>
 		<key>includeAdded</key>
-		<string>включить дополнительные</string>
+		<string>добавленные</string>
 		<key>omitUnsubmitted</key>
 		<string>исключить неподтверждённые</string>
 		<key>grandTotal</key>
@@ -254,9 +258,9 @@
 		</dict>
 		<dict>
 			<key>title</key>
-			<string>Табель (бух)</string>
+			<string>Учет занятий</string>
 			<key>hover</key>
-			<string>Табель учета занятий</string>
+			<string>Табель учета занятий и Журнал учета пропущенных и замещенных уроков</string>
 			<key>component</key>
 			<string>Tabel</string>
 			<key>group</key>

@@ -3,7 +3,7 @@ PageWrapper : PageWrapper {
 }
 
 Title : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.Tabel.extTitle;
+  value = application.strings.RujelCurriculum_Curriculum.Tabel.title;
   escapeHTML = false;
   valueWhenEmpty = "Teachers tabel";
 }
@@ -30,11 +30,14 @@ Year : WOString {
   escapeHTML = false;
 }
 
-SubmitButton : WOGenericElement {
-  elementName = "input";
-  type = "submit";
+ExportTabel : WOSubmitButton {
   value = application.strings.RujelReports_Reports.export;
-  style = "float:right;";
+  action = exportTabel;
+}
+
+ExportZPU : WOSubmitButton {
+  value = application.strings.RujelReports_Reports.export;
+  action = exportFullZPU;
 }
 
 ExportDetails : WOHyperlink {
@@ -42,12 +45,17 @@ ExportDetails : WOHyperlink {
   string = application.strings.RujelReports_Reports.export;
 }
 
+ExportTeacherZPU : WOHyperlink {
+  action = exportTeacherZPU;
+  string = application.strings.RujelReports_Reports.export;
+}
 SelectTeacher : OnClickContainer {
-  elementName = "span";
-  class = "button";
+  elementName = "td";
+  class = "highlight";
   invokeAction = selectTeacher;
   onclick = session.ajaxPopup;
-  hide = cantSelect;
+  disabled = cantSelect;
+  style = "font-size:110%;";
 }
 
 TeacherName : PersonDisplay {
@@ -148,8 +156,8 @@ Cell : WOGenericContainer {
 }
 
 TotalForm : WOForm {
-  style = "position:absolute;top:3em;right:4em;padding:1ex;";
-  action = export;
+  action = showFullZPU;
+  multipleSubmit = true;
 }
 
 ShowDetailsTitle : WOString {
@@ -183,98 +191,6 @@ HoursTitle : WOString {
   escapeHTML = false;
 }
 
-JournalZPU : WORepetition {
-  list = journalZPU;
-  item = item;
-}
-
-JRow : WOGenericContainer {
-  elementName = "tr";
-  class = jrowClass;
-}
-
-JDate : WOString {
-  value = item.date;
-  dateformat = application.prefs.ui.dateFormat;
-}
-
-MinusTeacher : PersonDisplay {
-  person = item.minusTeacher;
-  second = 1;
-  first = 1;
-  last = 2;
-  startWithLast = true;
-  valueWhenEmpty = session.strings.RujelBase_Base.vacant;
-  emptyStyle = "font-style:italic;";
-}
-
-MinusSubject : WOString {
-  value = item.minusCourse.subjectWithComment;
-  escapeHTML = false;
-}
-
-Reason : ReasonPresenter {
-  reason = item.reason;
-  refTeacher = currTeacher;
-}
-
-
-PlusTeacher : PersonDisplay {
-  person = item.plusTeacher;
-  second = 1;
-  first = 1;
-  last = 2;
-  startWithLast = true;
-}
-
-PlusSubject : WOString {
-  value = item.plusCourse.subjectWithComment;
-  escapeHTML = false;
-}
-
-
-JValue : WOString {
-  value = item.value;
-}
-
-JEduGrop : WOString {
-  value = item.eduGroup.name;
-  valueWhenEmpty = item.grade;
-}
-
-JHasCourse : WOConditional {
-  condition = item.minusCourse;
-}
-
-OrigTitle : WOString {
-  value = session.strings.RujelCurriculum_Curriculum.OrigTeacher;
-  escapeHTML = false;
-}
-GroupTitle : WOString {
-  value = session.strings.RujelInterfaces_Names.EduGroup.this;
-  escapeHTML = false;
-}
-SubjectTitle : WOString {
-  value = session.strings.RujelInterfaces_Names.EduCycle.subject;
-  escapeHTML = false;
-}
-ReasonTitle : WOString {
-  value = session.strings.RujelCurriculum_Curriculum.Reason.Reason;
-  escapeHTML = false;
-}
-SustitutorTitle : WOString {
-  value = session.strings.RujelCurriculum_Curriculum.Substitute.Substitutor;
-  escapeHTML = false;
-}
-FactorTitle : WOString {
-  value = session.strings.RujelCurriculum_Curriculum.Substitute.factor;
-  escapeHTML = false;
-}
-
-ExportZPU : WOHyperlink {
-  action = exportTeacherZPU;
-  string = application.strings.RujelReports_Reports.export;
-}
 TitleZPU : WOString {
   value = session.strings.RujelCurriculum_Curriculum.Tabel.journalZPU;
   escapeHTML = false;
@@ -284,12 +200,9 @@ HasJournalZPU : WOConditional {
   condition = journalZPU.count;
 }
 
-FormZPU : WOForm {
-  action = exportFullZPU;
-}
-
 IncludeAdded : WOCheckBox {
   checked = options.includeAdded;
+  name = "added";
 }
 
 AddedTitle : WOString {
@@ -304,10 +217,45 @@ UnsubmittedTitle : WOString {
 
 OmitUnsubmitted : WOCheckBox {
   checked = options.omitUnsubmitted;
+  name = "unsubmitted";
 }
 
 ReasonCell : WOGenericContainer {
   elementName = "td";
   class = item.cellClass;
   title = item.reason.verification;
+}
+
+JournalZPU : JournalZPU {
+  currTeacher = currTeacher;
+  currMonth = currMonth;
+  journalZPU = journalZPU;
+}
+
+MonthTitle : WOString {
+  value = session.strings.Reusables_Strings.dataTypes.Month;
+  escapeHTML = false;
+}
+
+TabelTitle : WOString {
+  value = session.strings.RujelCurriculum_Curriculum.Tabel.tabel;
+  escapeHTML = false;
+  valueWhenEmpty = "Tabel";
+}
+
+JournalShort : WOString {
+  value = session.strings.RujelCurriculum_Curriculum.Tabel.journalZPUshort;
+  escapeHTML = false;
+}
+
+TabelShort : WOString {
+  value = session.strings.RujelCurriculum_Curriculum.Tabel.tabelShort;
+  escapeHTML = false;
+}
+
+ShowFullZPU : WOGenericElement {
+  elementName = "input";
+  type = "button";
+  value = session.strings.Reusables_Strings.uiElements.Show;
+  onclick = "showZPU(form);";
 }
