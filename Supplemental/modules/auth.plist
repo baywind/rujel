@@ -31,6 +31,8 @@
 		<string>refuse</string>
 		<key>useHTTPS</key>
 		<string>false</string>
+		<key>noGuest</key>
+		<false/>
 		<key>_customURL</key>
 		<dict>
 			<key>insecure</key>

@@ -87,6 +87,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	protected ReadAccess _readAccess;
 	
 	public ReadAccess readAccess() {
+		if(_readAccess == null)
+			setDummyUser(Boolean.FALSE);
 		return _readAccess;
 	}
 	
@@ -159,6 +161,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	}
 	
 	public UserPresentation user() {
+		if(user == null)
+			setDummyUser(Boolean.FALSE);
 		return user;
 	}
 	

@@ -32,6 +32,7 @@ package net.rujel;
 import java.util.logging.Logger;
 
 import net.rujel.auth.LoginProcessor;
+import net.rujel.auth.UserPresentation;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
@@ -69,6 +70,13 @@ public class DirectAction extends WODirectAction {
 		//WOComponent nextPage = appl().loginHandler().loginComponent(context());
 		return LoginProcessor.loginAction(context());
 		//return pageWithName("LoginDialog");
+	}
+	
+	public WOActionResults guestAction() {
+		if(SettingsReader.boolForKeyPath("auth.noGuest", false))
+			return LoginProcessor.secureRedirect("login",context(),false);
+		context().session().takeValueForKey(new UserPresentation.Guest(), "user");
+		return LoginProcessor.secureRedirect("success",context(),false);
 	}
 	
 	public WOActionResults refuseAction() {
