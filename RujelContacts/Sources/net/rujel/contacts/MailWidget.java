@@ -55,6 +55,7 @@ public class MailWidget extends WOComponent {
 		dict.takeValueForKey(course.groupList(), "students");
 		dict.takeValueForKey(course.eduGroup(), "eduGroup");
 		nextPage.takeValueForKey(dict,"dict");
+		nextPage.takeValueForKey(context().page(), "returnPage");
 		return nextPage;
     }
     

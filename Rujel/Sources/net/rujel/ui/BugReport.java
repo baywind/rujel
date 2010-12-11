@@ -121,7 +121,10 @@ public class BugReport extends WOComponent {
 		};
 		Calendar cal = Calendar.getInstance();
 		StringBuilder buf = new StringBuilder(40);
-		buf.append(cal.get(Calendar.YEAR)).append(cal.get(Calendar.MONTH));
+		buf.append(cal.get(Calendar.YEAR));
+		if(cal.get(Calendar.MONTH) < 10) buf.append('0');
+		buf.append(cal.get(Calendar.MONTH));
+		if(cal.get(Calendar.DATE) < 10) buf.append('0');
 		buf.append(cal.get(Calendar.DATE)).append('/');
 		try {
 			ZipOutputStream zipStream = new ZipOutputStream(out);

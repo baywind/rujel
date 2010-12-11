@@ -52,7 +52,6 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	
 	public WOComponent returnPage;
 	protected EduLesson lesson;
-	protected boolean done = false;
 	//protected EOEditingContext ec;
 
     public LessonInspector(WOContext context) {
@@ -98,6 +97,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 			lesson.setTitle(newTitle);
 			MyUtility.setNumberToNewLesson(lesson);
 			EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
+			boolean done = false;
 			if(limits != null && !limits.evaluateWithObject(lesson)) {
 				session().setObjectForKey(this, "LessonInspector");
 				lesson.editingContext().revert();
@@ -128,6 +128,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	       	if(done) {
 //				returnPage.takeValueForKey(lesson, "currPerPersonLink");
 				returnPage.valueForKey("updateLessonList");
+				return RedirectPopup.getRedirect(context(), returnPage, null);
 			}
 		return this;
     }
@@ -162,12 +163,8 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    	if(done) {
-    		aResponse.appendContentString(aContext.componentActionURL());
-    	} else {
     		super.appendToResponse(aResponse, aContext);
         	session().takeValueForKey(null, "message");
-    	}
     }
 
     public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {

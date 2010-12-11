@@ -91,17 +91,18 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			setDummyUser(Boolean.FALSE);
 		return _readAccess;
 	}
-	
+/*
 	public String formMethod() {
 		String ua = context().request().headerForKey("user-agent");
 		if(ua == null || ua.contains("MSIE"))
 			return "get";
 		return "post";
 	}
-	
+*/	
 	public void awake() {
 		super.awake();
 		logger.logp(WOLogLevel.FINEST,"Session","awake","Session awake",this);
+		try {
 		if(user != null) {
 			NSDictionary curr = MyUtility.clientIdentity(context().request());
 			if(curr == null) {
@@ -112,7 +113,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 				clientIdentity = curr;
 			}
 		}
+		} finally {
 		ecLockManager.lock();
+		}
 //		if(_defaultEC != null)
 //			_defaultEC.lock();
 	}

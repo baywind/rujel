@@ -67,17 +67,17 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	public String disableMax;
 	public String disableWeight;
 	public EduLesson lesson;
-	protected boolean done = false;
+//	protected boolean done = false;
 
     public WorkInspector(WOContext context) {
         super(context);
     }
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    	if(done) {
+    /*	if(done) {
     		aResponse.appendContentString(aContext.componentActionURL());
     		return;
-    	}
+    	}*/
     	if(course == null)
     		course = (EduCourse)returnPage.valueForKey("course");
     	EOEditingContext ec = course.editingContext();
@@ -272,8 +272,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING, "error saving", 
     				new Object[] {session(),work,e});
     	}
-    	done = (!ec.hasChanges());
-       	if(done) {
+//    	done = (!ec.hasChanges());
+//       	if(done) {
+    	if (!ec.hasChanges()) {
        		if(lesson != null && lesson != work) {
        			returnPage.takeValueForKey(lesson, "currLesson");
        			returnPage.takeValueForKey(lesson, "selector");
@@ -284,6 +285,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		} else {
     			returnPage.takeValueForKeyPath("MarksPresenter", "present.tmpPresenter");
     		}
+    		return RedirectPopup.getRedirect(context(), returnPage, null);
        	}
  		session().removeObjectForKey("lessonProperies");
     	return this;
@@ -297,13 +299,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }
-    
+/*    
 	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
     	if(aContext.elementID().equals(aContext.senderID()))
     		return returnPage();
 		return super.invokeAction(aRequest, aContext);
 	}
-/*	private NSArray _criteria;
+	private NSArray _criteria;
     public NSArray criteria() {
 		if(_criteria == null) {
 			_criteria = CriteriaSet.criteriaForCourse(work.course());

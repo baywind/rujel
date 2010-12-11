@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOEditingContext;
@@ -50,6 +51,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 
 	public NSDictionary dict;
 	public NSMutableSet adrSet = new NSMutableSet();
+	public WOComponent returnPage;
 	protected PerPersonLink contacts;
 	
 	public SendMailForm(WOContext context) {
@@ -75,7 +77,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		ec = (EOEditingContext)dict.valueForKey("editingContext");
 		NSArray students = (NSArray)dict.valueForKey("students");
 		if(students == null || students.count() == 0) {
-			message = (String)application().valueForKeyPath(
+			message = (String)session().valueForKeyPath(
 				"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
 			return;
 		}
@@ -84,7 +86,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
 		message = null;
 		if(contacts == null || contacts.count() == 0) {
-			message = (String)application().valueForKeyPath(
+			message = (String)session().valueForKeyPath(
 				"strings.RujelContacts_Contacts.SendMailForm.noAddresses");
 			return;
 		}
@@ -95,7 +97,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 			NSArray cur = (NSArray) contacts.forPersonLink(stu);
 			if(cur == null || cur.count() == 0) {
 				if(message == null)
-					message = (String)application().valueForKeyPath(
+					message = (String)session().valueForKeyPath(
 						"strings.RujelContacts_Contacts.SendMailForm.noAddressesFor") + ": ";
 				else
 					message = message + ", ";
@@ -137,29 +139,29 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	
 	public String button() {
 		if(showList) {
-			return (String)application().
+			return (String)session().
 			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.hideList");
 		} else {
-			return (String)application().
+			return (String)session().
 			valueForKeyPath("strings.RujelContacts_Contacts.SendMailForm.showList");
 		}
 	}
 	
 	public WOActionResults send() {
 		if(adrSet.count() <= 0) {
-			message = (String)application().valueForKeyPath(
+			message = (String)session().valueForKeyPath(
 					"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
 			return null;
 		}
 		
 		//InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(adrSet, true);
 		if(adrSet == null || adrSet.count() == 0) {
-			message = (String)application().valueForKeyPath(
+			message = (String)session().valueForKeyPath(
 						"strings.RujelContacts_Contacts.SendMailForm.noRecipients");
 			return null;
 		}
 		if((text == null || text.length() == 0) && !attach) {
-			message = (String)application().valueForKeyPath(
+			message = (String)session().valueForKeyPath(
 					"strings.RujelContacts_Contacts.SendMailForm.noText");
 			return null;
 		}
@@ -188,9 +190,10 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		
 		param.takeValueForKey(new WeakReference(session()), "callerSession");
 		EMailBroadcast.broadcastMarks(param);
-		message = (String)application().valueForKeyPath(
+		message = (String)session().valueForKeyPath(
 				"strings.RujelContacts_Contacts.broadcastInitiated");
-		return null;
+		session().takeValueForKey(message, "message");
+		return RedirectPopup.getRedirect(context(), returnPage, null);
 	}
 	
 	public NSArray periods = (NSArray)session().valueForKeyPath("modules.periods");;

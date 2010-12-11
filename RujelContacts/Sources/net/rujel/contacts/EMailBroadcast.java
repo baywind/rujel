@@ -411,7 +411,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 		NSSet adrSet = (NSSet)params.valueForKey("adrSet");
 		Enumeration stEnu = students.objectEnumerator();
 		WOApplication app = WOApplication.application();
-		boolean allowRequest = !SettingsReader.boolForKeyPath("mail.denyRequesting", false);
+		boolean allowRequest = (reporter != null) &&
+			!SettingsReader.boolForKeyPath("mail.denyRequesting", false);
 st:		while (stEnu.hasMoreElements()) {
 			long startTime = System.currentTimeMillis();
 			Student student = (Student)stEnu.nextElement();
