@@ -27,13 +27,13 @@ public class RequestMail extends WODirectAction {
 		super(aRequest);
 	}
 	
-	protected static NSMutableSet sent = new NSMutableSet();
+	protected static NSMutableSet sent;
 	public static void forgetSent() {
-		sent.removeAllObjects();
+		sent = new NSMutableSet();
 	}
 
 	public WOActionResults performActionNamed(String anActionName) {
-		if(SettingsReader.boolForKeyPath("mail.denyRequesting", false))
+		if(sent == null || SettingsReader.boolForKeyPath("mail.denyRequesting", false))
 			return error("denied");
 		if(anActionName.equals("default"))
 			anActionName = request().stringFormValueForKey("code");

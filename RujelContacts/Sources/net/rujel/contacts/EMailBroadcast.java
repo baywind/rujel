@@ -388,6 +388,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			mailer = new Mailer();
 
 		StringBuffer textBuf = new StringBuffer();
+		boolean allowRequest = false;
 		if(reporter != null) {
 			String text = (String)reporter.valueForKey("winTitle");
 			if(text == null)
@@ -400,19 +401,29 @@ gr:		while (eduGroups.hasMoreElements()) {
 			textBuf.append(WOApplication.application().valueForKeyPath(
 					"strings.RujelContacts_Contacts.isInAttachment"));
 			textBuf.append("\n    ---------------\n\n");
+			allowRequest = !SettingsReader.boolForKeyPath("mail.denyRequesting", false);
 		}
 		if(params.valueForKey("messageText") == null)
 			textBuf.append(mailer.defaultMessageText());
 		else
 			textBuf.append(params.valueForKey("messageText"));
+		WOApplication app = WOApplication.application();
+		if(allowRequest) {
+//			String auto = ctx.completeApplicationURLPrefix(false, 0);
+			textBuf.append("\n\n");
+			textBuf.append(app.valueForKeyPath(
+					"strings.RujelContacts_Contacts.MailRequest.title"));
+			textBuf.append(":\n").append(app.valueForKey("serverUrl"));
+			textBuf.append(app.valueForKey("urlPrefix")).append('/');
+			textBuf.append(app.directActionRequestHandlerKey()).append('/');
+			textBuf.append("RequestMail/");
+		}
 		int textLength = textBuf.length();
+
 		Object since = params.valueForKey("since");
 		Object upTo = params.valueForKey("to");
 		NSSet adrSet = (NSSet)params.valueForKey("adrSet");
 		Enumeration stEnu = students.objectEnumerator();
-		WOApplication app = WOApplication.application();
-		boolean allowRequest = (reporter != null) &&
-			!SettingsReader.boolForKeyPath("mail.denyRequesting", false);
 st:		while (stEnu.hasMoreElements()) {
 			long startTime = System.currentTimeMillis();
 			Student student = (Student)stEnu.nextElement();
@@ -452,14 +463,6 @@ st:		while (stEnu.hasMoreElements()) {
 						subject.append(" : ").append(subj);
 					if(allowRequest) {
 						textBuf.delete(textLength, textBuf.length());
-						textBuf.append("\n\n");//.append(app.valueForKey("serverUrl"));
-						textBuf.append(app.valueForKeyPath(
-								"strings.RujelContacts_Contacts.MailRequest.title"));
-						textBuf.append(":\n");
-						textBuf.append(ctx.directActionURLForActionNamed("RequestMail/", null));
-						int arg = textBuf.indexOf("wosid",textLength);
-						if(arg > 0)
-							textBuf.delete(arg -1, textBuf.length());
 						EOKeyGlobalID stID = (EOKeyGlobalID)ec.globalIDForObject(student);
 						textBuf.append(stID.keyValues()[0]);
 					}

@@ -335,11 +335,14 @@ public class MyUtility {
 	
 	public static WOContext dummyContext(WOSession ses) {
 		WOApplication app = WOApplication.application();
-		String dummyUrl = app.cgiAdaptorURL() + "/" + app.name() + ".woa/wa/dummy";
+		StringBuilder dummyUrl = new StringBuilder();
+//		dummyUrl.append(app.valueForKey("serverUrl"));
+		dummyUrl.append(app.valueForKey("urlPrefix")).append('/');
+		dummyUrl.append(app.directActionRequestHandlerKey()).append("/dummy");
 		if(ses != null) {
-			dummyUrl = dummyUrl + "?wosid=" + ses.sessionID();
+			dummyUrl.append("?wosid=").append(ses.sessionID());
 		}
-		WORequest request = app.createRequest( "GET", dummyUrl, "HTTP/1.0", null, null, null);
+		WORequest request = app.createRequest("GET",dummyUrl.toString(),"HTTP/1.0",null,null,null);
 		WOContext context = new WOContext(request) {
 			public boolean shouldNotStorePageInBacktrackCache() {
 				return true;

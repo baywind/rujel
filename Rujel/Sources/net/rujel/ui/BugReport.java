@@ -145,7 +145,8 @@ public class BugReport extends WOComponent {
 				writer.write("\rhost: ");
 				writer.write(WORequestAdditions.hostName(context().request()));
 				writer.write("\rurl: ");
-				writer.write(context().request().applicationURLPrefix());
+				writer.write((String)application().valueForKey("serverUrl"));
+				writer.write((String)application().valueForKey("urlPrefix"));
 				writer.flush();
 				String modPath = SettingsReader.stringForKeyPath("modules", "modules");
 				File modFolder = new File(Various.convertFilePath(modPath));

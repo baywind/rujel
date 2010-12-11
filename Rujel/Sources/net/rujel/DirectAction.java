@@ -63,6 +63,7 @@ public class DirectAction extends WODirectAction {
     }
 	
 	public WOActionResults successAction() {
+		WOApplication.application().takeValueForKey(request(), "request");
 		return defaultAction();
 	}
 
