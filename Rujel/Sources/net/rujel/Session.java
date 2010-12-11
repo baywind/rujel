@@ -93,31 +93,17 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	}
 	
 	public String formMethod() {
-		String ua = context().request().headerForKey(CLIENT_IDENTITY_KEYS[3]);
+		String ua = context().request().headerForKey("user-agent");
 		if(ua == null || ua.contains("MSIE"))
 			return "get";
 		return "post";
-	}
-	
-	public static final String[] CLIENT_IDENTITY_KEYS = new String[]
-	{"x-webobjects-remote-addr", "remote_addr","remote_host","user-agent"};
-	
-	public static NSDictionary clientIdentity(WORequest request) {
-		NSMutableDictionary result = new NSMutableDictionary();
-		Object value = null;
-		for (int i = 0; i < CLIENT_IDENTITY_KEYS.length; i++) {
-			value = request.headerForKey((String)CLIENT_IDENTITY_KEYS[i]);
-			if(value != null && (result.count() == 0 || !result.containsValue(value)))
-				result.setObjectForKey(value,CLIENT_IDENTITY_KEYS[i]);
-		}
-		return result;
 	}
 	
 	public void awake() {
 		super.awake();
 		logger.logp(WOLogLevel.FINEST,"Session","awake","Session awake",this);
 		if(user != null) {
-			NSDictionary curr = clientIdentity(context().request());
+			NSDictionary curr = MyUtility.clientIdentity(context().request());
 			if(curr == null) {
 				logger.log(WOLogLevel.WARNING,"Unable to identify client",this);
 			} else if(!curr.equals(clientIdentity)) {

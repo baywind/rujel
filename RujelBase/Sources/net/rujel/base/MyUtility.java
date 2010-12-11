@@ -396,4 +396,18 @@ public class MyUtility {
     	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
     }
 
+	protected static final String[] CLIENT_IDENTITY_KEYS = new String[]
+	                 {"x-webobjects-remote-addr", "remote_addr","remote_host","user-agent"};
+
+	public static NSMutableDictionary clientIdentity(WORequest request) {
+		NSMutableDictionary result = new NSMutableDictionary();
+		Object value = null;
+		for (int i = 0; i < CLIENT_IDENTITY_KEYS.length; i++) {
+			value = request.headerForKey((String)CLIENT_IDENTITY_KEYS[i]);
+			if(value != null && (result.count() == 0 || !result.containsValue(value)))
+				result.setObjectForKey(value,CLIENT_IDENTITY_KEYS[i]);
+		}
+		return result;
+	}
+
 }

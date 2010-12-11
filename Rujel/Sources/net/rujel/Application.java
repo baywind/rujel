@@ -302,7 +302,7 @@ public class Application extends UTF8Application {
 		if(!(aRequest.method().equals("POST") && aRequest.uri().contains("login"))
 				&& !aRequest.uri().contains("dummy") && !aRequest.uri().contains("guest")) {
 			Exception ex = new Exception("Dangling session creation");
-			Object[] args = new Object[] {result, Session.clientIdentity(aRequest),ex};
+			Object[] args = new Object[] {result, MyUtility.clientIdentity(aRequest),ex};
 			logger.log(WOLogLevel.SESSION,
 					"Generating session: " + aRequest.method() + ':' + aRequest.uri(), args);
 		}
