@@ -43,7 +43,7 @@
 			<string>электронная почта</string>
 			<key>flags</key>
 			<array>
-				<string>Использовать для раcсылки</string>
+				<string>Использовать для рассылки</string>
 				<string>Сжимать (zip)</string>
 				<string></string>
 				<string></string>
