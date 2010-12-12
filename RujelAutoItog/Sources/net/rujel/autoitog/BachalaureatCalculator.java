@@ -224,6 +224,12 @@ public class BachalaureatCalculator extends WorkCalculator {
 			val = (magr==null)?null:magr[WEIGHT];
 			if(val != null) {
 				sumMarks = (sumMarks == null)?val:sumMarks.add(val);
+				if(optWorks != null) {
+					wagr = (BigDecimal[])optWorks.objectForKey(crit);
+					val = (wagr==null)?null:wagr[WEIGHT];
+					if(val != null)
+						sumMarks = sumMarks.subtract(val);
+				}
 			}
 			if(equals && (sumMarks == null || sumWorks.compareTo(sumMarks) != 0)) {
 				equals = false;
@@ -252,7 +258,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 		NSArray works = period.relatedForCourse(course);//works(course, period);
 
 		NSDictionary agregatedWorks = agregateWorks(works);
-		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
+		boolean noWorks = (works == null || works.count() == 0);
 		
 		EOQualifier[] quals = new EOQualifier[2];
 		if(!noWorks)
@@ -266,7 +272,7 @@ public class BachalaureatCalculator extends WorkCalculator {
 			Student student = (Student)enu.nextElement();
 			Prognosis progn = Prognosis.getPrognosis(student, course, 
 					period.itogContainer(), !noWorks);
-			if(agregatedWorks == null) {
+			if(noWorks) {
 				if(progn != null)
 					ec.deleteObject(progn);
 				continue;
@@ -327,9 +333,8 @@ public class BachalaureatCalculator extends WorkCalculator {
 		}
 		EOEditingContext ec = course.editingContext();
 		NSDictionary agregatedWorks = agregateWorks(works);
-		boolean noWorks = (agregatedWorks == null || agregatedWorks.count() == 0);
-		Prognosis progn = Prognosis.getPrognosis(student, course, 
-				period.itogContainer(), !noWorks);
+		boolean noWorks = (works == null || works.count() == 0);
+		Prognosis progn = Prognosis.getPrognosis(student, course, period.itogContainer(), !noWorks);
 		if(noWorks) {
 			if(progn != null)
 				ec.deleteObject(progn);

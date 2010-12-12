@@ -188,13 +188,14 @@ public class EMailPresenter extends WOComponent {
 		dict.takeValueForKey(parent().valueForKey("currClass"),"eduGroup");
 		dict.takeValueForKey(new NSArray(valueForBinding("person")),"students");
 		nextPage.takeValueForKey(dict,"dict");
+		nextPage.takeValueForKey(context().page(), "returnPage");
 		return nextPage;
 	}
-	
+	/*
 	public String mailButton() {
 		return "window.open('" + context().componentActionURL() + 
 			"','mailForm','toolbar=no, location=no')";
-	}
+	}*/
 	
 	public boolean isStateless() {
 		return true;

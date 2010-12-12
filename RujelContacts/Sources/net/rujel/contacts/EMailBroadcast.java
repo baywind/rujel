@@ -51,7 +51,7 @@ import javax.mail.internet.InternetAddress;
 
 
 public class EMailBroadcast implements Runnable{
-	protected static Logger logger = Logger.getLogger("rujel.contacts");
+	public static final Logger logger = Logger.getLogger("rujel.contacts");
 
 	public static Object init(Object obj, WOContext ctx) {
 		if (obj == null || obj.equals("init")) {
@@ -62,6 +62,7 @@ public class EMailBroadcast implements Runnable{
 				// default access not supported
 			}
 		} else if(obj.equals("scheduleTask")) {
+			RequestMail.forgetSent();
 			boolean dontBcast = Boolean.getBoolean("EMailBroadcast.disableWeekly");
 			if(dontBcast)
 				return null;
@@ -84,7 +85,8 @@ public class EMailBroadcast implements Runnable{
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelContacts_Contacts.contactsRegime");
 		} else if("journalPlugins".equals(obj)) {
-			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.SendMailForm")))
+			if(Various.boolForObject(ctx.session().valueForKeyPath(
+					"readAccess._read.SendMailForm")))
 				return null;
 			return ctx.session().valueForKeyPath("strings.RujelContacts_Contacts.dashboard");
 		}
@@ -93,7 +95,8 @@ public class EMailBroadcast implements Runnable{
 	
 	public static NSArray overviewAction(WOContext ctx) {
 		NSMutableArray result = new NSMutableArray();
-		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.SendMailForm");
+		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath(
+				"readAccess.FLAGS.SendMailForm");
 		if(access.getFlag(0)) {
 			result.addObject(ctx.session().valueForKeyPath(
 					"strings.RujelContacts_Contacts.sendmailAction"));
@@ -161,7 +164,8 @@ public class EMailBroadcast implements Runnable{
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
 		if(reporter == null)
-				reporter = (NSDictionary)app.valueForKeyPath("strings.Strings.Overview.defaultReporter");
+				reporter = (NSDictionary)app.valueForKeyPath(
+						"strings.Strings.Overview.defaultReporter");
 //		ec.unlock();
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
@@ -385,33 +389,39 @@ gr:		while (eduGroups.hasMoreElements()) {
 		if(mailer == null)
 			mailer = new Mailer();
 
-		String text = null;
+		StringBuffer textBuf = new StringBuffer();
+		boolean allowRequest = false;
 		if(reporter != null) {
-			text = (String)reporter.valueForKey("winTitle");
+			String text = (String)reporter.valueForKey("winTitle");
 			if(text == null)
 				text = (String)reporter.valueForKey("title");
 			if(text == null)
 				text = (String)reporter.valueForKey("component");
-			if(text == null)
-				text = "";
-		}
-		StringBuffer textBuf = null;
-		if(reporter != null) {
-			textBuf = new StringBuffer(text);
+			if(text != null)
+				textBuf.append(text);
 			textBuf.append(' ');
-			text = (String)WOApplication.application().valueForKeyPath(
-			"strings.RujelContacts_Contacts.isInAttachment");
-			textBuf.append(text);
+			textBuf.append(WOApplication.application().valueForKeyPath(
+					"strings.RujelContacts_Contacts.isInAttachment"));
 			textBuf.append("\n    ---------------\n\n");
-			//subject.append(" - ").append(title);
+			allowRequest = !SettingsReader.boolForKeyPath("mail.denyRequesting", false);
 		}
-		text = (String)params.valueForKey("messageText");
-		if(text == null)
-			text = mailer.defaultMessageText();
-		if(reporter != null) {
-			textBuf.append(text);
-			text = textBuf.toString();
+		if(params.valueForKey("messageText") == null)
+			textBuf.append(mailer.defaultMessageText());
+		else
+			textBuf.append(params.valueForKey("messageText"));
+		WOApplication app = WOApplication.application();
+		if(allowRequest) {
+//			String auto = ctx.completeApplicationURLPrefix(false, 0);
+			textBuf.append("\n\n");
+			textBuf.append(app.valueForKeyPath(
+					"strings.RujelContacts_Contacts.MailRequest.title"));
+			textBuf.append(":\n").append(app.valueForKey("serverUrl"));
+			textBuf.append(app.valueForKey("urlPrefix")).append('/');
+			textBuf.append(app.directActionRequestHandlerKey()).append('/');
+			textBuf.append("RequestMail/");
 		}
+		int textLength = textBuf.length();
+
 		Object since = params.valueForKey("since");
 		Object upTo = params.valueForKey("to");
 		NSSet adrSet = (NSSet)params.valueForKey("adrSet");
@@ -453,17 +463,22 @@ st:		while (stEnu.hasMoreElements()) {
 					String subj = (String)params.valueForKey("subject");
 					if(subj != null && subj.length() > 0)
 						subject.append(" : ").append(subj);
+					if(allowRequest) {
+						textBuf.delete(textLength, textBuf.length());
+						EOKeyGlobalID stID = (EOKeyGlobalID)ec.globalIDForObject(student);
+						textBuf.append(stID.keyValues()[0]);
+					}
 					if(reporter != null) {
-						WOComponent reportPage = WOApplication.application().pageWithName("PrintReport",ctx);
+						WOComponent reportPage = app.pageWithName("PrintReport",ctx);
 						reportPage.takeValueForKey(reporter,"reporter");
 						reportPage.takeValueForKey(existingCourses,"courses");
 						reportPage.takeValueForKey(new NSArray(student),"students");
 						reportPage.takeValueForKey(period,"period");
 						reportPage.takeValueForKey(since,"since");
 						reportPage.takeValueForKey(upTo,"to");
-						mailer.sendPage(subject.toString(), text, reportPage, to, zip);
+						mailer.sendPage(subject.toString(), textBuf.toString(), reportPage, to, zip);
 					} else {
-						mailer.sendTextMessage(subject.toString(), text, to);
+						mailer.sendTextMessage(subject.toString(), textBuf.toString(), to);
 					}
 					logger.finer("Mail sent \"" + subject + '"');
 				} catch (Exception ex) {

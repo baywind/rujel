@@ -335,11 +335,14 @@ public class MyUtility {
 	
 	public static WOContext dummyContext(WOSession ses) {
 		WOApplication app = WOApplication.application();
-		String dummyUrl = app.cgiAdaptorURL() + "/" + app.name() + ".woa/wa/dummy";
+		StringBuilder dummyUrl = new StringBuilder();
+//		dummyUrl.append(app.valueForKey("serverUrl"));
+		dummyUrl.append(app.valueForKey("urlPrefix")).append('/');
+		dummyUrl.append(app.directActionRequestHandlerKey()).append("/dummy");
 		if(ses != null) {
-			dummyUrl = dummyUrl + "?wosid=" + ses.sessionID();
+			dummyUrl.append("?wosid=").append(ses.sessionID());
 		}
-		WORequest request = app.createRequest( "GET", dummyUrl, "HTTP/1.0", null, null, null);
+		WORequest request = app.createRequest("GET",dummyUrl.toString(),"HTTP/1.0",null,null,null);
 		WOContext context = new WOContext(request) {
 			public boolean shouldNotStorePageInBacktrackCache() {
 				return true;
@@ -395,5 +398,19 @@ public class MyUtility {
     	int eveningHour = SettingsReader.intForKeyPath("edu.eveningHour", 17);
     	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
     }
+
+	protected static final String[] CLIENT_IDENTITY_KEYS = new String[]
+	                 {"x-webobjects-remote-addr", "remote_addr","remote_host","user-agent"};
+
+	public static NSMutableDictionary clientIdentity(WORequest request) {
+		NSMutableDictionary result = new NSMutableDictionary();
+		Object value = null;
+		for (int i = 0; i < CLIENT_IDENTITY_KEYS.length; i++) {
+			value = request.headerForKey((String)CLIENT_IDENTITY_KEYS[i]);
+			if(value != null && (result.count() == 0 || !result.containsValue(value)))
+				result.setObjectForKey(value,CLIENT_IDENTITY_KEYS[i]);
+		}
+		return result;
+	}
 
 }

@@ -324,7 +324,7 @@ public class Overview extends WOComponent {
 		buf.append(')');
  		logger.logp(WOLogLevel.MASS_READING,"Overview","selectStudent",buf.toString(),
  				new Object[] {session(),currClass});
-		return reportPage;
+		return RedirectPopup.getRedirect(context(), reportPage, "printMarks");
 	}
 	
 	//public static final String reporter = SettingsReader.stringForKeyPath("ui.presenter.report","StudentMarks");
@@ -453,6 +453,14 @@ public class Overview extends WOComponent {
 		dict.takeValueForKey(currClass,"eduGroup");
 		
 		nextPage.takeValueForKey(dict,"dict");
+		if(Various.boolForObject(reporterItem.valueForKey("redirect")))
+			return RedirectPopup.getRedirect(context(), nextPage,
+					(String)reporterItem.valueForKey("target"));
+		try {
+			nextPage.takeValueForKey(this, "returnPage");
+		} catch (Exception e) {
+			// return not supported
+		}
 		return nextPage;
 	}
 	

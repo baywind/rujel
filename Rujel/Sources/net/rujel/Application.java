@@ -51,6 +51,7 @@ public class Application extends UTF8Application {
 	protected Timer timer;
 	public Integer year;
 	protected String serverUrl;
+	protected String urlPrefix;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -148,7 +149,7 @@ public class Application extends UTF8Application {
 			ModulesInitialiser.useModules(null, "scheduleTask");
 		}
 		serverUrl = SettingsReader.stringForKeyPath("ui.serverURL", null);
-		if(serverUrl == null) {
+		if(serverUrl == null || serverUrl.length() < 5) {
 			SettingsReader reader = SettingsReader.settingsForPath(
 					"auth.customURL", false);
 			if(reader != null) {
@@ -156,9 +157,16 @@ public class Application extends UTF8Application {
 				if(serverUrl == null)
 					serverUrl = (String)reader.valueForKeyPath("secure.default");
 			}
+		} else {
+			if(!serverUrl.startsWith("http"))
+				serverUrl = "http://" + serverUrl;
+			int slash = serverUrl.indexOf('/', 8);
+			if(slash > 0)
+				serverUrl = serverUrl.substring(0,slash);
 		}
-		logger.log(WOLogLevel.INFO,"Rujel started. Version:"
-				+ System.getProperty("RujelVersion"), webserverConnectURL());
+		urlPrefix = SettingsReader.stringForKeyPath("ui.urlPrefix", "?/Apps/WebObjects/Rujel.woa");
+		logger.log(WOLogLevel.INFO,"Rujel started. Version:" + System.getProperty("RujelVersion")
+				 + ' ' + System.getProperty("RujelRevision"), webserverConnectURL());
 	}
 	
 	public Timer timer() {
@@ -276,33 +284,48 @@ public class Application extends UTF8Application {
 		return serverUrl;
 	}
 	
+	public String urlPrefix() {
+		if(urlPrefix.charAt(0) == '?')
+			return urlPrefix.substring(1);
+		return urlPrefix;
+	}
+	
 	public WORequest createRequest(String aMethod, String aURL, String anHTTPVersion, 
 			Map someHeaders, NSData aContent, Map someInfo) {
 		WORequest result = super.createRequest(
 				aMethod, aURL, anHTTPVersion, someHeaders, aContent, someInfo);
 		if(serverUrl == null || serverUrl.charAt(0) == '?') {
 			String url = WORequestAdditions.hostName(result);
-            if(url != null) {
-            	if(!url.startsWith("http"))
-            		url = "http://" + url;
-            	if(url.contains("//localhost") || url.contains("//127.0.0.1") ||
-            			url.contains("//192.168.") || url.contains("//10.")) {
-            		serverUrl = '?' + url;
-            	} else {
-            		serverUrl = url;
-            	}
-            }
+	        if(url != null && url.length() > 0 && (serverUrl == null || !serverUrl.endsWith(url)))
+	        	tryUrl(url);
 		}
 		return result;
 	}
-
 	
+	protected void tryUrl(String url) {
+		if(!url.startsWith("http"))
+			url = "http://" + url;
+		if(url.contains("//localhost") || url.contains("//127.0.0.1") ||
+				url.contains("//192.168.") || url.contains("//10.") ||
+				url.endsWith(".local") || url.indexOf('.') < 1) {
+			serverUrl = '?' + url;
+		} else {
+			serverUrl = url;
+		}
+	}
+	
+	public void _setRequest(WORequest req) {
+		if (urlPrefix == null || urlPrefix.charAt(0) == '?') {
+			urlPrefix = req.applicationURLPrefix();
+		}
+	}
+
 	public WOSession createSessionForRequest(WORequest aRequest) {
 		WOSession result = super.createSessionForRequest(aRequest);
 		if(!(aRequest.method().equals("POST") && aRequest.uri().contains("login"))
-				&& !aRequest.uri().contains("dummy")) {
+				&& !aRequest.uri().contains("dummy") && !aRequest.uri().contains("guest")) {
 			Exception ex = new Exception("Dangling session creation");
-			Object[] args = new Object[] {result, Session.clientIdentity(aRequest),ex};
+			Object[] args = new Object[] {result, MyUtility.clientIdentity(aRequest),ex};
 			logger.log(WOLogLevel.SESSION,
 					"Generating session: " + aRequest.method() + ':' + aRequest.uri(), args);
 		}
