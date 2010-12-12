@@ -47,7 +47,7 @@ import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.foundation.NSArray;
 
 public class TableLoginHandler implements LoginHandler {
-	protected static Logger logger = Logger.getLogger("user");
+	protected static Logger logger = Logger.getLogger("rujel.user");
 	protected LoginHandler parentHandler;
 	protected static Boolean noUsers;
 	public static final String HASH_PREFIX = "pwhash: ";
@@ -152,7 +152,7 @@ public class TableLoginHandler implements LoginHandler {
 					}
 				} else {
 					throw new AuthenticationFailedException(ERROR,
-							"Could not get authorisation method");
+							"Could not get parent authorisation method");
 				}
 			}
 			return new TableUser(au, null);
