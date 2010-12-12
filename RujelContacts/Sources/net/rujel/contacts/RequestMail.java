@@ -71,35 +71,34 @@ public class RequestMail extends WODirectAction {
 			params.takeValueForKey(new NSArray(student), "students");
 			EduGroup gr = student.recentMainEduGroup();
 			{
-				EOEnterpriseObject setting = SettingsBase.settingForValue(EduPeriod.ENTITY_NAME,
-						gr, MyUtility.eduYearForDate(date), ec);
+				NSMutableDictionary dict = new NSMutableDictionary();
+				dict.takeValueForKey(MyUtility.eduYearForDate(date), "eduYear");
+				if(gr != null) {
+					params.takeValueForKey(gr.name(), "groupName");
+					dict.takeValueForKey(gr,"eduGroup");
+					params.takeValueForKey(EOUtilities.objectsMatchingValues(ec,
+							EduCourse.entityName, dict), "courses");
+					dict.takeValueForKey(new NSDictionary(gr.grade(),"grade"),"cycle");
+				}
+				EOEnterpriseObject setting = SettingsBase.settingForCourse(
+						EduPeriod.ENTITY_NAME, dict, ec);
 				String listName = (setting == null)?null:
 					(String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 				Period period = EduPeriod.getCurrentPeriod(date, listName, ec);;
 				params.takeValueForKey(period, "period");
 			}
-			if(gr != null) {
-				params.takeValueForKey(gr.name(), "groupName");
-				NSDictionary dict = new NSDictionary(
-						new Object[] {gr,MyUtility.eduYearForDate(date)},
-						new String[] {"eduGroup","eduYear"});
-				params.takeValueForKey(EOUtilities.objectsMatchingValues(ec,
-						EduCourse.entityName, dict), "courses");
+			NSArray mails = EOUtilities.objectsWithQualifierFormat(ec, Contact.ENTITY_NAME,
+					"persID = %d AND ( contact caseInsensitiveLike '*<" + mail +
+					">' OR contact caseInsensitiveLike '" + mail + "')",
+					new NSArray(Contact.idForPerson(student.person())));
+			if(mails == null || mails.count() == 0)
+				return error("illegalMail");
+			NSMutableSet set = new NSMutableSet();
+			for (int i = 0; i < mails.count(); i++) {
+				Contact cnt = (Contact)mails.objectAtIndex(i);
+				set.addObject(ec.globalIDForObject(cnt));
 			}
-			if(mail != null) {
-				NSArray mails = EOUtilities.objectsWithQualifierFormat(ec, Contact.ENTITY_NAME,
-							"persID = %d AND ( contact caseInsensitiveLike '*<" + mail +
-							">' OR contact caseInsensitiveLike '" + mail + "')",
-						new NSArray(Contact.idForPerson(student.person())));
-				if(mails == null || mails.count() == 0)
-					return error("illegalMail");
-				NSMutableSet set = new NSMutableSet();
-				for (int i = 0; i < mails.count(); i++) {
-					Contact cnt = (Contact)mails.objectAtIndex(i);
-					set.addObject(ec.globalIDForObject(cnt));
-				}
-				params.takeValueForKey(set, "adrSet");
-			}
+			params.takeValueForKey(set, "adrSet");
 			params.takeValueForKey(student,"logParam");
 			EMailBroadcast.logger.log(WOLogLevel.INFO, "Requested mail queued for: " + mail,
 					new Object[] {MyUtility.clientIdentity(context().request()),student});
