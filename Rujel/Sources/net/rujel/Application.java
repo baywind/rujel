@@ -332,8 +332,8 @@ public class Application extends UTF8Application {
 
 	public WOSession createSessionForRequest(WORequest aRequest) {
 		WOSession result = super.createSessionForRequest(aRequest);
-		if(!(aRequest.method().equals("POST") && aRequest.uri().contains("login"))
-				&& !aRequest.uri().contains("dummy") && !aRequest.uri().contains("guest")) {
+		if(!Various.boolForObject(aRequest.userInfoForKey("isLogin"))
+				&& !aRequest.uri().contains("dummy")) {
 			Exception ex = new Exception("Dangling session creation");
 			Object[] args = new Object[] {result, MyUtility.clientIdentity(aRequest),ex};
 			logger.log(WOLogLevel.SESSION,

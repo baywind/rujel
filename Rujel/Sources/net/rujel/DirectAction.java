@@ -40,17 +40,9 @@ import net.rujel.reusables.WOLogLevel;
 import com.webobjects.appserver.*;
 
 public class DirectAction extends WODirectAction {
-/*	protected static CoreApplication appl() {
-		return ((CoreApplication)WOApplication.application());
-	}*/
 
     public DirectAction(WORequest aRequest) {
         super(aRequest);
-    }
-
-    public WOActionResults performActionNamed(String actionName) {
-    	WOActionResults result = super.performActionNamed(actionName);
-    	return result;
     }
     
     public WOActionResults defaultAction() {
@@ -74,12 +66,14 @@ public class DirectAction extends WODirectAction {
 	}
 
 	public WOActionResults loginAction() {
+		context().request().setUserInfoForKey(Boolean.TRUE, "isLogin");
 		return LoginProcessor.loginAction(context());
 	}
 	
 	public WOActionResults guestAction() {
 		if(SettingsReader.boolForKeyPath("auth.noGuest", false))
 			return redirect("login");
+		context().request().setUserInfoForKey(Boolean.TRUE, "isLogin");
 		context().session().takeValueForKey(new UserPresentation.Guest(), "user");
 		return LoginProcessor.welcomeRedirect(context(),
 				SettingsReader.stringForKeyPath("auth.welcomeAction", "default"));
@@ -91,15 +85,6 @@ public class DirectAction extends WODirectAction {
 		result.takeValueForKey("accessDenied", "plistMessage");
 		result.takeValueForKey("login", "redirectAction");
 		return result;
-		/*WOResponse resp = WOApplication.application().createResponseInContext(context());
-		WOResourceManager rm = WOApplication.application().resourceManager();
-		java.io.InputStream in = rm.inputStreamForResourceNamed("AccessDenied.html",null,null);
-		try {
-			resp.setContentStream(in,4096,in.available());
-		} catch (java.io.IOException ioex) {
-			throw new NSForwardException (ioex);
-		}
-		return resp;*/
 	}
 	
 	public WOActionResults logoutAction() {
@@ -117,11 +102,6 @@ public class DirectAction extends WODirectAction {
 		result.setUrl(url);
 		return result; 
 	}
-	
-/*	public WOActionResults checkAction() {
-		WOComponent nextPage = LoginProcessor.processLogin(context());
-		return nextPage;
-	} */
 	
 	protected WORedirect redirect(String action) {
 		String url = context().urlWithRequestHandlerKey(
