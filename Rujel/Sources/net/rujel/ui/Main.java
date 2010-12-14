@@ -62,7 +62,8 @@ public class Main extends com.webobjects.appserver.WOComponent {
     	if(guestUser() != null)
     		return "guest(form);";
     	StringBuilder buf = new StringBuilder("window.location = '");
-    	buf.append(context().directActionURLForActionNamed("guest", null));
+    	buf.append(context().urlWithRequestHandlerKey(
+    			application().directActionRequestHandlerKey(), "guest", null));
     	buf.append("';");
     	return buf.toString();
     }
