@@ -48,35 +48,41 @@ public class DirectAction extends WODirectAction {
         super(aRequest);
     }
 
+    public WOActionResults performActionNamed(String actionName) {
+    	WOActionResults result = super.performActionNamed(actionName);
+    	return result;
+    }
+    
     public WOActionResults defaultAction() {
-		WOComponent result;
-		WOSession ses = WOApplication.application().restoreSessionWithID(request().sessionID(),context());
-		if (ses != null && ses.valueForKey("user") != null)//(context().hasSession() || ses != null)
+    	WOActionResults result;
+		WOSession ses = WOApplication.application().restoreSessionWithID(
+				request().sessionID(),context());
+		if (ses != null && ses.valueForKey("user") != null) {
+			WOApplication.application().takeValueForKey(request(), "request");
 			result = pageWithName("SrcMark");
-		else
-			result = LoginProcessor.secureRedirect("login",context(),
-					SettingsReader.boolForKeyPath("auth.useHTTPS", true));
+		} else {
+			if(SettingsReader.boolForKeyPath("auth.useHTTPS", true))
+				result = LoginProcessor.secureRedirect("login",context(),Boolean.TRUE);
+			else
+				result = loginAction();
+		}
 		return result;
     }
 	
 	public WOActionResults successAction() {
-		WOApplication.application().takeValueForKey(request(), "request");
 		return defaultAction();
 	}
 
 	public WOActionResults loginAction() {
-		//WOComponent nextPage = appl().loginHandler().loginComponent(context());
 		return LoginProcessor.loginAction(context());
-		//return pageWithName("LoginDialog");
 	}
 	
 	public WOActionResults guestAction() {
 		if(SettingsReader.boolForKeyPath("auth.noGuest", false))
-			return LoginProcessor.secureRedirect("login",context(),
-					SettingsReader.boolForKeyPath("auth.useHTTPS", true));
+			return redirect("login");
 		context().session().takeValueForKey(new UserPresentation.Guest(), "user");
-		return LoginProcessor.secureRedirect("success",context(),
-					SettingsReader.boolForKeyPath("auth.sessionSecure", false));
+		return LoginProcessor.welcomeRedirect(context(),
+				SettingsReader.stringForKeyPath("auth.welcomeAction", "default"));
 	}
 	
 	public WOActionResults refuseAction() {
@@ -101,9 +107,12 @@ public class DirectAction extends WODirectAction {
 		if(ses != null)
 			ses.terminate();
 		String url = SettingsReader.stringForKeyPath("ui.logoutScreen", null);
-		if(url == null)
-			return LoginProcessor.secureRedirect("login",context(),
-					SettingsReader.boolForKeyPath("auth.useHTTPS", true));
+		if(url == null) {
+			if(SettingsReader.boolForKeyPath("auth.useHTTPS", true))
+				return LoginProcessor.secureRedirect("login",context(),Boolean.TRUE);
+			url = context().urlWithRequestHandlerKey(
+					WOApplication.application().directActionRequestHandlerKey(), "login", null);
+		}
 		WORedirect result = new WORedirect(context());
 		result.setUrl(url);
 		return result; 
@@ -113,6 +122,14 @@ public class DirectAction extends WODirectAction {
 		WOComponent nextPage = LoginProcessor.processLogin(context());
 		return nextPage;
 	} */
+	
+	protected WORedirect redirect(String action) {
+		String url = context().urlWithRequestHandlerKey(
+				WOApplication.application().directActionRequestHandlerKey(), action, null);
+		WORedirect result = new WORedirect(context());
+		result.setUrl(url);
+		return result; 
+	}
 	
 	public WOActionResults reportAction() {
 		WOApplication app = WOApplication.application();
