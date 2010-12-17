@@ -1,5 +1,4 @@
 PageWrapper1: PageWrapper {
-	hasChanges = false;
 	title = title;
 	hasChanges = ec.hasChanges;
 	onLoad = "onLoad();";
@@ -289,11 +288,6 @@ SelectBox : WOCheckBox {
 TicksForm : WOForm {
   action = reasonsToMoveIn;
   id = "ticks"; 
-}
-
-NotExternal : WOConditional {
-  condition = currReason.external;
-  negate = true;
 }
 
 ToMove : WOConditional {

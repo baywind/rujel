@@ -48,20 +48,6 @@ ReasonPresenter : ReasonPresenter {
   refEduGroup = course.eduGroup;
 }
 
-TextCell : WOGenericContainer {
-  elementName = "td";
-  colspan = colspan;
-}
-
-HasSpecs : WOConditional {
-  condition = colspan;
-  negate = true;
-}
-
-ExtsString : WOString {
-  value = rItem.extToString;
-}
-
 OtherRB : WORadioButton {
   name = "selectReason";
   selection = reasonID;
@@ -154,9 +140,6 @@ EndDate : WOTextField {
   onkeypress = "return isNumberInput(event,true);";
   name = "end";
   onfocus = "if(value==null||value.length==0)value=form.begin.value;";
-}
-ActiveTitle : WOString {
-  value = application.strings.RujelCurriculum_Curriculum.Reason.isActive;
 }
 
 BeginTitle : WOString {

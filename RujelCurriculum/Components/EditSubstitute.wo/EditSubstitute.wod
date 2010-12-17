@@ -18,16 +18,8 @@ LessonDate : WOString {
   dateformat = application.prefs.ui.dateFormat; 
 }
 
-LessonTheme : WOString {
-  value = lesson.theme;
-}
-
 SubstitutorTitle : WOString {
   value = application.strings.RujelInterfaces_Names.Teacher.this;
-}
-
-CantSelect : WOConditional {
-  condition = cantSelect;
 }
 
 Teacher : PersonDisplay {
@@ -68,15 +60,6 @@ DeleteButton: WOGenericElement {
 ResetButton1: WOResetButton {
 	value = application.strings.Reusables_Strings.uiElements.Cancel;
 	onclick = "closePopup();";
-}
-
-FactorField : WOTextField {
-	value = factor;
-	numberformat = "0.##";
-	onkeypress = "return isNumberInput(event,true);";
-	size = 4;
-	style = "text-align:center;font-weight:bold";
-	disabled = cantEdit;
 }
 
 ReasonSelector : ReasonSelector {
@@ -133,11 +116,6 @@ Review : OnClickContainer {
 
 Factor : WOString {
   value = factor;
-}
-
-CantDelete : WOConditional {
-  condition = canDelete;
-  negate = true;
 }
 
 FactorCell : WOGenericContainer {

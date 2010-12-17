@@ -33,42 +33,6 @@ CourseTeacher : PersonDisplay {
   startWithLast = true;
 }
 
-GroupCell : WOGenericContainer {
-  elementName = "td";
-  class = groupStyle;
-  style = "border:double 3px #cccccc;";
-}
-
-Group : WOString {
-  value = bc.eduGroup.name;
-  valueWhenEmpty = bc.grade.toString;
-}
-
-SubjCell : WOGenericContainer {
-  elementName = "td";
-  class = subjectStyle;
-  style = "border:double 3px #cccccc;";
-}
-
-Subject : WOString {
-  value = bc.cycle.subject;
-  valueWhenEmpty = application.strings.RujelBase_Base.SettingsBase.unspecified;
-}
-
-TeacherCell : WOGenericContainer {
-  elementName = "td";
-  class = teacherStyle;
-  style = "border:double 3px #cccccc;";
-}
-
-Teacher : PersonDisplay {
-  person = bc.teacher;
-  last = 2;
-  first = 1;
-  second = 1;
-  startWithLast = true;
-  valueWhenEmpty = application.strings.RujelBase_Base.SettingsBase.unspecified;
-}
 BaseString : WOString {
   value = application.strings.RujelBase_Base.SettingsBase.default;
   escapeHTML = false;

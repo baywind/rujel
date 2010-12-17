@@ -71,13 +71,6 @@ IsAdded : WOString {
   escapeHTML = false;
 }
 
-JoinContainer : OnClickContainer {
-  elementName = "td";
-  onclick = session.ajaxPopupNoPos;
-  invokeAction = addJoin;
-  disabled = cantCreate;
-}
-
 JoinTitle : WOString {
   value = session.strings.RujelCurriculum_Curriculum.titles.joint;
   escapeHTML = false;
@@ -97,15 +90,6 @@ OpenJoint : OnClickContainer {
   onclick = session.checkRun;
   invokeAction = openJointLesson;
   title = session.strings.RujelCurriculum_Curriculum.titles.openJoint;
-}
-
-CanAdd : WOConditional {
-  condition = canAdd;
-}
-
-CantAdd : WOConditional {
-  condition = canAdd;
-  negate = true;
 }
 
 SubsSubject : WOString {

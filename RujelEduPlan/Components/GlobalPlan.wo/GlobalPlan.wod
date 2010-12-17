@@ -142,10 +142,6 @@ ShowRow : WOConditional {
   condition = showRow;
 }
 
-NextArea : WOConditional {
-  condition = area;
-}
-
 TogleAllButton : OnClickContainer {
   elementName = "td";
   invokeAction = toggleAll;

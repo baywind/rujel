@@ -128,10 +128,6 @@ SaveSort : WOImage {
   title = session.strings.Reusables_Strings.uiElements.Save;
 }
 
-SortingScript : ResourceLink {
-  framework = "RujelBase";
-  jsLink = "sorting.js";
-}
 
 Title : WOString {
   value = title;

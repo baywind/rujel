@@ -190,12 +190,6 @@ PerWeeksDays : WOString {
   escapeHTML = false;
 }
 
-CycleHead : WOString {
-  value = application.strings.RujelInterfaces_Names.EduCourse.cycle;
-  valueWhenEmpty = "Cycle";
-  escapeHTML = false;
-}
-
 SubjectLabel: WOString {
 	value = application.strings.RujelInterfaces_Names.EduCycle.subject;
 	valueWhenEmpty = "Subject";
@@ -282,11 +276,4 @@ HasSelection : WOConditional {
 
 CalculatedTotal : WOString {
   value = rowItem.total;
-}
-
-Cross : WOImage {
-  framework = "RujelBase";
-  filename = "cross.png";
-  height = 9;
-  width = 9;
 }
