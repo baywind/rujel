@@ -204,7 +204,7 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		WOComponent editor = pageWithName(pageName);
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(lesson, "lesson");
-		if(substitute != null)
+//		if(substitute != null)
 			editor.takeValueForKey(substitute, "substitute");
 		if(substitute == null && pageName.equals("EditSubstitute")) {
 			Substitute sub = (Substitute) subsList().objectAtIndex(0);

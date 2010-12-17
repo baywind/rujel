@@ -129,4 +129,11 @@ public class PageWrapper extends WOComponent {
 		result = "return checkRun('" + result + "');";
 		return result;
 	}
+	
+	public String maskStyle() {
+		StringBuilder buf = new StringBuilder("display:none;background:url(");
+		buf.append(application().resourceManager().urlForResourceNamed(
+				"back.gif", "app", null, context().request())).append(") repeat;");
+		return buf.toString();
+	}
 }

@@ -10,7 +10,7 @@
 	<dict>
 		<key>loginHandlerClass</key>
 		<string>net.rujel.user.TableLoginHandler</string>
-		<key>parentLoginHandler</key>
+		<key>_parentLoginHandler</key>
 		<string>net.rujel.auth.ldap.LdapAuthentication</string>
 		<key>autoAddUsers</key>
 		<string>true</string>
@@ -20,6 +20,11 @@
 		<string>MD5</string>
 		<key>tryUnmappedGroups</key>
 		<true/>
+		<key>groupMapping</key>
+		<dict>
+			<key>any</key>
+			<string>*</string>
+		</dict>
 	</dict>
 </dict>
 </plist>

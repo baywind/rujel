@@ -138,7 +138,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 //    		categories = (NSArray)agregate.removeObjectForKey("subjects");
     		categories = (NSArray)VseTeacher.agregatedList(ec, agrDate);
         	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseTeacher");
-        	cantAddClass = Boolean.FALSE;
+        	cantAddClass = Boolean.TRUE;
     	} else {
 //    		agregate = VseStudent.studentsAgregate(ec, date);
     		categories = VseStudent.agregatedList(ec, agrDate);
