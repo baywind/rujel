@@ -33,6 +33,7 @@ package net.rujel.eduplan;
 import java.text.DecimalFormat;
 import java.util.Enumeration;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.*;
 
@@ -103,6 +104,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public int showTotal;
 	public NSArray subjects;
 	public int index;
+	public Boolean noDetails;
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
@@ -112,6 +114,18 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		  	subjectItem = null;
 		  	forcedSubjects = null;
 			setValueForBinding(Boolean.FALSE, "shouldReset");
+			noDetails = (Boolean)session().valueForKeyPath("readAccess._read.PlanDetail");
+			if(!noDetails.booleanValue())
+				noDetails = Boolean.valueOf(
+						SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false) == null);
+			if(!noDetails.booleanValue()) {
+				EOQualifier qual = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
+						EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
+				EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,qual,null);
+				fs.setFetchLimit(1);
+				NSArray found = ec.objectsWithFetchSpecification(fs);
+				noDetails = Boolean.valueOf(found == null || found.count() == 0);
+			}
 		}
 		index = 0;
 		super.appendToResponse(aResponse, aContext);

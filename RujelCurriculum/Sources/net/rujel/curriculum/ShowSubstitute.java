@@ -206,8 +206,6 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		WOComponent editor = pageWithName(pageName);
 		editor.takeValueForKey(context().page(), "returnPage");
 		editor.takeValueForKey(lesson, "lesson");
-//		if(substitute != null)
-//			editor.takeValueForKey(substitute, "substitute");
 		if(substitute == null && pageName.equals("EditSubstitute")) {
 			Substitute sub = (Substitute) subsList().objectAtIndex(0);
 			if(sub.fromLesson() != null)
@@ -216,27 +214,6 @@ public class ShowSubstitute extends com.webobjects.appserver.WOComponent {
 		}
 		return editor;
 	}
-	/*
-	public WOActionResults addJoin() {
-		WOComponent editor = pageWithName("SubsTypeSelector");
-		editor.takeValueForKey(context().page(), "returnPage");
-		editor.takeValueForKey(valueForBinding("lesson"), "lesson");	
-		return editor;
-	}*/
-
-/*	
-	public String cellClass() {
-		if(substitute == null)
-			return "grey";
-		else
-			return "gerade";
-	}
-
-	public String subsTitle() {
-		if(Various.boolForObject(valueForKeyPath("substitute.sFlags.join")))
-			return (String)application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Join");
-		return (String)application().valueForKeyPath("strings.RujelCurriculum_Curriculum.Substitute");
-	}*/
 	
 	protected Object _variation;
 	public Variation variation() {

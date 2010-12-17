@@ -34,50 +34,49 @@ import java.util.logging.Logger;
 import net.rujel.auth.LoginProcessor;
 import net.rujel.auth.UserPresentation;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 
 public class DirectAction extends WODirectAction {
-/*	protected static CoreApplication appl() {
-		return ((CoreApplication)WOApplication.application());
-	}*/
 
     public DirectAction(WORequest aRequest) {
         super(aRequest);
     }
-
+    
     public WOActionResults defaultAction() {
-/*		String url = context().directActionURLForActionNamed("login", null);
-		WORedirect result = new WORedirect(context());
-		result.setUrl(url);
-		*/
-        //return pageWithName("Main");
-		WOComponent result;
-		WOSession ses = WOApplication.application().restoreSessionWithID(request().sessionID(),context());
-		if (ses != null && ses.valueForKey("user") != null)//(context().hasSession() || ses != null)
+    	WOActionResults result;
+		WOSession ses = WOApplication.application().restoreSessionWithID(
+				request().sessionID(),context());
+		if (ses != null && ses.valueForKey("user") != null) {
+			WOApplication.application().takeValueForKey(request(), "request");
 			result = pageWithName("SrcMark");
-		else
-			result = LoginProcessor.secureRedirect("login",context(),false);
+		} else {
+			if(SettingsReader.boolForKeyPath("auth.useHTTPS", true))
+				result = LoginProcessor.secureRedirect("login",context(),Boolean.TRUE);
+			else
+				result = loginAction();
+		}
 		return result;
     }
 	
 	public WOActionResults successAction() {
-		WOApplication.application().takeValueForKey(request(), "request");
 		return defaultAction();
 	}
 
 	public WOActionResults loginAction() {
-		//WOComponent nextPage = appl().loginHandler().loginComponent(context());
+		context().request().setUserInfoForKey(Boolean.TRUE, "isLogin");
 		return LoginProcessor.loginAction(context());
-		//return pageWithName("LoginDialog");
 	}
 	
 	public WOActionResults guestAction() {
 		if(SettingsReader.boolForKeyPath("auth.noGuest", false))
-			return LoginProcessor.secureRedirect("login",context(),false);
+			return redirect("login");
+		context().request().setUserInfoForKey(Boolean.TRUE, "isLogin");
 		context().session().takeValueForKey(new UserPresentation.Guest(), "user");
-		return LoginProcessor.secureRedirect("success",context(),false);
+		return LoginProcessor.welcomeRedirect(context(),
+				SettingsReader.stringForKeyPath("auth.welcomeAction", "default"));
 	}
 	
 	public WOActionResults refuseAction() {
@@ -86,15 +85,6 @@ public class DirectAction extends WODirectAction {
 		result.takeValueForKey("accessDenied", "plistMessage");
 		result.takeValueForKey("login", "redirectAction");
 		return result;
-		/*WOResponse resp = WOApplication.application().createResponseInContext(context());
-		WOResourceManager rm = WOApplication.application().resourceManager();
-		java.io.InputStream in = rm.inputStreamForResourceNamed("AccessDenied.html",null,null);
-		try {
-			resp.setContentStream(in,4096,in.available());
-		} catch (java.io.IOException ioex) {
-			throw new NSForwardException (ioex);
-		}
-		return resp;*/
 	}
 	
 	public WOActionResults logoutAction() {
@@ -102,28 +92,38 @@ public class DirectAction extends WODirectAction {
 		if(ses != null)
 			ses.terminate();
 		String url = SettingsReader.stringForKeyPath("ui.logoutScreen", null);
-		if(url == null)
-			return LoginProcessor.secureRedirect("login",context(),false);
+		if(url == null) {
+			if(SettingsReader.boolForKeyPath("auth.useHTTPS", true))
+				return LoginProcessor.secureRedirect("login",context(),Boolean.TRUE);
+			url = context().urlWithRequestHandlerKey(
+					WOApplication.application().directActionRequestHandlerKey(), "login", null);
+		}
 		WORedirect result = new WORedirect(context());
 		result.setUrl(url);
 		return result; 
 	}
 	
-/*	public WOActionResults checkAction() {
-		WOComponent nextPage = LoginProcessor.processLogin(context());
-		return nextPage;
-	} */
+	protected WORedirect redirect(String action) {
+		String url = context().urlWithRequestHandlerKey(
+				WOApplication.application().directActionRequestHandlerKey(), action, null);
+		WORedirect result = new WORedirect(context());
+		result.setUrl(url);
+		return result; 
+	}
 	
 	public WOActionResults reportAction() {
-		WOResponse response = WOApplication.application().createResponseInContext(context());
+		WOApplication app = WOApplication.application();
+		WOResponse response = app.createResponseInContext(context());
 		WOSession ses = existingSession();
 		String report = request().stringFormValueForKey("report");
 		if(report != null && report.length() > 0) 
 			Logger.getLogger("rujel").log(WOLogLevel.INFO,"Error report: \n" + report,ses);
 		if(ses == null) {
-			response.appendContentString(context().directActionURLForActionNamed("logout", null));
+			response.appendContentString(context().urlWithRequestHandlerKey(
+	    			app.directActionRequestHandlerKey(), "logout", null));
 		} else {
-			response.appendContentString(context().directActionURLForActionNamed("resume", null));
+			response.appendContentString(Various.cleanURL(
+					context().directActionURLForActionNamed("resume", null)));
 		}
 		return response;
 	}

@@ -157,13 +157,13 @@ public class Application extends UTF8Application {
 				if(serverUrl == null)
 					serverUrl = (String)reader.valueForKeyPath("secure.default");
 			}
-		} else {
-			if(!serverUrl.startsWith("http"))
-				serverUrl = "http://" + serverUrl;
-			int slash = serverUrl.indexOf('/', 8);
-			if(slash > 0)
-				serverUrl = serverUrl.substring(0,slash);
+			if(serverUrl == null)
+				serverUrl = "?" + super.host();
 		}
+		serverUrl = Various.cleanURL(serverUrl);
+		int slash = serverUrl.indexOf('/');
+		if(slash > 0)
+			serverUrl = serverUrl.substring(0,slash);
 		urlPrefix = SettingsReader.stringForKeyPath("ui.urlPrefix", "?/Apps/WebObjects/Rujel.woa");
 		logger.log(WOLogLevel.INFO,"Rujel started. Version:" + System.getProperty("RujelVersion")
 				 + ' ' + System.getProperty("RujelRevision"), webserverConnectURL());
@@ -278,10 +278,20 @@ public class Application extends UTF8Application {
 		super.terminate();
 	}
 
-	public String serverUrl() {
+	public String host() {
+		if(serverUrl == null)
+			return super.host();
 		if(serverUrl.charAt(0) == '?')
 			return serverUrl.substring(1);
 		return serverUrl;
+	}
+	
+	public String serverUrl() {
+		StringBuilder buf = new StringBuilder("http");
+		if(SettingsReader.boolForKeyPath("auth.sessionSecure", false))
+			buf.append('s');
+		buf.append("://").append(host());
+		return buf.toString();
 	}
 	
 	public String urlPrefix() {
@@ -303,8 +313,7 @@ public class Application extends UTF8Application {
 	}
 	
 	protected void tryUrl(String url) {
-		if(!url.startsWith("http"))
-			url = "http://" + url;
+		url = Various.cleanURL(url);
 		if(url.contains("//localhost") || url.contains("//127.0.0.1") ||
 				url.contains("//192.168.") || url.contains("//10.") ||
 				url.endsWith(".local") || url.indexOf('.') < 1) {
@@ -322,8 +331,8 @@ public class Application extends UTF8Application {
 
 	public WOSession createSessionForRequest(WORequest aRequest) {
 		WOSession result = super.createSessionForRequest(aRequest);
-		if(!(aRequest.method().equals("POST") && aRequest.uri().contains("login"))
-				&& !aRequest.uri().contains("dummy") && !aRequest.uri().contains("guest")) {
+		if(!Various.boolForObject(aRequest.userInfoForKey("isLogin"))
+				&& !aRequest.uri().contains("dummy")) {
 			Exception ex = new Exception("Dangling session creation");
 			Object[] args = new Object[] {result, MyUtility.clientIdentity(aRequest),ex};
 			logger.log(WOLogLevel.SESSION,

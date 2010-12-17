@@ -29,6 +29,7 @@
 
 package net.rujel.ui;
 
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
 
 import com.webobjects.appserver.*;
@@ -52,7 +53,7 @@ public class ErrorPage extends com.webobjects.appserver.WOComponent {
     
     public String onclick() {
     	StringBuilder buf = new StringBuilder("getAjaxPopup(event,'");
-    	buf.append(context().directActionURLForActionNamed("report", null));
+    	buf.append(Various.cleanURL(context().directActionURLForActionNamed("report", null)));
     	buf.append("','report=' + document.getElementById('errorInfo').value);");
     	return buf.toString();
     }

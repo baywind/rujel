@@ -343,8 +343,8 @@ public class LessonList extends WOComponent {
 				NSKeyValueCoding la = (NSKeyValueCoding) en.nextElement();
 				if(date == null)
 					date = (NSTimestamp)la.valueForKey("date");
-				if(title == null)
-					title = (String)la.valueForKey("theme");
+				if(theme == null)
+					theme = (String)la.valueForKey("theme");
 				if(title == null)
 					title = (String)la.valueForKey("title");
 			}

@@ -19,11 +19,6 @@ SelectMonth : WOPopUpButton {
   onchange = "this.form.submit();";
 }
 
-Month : WOString {
-  value = currMonth.name;
-  escapeHTML = false;
-}
-
 Year : WOString {
   value = currMonth.year;
   numberformat = "0";
@@ -218,12 +213,6 @@ UnsubmittedTitle : WOString {
 OmitUnsubmitted : WOCheckBox {
   checked = options.omitUnsubmitted;
   name = "unsubmitted";
-}
-
-ReasonCell : WOGenericContainer {
-  elementName = "td";
-  class = item.cellClass;
-  title = item.reason.verification;
 }
 
 JournalZPU : JournalZPU {

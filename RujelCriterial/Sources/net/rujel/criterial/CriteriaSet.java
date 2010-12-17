@@ -141,6 +141,11 @@ public class CriteriaSet extends _CriteriaSet
 		return criterion;
 	}
 	
+	public boolean noCriteria() {
+		NSArray criteria = criteria();
+		return (criteria == null || criteria.count() == 0);
+	}
+	
 	public static CriteriaSet critSetForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
 		Integer set = SettingsBase.numericSettingForCourse(ENTITY_NAME, course,ec);
@@ -181,7 +186,10 @@ public class CriteriaSet extends _CriteriaSet
 	public static int maxCriterionForCourse(EduCourse course) {
 		CriteriaSet set = critSetForCourse(course);
 		if(set != null) {
-			Integer max = (Integer)set.criteria().valueForKey("@max.criterion");
+			NSArray criteria = set.criteria();
+			if(criteria == null || criteria.count() == 0)
+				return 0;
+			Integer max = (Integer)criteria.valueForKey("@max.criterion");
 			return (max == null)?0:max.intValue();
 		}
 		NSArray works = EOUtilities.objectsMatchingKeyAndValue(course.editingContext(), 

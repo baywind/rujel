@@ -324,7 +324,8 @@ public class Overview extends WOComponent {
 		buf.append(')');
  		logger.logp(WOLogLevel.MASS_READING,"Overview","selectStudent",buf.toString(),
  				new Object[] {session(),currClass});
-		return RedirectPopup.getRedirect(context(), reportPage, "printMarks");
+		return reportPage;
+		//return RedirectPopup.getRedirect(context(), reportPage, "_blank");
 	}
 	
 	//public static final String reporter = SettingsReader.stringForKeyPath("ui.presenter.report","StudentMarks");

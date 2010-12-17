@@ -40,7 +40,6 @@ Subject : WOString {
 }
 
 SubmitForm : WOForm {
-  style = "padding:1ex; min-width:8em;white-space:nowrap;";
 }
 
 SubmitButton : WOSubmitButton {

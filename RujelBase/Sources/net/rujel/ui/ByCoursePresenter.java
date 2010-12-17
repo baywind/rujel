@@ -307,7 +307,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
     	if(access.flagForKey("edit") || access.flagForKey("delete")) {
     		if(access.flagForKey("edit") && access.flagForKey("delete"))
-    			return "<td colspan = \"2\"/>";
+    			return "<td colspan = \"2\"></td>";
     		else
     			return "<td/>";
     	}

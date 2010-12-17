@@ -1,12 +1,11 @@
 <webobject name = "PageWrapper">
-
 <h1 style = "margin-bottom:10px;"><webobject name = "Title"/></h1>
 <table cellpadding = "4" style = "margin-left:12em;">
 <tr><th align = "right" style = "height:2em;"><webobject name = "MonthTitle"/>:</th>
 	<td align = "left"><webobject name = "Form">
 		<webobject name = "SelectMonth"/> <webobject name = "Year"/></webobject></td>
-<td rowspan = "3" valign = "top" align = "left">
-		<webobject name = "CanCreate"><webobject name = "TotalForm">
+<webobject name = "CanCreate"><td rowspan = "3" valign = "top" align = "left">
+		<webobject name = "TotalForm">
 <script language = "JavaScript">
 function showZPU(form) {
 	var url = form.action + "?unsubmitted=";
@@ -35,10 +34,9 @@ function showZPU(form) {
 	<webobject name = "OmitUnsubmitted"/> <webobject name = "UnsubmittedTitle"/></td></tr>
 <tr><td align = "left"><webobject name = "ExportTabel"/></td>
 	<td align = "center"><webobject name = "ExportZPU"/> <webobject name = "ShowFullZPU"/></td></tr>
-</tbody></table></webobject></webobject></td></tr>
+</tbody></table></webobject></td></webobject></tr>
 <tr style = "height:2em;"><th align = "right"><webobject name = "TeacherTitle"/>:</th>
 	<webobject name = "SelectTeacher"><webobject name = "TeacherName"/></webobject></tr>
-</webobject>
 <tr><td></td></tr>
 </table><webobject name = "HasDetails">
 <table style = "table-layout:fixed;width:100%;margin-top:2em;">
@@ -88,4 +86,4 @@ function showZPU(form) {
 	<td align = "right"><webobject name = "ExportTeacherZPU"></webobject></td></tr>
 <tr><td colspan = "2">
 <webobject name = "JournalZPU"/>
-</td></tr></table></webobject>
+</td></tr></table></webobject></webobject>

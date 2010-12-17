@@ -30,7 +30,7 @@
 		<key>refuseAction</key>
 		<string>refuse</string>
 		<key>useHTTPS</key>
-		<string>false</string>
+		<false/>
 		<key>noGuest</key>
 		<false/>
 		<key>_customURL</key>
