@@ -136,7 +136,7 @@ public class SettingsByCourse extends WOComponent {
     		return null;
     	NamedFlags access = (NamedFlags)valueForBinding("access");
     	if(access == null)
-    		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
+    		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
     	if(access.flagForKey("edit") || access.flagForKey("delete")) {
     		if(access.flagForKey("edit") && access.flagForKey("delete"))
     			return "<td colspan = \"2\"></td>";
@@ -182,7 +182,7 @@ public class SettingsByCourse extends WOComponent {
     	if(access != null)
     		return Boolean.valueOf(access.flagForKey("create"));
     	else
-    		return (Boolean)session().valueForKeyPath("readAccess.create.SettingByCourse");
+    		return (Boolean)session().valueForKeyPath("readAccess.create.QualifiedSetting");
     }
 
 	public Boolean cantSetBase() {
@@ -235,7 +235,7 @@ public class SettingsByCourse extends WOComponent {
     	if(access != null)
     		return Boolean.valueOf(access.flagForKey("edit"));
     	else
-    		return (Boolean)session().valueForKeyPath("readAccess.edit.SettingByCourse");
+    		return (Boolean)session().valueForKeyPath("readAccess.edit.QualifiedSetting");
  	}
 	
 	public WOActionResults saveSort() {

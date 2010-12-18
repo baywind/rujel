@@ -40,6 +40,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.reusables.Export;
+import net.rujel.reusables.ExportCSV;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
@@ -395,7 +396,7 @@ public class SubgroupEditor extends WOComponent {
 		if(list == null || list.count() == 0) {
 			return null;
 		}
-		Export export = new Export(context(), "grouplist");
+		Export export = new ExportCSV(context(), "grouplist");
 		Enumeration enu = list.objectEnumerator();
 		int num = 1;
 		while (enu.hasMoreElements()) {

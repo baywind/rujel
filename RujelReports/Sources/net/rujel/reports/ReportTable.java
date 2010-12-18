@@ -33,6 +33,7 @@ import java.util.Enumeration;
 
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.Export;
+import net.rujel.reusables.ExportCSV;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
@@ -90,7 +91,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			if(properties == null || properties.count() == 0)
 				return;
 			
-			Export export = new Export(aResponse,filenameFormatter);
+			Export export = new ExportCSV(aResponse,filenameFormatter);
 			appendRowToResponse(export,aContext);
 			if(list == null || list.count() == 0)
 				return;

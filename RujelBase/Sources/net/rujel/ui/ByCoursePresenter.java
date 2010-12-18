@@ -295,7 +295,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     	_access = (NamedFlags)valueForBinding("access");
     	if(_access != null)
     		return _access;
-    	_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
+    	_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
     	return _access;
     }
     
@@ -304,7 +304,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     		return null;
     	NamedFlags access = (NamedFlags)valueForBinding("access");
     	if(access == null)
-    		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SettingByCourse");
+    		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
     	if(access.flagForKey("edit") || access.flagForKey("delete")) {
     		if(access.flagForKey("edit") && access.flagForKey("delete"))
     			return "<td colspan = \"2\"></td>";
@@ -389,7 +389,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 			base = (SettingsBase)bc.valueForKey("settingsBase");
 		try {
 			ec.deleteObject(bc);
-			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting SettingByCourse: "
+			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,"Deleting QualifiedSetting: "
 					+ base.key(), new Object[] {session(),bc.valueForKey("settingsBase")});
 			String path = (String)valueForBinding("pushByCourse");
 			if(path != null) {
@@ -407,7 +407,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 			if(alist != null)
 				alist.removeObject(bc);
 		} catch (Exception e) {
-			ByCourseEditor.logger.log(WOLogLevel.INFO,"Could not delete SettingByCourse: "
+			ByCourseEditor.logger.log(WOLogLevel.INFO,"Could not delete QualifiedSetting: "
 					+ base.key(), new Object[] {session(),bc,e});
 			session().takeValueForKey(e.getMessage(), "message");
 		} finally {

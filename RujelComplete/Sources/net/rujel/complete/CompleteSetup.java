@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.QualifiedSetting;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
@@ -96,18 +97,11 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
     
     public void setPushByCourse(EOEnterpriseObject bc) {
     	if(bc == null) {
-//    		prepareActive(base);
     		return;
     	}
-//    	EOEditingContext ec = bc.editingContext();
-//    	if(ec.deletedObjects().contains(bc) &&
-//    !net.rujel.reusables.Various.boolForObject(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
-//    		bc = base;
-//    	} else 
-    		if(bc.entityName().equals("SettingByCourse")) {
+    	if(bc instanceof QualifiedSetting) {
     		bc.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
     	}
-//    	prepareActive(bc);
     }
     
 //    protected void prepareActive(EOEnterpriseObject bc) {

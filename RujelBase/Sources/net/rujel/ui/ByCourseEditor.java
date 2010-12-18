@@ -606,10 +606,10 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 				resultGetter.takeValueForKeyPath(byCourse, pushToKeyPath);
 			}
 			ec.saveChanges();
-			logger.log(WOLogLevel.COREDATA_EDITING,"Edited SettingByCourse: " + base.key(),
+			logger.log(WOLogLevel.COREDATA_EDITING,"Edited QualifiedSetting: " + base.key(),
 					new Object[] {session(),byCourse});
     	} catch (Exception e) {
-			logger.log(WOLogLevel.INFO,"Failed editing SettingByCourse: " + base.key(),
+			logger.log(WOLogLevel.INFO,"Failed editing QualifiedSetting: " + base.key(),
 					new Object[] {session(),byCourse,e});
     		session().takeValueForKey(e.getMessage(), "message");
     		ec.revert();

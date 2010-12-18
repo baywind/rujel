@@ -179,7 +179,7 @@ public class SettingsBase extends _SettingsBase {
 		NSDictionary values = new NSDictionary(new Object[] {this,textValue},
 				new String[] {"settingsBase",TEXT_VALUE_KEY});
 		NSArray subs = EOUtilities.objectsMatchingValues(
-				editingContext(), "SettingByCourse", values);
+				editingContext(), QualifiedSetting.ENTITY_NAME, values);
 		if(subs != null && subs.count() > 0)
 			subs.takeValueForKey(numValue, NUMERIC_VALUE_KEY);
 	}
@@ -295,39 +295,6 @@ public class SettingsBase extends _SettingsBase {
 		}
     	return byCourse;
     }
-	/*
-	public static EOQualifier byCourseQualifier(EOEnterpriseObject byCourse) {
-		if(!byCourse.entityName().equals("SettingByCourse"))
-			return null;
-		if(byCourse.valueForKey("course") != null)
-			return EOUtilities.qualifierForEnterpriseObject(byCourse.editingContext(),
-					byCourse);
-		NSMutableArray quals = new NSMutableArray();
-		Object param = byCourse.valueForKey("eduGroup"); 
-		if(param != null)
-			quals.addObject(new EOKeyValueQualifier("eduGroup",
-					EOQualifier.QualifierOperatorEqual,param));
-		param = byCourse.valueForKey("cycle"); 
-		if(param != null)
-			quals.addObject(new EOKeyValueQualifier("cycle",
-					EOQualifier.QualifierOperatorEqual,param));
-		param = byCourse.valueForKey("grade"); 
-		if(param != null && quals.count() == 0) {
-			NSArray cycles = EduCycle.Lister.cyclesForGrade((Integer)param,
-					byCourse.editingContext());
-			quals.addObject(Various.getEOInQualifier("cycle", cycles));
-		}
-		param = byCourse.valueForKey("teacher"); 
-		if(param != null || quals.count() == 0) {
-			quals.addObject(new EOKeyValueQualifier("teacher",
-					EOQualifier.QualifierOperatorEqual,param));
-		}
-		param = byCourse.valueForKey("eduYear"); 
-		if(param != null)
-			quals.addObject(new EOKeyValueQualifier("eduYear",
-					EOQualifier.QualifierOperatorEqual,param));
-		return new EOAndQualifier(quals);
-	} */
 	
 	public NSArray coursesForSetting(String text, Integer numeric, Integer eduYear) {
 		NSArray allCourses = EOUtilities.objectsMatchingKeyAndValue(editingContext(),

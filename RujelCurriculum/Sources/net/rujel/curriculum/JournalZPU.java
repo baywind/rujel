@@ -8,6 +8,7 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Export;
+import net.rujel.reusables.ExportCSV;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOApplication;
@@ -169,7 +170,7 @@ public class JournalZPU extends WOComponent {
         	response.setHeader("attachment; filename=\"noData.txt\"","Content-Disposition");
         	return response;
 		}
-		Export export = new Export(context,filename);
+		Export export = new ExportCSV(context,filename);
 		export.beginRow();
 		export.addValue(ses.valueForKeyPath("strings.Reusables_Strings.dataTypes.Date"));
 		export.addValue(ses.valueForKeyPath("strings.RujelCurriculum_Curriculum.OrigTeacher"));

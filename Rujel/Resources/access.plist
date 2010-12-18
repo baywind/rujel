@@ -114,7 +114,7 @@
 		<key>any</key>
 		<string>1</string>
 	</dict>
-	<key>SettingByCourse</key>
+	<key>QualifiedSetting</key>
 	<dict>
 		<key>root</key>
 		<string>1023</string>

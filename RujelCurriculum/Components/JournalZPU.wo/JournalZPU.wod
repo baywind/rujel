@@ -132,3 +132,11 @@ IsStandalone : WOConditional {
 YearTitle : WOString {
   value = currMonth.year;
 }
+
+Wrapper : HTMLPageWrapper {
+  headOpen = true;
+}
+
+EndHead : HTMLPageWrapper {
+  headClose = true;
+}

@@ -13,6 +13,8 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Counter;
+import net.rujel.reusables.ExportCSV;
+import net.rujel.reusables.ExportHTML;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Export;
@@ -310,9 +312,8 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	month++;
     	if(month < 10)
     		buf.append('0');
-    	buf.append(month);
-    	Export exportPage = new Export(context(),buf.toString());
-    	
+//    	buf.append(month).append(".html");
+    	ExportCSV exportPage = new ExportCSV(context(),buf.toString());
     	exportPage.beginRow();
     	exportPage.addValue(currMonth.valueForKey("name"));
     	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
@@ -393,7 +394,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	if(month < 10)
     		buf.append('0');
     	buf.append(month);
-		Export export = new Export(context(),buf.toString());
+		Export export = new ExportCSV(context(),buf.toString());
 
 		int days = ((Integer)currMonth.valueForKey("days")).intValue();
 		export.beginRow();

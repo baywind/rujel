@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>Настройка Оценивания</string>
+	<key>id</key>
+	<string>settings</string>
+	<key>sort</key>
+	<string>90</string>
+	<key>active</key>
+	<false/>
+	<key>entity</key>
+	<string>QualifiedSetting</string>
+	<key>subParams</key>
+	<array>
+		<dict>
+			<key>active</key>
+			<true/>
+			<key>id</key>
+			<string>text</string>
+			<key>title</key>
+			<string>текст</string>
+			<key>value</key>
+			<string>.textValue</string>
+			<key>sort</key>
+			<string>02</string>
+		</dict>
+		<dict>
+			<key>active</key>
+			<true/>
+			<key>id</key>
+			<string>numeric</string>
+			<key>title</key>
+			<string>число</string>
+			<key>value</key>
+			<string>.numericValue</string>
+			<key>sort</key>
+			<string>04</string>
+		</dict>
+		<dict>
+			<key>active</key>
+			<false/>
+			<key>id</key>
+			<string>sort</string>
+			<key>title</key>
+			<string>сорт</string>
+			<key>value</key>
+			<string>.sort</string>
+			<key>sort</key>
+			<string>05</string>
+		</dict>
+	</array>
+	<key>value</key>
+	<dict>
+		<key>className</key>
+		<string>net.rujel.base.SettingsBase</string>
+		<key>_object</key>
+		<dict>
+			<key>methodName</key>
+			<string>settingForCourse(String, NSKeyValueCodingAdditions, EOEditingContext)</string>
+			<key>className</key>
+			<string>net.rujel.base.SettingsBase</string>
+		</dict>
+		<key>methodName</key>
+		<string>settingForCourse</string>
+		<key>paramClasses</key>
+		<array>
+			<string>java.lang.String</string>
+			<string>com.webobjects.foundation.NSKeyValueCodingAdditions</string>
+			<string>com.webobjects.eocontrol.EOEditingContext</string>
+		</array>
+		<key>paramValues</key>
+		<array>
+			<string>&apos;CriteriaSet</string>
+			<string>.</string>
+			<string>$parent.ec</string>
+		</array>
+		<key>cacheResult</key>
+		<true/>
+	</dict>
+</dict>
+</plist>
