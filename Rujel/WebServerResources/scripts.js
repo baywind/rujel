@@ -497,11 +497,7 @@ function ajaxPopupAction (action,aevent) {
 	return true;
 }
 
-function ajaxPost(ini,aevent) {
-	if(!tryLoad(false))
-		return false;
-	if(document.getElementById(ini))
-		ini = document.getElementById(ini);
+function formParams(ini) {
 	var aForm = ini;
 	if(ini.form)
 		aForm = ini.form;
@@ -523,6 +519,18 @@ function ajaxPost(ini,aevent) {
 		params = params.concat(elt.name,'=',elt.value);
 		//alert(elt.name + ' = ' + elt.value);
 	}
+	return params;
+}
+
+function ajaxPost(ini,aevent) {
+	if(!tryLoad(false))
+		return false;
+	if(document.getElementById(ini))
+		ini = document.getElementById(ini);
+	var aForm = ini;
+	if(ini.form)
+		aForm = ini.form;
+	var params = formParams(ini);
 	getAjaxPopup(aevent, aForm.action, params);
 	return false;
 }

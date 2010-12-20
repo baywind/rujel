@@ -485,3 +485,12 @@ ExportButton : WOHyperlink {
 ShowDetails : WOConditional {
   condition = currReason.namedFlags._external;
 }
+
+ToReturn : WOCheckBox {
+  checked = currReason.namedFlags.toReturn;
+}
+
+ReturnTitle : WOString {
+  value = session.strings.RujelCurriculum_Curriculum.Reason.toReturn;
+  escapeHTML = false;
+}

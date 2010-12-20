@@ -111,7 +111,10 @@ public class JournalZPU extends WOComponent {
 					dict.takeValueForKey(back.course().teacher(), "minusTeacher");
 				}
 				if(sub == null) {
-					dict.takeValueForKey(var.value(), "value");
+					if(var.reason().namedFlags().flagForKey("toReturn"))
+						dict.takeValueForKey("@", "value");
+					else
+						dict.takeValueForKey(var.value(), "value");
 					dict.takeValueForKey(var.course().teacher(), "plusTeacher");
 				}
 			} else {
@@ -121,7 +124,10 @@ public class JournalZPU extends WOComponent {
 					dict.takeValueForKey(back.course(), "plusCourse");
 					if(sub == null) {
 						dict.takeValueForKey(back.course().teacher(), "plusTeacher");
-						dict.takeValueForKey(back.value(), "value");
+						if(back.reason().namedFlags().flagForKey("toReturn"))
+							dict.takeValueForKey("@", "value");
+						else
+							dict.takeValueForKey(back.value(), "value");
 					}
 				} else if(sub == null) {
 					dict.takeValueForKey(new Integer(-var.value().intValue()), "value");

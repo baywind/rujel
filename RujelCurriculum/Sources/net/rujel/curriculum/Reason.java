@@ -98,7 +98,7 @@ public class Reason extends _Reason {
 	}
 	
 	public static NSArray flagNames = new NSArray(new String[] {
-			"external","forSkip","forAdd","-8-","forEduGroup","forTeacher"});
+			"external","forSkip","forAdd","toReturn","forEduGroup","forTeacher"});
 
 	private NamedFlags _flags;
     public NamedFlags namedFlags() {

@@ -163,10 +163,12 @@ ShowDetailsTitle : WOString {
 
 ShowDetails : WOCheckBox {
   checked = options.showDetails;
+  name = "details";
 }
 
 ShowLoad : WOCheckBox {
   checked = options.showLoad;
+  name = "load";
 }
 
 ShowLoadTitle : WOString {
@@ -247,4 +249,11 @@ ShowFullZPU : WOGenericElement {
   type = "button";
   value = session.strings.Reusables_Strings.uiElements.Show;
   onclick = "showZPU(form);";
+}
+
+ShowTabel : WOSubmitButton {
+  action = exportTabel;
+  value = session.strings.Reusables_Strings.uiElements.Show;
+  name = "html";
+  onclick = "return showTabel(this);";
 }

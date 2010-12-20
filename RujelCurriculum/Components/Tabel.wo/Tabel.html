@@ -5,7 +5,6 @@
 	<td align = "left"><webobject name = "Form">
 		<webobject name = "SelectMonth"/> <webobject name = "Year"/></webobject></td>
 <webobject name = "CanCreate"><td rowspan = "3" valign = "top" align = "left">
-		<webobject name = "TotalForm">
 <script language = "JavaScript">
 function showZPU(form) {
 	var url = form.action + "?unsubmitted=";
@@ -18,7 +17,13 @@ function showZPU(form) {
 	}
 	window.open(url,"_blank");
 }
+function showTabel(ini) {
+	var url = ini.form.action + '?' + formParams(ini);
+	window.open(url,"_blank");
+	return false;
+}
 </script>
+<webobject name = "TotalForm">
 <table style = "border:#999999 double;position:absolute;" class = "backfield2">
 <thead onclick = "toggleObj('wholeSchool');" onmouseover = "dim(this);" onmouseout = "unDim(this);">
 <tr><th colspan = "2" style = "padding:5px;"><webobject name = "WholeSchool"/></th></tr></thead>
@@ -32,7 +37,7 @@ function showZPU(form) {
 		<webobject name = "IncludeAdded"/>&nbsp;<webobject name = "AddedTitle"/></td></tr>
 <tr><td colspan = "2" align = "center">
 	<webobject name = "OmitUnsubmitted"/> <webobject name = "UnsubmittedTitle"/></td></tr>
-<tr><td align = "left"><webobject name = "ExportTabel"/></td>
+<tr><td align = "left"><webobject name = "ExportTabel"/> <webobject name = "ShowTabel"/></td>
 	<td align = "center"><webobject name = "ExportZPU"/> <webobject name = "ShowFullZPU"/></td></tr>
 </tbody></table></webobject></td></webobject></tr>
 <tr style = "height:2em;"><th align = "right"><webobject name = "TeacherTitle"/>:</th>

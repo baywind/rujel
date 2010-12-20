@@ -47,6 +47,8 @@
 		<string>Поправки</string>
 		<key>verification</key>
 		<string>Обоснование</string>
+		<key>toReturn</key>
+		<string>Возврат часов</string>
 	</dict>
 	<key>Variation</key>
 	<dict>
