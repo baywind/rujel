@@ -40,20 +40,6 @@ DateField : WOTextField {
   onkeypress = "return isNumberInput(event,true);";
 }
 
-TrueRadio : WORadioButton {
-	name = "negative";
-	selection = negative;
-	value = true;
-	disabled = true;
-}
-
-FalseRadio : WORadioButton {
-	name = "negative";
-	selection = negative;
-	value = false;
-	disabled = true;
-}
-
 ValueField : WOTextField {
   value = abs;
   numberformat = "#;#";
@@ -101,10 +87,6 @@ MinusTitle : WOString {
   value = application.strings.RujelCurriculum_Curriculum.Variation.minus;
   valueWhenEmpty = "Lost";
   escapeHTML = false;
-}
-
-ReturnNormaly : WOConditional {
-  condition = returnNormaly;
 }
 
 HasLesson : WOConditional {

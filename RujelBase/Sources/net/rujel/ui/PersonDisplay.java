@@ -56,7 +56,14 @@ public class PersonDisplay extends ExtDynamicElement {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object tmp = valueForBinding("person",aContext);
     	if(tmp == null || tmp == NSKeyValueCoding.NullValue) {
-    		tmp = valueForBinding("valueWhenEmpty", aContext);
+    		Object emptyValue = valueForBinding("valueWhenEmpty",aContext);
+    		if(tmp == NSKeyValueCoding.NullValue) {
+        		tmp = valueForBinding("nullValue", aContext);
+        		if(tmp == null)
+        			tmp = emptyValue;
+    		} else {
+    			tmp = emptyValue;
+    		}
     		if(tmp != null) {
     			String emptyStyle = (String)valueForBinding("emptyStyle", aContext);
     			if(emptyStyle != null) {

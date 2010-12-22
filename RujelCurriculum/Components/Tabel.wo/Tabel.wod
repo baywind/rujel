@@ -59,7 +59,9 @@ TeacherName : PersonDisplay {
   first = 2;
   second = 2;
   startWithLast = true;
-  valueWhenEmpty = session.strings.RujelBase_Base.vacant;
+  valueWhenEmpty = session.strings.Reusables_Strings.uiElements.Select;
+  nullValue = session.strings.RujelBase_Base.vacant;
+  emptyStyle = "font-style:italic;";
 }
 
 Row : WOGenericContainer {
@@ -208,13 +210,18 @@ AddedTitle : WOString {
 }
 
 UnsubmittedTitle : WOString {
-  value = session.strings.RujelCurriculum_Curriculum.Tabel.omitUnsubmitted;
+  value = session.strings.RujelCurriculum_Curriculum.Tabel.unsubmitted;
   escapeHTML = false;
 }
 
 OmitUnsubmitted : WOCheckBox {
-  checked = options.omitUnsubmitted;
+  checked = options.unsubmitted;
   name = "unsubmitted";
+}
+
+ShowUnsubmittedZPU : WOCheckBox {
+  checked = options.unsubmittedZPU;
+  name = "unsubmittedZPU";
 }
 
 JournalZPU : JournalZPU {
@@ -256,4 +263,32 @@ ShowTabel : WOSubmitButton {
   value = session.strings.Reusables_Strings.uiElements.Show;
   name = "html";
   onclick = "return showTabel(this);";
+}
+
+DatesForm : WOForm {
+  action = applyDates;
+}
+
+BeginDate : WOTextField {
+  value = currMonth.beginDate;
+  dateformat = application.prefs.ui.shortDateFormat;
+  size = 5;
+  maxlength = 5;
+  style = "text-align:center;";
+  onkeypress = "return isNumberInput(event,true);";
+}
+
+EndDate : WOTextField {
+  value = currMonth.endDate;
+  dateformat = application.prefs.ui.shortDateFormat;
+  size = 5;
+  maxlength = 5;
+  style = "text-align:center;";
+  onkeypress = "return isNumberInput(event,true);";
+}
+
+SubmitDates : WOGenericElement {
+  elementName = "input";
+  type = "submit";
+  value = "&radic;";
 }

@@ -93,8 +93,8 @@
 		<string>Журнал замен</string>
 		<key>includeAdded</key>
 		<string>добавленные</string>
-		<key>omitUnsubmitted</key>
-		<string>исключить неподтверждённые</string>
+		<key>unsubmitted</key>
+		<string>неподтверждённые</string>
 		<key>grandTotal</key>
 		<dict>
 			<key>colspan</key>

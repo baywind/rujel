@@ -3,13 +3,15 @@
 <table cellpadding = "4" style = "margin-left:12em;">
 <tr><th align = "right" style = "height:2em;"><webobject name = "MonthTitle"/>:</th>
 	<td align = "left"><webobject name = "Form">
-		<webobject name = "SelectMonth"/> <webobject name = "Year"/></webobject></td>
+		<webobject name = "SelectMonth"/> <webobject name = "Year"/></webobject>
+		<webobject name = "DatesForm"><webobject name = "BeginDate"/> -
+			<webobject name = "EndDate"/> <webobject name = "SubmitDates"/></webobject></td>
 <webobject name = "CanCreate"><td rowspan = "3" valign = "top" align = "left">
 <script language = "JavaScript">
 function showZPU(form) {
-	var url = form.action + "?unsubmitted=";
-	if(form.unsubmitted.checked) {
-		url = url + form.unsubmitted.value;
+	var url = form.action + "?unsubmittedZPU=";
+	if(form.unsubmittedZPU.checked) {
+		url = url + form.unsubmittedZPU.value;
 	}
 	url = url + "&added=";
 	if(form.added.checked) {
@@ -24,7 +26,7 @@ function showTabel(ini) {
 }
 </script>
 <webobject name = "TotalForm">
-<table style = "border:#999999 double;position:absolute;" class = "backfield2">
+<table style = "border:#999999 double;position:absolute;" class = "backfield2" cellspacing = "4">
 <thead onclick = "toggleObj('wholeSchool');" onmouseover = "dim(this);" onmouseout = "unDim(this);">
 <tr><th colspan = "2" style = "padding:5px;"><webobject name = "WholeSchool"/></th></tr></thead>
 <tbody id = "wholeSchool" style = "display:none;" class = "grey">
@@ -32,19 +34,19 @@ function showTabel(ini) {
 	<th><webobject name = "JournalShort"/></th></tr>
 <tr><td align = "left">
 		<webobject name = "ShowDetails"/>&nbsp;<webobject name = "ShowDetailsTitle"/><br/>
-		<webobject name = "ShowLoad"/>&nbsp;<webobject name = "ShowLoadTitle"/></td>
+		<webobject name = "ShowLoad"/>&nbsp;<webobject name = "ShowLoadTitle"/><br/>
+		<webobject name = "OmitUnsubmitted"/> <webobject name = "UnsubmittedTitle"/></td>
 	<td align = "left">
-		<webobject name = "IncludeAdded"/>&nbsp;<webobject name = "AddedTitle"/></td></tr>
-<tr><td colspan = "2" align = "center">
-	<webobject name = "OmitUnsubmitted"/> <webobject name = "UnsubmittedTitle"/></td></tr>
-<tr><td align = "left"><webobject name = "ExportTabel"/> <webobject name = "ShowTabel"/></td>
+		<webobject name = "IncludeAdded"/>&nbsp;<webobject name = "AddedTitle"/><br>
+		<webobject name = "ShowUnsubmittedZPU"/> <webobject name = "UnsubmittedTitle"/></td></tr>
+<tr><td align = "center"><webobject name = "ExportTabel"/> <webobject name = "ShowTabel"/></td>
 	<td align = "center"><webobject name = "ExportZPU"/> <webobject name = "ShowFullZPU"/></td></tr>
 </tbody></table></webobject></td></webobject></tr>
 <tr style = "height:2em;"><th align = "right"><webobject name = "TeacherTitle"/>:</th>
 	<webobject name = "SelectTeacher"><webobject name = "TeacherName"/></webobject></tr>
 <tr><td></td></tr>
 </table><webobject name = "HasDetails">
-<table style = "table-layout:fixed;width:100%;margin-top:2em;">
+<table style = "table-layout:fixed;width:100%;margin-top:2em;" cellpadding = "0">
 <thead>
 <tr><td style = "width:12em;"></td>
 	<th style = "font-size:110%;"align = "left"><webobject name = "TabelTitle"/></th>
@@ -52,7 +54,7 @@ function showTabel(ini) {
 		</td></tr>
 </thead>
 <tbody class = "backfield1"><tr valign = "top">
-	<td style = "width:12em;padding:0px;"><div style = "overflow:hidden;width:12em;">
+	<td style = "width:12em;"><div style = "overflow:hidden;width:12em;">
 		<table width = "100%">
 		<thead><tr><th colspan = "2" style = "max-width:12em;"><webobject name = "DateTitle"/></th>
 		</tr></thead>
@@ -70,8 +72,8 @@ function showTabel(ini) {
 				<webobject name = "HoursTitle"/></div></th><webobject name = "Days">
 			<th><div style = "width:2em;"><webobject name = "Value"/></div></th></webobject>
 		</tr></thead>
-		<tbody><webobject name = "Details">
-			<webobject name = "Row"><td style = "border-right: 1px dotted #666666">
+		<tbody><webobject name = "Details"><webobject name = "Row">
+			<td style = "border-right: 1px dotted #666666;white-space:nowrap;">
 				<webobject name = "Hours"/></td>
 			<webobject name = "Days"><webobject name = "Cell">
 				<webobject name = "Value"/></webobject></webobject>

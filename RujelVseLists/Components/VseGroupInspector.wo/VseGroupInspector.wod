@@ -34,11 +34,6 @@ YearTitle : WOString {
   escapeHTML = false;
 }
 
-AsTitle : WOString {
-  value = session.strings.RujelVseLists_VseStrings.VseGroupInspector.as;
-  escapeHTML = false;
-}
-
 GradePopUp : WOPopUpButton {
   list = grades;
   selection = grade;

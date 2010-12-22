@@ -19,17 +19,6 @@ EditVarTitle : WOString {
   valueWhenEmpty = "AutoItog";
 }
 
-
-CourseTitle : WOString {
-  value = session.strings.RujelInterfaces_Names.EduCourse.this;
-  escapeHTML = false;
-}
-
-LessonTitle : WOString {
-  value = session.strings.RujelInterfaces_Names.EduLesson.this;
-  escapeHTML = false;
-}
-
 Courses : WORepetition {
   list = courses;
   item = item;
@@ -60,10 +49,6 @@ CourseTeacher : PersonDisplay {
   valueWhenEmpty = session.strings.RujelBase_Base.vacant;
 }
 
-CourseComment : WOString {
-  value = item.comment;
-}
-
 ReasonSelector : ReasonSelector {
   course = reasonCourse;
   date = date;
@@ -76,15 +61,6 @@ Form : WOForm {
   onsubmit = onsubmit;
   action = save;
   style = "border-top: 1px #666 solid;";
-}
-
-CanChange: WOConditional {
-	condition = cantEdit;
-	negate = true;
-}
-
-CanDelete: WOConditional {
-	condition = canDelete;
 }
 
 Save: WOGenericElement {

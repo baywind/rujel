@@ -7,15 +7,6 @@ Tabs : Tabs {
 ComponentContent : WOComponentContent {
 }
 
-AddByCourse : OnClickContainer {
-  elementName = "span";
-  onclick = session.ajaxPopup;
-  invokeAction = addByCourse;
-  class = "green";
-  style = "float:right;padding:0px 4px;font-weight:bold;border:double 3px #33cc33;color:#33cc33;";
-  hide = session.readAccess._create.QualifiedSetting;
-}
-
 AddListForm : WOForm {
 	action = createList;
 	style = "display:none;";
@@ -41,20 +32,6 @@ ListTitle : WOString {
   escapeHTML = false;
 }
 
-EduGroupLabel: WOString {
-	value = application.strings.RujelInterfaces_Names.EduGroup.this;
-	valueWhenEmpty = "Class";
-	escapeHTML = false;
-}
-
-BasePresenter : ByCoursePresenter {
-  value = base;
-}
-
-ByCoursePresenter2 : ByCoursePresenter {
-  value = item;
-}
-
 ListsOverviewTitle : WOString {
   value = application.strings.RujelEduPlan_EduPlan.SetupPeriods.listsOverview;
 }
@@ -68,10 +45,6 @@ BcListName : WOString {
   value = item.textValue;
   valueWhenEmpty = base.textValue;
   escapeHTML = true;
-}
-
-BaseTextValue : WOString {
-  value = base.textValue;
 }
 
 SettingsByCourse : SettingsByCourse {

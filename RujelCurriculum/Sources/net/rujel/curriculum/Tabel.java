@@ -37,9 +37,10 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public NSMutableArray details;
 	public Integer index;
 	public Boolean cantSelect;
-	public NSMutableDictionary options = new NSMutableDictionary();
 	public NSArray journalZPU;
-	protected int firstWeekday;
+	public NSMutableDictionary options = new NSMutableDictionary(
+			new Boolean[] {Boolean.TRUE,Boolean.TRUE},
+			new String[] {"unsubmitted","unsubmittedZPU"});
 	
     public Tabel(WOContext context) {
         super(context);
@@ -54,18 +55,26 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
         cal.set(Calendar.YEAR, ((Number)session().valueForKey("eduYear")).intValue());
         cal.set(Calendar.MONTH,
         		SettingsReader.intForKeyPath("edu.newYearMonth",GregorianCalendar.JULY));
+        cal.set(Calendar.DATE, SettingsReader.intForKeyPath("edu.newYearDay",1));
         NSDictionary[] mns = new NSDictionary[12 + 
-                  ((SettingsReader.intForKeyPath("edu.newYearDay",1) > 1)?1:0)];
+                  ((cal.get(Calendar.DATE) > 1)?1:0)];
         for (int i = 0; i < mns.length; i++) {
         	int m = cal.get(Calendar.MONTH);
-			mns[i] = new NSDictionary(new Object[] {
+        	mns[i] = new NSMutableDictionary(new Object[] {
 					new Integer(cal.get(Calendar.YEAR)), new Integer(m),
-						monthNames.objectAtIndex(m),
-						new Integer(cal.getActualMaximum(Calendar.DAY_OF_MONTH))}
-			,new Object[] { "year", "month", "name","days" });
+						monthNames.objectAtIndex(m)}
+			,new Object[] { "year", "month", "name"});
+        	mns[i].takeValueForKey(new NSTimestamp(cal.getTimeInMillis()), "beginDate");
+        	if(i == 12) {
+        		cal.set(Calendar.DATE, SettingsReader.intForKeyPath("edu.newYearDay",28));
+        		cal.add(Calendar.DATE, -1);
+        	} else {
+        		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        	}
+        	mns[i].takeValueForKey(new NSTimestamp(cal.getTimeInMillis()), "endDate");
 			if(m == cmi)
 				currMonth = mns[i];
-			cal.add(Calendar.MONTH, 1);
+			cal.add(Calendar.DATE, 1);
 		}
         months = new NSArray(mns);
         EOKeyGlobalID gid = (EOKeyGlobalID)context.session().valueForKey("userPersonGID");
@@ -81,13 +90,12 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     }
     
     protected static void addHoursToKey(NSMutableDictionary dict, 
-    		BigDecimal hours, Calendar cal, Object key) {
+    		BigDecimal hours, int day, int days, Object key) {
     	BigDecimal[] byTeacher = (BigDecimal[])((dict==null)?key:dict.objectForKey(key));
     	if(byTeacher ==  null) {
-    		byTeacher = new BigDecimal[cal.getActualMaximum(Calendar.DAY_OF_MONTH) +1];
+    		byTeacher = new BigDecimal[days +1];
     		dict.setObjectForKey(byTeacher, key);
     	}    	
-    	int day = cal.get(Calendar.DAY_OF_MONTH);
     	if(byTeacher[day] == null) {
     		byTeacher[day] = hours;
     	} else {
@@ -100,9 +108,14 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	}
     }
     
-    protected NSMutableArray monthQual(Calendar cal) {
-    	EOQualifier quals[] = monthQuals(((Integer)currMonth.valueForKey("year")).intValue()
-    			, ((Integer)currMonth.valueForKey("month")).intValue(), "date",cal);
+    protected NSMutableArray monthQual() {
+    	EOQualifier quals[] = new EOQualifier[2];
+    	quals[0] = new EOKeyValueQualifier("date",
+    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,
+    			currMonth.valueForKey("beginDate"));
+    	quals[1] = new EOKeyValueQualifier("date",
+    			EOQualifier.QualifierOperatorLessThanOrEqualTo,
+    			currMonth.valueForKey("endDate"));
     	NSMutableArray result = new NSMutableArray(quals);
     	return result;
     }
@@ -126,7 +139,21 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     
     public WOActionResults exportTabel() {
     	Calendar cal = Calendar.getInstance();
-    	NSMutableArray quals = monthQual(cal);
+    	NSMutableArray quals = monthQual();
+//		cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
+//		cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
+		NSTimestamp lastDay = (NSTimestamp)currMonth.valueForKey("endDate");
+		cal.setTime(lastDay);
+		int days = cal.get(Calendar.DAY_OF_YEAR) +1;
+		NSTimestamp firstDay = (NSTimestamp)currMonth.valueForKey("beginDate");
+		cal.setTime(firstDay);
+		int firstDOY = cal.get(Calendar.DAY_OF_YEAR);
+		int maxDOY = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+		days -= firstDOY;
+		if(days < 0)
+			days += maxDOY;
+//		cal.set(Calendar.DAY_OF_MONTH, days);
+//		int lastDOY = cal.get(Calendar.DAY_OF_YEAR);
     	EOFetchSpecification fs = new EOFetchSpecification(
     			Substitute.ENTITY_NAME,new EOAndQualifier(quals),null);
     	fs.setRefreshesRefetchedObjects(true);
@@ -139,7 +166,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     		session().takeValueForKey(message, "message");
     		return null;
     	}
-    	boolean omitUnsubmitted = Various.boolForObject(options.valueForKey("omitUnsubmitted"));
+    	boolean omitUnsubmitted = !Various.boolForObject(options.valueForKey("unsubmitted"));
     	NSMutableDictionary byTeacher = new NSMutableDictionary();
     	NSMutableDictionary subsByTeacher = new NSMutableDictionary();
     	NSMutableDictionary plusByTeacher = new NSMutableDictionary();
@@ -148,6 +175,9 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	while (enu.hasMoreElements()) {   // lessons
 			EduLesson lesson = (EduLesson) enu.nextElement();
 			cal.setTime(lesson.date());
+			int day = cal.get(Calendar.DAY_OF_YEAR) - firstDOY +1;
+			if(day < 0)
+				day += maxDOY;
 			NSArray subs = (NSArray)lesson.valueForKey("substitutes");
 			int subsCount = 0;
 			if(subs != null && subs.count() > 0) {
@@ -164,7 +194,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 						continue;
 					subsCount++;
 					Teacher teacher = sub.teacher();
-					addHoursToKey(byTeacher, sub.factor(), cal, teacher);
+					addHoursToKey(byTeacher, sub.factor(), day, days, teacher);
 					BigDecimal bySub = (BigDecimal)subsByTeacher.objectForKey(teacher);
 					if(bySub == null) {
 						subsByTeacher.setObjectForKey(sub.factor(), teacher);
@@ -177,7 +207,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 				Object teacher = lesson.course().teacher(lesson.date());
 				if(teacher == null)
 					teacher = NSDictionary.EmptyDictionary;
-				addHoursToKey(byTeacher, BigDecimal.ONE, cal,teacher);
+				addHoursToKey(byTeacher, BigDecimal.ONE, day, days,teacher);
 			}
 		} // lessons
     	if(omitUnsubmitted) {
@@ -241,13 +271,6 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     	} // have variatins
     	NSMutableDictionary loads = null;
     	if(Various.boolForObject(options.valueForKey("showLoad"))) {
-    		cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
-    		cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
-    		cal.set(Calendar.DAY_OF_MONTH, 1);
-    		NSTimestamp firstDay = new NSTimestamp(cal.getTimeInMillis());
-    		int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-    		cal.set(Calendar.DAY_OF_MONTH, days);
-    		NSTimestamp lastDay = new NSTimestamp(cal.getTimeInMillis());
     		list = EOUtilities.objectsMatchingKeyAndValue(ec, 
     				EduCourse.entityName, "eduYear", session().valueForKey("eduYear"));
     		enu = list.objectEnumerator();
@@ -302,10 +325,11 @@ vars:		while (vEnu.hasMoreElements()) { // variations
         	exportPage.beginTitleRow();
         	exportPage.addValue(currMonth.valueForKey("name"));
     	}
-    	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
     	if(Various.boolForObject(options.valueForKey("showDetails"))) {
+			cal.setTime(firstDay);
     		for (int i = 1; i <= days; i++) {
-    			exportPage.addValue(Integer.toString(i));
+    			exportPage.addValue(Integer.toString(cal.get(Calendar.DATE)));
+    			cal.add(Calendar.DATE, 1);
     		}
     	}
     	if(loads != null) {
@@ -435,15 +459,24 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     	if(currTeacher == null || currMonth == null)
     		return;
     	Calendar cal = Calendar.getInstance();
-    	cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
-    	cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
-    	cal.set(Calendar.DAY_OF_MONTH, 1);
-    	NSTimestamp firstDay = new NSTimestamp(cal.getTimeInMillis());
-    	firstWeekday = cal.get(Calendar.DAY_OF_WEEK);
-    	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-    	cal.set(Calendar.DAY_OF_MONTH, days);
-    	NSTimestamp lastDay = new NSTimestamp(cal.getTimeInMillis());
-
+//    	cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
+//    	cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
+//    	cal.set(Calendar.DAY_OF_MONTH, 1);
+    	NSTimestamp firstDay = (NSTimestamp)currMonth.valueForKey("beginDate");
+    	cal.setTime(firstDay);
+    	int firstDOY = cal.get(Calendar.DAY_OF_YEAR);
+    	int maxDOY = cal.getActualMaximum(Calendar.DAY_OF_YEAR);
+//    	int days = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+//    	cal.set(Calendar.DAY_OF_MONTH, days);
+    	NSTimestamp lastDay = (NSTimestamp)currMonth.valueForKey("endDate");
+    	cal.setTime(lastDay);
+    	int lastDOY = cal.get(Calendar.DAY_OF_YEAR);
+    	int days = lastDOY - firstDOY +1;
+    	currMonth.takeValueForKey(new Integer(days), "days");
+    	if(days > 0)
+    		maxDOY = 0;
+    	else
+    		days += maxDOY;
     	// courses for teacher
     	EOQualifier[] quals = new EOQualifier[2];//NSMutableArray();
     	quals[0] = new EOKeyValueQualifier("date",
@@ -487,7 +520,9 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 			    	dict.takeValueForKey(new EOAndQualifier(new NSArray(quals)),"qual");
 			    	NSMutableArray[] info = new NSMutableArray[days +1];
 			    	cal.setTime(dates[0]);
-			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) -1; i > 0; i--) {
+			    	int fin = cal.get(Calendar.DAY_OF_YEAR) - firstDOY;
+			    	if(fin < 0) fin += maxDOY;
+			    	for (int i = 1; i <= fin; i++) {
 						info[i] = clear;
 					}
 			    	dict.takeValueForKey(info, "info");
@@ -534,7 +569,9 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 				} else {
 					info = new NSMutableArray[days +1];
 			    	cal.setTime(begin);
-			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) -1; i > 0; i--) {
+			    	int fin = cal.get(Calendar.DAY_OF_YEAR) - firstDOY;
+			    	if(fin < 0) fin += maxDOY;
+			    	for (int i = fin; i > 0; i--) {
 						info[i] = clear;
 					}
 			    	StringBuilder buf = new StringBuilder(3);
@@ -550,7 +587,9 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 					if(info == null)
 						info = new NSMutableArray[days +1];
 			    	cal.setTime(end);
-			    	for (int i = cal.get(Calendar.DAY_OF_MONTH) +1; i < info.length; i++) {
+			    	int fin = cal.get(Calendar.DAY_OF_YEAR) - firstDOY;
+			    	if(fin < 0) fin += maxDOY;
+			    	for (int i = fin +2; i < info.length; i++) {
 						info[i] = clear;
 					}
 			    	change -= hours;
@@ -638,19 +677,20 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 						EduLesson lesson = (EduLesson) lEnu.nextElement();
 						cal.setTime(lesson.date());
 						list = (NSArray)lesson.valueForKey("substitutes");
+						int day = cal.get(Calendar.DAY_OF_YEAR) - firstDOY +1;
+						if(day < 0) day += maxDOY;
 						if(list != null && list.count() > 0) {
 							substitutes.addObjectsFromArray(list);
 							if(info == null)
 								info = new NSMutableArray[days +1];
-							int day = cal.get(Calendar.DAY_OF_MONTH);
 							if(info[day] == null)
 								info[day] = new NSMutableArray(lesson);
 							else
 								info[day].addObject(lesson);
 						} else {
-							addHoursToKey(null, BigDecimal.ONE, cal, allHours);
-							addHoursToKey(null, BigDecimal.ONE, cal, mainTotals);
-							addHoursToKey(null, BigDecimal.ONE, cal, totals);
+							addHoursToKey(null, BigDecimal.ONE, day, days, allHours);
+							addHoursToKey(null, BigDecimal.ONE, day, days, mainTotals);
+							addHoursToKey(null, BigDecimal.ONE, day, days, totals);
 						}
 					}
 				} //lessons
@@ -666,7 +706,8 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 						Variation var = (Variation) vEnu.nextElement();
 						int val = var.value().intValue();
 						cal.setTime(var.date());
-						int day = cal.get(Calendar.DAY_OF_MONTH);
+						int day = cal.get(Calendar.DAY_OF_YEAR) - firstDOY +1;
+						if(day < 0) day += maxDOY;
 						if(info[day] == null) {
 							info[day] = new NSMutableArray(var);
 						} else {
@@ -681,19 +722,19 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 							continue;
 						boolean toReturn = var.reason().namedFlags().flagForKey("toReturn");
 						if(!toReturn)
-							addHoursToKey(null, new BigDecimal(-val), cal, mainTotals);
+							addHoursToKey(null, new BigDecimal(-val), day, days, mainTotals);
 						Variation paired = var.getPaired();
 						if(paired != null) {
-							addHoursToKey(byCourse, BigDecimal.ONE, cal, paired.course());
+							addHoursToKey(byCourse, BigDecimal.ONE, day, days, paired.course());
 							if(factorCounts == null)
 								factorCounts = new BigDecimal[days + 1];
-							addHoursToKey(null, BigDecimal.ONE, cal, factorCounts);
+							addHoursToKey(null, BigDecimal.ONE, day, days, factorCounts);
 							if(!toReturn)
-								addHoursToKey(null, BigDecimal.ONE, cal, subsTotals);
+								addHoursToKey(null, BigDecimal.ONE, day, days, subsTotals);
 						} else if(!toReturn) {
 							if(extras == null)
 								extras = new BigDecimal[days + 1];
-							addHoursToKey(null, new BigDecimal(val), cal, extras);
+							addHoursToKey(null, new BigDecimal(val), day, days, extras);
 						}
 					}
 				} // variations
@@ -737,7 +778,6 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     	}
     	substitutes.addObjectsFromArray(list);
 		Enumeration enu = list.objectEnumerator();
-		int month = ((Integer)currMonth.valueForKey("month")).intValue();
 		BigDecimal currFactor = null;
        	NSArray sorter = new NSArray(new EOSortOrdering[] {
     			new EOSortOrdering("cycle",EOSortOrdering.CompareAscending),
@@ -750,7 +790,9 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 			if(factor.compareTo(BigDecimal.ZERO) == 0)
 				continue;
 			cal.setTime(sub.lesson().date());
-			if(month != cal.get(Calendar.MONTH))
+			int day = cal.get(Calendar.DAY_OF_YEAR) - firstDOY +1;
+			if(day < 0) day += maxDOY;
+			if(day < 0 || day > days)
 				continue;
 			if(!factor.equals(currFactor)) {
 				if(byCourse.count() > 0)
@@ -764,10 +806,10 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 				row.takeValueForKey(factorCounts,"values");
 				details.addObject(row);
 			}
-			addHoursToKey(byCourse, BigDecimal.ONE, cal, sub.lesson().course());
-			addHoursToKey(null, BigDecimal.ONE, cal, factorCounts);
-			addHoursToKey(null, factor, cal, subsTotals);
-			addHoursToKey(null, factor, cal, totals);
+			addHoursToKey(byCourse, BigDecimal.ONE, day, days, sub.lesson().course());
+			addHoursToKey(null, BigDecimal.ONE, day, days, factorCounts);
+			addHoursToKey(null, factor, day, days, subsTotals);
+			addHoursToKey(null, factor, day, days, totals);
 		} // substitutes
 		if(byCourse.count() > 0)
 			appendCourses(byCourse, sorter, itemClass);
@@ -812,13 +854,15 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 	
 	public String value() {
 		if(item == null && index!=null) {
-			int idx = index.intValue();
-			if((firstWeekday + idx)%7 == Calendar.SUNDAY) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime((NSTimestamp)currMonth.valueForKey("beginDate"));
+			cal.add(Calendar.DATE, index.intValue());
+			if(cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
 				StringBuilder buf = new StringBuilder("<span style = \"color:#cc0000;\">");
-				buf.append(idx + 1).append("</span>");
+				buf.append(cal.get(Calendar.DATE)).append("</span>");
 				return buf.toString();
 			}
-			return Integer.toString(idx + 1);
+			return Integer.toString(cal.get(Calendar.DATE));
 		}
 		BigDecimal[] values = (BigDecimal[])((NSDictionary)item).valueForKey("values");
 		if(values == null)
@@ -919,9 +963,8 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 	}
 	
 	protected NSArray fullZPU() {
-	   	Calendar cal = Calendar.getInstance();
-		NSMutableArray quals = monthQual(cal);
-		if(Various.boolForObject(options.valueForKey("omitUnsubmitted")))
+		NSMutableArray quals = monthQual();
+		if(!Various.boolForObject(options.valueForKey("unsubmittedZPU")))
 			quals.addObject(new EOKeyValueQualifier("reason.verification",
 					EOQualifier.QualifierOperatorNotEqual,NullValue));
     	EOFetchSpecification fs = new EOFetchSpecification(Substitute.ENTITY_NAME,
@@ -956,5 +999,53 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     		buf.append('0');
     	buf.append(month);
 		return JournalZPU.exportJournalZPU(fullZPU(),context(),buf.toString());
+	}
+	
+	public WOActionResults applyDates() {
+		currMonth.takeValueForKey(Boolean.TRUE, "manual");
+		int idx = months.indexOfIdenticalObject(currMonth);
+		Integer year = (Integer)currMonth.valueForKey("year");
+		Integer month = (Integer)currMonth.valueForKey("month");
+		Calendar cal = Calendar.getInstance();
+		// process beginDate
+		cal.setTime((NSTimestamp)currMonth.valueForKey("beginDate"));
+		if(cal.get(Calendar.MONTH) == month.intValue() || 
+				month.intValue() - cal.get(Calendar.MONTH) == 1) {
+			cal.set(Calendar.YEAR, year.intValue());
+		} else if(month.intValue() == Calendar.JANUARY && 
+				cal.get(Calendar.MONTH) == Calendar.DECEMBER) {
+			cal.set(Calendar.YEAR, year.intValue() -1);
+		} else {
+			cal.set(Calendar.YEAR, year.intValue());
+			cal.set(Calendar.MONTH,month.intValue());
+			cal.set(Calendar.DATE, 1);
+		}
+		currMonth.takeValueForKey(new NSTimestamp(cal.getTimeInMillis()), "beginDate");
+		if(idx > 0) {
+			cal.add(Calendar.DATE, -1);
+			NSMutableDictionary mDict = (NSMutableDictionary)months.objectAtIndex(idx -1);
+			mDict.takeValueForKey(new NSTimestamp(cal.getTimeInMillis()), "endDate");
+		}
+		// process endDate
+		cal.setTime((NSTimestamp)currMonth.valueForKey("endDate"));
+		if(cal.get(Calendar.MONTH) == month.intValue() || 
+				month.intValue() - cal.get(Calendar.MONTH) == -1) {
+			cal.set(Calendar.YEAR, year.intValue());
+		} else if(month.intValue() == Calendar.DECEMBER && 
+				cal.get(Calendar.MONTH) == Calendar.JANUARY) {
+			cal.set(Calendar.YEAR, year.intValue() +1);
+		} else {
+			cal.set(Calendar.YEAR, year.intValue());
+			cal.set(Calendar.MONTH,month.intValue());
+			cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		}
+		currMonth.takeValueForKey(new NSTimestamp(cal.getTimeInMillis()), "endDate");
+		if(idx > 0 && idx < months.count() -1) {
+			cal.add(Calendar.DATE, 1);
+			NSMutableDictionary mDict = (NSMutableDictionary)months.objectAtIndex(idx +1);
+			mDict.takeValueForKey(new NSTimestamp(cal.getTimeInMillis()), "beginDate");
+		}
+		go();
+		return null;
 	}
 }
