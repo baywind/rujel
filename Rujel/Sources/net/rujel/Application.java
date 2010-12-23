@@ -160,10 +160,13 @@ public class Application extends UTF8Application {
 			if(serverUrl == null)
 				serverUrl = "?" + super.host();
 		}
-		serverUrl = Various.cleanURL(serverUrl);
-		int slash = serverUrl.indexOf('/');
+		int slash0 = 0;
+		if(serverUrl.startsWith("http")) {
+			slash0 = serverUrl.lastIndexOf('/', 10) +1;
+		}
+		int slash = serverUrl.indexOf('/',slash0);
 		if(slash > 0)
-			serverUrl = serverUrl.substring(0,slash);
+			serverUrl = serverUrl.substring(slash0,slash);
 		urlPrefix = SettingsReader.stringForKeyPath("ui.urlPrefix", "?/Apps/WebObjects/Rujel.woa");
 		logger.log(WOLogLevel.INFO,"Rujel started. Version:" + System.getProperty("RujelVersion")
 				 + ' ' + System.getProperty("RujelRevision"), webserverConnectURL());
@@ -306,16 +309,23 @@ public class Application extends UTF8Application {
 				aMethod, aURL, anHTTPVersion, someHeaders, aContent, someInfo);
 		if(serverUrl == null || serverUrl.charAt(0) == '?') {
 			String url = WORequestAdditions.hostName(result);
-	        if(url != null && url.length() > 0 && (serverUrl == null || !serverUrl.endsWith(url)))
+	        if(url != null && url.length() > 0 && 
+	        		(serverUrl == null || !url.contains(serverUrl.substring(1))))
 	        	tryUrl(url);
 		}
 		return result;
 	}
 	
 	protected void tryUrl(String url) {
-		url = Various.cleanURL(url);
-		if(url.contains("//localhost") || url.contains("//127.0.0.1") ||
-				url.contains("//192.168.") || url.contains("//10.") ||
+		int slash0 = 0;
+		if(url.startsWith("http")) {
+			slash0 = url.lastIndexOf('/', 10) +1;
+		}
+		int slash = url.indexOf('/',slash0);
+		if(slash > 0)
+			url = url.substring(slash0,slash);
+		if(url.startsWith("localhost") || url.startsWith("127.0.0.1") ||
+				url.startsWith("192.168.") || url.startsWith("10.") ||
 				url.endsWith(".local") || url.indexOf('.') < 1) {
 			serverUrl = '?' + url;
 		} else {
