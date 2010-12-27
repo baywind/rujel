@@ -102,6 +102,7 @@ public class CompletePopup extends WOComponent {
     	localisation.takeValueForKey(dict.valueForKey("title"), "student");
     	dict.takeValueForKey(Boolean.TRUE, "manual");
     	list.addObject(dict);*/
+    	completions = new Completion[ids.count()];
     	NSMutableDictionary dict = new NSMutableDictionary(course,"course");
     	dict.takeValueForKey(NSKeyValueCoding.NullValue, "student");
     	EOEditingContext ec = course.editingContext();
@@ -109,7 +110,6 @@ public class CompletePopup extends WOComponent {
     			Completion.ENTITY_NAME, dict);
     	if(modules == null || modules.count() == 0)
     		return; //TODO
-    	completions = new Completion[ids.count()];
     	NamedFlags access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Completion");
     	NSMutableSet set = new NSMutableSet();
     	Enumeration enu = modules.objectEnumerator();

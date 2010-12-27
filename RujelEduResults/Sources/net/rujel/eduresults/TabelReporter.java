@@ -205,7 +205,7 @@ public class TabelReporter extends WOComponent {
 			if(!cycles.containsObject(cycle.subject()))
 				cycles.addObject(cycle.subject());
 		}
-		if(eduYear == null) { // prepare years head
+		if(eduYear == null && perlist.count() > 0) { // prepare years head
 			int year = 0;
 			years = new NSMutableArray();
 			int colspan = 0;

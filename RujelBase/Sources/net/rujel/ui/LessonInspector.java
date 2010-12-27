@@ -79,7 +79,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 //		returnPage.ensureAwakeInContext(context());
 //		EduLesson lesson = (EduLesson)returnPage.valueForKey("addLesson");
     	
-    	if(lesson == null) {
+    	if(lesson == null || lesson.editingContext() == null) {
     		EduCourse course = (EduCourse)returnPage.valueForKey("course");
     		lesson = (EduLesson)EOUtilities.createAndInsertInstance(
     				course.editingContext(), EduLesson.entityName);
@@ -100,10 +100,11 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 			boolean done = false;
 			if(limits != null && !limits.evaluateWithObject(lesson)) {
 				session().setObjectForKey(this, "LessonInspector");
-				lesson.editingContext().revert();
-				returnPage.takeValueForKey(null, "currPerPersonLink");
-				returnPage.valueForKey("refresh");
+//				lesson.editingContext().revert();
+//				returnPage.takeValueForKey(null, "currPerPersonLink");
+//				returnPage.valueForKey("refresh");
 				appendMessage("strings.RujelBase_Base.notInTab");
+				newTitle = MyUtility.dateFormat().format(newDate);
 				done = true;
 				return this;
 			}
