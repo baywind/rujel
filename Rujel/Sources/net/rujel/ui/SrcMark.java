@@ -340,6 +340,10 @@ public class SrcMark extends WOComponent {
 		return null;
 	}
 	
+	public Boolean teacherIsSelected() {
+		return Boolean.valueOf(dict.valueForKey("teacher") != null);
+	}
+	/*
 	public String currTeacherName() {
 		return teacherName(currTeacher);
 	}
@@ -359,7 +363,7 @@ public class SrcMark extends WOComponent {
 			return Person.Utility.fullName((PersonLink)teacher,true,2,1,1);
 		
 		return "???";
-	}
+	}*/
 	
     public boolean cantCreate() {
 		if (currClass == null || courses == null || currIndex >= courses.count() ||

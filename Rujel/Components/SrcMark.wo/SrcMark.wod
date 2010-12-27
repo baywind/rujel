@@ -91,7 +91,7 @@ TeacherLN: PersonDisplay {
 	first = 1;
 	second = 1;
 	startWithLast = true;
-	valueWhenEmpty = application.strings.RujelBase_Base.vacant;
+	nullValue = application.strings.RujelBase_Base.vacant;
 	emptyStyle = "font-style:italic;";
 }
 
@@ -114,10 +114,15 @@ Selected: WOConditional {
 	condition = isSelected;
 }
 
-TeacherName: WOString {
-  value = teacherName;
-  escapeHTML = false;
+TeacherName: PersonDisplay {
+  person = dict.teacher;
   valueWhenEmpty = session.strings.Reusables_Strings.uiElements.Select;
+  nullValue = session.strings.RujelBase_Base.vacant;
+  last = 2;
+  first = 1;
+  second = 1;
+  startWithLast = true;
+  emptyStyle = "font-style:italic;";
 }
 
 SubmitName: WOImageButton {
@@ -125,10 +130,6 @@ SubmitName: WOImageButton {
 	filename = "button_ok.gif";
 	framework = "app";
 	align = "right";
-}
-
-Conditional1: WOConditional {
-	condition = canCreate;
 }
 
 AddCourse: OnClickContainer {
@@ -169,18 +170,8 @@ GradeCyclesPopup: WOPopUpButton {
 	selection = dict.cycle;
 }
 
-Save: WOSubmitButton {
-	action = save;
-	value = application.strings.Reusables_Strings.uiElements.Save;
-}
-
 LessonsCount : WOString {
   value = item.lessons.count;
-}
-
-GroupsTitle : WOString {
-  value = session.strings.Strings.SrcMark.eduGroups;
-  escapeHTML = false;
 }
 
 EduGroup : WOString {
@@ -217,10 +208,15 @@ TeacherCell : OnClickContainer {
   title = currFullname;
 }
 
-CurrTeacherName : WOString {
-  value = currTeacherName;
-  escapeHTML = false;
+CurrTeacherName : PersonDisplay {
+  person = currTeacher;
   valueWhenEmpty = session.strings.Reusables_Strings.uiElements.Select;
+  nullValue = session.strings.RujelBase_Base.vacant;
+  last = 2;
+  first = 1;
+  second = 1;
+  startWithLast = true;
+  emptyStyle = "font-style:italic;";
 }
 
 SelectorTitle : WOString {
@@ -229,5 +225,5 @@ SelectorTitle : WOString {
 }
 
 TeacherIsSelected : WOConditional {
-  condition = teacherName;
+  condition = teacherIsSelected;
 }
