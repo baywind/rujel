@@ -4,6 +4,7 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOElement;
 import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WOResponse;
 
@@ -29,6 +30,10 @@ public class RedirectPopup extends WOComponent {
     		returnPage.ensureAwakeInContext(aContext);
     		return returnPage;
     	}
+    	return null;
+    }
+    
+    public WOElement template() {
     	return null;
     }
     

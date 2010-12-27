@@ -331,11 +331,14 @@ public class Application extends UTF8Application {
 		} else {
 			serverUrl = url;
 		}
+		logger.log(WOLogLevel.INFO,"Server url assumed: " + serverUrl);
 	}
 	
 	public void _setRequest(WORequest req) {
 		if (urlPrefix == null || urlPrefix.charAt(0) == '?') {
 			urlPrefix = req.applicationURLPrefix();
+			logger.log(WOLogLevel.INFO,"Url prefix assumed: " + urlPrefix, 
+					(req.context().hasSession())?req.context().session():null);
 		}
 	}
 
