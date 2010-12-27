@@ -134,8 +134,12 @@ public class VariationsList extends WOComponent {
     	boolean plus = false;
     	if(item == null) {
     		aDate = MyUtility.parseDate(date);
-    		if(aDate == null)
+    		if(aDate == null) {
+    			date = "???";
     			return this;
+    		}
+    	} if(item.valueForKey("course") == null) {
+    		return this;
     	} else {
     		Integer val = (Integer)item.valueForKey("value");
     		plus = (val.intValue() > 0);
