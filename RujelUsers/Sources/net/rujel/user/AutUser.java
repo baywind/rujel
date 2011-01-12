@@ -29,6 +29,7 @@
 
 package net.rujel.user;
 
+import net.rujel.auth.LoginProcessor;
 import net.rujel.base.EntityIndex;
 import net.rujel.interfaces.PersonLink;
 
@@ -71,7 +72,7 @@ public class AutUser extends _AutUser {
 	}
 	
 	public String setPassword(String password) {
-		String hash = TableLoginHandler.getPasswordDigest(password);
+		String hash = TableLoginHandler.HASH_PREFIX + LoginProcessor.getPasswordDigest(password);
 		setCredential(hash);
 		return hash;
 	}

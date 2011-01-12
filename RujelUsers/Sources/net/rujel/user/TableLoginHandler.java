@@ -133,8 +133,8 @@ public class TableLoginHandler implements LoginHandler {
 			if(au.credential() != null) { 
 				if(au.credential().startsWith(HASH_PREFIX)) { 
 					// compare credential with password digest
-					String digestString = getPasswordDigest(password);
-					if(digestString != null && digestString.equals(au.credential()))
+					String digestString = LoginProcessor.getPasswordDigest(password);
+					if(digestString != null && digestString.equals(au.credential().substring(8)))
 						return new TableUser(au, null);
 					throw new AuthenticationFailedException(CREDENTIAL);
 				} else if(parentHandler != null) {
@@ -219,7 +219,12 @@ public class TableLoginHandler implements LoginHandler {
 			byte[] digest = md.digest(password.getBytes());
 			StringBuilder buf = new StringBuilder(digest.length * 2 + 8);
 			buf.append(HASH_PREFIX);
-			return LoginProcessor.bytesToString(digest, buf);
+			for (int i = 0; i < digest.length; i++) {
+				buf.append(Integer.toHexString((digest[i] & 0xf0) >>> 4));
+				buf.append(Integer.toHexString(digest[i] & 0xf));
+			}
+			return buf.toString();
+//			return LoginProcessor.bytesToString(digest, buf);
 		} catch (Exception e) {
 			throw new IllegalStateException("Error digesting password", e);
 		}
