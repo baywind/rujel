@@ -694,13 +694,15 @@ public class LessonNoteEditor extends WOComponent {
 	}
 	
 	public Boolean cantAddTab() {
-		if(currLesson() == null || lessonsList == null)
-			return Boolean.TRUE;
-		if(currLesson().number().intValue() <= 1)
+		Boolean splitCreate = splitCreate();
+		if(splitCreate == null)
 			return Boolean.TRUE;
 		if(!(_currTab instanceof BaseTab.Tab) && lessonsList.indexOf(currPerPersonLink) <= 0)
 			return Boolean.TRUE;
-		return (Boolean)session().valueForKeyPath("readAccess._edit.currLesson");
+		if(splitCreate.booleanValue())
+			return (Boolean)session().valueForKeyPath("readAccess._create.BaseTab");
+		else
+			return (Boolean)session().valueForKeyPath("readAccess._delete.BaseTab");
 	}
 	
 	protected Boolean splitCreate() {
