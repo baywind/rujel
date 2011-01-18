@@ -104,7 +104,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		logger.logp(WOLogLevel.FINEST,"Session","awake","Session awake",this);
 		try {
 		if(user != null) {
-			NSDictionary curr = MyUtility.clientIdentity(context().request());
+			NSDictionary curr = Various.clientIdentity(context().request());
 			if(curr == null) {
 				logger.log(WOLogLevel.WARNING,"Unable to identify client",this);
 			} else if(!curr.equals(clientIdentity)) {
@@ -414,12 +414,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			result.ensureAwakeInContext(context());
 		return result;
 	}
-    /*
-	public NSArray pathStack() {
-		return pathStack.immutableClone();
-	}
-	
-	public void */
+
 	public void terminate() {
 		logger.log(WOLogLevel.SESSION,"Session terminated",this);
 		_modules = null;

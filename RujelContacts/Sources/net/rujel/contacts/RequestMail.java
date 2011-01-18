@@ -8,6 +8,7 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Period;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -101,7 +102,7 @@ public class RequestMail extends WODirectAction {
 			params.takeValueForKey(set, "adrSet");
 			params.takeValueForKey(student,"logParam");
 			EMailBroadcast.logger.log(WOLogLevel.INFO, "Requested mail queued for: " + mail,
-					new Object[] {MyUtility.clientIdentity(context().request()),student});
+					new Object[] {Various.clientIdentity(context().request()),student});
 		} catch (EOObjectNotAvailableException e) {
 			return error("wrongCode");
 		} catch (Exception e) {
@@ -125,7 +126,7 @@ public class RequestMail extends WODirectAction {
 		String message = "strings.RujelContacts_Contacts.MailRequest." + amessage;
 		message = (String)WOApplication.application().valueForKeyPath(message);
 		if(message == null) message = amessage;
-		NSMutableDictionary dict = MyUtility.clientIdentity(context().request());
+		NSMutableDictionary dict = Various.clientIdentity(context().request());
 		dict.takeValueForKey(request().requestHandlerPath(), "requested");
 		dict.addEntriesFromDictionary(request().formValues());
 		EMailBroadcast.logger.log(WOLogLevel.INFO,"Failed to send requested mail: " + message,dict);

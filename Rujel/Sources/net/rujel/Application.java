@@ -347,7 +347,7 @@ public class Application extends UTF8Application {
 		if(!Various.boolForObject(aRequest.userInfoForKey("isLogin"))
 				&& !aRequest.uri().contains("dummy")) {
 			Exception ex = new Exception("Dangling session creation");
-			Object[] args = new Object[] {result, MyUtility.clientIdentity(aRequest),ex};
+			Object[] args = new Object[] {result, Various.clientIdentity(aRequest),ex};
 			logger.log(WOLogLevel.SESSION,
 					"Generating session: " + aRequest.method() + ':' + aRequest.uri(), args);
 		}
