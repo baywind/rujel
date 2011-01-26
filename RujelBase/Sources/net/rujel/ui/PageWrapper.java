@@ -105,7 +105,7 @@ public class PageWrapper extends WOComponent {
 	}
 	
 	public String onLoad() {
-		String required = "countdown();";
+		String required = "analyse(document);countdown();";
 		String onLoad = (String)valueForBinding("onLoad");
 		if(onLoad == null)
 			return required;

@@ -175,66 +175,6 @@ function cancelLoading() {
 	o.style.display ='none';
 }
 
-function eventKey(event) {
-	var key;	
-	if(window.event) {
-		//alert("window");
-		key = window.event.keyCode;
-		if(key == 0)
-			key = window.event.charCode
-		//alert("keyCode = " + event.keyCode + "\ncharCode = " + event.charCode);
-	} else if (event) {
-		key = event.keyCode;
-		//alert("keyCode = " + event.keyCode + "\ncharCode = " + event.charCode);
-		if(key == 0)
-			key = event.charCode;
-	} else {
-		//alert('none');
-		return 0;
-	}
-	return key;
-}
-
-function isNumberInput(event,dot) {
-	//alert("keyCode = " + event.keyCode + "\ncharCode = " + event.charCode);
-	if ((event.charCode == null || event.charCode == 0) 
-			&& event.keyCode >= 37 && event.keyCode <= 40)
-		return true;
-	var key = eventKey(event);
-	if(key == null || key < 32 || key == 127)  // spec symbols
-		return true;
-	if (key >= 48 && key <= 57) // digins
-		return true;
-	if(dot && key == 46) // dot
-		return true;
-	if(dot && ((key >= 42 && key <= 47) || key == 1073 || key == 1102)) {
-		if(event.srcElement)
-			insertAtCursor(event.srcElement, '.');
-		else if(event.target)
-			insertAtCursor(event.target, '.');
-	}
-	return false;
-}
-
-function insertAtCursor(myField, myValue) {
-  if (document.selection) {
-  //IE support
-    myField.focus();
-    sel = document.selection.createRange();
-    sel.text = myValue;
-  } else if (myField.selectionStart || myField.selectionStart == '0') {
-  //MOZILLA/NETSCAPE support
-    var startPos = myField.selectionStart;
-    var endPos = myField.selectionEnd;
-    myField.value = myField.value.substring(0, startPos)
-                  + myValue
-                  + myField.value.substring(endPos, myField.value.length);
-    myField.selectionEnd = startPos + myValue.length;
-  } else {
-    myField.value += myValue;
-  }
-}
-
 function extOnSpace(event,fld,maxLen,message,extParent) {
 	if(eventKey(event) == 32) {
 		var cont = fld.value;
@@ -470,13 +410,7 @@ function onReadyStateChange(pos) {
 		container.style.display='block';
 	}*/
 	container.innerHTML = xmlHttp.responseText;
-	var ins = container.getElementsByTagName("input");
-	for(var i = 0; i < ins.length; i++) {
-		if(ins[i].type == "text") {
-			if(ins[i].disabled)
-				ins[i].style.backgroundColor='#cccccc';
-		}
-	}
+	analyse(container);
 	cancelLoading();
 	if(pos != null) {
 		positionPopup(container.firstChild,pos);
@@ -531,6 +465,8 @@ function ajaxPost(ini,aevent) {
 	if(ini.form)
 		aForm = ini.form;
 	var params = formParams(ini);
+	if(!presubmit(aForm))
+		return false;
 	getAjaxPopup(aevent, aForm.action, params);
 	return false;
 }

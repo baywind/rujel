@@ -64,6 +64,7 @@ StudentTD: OnClickContainer {
 	disabled = cantSelectStudent;
 	title = studentItem.person.secondName;
 	colspan = 2;
+	style = "white-space:nowrap;";
 }
 
 StudentName: PersonDisplay {

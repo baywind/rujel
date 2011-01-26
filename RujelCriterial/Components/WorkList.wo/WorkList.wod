@@ -204,13 +204,22 @@ Weight: WOString {
 StudentPresenter: WOSwitchComponent {
 	WOComponentName = studentPresenter;
 	lesson = lessonItem;
-	isSelected = false;
 	readOnly = true;
+	isSelected = false;
 	student = ^student;
 	denyCreation = false;
 	full=true;
 }
 
+WorkMarksPresenter: WOSwitchComponent {
+	WOComponentName = studentPresenter;
+	lesson = lessonItem;
+	readOnly = false;
+	isSelected = true;
+	student = ^student;
+	denyCreation = false;
+	full=true;
+}
 ThemeTitle: WOString {
 	value = application.strings.RujelCriterial_Strings.theme;
 }

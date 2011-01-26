@@ -65,6 +65,8 @@ public class NotesPage extends WOComponent {
 	}*/
 						  
 	public NSArray lessonsListing() {
+		if(valueForBinding("selectStudent") instanceof Student)
+			return null;
 		if(single()) {
 			if(currLesson() != null)
 				return new NSArray(currLesson());
@@ -137,10 +139,8 @@ public class NotesPage extends WOComponent {
 			else
 				return "grey";
 		}
-		if(currLesson() == null && hasBinding("selectStudentAction")) {
-			if(selectStudent != null && selectStudent.equals(studentItem))
-				return "selection";
-		}
+		if(selectStudent != null && selectStudent.equals(studentItem))
+			return "selection";
 		Boolean sex = (Boolean)valueForKeyPath("studentItem.person.sex");
 		if(sex == null) return "grey";
 		if (sex.booleanValue())
@@ -229,8 +229,12 @@ public class NotesPage extends WOComponent {
 	
 	public WOActionResults studentSelection() {
 		//selectStudent = studentItem;
-		if(hasBinding("selectStudent"))
-			setValueForBinding(studentItem,"selectStudent");
+		if(hasBinding("selectStudent")) {
+			if(studentItem != valueForBinding("selectStudent"))
+				setValueForBinding(studentItem,"selectStudent");
+			else
+				setValueForBinding(currLesson(),"selectStudent");
+		}
 		EOEditingContext ec = studentItem.editingContext();
 		if (ec.hasChanges()) ec.revert();
 		return (WOActionResults)valueForBinding("selectStudentAction");

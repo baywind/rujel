@@ -234,7 +234,7 @@ public class MarksPresenter extends NotePresenter {
 		if(!access().flagForKey("read")) return "#";
         if (mark() == null) {
 			if(Various.boolForObject(valueForBinding("full")) 
-					&& lesson().usedCriteria().containsObject(critItem))
+					&& lesson().usedCriteria().containsObject(critItem) && !isSelected())
 				return ".";
 			else return null;
 		}
@@ -543,8 +543,12 @@ public class MarksPresenter extends NotePresenter {
 	}
 	
 	public boolean cantCreateMark() {
-		Boolean deny = (Boolean)valueForBinding("denyCreation");
-        return (deny != null && deny.booleanValue() && 
+		if(student() == null || lesson() == null)
+			return false;
+		if(Various.boolForObject(valueForBinding("full")) 
+				&& !lesson().usedCriteria().containsObject(critItem))
+			return true;
+        return (Various.boolForObject(valueForBinding("denyCreation")) && 
         		student() != null && lesson() != null && mark() == null);
     }
 	

@@ -140,10 +140,26 @@ public class LessonNoteEditor extends WOComponent {
 		if(valueForKeyPath("currLesson.editingContext") != null) {
 			ec.refaultObject(currLesson());
 		}
-		currPerPersonLink = null;
 		if (ec.hasChanges()) ec.revert();
-		if(selector instanceof Student)
+		if(selector instanceof Student) {
 			student = (Student)selector;
+			if(currLesson() != null) {
+				String ent = currLesson().entityName();
+				if(!ent.equals(present.valueForKey("entityName"))) {
+					Enumeration enu = presentTabs.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						NSKeyValueCoding pr = (NSKeyValueCoding) enu.nextElement();
+						if(ent.equals(pr.valueForKey("entityName"))) {
+							present = pr;
+							refresh();
+							break;
+						}
+					}
+				}
+			}
+		} else {
+			student = null;
+		}
 		regime = NORMAL;
 		//refresh();
 	}
@@ -312,7 +328,7 @@ public class LessonNoteEditor extends WOComponent {
 	}
 	
 	public void save() {
-		save(true);
+		save(student == null);
 		//return this;
 	}
 	
@@ -331,7 +347,10 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	protected void save(boolean reset) {
-		student = null;
+		if(reset) {
+			student = null;
+			selector = currPerPersonLink;
+		}
 		boolean newLesson = (currPerPersonLink == null);
 		if(ec.hasChanges()) {
 			NSMutableSet changes = new NSMutableSet();
@@ -434,6 +453,8 @@ public class LessonNoteEditor extends WOComponent {
 		}// ec.hasChanges
 		if(reset)
 			currPerPersonLink = null;
+		else if(student != null)
+			selector = student;
 	}
 
 	public void delete() {
@@ -847,12 +868,14 @@ public class LessonNoteEditor extends WOComponent {
 	public void setPresent(NSKeyValueCoding pres) {
 		if(pres != null)
 			present = pres;
+		else
+			student = null;
 		if(ec.hasChanges())
 			ec.revert();
 		refresh();
 
-		student = null;
-		selector = null;
+//		student = null;
+		selector = student;
 		currPerPersonLink = null;
 	}
 
@@ -889,7 +912,7 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public boolean showSeparator() {
-		if(hideLeft() && currPerPersonLink != null) return false;
+//		if(hideLeft() && currPerPersonLink != null) return false;
 		if(!(accessInterface().flagForKey("rightSide") && accessInterface().flagForKey("leftSide")))
 			return false;
 		return true;
@@ -917,7 +940,7 @@ public class LessonNoteEditor extends WOComponent {
 						_currTab = (BaseTab)tablist.objectAtIndex(idx);
 					}*/
 		}
-		updateLessonList();
+//		updateLessonList();
 	}
 
 	public void moveRight() {
@@ -942,7 +965,7 @@ public class LessonNoteEditor extends WOComponent {
 						_currTab = (BaseTab)tablist.objectAtIndex(idx);
 					}*/
 		}
-		updateLessonList();
+//		updateLessonList();
 	}
 	
 	public String goRightTitle() {

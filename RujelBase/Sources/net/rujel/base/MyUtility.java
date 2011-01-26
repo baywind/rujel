@@ -283,9 +283,8 @@ public class MyUtility {
 
 	public static Integer setNumberToNewLesson(EduLesson currLesson) {
 		EOEditingContext ec = currLesson.editingContext();
-		NSMutableArray allLessons = EOUtilities.
-		objectsMatchingKeyAndValue(ec, currLesson.entityName(),
-				"course", currLesson.course()).mutableClone();
+		NSMutableArray allLessons = EOUtilities.objectsMatchingKeyAndValue(ec, 
+				currLesson.entityName(),"course", currLesson.course()).mutableClone();
 		if(allLessons != null && allLessons.count() > 0) {
 			allLessons.removeIdenticalObject(currLesson);
 			EOSortOrdering.sortArrayUsingKeyOrderArray(allLessons, EduLesson.sorter);
