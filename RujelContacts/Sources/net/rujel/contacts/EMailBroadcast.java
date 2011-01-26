@@ -35,6 +35,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
+import net.rujel.email.Mailer;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;

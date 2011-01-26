@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import net.rujel.contacts.Mailer;
+import net.rujel.email.Mailer;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
