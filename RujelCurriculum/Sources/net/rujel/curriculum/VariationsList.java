@@ -101,7 +101,7 @@ public class VariationsList extends WOComponent {
     	if(planFact == null)
     		planFact = VariationsPlugin.planFact(course, today);
     	super.appendToResponse(aResponse, aContext);
-    	session().takeValueForKey(null, "message");
+//    	session().takeValueForKey(null, "message");
     }
     
 /*    public String valueStyle() {
@@ -138,21 +138,21 @@ public class VariationsList extends WOComponent {
     			date = "???";
     			return this;
     		}
-    	} if(item.valueForKey("course") == null) {
-    		return this;
+//    	} else if(item.valueForKey("course") == null) {
+//    		return this;
     	} else {
     		Integer val = (Integer)item.valueForKey("value");
     		plus = (val.intValue() > 0);
     	}
     	WOComponent nextPage = pageWithName((plus)?"EditVarSub":"EditVariation");
     	nextPage.takeValueForKey(this, "returnPage");
-    	if(plus)
-    		nextPage.takeValueForKey(Boolean.FALSE, "returnNormaly");
-    	else
+    	if(!plus)
     		nextPage.takeValueForKey(course, "course");
     	if(item != null) {
     		nextPage.takeValueForKey(item, "variation");
     	} else {
+    		if(value != null && value.intValue() > 0)
+    			value = new Integer(-value.intValue());
     		nextPage.takeValueForKey(value, "value");
     		nextPage.takeValueForKey(aDate, "date");
     		nextPage.takeValueForKey(Boolean.TRUE, "negative");

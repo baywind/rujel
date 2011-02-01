@@ -39,6 +39,7 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -224,6 +225,11 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 	}
 
 	public WOActionResults save() {
+		if(reason == null) {
+    		session().takeValueForKey(application().valueForKeyPath(
+    			"strings.RujelCurriculum_Curriculum.messages.reasonRequired"), "message");
+    		return this;
+		}
 		EOEditingContext ec = lesson.editingContext(); 
 		NSArray others = (selLesson == null)?null:
 			(NSArray)selLesson.valueForKey("substitutes");
@@ -243,15 +249,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 				}
 			}
 		}
-		if(reason == null) {
-			if (returnPage instanceof WOComponent) 
-				((WOComponent)returnPage).ensureAwakeInContext(context());
-			if(ec.hasChanges())
-				ec.revert();
-			return returnPage;
-		}
 		String action = "saved";
-		ec.lock();
 //		if(substitute == null) {
 			Substitute substitute = (Substitute)EOUtilities.createAndInsertInstance(ec,
 					Substitute.ENTITY_NAME);
@@ -331,10 +329,12 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 	
 	protected WOActionResults done(String action) {
 		EOEditingContext ec = lesson.editingContext();
+		boolean ok = false;
 		try {
 			ec.saveChanges();
 			Object[] args = new Object[] {session(),selLesson};
 			logger.log(WOLogLevel.EDITING,"Join for lesson " + action,args);
+			ok = true;
 		} catch (NSValidation.ValidationException vex) {
 			ec.revert();
 			String message = vex.getMessage();
@@ -348,11 +348,9 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),selLesson,e};
 			logger.log(WOLogLevel.WARNING,"Failed to save "+ action + 
 					" Join for lesson ",args);
-		} finally {
-			ec.unlock();
 		}
-		if (returnPage instanceof WOComponent) 
-			((WOComponent)returnPage).ensureAwakeInContext(context());
-		return returnPage;
+		if(ok)
+			return RedirectPopup.getRedirect(context(), returnPage);
+		return this;
 	}
 }

@@ -41,13 +41,13 @@ public class PageWrapper extends WOComponent {
     public PageWrapper(WOContext context) {
         super(context);
     }
-    
+    /*
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		super.appendToResponse(aResponse, aContext);
 		if(aContext.hasSession())
 			aContext.session().takeValueForKey(null, "message");
 	}
-	
+	*/
 	public String eduYear() {
 		if(!context().hasSession())
 			return null;

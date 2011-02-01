@@ -36,6 +36,7 @@ import net.rujel.interfaces.Person;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -58,7 +59,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 	public boolean negative;
 	
 	public boolean onlyChooseReason = false;
-	public boolean returnNormaly = false;
 	
     public EditVariation(WOContext context) {
         super(context);
@@ -144,23 +144,31 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     }
 
     public WOActionResults done(boolean hasChanges) {
-    	returnPage.ensureAwakeInContext(context());
-    	if(hasChanges && (returnPage instanceof VariationsList)) {
-    		returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
-    		returnPage.takeValueForKey(null,"planFact");
-    	}
     	if(hasChanges)
 			session().removeObjectForKey("lessonProperies");
-       	return returnPage;
+    	if(returnPage instanceof VariationsList) {
+    		returnPage.ensureAwakeInContext(context());
+    		if(hasChanges) {
+    			returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
+    			returnPage.takeValueForKey(null,"planFact");
+    		}
+    		return returnPage;
+    	}
+       	return RedirectPopup.getRedirect(context(), returnPage);
     }
     
     public WOActionResults save() {
     	if(date == null || !MyUtility.dateFormat().format(date).equals(oldDate))
     		return updateDate();
-    	if(abs == null || reason == null) {
+    	if(abs == null) {
     		session().takeValueForKey(application().valueForKeyPath(
     				"strings.RujelCurriculum_Curriculum.messages.wrongVariation"), "message");
-    		return done(false);
+    		return this;
+    	}
+    	if(reason == null) {
+    		session().takeValueForKey(application().valueForKeyPath(
+    				"strings.RujelCurriculum_Curriculum.messages.reasonRequired"), "message");
+    		return this;
     	}
     	Integer value = (negative)?new Integer(-abs.intValue()):abs;
     	EOEditingContext ec = course.editingContext();
@@ -237,25 +245,9 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	return done(true);
     }
     
-    public String onsubmit() {
-    	if(returnNormaly)
-    		return null;
-    	else
-    		return "ajaxPost(this);return false;";
-    }
-    
     public String onDelete() {
-    	if(returnNormaly)
-    		return (String)session().valueForKey("confirmMessage");
-		String href = context().componentActionURL();
-   	return "if(confirmAction(this.value,event))ajaxPopupAction('" + href + "');";
-    }
-    
-    public String onCancel() {
-       	if(returnNormaly)
-    		return "closePopup();";
-    	else
-    		return (String)session().valueForKey("ajaxPopupNoPos");    	
+    	String href = context().componentActionURL();
+    	return "if(confirmAction(this.value,event))ajaxPopupAction('" + href + "');";
     }
     
     public WOActionResults showLesson() {

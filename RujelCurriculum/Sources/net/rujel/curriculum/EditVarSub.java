@@ -6,6 +6,7 @@ import net.rujel.interfaces.Person;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
@@ -27,7 +28,6 @@ public class EditVarSub extends WOComponent {
     public Reason reason;
     protected Variation variation;
     public Boolean cantSave = Boolean.TRUE;
-	public boolean returnNormaly = true;
 	public NamedFlags access;
     
     public EditVarSub(WOContext context) {
@@ -134,25 +134,9 @@ public class EditVarSub extends WOComponent {
     	cantSave = null;
     }
     
-    public String onsubmit() {
-    	if(returnNormaly)
-    		return null;
-    	else
-    		return "ajaxPost(this);return false;";
-    }
-    
     public String onDelete() {
-    	if(returnNormaly)
-    		return (String)session().valueForKey("confirmMessage");
 		String href = context().componentActionURL();
-   	return "if(confirmAction(this.value,event))ajaxPopupAction('" + href + "');";
-    }
-    
-    public String onCancel() {
-       	if(returnNormaly)
-    		return "closePopup();";
-    	else
-    		return (String)session().valueForKey("ajaxPopupNoPos");    	
+		return "if(confirmAction(this.value,event))ajaxPopupAction('" + href + "');";
     }
 
     public WOActionResults done() {
@@ -160,24 +144,26 @@ public class EditVarSub extends WOComponent {
     }
 
     public WOActionResults done(boolean hasChanges) {
-    	returnPage.ensureAwakeInContext(context());
-    	if(hasChanges && (returnPage instanceof VariationsList)) {
-    		returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
-    		returnPage.takeValueForKey(null,"planFact");
-    	}
     	if(hasChanges)
 			session().removeObjectForKey("lessonProperies");
-       	return returnPage;
+    	if(returnPage instanceof VariationsList) {
+    		returnPage.ensureAwakeInContext(context());
+    		if(hasChanges) {
+    			returnPage.takeValueForKey(Boolean.TRUE,"hasChanges");
+    			returnPage.takeValueForKey(null,"planFact");
+    		}
+    		return returnPage;
+    	}
+       	return RedirectPopup.getRedirect(context(), returnPage);
     }
 
     public WOActionResults save() {
-		EOEditingContext ec = toCourse.editingContext();
-		returnPage.ensureAwakeInContext(context());
 		if(reason == null) {
-			ec.revert();
-			return done(false);
+    		session().takeValueForKey(application().valueForKeyPath(
+    			"strings.RujelCurriculum_Curriculum.messages.reasonRequired"), "message");
+    		return this;
 		}
-
+		EOEditingContext ec = toCourse.editingContext();
 		if(variation == null)
 			variation = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
 		variation.setRelatedLesson(lesson);

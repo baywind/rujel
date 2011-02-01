@@ -47,6 +47,7 @@ CanDelete: WOConditional {
 Save: WOSubmitButton {
 	action = save;
 	value = application.strings.Reusables_Strings.uiElements.Save;
+	onclick = "return ajaxPost(this);";
 }
 
 DeleteButton: WOGenericElement {
@@ -162,4 +163,13 @@ SelectTeacher : OnClickContainer {
 
 HasFrom : WOConditional {
   condition = fromLesson;
+}
+
+HasMessage : WOConditional {
+  condition = session.message;
+}
+
+SesMessage : WOString {
+	value = session.message;
+	escapeHTML = false;
 }

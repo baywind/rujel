@@ -8,13 +8,13 @@ Cross : WOImage {
 
 CrossBox : OnClickContainer {
   elementName = "span";
-  onclick = onCancel;
+  onclick = session.ajaxPopupNoPos;
   invokeAction = done;
   style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
 }
 
 Form : WOForm {
-  onsubmit = onsubmit;
+  onsubmit = "ajaxPost(this);return false;";
   action = save;
 }
 
@@ -37,7 +37,7 @@ DateField : WOTextField {
   size = 10;
   style = "text-align:center;";
   onchange = "ajaxPost(this.form);";
-  onkeypress = "return isNumberInput(event,true);";
+  class = "date";
 }
 
 ValueField : WOTextField {
@@ -46,7 +46,7 @@ ValueField : WOTextField {
   size = 3;
   style = "text-align:center;font-size:larger;";
   disabled = onlyChooseReason;
-  onkeypress = "return isNumberInput(event,false);";
+  class = "numeric";
 }
 
 ReasonSelector : ReasonSelector {
@@ -78,7 +78,7 @@ DeleteButton: WOGenericElement {
 CancelButton: WOGenericElement {
 	value = application.strings.Reusables_Strings.uiElements.Cancel;
 	invokeAction = done;
-	onclick = onCancel;
+	onclick = session.ajaxPopupNoPos;
 	elementName = "input";
 	type = "button";
 }
@@ -107,5 +107,14 @@ ShowLesson : OnClickContainer {
 
 SubsSubject : WOString {
   value = lesson.course.subjectWithComment;
+  escapeHTML = false;
+}
+
+HasMessage : WOConditional {
+  condition = session.message;
+}
+
+SesMessage: WOString {
+  value = session.message;
   escapeHTML = false;
 }

@@ -361,7 +361,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 //		cal.add(Calendar.DATE, +1);
 		cal.set(Calendar.HOUR_OF_DAY,20);
 		long startDate = cal.getTimeInMillis();
-		int verifiedOnly = SettingsBase.numericSettingForCourse("ignoreUnverifiedReasons", course, ec, 0);
+		int verifiedOnly = SettingsBase.numericSettingForCourse(
+				"ignoreUnverifiedReasons", course, ec, 0);
 		if(list != null && list.count() > 0) {  // accont for variations
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -453,6 +454,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 							sg.takeValueForKey(
 									new NSTimestamp(cal.getTimeInMillis()), "date");
 							sg.takeValueForKey(new Integer(currWeek[i]),"value");
+							if(currWeek[i] > 0)
+								sg.takeValueForKey(Boolean.TRUE, "positive");
 							suggest.addObject(sg);
 						}
 					}

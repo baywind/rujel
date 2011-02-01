@@ -171,7 +171,7 @@
 		<key>wrongDates</key>
 		<string>Предлагаемый период актуальности причины не заключает в себе заданную дату.&lt;br/&gt;Граница периода была автоматически изменена.</string>
 		<key>wrongVariation</key>
-		<string>Неверное описание поправки</string>
+		<string>Не указано количество уроков</string>
 		<key>cantSetTeacher</key>
 		<string>Невозможно установить данного учителя, поскольку есть связанная Замена/Поправка для другого учителя</string>
 		<key>cantSetEduGroup</key>
@@ -190,6 +190,8 @@
 		<string>Для описания совмещения необходимо указать совместный урок</string>
 		<key>oldLesson</key>
 		<string>Вам запрещено редактирование старых уроков</string>
+		<key>reasonRequired</key>
+		<string>Укажите причину</string>
 	</dict>
 	<key>titles</key>
 	<dict>

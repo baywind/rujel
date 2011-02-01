@@ -163,11 +163,6 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     	return returnPage;
     }
     
-    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    		super.appendToResponse(aResponse, aContext);
-        	session().takeValueForKey(null, "message");
-    }
-
     public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
     	if(aContext.elementID().equals(aContext.senderID()))
     		return returnPage();

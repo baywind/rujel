@@ -216,6 +216,7 @@ ShowSuggestions : WOConditional {
 
 SubmitSuggest : OnClickContainer {
   elementName = "td";
+  hide = item.positive;
   onclick = session.ajaxPopupNoPos;
   invokeAction = editVariation;
   class = "orange";
@@ -234,5 +235,14 @@ SuggestionsTitle : WOString {
 
 BackTitle : WOString {
   value = varSub;
+  escapeHTML = false;
+}
+
+NoSubmit : WOConditional {
+  condition = item.positive;
+}
+
+Dop : WOString {
+  value = session.strings.RujelCurriculum_Curriculum.Variation.isAdded;
   escapeHTML = false;
 }

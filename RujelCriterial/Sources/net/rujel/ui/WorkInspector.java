@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import java.math.BigDecimal;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
@@ -114,7 +115,6 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	}
     	critIdx = -1;
     	super.appendToResponse(aResponse, aContext);
-    	session().takeValueForKey(null, "message");
     }
     
     public void setWork(Work newWork) {
@@ -227,10 +227,24 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 				continue;
 			} else {
 				if(mask == null) {
-					mask = EOUtilities.createAndInsertInstance(ec, "CriterMask");
+					if(ec.deletedObjects() != null) {
+						Enumeration denu = ec.deletedObjects().objectEnumerator();
+						while (denu.hasMoreElements()) {
+							mask = (EOEnterpriseObject)denu.nextElement();
+							if(mask.entityName().equals("CriterMask") && 
+									criterion.equals(mask.valueForKey("criterion"))) {
+								ec.insertObject(mask);
+								break;
+							}
+							mask = null;
+						}
+					}
+					if(mask == null) {
+						mask = EOUtilities.createAndInsertInstance(ec, "CriterMask");
+						mask.takeValueForKey(criterion, "criterion");
+					}
 					work.addObjectToBothSidesOfRelationshipWithKey(
 							mask, Work.CRITER_MASK_KEY);
-					mask.takeValueForKey(criterion, "criterion");
 				}
 				if(!val.equals(mask.valueForKey("max")))
 					mask.takeValueForKey(val, "max");

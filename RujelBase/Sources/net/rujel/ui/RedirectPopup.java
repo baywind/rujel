@@ -37,6 +37,10 @@ public class RedirectPopup extends WOComponent {
     	return null;
     }
     
+    public static RedirectPopup getRedirect(WOContext ctx, WOComponent returnPage) {
+    	return getRedirect(ctx, returnPage,null);
+    }
+    
     public static RedirectPopup getRedirect(WOContext ctx, WOComponent returnPage, String target) {
     	RedirectPopup redir = (RedirectPopup)WOApplication.application().pageWithName(
     			"RedirectPopup", ctx);

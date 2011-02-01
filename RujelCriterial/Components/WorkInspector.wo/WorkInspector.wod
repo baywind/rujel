@@ -188,8 +188,8 @@ WeightField : WOGenericElement {
 	size = 2;
 	value = criterWeight;
 	style = "text-align:center;";
-	onkeypress = "return isNumberInput(event);";
 	disabled = disableWeight;
+	class = "numeric";
 }
 
 Save: WOGenericElement {

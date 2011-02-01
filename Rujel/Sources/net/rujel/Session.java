@@ -215,7 +215,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
     public String message() {
     	if(message == null || message.length() == 0)
     		return null;
-        return message.toString();
+        String result = message.toString();
+        message.append('\n');
+        return result;
     }
     
     public synchronized void setMessage(String newMessage) {
@@ -249,7 +251,11 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			}
 		}
 		setTimeOut(to);
+		to = (double)message.length();
 		super.appendToResponse(aResponse,aContext);
+		int diff = message.length() - (int)to;
+		if (diff > 0 && diff < 10 && message.charAt(message.length() -1) == '\n')
+			message.delete(0, message.length());
 	}
 	
 	private NSMutableArray persList = new NSMutableArray();

@@ -8,7 +8,7 @@ Cross : WOImage {
 
 CrossBox : OnClickContainer {
   elementName = "span";
-  onclick = onCancel;
+  onclick = session.ajaxPopupNoPos;
   invokeAction = done;
   style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
 }
@@ -58,7 +58,7 @@ ReasonSelector : ReasonSelector {
 }
 
 Form : WOForm {
-  onsubmit = onsubmit;
+  onsubmit = "ajaxPost(this);return false;";
   action = save;
   style = "border-top: 1px #666 solid;";
 }
@@ -149,10 +149,20 @@ DeleteButton: WOGenericElement {
 CancelButton: WOGenericElement {
 	value = application.strings.Reusables_Strings.uiElements.Cancel;
 	invokeAction = done;
-	onclick = onCancel;
+	onclick = session.ajaxPopupNoPos;
 	elementName = "input";
 	type = "button";
 }
+
 NoEdit : WOConditional {
   condition = access._edit;
+}
+
+HasMessage : WOConditional {
+  condition = session.message;
+}
+
+SesMessage : WOString {
+	value = session.message;
+	escapeHTML = false;
 }
