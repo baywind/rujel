@@ -66,10 +66,10 @@ public class LessonList extends WOComponent {
     }
 	
 	public WOActionResults selectLesson() {
-		if(hasBinding("currLesson"))
-			setValueForBinding(lessonItem,"currLesson");
 		if(hasBinding("selector"))
 			setValueForBinding(lessonItem,"selector");
+		if(hasBinding("currLesson"))
+			setValueForBinding(lessonItem,"currLesson");
 		if(lessonItem != null) {
 			EOEditingContext ec = lessonItem.editingContext();
 			if (ec != null && ec.hasChanges()) ec.revert();

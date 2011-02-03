@@ -108,13 +108,13 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void setCurrLesson(EduLesson lesson) {
-		student = null;
+//		student = null;
 		currPerPersonLink = (PerPersonLink)EOUtilities.localInstanceOfObject(ec,lesson);
 		session().setObjectForKey(lesson.date(), "recentDate");
 	}
 	
 	public void setCurrPerPersonLink(PerPersonLink lesson) {
-		student = null;
+//		student = null;
 		if(lesson instanceof EduLesson)
 			session().setObjectForKey(((EduLesson)lesson).date(), "recentDate");
 		if (ec.hasChanges()) {
@@ -122,6 +122,8 @@ public class LessonNoteEditor extends WOComponent {
 			updateLessonList();
 		}
 		currPerPersonLink = lesson;
+		if(student != null)
+			selector = student;
 		if(currLesson() == null)
 			return;
 		logger.log(WOLogLevel.READING,"Open lesson",new Object[] {session(),lesson});

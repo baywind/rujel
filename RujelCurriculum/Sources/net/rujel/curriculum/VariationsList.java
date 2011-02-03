@@ -138,8 +138,6 @@ public class VariationsList extends WOComponent {
     			date = "???";
     			return this;
     		}
-//    	} else if(item.valueForKey("course") == null) {
-//    		return this;
     	} else {
     		Integer val = (Integer)item.valueForKey("value");
     		plus = (val.intValue() > 0);
