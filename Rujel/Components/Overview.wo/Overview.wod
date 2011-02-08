@@ -109,6 +109,7 @@ PeriodSelector: PeriodSelector {
 	end = to;
 	period = period;
 	selectAction = updateLessonLists;
+	allowNone = true;
 }
 
 PersonSelector1: PersonSelector {

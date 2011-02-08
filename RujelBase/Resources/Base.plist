@@ -29,6 +29,54 @@
 			<string>notes</string>
 			<string>taskText</string>
 		</array>
+		<key>params</key>
+		<array>
+			<dict>
+				<key>title</key>
+				<string>Дата</string>
+				<key>active</key>
+				<true/>
+				<key>attribute</key>
+				<string>date</string>
+				<key>formatter</key>
+				<string>date</string>
+				<key>fieldSize</key>
+				<integer>10</integer>
+				<key>qualifierSelector</key>
+				<string>&gt;=</string>
+				<key>secondSelector</key>
+				<string>&lt;=</string>
+				<key>defaultMax</key>
+				<string>$session.today</string>
+				<key>defaultMin</key>
+				<dict>
+					<key>object</key>
+					<string>$session.today</string>
+					<key>methodName</key>
+					<string>timestampByAddingGregorianUnits</string>
+					<key>cacheResult</key>
+					<true/>
+					<key>paramClasses</key>
+					<array>
+						<string>int</string>
+						<string>int</string>
+						<string>int</string>
+						<string>int</string>
+						<string>int</string>
+						<string>int</string>
+					</array>
+					<key>paramValues</key>
+					<array>
+						<integer>0</integer>
+						<integer>-1</integer>
+						<integer>0</integer>
+						<integer>0</integer>
+						<integer>0</integer>
+						<integer>0</integer>
+					</array>
+				</dict>
+			</dict>
+		</array>
 	</dict>
 	<key>reportSettings</key>
 	<dict>
@@ -143,6 +191,8 @@
 	<string>Вакансия</string>
 	<key>before</key>
 	<string>до</string>
+	<key>noLimit</key>
+	<string>все</string>
 	<key>SettingsBase</key>
 	<dict>
 		<key>duplicateByCourse</key>

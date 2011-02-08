@@ -173,3 +173,9 @@ Count : WOString {
   numberformat = "0";
   escapeHTML = false;
 }
+
+QueryParams : QueryParams {
+  list = currReport.params;
+  params = params;
+  ec = ec;
+}

@@ -183,17 +183,25 @@ public class Overview extends WOComponent {
 	public void updateLessonLists() {
 		if(courses == null || courses.count() == 0) return;
 		Enumeration enu = courses.objectEnumerator();
-		NSArray args = new NSArray(new Object[] { since,to });
-		session().setObjectForKey(to, "recentDate");
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
+		NSMutableArray qualifiers = new NSMutableArray();
+		if(to != null) {
+			session().setObjectForKey(to, "recentDate");
+			qualifiers.addObject(new EOKeyValueQualifier("date",
+					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+		} else {
+			session().removeObjectForKey("recentDate");	
+		}
+		if(since != null) {
+			qualifiers.addObject(new EOKeyValueQualifier("date",
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+		}
 		NSKeyValueCoding present = present();
 		while(enu.hasMoreElements()) {
 			courseItem = (NSMutableDictionary)enu.nextElement();
 			//NSArray tmp = (NSArray)courseItem.valueForKeyPath("course.lessons");
 			EduCourse course = (EduCourse)courseItem.valueForKey("course");
-			NSMutableArray qualifiers = new NSMutableArray(qual);
 			NSArray lessons = LessonNoteEditor.lessonListForCourseAndPresent(
-					course, present, qualifiers);
+					course, present, qualifiers.mutableClone());
 			courseItem.setObjectForKey(lessons,"lessonsList");
 		}
 		/*NSArray notesAddOns = (NSArray)session().objectForKey("notesAddOns");

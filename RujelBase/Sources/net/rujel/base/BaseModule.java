@@ -42,9 +42,9 @@ import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableDictionary;
 
 public class BaseModule {
-	protected static NSDictionary lessonsTab;
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -56,10 +56,11 @@ public class BaseModule {
 			}
 			init();
 		} else if("presentTabs".equals(obj)) {
-			if(lessonsTab == null) lessonsTab = (NSDictionary)WOApplication.application().
-			valueForKeyPath("strings.RujelBase_Base.lessonsTab");
-			if(lessonsTab == null) lessonsTab = NSDictionary.EmptyDictionary;
-			return lessonsTab.mutableClone();
+			NSDictionary lessonsTab = (NSDictionary)ctx.session().valueForKeyPath(
+					"strings.RujelBase_Base.lessonsTab");
+			if(lessonsTab == null)
+				return new NSMutableDictionary();
+			return PlistReader.cloneDictionary(lessonsTab, true);
 		} else if("reportForStudent".equals(obj)) {
 			NSDictionary settings = (NSDictionary)ctx.session().objectForKey("reportForStudent");
 			return LessonReport.reportForStudent(settings);

@@ -32,15 +32,11 @@ package net.rujel.reports;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOEntity;
-import com.webobjects.eoaccess.EORelationship;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -84,98 +80,11 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 	}
 
     public void go() {
-    	NSMutableArray quals = new NSMutableArray();
     	String entityName = (String)currReport.valueForKey("entity");
-   	
-    	NSMutableDictionary inQuals = new NSMutableDictionary();
     	NSArray paramDicts = (NSArray)currReport.valueForKey("params");
-    	Enumeration enu = paramDicts.objectEnumerator();
-    	while (enu.hasMoreElements()) {
-			NSKeyValueCoding dict = (NSKeyValueCoding) enu.nextElement();
-			if(!Various.boolForObject(dict.valueForKey("active")))
-				continue;
-			EOQualifier qual = Parameter.qualForParam(dict, params,this);
-			if(qual != null) {
-				NSKeyValueCoding in = (NSKeyValueCoding)dict.valueForKey("in");
-				if(in == null) {
-					quals.addObject(qual);
-				} else {
-					String rel = (String)in.valueForKey("relationship");
-					try {
-						Object inList = in.valueForKey("list");
-						if(inList != null) {
-							inList = DisplayAny.ValueReader.evaluateValue(
-									inList, params, this);
-							if(inList != null && ((NSArray)inList).count() > 0) {
-								quals.addObject(Various.getEOInQualifier(rel, (NSArray)inList));
-								continue;
-							} else {
-								String message = (String)session().valueForKeyPath(
-									"strings.RujelReports_Reports.CustomReport.restrictingParam");
-								if(message == null)
-									message = (String)dict.valueForKey("title");
-								else
-									message = String.format(message,dict.valueForKey("title"));
-								session().takeValueForKey(message, "message");
-								return;
-							}
-						}
-					} catch (Exception e) {
-						logger.log(WOLogLevel.WARNING,
-								"Error reading allowed value list for relationship \"" + rel +
-								'"' + "in report '" + currReport.valueForKey("title") + '\'',
-								new Object[] {session(),e});
-					}
-					NSMutableDictionary inDict = (NSMutableDictionary)
-							inQuals.valueForKey(rel);
-					if(inDict == null) {
-						String inEntity = (String)in.valueForKey("entity");
-						if(inEntity == null) {
-							try {
-								EOEntity ent = EOUtilities.entityNamed(ec, entityName);
-								EORelationship relat = ent.relationshipNamed(rel);
-								ent = relat.destinationEntity();
-								inEntity = ent.name();
-							} catch (RuntimeException e) {
-								Object[] args = new Object[] { session(),e,dict };
-								logger.log(WOLogLevel.WARNING,"Could not get entityName",args);
-								continue;
-							}
-						}
-						inDict = new NSMutableDictionary(inEntity,"entity");
-						NSMutableArray attrQuals = new NSMutableArray(qual);
-						qual = Parameter.qualForParam(in, params,this);
-						if(qual != null) {
-							attrQuals.addObject(qual);
-						}
-						inDict.setObjectForKey(attrQuals, "attrQuals");
-						inQuals.takeValueForKey(inDict, rel);
-					} else {
-						NSMutableArray attrQuals = (NSMutableArray)
-								inDict.valueForKey("attrQuals");
-						attrQuals.addObject(qual);
-					}
-				}
-			} else if(!Various.boolForObject(dict.valueForKey("hidden"))) { // has qual
-				dict.takeValueForKey(null, "active");
-			}
-		}
+    	NSMutableArray quals = QueryParams.paramsToQual(
+    			params, paramDicts, entityName, this, ec, null);
     	EOQualifier qual = null;
-    	if(inQuals != null && inQuals.count() > 0) {
-    		enu = inQuals.keyEnumerator();
-    		while (enu.hasMoreElements()) {
-				String rel = (String) enu.nextElement();
-				NSMutableDictionary inDict = (NSMutableDictionary)inQuals.objectForKey(rel);
-				NSArray attrQuals = (NSArray)inDict.valueForKey("attrQuals");
-				qual = new EOAndQualifier(attrQuals);
-				String inEntity = (String)inDict.valueForKey("entity");
-				EOFetchSpecification fs = new EOFetchSpecification(inEntity,qual,null);
-				NSArray inList = ec.objectsWithFetchSpecification(fs);
-				qual = Various.getEOInQualifier(rel, inList);
-				if(qual != null)
-					quals.addObject(qual);
-			}
-    	} // add IN qualifiers
     	if(quals.count() > 0) {
     		if(quals.count() > 1)
     			qual = new EOAndQualifier(quals);

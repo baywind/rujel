@@ -34,6 +34,7 @@ import net.rujel.base.BaseTab;
 import net.rujel.base.MyUtility;
 
 import net.rujel.reusables.*;
+import net.rujel.reusables.Tabs.GenericTab;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -236,6 +237,8 @@ public class LessonNoteEditor extends WOComponent {
 		if(entityName == null)
 			entityName = EduLesson.entityName;
 		baseTabs = BaseTab.tabsForCourse(course, entityName);
+		if(_currTab instanceof CustomTab.Tab)
+			_currTab = (GenericTab) ((CustomTab.Tab) _currTab).params.valueForKey("parentTab");
 		if(_currTab == null || _currTab instanceof BaseTab.Tab) {
 			if(_currTab != null && (baseTabs == null || !baseTabs.containsObject(_currTab)))
 				_currTab = null;
@@ -295,7 +298,7 @@ public class LessonNoteEditor extends WOComponent {
 			else
 				qualifiers.addObject(extraQualifier);
 		}
-		if(qualifiers != null) {
+		if(qualifiers != null && qualifiers.count() > 0) {
 			qualifiers.addObject(qual);
 			qual = new EOAndQualifier(qualifiers);
 		}
@@ -307,9 +310,9 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void updateLessonList() {
-		NSMutableArray qualifiers = null;
-		if(currTab() != null) {
-			qualifiers = new NSMutableArray(currTab().qualifier());
+		NSMutableArray qualifiers = new NSMutableArray();
+		if(currTab() != null && currTab().qualifier() != null) {
+			qualifiers.addObject(currTab().qualifier());
 		}
 		if(valueForKeyPath("currLesson.editingContext") != null) {
 			ec.refaultObject(currLesson());
@@ -1029,5 +1032,31 @@ public class LessonNoteEditor extends WOComponent {
 		WOComponent resultPage = srcMark();
  		resultPage.takeValueForKey(course.teacher(), "currTeacher");
 		return resultPage;
+	}
+	
+	public String customTabClass() {
+		if(_currTab instanceof CustomTab.Tab)
+			return "selection";
+		return "grey";
+	}
+	
+	public WOActionResults customTab() {
+		WOComponent result = CustomTab.getPopup(this, null);
+		result.takeValueForKey(ec, "ec");
+		result.takeValueForKey(present, "present");
+		return result;
+	}
+	
+	public Boolean hideCustomTab() {
+		if(present == null || present.valueForKey("params") == null)
+			return Boolean.TRUE;
+		try {
+			Class query = Class.forName("net.rujel.reports.QueryParams");
+			if(query == null)
+				return Boolean.TRUE;
+		} catch (Exception e) {
+			return Boolean.TRUE;
+		}
+		return Boolean.FALSE;
 	}
 }

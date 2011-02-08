@@ -227,3 +227,18 @@ SplitSign : WOString {
   value = splitSign;
   escapeHTML = false;
 }
+
+CustomTab : OnClickContainer {
+  elementName = "div";
+  hide = hideCustomTab;
+  class = customTabClass;
+  invokeAction = customTab;
+  onclick = session.ajaxPopup;
+  style="margin-bottom:1ex;padding:1pt 3pt;white-space:nowrap;";
+  title = session.strings.Strings.LessonNoteEditor.manualTab;
+}
+
+CustomTabTitle : WOString {
+  value = session.strings.Strings.LessonNoteEditor.manTab;
+  escapeHTML = false;
+}

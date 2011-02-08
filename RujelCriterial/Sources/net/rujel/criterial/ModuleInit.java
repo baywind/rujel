@@ -73,7 +73,7 @@ public class ModuleInit {
 		} else if("presentTabs".equals(obj)) {
 			NSDictionary worksTab = (NSDictionary)WOApplication.application().
 				valueForKeyPath("strings.RujelCriterial_Strings.worksTab");
-			return worksTab.mutableClone();
+			return PlistReader.cloneDictionary(worksTab, true);
 		} else if ("extendLesson".equals(obj)) {
 			return extendLesson(ctx);
 		} else if("reportForStudent".equals(obj)) {
