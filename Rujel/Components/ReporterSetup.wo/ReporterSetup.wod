@@ -178,7 +178,7 @@ SubHasOptions : WOConditional {
 }
 
 SubOptions : WORepetition {
-  list = subItem.options;
+  list = options;
   item = optItem;
 }
 
@@ -186,7 +186,7 @@ SubOptions : WORepetition {
 OptRadio : WORadioButton {
   name = subItem.id;
   value = optItem.value;
-  selection = subItem.active;
+  selection = selection;
 }
 
 OptCell : WOGenericContainer {
@@ -196,4 +196,22 @@ OptCell : WOGenericContainer {
 
 OptName : WOString {
   value = optItem.title;
+}
+
+IsRadio : WOConditional {
+  condition = subItem.popUp;
+  negate = true;
+}
+
+IsPopup : WOConditional {
+  condition = subItem.popUp;
+}
+
+PopUp : WOPopUpButton {
+  list = options;
+  item = optItem;
+  noSelectionString = subItem.noSelectionString;
+  displayString = optTitle;
+  selection = selection;
+  name = subItem.id;
 }

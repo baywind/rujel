@@ -8,16 +8,20 @@ import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -131,8 +135,7 @@ public class ReporterSetup extends WOComponent {
 	        }
 			defaultSettings = settings.immutableClone();
 			presetName = defaultName;
-			String path = SettingsReader.stringForKeyPath("reportsDir",
-			"CONFIGDIR/RujelReports");
+			String path = SettingsReader.stringForKeyPath("reportsDir","CONFIGDIR/RujelReports");
 			path = path + "/StudentReport/defaultSettings.plist";
 			file = new File(Various.convertFilePath(path));
 		} else if(presets != null) {
@@ -268,6 +271,8 @@ public class ReporterSetup extends WOComponent {
 			NSMutableDictionary rp = (NSMutableDictionary) enu.nextElement();
 			Object key = rp.valueForKey("id");
 			NSMutableDictionary subs = (NSMutableDictionary)settings.objectForKey(key);
+			NSDictionary defaults = (defaultSettings==null)?null:
+				(NSDictionary)defaultSettings.objectForKey(key);
 			NSMutableArray skeys = null;
 			if(subs == null) {
 				subs = new NSMutableDictionary();
@@ -278,10 +283,14 @@ public class ReporterSetup extends WOComponent {
 				skeys.removeObject("active");
 				skeys.removeObject("sort");
 			}
-			if(updSettings || subs.valueForKey("active") == null)
-				subs.takeValueForKey(rp.valueForKey("active"),"active");
-			else if(updReports)
+			if(updSettings || subs.valueForKey("active") == null) {
+				Object value = rp.valueForKey("active");
+//				if(value instanceof EOEnterpriseObject)
+//					value = WOLogFormatter.formatEO((EOEnterpriseObject)value);
+				subs.takeValueForKey(value,"active");
+			} else if(updReports) {
 				rp.takeValueForKey(subs.valueForKey("active"), "active");
+			}
 			if(updSettings || subs.valueForKey("sort") == null)
 				subs.takeValueForKey(rp.valueForKey("sort"),"sort");
 			else if(updReports)
@@ -290,10 +299,18 @@ public class ReporterSetup extends WOComponent {
 			while (options.hasMoreElements()) {
 				NSMutableDictionary opt = (NSMutableDictionary) options.nextElement();
 				key = opt.valueForKey("id");
-				if(updSettings || subs.objectForKey(key) == null)
-					subs.takeValueForKey(opt.valueForKey("active"),(String)key);
-				else if(updReports)
-					opt.setObjectForKey(subs.objectForKey(key),"active");
+				if(subs.objectForKey(key) == null) {
+					subs.takeValueForKey(((defaults==null)?opt:defaults)
+							.objectForKey(key),(String)key);
+				}
+				if(updSettings) {
+					Object value = opt.valueForKey("active");
+					if(value instanceof EOEnterpriseObject)
+						value = WOLogFormatter.formatEO((EOEnterpriseObject)value);
+					subs.takeValueForKey(value,(String)key);
+				} else if(updReports) {
+					opt.takeValueForKey(subs.objectForKey(key),"active");
+				}
 				if(skeys != null)
 					skeys.removeObject(key);
 			}
@@ -374,5 +391,32 @@ public class ReporterSetup extends WOComponent {
 			result + "}else{disabled=true;f.focus();}return false;";
 		}
 		return result + "return false;";
+	}
+	
+	public NSArray options() {
+		return (NSArray)DisplayAny.ValueReader.evaluateValue(
+				subItem.valueForKey("options"), item, this);
+	}
+	
+	public Object selection() {
+		Object obj = subItem.valueForKey("active");
+		if(obj instanceof String) {
+			try {
+				EOEditingContext ec = (EOEditingContext)returnPage.valueForKey("ec");
+				obj = Various.parseEO((String)obj, ec);
+			} catch (Exception e) {
+				;
+			}
+		}
+		return obj;
+	}
+	
+	public void setSelection(Object sel) {
+		subItem.takeValueForKey(sel, "active");
+	}
+	
+	public String optTitle() {
+		String key = (String)subItem.valueForKey("displayString");
+		return (String)optItem.valueForKey(key);
 	}
 }

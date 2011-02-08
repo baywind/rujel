@@ -211,7 +211,7 @@
 				<key>title</key>
 				<string>Дата</string>
 				<key>active</key>
-				<true/>
+				<false/>
 				<key>attribute</key>
 				<string>date</string>
 				<key>formatter</key>
@@ -416,6 +416,37 @@
 				<string>какие работы показывать в распечатке</string>
 				<key>active</key>
 				<integer>1</integer>
+			</dict>
+			<dict>
+				<key>id</key>
+				<string>workType</string>
+				<key>title</key>
+				<string>Тип</string>
+				<key>options</key>
+				<dict>
+					<key>className</key>
+					<string>com.webobjects.eoaccess.EOUtilities</string>
+					<key>methodName</key>
+					<string>objectsForEntityNamed</string>
+					<key>cacheResult</key>
+					<true/>
+					<key>paramClasses</key>
+					<array>
+						<string>com.webobjects.eocontrol.EOEditingContext</string>
+						<string>java.lang.String</string>
+					</array>
+					<key>paramValues</key>
+					<array>
+						<string>$returnPage.ec</string>
+						<string>&apos;WorkType</string>
+					</array>
+				</dict>
+				<key>displayString</key>
+				<string>typeName</string>
+				<key>noSelectionString</key>
+				<string>_все_</string>
+				<key>popUp</key>
+				<true/>
 			</dict>
 			<dict>
 				<key>id</key>

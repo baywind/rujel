@@ -89,7 +89,17 @@ public class StudentMarks extends WOComponent {
 		Period period = (Period)settings.valueForKey("period");
 		if(!(period instanceof EOEnterpriseObject))
 			period = null;
-
+		Object workType = options.valueForKey("workType");
+		if(workType instanceof String) {
+			try {
+				workType = Various.parseEO((String)workType, ec);
+			} catch (Exception e) {
+				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+						"Error parsing workType in reportSettings",e);
+				workType = null;
+				settings.takeValueForKey(null, "workType");
+			}
+		}
 		NSArray courses = (NSArray)settings.valueForKey("courses");
 		if(courses == null)
 			return null;
@@ -117,8 +127,11 @@ public class StudentMarks extends WOComponent {
 				quals.addObject(new EOKeyValueQualifier(Work.WEIGHT_KEY,
 						EOQualifier.QualifierOperatorGreaterThan,BigDecimal.ZERO));
 			}
-
-			EOFetchSpecification fs = new EOFetchSpecification("Work",
+			if(workType != null) {
+				quals.addObject(new EOKeyValueQualifier(Work.WORK_TYPE_KEY,
+						EOQualifier.QualifierOperatorEqual,workType));
+			}
+			EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
 					new EOAndQualifier(quals),EduLesson.sorter);
 			fs.setRefreshesRefetchedObjects(true);
 			NSArray works = ec.objectsWithFetchSpecification(fs);
@@ -150,10 +163,11 @@ public class StudentMarks extends WOComponent {
 		if(level >= 1) { //add works with marks
 			boolean dateSet = Various.boolForObject(options.valueForKey("dateSet"));
 			args.removeAllObjects();
-//			args.addObjects(new Object[] { student,since,to,since,to });
-//			String qualifierFormat = "student = %@ AND ";
 			args.addObject(new EOKeyValueQualifier("student",
 					EOQualifier.QualifierOperatorEqual,student));
+			if(workType != null)
+				args.addObject(new EOKeyValueQualifier("work.workType",
+					EOQualifier.QualifierOperatorEqual,workType));
 			if(period != null) {
 				args.addObject(new EOKeyValueQualifier("work.date",
 						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,period.begin()));
@@ -192,9 +206,11 @@ public class StudentMarks extends WOComponent {
 			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
 			//insert WorkNotes
 			fs.setEntityName("WorkNote");
-			if(period == null) {
-				while (args.count() > 1) {
-					args.removeLastObject();
+			if(period == null && dateSet) {
+				for (int i = args.count() -1; i >= 0; i--) {
+					if(args.objectAtIndex(i) instanceof EOOrQualifier) {
+						args.removeObjectAtIndex(i);
+					}
 				}
 				if(since != null)
 					args.addObject(new EOKeyValueQualifier("work.date",
@@ -202,8 +218,6 @@ public class StudentMarks extends WOComponent {
 				if(to != null)
 					args.addObject(new EOKeyValueQualifier("work.date",
 							EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
-//				EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
-//						"student = %@ AND work.date >= %@ AND work.date <= %@",args);
 				fs.setQualifier(new EOAndQualifier(args));
 			}
 			NSArray workNotes = ec.objectsWithFetchSpecification(fs);
