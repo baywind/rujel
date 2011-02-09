@@ -83,7 +83,7 @@ public class ReporterSetup extends WOComponent {
         	}
         }
         if(defaultSettings == null)
-        	defaultSettings = NSDictionary.EmptyDictionary;
+        	getDefaultSettings(context.session());
         if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
         	presetName = (String)context.session().valueForKeyPath(
         				"strings.Strings.PrintReport.defaultSettings");
@@ -337,27 +337,23 @@ public class ReporterSetup extends WOComponent {
 	
 	public static NSMutableDictionary getDefaultSettings(WOSession ses) {
 		NSMutableDictionary result = null;
-		if(defaultSettings == null) {
+		if(defaultSettings == null || defaultSettings.count() == 0) {
 			String path = SettingsReader.stringForKeyPath("reportsDir",
 					"CONFIGDIR/RujelReports");
 			path = path + "/StudentReport/defaultSettings.plist";
 			Object plist = PlistReader.readPlist(path, null);
+			NSArray reports = (NSArray)ses.valueForKeyPath(
+					"modules.reportSettingsForStudent");
 			if(plist instanceof NSDictionary) {
 				defaultSettings = (NSDictionary)plist;
 				result = PlistReader.cloneDictionary(defaultSettings, true);
-				NSArray reports = (NSArray)ses.valueForKeyPath(
-						"modules.reportSettingsForStudent");
 				result = synchronizeReportSettings(result, reports, false, false);
-				defaultSettings = result.immutableClone();
 			} else {
-				defaultSettings = NSDictionary.EmptyDictionary;
+				result = synchronizeReportSettings(null, reports, true, false);
 			}
-		}
-		if(defaultSettings.count() > 0) {
-			result = PlistReader.cloneDictionary(defaultSettings, true);
+			defaultSettings = result.immutableClone();
 		} else {
-			NSArray reports = (NSArray)ses.valueForKeyPath("modules.reportSettingsForStudent");
-			result = synchronizeReportSettings(result, reports, true, false);
+			result = PlistReader.cloneDictionary(defaultSettings, true);
 		}
 		return result;
 	}
