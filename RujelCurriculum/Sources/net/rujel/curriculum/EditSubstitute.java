@@ -320,7 +320,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 					reason = null;
 					session().takeValueForKey(application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.duplicateTeacher"), "message");
-					session().removeObjectForKey("lessonProperies");
+					session().removeObjectForKey("lessonProperties");
 					if(ec.hasChanges())
 						ec.revert();
 					return this;
@@ -453,7 +453,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		} finally {
 			ec.unlock();
 		}
-		session().removeObjectForKey("lessonProperies");
+		session().removeObjectForKey("lessonProperties");
 	}
 	
 	public String checkSave() {

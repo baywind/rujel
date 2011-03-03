@@ -29,6 +29,8 @@
 
 package net.rujel.ui;
 
+import java.lang.ref.WeakReference;
+
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 
@@ -41,15 +43,90 @@ public class AddOnPresenter extends WOComponent {
         super(context);
     }
 	
+    public static class AddOn implements NSKeyValueCoding,NSKeyValueCoding.ErrorHandling {
+    	protected EduCourse _course;
+    	protected NSDictionary dict;
+    	protected NamedFlags _access;
+    	public NSMutableDictionary agregate;
+    	private NSMutableDictionary userInfo;
+    	
+    	public AddOn(NSDictionary init, NamedFlags access) {
+    		dict = init;
+    		_access = access;
+    	}
+
+    	public EduCourse course() {
+    		return _course;
+    	}
+
+    	public void setCourse(Object aCourse) {
+    		EduCourse crs = null;
+    		if(aCourse instanceof EduCourse) {
+    			crs = (EduCourse)aCourse;
+    		} else if (aCourse instanceof WeakReference) {
+    			crs = (EduCourse)((WeakReference)aCourse).get();
+    		}
+    		if(crs == null) {
+    			reset();
+    		} else {
+    			update(crs);
+    		}
+    	}
+    	
+    	public void update(EduCourse crs) {
+    		_course = crs;
+    	}
+    	
+    	public void reset() {
+    		_course = null;
+    		agregate = null;
+    		userInfo = null;
+    	}
+
+    	public NamedFlags access() {
+    		return _access;
+    	}
+    	
+    	public void takeValueForKey(Object value, String key) {
+    		NSKeyValueCoding.DefaultImplementation.takeValueForKey(this, value, key);
+    	}
+
+    	public Object valueForKey(String key) {
+    		Object result = dict.valueForKey(key);
+    		if(result != null)
+    			return result;
+    		result = NSKeyValueCoding.DefaultImplementation.valueForKey(this, key);
+    		return result;
+    	}
+
+    	public Object handleQueryWithUnboundKey(String key) {
+    		if(userInfo == null)
+    			return null;
+    		return userInfo.valueForKey(key);
+    	}
+
+    	public void handleTakeValueForUnboundKey(Object value, String key) {
+    		if(userInfo == null) {
+    			if(value != null)
+    				userInfo = new NSMutableDictionary(value,key);
+    		} else
+    			userInfo.takeValueForKey(value, key);
+    	}
+
+    	public void unableToSetNullForKey(String key) {
+    		NSKeyValueCoding.DefaultImplementation.unableToSetNullForKey(this, key);
+    		//throw new NullPointerException("unableToSetNullForKey : " + key);
+    	}
+   }
 	
-	protected NSKeyValueCoding _currAddOn;
+	protected AddOn _currAddOn;
 	private EduCourse _course;
 //	private EduPeriod _period;
 	private Object _student;
 	
-	public NSKeyValueCoding currAddOn() {
+	public AddOn currAddOn() {
 		if(_currAddOn == null) {
-			_currAddOn = (NSKeyValueCoding)valueForBinding("currAddOn");
+			_currAddOn = (AddOn)valueForBinding("currAddOn");
 		}
 		return _currAddOn;
 	}

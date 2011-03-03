@@ -488,6 +488,7 @@ ShowDetails : WOConditional {
 
 ToReturn : WOCheckBox {
   checked = currReason.namedFlags.toReturn;
+  disabled = cantEdit;
 }
 
 ReturnTitle : WOString {

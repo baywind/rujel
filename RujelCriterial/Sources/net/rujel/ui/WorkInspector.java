@@ -301,7 +301,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		}
     		return RedirectPopup.getRedirect(context(), returnPage, null);
        	}
- 		session().removeObjectForKey("lessonProperies");
+ 		session().removeObjectForKey("lessonProperties");
     	return this;
     }
     

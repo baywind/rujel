@@ -43,6 +43,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.Timer;
@@ -267,10 +268,11 @@ public class AutoItogModule {
 		if(Various.boolForObject(ses.valueForKeyPath("readAccess._read.Prognosis")))
 			return null;
 		String key = "AutoItog.PrognosesAddOn";
-		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey(key);
+		WeakReference addOnRef = (WeakReference)ses.objectForKey(key);
+		PrognosesAddOn addOn = (addOnRef==null)?null:(PrognosesAddOn)addOnRef.get();
 		if(addOn == null) {
 			addOn = new PrognosesAddOn(ses);
-			ses.setObjectForKey(addOn, key);
+			ses.setObjectForKey(new WeakReference(addOn), key);
 		}
 		return addOn;
 	}

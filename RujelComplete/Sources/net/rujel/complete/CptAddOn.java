@@ -8,29 +8,26 @@ import net.rujel.interfaces.Student;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.AddOnPresenter;
 
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
-public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandling {
+public class CptAddOn extends AddOnPresenter.AddOn {
 
 	protected WOSession session;
-	protected NSDictionary dict;
 	protected Completion global;
-	protected NamedFlags access;
-	protected EduCourse course;
 	protected boolean active;
 	protected boolean dim = false;
-	protected NSMutableDictionary agregate;
 	protected NSArray requires;
 	protected ClosingLock closingLock;
 	
 	public CptAddOn(WOSession ses) {
+		super( (NSDictionary)ses.valueForKeyPath("strings.RujelComplete_Complete.addOn"),
+				(NamedFlags)ses.valueForKeyPath("readAccess.FLAGS.Completion"));
 		session = ses;
-		dict = (NSDictionary)ses.valueForKeyPath("strings.RujelComplete_Complete.addOn");
-		access = (NamedFlags)ses.valueForKeyPath("readAccess.FLAGS.Completion");
 		NSArray modules = (NSArray)ses.valueForKeyPath("modules.courseComplete");
 		EOQualifier qual = new EOKeyValueQualifier("precedes",
 				EOQualifier.QualifierOperatorContains,"student");
@@ -38,23 +35,27 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		closingLock = (ClosingLock)ses.valueForKeyPath("readAccess.modifier.ClosingLock");
 	}
 	
-	public NamedFlags access() {
-		return access;
-	}
-	
-	public void setCourse(EduCourse crs) {
-		if(crs == course)
+	public void update(EduCourse crs) {
+		if(crs == _course)
 			return;
-		course = crs;
+		_course = crs;
 		agregate = null;
 		global = null;
-		if(crs == null) {
+		if(closingLock != null)
+			closingLock.setCourse(_course);
+		if(_course == null) {
 			active = false;
-			return;
 		}
 		String closing = SettingsBase.stringSettingForCourse(
-				Completion.SETTINGS_BASE, course, course.editingContext());
+				Completion.SETTINGS_BASE, _course, _course.editingContext());
 		active = Boolean.parseBoolean(closing);
+	}
+	
+	public void reset() {
+		dropCompletionAgregate();
+		super.reset();
+		global = null;
+		active = false;
 	}
 	
 	public StringBuilder checkRequirements(EduCourse crs) {
@@ -92,9 +93,9 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 	}
 	
 	protected void getAgregate() {
-		EOEditingContext ec = course.editingContext();
-		NSMutableArray courseList = course.groupList().mutableClone();
-		NSMutableDictionary param = new NSMutableDictionary(course,"course");
+		EOEditingContext ec = _course.editingContext();
+		NSMutableArray courseList = _course.groupList().mutableClone();
+		NSMutableDictionary param = new NSMutableDictionary(_course,"course");
 		param.takeValueForKey("student", Completion.ASPECT_KEY);
 		NSArray found = EOUtilities.objectsMatchingValues(ec, Completion.ENTITY_NAME, param);
 		agregate = new NSMutableDictionary();
@@ -120,7 +121,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		}
 		dim = !access().flagForKey("create");
 		if(!dim)
-			dim = (checkRequirements(course) != null);
+			dim = (checkRequirements(_course) != null);
 		if(courseList.count() > 0) {
 			NSMutableDictionary preset = new NSMutableDictionary();
 			boolean closed = false;
@@ -150,7 +151,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 		}
 		if(dim)
 			return;
-		session.setObjectForKey(course, "preventComplete");
+		session.setObjectForKey(_course, "preventComplete");
 		found = (NSArray)session.valueForKeyPath("modules.preventComplete");
 		session.removeObjectForKey("preventComplete");
 		if(found != null && found.count() > 0) {
@@ -228,16 +229,16 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 	public void setCloseDict(NSMutableDictionary cd) {
 		setCourse((EduCourse)cd.objectForKey("course"));
 		String user = (String)cd.objectForKey("user");
-		EOEditingContext ec = course.editingContext();
+		EOEditingContext ec = _course.editingContext();
 		NSTimestamp date = new NSTimestamp();
 		NSArray toClose = (NSArray)cd.valueForKey("toClose");
 		boolean closeAll = Various.boolForObject(cd.valueForKey("closeAll"));
 		if(closeAll) {
 			if(global == null) {
 				global = (Completion)EOUtilities.createAndInsertInstance(ec,Completion.ENTITY_NAME);
-				global.setCourse(course);
+				global.setCourse(_course);
 				global.setAspect("student");
-				toClose = course.groupList();
+				toClose = _course.groupList();
 			} else if(agregate != null)
 				((NSArray)agregate.allValues()).takeValueForKey(Boolean.TRUE, "closed");
 			global.setCloseDate(date);
@@ -257,12 +258,12 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 				dic.takeValueForKey(user, "hover");
 			} else { 
 //				toClose = new NSArray(releaseStudent);
-				toClose = course.groupList().mutableClone();
+				toClose = _course.groupList().mutableClone();
 				((NSMutableArray)toClose).removeObject(releaseStudent);
 			}
 		}
 		if(toClose != null) {
-			Enumeration enu = course.groupList().objectEnumerator();//cd.keyEnumerator();
+			Enumeration enu = _course.groupList().objectEnumerator();//cd.keyEnumerator();
 			while (enu.hasMoreElements()) {
 				Student student = (Student) enu.nextElement();
 				NSMutableDictionary dic = dictForStudent(student);
@@ -273,7 +274,7 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 				if(cpt == null || student != cpt.student()) {
 					cpt = (Completion)EOUtilities.createAndInsertInstance(ec,Completion.ENTITY_NAME);
 					cpt.setStudent(student);
-					cpt.setCourse(course);
+					cpt.setCourse(_course);
 					cpt.setAspect("student");
 					dic.takeValueForKey(cpt, Completion.ENTITY_NAME);
 					if(global != null) {
@@ -314,22 +315,22 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 			if(global != null && global.editingContext() != ec)
 				global = null;
 			CompletePopup.logger.log(WOLogLevel.EDITING,"Student Completions saved",
-					new Object[] {course,cd.allKeys()});
+					new Object[] {_course,cd.allKeys()});
 		} catch (Exception e) {
 			ec.revert();
 			agregate = null;
 			CompletePopup.logger.log(WOLogLevel.WARNING,"Error saving student Completions",
-					new Object[] {course,cd.allKeys(),e});
+					new Object[] {_course,cd.allKeys(),e});
 		}
 		if(closingLock != null)
 			closingLock.setCourse(null);
 		Executor.Task executor = new Executor.Task();
 		executor.date = session.valueForKey("eduYear");
-		executor.setCourse(course);
+		executor.setCourse(_course);
 		if(cd.valueForKey("toClose") == null) {
 			Object releaseStudent = cd.valueForKey("releaseStudent");
 			if(releaseStudent == null)
-				toClose = course.groupList();
+				toClose = _course.groupList();
 			else
 				toClose = new NSArray(releaseStudent);
 		}
@@ -343,25 +344,4 @@ public class CptAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandlin
 			closingLock.setCourse(null);
 		return null;
 	}
-	
-	public void takeValueForKey(Object arg0, String arg1) {
-		NSKeyValueCoding.DefaultImplementation.takeValueForKey(this, arg0, arg1);
-	}
-
-	public Object valueForKey(String arg0) {
-		return NSKeyValueCoding.DefaultImplementation.valueForKey(this, arg0);
-	}
-
-	public Object handleQueryWithUnboundKey(String arg0) {
-		return dict.valueForKey(arg0);
-	}
-
-	public void handleTakeValueForUnboundKey(Object arg0, String arg1) {
-		NSKeyValueCoding.DefaultImplementation.handleTakeValueForUnboundKey(this, arg0, arg1);
-	}
-
-	public void unableToSetNullForKey(String arg0) {
-		NSKeyValueCoding.DefaultImplementation.unableToSetNullForKey(this, arg0);
-	}
-
 }

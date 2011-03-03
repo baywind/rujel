@@ -145,7 +145,7 @@ public class EditVarSub extends WOComponent {
 
     public WOActionResults done(boolean hasChanges) {
     	if(hasChanges)
-			session().removeObjectForKey("lessonProperies");
+			session().removeObjectForKey("lessonProperties");
     	if(returnPage instanceof VariationsList) {
     		returnPage.ensureAwakeInContext(context());
     		if(hasChanges) {
@@ -278,7 +278,7 @@ public class EditVarSub extends WOComponent {
     			return done(changed);
     		}
        	}
-       	session().removeObjectForKey("lessonProperies");
+       	session().removeObjectForKey("lessonProperties");
 		return done(changed);
 	}
 	
@@ -288,7 +288,7 @@ public class EditVarSub extends WOComponent {
    		for (int i = 0; i < found.count(); i++) {
 			Variation var = (Variation)found.objectAtIndex(i);
 			if(var.relatedLesson() == lesson) {
-		       	session().removeObjectForKey("lessonProperies");
+		       	session().removeObjectForKey("lessonProperties");
 				return var;
 			}
 			if(var.reason() == reason && lvl < 4) {

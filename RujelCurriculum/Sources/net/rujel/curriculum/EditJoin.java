@@ -244,7 +244,7 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 					session().takeValueForKey(application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.duplicateTeacher"), 
 						"message");
-					session().removeObjectForKey("lessonProperies");
+					session().removeObjectForKey("lessonProperties");
 					break;
 				}
 			}

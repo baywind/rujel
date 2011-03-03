@@ -519,23 +519,18 @@
 			<string>.</string>
 			<key>value</key>
 			<dict>
-				<key>object</key>
-				<string>.value</string>
+				<key>className</key>
+				<string>net.rujel.autoitog.PrognosisPopup</string>
 				<key>methodName</key>
-				<string>movePointRight</string>
+				<string>fractionToPercent</string>
 				<key>paramClasses</key>
 				<array>
-					<string>int</string>
+					<string>java.math.BigDecimal</string>
 				</array>
 				<key>paramValues</key>
 				<array>
-					<integer>2</integer>
+					<string>.value</string>
 				</array>
-			</dict>
-			<key>presenterBindings</key>
-			<dict>
-				<key>numberformat</key>
-				<string>&apos;0%</string>
 			</dict>
 			<key>comparison</key>
 			<string>CompareAscending</string>

@@ -82,8 +82,8 @@ public class CurriculumModule {
 			Reprimand.init();
 		} else if ("extendLesson".equals(obj)) {
 			return extendLesson(ctx);
-		} else if ("lessonProperies".equals(obj)) {
-			return lessonProperies(ctx);
+		} else if ("lessonProperties".equals(obj)) {
+			return lessonProperties(ctx);
 		} else if ("journalPlugins".equals(obj)) {
 			return journalPlugins(ctx);
 		} else if("scheduleTask".equals(obj)) {
@@ -117,7 +117,7 @@ public class CurriculumModule {
 		return result;
 	}
 	
-	public static NSDictionary lessonProperies(WOContext ctx) {
+	public static NSDictionary lessonProperties(WOContext ctx) {
 		boolean showSubs = Various.boolForObject("readAccess.read.Substitute");
 		boolean showVars = Various.boolForObject("readAccess.read.Variation");
 		if(!showSubs && !showVars)

@@ -204,7 +204,7 @@ public class LessonList extends WOComponent {
 		_studentPresenter = null;
 		_extentions = null;
 		extItem = null;
-		lessonProperies = null;
+		lessonProperties = null;
 		_access = null;
 	}
 
@@ -253,13 +253,13 @@ public class LessonList extends WOComponent {
 		return null;
 	}
 	
-	protected NSMutableDictionary lessonProperies;
+	protected NSMutableDictionary lessonProperties;
 	public NSDictionary lessonProperties() {
-		if(lessonProperies == null)
-			lessonProperies = (NSMutableDictionary)session().objectForKey("lessonProperies");
+		if(lessonProperties == null)
+			lessonProperties = (NSMutableDictionary)session().objectForKey("lessonProperties");
 		NSDictionary lProps = null;
-		if(lessonProperies != null)
-			lProps = (NSDictionary)lessonProperies.objectForKey(lessonItem);
+		if(lessonProperties != null)
+			lProps = (NSDictionary)lessonProperties.objectForKey(lessonItem);
 		if(lProps != null)
 			return lProps;
 		NSArray lessonsList = (NSArray)valueForBinding("lessonsList");
@@ -267,9 +267,9 @@ public class LessonList extends WOComponent {
 			return NSDictionary.EmptyDictionary;
 		session().setObjectForKey(lessonsList, "lessonsList");
 		NSArray propertiesList = (NSArray)session().valueForKeyPath(
-				"modules.lessonProperies");
+				"modules.lessonProperties");
 		session().removeObjectForKey("lessonsList");
-		lessonProperies = new NSMutableDictionary();
+		lessonProperties = new NSMutableDictionary();
 		if(propertiesList == null || propertiesList.count() == 0) 
 			return NSDictionary.EmptyDictionary;
 		Enumeration lessons = lessonsList.objectEnumerator();
@@ -306,12 +306,12 @@ public class LessonList extends WOComponent {
 					}
 				}// lm.keyEnumerator();
 			} // propertiesList.objectEnumerator();
-			lessonProperies.setObjectForKey((currProperties.count() > 0)?
+			lessonProperties.setObjectForKey((currProperties.count() > 0)?
 					currProperties:NSDictionary.EmptyDictionary, lesson);
 			if(lesson == lessonItem)
 				lProps = currProperties;
 		}// lessonsList.objectEnumerator();
-		session().setObjectForKey(lessonProperies, "lessonProperies");
+		session().setObjectForKey(lessonProperties, "lessonProperties");
 		if(lProps == null) {
 			Logger.getLogger("rujel.ui").log(WOLogLevel.WARNING,
 					"Something wrong reading properties",session());

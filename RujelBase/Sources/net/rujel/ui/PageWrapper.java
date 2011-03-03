@@ -70,7 +70,11 @@ public class PageWrapper extends WOComponent {
     }
 	
     public WOComponent goTo() {
-        NSMutableArray list = (NSMutableArray)session().valueForKey("pathStack");
+		session().removeObjectForKey("lessonProperties");
+        NSMutableArray list = (NSMutableArray)session().objectForKey("notesAddOns");
+		if(list != null && list.count() > 0)
+			list.valueForKey("reset");
+        list = (NSMutableArray)session().valueForKey("pathStack");
         if(pathItem == null) {
         	list.removeAllObjects();
     		session().takeValueForKey(Boolean.FALSE,"prolong");

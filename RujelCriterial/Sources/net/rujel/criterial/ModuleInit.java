@@ -83,8 +83,8 @@ public class ModuleInit {
 			NSDictionary reportSettings = (NSDictionary)WOApplication.application().
 				valueForKeyPath("strings.RujelCriterial_Strings.reportSettings");
 			return PlistReader.cloneDictionary(reportSettings, true);
-		} else if ("lessonProperies".equals(obj)) {
-			return lessonProperies(ctx);
+		} else if ("lessonProperties".equals(obj)) {
+			return lessonProperties(ctx);
 		} else if ("diary".equals(obj)) {
 			NSArray diaryTabs = (NSArray)WOApplication.application().
 					valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
@@ -157,7 +157,7 @@ public class ModuleInit {
 		return result;
 	}
 	
-	public static NSDictionary lessonProperies(WOContext ctx) {
+	public static NSDictionary lessonProperties(WOContext ctx) {
 		NSArray lessonsList = (NSArray)ctx.session().objectForKey("lessonsList");
 		if(lessonsList == null || lessonsList.count() == 0)
 			return null;

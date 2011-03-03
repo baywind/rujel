@@ -81,6 +81,7 @@ public class ChooseRegime extends WOComponent {
     }
     
     protected WOComponent cleanPathStack(String componentName) {
+    	NotesPage.resetAddons(session());
     	NSMutableArray pathStack = (NSMutableArray)session().valueForKey("pathStack");
     	WOComponent component = null;
     	if(pathStack != null && pathStack.count() > 0) {
@@ -150,9 +151,11 @@ public class ChooseRegime extends WOComponent {
     }
     
     public WOActionResults flushStrings() {
+    	System.gc();
+    	/*
     	StringStorage str = (StringStorage)application().valueForKey("strings");
     	str.flush();
-    	logger.log(WOLogLevel.INFO,"Localised strings cache flushed",session());
+    	logger.log(WOLogLevel.INFO,"Localised strings cache flushed",session());*/
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }

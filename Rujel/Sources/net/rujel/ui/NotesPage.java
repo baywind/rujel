@@ -35,6 +35,8 @@ import net.rujel.reusables.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
+
+import java.lang.ref.WeakReference;
 import java.util.Enumeration;
 
 public class NotesPage extends WOComponent {
@@ -311,7 +313,8 @@ public class NotesPage extends WOComponent {
 			session().setObjectForKey(allAddOns,"notesAddOns");
 			//setValueForBinding(allAddOns,"allAddOns");
 		}
-		allAddOns.takeValueForKey(valueForBinding("course"), "course");
+		WeakReference courseRef = new WeakReference(valueForBinding("course"));
+		allAddOns.takeValueForKey(courseRef, "course");
 		return allAddOns;
 	}
 
@@ -337,9 +340,17 @@ public class NotesPage extends WOComponent {
 			}
 		}
 		if(activeAddOns != null) {
-			activeAddOns.takeValueForKey(valueForBinding("course"), "course");
+			WeakReference courseRef = new WeakReference(valueForBinding("course"));
+			activeAddOns.takeValueForKey(courseRef, "course");
 		}
 		return activeAddOns;
+	}
+	
+	public static void resetAddons(WOSession ses) {
+		NSMutableArray addOns = (NSMutableArray)ses.objectForKey("notesAddOns");
+		if(addOns != null && addOns.count() > 0)
+			addOns.valueForKey("reset");
+		ses.removeObjectForKey("lessonProperties");
 	}
 
 	/*

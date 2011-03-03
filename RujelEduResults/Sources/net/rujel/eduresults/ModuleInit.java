@@ -30,6 +30,7 @@
 package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
+import net.rujel.ui.AddOnPresenter;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 
@@ -78,13 +79,13 @@ public class ModuleInit {
 		return null;
 	}
 	
-	public static NSMutableDictionary notesAddOns(WOContext ctx) {
+	public static NSKeyValueCoding notesAddOns(WOContext ctx) {
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
 		if(access.getFlag(0)) {
-			NSMutableDictionary itogAddOn = ((NSDictionary)WOApplication.application().
-					valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn")).mutableClone();
+			NSDictionary itogAddOn = (NSDictionary)WOApplication.application().
+					valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn");
 			itogAddOn.takeValueForKey(access,"access");
-			return itogAddOn;
+			return new AddOnPresenter.AddOn(itogAddOn, access);
 		}
 		return null;
 	}

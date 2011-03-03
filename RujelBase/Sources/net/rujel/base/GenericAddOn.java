@@ -171,17 +171,7 @@ public class GenericAddOn extends WOComponent {
 		}
 		int idx = getActiveIndex(activeList);
 		if(idx == NSArray.NotFound) {
-			NSKeyValueCoding active = activeAddOn(currAddOn());/*(NSKeyValueCoding)currAddOn().valueForKey("active");
-			if(active == null) {
-				String presenter = (String)currAddOn().valueForKey("activePresenter");
-				if(presenter == null) {
-					active = currAddOn();
-				}
-				else {
-					active = new NSMutableDictionary("activeComponent",presenter);
-					active.takeValueForKey(currAddOn().valueForKey("id"),"id");
-				}
-			}*/
+			NSKeyValueCoding active = activeAddOn(currAddOn());
 			activeList.addObject(active);
 		} else {
 			activeList.removeObjectAtIndex(idx);

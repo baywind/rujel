@@ -78,7 +78,7 @@ public class LessonNoteEditor extends WOComponent {
 		ec = new SessionedEditingContext(session());
 		ec.lock();
 		ec.unlock();
-		session().savePageInPermanentCache(this);
+//		session().savePageInPermanentCache(this);
 	}
 
 	public boolean showTabs() {
@@ -1016,6 +1016,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(resultPage == null) {
 			resultPage = pageWithName("SrcMark");
 		}
+    	NotesPage.resetAddons(session());
 		return resultPage;
 	}
 	

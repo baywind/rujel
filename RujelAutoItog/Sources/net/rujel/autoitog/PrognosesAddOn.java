@@ -42,33 +42,24 @@ import net.rujel.base.MyUtility;
 import net.rujel.eduresults.*;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
+import net.rujel.ui.AddOnPresenter;
 
-public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorHandling {
+public class PrognosesAddOn extends AddOnPresenter.AddOn {
 
-	protected static NSDictionary addOn = (NSDictionary)WOApplication.application().
-						valueForKeyPath("strings.RujelAutoItog_AutoItog.PrognosesAddOn");
-
-	protected EduCourse _course;
 	protected NSArray _periods;
-	protected NSMutableDictionary _prognosesMatrix;
 	public AutoItog periodItem;
 	protected Student _student;
 	protected NSDictionary _prognosesForStudent;
 	protected NSMutableDictionary _courseTimeouts;
 
 	public PrognosesAddOn(WOSession ses) {
-		super();
+		super((NSDictionary)WOApplication.application().
+				valueForKeyPath("strings.RujelAutoItog_AutoItog.PrognosesAddOn"),
+				(NamedFlags)ses.valueForKeyPath("readAccess.FLAGS.Prognosis"));
 		session = ses;
+		_courseTimeouts = new NSMutableDictionary();
 	}
 	protected WOSession session;
-
-//	private NamedFlags _access;
-	public NamedFlags access() {
-//		if(_access == null)
-//			_access = 
-				return (NamedFlags)session.valueForKeyPath("readAccess.FLAGS.Prognosis");
-//		return _access;
-	}
 
 	private NamedFlags _accessTimeout;
 	public NamedFlags accessTimeout() {
@@ -88,9 +79,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 	public void reset() {
 		periodItem = null;
 		_periods = null;
-		_course = null;
-		_prognosesMatrix = null;
-		_courseTimeouts = new NSMutableDictionary();
+		super.reset();
+		_courseTimeouts.removeAllObjects();
 		_student = null;
 		_prognosesForStudent = null;
 		_timeout = null;
@@ -98,26 +88,26 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		currDate = null;
 	}
 
-	public void setCourse(EduCourse newCourse) {
+	public void update(EduCourse crs) {
 		NSTimestamp date = (NSTimestamp)session.objectForKey("recentDate");
 		if(date == null)
 			date = (NSTimestamp)session.valueForKey("today");
-		setCourse(newCourse, date);
+		setCourse(crs, date);
 	}
 
 	public void setCourse(EduCourse newCourse, NSTimestamp date) {
 		if(newCourse != _course)
 			reset();
-		_course = newCourse;
 		if(newCourse == null) {
 			return;
 		}
+		_course = newCourse;
 		if(_periods == null || !date.equals(currDate)) {
 			_periods = AutoItog.currentAutoItogsForCourse(_course, date);
-			_prognosesMatrix = null;
+			agregate = null;
 			_prognosesForStudent = null;
 //			_prognosis = null;
-			_courseTimeouts = new NSMutableDictionary();
+			_courseTimeouts.removeAllObjects();
 //			_timeout =null;
 		}
 		currDate = date;
@@ -160,8 +150,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 					periodItem.itogContainer());
 			return _prognosis;
 		}
-		if(_prognosesMatrix == null) {
-			_prognosesMatrix = new NSMutableDictionary();
+		if(agregate == null) {
+			agregate = new NSMutableDictionary();
 			Enumeration enu = _periods.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				AutoItog eduPeriod = (AutoItog) enu.nextElement();
@@ -174,10 +164,10 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 					Prognosis cpr = (Prognosis) penu.nextElement();
 					Student student = cpr.student();
 					NSMutableDictionary forStudent = (NSMutableDictionary)
-					_prognosesMatrix.objectForKey(student);
+					agregate.objectForKey(student);
 					if(forStudent == null) {
 						forStudent = new NSMutableDictionary(cpr,eduPeriod.itogContainer());
-						_prognosesMatrix.setObjectForKey(forStudent, student);
+						agregate.setObjectForKey(forStudent, student);
 					} else {
 						forStudent.setObjectForKey(cpr, eduPeriod.itogContainer());
 					}
@@ -190,7 +180,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			if(_prognosis != null)
 				return _prognosis;
 		} // _prognosesMatrix == null
-		_prognosesForStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
+		_prognosesForStudent = (NSMutableDictionary)agregate.objectForKey(_student);
 		if(_prognosesForStudent == null)
 			_prognosesForStudent = NSDictionary.EmptyDictionary;
 		_prognosis = (Prognosis)_prognosesForStudent.objectForKey(
@@ -203,27 +193,27 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		if(_prognosis == prognosis)
 			return;
 		_prognosis = prognosis;
-		if(_prognosesMatrix == null)
+		if(agregate == null)
 			return;
 		if(prognosis != null && !_periods.contains(prognosis.autoItog())) {
 			PerPersonLink forPeriod = (PerPersonLink)
-					_prognosesMatrix.objectForKey(prognosis.itogContainer());
+					agregate.objectForKey(prognosis.itogContainer());
 			if(forPeriod == null ||
 			 		forPeriod.forPersonLink(prognosis.student()) == prognosis)
 				return;
-			_prognosesMatrix.removeObjectForKey(prognosis.itogContainer());
+			agregate.removeObjectForKey(prognosis.itogContainer());
 			return;
 		}
 		if(prognosis != null)
 			_student = prognosis.student();
-		NSMutableDictionary forStudent = (NSMutableDictionary)_prognosesMatrix.objectForKey(_student);
+		NSMutableDictionary forStudent = (NSMutableDictionary)agregate.objectForKey(_student);
 		if(prognosis != null) {
 			if(periodItem == null ||
 					periodItem.itogContainer() != prognosis.itogContainer())
 			periodItem = prognosis.autoItog();
 			if(forStudent == null) {
 				forStudent = new NSMutableDictionary(prognosis,periodItem.itogContainer());
-				_prognosesMatrix.setObjectForKey(forStudent, _student);
+				agregate.setObjectForKey(forStudent, _student);
 			} else {
 				forStudent.setObjectForKey(prognosis, periodItem.itogContainer());
 			}
@@ -308,38 +298,6 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		return true;
 	}
 
-	public void takeValueForKey(Object value, String key) {
-		NSKeyValueCoding.DefaultImplementation.takeValueForKey(this, value, key);
-	}
-
-	public Object valueForKey(String key) {
-		Object result = addOn.valueForKey(key);
-		if(result != null)
-			return result;
-		result = NSKeyValueCoding.DefaultImplementation.valueForKey(this, key);
-		return result;
-	}
-
-	protected NSMutableDictionary userInfo;
-	public Object handleQueryWithUnboundKey(String key) {
-		if(userInfo == null)
-			return null;
-		return userInfo.valueForKey(key);
-	}
-
-	public void handleTakeValueForUnboundKey(Object value, String key) {
-		if(userInfo == null) {
-			if(value != null)
-				userInfo = new NSMutableDictionary(value,key);
-		} else
-			userInfo.takeValueForKey(value, key);
-	}
-
-	public void unableToSetNullForKey(String key) {
-		NSKeyValueCoding.DefaultImplementation.unableToSetNullForKey(this, key);
-		//throw new NullPointerException("unableToSetNullForKey : " + key);
-	}
-
 	/*	public void setSaveLesson(EduLesson lesson) {
 		NSTimestamp date = lesson.date();
 //		if(_forcedPeriod != null && !_forcedPeriod.contains(date))
@@ -382,7 +340,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 		try {
 			ec.lock();
 			PerPersonLink prognoses = calc.calculatePrognoses(_course,periodItem);
-			boolean um = (_prognosesMatrix!=null && _periods.containsObject(periodItem));
+			boolean um = (agregate!=null && _periods.containsObject(periodItem));
 			Enumeration enu = _course.groupList().objectEnumerator();
 			boolean ifArchive = (SettingsReader.boolForKeyPath(
 					"markarchive.Prognosis", false)
@@ -390,7 +348,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 			while (enu.hasMoreElements()) {
 				Student student = (Student) enu.nextElement();
 				NSMutableDictionary forStudent = (um)?
-						(NSMutableDictionary)_prognosesMatrix.objectForKey(student):null;
+						(NSMutableDictionary)agregate.objectForKey(student):null;
 				Prognosis prognosis = (prognoses==null)?null:
 					(Prognosis)prognoses.forPersonLink(student);
 				if(prognosis != null) {
@@ -404,7 +362,7 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 						if(forStudent == null) {
 							forStudent = new NSMutableDictionary(prognosis,
 									periodItem.itogContainer());
-							_prognosesMatrix.setObjectForKey(forStudent, student);
+							agregate.setObjectForKey(forStudent, student);
 						} else {
 							forStudent.setObjectForKey(prognosis, 
 									periodItem.itogContainer());
@@ -416,8 +374,8 @@ public class PrognosesAddOn implements NSKeyValueCoding, NSKeyValueCoding.ErrorH
 					}
 				}
 			}
-			if(!um && _prognosesMatrix != null && prognoses != null) {
-				_prognosesMatrix.setObjectForKey(prognoses, periodItem);
+			if(!um && agregate != null && prognoses != null) {
+				agregate.setObjectForKey(prognoses, periodItem);
 			}
 			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(_course,
 					periodItem.itogContainer());

@@ -44,6 +44,7 @@ import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.AddOnPresenter;
 
 public class ItogPopup extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.itog");
@@ -53,7 +54,7 @@ public class ItogPopup extends WOComponent {
 	//public EduCycle cycle;
     public Student student;
     public String mark;
-	public NSKeyValueCoding addOn;
+	public AddOnPresenter.AddOn addOn;
 	public WOComponent returnPage;
 	public String changeReason;
 	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
@@ -67,7 +68,7 @@ public class ItogPopup extends WOComponent {
 	public EduCourse course() {
 		if(addOn == null)
 				return (itog==null)? null: itog.assumeCourse();
-		return (EduCourse)addOn.valueForKey("eduCourse");
+		return addOn.course();
 	}
 
 	
@@ -182,7 +183,7 @@ public class ItogPopup extends WOComponent {
 					itog.addObjectToBothSidesOfRelationshipWithKey(student,"student");
 					itog.addObjectToBothSidesOfRelationshipWithKey(eduCourse.cycle(),"cycle");
 					if(addOn != null)
-						addOn.takeValueForKey(null,"agregate");
+						addOn.agregate = null;
 				}
 				if(!same) {
 					if(!newItog)

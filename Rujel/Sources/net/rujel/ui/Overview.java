@@ -116,7 +116,7 @@ public class Overview extends WOComponent {
 		since = new NSTimestamp(cal.getTime());//to.timestampByAddingGregorianUnits(0, 0, -7, 0, 0, 0);
 		int mode = (access().flagForKey("students") && !access().flagForKey("subjects"))?1:0;
 		currentMode = new Integer(mode);
-		session().savePageInPermanentCache(this);
+//		session().savePageInPermanentCache(this);
     }
 	
     public WOComponent selectClass() {

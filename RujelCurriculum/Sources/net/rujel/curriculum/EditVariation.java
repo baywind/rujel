@@ -145,7 +145,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 
     public WOActionResults done(boolean hasChanges) {
     	if(hasChanges)
-			session().removeObjectForKey("lessonProperies");
+			session().removeObjectForKey("lessonProperties");
     	if(returnPage instanceof VariationsList) {
     		returnPage.ensureAwakeInContext(context());
     		if(hasChanges) {

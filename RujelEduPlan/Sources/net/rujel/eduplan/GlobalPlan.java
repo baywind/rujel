@@ -55,7 +55,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	
 	public GlobalPlan(WOContext context) {
         super(context);
-        	session().savePageInPermanentCache(this);
+//        	session().savePageInPermanentCache(this);
         showTotal = SettingsReader.intForKeyPath("edu.showTotal", 0);
     }
 	

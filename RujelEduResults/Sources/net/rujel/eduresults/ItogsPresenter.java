@@ -31,7 +31,6 @@ package net.rujel.eduresults;
 
 import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter;
-import net.rujel.interfaces.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -41,7 +40,6 @@ import java.util.logging.Logger;
 
 public class ItogsPresenter extends AddOnPresenter {
 
-	protected PerPersonLink _itogs;
 	private NSArray _periods;
 	private ItogMark[] _arr;
 	
@@ -53,7 +51,6 @@ public class ItogsPresenter extends AddOnPresenter {
 	
 	public void reset() {
 		super.reset();
-		_itogs = null;
 		_periods = null;
 		_arr = null;
 		_pertype = null;
@@ -62,31 +59,26 @@ public class ItogsPresenter extends AddOnPresenter {
 	
 	public NSArray periods() {
 		if(_periods == null) {
-			if(currAddOn().valueForKey("eduCourse") == course()) {
+			if(currAddOn().course() == course()) {
 				_periods = (NSArray)currAddOn().valueForKey("periods");
 			}
 			if(_periods == null) {
-				_periods = ItogContainer.itogsForCourse(course());//EduPeriod.periodsForCourse(course());
+				currAddOn().setCourse(course());
+				_periods = ItogContainer.itogsForCourse(course());
 				if(_periods == null)
 					_periods = NSArray.EmptyArray;
 				currAddOn().takeValueForKey(_periods,"periods");
-				currAddOn().takeValueForKey(course(),"eduCourse");
-				_itogs = null;
-				currAddOn().takeValueForKey(_itogs,"agregate");
+				currAddOn().agregate = null;
 			}
 		}
 		return _periods;
 	}
 	
-	public PerPersonLink itogs() {
-		if(_itogs == null) {
-			if(currAddOn().valueForKey("eduCourse") == course()) {
-				_itogs = (PerPersonLink)currAddOn().valueForKey("agregate");
-			}
-			if(_itogs == null) {
+	public NSDictionary itogs() {
+		if(currAddOn().agregate == null) {
 				NSArray periods = periods();
 				if(periods == null || periods.count() == 0)
-					return new PerPersonLink.Dictionary(NSDictionary.EmptyDictionary);
+					return NSDictionary.EmptyDictionary;
 				EOQualifier qual = Various.getEOInQualifier(ItogMark.CONTAINER_KEY,periods);
 				NSMutableArray quals = new NSMutableArray(qual);
 				qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,course().cycle());
@@ -118,20 +110,19 @@ public class ItogsPresenter extends AddOnPresenter {
 						}
 						arr[idx] = curr;
 					}
-					_itogs = new PerPersonLink.Dictionary(agregate);
+					currAddOn().agregate = agregate;
 				} else {
-					_itogs = new PerPersonLink.Dictionary(NSDictionary.EmptyDictionary);
+					currAddOn().agregate = new NSMutableDictionary();
 				}
-				currAddOn().takeValueForKey(_itogs,"agregate");
-				currAddOn().takeValueForKey(course(),"eduCourse");
-			}
 		}
-		return _itogs;
+		return currAddOn().agregate;
 	}
 	
 	public ItogMark itog() {
+		if(student() == null)
+			return null;
 		if(_arr == null)
-			_arr = (ItogMark[])itogs().forPersonLink(student());
+			_arr = (ItogMark[])itogs().objectForKey(student());
 		if(_arr == null) return null;
 		return _arr[periods().indexOfIdenticalObject(periodItem)];
 	}
@@ -158,13 +149,6 @@ public class ItogsPresenter extends AddOnPresenter {
     public WOComponent moreInfo() {
 		course().editingContext().revert();
         WOComponent nextPage = pageWithName("ItogPopup");
-		/*ItogMark itog = itog();
-		if(itog == null) {
-			itog = (ItogMark)EOUtilities.createAndInsertInstance(course().editingContext(),"ItogMark");
-			itog.setStudent(student());
-			itog.setItogContainer(periodItem);
-			itog.setCycle(course().cycle());
-		}*/
 		nextPage.takeValueForKey(itog(),"itog");
 		nextPage.takeValueForKey(student(),"student");
 		nextPage.takeValueForKey(periodItem,"itogContainer");
