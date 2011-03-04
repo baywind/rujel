@@ -118,3 +118,8 @@ NotePresenter2: WOSwitchComponent {
 	single=^single;
 	presenterCache = presenterCache;
 }
+
+StudentNotes : WOString {
+  value = studentNotes;
+  escapeHTML = false;
+}

@@ -155,6 +155,35 @@ public class NotesPage extends WOComponent {
 		return (!hasBinding("selectStudentAction"));
 	}
 	
+	public String studentNotes() {
+		if(studentItem == null || currLesson() == null ||
+				!(valueForBinding("selectStudent") instanceof Student))
+			return null;
+		StringBuilder buf = new StringBuilder(
+				"<span class=\"fsc\">");
+		Object forStudent = currLesson().forPersonLink(studentItem);
+		boolean none = (forStudent == null || forStudent.equals(NullValue));
+//		if(none)
+//			buf.append("color:#cc3333;\">");
+//		else
+//			buf.append("color:#999999;\">");
+		if(none)
+			buf.append('0');
+		else if(forStudent instanceof Object[]) {
+			Object[] arr = (Object[])forStudent;
+			int count = 0;
+			for (int i = 0; i < arr.length; i++) {
+				if(arr[i] != null && !arr[i].equals(NullValue))
+					count++;
+			}
+			buf.append(count);
+		} else if(forStudent instanceof NSArray)
+			buf.append(((NSArray) forStudent).count());
+		else
+			buf.append('1');
+		buf.append("</span>");
+		return buf.toString();
+	}
     
 	public NSArray unmentionedStudents() {
 		NSArray lessonsList = (NSArray)valueForBinding("lessonsList");
@@ -318,8 +347,9 @@ public class NotesPage extends WOComponent {
 		return allAddOns;
 	}
 
+	protected static final EOQualifier inSingle = new EOKeyValueQualifier("inSingle", 
+			EOQualifier.QualifierOperatorEqual, Boolean.TRUE);
 	public NSMutableArray activeAddOns() {
-		if((single() && currLesson() != null) || session()==null) return null;
 		if(activeAddOns != null)
 			return activeAddOns;
 		//activeAddOns = (NSMutableArray)valueForBinding("activeAddOns");
@@ -339,9 +369,11 @@ public class NotesPage extends WOComponent {
 				session().setObjectForKey(activeAddOns, "activeAddOns");
 			}
 		}
-		if(activeAddOns != null) {
+		if(activeAddOns != null && activeAddOns.count() > 0) {
 			WeakReference courseRef = new WeakReference(valueForBinding("course"));
 			activeAddOns.takeValueForKey(courseRef, "course");
+			if(single() && currLesson() != null)
+				EOQualifier.filterArrayWithQualifier(activeAddOns, inSingle);
 		}
 		return activeAddOns;
 	}

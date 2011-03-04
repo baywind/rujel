@@ -278,3 +278,11 @@ NoCritMax : WOString {
   value = criterlessMax;
   escapeHTML = false;
 }
+
+StudentName : PersonDisplay {
+  person = ^student;
+  startWithLast = true;
+  last = 2;
+  first = 2;
+  second = 0;
+}

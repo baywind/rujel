@@ -225,7 +225,7 @@ public class Application extends UTF8Application {
     			(aContext.hasSession())?aContext.session():null);
     	page.takeValueForKey("Error", "plistTitle");
     	page.takeValueForKey("PageRestorationError", "plistMessage");
-    	page.takeValueForKey("report", "redirectAction");
+    	page.takeValueForKey("resume", "redirectAction");
     	return page.generateResponse();
     }
     

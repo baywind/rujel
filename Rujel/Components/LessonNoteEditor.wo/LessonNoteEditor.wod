@@ -102,7 +102,7 @@ PageWrapper1: PageWrapper {
 	hasChanges = ec.hasChanges;
 	title = title;
 	onLoad="pagePreflight();focus();";
-	styles = "a {font-style:italic;text-decoration:none;color:blue;} a:hover{color:red;}";
+	styles = "a {font-style:italic;text-decoration:none;color:blue;} a:hover{color:red;} .fsc {float:right;margin-left:3px;font: 70% monospace;color:#66cc66;text-decoration:inherit;position:relative;top:-0.7em;}";
 	cssURL = present.cssURL;
 	cssResource = present.cssResource;
 	scriptURL = present.scriptURL;

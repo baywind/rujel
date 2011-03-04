@@ -43,7 +43,6 @@ import com.webobjects.eoaccess.EOUtilities;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.Timer;
@@ -268,11 +267,10 @@ public class AutoItogModule {
 		if(Various.boolForObject(ses.valueForKeyPath("readAccess._read.Prognosis")))
 			return null;
 		String key = "AutoItog.PrognosesAddOn";
-		WeakReference addOnRef = (WeakReference)ses.objectForKey(key);
-		PrognosesAddOn addOn = (addOnRef==null)?null:(PrognosesAddOn)addOnRef.get();
+		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey(key);
 		if(addOn == null) {
 			addOn = new PrognosesAddOn(ses);
-			ses.setObjectForKey(new WeakReference(addOn), key);
+			ses.setObjectForKey(addOn, key);
 		}
 		return addOn;
 	}
@@ -411,12 +409,12 @@ public class AutoItogModule {
 	}
 	
 	public static NSMutableDictionary printStudentResults(WOContext ctx) {
-		NSMutableDictionary dict = (NSMutableDictionary)ctx.session().objectForKey("printStudentResults");
+		NSMutableDictionary dict = (NSMutableDictionary)ctx.session().objectForKey(
+				"printStudentResults");
 		if(dict == null)
 			return null;
 		Student student = (Student)dict.objectForKey("student");
 		EOEditingContext ec = student.editingContext();
-		//NSArray periods = EOUtilities.objectsWithQualifierFormat(student.editingContext(),"EduPeriod","begin <= %@ AND end >= %@",new NSArray(new Object[]{since,to}));
 		EOQualifier qual = null;
 		EOFetchSpecification fs = null;
 		NSArray results = null;

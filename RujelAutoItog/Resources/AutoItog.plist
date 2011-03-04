@@ -11,7 +11,9 @@
 		<key>component</key>
 		<string>PrognosAddOn</string>
 		<key>defaultOn</key>
-		<string>true</string>
+		<true/>
+		<key>inSingle</key>
+		<true/>
 		<key>framework</key>
 		<string>app</string>
 		<key>id</key>
