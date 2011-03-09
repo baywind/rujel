@@ -74,6 +74,9 @@ public class AddOnPresenter extends WOComponent {
     	}
     	
     	public void update(EduCourse crs) {
+    		if(crs == _course)
+    			return;
+    		reset();
     		_course = crs;
     	}
     	
