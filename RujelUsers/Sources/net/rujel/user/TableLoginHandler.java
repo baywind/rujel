@@ -37,6 +37,8 @@ import java.util.logging.Logger;
 import net.rujel.auth.LoginHandler;
 import net.rujel.auth.LoginProcessor;
 import net.rujel.auth.UserPresentation;
+import net.rujel.interfaces.Person;
+import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
@@ -143,6 +145,8 @@ public class TableLoginHandler implements LoginHandler {
 						UserPresentation pUser = parentHandler.authenticate(args);
 						if(!SettingsReader.boolForKeyPath("auth.readFromParent", false))
 							pUser = null;
+						else
+							ajustGroups(au, pUser);
 						return new TableUser(au, pUser);
 					} catch (AuthenticationFailedException ex) {
 						if(ex.getReason() == IDENTITY)
@@ -164,27 +168,15 @@ public class TableLoginHandler implements LoginHandler {
 				UserPresentation pUser = parentHandler.authenticate(args);
 				if(SettingsReader.boolForKeyPath("auth.autoAddUsers", false)){
 					try {
+						NSArray found = Person.Utility.search(ec, Teacher.entityName,
+								pUser.present());
 						AutUser au = (AutUser)EOUtilities.createAndInsertInstance(ec,
 								AutUser.ENTITY_NAME);
 						au.setUserName(user);
 						au.setCredential(pUser.toString());
-						// add groups
-						NSArray groups = EOUtilities.objectsForEntityNamed(ec, "UserGroup");
-						if(groups == null || groups.count() < 0) {
-							
-						} else {
-							Enumeration enu = groups.objectEnumerator();
-							while (enu.hasMoreElements()) {
-								EOEnterpriseObject gr = (EOEnterpriseObject) enu.nextElement();
-								String ext = (String)gr.valueForKey("externalEquivalent");
-								if(ext == null)
-									continue;
-								if(pUser.isInGroup(ext)) {
-									au.addObjectToBothSidesOfRelationshipWithKey(gr,
-											AutUser.GROUPS_KEY);
-								}
-							}
-						}
+						ajustGroups(au, pUser);
+						if(found.count() == 1)
+							au.setPersonLink((Teacher)found.objectAtIndex(0));
 						ec.saveChanges();
 						if(!SettingsReader.boolForKeyPath("auth.readFromParent", false))
 							pUser = null;
@@ -206,6 +198,30 @@ public class TableLoginHandler implements LoginHandler {
 		} finally {
 			ec.unlock();
 		}
+	}
+	
+	protected void ajustGroups(AutUser au, UserPresentation parent) {
+		NSArray groups = EOUtilities.objectsWithQualifierFormat(au.editingContext(),
+				"UserGroup", "externalEquivalent != nil", null);
+		if(groups == null || groups.count() == 0)
+			return;
+		Enumeration enu = groups.objectEnumerator();
+		NSArray now = au.groups();
+		if(now == null)
+			now = NSArray.EmptyArray;
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject gr = (EOEnterpriseObject) enu.nextElement();
+			String ext = (String)gr.valueForKey("externalEquivalent");
+			if(ext == null)
+				continue;
+			if(parent.isInGroup(ext)) {
+				if(!now.containsObject(gr))
+					au.addObjectToBothSidesOfRelationshipWithKey(gr,AutUser.GROUPS_KEY);
+			} else if(now.containsObject(gr)) {
+				au.removeObjectFromBothSidesOfRelationshipWithKey(gr, AutUser.GROUPS_KEY);
+			}
+		}
+
 	}
 	
 	public static String getPasswordDigest(String password) {

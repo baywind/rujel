@@ -64,6 +64,12 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		selection = valueForBinding("selection");
+/*		if(selection instanceof String) {
+			searchString = (String)selection;
+			selection = null;
+			setValueForBinding(null,"selection");
+			search();
+		}*/
 		item = null;
 		super.appendToResponse(aResponse, aContext);
 		searchMessage = null;

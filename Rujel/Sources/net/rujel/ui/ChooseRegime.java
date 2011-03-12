@@ -151,11 +151,9 @@ public class ChooseRegime extends WOComponent {
     }
     
     public WOActionResults flushStrings() {
-    	System.gc();
-    	/*
     	StringStorage str = (StringStorage)application().valueForKey("strings");
     	str.flush();
-    	logger.log(WOLogLevel.INFO,"Localised strings cache flushed",session());*/
+    	logger.log(WOLogLevel.INFO,"Localised strings cache flushed",session());
     	returnPage.ensureAwakeInContext(context());
     	return returnPage;
     }

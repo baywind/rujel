@@ -37,6 +37,7 @@ import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
 
 import net.rujel.auth.UserPresentation;
 import net.rujel.auth.UserPresentation.DefaultImplementation;
@@ -51,7 +52,7 @@ public class TableUser extends DefaultImplementation implements
 	protected String username;
 	protected EOGlobalID userGID;
 	protected EOGlobalID personGID;
-	protected String[] groups;
+	protected NSMutableDictionary groups;
 	protected NSMutableDictionary properties;
 	protected UserPresentation parent;
 	protected String present;
@@ -78,10 +79,19 @@ public class TableUser extends DefaultImplementation implements
 		}
 		list = au.groups();
 		if(list != null && list.count() > 0) {
-			groups = new String[list.count()];
-			for (int i = 0; i < groups.length; i++) {
+			groups = new NSMutableDictionary();
+			for (int i = 0; i < list.count(); i++) {
 				EOEnterpriseObject gr = (EOEnterpriseObject)list.objectAtIndex(i);
-				groups[i] = (String)gr.valueForKey("groupName");
+				Object section = gr.valueForKey("section");
+				if(section == null)
+					section = "global";
+				NSMutableSet set = (NSMutableSet)groups.objectForKey(section);
+				if(set == null) {
+					set = new NSMutableSet(gr.valueForKey("groupName"));
+					groups.setObjectForKey(set, section);
+				} else {
+					set.addObject(gr.valueForKey("groupName"));
+				}
 			}
 		}
 		this.parent = parent;
@@ -101,20 +111,50 @@ public class TableUser extends DefaultImplementation implements
 		personGID = plink.editingContext().globalIDForObject(plink);
 	}
 	
-	public Object[] listGroups() {
+	public String[] listGroups(Integer section) {
 		if(groups == null)
 			return null;
-		return groups.clone();
+		NSMutableSet set = (NSMutableSet)groups.objectForKey("global");
+		if(section != null) {
+			NSMutableSet bySection = (NSMutableSet)groups.objectForKey(section);
+			if(set == null) {
+				set = bySection;
+			} else if(bySection != null) {
+				set = set.mutableClone();
+				set.unionSet(bySection);
+			}
+		}
+		if(set == null)
+			return null;
+		String[] result = new String[set.count()];
+		Enumeration enu = set.objectEnumerator();
+		for (int i = 0; i < result.length && enu.hasMoreElements(); i++) {
+			result[i] = (String)enu.nextElement();
+		}
+		return result;
 	}
 
 	public String present() {
 		return present;
 	}
 
-	public boolean isInGroup (Object group) {
-		return (group.equals(username) ||
-				(groups != null && super.isInGroup(group)) ||
-				(parent != null && parent.isInGroup(group)));
+	public boolean isInGroup (String group,Integer section) {
+		if (group.equals(username) || group.equalsIgnoreCase("any") || group.equals("*"))
+			return true;
+		if(groups != null) {
+			NSMutableSet set = (NSMutableSet)groups.objectForKey("global");
+			if(set != null && set.containsObject(group))
+				return true;
+			if(section != null) {
+				set = (NSMutableSet)groups.objectForKey(section);
+				if(set != null && set.containsObject(group))
+					return true;
+			}
+		}
+		if(parent != null) {
+			return parent.isInGroup(group,section);
+		}
+		return false;
 	}
 	
 	public Object propertyNamed(String property) {

@@ -363,6 +363,8 @@ public class ItogMark extends _ItogMark
 	}
 	
 	public EduCourse assumeCourse() {
+		if(container() == null)
+			return null;
 		EOQualifier[] quals = new EOQualifier[2];
 		quals[0] = new EOKeyValueQualifier("eduYear",
 				EOQualifier.QualifierOperatorEqual,container().eduYear());

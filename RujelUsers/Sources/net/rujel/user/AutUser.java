@@ -35,6 +35,7 @@ import net.rujel.interfaces.PersonLink;
 
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.NSArray;
 
 public class AutUser extends _AutUser {
 
@@ -88,5 +89,12 @@ public class AutUser extends _AutUser {
 	
 	public void _flushPlink() {
 		plink = null;
+	}
+
+	public boolean isInGroup(EOEnterpriseObject group) {
+		NSArray groups = groups();
+		if(groups == null || groups.count() == 0)
+			return false;
+		return groups.containsObject(group);
 	}
 }

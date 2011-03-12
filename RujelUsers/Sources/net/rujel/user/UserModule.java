@@ -48,8 +48,8 @@ import com.webobjects.foundation.NSDictionary;
 
 public class UserModule {
 	
-	public static final String[] presetGroups = new String[] {
-		"root","zavuch","zav_kaf","tutor","teacher"};
+//	public static final String[] presetGroups = new String[] {
+//		"root","zavuch","zav_kaf","tutor","teacher"};
  	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -74,8 +74,11 @@ public class UserModule {
 		EOEditingContext ec = new EOEditingContext();
 		ec.lock();
 		try {
-			NSMutableArray preset = new NSMutableArray(presetGroups);
-			NSArray exists = EOUtilities.objectsForEntityNamed(ec, "UserGroup");
+			NSArray presetGroups = (NSArray)WOApplication.application().valueForKeyPath(
+					"strings.RujelUsers_UserStrings.accessGroups.array");
+			NSMutableArray preset = presetGroups.mutableClone();
+			NSArray exists = EOUtilities.objectsMatchingKeyAndValue(ec,"UserGroup",
+					"section",NSKeyValueCoding.NullValue);
 			NSDictionary existing = NSDictionary.EmptyDictionary;
 			if(exists != null && exists.count() > 0) {
 				if(SettingsReader.stringForKeyPath("auth.parentLoginHandler", null) == null)
@@ -94,8 +97,10 @@ public class UserModule {
 						continue;
 					EOEnterpriseObject gr = (EOEnterpriseObject)existing.valueForKey(key);
 					if(gr != null) {
-						if(gr.valueForKey("externalEquivalent") == null)
+						if(gr.valueForKey("externalEquivalent") == null) {
 							gr.takeValueForKey(value, "externalEquivalent");
+							count++;
+						}
 						continue;
 					}
 					count++;

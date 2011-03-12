@@ -29,8 +29,11 @@
 
 package net.rujel.user;
 
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.IndexRow;
+import net.rujel.base.Indexer;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
@@ -40,31 +43,76 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WODisplayGroup;
+import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 
 public class ManageUsers extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.user");
 
 	public ManageUsers(WOContext aContext) {
 		super(aContext);
-		if(SettingsReader.boolForKeyPath("auth.readFromParent", false) && 
-				SettingsReader.boolForKeyPath("auth.tryUnmappedGroups", false))
-			mapping = SettingsReader.settingsForPath("auth.groupMapping", false);
+		populateGroups(aContext.session());
+	}
+	
+	public void populateGroups(WOSession ses) {
+		NSDictionary locale = (NSDictionary)ses.valueForKeyPath(
+				"strings.RujelUsers_UserStrings.accessGroups");
+		NSArray array = (NSArray)locale.valueForKey("array");
+		Enumeration enu = array.objectEnumerator();
+		accGroups = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			String grId = (String) enu.nextElement();
+			NSMutableDictionary dict = new NSMutableDictionary(grId,"groupName");
+			dict.takeValueForKey(locale.valueForKey(grId), "title");
+			accGroups.addObject(dict);
+		}
+		if(ec == null)
+			ec = new SessionedEditingContext(ses);
+		NSArray found = EOUtilities.objectsForEntityNamed(ec, "UserGroup");
+		if(found == null)
+			return;
+		enu = found.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject gr = (EOEnterpriseObject) enu.nextElement();
+			String name = (String)gr.valueForKey("groupName");
+			int idx = array.indexOf(name);
+			NSMutableDictionary dict = null;
+			if(idx < 0) {
+				dict = new NSMutableDictionary(name,"groupName");
+				dict.takeValueForKey(locale.valueForKey(name), "title");
+				accGroups.addObject(dict);
+				array = array.arrayByAddingObject(name);
+			} else {
+				dict = (NSMutableDictionary)accGroups.objectAtIndex(idx);
+			}
+			Integer section = (Integer)gr.valueForKey("section");
+			if(section == null)
+				dict.takeValueForKey(gr, "global");
+			else
+				dict.setObjectForKey(gr, section);
+		}
 	}
 	
 	protected EOEditingContext ec;
 	public WODisplayGroup usersList;
-	public WODisplayGroup groupsList;
+	public NSArray sections;
+	public NSMutableArray accGroups;
 	public AutUser userItem;
 	public EOEnterpriseObject item;
-	public String parentHandler = SettingsReader.stringForKeyPath(
-			"auth.parentLoginHandler", null);
+	public NSKeyValueCoding item2;
+	public NSKeyValueCoding currGroup;
+	public String parentHandler = SettingsReader.stringForKeyPath("auth.parentLoginHandler", null);
 	public String passw1;
 	public String passw2;
-	protected SettingsReader mapping;
+	protected boolean readFromParent = parentHandler != null && 
+		SettingsReader.boolForKeyPath("auth.readFromParent", false);
 	
 	public EOEditingContext _ec() {
 		if(ec == null)
@@ -72,14 +120,50 @@ public class ManageUsers extends WOComponent {
 		return ec;
 	}
 	
+	public WOActionResults saveGroup() {
+		if(currGroup == null)
+			return null;
+		EOEnterpriseObject group = (EOEnterpriseObject)currGroup.valueForKey("group");
+		NSMutableDictionary row = null;
+		if(group == null) {
+			group = EOUtilities.createAndInsertInstance(ec, "UserGroup");
+			group.takeValueForKey(currGroup.valueForKey("groupName"), "groupName");
+			Object section = currGroup.valueForKey("section");
+			group.takeValueForKey(section, "section");
+			row = (NSMutableDictionary)currGroup.valueForKey("row");
+		}
+		group.takeValueForKey(currGroup.valueForKey("externalEquivalent"), "externalEquivalent");
+		try {
+			ec.saveChanges();
+			logger.log(WOLogLevel.CONFIG,"Saved group changes",group);
+			if(row != null) {
+				Object section = currGroup.valueForKey("section");
+				if(section == null)
+					section = "global";
+				row.setObjectForKey(group, section);
+			}
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error saving group changes",
+					new Object[] {session(),group,e});
+			session().takeValueForKey(e.getMessage(), "message");
+		}
+		return null;
+	}
+	
+	public WOActionResults search() {
+		String query = context().request().stringFormValueForKey("userName");
+		usersList.queryMatch().takeValueForKey(query, "userName");
+		usersList.qualifyDisplayGroup();
+		usersList.setCurrentBatchIndex(0);
+		return null;
+	}
+	
 	public WOActionResults save() {
 		boolean match = true;
-		WODisplayGroup list = null;
-		try {
+		try {/*
 			if(groupsList.selectedObject() != null) {
 				list = groupsList;
-			} else if(usersList.selectedObject() != null) {
-				list = usersList;
+			} else*/ if(usersList.selectedObject() != null) {
 				if(passw1 == passw2 || passw1 != null && !passw1.equals("password")) {
 					match = (passw1 == null || passw1.equals(passw2));
 					if(match)
@@ -102,15 +186,17 @@ public class ManageUsers extends WOComponent {
 			}
 			ec.saveChanges();
 			logger.log(WOLogLevel.EDITING,"User changes saved",
-					new Object[] {session(),list.selectedObject()});
+					new Object[] {session(),usersList.selectedObject()});
 			if(match) {
-				list.clearSelection();
+				usersList.clearSelection();
 				passw1 = null;
 				passw2 = null;
 			}
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error changing User ",
-					new Object[] {session(),list.selectedObject(),e});
+					new Object[] {session(),usersList.selectedObject(),e});
+			ec.revert();
+			populateGroups(session());
 			session().takeValueForKey(e.getMessage(), "message");
 		}
 		return null;
@@ -118,12 +204,14 @@ public class ManageUsers extends WOComponent {
 	
 	public WOActionResults delete() {
 		WODisplayGroup list = null;
+		/*
 		if(groupsList.selectedObject() != null) {
 			list = groupsList;
 			logger.log(WOLogLevel.EDITING,"Deleting group " + NSKeyValueCoding.Utility.
 					valueForKey(list.selectedObject(), "groupName"),
 					new Object[] {session(),list.selectedObject()});
-		} else if(usersList.selectedObject() != null) {
+		} else */
+		if(usersList.selectedObject() != null) {
 			list = usersList;
 			logger.log(WOLogLevel.EDITING,"Deleting user " + NSKeyValueCoding.Utility.
 					valueForKey(list.selectedObject(), AutUser.USER_NAME_KEY),
@@ -151,10 +239,16 @@ public class ManageUsers extends WOComponent {
 			ec.revert();
 			valueForKeyPath("usersList.selectedObject.flushPlink");
 		}
-		usersList.selectObject(userItem);
-		passw1 = (userItem.credential() == null)? null :"password";
-		passw2 = (userItem.hasParent())? "parent" : null;
-		groupsList.clearSelection();
+		if(usersList.selectedObject() == userItem) {
+			usersList.clearSelection();
+			passw1 = null;
+			passw2 = null;
+		} else {
+			usersList.selectObject(userItem);
+			passw1 = (userItem.credential() == null)? null :"password";
+			passw2 = (userItem.hasParent())? "parent" : null;
+		}
+		currGroup = null;
 		return null;
 	}
 	
@@ -167,7 +261,21 @@ public class ManageUsers extends WOComponent {
 				"selectedObject.personLink", ec);
 		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.hideVacant");
 		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.allowDelete");
+//		selector.takeValueForKeyPath(valueForKeyPath("usersList.selectedObject.present")
+//				, "dict.presenterBindings.selection");
 		return selector;
+	}
+
+	public WOActionResults addGroup() {
+		if(passw2 == null)
+			return null;
+		item2 = new NSMutableDictionary(passw2,"groupName");
+		NSDictionary locale = (NSDictionary)session().valueForKeyPath(
+				"strings.RujelUsers_UserStrings.accessGroups");
+		item2.takeValueForKey(locale.valueForKey(passw2), "title");
+		accGroups.addObject(item2);
+		selectGroup();
+		return null;
 	}
 
 	public WOActionResults attachParent() {
@@ -190,32 +298,89 @@ public class ManageUsers extends WOComponent {
 		return "ungerade";
 	}
 	
+	public NSArray sections() {
+		if(sections != null)
+			return sections;
+		Indexer sidx = Indexer.indexerOfType(ec, "eduSections", true);
+		if(ec.globalIDForObject(sidx).isTemporary()) {
+			try {
+				ec.saveChanges();
+				logger.log(WOLogLevel.COREDATA_EDITING,"autocreating eduSections indexer",sidx);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Error autocreating eduSections indexer",
+						new Object[] {session(),e});
+				ec.revert();
+				sections = NSArray.EmptyArray;
+				return null;
+			}
+		}
+		sections = sidx.sortedIndex();
+		return sections;
+	}
+	
+	protected EOEnterpriseObject group() {
+		if(item2 == null)
+			return null;
+		Object section = (item == null)?"global":item.valueForKey(IndexRow.IDX_KEY);
+		return (EOEnterpriseObject)((NSMutableDictionary)item2).objectForKey(section);
+	}
+	
 	public boolean isInGroup() {
-		if(item == null) return false;
+		EOEnterpriseObject group = group();
+		EOEnterpriseObject global = (EOEnterpriseObject)item2.valueForKey("global");
+		if(group == null && global == null)
+			return false;
 		NSArray groups = (NSArray)valueForKeyPath("usersList.selectedObject.groups");
-		if(groups == null) return false;
-		return groups.containsObject(item);
+		if(groups == null || groups.count() == 0)
+			return false;
+		return (group != null && groups.containsObject(group)) ||
+				(global != null && groups.containsObject(global));
+	}
+	
+	public Boolean cantEditGroup() {
+		if(usersList.selectedObject() != null)
+			return Boolean.TRUE;
+		return (Boolean)session().valueForKeyPath("readAccess._edit.UserGroup");
 	}
 	
 	public Boolean disableGroup() {
-		if(mapping == null)
-			return Boolean.FALSE;
-		String name = (String)item.valueForKey("groupName");
-		return Boolean.valueOf(!name.equals(mapping.get(name, name)));
+		EOEnterpriseObject group = group();
+		AutUser au = (AutUser)usersList.selectedObject();
+		if(readFromParent && au.hasParent() &&
+				(group != null && group.valueForKey("externalEquivalent") != null))
+			return Boolean.TRUE;
+		if(item != null) {
+			EOEnterpriseObject global = (EOEnterpriseObject)item2.valueForKey("global");
+			if(au.isInGroup(global))
+				return Boolean.TRUE;
+		}
+		return (Boolean)session().valueForKeyPath("readAccess._edit.ManageUsers.@" + 
+						item2.valueForKey("groupName"));
 	}
 	
 	public void setIsInGroup(boolean is) {
 		AutUser au = (AutUser)usersList.selectedObject();
-		if(item == null || au == null)
+		EOEnterpriseObject group = group();
+		EOEnterpriseObject global = (EOEnterpriseObject)item2.valueForKey("global");
+		if(is && au.isInGroup(global))
 			return;
+		if(is && group == null) {
+			group = EOUtilities.createAndInsertInstance(ec, "UserGroup");
+			group.takeValueForKey(item2.valueForKey("groupName"), "groupName");
+			if(item != null) {
+				Object section = item.valueForKey(IndexRow.IDX_KEY);
+				group.takeValueForKey(section, "section");
+				((NSMutableDictionary)item2).setObjectForKey(group, section);
+			} else {
+				item2.takeValueForKey(group, "global");
+			}
+		}
 		if(is) {
-			if(!au.groups().containsObject(item))
-				au.addObjectToBothSidesOfRelationshipWithKey(
-						(EOEnterpriseObject)item,AutUser.GROUPS_KEY);
+			if(!au.isInGroup(group))
+				au.addObjectToBothSidesOfRelationshipWithKey(group,AutUser.GROUPS_KEY);
 		} else {
-			if(au.groups().containsObject(item))
-				au.removeObjectFromBothSidesOfRelationshipWithKey(
-						(EOEnterpriseObject)item,AutUser.GROUPS_KEY);
+			if(au.isInGroup(group))
+				au.removeObjectFromBothSidesOfRelationshipWithKey(group,AutUser.GROUPS_KEY);
 		}
 	}
 	
@@ -224,7 +389,27 @@ public class ManageUsers extends WOComponent {
 			ec.revert();
 			valueForKeyPath("usersList.selectedObject.flushPlink");
 		}
-		groupsList.selectObject(item);
+		if(item2 == null)
+			return null;
+		currGroup = new NSMutableDictionary();
+		currGroup.takeValueForKey(item2.valueForKey("groupName"), "groupName");
+		currGroup.takeValueForKey(item2.valueForKey("title"), "title");
+		currGroup.takeValueForKey(item2, "row");
+		if(item != null) {
+			Object section = item.valueForKey(IndexRow.IDX_KEY);
+			currGroup.takeValueForKey(section, "section");
+			currGroup.takeValueForKey(item.valueForKey(IndexRow.VALUE_KEY), "sectionName");
+			if(currGroup.valueForKey("sectionName") == null && section != null)
+				currGroup.takeValueForKey(section.toString(), "sectionName");
+		} else {
+			currGroup.takeValueForKey("...", "sectionName");
+		}
+		EOEnterpriseObject group = group();
+		if(group != null) {
+			currGroup.takeValueForKey(group, "group");
+			currGroup.takeValueForKey(
+					group.valueForKey("externalEquivalent"), "externalEquivalent");
+		}
 		usersList.clearSelection();
 		passw1 = null;
 		passw2 = null;
@@ -232,27 +417,32 @@ public class ManageUsers extends WOComponent {
 	}
 	
 	public String groupClass() {
-		if(item == null)
+		EOEnterpriseObject group = group();
+		if(group == null)
 			return "grey";
-		if(item == groupsList.selectedObject())
+		if(group == currGroup)
 			return "selection";
-		if(item.valueForKey("externalEquivalent") != null)
+		if(!readFromParent)
+			return null;
+		if(group.valueForKey("externalEquivalent") != null)
 			return "gerade";
 		return "ungerade";
 	}
 	
 	public Boolean noAddGroup() {
-		if(usersList.selectedObject() != null || groupsList.selectedObject() != null)
+		if(usersList.selectedObject() != null)
 			return Boolean.TRUE;
 		return (Boolean)session().valueForKeyPath("readAccess._create.UserGroup");
 	}
 
-	public Boolean noBatch() {
-		if(usersList.selectedObject() != null || groupsList.selectedObject() != null)
-			return Boolean.TRUE;
-		return Boolean.valueOf(usersList.batchCount() < 2);
+	public Boolean showBatch() {
+		return Boolean.valueOf(usersList.batchCount() > 1);
 	}
 
+	public boolean showSelector() {
+		return usersList.allObjects().count() > usersList.numberOfObjectsPerBatch();
+	}
+	
 	public boolean synchronizesVariablesWithBindings() {
         return false;
 	}

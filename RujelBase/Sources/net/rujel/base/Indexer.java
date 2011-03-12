@@ -63,10 +63,10 @@ public class Indexer extends _Indexer
     	}
     }*/
     
-    protected Indexer typeIndex() {
-    	EOEditingContext ec = editingContext();
+    public static Indexer typeIndex(EOEditingContext ec) {
+    	EOEditingContext orig = ec;
     	if(ec.hasChanges()) {
-    		ec = new EOEditingContext(editingContext().rootObjectStore());
+    		ec = new EOEditingContext(orig.rootObjectStore());
     		ec.lock();
     	}
     	Indexer typeIndex = null;
@@ -83,16 +83,15 @@ public class Indexer extends _Indexer
 			} else {
 				typeIndex = (Indexer)list.objectAtIndex(0);
 			}
-			if(ec != editingContext()) {
-				typeIndex = (Indexer)EOUtilities.localInstanceOfObject(
-						editingContext(), typeIndex);
+			if(ec != orig) {
+				typeIndex = (Indexer)EOUtilities.localInstanceOfObject(orig, typeIndex);
 			}
 		} catch (Exception e) {
 			Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
 					"Error autogenerating type index",e);
 			typeIndex = null;
 		} finally {
-			if(ec != editingContext()) {
+			if(ec != orig) {
 				ec.unlock();
 			}
 		}
@@ -130,6 +129,11 @@ public class Indexer extends _Indexer
     public NSArray sortedIndex() {
     	initIndex();
     	return indexCache.immutableClone();
+    }
+    
+    public NSArray sortedValues() {
+    	initIndex();
+    	return (NSArray)indexCache.valueForKey(IndexRow.VALUE_KEY);
     }
     
     public Integer minIndex() {
@@ -329,7 +333,7 @@ public class Indexer extends _Indexer
 	
 	public String indexType() {
 		if(indexType == null) {
-			Indexer typeIndex = typeIndex();
+			Indexer typeIndex = typeIndex(editingContext());
 			if(typeIndex == null)
 				return null;
 			indexType = typeIndex.valueForIndex(type().intValue(), null);
@@ -338,7 +342,7 @@ public class Indexer extends _Indexer
 	}
 	
 	public void setIndexType(String type) {
-		Indexer typeIndex = typeIndex();
+		Indexer typeIndex = typeIndex(editingContext());
 		if(typeIndex == null)
 			return;
 		Integer idx = typeIndex.indexForValue(type, true,true);
@@ -399,6 +403,22 @@ public class Indexer extends _Indexer
 			}
 		}
 		super.validateForSave();
+	}
+	public static Indexer indexerOfType(EOEditingContext ec, String type, boolean create) {
+		Indexer typeIndex = typeIndex(ec);
+		Integer typeIdx = typeIndex.indexForValue(type, true, create);
+		if(typeIdx == null)
+			return null;
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
+				ENTITY_NAME, TYPE_KEY, typeIdx);
+		if(list != null && list.count() > 0)
+			return (Indexer)list.objectAtIndex(0);
+		if(!create)
+			return null;
+		typeIndex = (Indexer)EOUtilities.createAndInsertInstance(ec,ENTITY_NAME);
+		typeIndex.setType(typeIdx);
+		typeIndex.setTitle(type);
+		return typeIndex;
 	}
 	
 	public static NSArray indexersOfType(EOEditingContext ec, String type) {

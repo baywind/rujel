@@ -2,29 +2,6 @@
     "WebObjects Release" = "WebObjects 5.0"; 
     encoding = "UTF-8"; 
     variables = {
-        groupsList = {
-            class = WODisplayGroup; 
-            dataSource = {
-                class = EODatabaseDataSource; 
-                editingContext = ec; 
-                fetchSpecification = {
-                    class = EOFetchSpecification; 
-                    entityName = UserGroup; 
-                    isDeep = YES; 
-                    prefetchingRelationshipKeyPaths = (); 
-                }; 
-            }; 
-            fetchesOnLoad = YES; 
-            formatForLikeQualifier = "%@*"; 
-            numberOfObjectsPerBatch = 0; 
-            selectsFirstObjectAfterFetch = NO; 
-            sortOrdering = (
-                {class = EOSortOrdering; key = groupName; selectorName = "compareAscending:"; }
-            ); 
-            insertedObjectDefaultValues = {
-            	groupName = "groupName";
-            };
-        }; 
         usersList = {
             class = WODisplayGroup; 
             dataSource = {
@@ -39,14 +16,11 @@
             }; 
             fetchesOnLoad = YES; 
             formatForLikeQualifier = "*%@*"; 
-            numberOfObjectsPerBatch = 20; 
+            numberOfObjectsPerBatch = 5; 
             selectsFirstObjectAfterFetch = NO; 
             sortOrdering = (
                 {class = EOSortOrdering; key = userName; selectorName = "compareAscending:"; }
             ); 
-            insertedObjectDefaultValues = {
-            	userName = "userName";
-            };
         }; 
     }; 
 }
