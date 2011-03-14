@@ -157,6 +157,8 @@
 		<string>Произошла ошибка при обновлении прогнозов</string>
 		<key>ItogLock</key>
 		<string>Прогнозируемый итог</string>
+		<key>perform</key>
+		<string>выставить сейчас</string>
 	</dict>
 	<key>reportSettings</key>
 	<dict>

@@ -30,11 +30,15 @@
 package net.rujel.autoitog;
 
 import java.math.BigDecimal;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
+import net.rujel.ui.AddOnPresenter.AddOn;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -317,7 +321,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 	public String onkeypress() {
 		if(!ifArchive || mark == null)
 			return null;
-		return "showObj('prognosChangeReason');form.changeReason.onkeypress();";
+return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReason.onkeypress();";
 	}
 
 	public EOEnterpriseObject item;
@@ -362,7 +366,56 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	} else {
     		archDict.takeValueForKey(item.valueForKey("@value"),"title");
     	}
-    	
-    	
+    }
+    
+    public WOActionResults perform() {
+    	ItogMark itog = prognosis.convertToItogMark(null, false);
+    	Logger logger = Logger.getLogger("rujel.autoitog");
+    	EOEditingContext ec = prognosis.editingContext();
+    	try {
+    		if(SettingsReader.boolForKeyPath("markarchive.ItogMark", false)) {
+				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+				archive.takeValueForKey(itog, "object");
+    		}
+			ec.saveChanges();
+			logger.log(WOLogLevel.EDITING,"Forced prognosis execution",itog);
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error forcing prognosis execution",
+					new Object[] {session(),prognosis,e});
+			ec.revert();
+			session().takeValueForKey(e.getMessage(), "message");
+			return RedirectPopup.getRedirect(context(), returnPage);
+		}
+        WOComponent nextPage = pageWithName("ItogPopup");
+		nextPage.takeValueForKey(itog,"itog");
+		nextPage.takeValueForKey(prognosis.student(),"student");
+		nextPage.takeValueForKey(prognosis.itogContainer(),"itogContainer");
+		nextPage.takeValueForKey(returnPage,"returnPage");
+		NSArray addOns = (NSArray)session().objectForKey("notesAddOns");
+		if(addOns != null) {
+			Enumeration enu = addOns.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				AddOn itogAddOn = (AddOn) enu.nextElement();
+				if("itogs".equals(itogAddOn.valueForKey("id"))) {
+					nextPage.takeValueForKey(itogAddOn,"addOn");
+					itogAddOn.agregate = null;
+					break;
+				}
+			}
+		}
+        return nextPage;
+    }
+    
+    public String performOnClick() {
+		String href = context().componentActionURL();
+		String result = "refreshRequired=true;ajaxPopupAction('"+href+"');hideObj('ajaxPopup')";
+		return result;
+    }
+    
+    public Boolean cantPerform() {
+    	if(prognosis == null || ItogMark.getItogMark(course.cycle(),prognosis.itogContainer(),
+				student,prognosis.editingContext()) != null)
+    		return Boolean.TRUE;
+    	return (Boolean)session().valueForKeyPath("readAccess._create.ItogMark");
     }
 }

@@ -281,7 +281,7 @@ public class ItogPopup extends WOComponent {
 			ec.unlock();
 		}
 		if(addOn != null)
-			addOn.takeValueForKey(null,"agregate");
+			addOn.agregate = null;
 		return returnPage;
 	}
 

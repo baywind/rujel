@@ -339,7 +339,7 @@ public class ItogMark extends _ItogMark
 			String comment, String key) {
 		NSMutableDictionary dict = commentsDict(commentEO);
 		String stored = (String)dict.valueForKey(key);
-		if(stored == null || !stored.equals(comment)) {
+		if((stored == null)? comment != null : !stored.equals(comment)) {
 			dict.takeValueForKey(comment, key);
 			if(dict.count() == 0) {
 				commentEO.editingContext().deleteObject(commentEO);

@@ -140,4 +140,8 @@ public class PageWrapper extends WOComponent {
 				"back.gif", "app", null, context().request())).append(") repeat;");
 		return buf.toString();
 	}
+	
+	public WOActionResults refreshPage() {
+		return null;
+	}
 }

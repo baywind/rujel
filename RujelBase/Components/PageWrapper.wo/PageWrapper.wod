@@ -150,9 +150,9 @@ UnsavedAlert: WOString {
 	escapeHTML = false;
 }
 
-ConfinmAlert : WOString {
+ConfirmAlert : WOString {
 	value = application.strings.Strings.messages.areYouShure;
-	valueWhenEmpty = "Are you shure, you want %s?"; 
+	valueWhenEmpty = "Are you shure, you want %s?";
 	escapeHTML = false;
 }
 
@@ -209,4 +209,8 @@ ReusableScripts : ResourceLink {
 
 EduYear : WOString {
   value = eduYear;
+}
+
+RefreshPage : WOActionURL {
+  action = refreshPage;
 }

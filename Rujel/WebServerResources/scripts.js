@@ -28,7 +28,9 @@
 var hasChanges = false;
 var changed = false;
 var unsavedAlert = "Unsaved changes will be lost";
+var confirmAlert = "Are you shure, you want %s?";
 var loading = false;
+var refreshRequired = false;
 
 	function checkChanges(fld) {
 		if(hasChanges) {
@@ -677,6 +679,11 @@ function fitWindow(w,ph,pw) {
 
 function closePopup(aForm) {
 	container = document.getElementById('ajaxMask');
+	if(refreshRequired) {
+		container.innerHTML = '';
+		window.location = pageRefreshUrl;
+		return;
+	}
 	container.style.display='none';
 	if(aForm != null) {
 		for(var i = 0; i < document.forms.length; i++) {
