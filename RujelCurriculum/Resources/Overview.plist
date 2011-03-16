@@ -523,8 +523,6 @@
 					<string>$variationEditor</string>
 					<key>popupParams</key>
 					<dict>
-						<key>returnNormaly</key>
-						<true/>
 						<key>variation</key>
 						<string>.</string>
 					</dict>
