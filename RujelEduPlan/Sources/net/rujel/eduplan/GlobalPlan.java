@@ -32,7 +32,10 @@ package net.rujel.eduplan;
 
 import java.text.DecimalFormat;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
+import net.rujel.base.IndexRow;
+import net.rujel.base.Indexer;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.*;
@@ -105,10 +108,36 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public NSArray subjects;
 	public int index;
 	public Boolean noDetails;
+	public Integer onLevel;
+	public NSArray sections;
+	public NSKeyValueCoding item;
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
+			Indexer sidx = Indexer.indexerOfType(ec, "eduSections", true);
+			if(ec.globalIDForObject(sidx).isTemporary()) {
+				Logger logger = Logger.getLogger("rujel.eduplan");
+				try {
+					ec.saveChanges();
+					logger.log(WOLogLevel.COREDATA_EDITING,"autocreating eduSections indexer",sidx);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Error autocreating eduSections indexer",
+							new Object[] {session(),e});
+					ec.revert();
+					sections = NSArray.EmptyArray;
+				}
+			} else {
+				sections = sidx.sortedIndex();
+			}
+			if(onLevel == null) {
+				if(sections != null && sections.count() > 0) {
+					IndexRow sect = (IndexRow)sections.objectAtIndex(0);
+					onLevel = sect.idx();
+				} else {
+					onLevel = new Integer(0);
+				}
+			}
 	        grades = prepareGrades(ec);
 		  	subjects = prepareAgregate();
 		  	subjectItem = null;
@@ -156,12 +185,17 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			NSMutableDictionary dict = new NSMutableDictionary(
 					subj, PlanCycle.SUBJECT_EO_KEY);
 			dict.takeValueForKey(subj.subject(), Subject.SUBJECT_KEY);
-			dict.takeValueForKey(new PlanCycle[grades.count()], "planCycles");
-			dict.takeValueForKey(new EOEnterpriseObject[grades.count()], "planHours");
+			if(onLevel == null) {
+				dict.takeValueForKey(
+						new EOEnterpriseObject[grades.count()][sections.count()], "byGrade");
+			} else {
+				dict.takeValueForKey(new PlanCycle[grades.count()], "planCycles");
+				dict.takeValueForKey(new EOEnterpriseObject[grades.count()], "planHours");
+			}
 			dict.takeValueForKey(new Counter(), "counter");
 			agregate.addObject(dict);
 		}
-		NSArray allCycles = PlanCycle.allCyclesFor(null, null,
+		NSArray allCycles = PlanCycle.allCyclesFor(null, null, onLevel,
 				(Integer)session().valueForKey("school"), ec);
 		if(allCycles != null && allCycles.count() > 0) {
 			enu = allCycles.objectEnumerator();
@@ -169,23 +203,52 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				PlanCycle cycle = (PlanCycle) enu.nextElement();
 				int idx = allSubjects.indexOf(cycle.subjectEO());
 				NSMutableDictionary dict = (NSMutableDictionary)agregate.objectAtIndex(idx);
-				PlanCycle[] cycles = (PlanCycle[])dict.valueForKey("planCycles");
-				EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
-						dict.valueForKey("planHours");
 				idx = grades.indexOf(cycle.grade());
 				if(idx < 0)
 					continue;
-				cycles[idx] = cycle;
-				planHours[idx] = cycle.planHours(null);
-				idx++;
-				while(idx < grades.count()) {
-					Object next = grades.objectAtIndex(idx);
-					if(!(next instanceof EduGroup))
-						break;
-					EduGroup grp = (EduGroup)next;
-					if(!grp.grade().equals(cycle.grade()))
-						break;
-					planHours[idx] = cycle.planHours(grp);
+				if(onLevel == null) {
+					EOEnterpriseObject[][] byGrade = 
+						(EOEnterpriseObject[][])dict.valueForKey("byGrade");
+					int lvl = 0;
+					while(lvl < sections.count()) {
+						IndexRow section = (IndexRow)sections.objectAtIndex(lvl);
+						if(section.idx().equals(cycle.level()))
+							break;
+						lvl++;
+					}
+					if(lvl >= sections.count())
+						continue;
+					byGrade[idx][lvl] = cycle.planHours(null);
+					if(byGrade[idx][lvl] == null)
+						byGrade[idx][lvl] = cycle;
+					idx++;
+					while(idx < grades.count()) {
+						Object next = grades.objectAtIndex(idx);
+						if(!(next instanceof EduGroup))
+							break;
+						EduGroup grp = (EduGroup)next;
+						if(!grp.grade().equals(cycle.grade()))
+							break;
+						byGrade[idx][lvl] = cycle.planHours(grp,false);
+						if(byGrade[idx][lvl] == null)
+							byGrade[idx][lvl] = cycle;
+					}
+				} else {
+					PlanCycle[] cycles = (PlanCycle[])dict.valueForKey("planCycles");
+					EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
+					dict.valueForKey("planHours");
+					cycles[idx] = cycle;
+					planHours[idx] = cycle.planHours(null);
+					idx++;
+					while(idx < grades.count()) {
+						Object next = grades.objectAtIndex(idx);
+						if(!(next instanceof EduGroup))
+							break;
+						EduGroup grp = (EduGroup)next;
+						if(!grp.grade().equals(cycle.grade()))
+							break;
+						planHours[idx] = cycle.planHours(grp);
+					}
 				}
 				NSArray hrs = cycle.planHours();
 				if(hrs != null && hrs.count() > 0)
@@ -223,6 +286,28 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		return agregate;
 	}
 	
+	public boolean hasSection() {
+		return (onLevel != null);
+	}
+	
+	public String sectionClass() {
+		if((onLevel == null)? item == null : item != null &&
+				onLevel.equals(item.valueForKey(IndexRow.IDX_KEY)))
+			return "selection";
+		return "gerade";
+	}
+	
+	public WOActionResults selectSection() {
+		if(item == null)
+			onLevel = null;
+		else
+			onLevel = (Integer)item.valueForKey(IndexRow.IDX_KEY);
+	  	subjects = prepareAgregate();
+	  	subjectItem = null;
+	  	forcedSubjects = null;
+		return null;
+	}
+	
 	protected NSMutableSet forcedSubjects;
 	public boolean showAll = false;
 	public boolean showRow() {
@@ -243,18 +328,43 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 
 	public boolean editable() {
+		if(onLevel == null)
+			return Boolean.FALSE;
 		if(planHoursEO() == null) {
 			return access().flagForKey("create");
 		} else {
 			return access().flagForKey("edit");
 		}
 	}
+	
+	public Integer cycleLevel() {
+		return (Integer)item.valueForKey(IndexRow.IDX_KEY);
+	}
+	
+	public void setCycleLevel(Integer value) {
+		if(item == null || onLevel != null || sections == null ||
+				value == null || value.equals(cycleLevel()))
+			return;
+		int lvl = sections.indexOfIdenticalObject(item);
+		if(lvl < 0) return;
+		EOEnterpriseObject[][] byGrade = 
+			(EOEnterpriseObject[][])subjectItem.valueForKey("byGrade");
+		EOEnterpriseObject ph = byGrade[index][lvl];
+		if(ph == null)
+			return;
+		if(ph instanceof PlanCycle)
+			ph.takeValueForKey(value, PlanCycle.LEVEL_KEY);
+		else
+			ph.takeValueForKeyPath(value,"planCycle.level");
+	}
 
 	protected static DecimalFormat fmt = new DecimalFormat("0.0#");
 	public String planHours() {
 		EOEnterpriseObject ph = planHoursEO();
 		if(ph == null)
-			return null;
+			return (onLevel == null)? "<span style = \"color:#cccccc;\">&oslash;</span>":null;
+		else if(ph instanceof PlanCycle)
+			return "<span style = \"color:#999999;\">0</span>";
 		PlanCycle cycle = (PlanCycle)ph.valueForKey("planCycle");
 		Integer year = (Integer)session().valueForKey("eduYear"); 
 		int[] wd = cycle.weeksAndDays(year);
@@ -310,13 +420,14 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				cycle.addObjectToBothSidesOfRelationshipWithKey((Subject)
 						subjectItem.valueForKey("subjectEO"), PlanCycle.SUBJECT_EO_KEY);
 				cycle.setSchool((Integer)session().valueForKey("school"));
+				cycle.setLevel(onLevel);
 				for (int i = 0; i < planCycles.length; i++) {
 					Integer grd = null;
-					Object item = grades.objectAtIndex(i); 
-					if(item instanceof EduGroup) {
-						grd = ((EduGroup)item).grade();
+					Object grItem = grades.objectAtIndex(i); 
+					if(grItem instanceof EduGroup) {
+						grd = ((EduGroup)grItem).grade();
 					} else {
-						grd = (Integer)item;
+						grd = (Integer)grItem;
 					}
 					if(grd.compareTo(grade) > 0)
 						break;
@@ -394,6 +505,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),changes};*/
 			ec.saveChanges();
 			EduPlan.logger.log(WOLogLevel.EDITING,"Saved changes in EduPlan",session());
+			if(onLevel == null)
+			  	subjects = prepareAgregate();
 		} catch (Exception ex) {
 			Object[] args = new Object[] {session(),ex};
 			EduPlan.logger.log(WOLogLevel.WARNING,"Failed to save changes",args);
@@ -422,10 +535,18 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	protected EOEnterpriseObject planHoursEO() {
 		if(subjectItem == null)
 			return null;
+		if(index < 0 || index >= grades.count())
+			return null;
+		if(onLevel == null) {
+			if(item == null) return null;
+			int lvl = sections.indexOfIdenticalObject(item);
+			if(lvl < 0) return null;
+			EOEnterpriseObject[][] byGrade = 
+				(EOEnterpriseObject[][])subjectItem.valueForKey("byGrade");
+			return byGrade[index][lvl];
+		}
 		EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
 			subjectItem.valueForKey("planHours");
-		if(index < 0 || index >= planHours.length)
-			return null;
 		return planHours[index];
 	}
 	
@@ -434,6 +555,12 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		if(area() != null) {
 			result = "border-top:#ffcc66 solid 2px;";
 		}
+		if(onLevel == null) {
+			if(result == null)
+				result = "white-space:nowrap;border-left:#666666 solid 1px;";
+			else
+				result = result + "white-space:nowrap;border-left:#666666 solid 1px;";
+		} else
 		if(!editable()) {
 			EOEnterpriseObject ph = planHoursEO();
 			if(ph == null)
@@ -540,6 +667,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				"strings.RujelEduPlan_EduPlan.PlanDetails"),"title");
 		dict.takeValueForKey(valueForKeyPath("subjectItem.subjectEO"), "selection");
 		dict.takeValueForKey(new Integer(showTotal), "showTotal");
+		dict.takeValueForKey(onLevel, "onLevel");
 //		parent().takeValueForKey(dict, "currTab");
 		setValueForBinding(dict, "dict");
 //		session().takeValueForKey(context().page(), "pushComponent");

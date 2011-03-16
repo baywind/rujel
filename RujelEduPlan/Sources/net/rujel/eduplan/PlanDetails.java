@@ -66,6 +66,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
  	public EOEnterpriseObject pdItem;
  	public Integer courseIndex;
 	public int showTotal;
+	public Integer onLevel = new Integer(0);
  	
 	public PlanDetails(WOContext context) {
         super(context);
@@ -124,7 +125,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 //				groups = new NSArray(sel);
 			} else if (sel instanceof Subject) {
 				Subject subject = (Subject) sel;
-				cycles = PlanCycle.cyclesForSubject(subject);
+				cycles = PlanCycle.cyclesForSubject(subject,onLevel);
 				EOSortOrdering so =new EOSortOrdering("grade",EOSortOrdering.CompareAscending);
 				cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, new NSArray(so));
 				NSTimestamp date = (NSTimestamp)session().valueForKey("today");
@@ -779,6 +780,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 				showTotal = 0;
 			} else {
 				showTotal = ((Integer)dict.valueForKey("showTotal")).intValue();
+				onLevel = (Integer)dict.valueForKey("onLevel");
 				setSelection(dict.valueForKey("selection"));
 			}
 			setValueForBinding(Boolean.FALSE, "shouldReset");

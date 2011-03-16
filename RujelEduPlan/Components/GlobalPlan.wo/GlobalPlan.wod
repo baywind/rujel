@@ -89,11 +89,12 @@ CanEdit : WOConditional {
 
 CntEdit : WOConditional {
   condition = editable;
-  negate = true;
+  negate = hasSection;
 }
 
 ReadHours : WOString {
   value = planHours;
+  escapeHTML = false;
 }
 
 PlusImage : WOImage {
@@ -193,4 +194,45 @@ Colspan : WOGenericContainer {
   colspan = colspan;
   style = "padding:1ex";
   align = "center";
+}
+
+Sections : WORepetition {
+  list = sections;
+  item = item;
+}
+
+SectionContainer : OnClickContainer {
+  elementName = "div";
+  class = sectionClass;
+  invokeAction = selectSection;
+  onclick = session.checkRun;
+  style = "margin:3px";
+}
+
+SectionNum : WOString {
+  value = item.idx;
+  numberformat = "0";
+}
+
+SectionTitle : WOString {
+  value = item.value;
+}
+
+ShowAll : WOConditional {
+  condition = hasSection;
+  negate = true;
+}
+
+HasSection : WOConditional {
+  condition = hasSection;
+}
+
+CycleLevel : WOTextField {
+  value = cycleLevel;
+  numberformat = "0";
+  style = "display:none;";
+}
+
+CanSave : WOConditional {
+  condition = session.readAccess.edit.PlanCycle;
 }

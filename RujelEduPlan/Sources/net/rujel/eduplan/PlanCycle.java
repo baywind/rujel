@@ -123,9 +123,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
     }
 */
 
-	public static NSArray cyclesForSubject(Subject subject) {
+	public static NSArray cyclesForSubject(Subject subject, Integer level) {
 		EOEditingContext ec = subject.editingContext();
-		NSArray found = allCyclesFor(null, subject, school(ec), ec);
+		NSArray found = allCyclesFor(null, subject, level,school(ec), ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		NSMutableArray result = new NSMutableArray();
@@ -168,7 +168,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return result;
 	}
 
-	public static NSArray allCyclesFor(Integer grade, Subject subject, 
+	public static NSArray allCyclesFor(Integer grade, Subject subject, Integer level,
 				Integer school, EOEditingContext ec) {
 		NSMutableArray  quals = new NSMutableArray();
 		if(school != null)
@@ -180,13 +180,16 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		if(subject != null)
 			quals.addObject(new EOKeyValueQualifier(SUBJECT_EO_KEY,
 					EOQualifier.QualifierOperatorEqual,subject));
+		if(level != null)
+			quals.addObject(new EOKeyValueQualifier(LEVEL_KEY,
+					EOQualifier.QualifierOperatorEqual,level));
 		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",
 				new EOAndQualifier(quals),null);
 		return ec.objectsWithFetchSpecification(fs);		
 	}
 	
 	public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec) {
-		NSArray found = allCyclesFor(grade,null, school(ec), ec);
+		NSArray found = allCyclesFor(grade,null, null,school(ec), ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		Enumeration enu = found.objectEnumerator();
@@ -202,7 +205,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	
 	public static NSArray cyclesForEduGroup(EduGroup group) {
 		EOEditingContext ec = group.editingContext();
-		NSArray found = allCyclesFor(group.grade(),null, school(ec), ec);
+		NSArray found = allCyclesFor(group.grade(),null, null,school(ec), ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		Enumeration enu = found.objectEnumerator();
