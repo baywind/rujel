@@ -82,7 +82,10 @@ public class ReportsModule {
 			settings.mergeValueToKeyPath(reportsDir, "reportsDir");
 		reportsDir = Various.convertFilePath(reportsDir);
 		reportsFolder = new File(reportsDir);
-		Object value = dict.objectForKey("auth.access");
+		Object value = dict.objectForKey("ui");
+		if(value instanceof NSDictionary)
+			settings.mergeValueToKeyPath(value, "ui");
+		value = dict.objectForKey("auth.access");
 		if(value == null)
 			return;
 		NSDictionary access = null;

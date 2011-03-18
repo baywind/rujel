@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -96,14 +97,20 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     	NSArray args = (NSArray)currReport.valueForKey("prefetch");
     	if(args != null && args.count() > 0)
     		fs.setPrefetchingRelationshipKeyPaths(args);
-    	fullList = ec.objectsWithFetchSpecification(fs);
+    	try {
+    		fullList = ec.objectsWithFetchSpecification(fs);
+    	} catch (Exception e) {
+			fullList = null;
+			logger.log(WOLogLevel.WARNING,"Error fetching custom report",
+					new Object[] {session(),entityName,params,e});
+		}
     	if(fullList == null || fullList.count() == 0) {
     		session().takeValueForKey(session().valueForKeyPath(
     				"strings.Strings.messages.nothingFound"), "message");
     	} else {
-    		setupDisplay();
         	logger.log(WOLogLevel.MASS_READING,"Generating report '" + 
         			currReport.valueForKey("title") + "' found: " + fullList.count(),session());
+    		setupDisplay();
     	}
     }
     
@@ -113,15 +120,33 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 		countList = null;
     	if(fullList != null && fullList.count() > 1) {
     		boolean sortAll = Various.boolForObject(currReport.valueForKey("sortAll"));
-    		list = sort(fullList,display,sortAll);
     		Object[] prop = display.objects();
     		params.removeObjectForKey("currObject");
+    		int limit = SettingsReader.intForKeyPath("ui.limitReportRows", 0);
     		if(!sortAll) {
     			for (int i = 0; i < prop.length; i++) {
-					if(sortingProp((NSKeyValueCoding)prop[i],sortAll) == null)
+					if(sortingProp((NSKeyValueCoding)prop[i],sortAll) == null) {
+		    			if(limit > 0 && fullList.count() > limit) {
+		    				logger.log(WOLogLevel.INFO,"CustomReport rows limit exceeded",
+		    						session());
+		    				list = null;
+		    				fullList = null;
+		    				countList = null;
+		    				display = null;
+		    				item = null;
+		    				System.gc();
+		    				String message = (String)session().valueForKeyPath(
+		    						"strings.RujelReports_Reports.CustomReport.limitExceded");
+		    				message = String.format(message, limit);
+		    				session().takeValueForKey(message, "message");
+		    			} else {
+		    				list = sort(fullList,display,sortAll);
+		    			}
 						return;
+					}
 				}
     		}
+    		list = sort(fullList,display,sortAll);
     		NSMutableArray newList = new NSMutableArray(list.objectAtIndex(0));
     		countList = new NSMutableArray();
     		Enumeration listEnu = list.objectEnumerator();
@@ -150,6 +175,20 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 						}
 					}
 				}
+    			if(limit > 0 && newList.count() > limit) {
+    				logger.log(WOLogLevel.INFO,"CustomReport rows limit exceeded",session());
+    				list = null;
+    				fullList = null;
+    				countList = null;
+    				display = null;
+    				item = null;
+    				System.gc();
+    				String message = (String)session().valueForKeyPath(
+    						"strings.RujelReports_Reports.CustomReport.limitExceded");
+    				message = String.format(message, limit);
+    				session().takeValueForKey(message, "message");
+    				return;
+    			}
     			count++;
 			}
 			if(count > maxCount)
