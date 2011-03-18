@@ -42,8 +42,8 @@ public abstract class _PlanCycle extends EOGenericRecord {
 
 	// Attributes
 	public static final String GRADE_KEY = "grade";
-	public static final String LEVEL_KEY = "level";
 	public static final String SCHOOL_KEY = "school";
+	public static final String SECTION_KEY = "section";
 	public static final String SUBJECT_KEY = "subject";
 
 	// Relationships
@@ -58,20 +58,20 @@ public abstract class _PlanCycle extends EOGenericRecord {
     takeStoredValueForKey(value, GRADE_KEY);
   }
 
-  public Integer level() {
-    return (Integer) storedValueForKey(LEVEL_KEY);
-  }
-
-  public void setLevel(Integer value) {
-    takeStoredValueForKey(value, LEVEL_KEY);
-  }
-
   public Integer school() {
     return (Integer) storedValueForKey(SCHOOL_KEY);
   }
 
   public void setSchool(Integer value) {
     takeStoredValueForKey(value, SCHOOL_KEY);
+  }
+
+  public Integer section() {
+    return (Integer) storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(Integer value) {
+    takeStoredValueForKey(value, SECTION_KEY);
   }
 
   public String subject() {

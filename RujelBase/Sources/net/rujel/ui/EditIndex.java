@@ -88,6 +88,13 @@ public class EditIndex extends WOComponent {
     	return null;
     }
     
+    public String onclick() {
+    	String onclick = (String)valueForBinding("onclick");
+    	if(onclick == null)
+    		onclick = (String)session().valueForKey("checkRun");
+    	return onclick;
+    }
+    
     public boolean isStateless() {
 		return true;
 	}

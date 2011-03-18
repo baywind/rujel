@@ -16,7 +16,7 @@
             }; 
             fetchesOnLoad = YES; 
             formatForLikeQualifier = "*%@*"; 
-            numberOfObjectsPerBatch = 5; 
+            numberOfObjectsPerBatch = 20; 
             selectsFirstObjectAfterFetch = NO; 
             sortOrdering = (
                 {class = EOSortOrdering; key = userName; selectorName = "compareAscending:"; }

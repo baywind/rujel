@@ -31,7 +31,6 @@ package net.rujel.eduplan;
 
 import java.util.Enumeration;
 
-import net.rujel.base.Indexer;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
@@ -75,7 +74,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		super.awakeFromInsertion(ec);
 		Integer zero = new Integer(0);
 		setGrade(zero);
-		setLevel(zero);
+		setSection(zero);
 		setSchool(school(ec));
 	}
 	
@@ -123,9 +122,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
     }
 */
 
-	public static NSArray cyclesForSubject(Subject subject, Integer level) {
+	public static NSArray cyclesForSubject(Subject subject, Integer section) {
 		EOEditingContext ec = subject.editingContext();
-		NSArray found = allCyclesFor(null, subject, level,school(ec), ec);
+		NSArray found = allCyclesFor(null, subject, section,school(ec), ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		NSMutableArray result = new NSMutableArray();
@@ -168,7 +167,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return result;
 	}
 
-	public static NSArray allCyclesFor(Integer grade, Subject subject, Integer level,
+	public static NSArray allCyclesFor(Integer grade, Subject subject, Integer section,
 				Integer school, EOEditingContext ec) {
 		NSMutableArray  quals = new NSMutableArray();
 		if(school != null)
@@ -180,9 +179,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		if(subject != null)
 			quals.addObject(new EOKeyValueQualifier(SUBJECT_EO_KEY,
 					EOQualifier.QualifierOperatorEqual,subject));
-		if(level != null)
-			quals.addObject(new EOKeyValueQualifier(LEVEL_KEY,
-					EOQualifier.QualifierOperatorEqual,level));
+		if(section != null)
+			quals.addObject(new EOKeyValueQualifier(SECTION_KEY,
+					EOQualifier.QualifierOperatorEqual,section));
 		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",
 				new EOAndQualifier(quals),null);
 		return ec.objectsWithFetchSpecification(fs);		
@@ -451,13 +450,13 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		super.setSubjectEO(value);
 		setSubject((value==null)?null:(String)value.valueForKey(Subject.SUBJECT_KEY));
 	}
-	
+	/*
 	public String extraInfo() {
-		NSArray list = Indexer.indexersOfType(editingContext(), "eduLevel");
+		NSArray list = Indexer.indexersOfType(editingContext(), "eduSection");
 		if(list == null || list.count() == 0)
 			throw new UnknownKeyException("eduLevel not defined can't return extraInfo",
 					this,"extraInfo");
 		Indexer idx = (Indexer)list.objectAtIndex(0);
-		return idx.formattedForIndex(level().intValue(), null);
-	}
+		return idx.formattedForIndex(section().intValue(), null);
+	}*/
 }

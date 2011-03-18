@@ -50,6 +50,13 @@
 	<string>Подробное описание</string>
 	<key>compulsory</key>
 	<string>обязательная</string>
+	<key>titles</key>
+	<dict>
+		<key>idx</key>
+		<string>зн.</string>
+		<key>value</key>
+		<string>предст.</string>
+	</dict>
 	<key>setup</key>
 	<dict>
 		<key>WorkType</key>

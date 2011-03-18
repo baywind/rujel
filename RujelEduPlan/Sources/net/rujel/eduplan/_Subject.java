@@ -41,6 +41,7 @@ public abstract class _Subject extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Subject";
 
 	// Attributes
+	public static final String FLAGS_KEY = "flags";
 	public static final String FULL_NAME_KEY = "fullName";
 	public static final String NORMAL_GROUP_KEY = "normalGroup";
 	public static final String NUM_KEY = "num";
@@ -49,6 +50,14 @@ public abstract class _Subject extends EOGenericRecord {
 
 	// Relationships
 	public static final String AREA_KEY = "area";
+
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
+  }
+
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
+  }
 
   public String fullName() {
     return (String) storedValueForKey(FULL_NAME_KEY);

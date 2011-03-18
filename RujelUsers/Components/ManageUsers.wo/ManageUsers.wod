@@ -243,7 +243,7 @@ Sections : WORepetition {
 }
 
 SectionTitle : WOString {
-  value = session.strings.RujelUsers_UserStrings.eduSection;
+  value = session.strings.RujelEduPlan_EduPlan.sections.eduSection;
   escapeHTML = false;
 }
 
@@ -285,4 +285,8 @@ ShowAll : OnClickContainer {
   invokeAction = search;
   hide = showBatch;
   style = "float:left;color:#3333cc;";
+}
+
+NoLimit : WOString {
+  value = session.strings.RujelBase_Base.noLimit;
 }

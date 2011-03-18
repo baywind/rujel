@@ -37,6 +37,7 @@ import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFaultHandler;
@@ -47,8 +48,10 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
  
-public class Indexer extends _Indexer
-{
+public class Indexer extends _Indexer {
+	
+	public static final String SYSTEM = "SYSTEM";
+	
     public Indexer() {
         super();
     }
@@ -77,11 +80,15 @@ public class Indexer extends _Indexer
 				typeIndex = (Indexer)EOUtilities.createAndInsertInstance(ec,ENTITY_NAME);
 				typeIndex.takeValueForKey(new Integer((int)Short.MIN_VALUE), TYPE_KEY);
 				typeIndex.takeValueForKey("index types",TITLE_KEY);
+				typeIndex.setValueForIndex(SYSTEM, 0);
 				ec.saveChanges();
 				Logger.getLogger("rujel.base").log(WOLogLevel.COREDATA_EDITING,
 						"Automatically generated type index");
 			} else {
 				typeIndex = (Indexer)list.objectAtIndex(0);
+				typeIndex.setValueForIndex(SYSTEM, 0);
+				if(ec.hasChanges())
+					ec.saveChanges();
 			}
 			if(ec != orig) {
 				typeIndex = (Indexer)EOUtilities.localInstanceOfObject(orig, typeIndex);
@@ -328,6 +335,8 @@ public class Indexer extends _Indexer
 			row.setIdx(new Integer(index));
 			addObjectToBothSidesOfRelationshipWithKey(row, INDEX_ROWS_KEY);
 		}
+		if((value==null)? row.value() != null : !value.equals(row.value()))
+			row.setValue(value);
 		return row;
 	}
 	
@@ -404,20 +413,45 @@ public class Indexer extends _Indexer
 		}
 		super.validateForSave();
 	}
-	public static Indexer indexerOfType(EOEditingContext ec, String type, boolean create) {
+	
+	public static Indexer getIndexer(EOEditingContext ec, String name, 
+			String type, boolean create) {
+		if(type == null)
+			return getIndexer(ec, name, new Integer(0), create);
 		Indexer typeIndex = typeIndex(ec);
 		Integer typeIdx = typeIndex.indexForValue(type, true, create);
 		if(typeIdx == null)
 			return null;
-		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
-				ENTITY_NAME, TYPE_KEY, typeIdx);
+		return getIndexer(ec, name, typeIdx, create);
+	}
+	
+	public static Indexer getIndexer(EOEditingContext ec, String name, 
+			Integer type, boolean create) {
+		EOQualifier[] qual = new EOQualifier[2];
+		if(type != null)
+			qual[0] = new EOKeyValueQualifier(TYPE_KEY, EOQualifier.QualifierOperatorEqual, type);
+		else if (name == null)
+			throw new IllegalArgumentException("At least one of type and name are reqired");
+		if(name != null) {
+			qual[1] = new EOKeyValueQualifier(TITLE_KEY, EOQualifier.QualifierOperatorEqual, name);
+			if(type == null)
+				qual[0] = qual[1];
+			else
+				qual[0] = new EOAndQualifier(new NSArray(qual));
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual[0],null);
+		NSArray list = ec.objectsWithFetchSpecification(fs);
 		if(list != null && list.count() > 0)
 			return (Indexer)list.objectAtIndex(0);
 		if(!create)
 			return null;
-		typeIndex = (Indexer)EOUtilities.createAndInsertInstance(ec,ENTITY_NAME);
-		typeIndex.setType(typeIdx);
-		typeIndex.setTitle(type);
+		if(type == null)
+			throw new IllegalStateException("Cant create Indexer with no type provided");
+		Indexer typeIndex = (Indexer)EOUtilities.createAndInsertInstance(ec,ENTITY_NAME);
+		typeIndex.setType(type);
+		if(name == null)
+			name = typeIndex(ec).valueForIndex(type.intValue(), null);
+		typeIndex.setTitle(name);
 		return typeIndex;
 	}
 	

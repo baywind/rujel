@@ -301,7 +301,7 @@ public class ManageUsers extends WOComponent {
 	public NSArray sections() {
 		if(sections != null)
 			return sections;
-		Indexer sidx = Indexer.indexerOfType(ec, "eduSections", true);
+		Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, true);
 		if(ec.globalIDForObject(sidx).isTemporary()) {
 			try {
 				ec.saveChanges();
@@ -417,11 +417,12 @@ public class ManageUsers extends WOComponent {
 	}
 	
 	public String groupClass() {
+		if(currGroup != null && currGroup.valueForKey("row") == item2 && 
+				currGroup.valueForKey("section") == valueForKeyPath("item.idx"))
+			return "selection";
 		EOEnterpriseObject group = group();
 		if(group == null)
 			return "grey";
-		if(group == currGroup)
-			return "selection";
 		if(!readFromParent)
 			return null;
 		if(group.valueForKey("externalEquivalent") != null)

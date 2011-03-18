@@ -207,6 +207,7 @@ SectionContainer : OnClickContainer {
   invokeAction = selectSection;
   onclick = session.checkRun;
   style = "margin:3px";
+  hide = noSections;
 }
 
 SectionNum : WOString {
@@ -235,4 +236,22 @@ CycleLevel : WOTextField {
 
 CanSave : WOConditional {
   condition = session.readAccess.edit.PlanCycle;
+}
+
+SectionsTitle : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.sections.sections;
+  escapeHTML = false;
+}
+
+SetupSections : OnClickContainer {
+  elementName = "div";
+  style = "font-size:120%;text-align:center;";
+  invokeAction = setupSections;
+  onclick = session.ajaxPopupNoPos;
+  disabled = session.readAccess._edit.PlanCycle;
+}
+
+AllTitle : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.sections.showAll;
+  escapeHTML = false;
 }

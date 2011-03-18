@@ -8,8 +8,6 @@
 	<string>группы</string>
 	<key>groupName</key>
 	<string>Группа</string>
-	<key>eduSection</key>
-	<string>Отделение</string>
 	<key>accessGroups</key>
 	<dict>
 		<key>array</key>

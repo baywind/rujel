@@ -99,6 +99,19 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>sections</key>
+	<dict>
+		<key>basic</key>
+		<string>Основная школа</string>
+		<key>eduSection</key>
+		<string>Отделение</string>
+		<key>sections</key>
+		<string>Отделения</string>
+		<key>setup</key>
+		<string>настроить</string>
+		<key>showAll</key>
+		<string>показать все</string>
+	</dict>
 	<key>planTabs</key>
 	<array>
 		<dict>
