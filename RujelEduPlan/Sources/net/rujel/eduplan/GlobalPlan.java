@@ -131,6 +131,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			} else {
 				sections = sidx.sortedIndex();
 			}
+			if(inSection == null)
+				inSection = (Integer)session().valueForKeyPath("state.section");
 			if(inSection == null) {
 				if(sections != null && sections.count() > 0) {
 					IndexRow sect = (IndexRow)sections.objectAtIndex(0);

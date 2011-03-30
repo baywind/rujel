@@ -47,6 +47,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	protected Logger logger = Logger.getLogger("rujel");
 	protected NSDictionary clientIdentity;
 	protected MultiECLockManager ecLockManager;
+	public NSMutableDictionary state = new NSMutableDictionary();
 
 	protected NSTimestamp today;// = new NSTimestamp();
 	public Session() {

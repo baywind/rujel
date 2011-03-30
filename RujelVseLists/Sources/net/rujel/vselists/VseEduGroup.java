@@ -101,7 +101,8 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	protected NSArray _list;
-	protected long since;
+	protected NSArray _tutors;
+	protected long since = 0;
 	protected long to = Long.MAX_VALUE;
 	public NSArray list() {
 		return list(MyUtility.date(editingContext()));
@@ -116,20 +117,35 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	public NSArray vseList() {
 		return vseList(MyUtility.date(editingContext()));
 	}
-	
 	public NSArray vseList(NSTimestamp date) {
 		long now = date.getTime();
-		if(_list != null && now > since && now < to)
-			return _list;
+		if(_list == null || now < since || now > to)
+			prepareLists(now);
+		return _list;
+	}
+	
+	public NSArray tutors() {
+		return tutors(MyUtility.date(editingContext()));
+	}
+	public NSArray tutors(NSTimestamp date) {
+		long now = date.getTime();
+		if(_tutors == null || now < since || now > to)
+			prepareLists(now);
+		return _tutors;
+	}
+	
+	protected void prepareLists(long now) {
 		since = 0;
 		to = Long.MAX_VALUE;
-		_list = lists();
-		if(_list == null || _list.count() == 0) {
-			_list = NSArray.EmptyArray;
-			return _list;
-		}
-		Enumeration enu = _list.objectEnumerator();
-		NSMutableArray result = new NSMutableArray();
+		_list = processList(lists(), now, VseList.sorter);
+		_tutors = processList(vseTutors(), now, VseTutor.sorter);
+	}
+	
+	protected NSArray processList(NSArray source, long now, NSArray lSorter) {
+		if(source == null || source.count() == 0)
+			return NSArray.EmptyArray;
+		Enumeration enu = source.objectEnumerator();
+		NSMutableArray list = new NSMutableArray();
 		Calendar cal = Calendar.getInstance();
 		while (enu.hasMoreElements()) {
 			EOEnterpriseObject l = (EOEnterpriseObject) enu.nextElement();
@@ -162,12 +178,11 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 					since = cal.getTimeInMillis();
 				}
 			}
-			result.addObject(l);
+			list.addObject(l);
 		}
-		if(result.count() > 1)
-			EOSortOrdering.sortArrayUsingKeyOrderArray(result, VseList.sorter);
-		_list = result.immutableClone();
-		return _list;
+		if(list.count() > 1)
+			EOSortOrdering.sortArrayUsingKeyOrderArray(list, lSorter);
+		return list.immutableClone();
 	}
 	
 	public VseList addStudent(VseStudent student, NSTimestamp date) {
@@ -200,17 +215,28 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		nullify();
 		super.setLists(value);
 	}
-
 	public void addToLists(EOEnterpriseObject object) {
 		nullify();
 		super.addToLists(object);
 	}
-
 	public void removeFromLists(EOEnterpriseObject object) {
 		nullify();
 		super.removeFromLists(object);
 	}
 
+	public void setVseTutors(NSArray value) {
+		nullify();
+		super.setVseTutors(value);
+	}
+	public void addToVseTutors(EOEnterpriseObject object) {
+		nullify();
+		super.addToVseTutors(object);
+	}
+	public void removeFromVseTutors(EOEnterpriseObject object) {
+		nullify();
+		super.removeFromVseTutors(object);
+	}
+	
 	public int count() {
 		return list().count();
 	}
@@ -260,6 +286,7 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 
     public void nullify() {
 		_list = null;
+		_tutors = null;
 		since = 0;
 		to = Long.MAX_VALUE;
 		_flags = null;

@@ -30,6 +30,8 @@
 package net.rujel.ui;
 
 import net.rujel.base.CourseInspector;
+import net.rujel.base.IndexRow;
+import net.rujel.base.Indexer;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -58,7 +60,8 @@ public class SrcMark extends WOComponent {
 	protected int currIndex = -1;
 	public NSMutableArray popupCycles;
 	public NSMutableDictionary dict = new NSMutableDictionary();
-	
+	public NSArray sections = null;
+	public IndexRow currSection;
 	
     public SrcMark(WOContext context) {
         super(context);
@@ -72,8 +75,50 @@ public class SrcMark extends WOComponent {
 				coursesForTeacher(currTeacher);
 			}
 		}
+		prepareSections();
+    }
+    
+    public void prepareSections() {
+		Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, true);
+		if(sidx != null)
+			sections = sidx.sortedIndex();
+		Integer sect = (Integer)session().valueForKeyPath("state.section");
+		if(sections != null && sections.count() > 0) {
+			if(sect == null) {
+				currSection = (IndexRow)sections.objectAtIndex(0);
+				session().takeValueForKeyPath(currSection.idx(), "state.section");
+			} else {
+				for (int i = sections.count() -1; i >= 0; i--) {
+					currSection = (IndexRow)sections.objectAtIndex(i);
+					if(sect.equals(currSection.idx()))
+						break;
+				}
+				if(!sect.equals(currSection.idx())) {
+					sect = currSection.idx();
+					session().takeValueForKeyPath(sect, "state.section");
+				}
+			}
+			if (sections.count() == 1)
+				sections = null;
+		} else if(sect == null) {
+			sections = null;
+			session().takeValueForKeyPath(new Integer(0), "state.section");
+		}
     }
 	
+    public void setCurrSection(Object sect) {
+    	if(sect instanceof Number) {
+			for (int i = sections.count() -1; i >= 0; i--) {
+				currSection = (IndexRow)sections.objectAtIndex(i);
+				if(sect.equals(currSection.idx()))
+					break;
+			}
+    	} else {
+    		currSection = (IndexRow)sect;
+    	}
+		session().takeValueForKeyPath(currSection.idx(), "state.section");
+    }
+    
 	public void setCurrClass(EduGroup newClass) {
 		if(newClass != null && newClass.editingContext() != ec) {
 			currClass = (EduGroup)EOUtilities.localInstanceOfObject(ec, newClass);

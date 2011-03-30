@@ -1,4 +1,4 @@
-//  VseList.java
+//  VseTutor.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -29,40 +29,31 @@
 
 package net.rujel.vselists;
 
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.EOSortOrdering;
-import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSTimestamp;
 
-public class VseList extends _VseList {
+public class VseTutor extends _VseTutor {
 
-	public static final NSArray sorter = new NSArray(
-			new EOSortOrdering(STUDENT_KEY,EOSortOrdering.CompareAscending));
-
+	public static final NSArray sorter = new NSArray( new Object[] {
+			new EOSortOrdering(ENTER_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering(LEAVE_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering(TEACHER_KEY,EOSortOrdering.CompareAscending)});
+	
 	public void setEnter(NSTimestamp value) {
 		super.setEnter(value);
 		eduGroup().nullify();
-		if(value != null && student().enter() != null && student().enter().after(value))
-			student().setEnter(value);
 	}
 
 	public void setLeave(NSTimestamp value) {
 		super.setLeave(value);
+		if(value != null && enter() != null && !value.after(enter()))
+			editingContext().deleteObject(this);
 		eduGroup().nullify();
-		if(value != null && student().leave() != null && student().leave().before(value))
-			student().setLeave(value);
 	}
 	
 	public void validateForSave() {
 		super.validateForSave();
-		validateDates(enter(), leave());
-	}
-	
-	public static void validateDates(NSTimestamp enter, NSTimestamp leave) {
-		if(enter == null || leave == null)
-			return;
-		if(enter.getTime() > leave.getTime()) {
-			throw new NSValidation.ValidationException((String)WOApplication.application()
-					.valueForKeyPath("strings.RujelVseLists_VseStrings.enterLaterLeave"));
-		}
+		VseList.validateDates(enter(), leave());
 	}
 }

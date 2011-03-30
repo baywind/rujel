@@ -121,6 +121,7 @@ public class ChooseRegime extends WOComponent {
 		} else {
 			cleanPathStack(null);
     		srcMark.ensureAwakeInContext(context());
+    		srcMark.valueForKey("prepareSections");
 		}
 		/*		
 		session().takeValueForKey(this,"pushComponent");

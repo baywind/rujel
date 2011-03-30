@@ -227,3 +227,14 @@ SelectorTitle : WOString {
 TeacherIsSelected : WOConditional {
   condition = teacherIsSelected;
 }
+
+SectionTabs : Tabs {
+  currTab = currSection;
+  tablist = sections;
+  titleAttribute = "value";
+  vertical = true;
+}
+
+HasSections : WOConditional {
+  condition = sections;
+}

@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
+import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Counter;
 import net.rujel.reusables.DegenerateFlags;
 import net.rujel.reusables.NamedFlags;
@@ -51,6 +52,7 @@ import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -92,6 +94,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     public NSKeyValueCodingAdditions item;
     public NamedFlags access;
     public NSArray list;
+    public NSArray tutors;
 	public Integer mode;
 //	public NSMutableDictionary agregate;
 	public NSArray categories;
@@ -151,6 +154,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     
     public void setSelection(Object sel) {
     	ticks.removeAllObjects();
+    	tutors = null;
     	if(sel == null) {
     		list = NSArray.EmptyArray;
     	} else if(sel instanceof VseEduGroup) {
@@ -252,9 +256,20 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     	if(gr == null) {
     		list = null;
     	} else if(showAll) {
-    		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(gr.lists(),VseList.sorter);
+    		list = gr.lists();
+    		if(list == null)
+    			list = NSArray.EmptyArray;
+    		else
+    			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list,VseList.sorter);
+    		tutors = gr.vseTutors();
+    		if(tutors == null)
+    			tutors = NSArray.EmptyArray;
+    		else
+    			tutors = EOSortOrdering.sortedArrayUsingKeyOrderArray(tutors, VseTutor.sorter);
     	} else {
-    		list = gr.vseList();
+    		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
+    		list = gr.vseList(today);
+    		tutors = gr.tutors(today);
     	}
     }
     
@@ -277,25 +292,26 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     		return null;
     	if(item instanceof PersonLink)
     		return (PersonLink)item;
-    	return (PersonLink)item.valueForKey("student");
+    	if(item instanceof VseList)
+    		return (PersonLink)item.valueForKey(VseList.STUDENT_KEY);
+    	if(item instanceof VseTutor)
+    		return (PersonLink)item.valueForKey(VseTutor.TEACHER_KEY);
+    	return null;
     }
     
-	public String rowClass() {
-		if (showAll) {
-			NSTimestamp enter = (NSTimestamp) item.valueForKey("enter");
-			NSTimestamp leave = (NSTimestamp) item.valueForKey("leave");
-			if (enter != null || leave != null) {
-				NSTimestamp today = (NSTimestamp) session()
-						.valueForKey("today");
-				if (leave != null && leave.compare(today) < 0)
-					return "grey";
-				if (enter != null && enter.compare(today) > 0)
-					return "grey";
-			}
-		}
-		Boolean sex = (Boolean)valueForKeyPath("plink.person.sex");
-		if(sex == null) return "gerade";
-		return (sex.booleanValue())?"male":"female";
+    public String rowClass() {
+    	NSTimestamp enter = (NSTimestamp) item.valueForKey("enter");
+    	NSTimestamp leave = (NSTimestamp) item.valueForKey("leave");
+    	if (enter != null || leave != null) {
+    		NSTimestamp today = (NSTimestamp) session().valueForKey("today");
+    		if (leave != null && leave.compare(today) < 0)
+    			return "grey";
+    		if (enter != null && enter.compare(today) > 0)
+    			return "grey";
+    	}
+    	Boolean sex = (Boolean)valueForKeyPath("plink.person.sex");
+    	if(sex == null) return "gerade";
+    	return (sex.booleanValue())?"male":"female";
 	}
 	
 	public WOActionResults editPerson() {
@@ -409,6 +425,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			ec.saveChanges();
 			logger.log(WOLogLevel.EDITING, "Changed enter/leave dates",
 					new Object[] {session(),selection});
+			setSelection(selection);
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING, "Error saving enter/leave dates changes",
 					new Object[] {session(),selection,e});
@@ -623,6 +640,46 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			return false;
 		return list != null && list.count() > 0 && 
 			(access == null || access.flagForKey("edit"));
+	}
+	
+	public WOActionResults addTutor() {
+		WOComponent selector = TeacherSelector.selectorPopup(this, "tutor", ec);
+		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.hideVacant");
+		return selector;
+	}
+	
+	public void setTutor(Teacher teacher) {
+		VseEduGroup group = (VseEduGroup)selection;
+		NSArray grTutors = group.tutors();
+		if(grTutors.count() > 0) {
+			Enumeration enu = grTutors.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				VseTutor tt = (VseTutor) enu.nextElement();
+				if(tt.teacher() == teacher)
+					return;
+			}
+		}
+		VseTutor tutor = (VseTutor)EOUtilities.createAndInsertInstance(ec, VseTutor.ENTITY_NAME);
+		tutor.addObjectToBothSidesOfRelationshipWithKey(group, VseTutor.EDU_GROUP_KEY);
+		tutor.setTeacher(teacher);
+//		tutor.setEnter((NSTimestamp)session().valueForKey("today"));
+		try {
+			ec.saveChanges();
+			tutors = tutors.arrayByAddingObject(tutor);
+			logger.log(WOLogLevel.EDITING,"Tutor added",tutor);
+		} catch (Exception e) {
+			ec.revert();
+			logger.log(WOLogLevel.WARNING,"Error adding tutor to edu group " + group.name(),
+					new Object[] {session(),teacher,e});
+			session().takeValueForKey(e.getMessage(), "message");
+		}
+	}
+	
+	public String tutorFullName() {
+		Person pers = (Person)valueForKeyPath("item.teacher.person");
+		if(pers == null)
+			return null;
+		return Person.Utility.composeName(pers, 2, 2);
 	}
 	
 	/*

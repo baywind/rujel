@@ -45,10 +45,12 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 	public static final String FIRST_YEAR_KEY = "firstYear";
 	public static final String FLAGS_KEY = "flags";
 	public static final String LAST_YEAR_KEY = "lastYear";
+	public static final String SECTION_KEY = "section";
 	public static final String TITLE_KEY = "title";
 
 	// Relationships
 	public static final String LISTS_KEY = "lists";
+	public static final String VSE_TUTORS_KEY = "vseTutors";
 
   public Integer absGrade() {
     return (Integer) storedValueForKey(ABS_GRADE_KEY);
@@ -82,6 +84,14 @@ public abstract class _VseEduGroup extends EOGenericRecord {
     takeStoredValueForKey(value, LAST_YEAR_KEY);
   }
 
+  public Integer section() {
+    return (Integer) storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(Integer value) {
+    takeStoredValueForKey(value, SECTION_KEY);
+  }
+
   public String title() {
     return (String) storedValueForKey(TITLE_KEY);
   }
@@ -104,6 +114,22 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 
   public void removeFromLists(EOEnterpriseObject object) {
     excludeObjectFromPropertyWithKey(object, LISTS_KEY);
+  }
+
+  public NSArray vseTutors() {
+    return (NSArray)storedValueForKey(VSE_TUTORS_KEY);
+  }
+ 
+  public void setVseTutors(NSArray value) {
+    takeStoredValueForKey(value, VSE_TUTORS_KEY);
+  }
+  
+  public void addToVseTutors(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, VSE_TUTORS_KEY);
+  }
+
+  public void removeFromVseTutors(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, VSE_TUTORS_KEY);
   }
 
 }

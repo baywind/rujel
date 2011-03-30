@@ -1,4 +1,4 @@
-//  VseList.java
+// _VseTutor.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -27,42 +27,57 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Created by eogenerator
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to VseTutor.java instead.
+
 package net.rujel.vselists;
 
-import com.webobjects.appserver.WOApplication;
-import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
+import java.math.BigDecimal;
 
-public class VseList extends _VseList {
+@SuppressWarnings("all")
+public abstract class _VseTutor extends EOGenericRecord {
+	public static final String ENTITY_NAME = "VseTutor";
 
-	public static final NSArray sorter = new NSArray(
-			new EOSortOrdering(STUDENT_KEY,EOSortOrdering.CompareAscending));
+	// Attributes
+	public static final String ENTER_KEY = "enter";
+	public static final String LEAVE_KEY = "leave";
 
-	public void setEnter(NSTimestamp value) {
-		super.setEnter(value);
-		eduGroup().nullify();
-		if(value != null && student().enter() != null && student().enter().after(value))
-			student().setEnter(value);
-	}
+	// Relationships
+	public static final String EDU_GROUP_KEY = "eduGroup";
+	public static final String TEACHER_KEY = "teacher";
 
-	public void setLeave(NSTimestamp value) {
-		super.setLeave(value);
-		eduGroup().nullify();
-		if(value != null && student().leave() != null && student().leave().before(value))
-			student().setLeave(value);
-	}
-	
-	public void validateForSave() {
-		super.validateForSave();
-		validateDates(enter(), leave());
-	}
-	
-	public static void validateDates(NSTimestamp enter, NSTimestamp leave) {
-		if(enter == null || leave == null)
-			return;
-		if(enter.getTime() > leave.getTime()) {
-			throw new NSValidation.ValidationException((String)WOApplication.application()
-					.valueForKeyPath("strings.RujelVseLists_VseStrings.enterLaterLeave"));
-		}
-	}
+  public NSTimestamp enter() {
+    return (NSTimestamp) storedValueForKey(ENTER_KEY);
+  }
+
+  public void setEnter(NSTimestamp value) {
+    takeStoredValueForKey(value, ENTER_KEY);
+  }
+
+  public NSTimestamp leave() {
+    return (NSTimestamp) storedValueForKey(LEAVE_KEY);
+  }
+
+  public void setLeave(NSTimestamp value) {
+    takeStoredValueForKey(value, LEAVE_KEY);
+  }
+
+  public net.rujel.vselists.VseEduGroup eduGroup() {
+    return (net.rujel.vselists.VseEduGroup)storedValueForKey(EDU_GROUP_KEY);
+  }
+
+  public void setEduGroup(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, EDU_GROUP_KEY);
+  }
+  
+  public net.rujel.vselists.VseTeacher teacher() {
+    return (net.rujel.vselists.VseTeacher)storedValueForKey(TEACHER_KEY);
+  }
+
+  public void setTeacher(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, TEACHER_KEY);
+  }
+  
 }
