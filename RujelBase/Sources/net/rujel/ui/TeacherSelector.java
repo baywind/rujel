@@ -70,6 +70,16 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			setValueForBinding(null,"selection");
 			search();
 		}*/
+		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+		if(editingContext == null || dict == null || 
+				(section != null && !section.equals(dict.valueForKey("section")))) {
+			editingContext = (EOEditingContext)valueForBinding("editingContext");
+			dict = populate(editingContext,session());
+			subjects = (NSArray)dict.removeObjectForKey("subjects");
+			currSubject = (String)valueForBinding("subject");
+			if(subjects == null || !subjects.containsObject(currSubject))
+				currSubject = null;
+		}
 		item = null;
 		super.appendToResponse(aResponse, aContext);
 		searchMessage = null;
@@ -78,7 +88,9 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	public void awake() {
 		super.awake();
 		selection = valueForBinding("selection");
-		if(editingContext == null) {
+		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+		if(editingContext == null || dict == null || 
+				(section != null && !section.equals(dict.valueForKey("section")))) {
 			editingContext = (EOEditingContext)valueForBinding("editingContext");
 			dict = populate(editingContext,session());
 			subjects = (NSArray)dict.removeObjectForKey("subjects");
@@ -104,8 +116,11 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		// collecting teachers on subjects
 		Enumeration enu = allCourses.objectEnumerator();
 		boolean smartEduPlan = (EduCycle.className.equals("net.rujel.eduplan.PlanCycle"));
+		Integer section = (Integer)ses.valueForKeyPath("state.section.idx");
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
+			if(section != null && !section.equals(course.valueForKeyPath("cycle.section")))
+				continue;
 			Object subject = course.cycle().subject();
 			Teacher teacher = course.teacher();
 			if(teacher != null) {
@@ -149,6 +164,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		if(smartEduPlan) {
 			subjects = (NSArray)subjects.valueForKey("subject");
 		}
+		dict.takeValueForKey(section, "section");
 		dict.takeValueForKey(subjects,"subjects");
 		return dict;
 	}

@@ -56,7 +56,6 @@ public class Session extends WOSession implements MultiECLockManager.Session {
         
 		_strings = (StringStorage)WOApplication.application().valueForKey("strings");
 		ecLockManager = new MultiECLockManager();
-		
    }
 	
 	protected SessionedEditingContext _defaultEC;
@@ -423,6 +422,12 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	}
 
 	public void terminate() {
+		try {
+			ModulesInitialiser.useModules(null, this);
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Error executing modules when terminating session",
+					new Object[] {this, e});
+		}
 		logger.log(WOLogLevel.SESSION,"Session terminated",this);
 		_modules = null;
 		_strings = null;

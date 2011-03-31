@@ -203,7 +203,7 @@ GroupSpan : OnClickContainer {
   elementName = "span";
   onclick = session.checkRun;
   invokeAction = chooseEduGroup;
-  title = application.strings.Strings.LessonNoteEditor.byEduGroup;
+  title = groupHover;
 }
 
 TeacherSpan : OnClickContainer {

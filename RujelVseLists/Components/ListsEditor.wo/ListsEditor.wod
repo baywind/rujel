@@ -146,7 +146,7 @@ ShowAllToggle : OnClickContainer {
   colspan = 2;
   onclick = session.checkRun;
   invokeAction = toggleAll;
-  style = "font-style:italic;color:blue;";
+  style = "font-style:italic;color:blue;border:1px solid #cccc99;";
 }
 
 CategoryRow : OnClickContainer {
@@ -274,6 +274,7 @@ ChooseTutor : OnClickContainer {
   elementName = "td";
   invokeAction = addTutor;
   onclick = session.ajaxPopup;
+  style = "color:blue;";
 }
 
 TutorCell : WOGenericContainer {
@@ -287,4 +288,17 @@ TutorName : PersonDisplay {
   last = 2;
   first = 1;
   second = 1;
+}
+
+SectionTabs : Tabs {
+  idAttribute = "idx";
+  currTab = session.state.section;
+  tablist = application.strings.sections.list;
+  titleAttribute = "value";
+  selectAction = switchMode;
+  vertical = true;
+}
+
+HasSections : WOConditional {
+  condition = application.strings.sections.hasSections;
 }

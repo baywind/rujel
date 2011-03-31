@@ -229,12 +229,18 @@ TeacherIsSelected : WOConditional {
 }
 
 SectionTabs : Tabs {
-  currTab = currSection;
-  tablist = sections;
+  idAttribute = "idx";
+  currTab = session.state.section;
+  tablist = application.strings.sections.list;
   titleAttribute = "value";
+  selectAction = sectionChanged;
   vertical = true;
 }
 
 HasSections : WOConditional {
-  condition = sections;
+  condition = application.strings.sections.hasSections;
+}
+
+CurrSection : WOString {
+  value = session.state.section.value;
 }

@@ -352,6 +352,7 @@ public class Application extends UTF8Application {
 			logger.log(WOLogLevel.SESSION,
 					"Generating session: " + aRequest.method() + ':' + aRequest.uri(), args);
 		}
+		ModulesInitialiser.useModules(aRequest.context(), result);
 		return result;
 	}
 	

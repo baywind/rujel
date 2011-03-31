@@ -116,23 +116,11 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
-			Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, true);
-			if(ec.globalIDForObject(sidx).isTemporary()) {
-				Logger logger = Logger.getLogger("rujel.eduplan");
-				try {
-					ec.saveChanges();
-					logger.log(WOLogLevel.COREDATA_EDITING,"autocreating eduSections indexer",sidx);
-				} catch (Exception e) {
-					logger.log(WOLogLevel.WARNING,"Error autocreating eduSections indexer",
-							new Object[] {session(),e});
-					ec.revert();
-					sections = NSArray.EmptyArray;
-				}
-			} else {
+			Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, false);
+			if(sidx != null)
 				sections = sidx.sortedIndex();
-			}
 			if(inSection == null)
-				inSection = (Integer)session().valueForKeyPath("state.section");
+				inSection = (Integer)session().valueForKeyPath("state.section.idx");
 			if(inSection == null) {
 				if(sections != null && sections.count() > 0) {
 					IndexRow sect = (IndexRow)sections.objectAtIndex(0);

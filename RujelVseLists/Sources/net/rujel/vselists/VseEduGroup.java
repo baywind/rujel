@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
@@ -42,6 +43,8 @@ import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
@@ -132,6 +135,25 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		if(_tutors == null || now < since || now > to)
 			prepareLists(now);
 		return _tutors;
+	}
+	
+	public String hover() {
+		NSArray tutors = tutors();
+		if(tutors == null || tutors.count() == 0)
+			return null;
+		Enumeration enu = tutors.objectEnumerator();
+		StringBuilder buf = new StringBuilder();
+		String title = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelVseLists_VseStrings.tutor");
+		if(title != null)
+			buf.append(title).append(':').append(' ');
+		while (enu.hasMoreElements()) {
+			VseTutor tt = (VseTutor) enu.nextElement();
+			buf.append(Person.Utility.fullName(tt.teacher(), true, 2, 1, 1));
+			if(enu.hasMoreElements())
+				buf.append(',').append(' ');
+		}
+		return buf.toString();
 	}
 	
 	protected void prepareLists(long now) {
@@ -298,13 +320,31 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 
 	public static NSArray listGroups(NSTimestamp date, EOEditingContext ec) {
-		Integer year = (date == null)?MyUtility.eduYear(ec)
-				:MyUtility.eduYearForDate(date);
-		EOQualifier[] quals = new EOQualifier[2];
+		Object section = null;
+		Integer year = MyUtility.eduYearForDate(date);
+		try {
+			if (ec instanceof SessionedEditingContext) {
+				WOSession ses = ((SessionedEditingContext)ec).session();
+				if(ses != null) {
+					if(date == null) {
+						Integer sYear = (Integer)ses.valueForKey("eduYear");
+						if(sYear != null) year = sYear;
+					}
+					section = ses.valueForKeyPath("state.section.idx");
+				}
+			}
+		} catch (Exception e) {
+			;
+		}
+		EOQualifier[] quals = new EOQualifier[3];
 		quals[0] = new EOKeyValueQualifier(FIRST_YEAR_KEY,
 				EOQualifier.QualifierOperatorLessThanOrEqualTo,year);
 		quals[1] = new EOKeyValueQualifier(LAST_YEAR_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,year);
+		if(section != null) {
+			quals[2] = new EOKeyValueQualifier(SECTION_KEY,
+					EOQualifier.QualifierOperatorEqual,section);
+		}
 		quals[0] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],sorter);
 		NSArray result = ec.objectsWithFetchSpecification(fs);

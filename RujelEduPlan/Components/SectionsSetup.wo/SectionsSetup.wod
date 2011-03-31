@@ -13,6 +13,7 @@ EditIndex : EditIndex {
   forcetype = "eduSection";
   onclick = session.ajaxPopupNoPos;
   onsubmit = "refreshRequired = true;return ajaxPost(this);";
+  updateAction = update;
 }
 
 ClosePopup : OnClickContainer {

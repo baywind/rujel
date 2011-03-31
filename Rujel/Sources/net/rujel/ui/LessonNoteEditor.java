@@ -1060,4 +1060,13 @@ public class LessonNoteEditor extends WOComponent {
 		}
 		return Boolean.FALSE;
 	}
+	
+	public String groupHover() {
+		try {
+			return (String)valueForKeyPath("course.eduGroup.hover");
+		} catch (NSKeyValueCoding.UnknownKeyException e) {
+			return null;
+		}
+	}
+
 }

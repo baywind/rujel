@@ -157,6 +157,14 @@ public class Overview extends WOComponent {
     		return false;
     	return (present().valueForKey("selector") != null);
     }
+    
+    public WOActionResults resetSelections() {
+    	unselect();
+		existingCourses = null;
+    	currClass = null;
+    	subjects = null;
+    	return null;
+    }
 	
 	protected void unselect() {
 		selectedStudents.removeAllObjects();

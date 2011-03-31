@@ -1,5 +1,10 @@
 <webobject name="PageWrapper1"><webobject name = "HasSections">
-<div style = "float:left;"><webobject name = "SectionTabs"/></div></webobject>
+<div style = "float:left;position:absolute;border:1px solid #999999;" class = "gerade"
+ onmouseover = "hideObj('SectionTitle');showObj('SectionTabs')" onmouseout = "hideObj('SectionTabs');showObj('SectionTitle')">
+<div id = "SectionTitle" style = "padding:3px;" class = "highlight">
+	<webobject name = "CurrSection"/></div>
+<div id = "SectionTabs" style = "display:none;">
+<webobject name = "SectionTabs"/></div></div></webobject>
 <h2><webobject name="Title"/></h2>
 <table cellspacing="0" cellpadding="0" border="0" width="100%">
 <tr><th><webobject name = "SelectorTitle"/></th><td width="60%">

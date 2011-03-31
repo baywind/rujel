@@ -18,5 +18,6 @@
     <binding name="idxTitle"/>
         <binding name="valueTitle"/>
     <binding name="valueSize"/>
+    <binding defaults="Actions" name="updateAction"/>
     </wo>
 </wodefinitions>

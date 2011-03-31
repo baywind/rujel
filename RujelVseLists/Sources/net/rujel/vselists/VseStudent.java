@@ -59,8 +59,8 @@ public class VseStudent extends _VseStudent implements Student {
 		setAbsGrade(new Integer(0));
 	}
 
-	protected static final NSArray flagsSorter = new NSArray(
-			new EOSortOrdering("eduGroup.flags",EOSortOrdering.CompareAscending));
+	protected static final NSArray memberSorter = new NSArray(
+			new EOSortOrdering("eduGroup.section",EOSortOrdering.CompareAscending));
 	public VseEduGroup recentMainEduGroup() {
 		NSArray lists = lists();
 		if(lists == null || lists.count() == 0)
@@ -74,7 +74,7 @@ public class VseStudent extends _VseStudent implements Student {
 			return null;
 		int year = MyUtility.eduYearForDate(date);
 		if(lists.count() > 1) {
-			lists = EOSortOrdering.sortedArrayUsingKeyOrderArray(lists, flagsSorter);
+			lists = EOSortOrdering.sortedArrayUsingKeyOrderArray(lists, memberSorter);
 		}
 		Enumeration enu = lists.objectEnumerator();
 		while (enu.hasMoreElements()) {

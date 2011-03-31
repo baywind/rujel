@@ -114,9 +114,12 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
     	ec.lock();
     	try {
     		boolean create = (currGroup == null); 
-			if(create)
+			Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+			if(create) {
 				currGroup = (VseEduGroup)EOUtilities.createAndInsertInstance(ec,
 						VseEduGroup.ENTITY_NAME);
+				currGroup.setSection(section);
+			}
 			if(groupTitle != null) {
 				if(!groupTitle.equals(currGroup.title()))
 					currGroup.setTitle(groupTitle);
@@ -137,9 +140,10 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 				ec.saveChanges();
 				ListsEditor.logger.log(WOLogLevel.EDITING,"VseEduGroup changes saved",
 						new Object[] {session(),currGroup});
-				if(create) {
+				if(create || !section.equals(currGroup.section())) {
 					returnPage.valueForKey("switchMode");
-					returnPage.takeValueForKey(currGroup, "group");
+					if(section.equals(currGroup.section()))
+						returnPage.takeValueForKey(currGroup, "group");
 				}
 			}
     	} catch (Exception e) {

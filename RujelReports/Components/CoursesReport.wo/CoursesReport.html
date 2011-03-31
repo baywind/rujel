@@ -1,4 +1,10 @@
-<webobject name = "PageWrapper">
+<webobject name = "PageWrapper"><webobject name = "HasSections">
+<div style = "float:left;position:absolute;border:1px solid #999999;" class = "gerade"
+ onmouseover = "hideObj('SectionTitle');showObj('SectionTabs')" onmouseout = "hideObj('SectionTabs');showObj('SectionTitle')">
+<div id = "SectionTitle" style = "padding:3px;" class = "highlight">
+	<webobject name = "CurrSection"/></div>
+<div id = "SectionTabs" style = "display:none;">
+<webobject name = "SectionTabs"/></div></div></webobject>
 <h1><webobject name = "Title"/></h1>
 <webobject name = "Form">
 <div onclick = "toggleObj('reportsAvailable');" style = "font-size:larger;margin:3px;" onmouseover = "dim(this);" onmouseout = "unDim(this);">

@@ -64,7 +64,7 @@ public class EditIndex extends WOComponent {
 			indexer().editingContext().revert();
 			session().takeValueForKey(e.getMessage(), "message");
 		}
-		return null;
+		return (WOActionResults)valueForBinding("updateAction");
     }
 
     public WOActionResults delete() {
@@ -85,7 +85,7 @@ public class EditIndex extends WOComponent {
 			indexer().editingContext().revert();
 			session().takeValueForKey(e.getMessage(), "message");
 		}
-    	return null;
+		return (WOActionResults)valueForBinding("updateAction");
     }
     
     public String onclick() {

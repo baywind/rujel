@@ -299,3 +299,21 @@ NoReporters : WOConditional {
   condition = showReporterSelector;
   negate = true;
 }
+
+SectionTabs : Tabs {
+  idAttribute = "idx";
+  currTab = session.state.section;
+  tablist = application.strings.sections.list;
+  titleAttribute = "value";
+  selectAction = resetSelections;
+  vertical = true;
+}
+
+HasSections : WOConditional {
+  condition = application.strings.sections.hasSections;
+}
+
+CurrSection : WOString {
+  value = session.state.section.value;
+}
+

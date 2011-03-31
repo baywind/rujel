@@ -74,7 +74,8 @@ public class ClassListing extends WOComponent {
 	}
 	
 	public NSArray groups() {
-		return listGroups((NSTimestamp)session().valueForKey("today"),(EOEditingContext)valueForBinding("editingContext"));
+		return listGroups((NSTimestamp)session().valueForKey("today"),
+				(EOEditingContext)valueForBinding("editingContext"));
 	}
 	
 	public boolean isStateless() {
@@ -88,8 +89,17 @@ public class ClassListing extends WOComponent {
         boolean noAction = !hasBinding("selectAction");
 		return noAction;
     }
+    
     public WOActionResults anAction() {
         setValueForBinding(currClass,"selection");
 		return (WOActionResults)valueForBinding("selectAction");
     }
+
+	public String rowTitle() {
+		try {
+			return (String)currClass.valueForKey("hover");
+		} catch (NSKeyValueCoding.UnknownKeyException e) {
+			return null;
+		}
+	}
 }

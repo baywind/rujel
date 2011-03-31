@@ -30,8 +30,6 @@
 package net.rujel.ui;
 
 import net.rujel.base.CourseInspector;
-import net.rujel.base.IndexRow;
-import net.rujel.base.Indexer;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -60,8 +58,8 @@ public class SrcMark extends WOComponent {
 	protected int currIndex = -1;
 	public NSMutableArray popupCycles;
 	public NSMutableDictionary dict = new NSMutableDictionary();
-	public NSArray sections = null;
-	public IndexRow currSection;
+//	public NSArray sections = null;
+//	public IndexRow currSection;
 	
     public SrcMark(WOContext context) {
         super(context);
@@ -75,9 +73,9 @@ public class SrcMark extends WOComponent {
 				coursesForTeacher(currTeacher);
 			}
 		}
-		prepareSections();
+//		prepareSections();
     }
-    
+    /*
     public void prepareSections() {
 		Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, true);
 		if(sidx != null)
@@ -117,6 +115,18 @@ public class SrcMark extends WOComponent {
     		currSection = (IndexRow)sect;
     	}
 		session().takeValueForKeyPath(currSection.idx(), "state.section");
+    } */
+    
+    public WOActionResults sectionChanged() {
+		dict.removeAllObjects();
+		currIndex = -1;
+		undoCreation();
+		currClass = null;
+		if(currTeacher == null)
+			courses = NSArray.EmptyArray;
+		else
+			coursesForTeacher(currTeacher);
+    	return null;
     }
     
 	public void setCurrClass(EduGroup newClass) {

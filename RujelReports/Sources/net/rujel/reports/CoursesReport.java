@@ -124,4 +124,10 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
  		exportPage.takeValueForKey("'CoursesReport'yyMMdd", "filenameFormatter");
 		return exportPage;
 	}
+	
+	public WOActionResults clear() {
+		courses = null;
+		curSource = null;
+		return null;
+	}
 }

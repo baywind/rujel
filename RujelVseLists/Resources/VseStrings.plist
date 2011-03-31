@@ -25,7 +25,7 @@
 	<key>enterLaterLeave</key>
 	<string>Дата зачисления не может быть позже даты выбытия</string>
 	<key>tutor</key>
-	<string>Классный руководитель</string>
+	<string>Куратор</string>
 	<key>VseGroupInspector</key>
 	<dict>
 		<key>title</key>
@@ -38,6 +38,8 @@
 		<string>расформирован в</string>
 		<key>eduYear</key>
 		<string>учебном году</string>
+		<key>section</key>
+		<string>отделение</string>
 	</dict>
 	<key>editorTabs</key>
 	<array>
