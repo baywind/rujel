@@ -459,11 +459,11 @@
 		<key>inner</key>
 		<string>внутреннее</string>
 	</dict>
-	<key>tabs</key>
+	<key>selectorTabs</key>
 	<array>
 		<string>Классы</string>
-		<string>Учителя</string>
 		<string>Предметы</string>
+		<string>Учителя</string>
 	</array>
 </dict>
 </plist>

@@ -29,18 +29,25 @@
 
 package net.rujel.eduplan;
 
+import java.util.Enumeration;
+
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EduCycle;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
 
 public class SubjectSelector extends WOComponent {
     public SubjectSelector(WOContext context) {
@@ -51,6 +58,8 @@ public class SubjectSelector extends WOComponent {
     protected EOEnterpriseObject _selection;
     protected NSArray _subjects;
     protected NSArray _areas;
+    protected NSMutableDictionary agregate;
+
     public EOEnterpriseObject item;
     
     protected EOEnterpriseObject selection() {
@@ -75,37 +84,127 @@ public class SubjectSelector extends WOComponent {
     public EOEnterpriseObject area() {
     	if(_currArea != null)
     		return _currArea;
-    	EOEnterpriseObject selection = selection();
+    	return areaForSelection(selection());
+    }
+    
+    public static EOEnterpriseObject areaForSelection(EOEnterpriseObject selection) {
     	if(selection == null)
     		return null;
     	if(selection instanceof Subject)
     		return ((Subject)selection).area();
     	if(selection.entityName().equals("SubjectArea"))
     		return selection;
-    	return null;
+    	return null;    	
     }
     
     public WOActionResults openArea() {
     	_currArea = item;
-    	_subjects = Subject.subjectsForArea(item);
+    	_subjects = null;
+		if(canSetValueForBinding("currDict"))
+			setValueForBinding(null, "currDict");
+		if(canSetValueForBinding("selection"))
+			setValueForBinding(null, "selection");
     	return null;
     }
     
     public NSArray subjects() {
-    	if(_subjects == null)
-    		_subjects = Subject.subjectsForArea(area());
+    	if(_subjects == null) {
+        	if(agregate == null) {
+        		_subjects = Subject.subjectsForArea(_currArea);
+        	} else {
+        		NSMutableSet sSet = (NSMutableSet)agregate.objectForKey(_currArea);
+        		if(sSet == null)
+        			_subjects = NSArray.EmptyArray;
+        		else
+        			_subjects = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+        					sSet.allObjects(), MyUtility.numSorter);
+        	}
+    	}
     	return _subjects;
     }
     
     public NSArray areas() {
+    	item = null;
+    	_selection = null;
+    	if(agregate != null) {
+    		Object check = agregate.valueForKey("section");
+    		if(check != null && !check.equals(session().valueForKeyPath("state.section.idx"))) {
+    			_areas = null;
+    		} else {
+    			check = agregate.valueForKey("school");
+        		if(check != null && !check.equals(session().valueForKey("school")))
+        			_areas = null;
+    		}
+    		if(_areas == null) {
+    			_subjects = null;
+    			_selection = null;
+    			if(canSetValueForBinding("currDict"))
+    				setValueForBinding(null, "currDict");
+    			if(canSetValueForBinding("selection"))
+    				setValueForBinding(null, "selection");
+    			item = _currArea;
+    			_currArea = null;
+    		}
+    	}
     	if(_areas == null) {
     		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
     		if(ec == null)
     			ec = (EOEditingContext)valueForBinding("editingContext");
-        	EOFetchSpecification fs = new EOFetchSpecification(
-        			"SubjectArea",null,MyUtility.numSorter);
-        	_areas = ec.objectsWithFetchSpecification(fs);
+    		if(Various.boolForObject(valueForBinding("existingOnly"))) {
+    			agregate = new NSMutableDictionary();
+				NSMutableDictionary values = new NSMutableDictionary();
+				values.takeValueForKey(session().valueForKeyPath("state.section.idx"), 
+						"section");
+				values.takeValueForKey(session().valueForKey("school"), "school");
+				NSArray cycles = EOUtilities.objectsMatchingValues(ec,EduCycle.entityName, values);
+				if(cycles == null || cycles.count() == 0)
+					return null;
+				Enumeration enu = cycles.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					PlanCycle cycle = (PlanCycle) enu.nextElement();
+					NSArray hrs = cycle.planHours();
+					if(hrs == null || hrs.count() == 0)
+						continue;
+					Subject subj = cycle.subjectEO();
+					NSMutableSet sSet = (NSMutableSet)agregate.objectForKey(subj.area());
+					if(sSet == null) {
+						sSet = new NSMutableSet(subj);
+						agregate.setObjectForKey(sSet, subj.area());
+					} else {
+						sSet.addObject(subj);
+					}
+				}
+				_areas = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+						agregate.allKeys(), MyUtility.numSorter);
+				agregate.addEntriesFromDictionary(values);
+    		} else {
+    			EOFetchSpecification fs = new EOFetchSpecification(
+    					"SubjectArea",null,MyUtility.numSorter);
+    			_areas = ec.objectsWithFetchSpecification(fs);
+    		}
     	}
+    		EOEnterpriseObject selArea = areaForSelection(selection());
+    		if(selArea != null && _areas.contains(selArea)) {
+    			_currArea = selArea;
+    			_subjects = null;
+    			subjects();
+    			if(_selection != selArea && 
+    					(_subjects == null || !_subjects.containsObject(_selection))) {
+        			_selection = null;
+        			if(canSetValueForBinding("currDict"))
+        				setValueForBinding(null, "currDict");
+        			if(canSetValueForBinding("selection"))
+        				setValueForBinding(null, "selection");
+    			}
+    		} else if(_selection != null) {
+    			_selection = null;
+    			if(canSetValueForBinding("currDict"))
+    				setValueForBinding(null, "currDict");
+    			if(canSetValueForBinding("selection"))
+    				setValueForBinding(null, "selection");
+    		}
+    	if(item != null && _currArea == null && _areas.contains(item))
+    		openArea();
     	return _areas;
     }
     
@@ -136,7 +235,7 @@ public class SubjectSelector extends WOComponent {
     	} else if(canSetValueForBinding("selection")) {
     		setValueForBinding(_selection,"selection");
     	}
-    	return null;
+    	return (WOActionResults)valueForBinding("selectAction");
     }
     
     public WOActionResults selectSubject() {
@@ -152,7 +251,7 @@ public class SubjectSelector extends WOComponent {
     	} else if(canSetValueForBinding("selection")) {
     		setValueForBinding(_selection,"selection");
     	}
-    	return null;
+    	return (WOActionResults)valueForBinding("selectAction");
     }
 
     public boolean isStateless() {

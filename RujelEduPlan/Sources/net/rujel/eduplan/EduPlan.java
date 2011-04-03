@@ -156,7 +156,7 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 				NSDictionary dict = (NSDictionary)sections.objectAtIndex(0);
 				state.takeValueForKey(dict, "section");
 			} else {
-				state.takeValueForKey(new Integer(0), "section");
+				state.takeValueForKey(new NSDictionary(new Integer(0),"idx"), "section");
 			}
 		}
 		return null;

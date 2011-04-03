@@ -48,8 +48,12 @@ public class SrcMark extends WOComponent {
 
 	public EOEditingContext ec;
 	
-	public EduGroup currClass;
-	public Object currTeacher;
+//	public EduGroup currClass;
+	public Object selection;
+	public void setSelection(Object selection) {
+		this.selection = selection;
+	}
+
 	public NSArray courses;
 //	public EduCourse aCourse;
 	
@@ -69,8 +73,11 @@ public class SrcMark extends WOComponent {
 		if(gid != null) {
 			EOEnterpriseObject pLink = ec.faultForGlobalID(gid, ec);
 			if(pLink instanceof Teacher) {
-				currTeacher = (Teacher)pLink;
-				coursesForTeacher(currTeacher);
+				selection = (Teacher)pLink;
+				session().takeValueForKeyPath(new Integer(CoursesSelector.TEACHER_TAB),
+					"state.courseSelector");
+				session().takeValueForKeyPath(gid,"state.coursesSelection");
+//				coursesForTeacher(currTeacher);
 			}
 		}
 //		prepareSections();
@@ -121,22 +128,22 @@ public class SrcMark extends WOComponent {
 		dict.removeAllObjects();
 		currIndex = -1;
 		undoCreation();
-		currClass = null;
-		if(currTeacher == null)
-			courses = NSArray.EmptyArray;
-		else
-			coursesForTeacher(currTeacher);
+		selection = null;
     	return null;
     }
     
 	public void setCurrClass(EduGroup newClass) {
 		if(newClass != null && newClass.editingContext() != ec) {
-			currClass = (EduGroup)EOUtilities.localInstanceOfObject(ec, newClass);
+			selection = (EduGroup)EOUtilities.localInstanceOfObject(ec, newClass);
 		} else {
-			currClass = newClass;
+			selection = newClass;
 		}
+		session().takeValueForKeyPath(new Integer(CoursesSelector.CLASS_TAB),
+				"state.courseSelector");
+		session().takeValueForKeyPath(ec.globalIDForObject((EduGroup)selection),
+				"state.coursesSelection");
 	}
-	
+	/*
 	public String teacherOnClick() {
 		String key = (currTeacher == null || currClass == null)?"ajaxPopup":"checkRun";
 		return (String)session().valueForKey(key);
@@ -168,30 +175,26 @@ public class SrcMark extends WOComponent {
 			EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduCourse.sorter);
 		courses = result;
 	}
-	
-    public WOComponent selectClass() {
+	*/
+    public WOComponent setCourses(NSArray list) {
 		dict.removeAllObjects();
+		dict.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
 		currIndex = -1;
 		undoCreation();
-		if(currClass == null)
+		courses = list;
+		if(!(selection instanceof EduGroup))
 			return null;
-		NSMutableArray cycles = EduCycle.Lister.cyclesForEduGroup(currClass).mutableClone();
-		dict.takeValueForKey(currClass, "eduGroup");
-		dict.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
-		NSArray existingCourses = EOUtilities.objectsMatchingValues(ec, EduCourse.entityName, dict);
-		EOQualifier qual = new EOKeyValueQualifier("cycle.school",
-				EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
-		existingCourses = EOQualifier.filteredArrayWithQualifier(existingCourses, qual);
-		//filter cycles
-		
+		NSMutableArray cycles = EduCycle.Lister.cyclesForEduGroup((EduGroup)selection).mutableClone();
+		dict.takeValueForKey(selection, "eduGroup");
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enumerator = cycles.objectEnumerator();
-		NSMutableSet coursesSet = new NSMutableSet(existingCourses);
+		NSMutableSet coursesSet = new NSMutableSet(courses);
 		popupCycles = new NSMutableArray();
 		while (enumerator.hasMoreElements()) {
 			EduCycle currCycle = (EduCycle)enumerator.nextElement();
-			qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,currCycle);
-			NSArray matches = EOQualifier.filteredArrayWithQualifier(existingCourses,qual);
+			EOKeyValueQualifier qual = new EOKeyValueQualifier("cycle",
+					EOQualifier.QualifierOperatorEqual,currCycle);
+			NSArray matches = EOQualifier.filteredArrayWithQualifier(courses,qual);
 			int count = 0;
 			if(matches != null && matches.count() > 0) {
 				count = matches.count();
@@ -224,19 +227,24 @@ public class SrcMark extends WOComponent {
     public void setCurrTeacher(Object teacher) {
 		undoCreation();
     	if(teacher instanceof Teacher) {
-    		currTeacher = (Teacher)EOUtilities.localInstanceOfObject(ec, (Teacher)teacher);
+    		selection = (Teacher)EOUtilities.localInstanceOfObject(ec, (Teacher)teacher);
     	} else {
-    		currTeacher = teacher;
+    		selection = teacher;
     	}
-    	if(teacher != null)
-    		coursesForTeacher(currTeacher);
+		session().takeValueForKeyPath(new Integer(CoursesSelector.TEACHER_TAB),
+				"state.courseSelector");
+		session().takeValueForKeyPath(ec.globalIDForObject((Teacher)selection),
+				"state.coursesSelection");
+		
+//    	if(teacher != null)
+//    		coursesForTeacher(currTeacher);
     }
-    
+    /*
     public String teacherRowClass() {
     	if(currClass == null && currTeacher != null)
     		return "selection";
     	return "grey";
-    }
+    }*/
 
     public WOComponent addCourse() {
 		currIndex = courses.count();
@@ -387,7 +395,7 @@ public class SrcMark extends WOComponent {
 			return Person.Utility.fullName((Teacher)teacher,false,2,2,2);
 		return null;
 	}
-
+	/*
 	public String currFullname() {
 		if(currTeacher instanceof Teacher) {
 			return Person.Utility.fullName((Teacher)currTeacher,false,2,2,2);
@@ -398,7 +406,7 @@ public class SrcMark extends WOComponent {
 	public Boolean teacherIsSelected() {
 		return Boolean.valueOf(dict.valueForKey("teacher") != null);
 	}
-	/*
+	
 	public String currTeacherName() {
 		return teacherName(currTeacher);
 	}
@@ -421,7 +429,7 @@ public class SrcMark extends WOComponent {
 	}*/
 	
     public boolean cantCreate() {
-		if (currClass == null || courses == null || currIndex >= courses.count() ||
+		if (!(selection instanceof EduGroup) || courses == null || currIndex >= courses.count() ||
 				popupCycles == null || popupCycles.count() == 0)
 			return true;
         if (access.flagForKey("edit"))
@@ -466,10 +474,10 @@ public class SrcMark extends WOComponent {
 			protected final EduCycle cycle = ((EduCourse)item).cycle();
 			public void update() {
 				NSMutableArray tmp = courses.mutableClone();
-				if(currClass == null) {
-					tmp.removeObjectAtIndex(idx);
-				} else {
+				if(selection instanceof EduGroup) {
 					tmp.replaceObjectAtIndex(cycle,idx);
+				} else {
+					tmp.removeObjectAtIndex(idx);
 				}
 				courses = tmp.immutableClone();
 				currIndex = -1;

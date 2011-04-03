@@ -205,6 +205,22 @@ public class LessonNoteEditor extends WOComponent {
 		//refresh();
 		logger.log(WOLogLevel.READING,"Open course",new Object[] {session(),course});
 
+		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+		if(section != null && !section.equals(course.valueForKeyPath("cycle.section"))) {
+			section = (Integer)course.valueForKeyPath("cycle.section");
+			if(section != null) {
+				NSArray sects = (NSArray)application().valueForKeyPath("strings.sections.list");
+				Enumeration enu = sects.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					NSDictionary sect = (NSDictionary) enu.nextElement();
+					if(section.equals(sect.valueForKey("idx"))) {
+						session().takeValueForKeyPath(sect, "state.section");
+						break;
+					}
+				}
+			}
+		}
+		
 		if(accessInterface().flagForKey("rightSide") && !accessInterface().flagForKey("leftSide"))
 			regime = LONGLIST;
 		else if(!accessInterface().flagForKey("rightSide") 
@@ -216,7 +232,7 @@ public class LessonNoteEditor extends WOComponent {
 		presentTabs = (NSArray)session().valueForKeyPath("modules.presentTabs");
 		if(presentTabs != null && presentTabs.count() > 0)
 			present = (NSKeyValueCoding)presentTabs.objectAtIndex(0);
-
+		
 		refresh();
 //		notesAddOns = null;
 //		activeNotesAddOns = null;
@@ -1023,10 +1039,7 @@ public class LessonNoteEditor extends WOComponent {
 	public WOActionResults chooseEduGroup() {
 		WOComponent resultPage = srcMark();
 		resultPage.takeValueForKey(course.eduGroup(), "currClass");
-    	WOActionResults  result = (WOActionResults)resultPage.valueForKey("selectClass");
-		if(result == null)
-			result = resultPage;
-		return result;
+		return resultPage;
 	}
 	
 	public WOActionResults chooseTeacher() {

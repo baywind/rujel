@@ -30,13 +30,19 @@ TeacherLabel: WOString {
 	escapeHTML = false;
 }
 
-ClassListing1: ClassListing {
-	selection = currClass;
-	width = "100%";
-	selectAction = selectClass;
-	editingContext = ec;
+Tabs : Tabs {
+	numeric = true;
+	currTab = session.state.courseSelector;
+	tablist = session.strings.RujelBase_Base.selectorTabs;
+	onClick = session.tryLoad;
+	selectAction = sectionChanged;
+}
+
+CoursesSelector: CoursesSelector {
+	ec = ec;
+	selection = selection;
+	courses = courses;
 	onClick = session.checkRun;
-	showTitle = true;
 }
 
 Repetition1: WORepetition {

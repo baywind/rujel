@@ -80,6 +80,8 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			if(subjects == null || !subjects.containsObject(currSubject))
 				currSubject = null;
 		}
+		if(selection != null && currSubject != null && !list().containsObject(selection))
+			currSubject = null;
 		item = null;
 		super.appendToResponse(aResponse, aContext);
 		searchMessage = null;
@@ -231,6 +233,8 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		}
 		if(item instanceof String) {
 			currSubject = (String)item;
+			selection = null;
+			setValueForBinding(selection, "selection");
 			return context().page();
 		}
 		if(item instanceof Teacher) {
