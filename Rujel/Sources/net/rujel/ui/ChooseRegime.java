@@ -141,9 +141,9 @@ public class ChooseRegime extends WOComponent {
     		srcMark = null;
     		returnPage = chooseJournal();
     		returnPage.takeValueForKey(null, "currClass");
-    		WOActionResults result = (WOActionResults)returnPage.valueForKey("selectClass");
-    		if(result != null && result instanceof WOComponent)
-    			returnPage = (WOComponent)result;
+//    		WOActionResults result = (WOActionResults)returnPage.valueForKey("selectClass");
+//    		if(result != null && result instanceof WOComponent)
+//    			returnPage = (WOComponent)result;
     	} else {
     		returnPage.ensureAwakeInContext(context());
     	}

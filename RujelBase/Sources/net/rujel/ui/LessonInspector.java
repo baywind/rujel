@@ -125,12 +125,14 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	    		Logger.getLogger("rujel.base").log(WOLogLevel.WARNING, "error saving", 
 	    				new Object[] {session(),lesson,e});
 	    	}
-	    	done = (!lesson.editingContext().hasChanges());
+	    	done = (lesson.editingContext() != null && !lesson.editingContext().hasChanges());
 	       	if(done) {
 //				returnPage.takeValueForKey(lesson, "currPerPersonLink");
 				returnPage.valueForKey("updateLessonList");
 				return RedirectPopup.getRedirect(context(), returnPage, null);
 			}
+	       	if(newTitle == null)
+				newTitle = MyUtility.dateFormat().format(newDate);
 		return this;
     }
 

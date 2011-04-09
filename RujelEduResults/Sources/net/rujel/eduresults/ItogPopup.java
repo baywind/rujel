@@ -269,10 +269,11 @@ public class ItogPopup extends WOComponent {
 				archive.takeValueForKey(".", '@' + "mark");
 				archive.takeValueForKey(changeReason, "reason");
 			}
+			EduCourse course = course();
 			ec.deleteObject(itog);
 			ec.saveChanges();
 			logger.logp(WOLogLevel.EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
-			ModuleInit.prepareStats(course(), itogContainer,true);
+			ModuleInit.prepareStats(course, itogContainer,true);
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});
 			session().takeValueForKey(ex.getMessage(),"message");

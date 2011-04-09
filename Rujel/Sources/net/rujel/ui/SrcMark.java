@@ -140,8 +140,8 @@ public class SrcMark extends WOComponent {
 		}
 		session().takeValueForKeyPath(new Integer(CoursesSelector.CLASS_TAB),
 				"state.courseSelector");
-		session().takeValueForKeyPath(ec.globalIDForObject((EduGroup)selection),
-				"state.coursesSelection");
+		Object gid = (selection == null) ? null : ec.globalIDForObject((EduGroup)selection);
+		session().takeValueForKeyPath(gid,"state.coursesSelection");
 	}
 	/*
 	public String teacherOnClick() {

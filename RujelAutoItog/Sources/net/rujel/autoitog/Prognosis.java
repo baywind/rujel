@@ -208,8 +208,10 @@ public class Prognosis extends _Prognosis {
 					student(),editingContext());
 			if(_relatedItog == null)
 				_relatedItog = NullValue;
-		}
-		if(_relatedItog == NullValue) {
+		} else if(_relatedItog == NullValue) {
+			return null;
+		} else if(((ItogMark)_relatedItog).editingContext() == null) {
+			_relatedItog = null;
 			return null;
 		}
 		return (ItogMark)_relatedItog;

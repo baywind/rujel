@@ -91,9 +91,11 @@ public class CoursesSelector extends WOComponent {
 	
 	public void setSelection(Object val) {
 		selection = val;
+		if(selection == NullValue)
+			selection = null;
 		if(hasBinding("selection"))
 			setValueForBinding(selection,"selection");
-		if(val == null) {
+		if(selection == null) {
 			if(hasBinding("courses"))
 				setValueForBinding(null, "courses");
 			session().takeValueForKeyPath(val, "state.coursesSelection");
