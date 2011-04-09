@@ -39,7 +39,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.*;
 
-import net.rujel.auth.ReadAccess;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;

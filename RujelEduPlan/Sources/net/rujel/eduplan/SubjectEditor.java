@@ -30,7 +30,6 @@
 package net.rujel.eduplan;
 
 import net.rujel.base.MyUtility;
-import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -50,7 +49,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     public EOEditingContext ec;
     public NSArray areas;   
     public EOEnterpriseObject areaItem;
-    public boolean cantChange = false;
+    public Boolean cantChange = Boolean.FALSE;
 
     public Subject subject;
     public String oldName;
@@ -61,12 +60,6 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     	ec = subj.editingContext();
     	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
     	areas = ec.objectsWithFetchSpecification(fs);
-    	
-    	NamedFlags access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Subject");
-    	if(ec.insertedObjects() != null && ec.insertedObjects().contains(subject))
-    		cantChange = !access.flagForKey("create");
-    	else
-    		cantChange = !access.flagForKey("edit");
     }
      
     public WOComponent save() {

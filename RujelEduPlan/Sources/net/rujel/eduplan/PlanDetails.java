@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.util.Enumeration;
 
 import net.rujel.base.CourseInspector;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Counter;
@@ -67,6 +68,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
  	public Integer courseIndex;
 	public int showTotal;
 	public Integer inSection = new Integer(0);
+	public ReadAccess access;
  	
 	public PlanDetails(WOContext context) {
         super(context);
@@ -103,6 +105,11 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setSelection(Object sel) {
+		Integer sesSection = (Integer)session().valueForKeyPath("state.section.idx");
+		if(inSection != null && !inSection.equals(sesSection))
+			session().takeValueForKeyPath(inSection, "state.section.idx");
+		else
+			sesSection = null;
 		if(listNames == null)
 			listNames = new NSMutableArray();
 		else
@@ -172,6 +179,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			cycles = null;
 		} finally {
 			ec.unlock();
+			if(sesSection != null)
+				session().takeValueForKeyPath(sesSection, "state.section.idx");
 		}
 	}
 
@@ -565,8 +574,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			row.takeValueForKey(Boolean.TRUE, "noDetails");
 			return;
 		}
-		row.takeValueForKey(session().valueForKeyPath(
-				"readAccess._delete.PlanDetail"), "noDetails");
+		row.takeValueForKey(access.valueForKeyPath(
+				"_delete.PlanDetail"), "noDetails");
 		NSDictionary listSetting = (NSDictionary)row.valueForKey("listSetting");
 		int total = 0;
 		int min = 0;
@@ -647,10 +656,9 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	
 	public NamedFlags courseAccess() {
 		if(rowItem == null || rowItem.valueForKey("course") == null)
-			return (NamedFlags)session().valueForKeyPath(
-					"readAccess.FLAGS." + EduCourse.entityName);
+			return (NamedFlags)access.valueForKeyPath("FLAGS." + EduCourse.entityName);
 		else
-			return (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.rowItem.course");
+			return (NamedFlags)access.valueForKeyPath("FLAGS.rowItem.course");
 	}
 	
 	public WOActionResults help() {
@@ -767,6 +775,11 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		Integer sesSection = (Integer)session().valueForKeyPath("state.section.idx");
+		if(inSection != null && !inSection.equals(sesSection))
+			session().takeValueForKeyPath(inSection, "state.section.idx");
+		else
+			sesSection = null;
 		if(Various.boolForObject(valueForBinding("shouldReset"))) {
 			ec = (EOEditingContext)context().page().valueForKey("ec");
 			periodsForList = new NSMutableDictionary(new Counter(),"periodsCounter");
@@ -781,11 +794,14 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			} else {
 				showTotal = ((Integer)dict.valueForKey("showTotal")).intValue();
 				inSection = (Integer)dict.valueForKey("inSection");
+				access = (ReadAccess)dict.valueForKey("access");
 				setSelection(dict.valueForKey("selection"));
 			}
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 		}
 		super.appendToResponse(aResponse, aContext);
+		if(sesSection != null)
+			session().takeValueForKeyPath(sesSection, "state.section.idx");
 	}
 
 	public boolean synchronizesVariablesWithBindings() {

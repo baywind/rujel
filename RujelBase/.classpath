@@ -2,6 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="Sources"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Authentication"/>
+	<classpathentry kind="con" path="WOFramework/Authentication"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>

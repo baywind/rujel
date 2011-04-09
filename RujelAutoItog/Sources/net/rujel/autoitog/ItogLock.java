@@ -5,8 +5,8 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSDictionary;
 
-import net.rujel.auth.ReadAccess.Modifier;
 import net.rujel.base.SettingsBase;
+import net.rujel.base.ReadAccess.Modifier;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;

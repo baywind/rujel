@@ -29,8 +29,8 @@
 
 package net.rujel;
 
-import net.rujel.auth.ReadAccess;
 import net.rujel.base.MyUtility;
+import net.rujel.base.ReadAccess;
 import net.rujel.reusables.*;
 
 import com.apress.practicalwo.practicalutilities.WORequestAdditions;

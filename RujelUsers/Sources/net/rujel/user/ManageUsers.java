@@ -150,6 +150,13 @@ public class ManageUsers extends WOComponent {
 		return null;
 	}
 	
+	public WOActionResults submit() {
+		if(usersList.selectedObject() == null)
+			return search();
+		else
+			return save();
+	}
+	
 	public WOActionResults search() {
 		String query = context().request().stringFormValueForKey("userName");
 		usersList.queryMatch().takeValueForKey(query, "userName");
@@ -429,12 +436,12 @@ public class ManageUsers extends WOComponent {
 			return "gerade";
 		return "ungerade";
 	}
-	
+	/*
 	public Boolean noAddGroup() {
 		if(usersList.selectedObject() != null)
 			return Boolean.TRUE;
 		return (Boolean)session().valueForKeyPath("readAccess._create.UserGroup");
-	}
+	}*/
 
 	public Boolean showBatch() {
 		return Boolean.valueOf(usersList.batchCount() > 1);

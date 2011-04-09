@@ -33,6 +33,7 @@ import net.rujel.auth.*;
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
+import net.rujel.base.ReadAccess;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;

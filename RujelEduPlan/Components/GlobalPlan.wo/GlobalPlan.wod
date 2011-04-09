@@ -120,7 +120,7 @@ SubjectCell : OnClickContainer {
   elementName = "td";
   onclick = session.ajaxPopup;
   invokeAction = editSubject;
-  disabled = session.readAccess._edit.subjectItem.subjectEO;
+  disabled = access._edit.subjectItem.subjectEO;
   style = cellStyle;
   title = subjectItem.subjectEO.fullName;
 }
@@ -235,7 +235,7 @@ CycleLevel : WOTextField {
 }
 
 CanSave : WOConditional {
-  condition = session.readAccess.edit.PlanCycle;
+  condition = access.edit.PlanCycle;
 }
 
 SectionsTitle : WOString {
@@ -248,7 +248,7 @@ SetupSections : OnClickContainer {
   style = "font-size:120%;text-align:center;";
   invokeAction = setupSections;
   onclick = session.ajaxPopupNoPos;
-  disabled = session.readAccess._edit.PlanCycle;
+  disabled = access._edit.PlanCycle;
 }
 
 AllTitle : WOString {

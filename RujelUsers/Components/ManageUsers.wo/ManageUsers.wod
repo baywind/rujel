@@ -42,7 +42,7 @@ Save : WOSubmitButton {
 
 Form : WOForm {
   multipleSubmit = true;
-  action = search;
+  action = submit;
 }
 
 UserSearch : WOGenericElement {
@@ -147,7 +147,7 @@ GroupName : WOString {
 AddGroup : OnClickContainer {
   elementName = "tr";
   onclick = "showObj('newGroup');hideObj(this);";
-  hide = noAddGroup;
+  hide = session.readAccess._create.UserGroup;
   class = "green";
 }
 
@@ -289,4 +289,9 @@ ShowAll : OnClickContainer {
 
 NoLimit : WOString {
   value = session.strings.RujelBase_Base.noLimit;
+}
+
+NoUserSelected : WOConditional {
+  condition = usersList.selectedObject;
+  negate = true;
 }

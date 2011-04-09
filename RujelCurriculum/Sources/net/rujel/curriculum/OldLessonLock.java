@@ -10,7 +10,7 @@ import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
-import net.rujel.auth.ReadAccess;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduLesson;

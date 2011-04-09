@@ -86,6 +86,8 @@ public class SectionsSetup extends WOComponent {
     
     public WOActionResults update() {
     	NSArray sections = updateApplication(sIndex);
+    	if(sections == null || sections.count() == 0)
+    		return null;
 		Integer state =  (Integer)session().valueForKeyPath("state.section.idx");
 		if(state != null) {
 			Enumeration enu = sections.objectEnumerator();

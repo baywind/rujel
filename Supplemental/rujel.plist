@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>schoolNumber</key>
-	<string>0</string>
+	<string>45</string>
 	<key>diaryLogging</key>
 	<string>CONFIGDIR/diaryLog.properties</string>
 	<key>loggingProperties</key>
-	<string>LOCALROOT/Library/WebObjects/Configuration/logging.properties</string>
+	<string>CONFIGDIR/logging.properties</string>
 	<key>schoolName</key>
 	<string>Гимназия № 45</string>
 	<key>edu</key>

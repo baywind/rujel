@@ -73,9 +73,15 @@ public class AutUser extends _AutUser {
 	}
 	
 	public String setPassword(String password) {
-		String hash = TableLoginHandler.HASH_PREFIX + LoginProcessor.getPasswordDigest(password);
-		setCredential(hash);
-		return hash;
+		if(password != null && password.length() > 0) {
+			String hash = TableLoginHandler.HASH_PREFIX
+							+ LoginProcessor.getPasswordDigest(password);
+			setCredential(hash);
+			return hash;
+		} else {
+			setCredential(null);
+			return null;
+		}
 	}
 	
 	public boolean hasParent() {

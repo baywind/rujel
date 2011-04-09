@@ -6,7 +6,6 @@
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
 	<classpathentry kind="con" path="WOFramework/RujelCriterial"/>
-	<classpathentry kind="con" path="WOFramework/Authentication"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>
