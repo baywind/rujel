@@ -117,22 +117,35 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     
     public WOActionResults save() {
     	EOEditingContext ec = ec();
-    	ec.lock();
     	EduPeriod per = currPeriod();
     	String act = "edit";
     	if(per == null) {
     		act = "creat";
-    		per = (EduPeriod)EOUtilities.createAndInsertInstance(ec,
-    			EduPeriod.ENTITY_NAME);
+    		per = (EduPeriod)EOUtilities.createAndInsertInstance(ec, EduPeriod.ENTITY_NAME);
         	if(listName != null) {
         		per.addToList(listName);
          	}
+        	per.setEduYear((Integer)session().valueForKey("eduYear"));
     	}
-    	per.setEduYear((Integer)session().valueForKey("eduYear"));
-    	per.setBegin(begin);
-    	per.setEnd(end);
-    	per.setTitle(title);
-    	per.setFullName(fullName);
+    	if(begin != null && !begin.equals(per.begin()))
+    		per.setBegin(begin);
+    	if(end != null && !end.equals(per.end()))
+    		per.setEnd(end);
+    	if(title != null && !title.equals(per.title()))
+    		per.setTitle(title);
+    	if(fullName != null && !fullName.equals(per.fullName()))
+    		per.setFullName(fullName);
+    	if(!ec.hasChanges()) {
+    		_currPeriod = null;
+    		if(hasBinding("currPeriod"))
+    			setValueForBinding(_currPeriod, "currPeriod");
+			begin = null;
+			end = null;
+			title = null;
+			fullName = null;
+    		setValueForBinding(per, "selected");
+    		return (WOActionResults)valueForBinding("selectAction");
+    	}
     	try {
     		ec.saveChanges();
 			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"EduPeriod " + act + "ed",
@@ -161,9 +174,7 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 				ec.revert();
 //			if(currPeriod() != null && currPeriod().editingContext() == null)
 //				_currPeriod = NullValue;
-		} finally {
-			ec.unlock();
-		}
+    	}
 		if(hasBinding("currPeriod"))
 			setValueForBinding(_currPeriod, "currPeriod");
 		_list = null;

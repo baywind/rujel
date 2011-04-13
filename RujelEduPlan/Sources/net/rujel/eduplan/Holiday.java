@@ -56,6 +56,14 @@ public class Holiday extends _Holiday implements EOPeriod {
 		return EOPeriod.Utility.countDays(begin(), end());
 	}
 	
+	public static NSArray holidaysForList(String listName, EOEditingContext ec) {
+		EOQualifier qual = (listName == null)? new EOKeyValueQualifier(LIST_NAME_KEY,
+    			EOQualifier.QualifierOperatorEqual,null): EOQualifier.qualifierWithQualifierFormat(
+    				"listName = nil OR listName = %@", new NSArray(listName));
+    	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,sorter);
+    	return ec.objectsWithFetchSpecification(fs);
+	}
+	
 	public static NSArray holidaysInDates(NSTimestamp since, NSTimestamp to, 
 			EOEditingContext ec, String listName) {
 		EOQualifier[] quals = new EOQualifier[2];
@@ -107,12 +115,4 @@ public class Holiday extends _Holiday implements EOPeriod {
 	public boolean contains(Date date) {
 		return EOPeriod.Utility.contains(this, date);
 	}
-
-	public String name() {
-		return holidayType().name();
-	}
-
-//	public Boolean _disabled() {
-//		return Boolean.FALSE;
-//	}
 }

@@ -44,9 +44,9 @@ public abstract class _Holiday extends EOGenericRecord {
 	public static final String BEGIN_KEY = "begin";
 	public static final String END_KEY = "end";
 	public static final String LIST_NAME_KEY = "listName";
+	public static final String NAME_KEY = "name";
 
 	// Relationships
-	public static final String HOLIDAY_TYPE_KEY = "holidayType";
 
   public NSTimestamp begin() {
     return (NSTimestamp) storedValueForKey(BEGIN_KEY);
@@ -72,12 +72,12 @@ public abstract class _Holiday extends EOGenericRecord {
     takeStoredValueForKey(value, LIST_NAME_KEY);
   }
 
-  public net.rujel.eduplan.HolidayType holidayType() {
-    return (net.rujel.eduplan.HolidayType)storedValueForKey(HOLIDAY_TYPE_KEY);
+  public String name() {
+    return (String) storedValueForKey(NAME_KEY);
   }
 
-  public void setHolidayType(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, HOLIDAY_TYPE_KEY);
+  public void setName(String value) {
+    takeStoredValueForKey(value, NAME_KEY);
   }
-  
+
 }
