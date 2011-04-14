@@ -34,12 +34,15 @@ public class JournalZPU extends WOComponent {
         super(context);
     }
 
-	protected static NSArray prepareJournalZPU(Enumeration substitutes, Enumeration variations) {
+	protected static NSArray prepareJournalZPU(Enumeration substitutes, Enumeration variations,
+			Integer section) {
 		NSMutableArray result = new NSMutableArray();
 		NSMutableSet lessons = new NSMutableSet();
 		if(variations != null) {
 			while (variations.hasMoreElements()) {
 				Variation var = (Variation) variations.nextElement();
+				if(section != null && !section.equals(var.valueForKeyPath("course.cycle.section")))
+					continue;
 				EduLesson lesson = var.relatedLesson();
 				if(lesson != null) {
 					if(lessons.containsObject(lesson))
@@ -65,8 +68,12 @@ public class JournalZPU extends WOComponent {
 		if(substitutes != null) {
 			while (substitutes.hasMoreElements()) {
 				Substitute sub = (Substitute) substitutes.nextElement();
-				if(lessons.containsObject(sub.lesson()))
+				EduLesson lesson = sub.lesson();
+				if(lessons.containsObject(lesson))
 						continue;
+				if(section != null && 
+						!section.equals(lesson.valueForKeyPath("course.cycle.section")))
+					continue;
 //				lessons.addObject(sub.lesson());
 				NSMutableDictionary dict = convertEvent(sub);
 				result.addObject(dict);

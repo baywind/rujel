@@ -70,11 +70,13 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			setValueForBinding(null,"selection");
 			search();
 		}*/
-		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+		Integer section = (Integer)valueForBinding("section");
+		if(section == null)
+			 section = (Integer)session().valueForKeyPath("state.section.idx");
 		if(editingContext == null || dict == null || 
 				(section != null && !section.equals(dict.valueForKey("section")))) {
 			editingContext = (EOEditingContext)valueForBinding("editingContext");
-			dict = populate(editingContext,session());
+			dict = populate(editingContext,session(), section);
 			subjects = (NSArray)dict.removeObjectForKey("subjects");
 			currSubject = (String)valueForBinding("subject");
 			if(subjects == null || !subjects.containsObject(currSubject))
@@ -90,11 +92,13 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	public void awake() {
 		super.awake();
 		selection = valueForBinding("selection");
-		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+		Integer section = (Integer)valueForBinding("section");
+		if(section == null)
+			 section = (Integer)session().valueForKeyPath("state.section.idx");
 		if(editingContext == null || dict == null || 
 				(section != null && !section.equals(dict.valueForKey("section")))) {
 			editingContext = (EOEditingContext)valueForBinding("editingContext");
-			dict = populate(editingContext,session());
+			dict = populate(editingContext,session(),section);
 			subjects = (NSArray)dict.removeObjectForKey("subjects");
 			currSubject = (String)valueForBinding("subject");
 			if(subjects == null || !subjects.containsObject(currSubject))
@@ -105,8 +109,12 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	public boolean synchronizesVariablesWithBindings() {
         return false;
 	}
-
+	
 	public static NSMutableDictionary populate(EOEditingContext ec, WOSession ses) {
+		return populate(ec, ses, null);
+	}
+	public static NSMutableDictionary populate(EOEditingContext ec, WOSession ses, 
+			Integer section) {
 		NSMutableDictionary dict = new NSMutableDictionary();
 		Integer eduYear = (Integer)ses.valueForKey("eduYear");
 		NSArray allCourses = EOUtilities.objectsMatchingKeyAndValue
@@ -118,7 +126,8 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		// collecting teachers on subjects
 		Enumeration enu = allCourses.objectEnumerator();
 		boolean smartEduPlan = (EduCycle.className.equals("net.rujel.eduplan.PlanCycle"));
-		Integer section = (Integer)ses.valueForKeyPath("state.section.idx");
+		if(section == null)
+			section = (Integer)ses.valueForKeyPath("state.section.idx");
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
 			if(section != null && !section.equals(course.valueForKeyPath("cycle.section")))

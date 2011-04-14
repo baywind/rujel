@@ -22,7 +22,6 @@ import net.rujel.reusables.Various;
 import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -41,10 +40,12 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 	public NSMutableDictionary options = new NSMutableDictionary(
 			new Boolean[] {Boolean.TRUE,Boolean.TRUE},
 			new String[] {"unsubmitted","unsubmittedZPU"});
+	public Integer section;
 	
     public Tabel(WOContext context) {
         super(context);
         ec = new SessionedEditingContext(context.session());
+        section = (Integer)context.session().valueForKeyPath("state.section.idx");
         Calendar cal = Calendar.getInstance();
         cal.setTime((NSTimestamp)session().valueForKey("today"));
 //        currMonth = new NSMutableDictionary(cal,"cal");
@@ -139,7 +140,31 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     
     public WOActionResults exportTabel() {
     	Calendar cal = Calendar.getInstance();
-    	NSMutableArray quals = monthQual();
+    	NSMutableArray quals = null;
+    	EOQualifier qual = new EOKeyValueQualifier("school",EOQualifier.QualifierOperatorEqual,
+    			session().valueForKey("school"));
+    	if(section != null) {
+    		quals = new NSMutableArray(qual);
+    		quals.addObject(new EOKeyValueQualifier("section",
+    				EOQualifier.QualifierOperatorEqual,section));
+    		qual = new EOAndQualifier(quals);
+    	}
+    	EOFetchSpecification fs = new EOFetchSpecification(PlanCycle.ENTITY_NAME,qual,null);
+    	NSArray list = ec.objectsWithFetchSpecification(fs);
+    	if(list == null || list.count() == 0) {
+    		String message = (String)session().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.Tabel.noData");
+    		session().takeValueForKey(message, "message");
+    		return null;
+    	}
+    	qual = Various.getEOInQualifier("cycle", list);
+    	quals = new NSMutableArray(qual);
+    	quals.addObject(new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,
+    			session().valueForKey("eduYear")));
+		qual = new EOAndQualifier(quals);
+		fs = new EOFetchSpecification(EduCourse.entityName,qual,null);
+		NSArray courses = ec.objectsWithFetchSpecification(fs);
+    	quals = monthQual();
 //		cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
 //		cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
 		NSTimestamp lastDay = (NSTimestamp)currMonth.valueForKey("endDate");
@@ -154,12 +179,14 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			days += maxDOY;
 //		cal.set(Calendar.DAY_OF_MONTH, days);
 //		int lastDOY = cal.get(Calendar.DAY_OF_YEAR);
-    	EOFetchSpecification fs = new EOFetchSpecification(
-    			Substitute.ENTITY_NAME,new EOAndQualifier(quals),null);
+		qual = new EOAndQualifier(quals);
+    	fs = new EOFetchSpecification(Substitute.ENTITY_NAME,qual,null);
     	fs.setRefreshesRefetchedObjects(true);
     	ec.objectsWithFetchSpecification(fs);
-    	fs.setEntityName(EduLesson.entityName);
-    	NSArray list = ec.objectsWithFetchSpecification(fs);
+    	quals.addObject(Various.getEOInQualifier("course", courses));
+		qual = new EOAndQualifier(quals);
+    	fs = new EOFetchSpecification(EduLesson.entityName,qual,null);
+    	list = ec.objectsWithFetchSpecification(fs);
     	if(list == null || list.count() == 0) {
     		String message = (String)session().valueForKeyPath(
 					"strings.RujelCurriculum_Curriculum.Tabel.noData");
@@ -247,7 +274,7 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 						}
 					}
 					if(list != null && list.count() > 0) { // test varSub
-						EOQualifier qual = new EOKeyValueQualifier("relatedLesson", 
+						qual = new EOKeyValueQualifier("relatedLesson", 
 								EOQualifier.QualifierOperatorEqual, lesson);
 						found = EOQualifier.filteredArrayWithQualifier(list, qual);
 						if(found != null && found.count() > 0) { // is varSub
@@ -271,15 +298,10 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     	} // have variatins
     	NSMutableDictionary loads = null;
     	if(Various.boolForObject(options.valueForKey("showLoad"))) {
-    		list = EOUtilities.objectsMatchingKeyAndValue(ec, 
-    				EduCourse.entityName, "eduYear", session().valueForKey("eduYear"));
-    		enu = list.objectEnumerator();
-    		Integer school = (Integer)session().valueForKey("school");
+    		enu = courses.objectEnumerator();
     		loads = new NSMutableDictionary();
     		while (enu.hasMoreElements()) {
     			EduCourse course = (EduCourse) enu.nextElement();
-    			if(!school.equals(course.cycle().school()))
-    				continue;
     			PlanCycle cycle = (PlanCycle)course.cycle();
     			int hours = cycle.weekly(course);
     			Object startTeacher = course.teacher(firstDay);
@@ -499,14 +521,16 @@ vars:		while (vEnu.hasMoreElements()) { // variations
        	int change = 0;
 		details = new NSMutableArray();
 		final NSMutableArray clear = new NSMutableArray();
+		Integer school = (Integer)session().valueForKey("school");
     	if(list != null && list.count() > 0) {  // recent cources
 	    	quals[1] = new EOKeyValueQualifier("date",
 	    			EOQualifier.QualifierOperatorLessThanOrEqualTo,lastDay);
     		Enumeration enu = list.objectEnumerator();
-    		Integer school = (Integer)session().valueForKey("school");
     		while (enu.hasMoreElements()) {
 				BaseCourse course = (BaseCourse) enu.nextElement();
 				if(!school.equals(course.cycle().school()))
+					continue;
+				if(section != null && !section.equals(course.valueForKeyPath("cycle.section")))
 					continue;
 				EOEnterpriseObject ct = course.teacherChange(lastDay,dates);
 				if(ct != null)
@@ -554,6 +578,10 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 				end = end.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
 				BaseCourse course = (BaseCourse) ct.valueForKey("course");
 				PlanCycle cycle = (PlanCycle)course.cycle();
+				if(!school.equals(cycle.school()))
+					continue;
+				if(section != null && !section.equals(cycle.section()))
+					continue;
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
 				int hours = cycle.weekly(course);
 				ct = course.teacherChange(end, dates);
@@ -771,7 +799,7 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     	fs.setSortOrderings(list);
     	list = ec.objectsWithFetchSpecification(fs);
     	if(list == null || list.count() == 0) {
-    		journalZPU = JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations));
+    		journalZPU = JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations),section);
     		return;
     	} else if(factorCounts == null) {
     		details.addObject(row);
@@ -786,6 +814,11 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     			new EOSortOrdering("comment",EOSortOrdering.CompareAscending)});
        	while (enu.hasMoreElements()) { //
 			Substitute sub = (Substitute) enu.nextElement();
+			if(!school.equals(sub.valueForKeyPath("lesson.course.cycle.school")))
+				continue;
+			if(section != null && !section.equals(sub.valueForKeyPath(
+					"lesson.course.cycle.section")))
+				continue;
 			BigDecimal factor = sub.factor();
 			if(factor.compareTo(BigDecimal.ZERO) == 0)
 				continue;
@@ -813,7 +846,7 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 		} // substitutes
 		if(byCourse.count() > 0)
 			appendCourses(byCourse, sorter, itemClass);
-		journalZPU = JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations));
+		journalZPU = JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations),section);
     }
     
     private void appendCourses(NSMutableDictionary byCourse,
@@ -848,7 +881,7 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     
 	public WOActionResults selectTeacher() {
 		WOComponent selector = TeacherSelector.selectorPopup(this, "currTeacher", ec);
-//		selector.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.hideVacant");
+		selector.takeValueForKeyPath(section, "dict.presenterBindings.section");
 		return selector;
 	}
 	
@@ -964,6 +997,8 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 	
 	protected NSArray fullZPU() {
 		NSMutableArray quals = monthQual();
+		quals.addObject(new EOKeyValueQualifier("reason.school",
+				EOQualifier.QualifierOperatorEqual, session().valueForKey("school")));
 		if(!Various.boolForObject(options.valueForKey("unsubmittedZPU")))
 			quals.addObject(new EOKeyValueQualifier("reason.verification",
 					EOQualifier.QualifierOperatorNotEqual,NullValue));
@@ -979,7 +1014,7 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     		fs.setQualifier(new EOAndQualifier(quals));
     	}
     	NSArray variations = ec.objectsWithFetchSpecification(fs);
-    	return JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations));
+    	return JournalZPU.prepareJournalZPU(enu(substitutes), enu(variations),section);
 	}
 	
 	public WOActionResults showFullZPU() {
@@ -1047,5 +1082,17 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 		}
 		go();
 		return null;
+	}
+	
+	public WOActionResults noSection() {
+		section = null;
+		go();
+		return null;
+	}
+	
+	public String noneSectionClass() {
+		if(section == null)
+			return "selection";
+		return "grey";
 	}
 }

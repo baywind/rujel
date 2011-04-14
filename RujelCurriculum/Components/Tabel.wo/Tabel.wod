@@ -292,3 +292,32 @@ SubmitDates : WOGenericElement {
   type = "submit";
   value = "&radic;";
 }
+
+HasSections : WOConditional {
+  condition = application.strings.sections.hasSections;
+}
+
+SectionTabs : Tabs {
+  idAttribute = "idx";
+  currTab = section;
+  byAttribute = true;
+  tablist = application.strings.sections.list;
+  titleAttribute = "value";
+  selectAction = go;
+  vertical = true;
+  onClick = session.tryLoad;
+}
+
+NoSection : OnClickContainer {
+  elementName = "div";
+  class = noneSectionClass;
+  invokeAction = noSection;
+  onclick = session.tryLoad;
+  style="margin:2pt 0pt;padding:1pt 3pt;white-space:nowrap;";
+}
+
+All : WOString {
+  value = session.strings.RujelBase_Base.noLimit;
+  valueWhenEmpty = "all";
+  escapeHTML = false;
+}

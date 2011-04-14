@@ -241,6 +241,7 @@ SectionTabs : Tabs {
   titleAttribute = "value";
   selectAction = sectionChanged;
   vertical = true;
+  onClick = session.tryLoad;
 }
 
 HasSections : WOConditional {
