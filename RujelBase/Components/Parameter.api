@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <wodefinitions>
         <wo class="Parameter.java" wocomponentcontent="false">
 
@@ -12,5 +12,10 @@
         </validation>
         <binding name="attribute"/>
     <binding name="editingContext"/>
+    <binding name="editor"/>
+        <validation message="'editor' must be bound to a settable value">
+            <unsettable name="editor"/>
+        </validation>
+    <binding defaults="Boolean" name="useAjax"/>
     </wo>
 </wodefinitions>

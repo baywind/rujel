@@ -28,6 +28,7 @@ ByCoursePresenter : ByCoursePresenter {
   pushByCourse = "^pushByCourse";
   editList = byCourse;
   rowspan = rowspan;
+  editors = editors;
 }
 
 
@@ -98,14 +99,14 @@ MoveUp: WOImage {
 	framework ="RujelBase";
 	align = "center";
 	valign = "top";
-	onclick="up(get(this,'tr',0));reorder();";
+	onclick="up(get(this,'tr',0),get(this,'td',0).rowSpan);reorder();";
 	style = "cursor:pointer;";
 }
 MoveDown: WOImage {
 	align = "center";
 	filename = "down.png";
 	framework ="RujelBase";
-	onclick= "down(get(this,'tr',0));reorder();";
+	onclick= "down(get(this,'tr',0),get(this,'td',0).rowSpan);reorder();";
 	style = "cursor:pointer;";
 }
 ItemSorting : WOTextField {
@@ -118,10 +119,10 @@ BaseString : WOString {
   escapeHTML = false;
 }
 SortForm : WOForm {
+  action = saveSort;
 }
 
 SaveSort : WOImage {
-  action = saveSort;
   filename = "button_ok.gif";
   framework = "app";
   onclick = "enumerate(get(this,'table',0),'sorting',1);get(this,'form',0).submit();";

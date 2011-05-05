@@ -36,6 +36,7 @@ import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.QueryParams;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
@@ -83,15 +84,8 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     public void go() {
     	String entityName = (String)currReport.valueForKey("entity");
     	NSArray paramDicts = (NSArray)currReport.valueForKey("params");
-    	NSMutableArray quals = QueryParams.paramsToQual(
+    	EOQualifier qual = QueryParams.paramsToQual(
     			params, paramDicts, entityName, this, ec, null);
-    	EOQualifier qual = null;
-    	if(quals.count() > 0) {
-    		if(quals.count() > 1)
-    			qual = new EOAndQualifier(quals);
-    		else
-    			qual = (EOQualifier)quals.objectAtIndex(0);
-    	}
     	EOFetchSpecification fs = new EOFetchSpecification(entityName,qual,null);
     	fs.setRefreshesRefetchedObjects(true);
     	NSArray args = (NSArray)currReport.valueForKey("prefetch");

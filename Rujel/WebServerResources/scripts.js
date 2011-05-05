@@ -437,19 +437,20 @@ function formParams(ini) {
 	var aForm = ini;
 	if(ini.form)
 		aForm = ini.form;
-	if(ini.type != "submit")
-		ini = null;
 	var params = "";
+	if(ini.type == "submit" || ini.type == "button") {
+		params = ini.name + '=' + ini.value;
+	} else if(ini.type == "image") {
+		params = ini.name + '.x=1&' + ini.name + '.y=1';
+	}
 	for(var i=0;i<aForm.elements.length;i++) {
 		var elt = aForm.elements[i];
 		if(elt == null || elt.name == null || elt.value == null)
 			continue;
 		if((elt.type == "radio" || elt.type == "checkbox") && !elt.checked)
 			continue;
-		if(elt.type == "submit" && elt != ini)
-			continue;
-		if(elt.type == "button")
-			continue;
+		if(elt.type == "submit" || elt.type == "button" || elt.type == "image")
+				continue;
 		if(params.length > 0)
 			params = params + '&';
 		params = params.concat(elt.name,'=',elt.value);

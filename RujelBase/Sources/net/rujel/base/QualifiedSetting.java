@@ -29,15 +29,22 @@
 
 package net.rujel.base;
 
+import java.util.Enumeration;
+
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
+import net.rujel.ui.Parameter;
 
+import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSPropertyListSerialization;
 
 public class QualifiedSetting extends _QualifiedSetting {
@@ -120,10 +127,10 @@ public class QualifiedSetting extends _QualifiedSetting {
 		if(courses == null && qualifier == null) {
 			read();
 		}
-		if(object instanceof EduCourse) {
+		if(eduYear() != null && object instanceof EduCourse) {
 			object = EOUtilities.localInstanceOfObject(editingContext(),
 					(EOEnterpriseObject)object);
-			if(eduYear() != null && !eduYear().equals(((EduCourse)object).eduYear()))
+			if(!eduYear().equals(((EduCourse)object).eduYear()))
 				return false;
 		}
 		if(courses != null)
@@ -151,4 +158,132 @@ public class QualifiedSetting extends _QualifiedSetting {
 	public int compare(NSKeyValueCoding other) {
 		return 0; // TODO: write comparison
 	}*/
+	
+	public static NSMutableArray editors(WOSession ses) {
+		NSArray list = (NSArray)ses.valueForKeyPath("strings.RujelBase_Base.SettingsBase.editors");
+		NSMutableArray editors = PlistReader.cloneArray(list, true);
+		list = (NSArray)ses.valueForKeyPath("modules.settingEditors");
+		editors.addObjectsFromArray(PlistReader.cloneArray(list, true));
+		EOSortOrdering.sortArrayUsingKeyOrderArray(editors, ModulesInitialiser.sorter);
+		return editors;
+	}
+	
+	public static class AdvancedQualifierException extends Exception {
+		private EOQualifier qual;
+		public AdvancedQualifierException(EOQualifier q) {
+			super();
+			qual = q;
+		}
+		
+		public EOQualifier qualifier() {
+			return qual;
+		}
+	}
+
+	public static void analyseQual(EOQualifier qual, NSMutableDictionary params, 
+			NSArray editors) throws AdvancedQualifierException {
+		if(qual instanceof EOOrQualifier) {
+			analyseOR((EOOrQualifier)qual,params,editors);
+		} else if (qual instanceof EOKeyValueQualifier) {
+			analyseKeyValue((EOKeyValueQualifier)qual, params, editors);
+		} else if (qual instanceof EOAndQualifier) {
+			analyseAND((EOAndQualifier)qual,params,editors);
+		} else {
+			throw new AdvancedQualifierException(qual);
+		}
+	}
+
+	protected static void analyseAND(EOAndQualifier and, NSMutableDictionary params, 
+			NSArray editors) throws AdvancedQualifierException {
+		Enumeration enu = and.qualifiers().objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOQualifier qual = (EOQualifier) enu.nextElement();
+			analyseQual(qual,params,editors);
+		}
+	}
+
+	protected static NSMutableDictionary analyseOR(EOOrQualifier or, NSMutableDictionary params, 
+			NSArray editors) throws AdvancedQualifierException {
+		NSMutableDictionary dict = null;
+		Enumeration enu = or.qualifiers().objectEnumerator();
+		String keyPath = null;
+		NSMutableArray values = null;
+		while (enu.hasMoreElements()) {
+			EOQualifier qual = (EOQualifier) enu.nextElement();
+			if(qual instanceof EOKeyValueQualifier) {
+				EOKeyValueQualifier kq = (EOKeyValueQualifier)qual;
+				if (kq.selector() != EOQualifier.QualifierOperatorEqual)
+					throw new AdvancedQualifierException(qual);
+				if(dict == null) {
+					dict = analyseKeyValue(kq,params,editors);
+					if(dict == null)
+						throw new AdvancedQualifierException(qual);
+					values = (NSMutableArray)params.valueForKey(Parameter.attribute(dict));
+					keyPath = (String)dict.valueForKey("attribute");
+					continue;
+				}
+				if (!checkKeyPath(kq.key(), keyPath))
+					throw new AdvancedQualifierException(qual);
+				values.addObject(kq.value());
+			} else {
+				throw new AdvancedQualifierException(qual);
+			}
+		}
+		return dict;
+	}
+
+	protected static boolean checkKeyPath(String key, String pattern) {
+		if(key == null || pattern == null)
+			return false;
+		if(pattern.charAt(pattern.length() -1) == '*') {
+			pattern = pattern.substring(0,pattern.length() -1);
+			return key.startsWith(pattern);
+		} else {
+			return key.equals(pattern);
+		}
+	}
+
+	protected static NSMutableDictionary analyseKeyValue(EOKeyValueQualifier qual, 
+			NSMutableDictionary params, NSArray editors) throws AdvancedQualifierException {
+		Enumeration enu = editors.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSMutableDictionary ed = (NSMutableDictionary) enu.nextElement();
+			String keyPath = (String)ed.valueForKey("attribute");
+			if(checkKeyPath(qual.key(), keyPath)) {
+				keyPath = Parameter.attribute(ed);
+				if(qual.selector() == EOQualifier.QualifierOperatorEqual ||
+						(EOQualifier.stringForOperatorSelector(qual.selector()).equalsIgnoreCase(
+								(String)ed.valueForKey("qualifierSelector")))) {
+					if(Various.boolForObject(ed.valueForKey("or"))) {
+						NSMutableArray values = (NSMutableArray)params.valueForKey(keyPath);
+						if(values == null)
+							params.takeValueForKey(new NSMutableArray(qual.value()), keyPath);						
+						else
+							values.addObject(qual.value());
+					} else {
+						params.takeValueForKey(qual.value(), keyPath);
+					}
+					if(Various.boolForObject(ed.valueForKey("range"))) {
+						ed.takeValueForKey("=", "qualifierSelector");
+						ed.takeValueForKey(null, "secondSelector");
+					}
+				} else if(qual.selector() == EOQualifier.QualifierOperatorGreaterThanOrEqualTo ||
+						qual.selector() == EOQualifier.QualifierOperatorGreaterThan) {
+					params.takeValueForKey(qual.value(), "min_" + keyPath);
+					if(Various.boolForObject(ed.valueForKey("range")))
+						ed.takeValueForKey(">=", "qualifierSelector");
+				} else if(qual.selector() == EOQualifier.QualifierOperatorLessThanOrEqualTo ||
+						qual.selector() == EOQualifier.QualifierOperatorLessThan) {
+					params.takeValueForKey(qual.value(), "max_" + keyPath);
+					if(Various.boolForObject(ed.valueForKey("range")))
+						ed.takeValueForKey("<=", "secondSelector");
+				} else {
+					throw new AdvancedQualifierException(qual);
+				}
+				ed.takeValueForKey(Boolean.TRUE, "active");
+				return ed;
+			}
+		}
+		return null;
+	}
 }

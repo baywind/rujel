@@ -27,7 +27,7 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.rujel.reports;
+package net.rujel.ui;
 
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -80,7 +80,7 @@ public class QueryParams extends WOComponent {
 		item = null;
 	}
 
-	public static NSMutableArray paramsToQual(NSMutableDictionary params, NSArray paramDicts, 
+	public static EOQualifier paramsToQual(NSMutableDictionary params, NSArray paramDicts, 
 			String entityName,WOComponent onpage, EOEditingContext ec, NSMutableArray quals) {
 		if(quals == null)
 			quals = new NSMutableArray();
@@ -175,6 +175,10 @@ public class QueryParams extends WOComponent {
 					quals.addObject(qual);
 			}
     	} // add IN qualifiers
-    	return quals;
+    	if(quals.count() == 0)
+    		return null;
+    	if(quals.count() == 1)
+    		return (EOQualifier) quals.objectAtIndex(0);
+    	return new EOAndQualifier(quals);
 	}
 }

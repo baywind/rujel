@@ -1,24 +1,12 @@
 <div class="backfield1" id="ajaxPopup"><webobject name = "Cross"/>
-<table cellpadding = "0" cellspacing = "0" border = "1" style = "border-collapse:collapse;width:600px;">
-<tr><td colspan = "2">
-	<table><thead><tr>
-			<th>?</th>
-			<th><webobject name = "EduGroupLabel"/></th>
-			<th><webobject name = "EduPlanLabel"/></th>
-			<th><webobject name = "TeacherLabel"/></th>
-	</tr></thead><tbody><webobject name = "QList">
-	<tr class = "grey" style = "min-height:1em;"><webobject name = "Matrix">
-		<webobject name = "MatrixCell"><webobject name = "IsValue">
-			<webobject name = "Value"/></webobject></webobject><webobject name = "OtherList"></webobject>
-			</webobject>
-	</tr></webobject></tbody></table>
-</td></tr>
-<webobject name = "HasSelection"><tr>
-<td width = "40%" valign = "top"><webobject name = "Editors"><webobject name = "SelectEditor">
-	<webobject name = "EditorItemTitle"/></webobject></webobject>
-	<webobject name = "SelectEditor">none</webobject>
-	</td>
-<td width = "60%" valign = "top"><webobject name = "IfGrade"><webobject name = "GradeForm">
+<table cellpadding = "0" cellspacing = "0" border = "1" style = "border-collapse:collapse;">
+<tr><td width = "300" valign = "top"><webobject name = "Form">
+	<table><webobject name = "QueryParams"/>
+	<tr><td colspan = "2"><webobject name = "SubmitButton"/>
+		<webobject name = "CurrYear"/> <webobject name = "Year"/></td></tr>
+	</table></webobject>
+</td><webobject name = "HasSelection">
+<td valign = "top"><webobject name = "IfGrade"><webobject name = "GradeForm">
 		= <webobject name = "GradeSelector"/><br/>
 		<webobject name = "GradeMin"/> ... <webobject name = "GradeMax"/><br/>
 		<input type = "button" onclick  = "ajaxPost(form);" value = "OK"/>
@@ -36,12 +24,7 @@
 		</webobject></webobject></table></td>
 </tr></table>
 	</webobject><webobject name = "IfPresent"><webobject name = "EditorPresent"></webobject>	
-	</webobject></td>
-</tr></webobject>
-<webobject name = "NoSelection">
-	<tr><td colspan = "2" style = "padding:1ex; min-width:8em;white-space:nowrap;">
-<webobject name = "SubmitForm"><webobject name = "SubmitButton"/>
-		<webobject name = "CurrYear"/> <webobject name = "Year"/></webobject>
-	</td></tr></webobject>
+	</webobject></td></webobject>
+</tr>
 </table>
 </div>

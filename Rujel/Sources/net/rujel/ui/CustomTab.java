@@ -31,7 +31,6 @@ package net.rujel.ui;
 
 import java.util.Enumeration;
 
-import net.rujel.reports.QueryParams;
 import net.rujel.reusables.StringStorage;
 import net.rujel.reusables.Tabs;
 import net.rujel.reusables.Various;
@@ -106,9 +105,8 @@ public class CustomTab extends WOComponent {
     		quals.addObject(new EOKeyValueQualifier("date",
     				EOQualifier.QualifierOperatorLessThanOrEqualTo,value));
     	*/
-    	QueryParams.paramsToQual(params, (NSArray)present.valueForKey("params"),
+    	tab.qual = QueryParams.paramsToQual(params, (NSArray)present.valueForKey("params"),
     			(String)present.valueForKey("entityName"), this, ec, quals);
-    	tab.qual = new EOAndQualifier(quals);
     	returnPage.takeValueForKeyPath(tab, resultPath);
     	return returnPage;
     }

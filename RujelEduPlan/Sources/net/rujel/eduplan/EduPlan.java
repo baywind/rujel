@@ -111,9 +111,9 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 			return EduPeriod.periods(ctx);
 		} else if("settingQualifiers".equals(obj)) {
 			return settingQualifiers(ctx);
-		} else if("settingEditorsSUBJECT".equals(obj)) {
+		} else if("settingEditors".equals(obj)) {
 			return ctx.session().valueForKeyPath(
-				"strings.RujelEduPlan_EduPlan.subjectSelector");
+				"strings.RujelEduPlan_EduPlan.settingEditors");
 		}
 		return null;
 	}

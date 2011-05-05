@@ -27,7 +27,7 @@
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.rujel.reports;
+package net.rujel.ui;
 
 import java.text.Format;
 import java.util.Enumeration;
@@ -38,7 +38,9 @@ import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOAndQualifier;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.*;
 
@@ -51,7 +53,8 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 //    protected String _attrParam;
     public Object item;
 
-    public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);;
+    public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);
+	public Integer index;
 	
 	public Parameter(WOContext context) {
         super(context);
@@ -68,44 +71,64 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 			_itemDict = (NSKeyValueCodingAdditions)valueForBinding("itemDict");
 		return _itemDict;
 	}
+	
+	public static String attribute(NSKeyValueCoding dict) {
+		String attrib = (String)dict.valueForKey("attributeParam");
+		if(attrib == null)
+			attrib = (String)dict.valueForKey("attribute");
+		return attrib;
+	}
     
 	public String attribute() {
 		if(_attrib != null)
 			return _attrib;
-		_attrib = (String)valueForBinding("attributeParam");
-		if(_attrib != null)
-			return _attrib;
-		_attrib = (String)itemDict().valueForKey("attributeParam");
+		_attrib = attribute(itemDict());
 		if(_attrib != null)
 			return _attrib;
 		_attrib = (String)valueForBinding("attribute");
-		if(_attrib != null)
-			return _attrib;
-		_attrib = (String)itemDict().valueForKey("attribute");
 		return _attrib;
 	}
 
-/*	public String attributeParam() {
-		if(_attrParam != null)
-			return _attrParam;
-		_attrParam = (String)itemDict().valueForKey("attributeParam");
-		if(_attrParam != null)
-			return _attrParam;
-		_attrParam = attribute();
-		return _attrParam;
-	}*/
+	public String paramStyle() {
+		if(value() == null)
+			return "font-style:italic;";
+		return null;
+	}
 	
     public Object value() {
     	boolean secondSelector = (itemDict().valueForKey("secondSelector") != null);
     	String attribute = attribute();
-    	if(secondSelector)
-    		attribute = "min_" + attribute;
     	Object value = paramsDict().valueForKey(attribute);
-    	if(value != null)
-    		return (value == NullValue)?null:value;
+    	if(value == NullValue)
+    		return null;
+    	if(value != null) {
+    		if(Various.boolForObject(itemDict().valueForKey("or")) && item != null)
+    			return item;
+    		return value;
+    	} else if(Various.boolForObject(itemDict().valueForKey("range"))) {
+    		StringBuilder buf = new StringBuilder();
+    		value = paramsDict().valueForKey("min_" + attribute);
+    		if(value != null)
+    			buf.append(value);
+    		value = paramsDict().valueForKey("max_" + attribute);
+    		if(value == null) {
+    			if(buf.length() > 0)
+    				buf.insert(0, "&ge; ");
+    		} else {
+    			buf.append((buf.length() > 0)?" ... ":"&le; ").append(value);
+    		}
+    		if(buf.length() > 0)
+    			return buf.toString();
+    	} else if(secondSelector) {
+    		attribute = "min_" + attribute;
+    		value = paramsDict().valueForKey(attribute);
+    		if(value != null)
+    			return value;
+    	}
     	value = valueOf.valueForKeyPath("paramsDict.itemDict.default" + 
     			((secondSelector)?"Min":"Value"));
-    	paramsDict().takeValueForKey((value==null)?NullValue:value, attribute);
+    	if(value != null)
+    		paramsDict().takeValueForKey(value, attribute);
     	return value;
     }
     
@@ -187,15 +210,37 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public WOActionResults selectorPopup() {
+		if(canSetValueForBinding("editor")) {
+			if(Various.boolForObject(itemDict().valueForKey("or")) &&
+					index != null && !index.equals(itemDict().valueForKey("selection"))) { 
+				itemDict().takeValueForKey(index, "selection");
+				if(itemDict() != valueForBinding("editor"))
+					setValueForBinding(itemDict(), "editor");
+			} else 
+			if(itemDict() == valueForBinding("editor")) {
+				setValueForBinding(null, "editor");
+			} else {
+				setValueForBinding(itemDict(), "editor");
+			}
+			return null;
+		}
 		WOComponent selector = pageWithName("SelectorPopup");
 		selector.takeValueForKey(context().page(), "returnPage");
 		selector.takeValueForKey("params." + attribute(), "resultPath");
-		selector.takeValueForKey(value(), "value");
+		Object value = (Various.boolForObject(itemDict().valueForKey("or")))? item : value();
+		selector.takeValueForKey(value, "value");
 		NSMutableDictionary dict = (NSMutableDictionary)itemDict().valueForKey("popup");
 		dict.takeValueForKeyPath(valueForBinding("editingContext"),
 				"presenterBindings.editingContext");
 		selector.takeValueForKey(dict, "dict");
 		return selector;
+	}
+	
+	public String onclick() {
+		Boolean ajax = (Boolean)valueForBinding("useAjax");
+		if(ajax != null && !ajax.booleanValue())
+			return null;
+		return "return ajaxPost(this);";
 	}
 	
 	public void clearParam() {
@@ -206,6 +251,8 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		_paramsDict = null;
 		_itemDict = null;
 		_attrib = null;
+		index = new Integer(-1);
+		item = null;
 //		_attrParam = null;
 		super.reset();
 	}
@@ -247,6 +294,7 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		selectorString = (String)itemDict.valueForKey("qualifierSelector");
 		String attrib = (String)itemDict.valueForKey("attribute");
 		String attrParam = (String)itemDict.valueForKey("attributeParam");
+		boolean condFormat = Various.boolForObject(itemDict.valueForKey("condFormat"));
 		if(attrParam == null)
 			attrParam = attrib;
 		if(secondSelector != null) {
@@ -272,8 +320,26 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 			default:
 				return new EOAndQualifier(quals);
 			}
+		} else if(Various.boolForObject(itemDict.valueForKey("or"))) {
+			NSArray list = (NSArray)params.valueForKey(attrParam);
+			if(list == null || list.count() == 0)
+				return null;
+			NSMutableArray quals = new NSMutableArray();
+			Enumeration en = list.objectEnumerator();
+			while (en.hasMoreElements()) {
+				Object val = en.nextElement();
+				if(condFormat)
+					attrib = condFormat("attribute", val, itemDict);
+				quals.addObject(new EOKeyValueQualifier(attrib,
+						EOQualifier.QualifierOperatorEqual,val));
+			}
+			if(quals.count() == 1)
+				return (EOQualifier)quals.objectAtIndex(0);
+			return new EOOrQualifier(quals);
 		} else {
 			NSSelector selector = EOQualifier.QualifierOperatorEqual;
+			if(selectorString != null)
+				selector = EOQualifier.operatorSelectorForString(selectorString);
 			Object value = params.valueForKey(attrParam);
 			if(value == null || value == NullValue) {
 				if(Various.boolForObject(itemDict.valueForKey("respectNull")))
@@ -281,9 +347,66 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 				else
 					return null;
 			}
-			if(selectorString != null)
-				selector = EOQualifier.operatorSelectorForString(selectorString);
+			if(condFormat)
+				attrib = condFormat("attribute",value,itemDict);
 			return new EOKeyValueQualifier(attrib,selector,value);
 		}
+	}
+	
+	private static String condFormat(String param, Object value, NSKeyValueCoding dict) {
+		String path = null;
+		if(value instanceof EOEnterpriseObject) {
+			path = ((EOEnterpriseObject)value).entityName();
+		} else {
+			path = value.getClass().getName();
+			int dot = path.lastIndexOf('.');
+			if(dot > 0)
+				path = path.substring(dot +1);
+		}
+		path = (String)dict.valueForKey(param + path);
+		if(path == null)
+			path = (String)dict.valueForKey(param);
+		return path;
+	}
+
+	public String paramClass() {
+		if(itemDict() == valueForBinding("editor")) {
+			if(Various.boolForObject(itemDict().valueForKey("or"))) {
+				Number sel = (Number)itemDict().valueForKey("selection");
+				if((sel==null)?index==null:sel.equals(index))
+					return "selection";
+				else
+					return "green";
+			}
+			return "selection";
+		}
+		return null;
+	}
+	
+	public String plusClass() {
+		if(itemDict() == valueForBinding("editor")) {
+			NSMutableArray list = (NSMutableArray)value();
+			if(list == null || list.count() == 0)
+				return "selection";
+			Number sel = (Number)itemDict().valueForKey("selection");
+			if(sel != null && (sel.intValue() >= list.count() || sel.intValue() < 0))
+					return "selection";
+		}
+		return "green";
+	}
+	
+	public WOActionResults addValue() {
+		index = new Integer(-1);
+		return selectorPopup();
+	}
+	
+	public WOActionResults deleteValue() {
+		NSMutableArray values =  (NSMutableArray)paramsDict().valueForKey(attribute());
+		values.removeObject(value());
+		return null;
+	}
+
+	public void setItem(Object item) {
+		this.item = item;
 	}
 }

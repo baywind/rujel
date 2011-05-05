@@ -77,7 +77,7 @@ ComponentContent : WOComponentContent {
 Row : WOGenericContainer {
   elementName = "tr";
   title = bc.eduYear;
-   class = "grey";
+  class = "grey";
 }
 
 EditorHead : WOString {
@@ -92,62 +92,79 @@ Listing : WORepetition {
 SpanCell : WOGenericContainer {
   elementName = "td";
   rowspan = rowspan;
-  class = dict.styleClass;
-  title = dict.hover;
-}
-
-SubPresenter : ByCoursePresenter {
-  value = bc;
-  qualifier = item;
+  class = "backfield2";
+  omitTags = hide;
 }
 
 Matrix : WORepetition {
-  count = 4;
+  count = 3;
   index = index;
 }
 
 MatrixCell : WOGenericContainer {
   elementName = "td";
-  class = dict.styleClass;
-  style = dict.style;
-  title = dict.hover;
-  omitTags = hide;
-  rowspan = rowspan;
+  class = dict.cellClass;
+  style = dict.cellStyle;
+  title = dict.title;
+  colspan = dict.colspan;
 }
 
 Value : DisplayAny {
-  value = dict.value;
-  dict = dict.dict;
+  value = value;
+  dict = dict;
 }
 
 HasOther : WOConditional {
-  condition = showOther;
+  condition = list;
 }
 
 Others : WORepetition {
-  list = dict.list;
+  list = list;
   item = item;
 }
 
 OtherSpan : WOGenericContainer {
   elementName = "span";
-  class = item.styleClass;
-  style = item.style;
-  title = item.hover;
-}
-
-OtherTitle : WOString {
-  value = item.title;
-  escapeHTML = false;
+  class = item.cellClass;
+  style = item.cellStyle;
+  title = item.title;
 }
 
 OtherValue : DisplayAny {
-  value = item.value;
-  dict = item.dict;
+  value = item;
+  dict = dict;
 }
 
 CondCell : WOGenericContainer {
   elementName = "td";
   rowspan = rowspan;
   omitTags = omitCell;
+}
+
+IsSingle : WOConditional {
+  condition = single;
+}
+
+IsMultiple : WOConditional {
+  condition = single;
+  negate = true;
+}
+
+Values : WORepetition {
+  list = value;
+  item = item;
+}
+
+Rows : WORepetition {
+  list = rows;
+  item = matrix;
+}
+
+ShowCell : WOConditional {
+  condition = hide;
+  negate = true;
+}
+
+ShowMatrix : WOConditional {
+  condition = showCell;
 }

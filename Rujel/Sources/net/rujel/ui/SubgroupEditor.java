@@ -218,7 +218,7 @@ public class SubgroupEditor extends WOComponent {
 //					level = WOLogLevel.OWNED_EDITING;
 				logger.logp(level,"SubgroupEditor","save","Subgroup changes saved",
 						new Object[] {session(),course});
-				session().takeValueForKey(Boolean.TRUE,"prolong");
+				session().takeValueForKey(Boolean.FALSE,"prolong");
 				if(groups == null) {
 					nextPage = (WOComponent)session().valueForKey("pullComponent");
 				} else if(autoUnmix()) {

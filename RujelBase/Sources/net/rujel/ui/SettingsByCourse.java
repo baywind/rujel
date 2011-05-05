@@ -54,6 +54,7 @@ public class SettingsByCourse extends WOComponent {
 	public Object selector;
 	protected SettingsBase base;
 	public Integer rowspan;
+	public NSMutableArray editors;
 	
     public SettingsByCourse(WOContext context) {
         super(context);
@@ -347,6 +348,7 @@ public class SettingsByCourse extends WOComponent {
 		_byCourse = null;
 		item = null;
 		rowspan = null;
+		editors = null;
 		setValueForBinding(null, "item");
 	}
 }

@@ -1,8 +1,6 @@
 WOPort=2000
 WOSessionTimeOut=910
-WOSessionTimeOutMultiplier=3.2
-WOSessionLongTimeOut=3600
-WOSessionShortTimeOut=300
+OnEditTimeOutMultiplier=2
 
 ApplicationName=Rujel
 RujelVersion=0.9b

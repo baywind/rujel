@@ -19,6 +19,8 @@ Parameter : Parameter {
   itemDict = item;
   paramsDict = ^params;
   editingContext = ^ec;
+  editor = ^editor;
+  useAjax = ^useAjax;
 }
 
 ShowParam : WOConditional {
