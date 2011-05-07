@@ -39,10 +39,11 @@ Subject : WOString {
   value = item.subject;
 }
 
-SubmitButton : WOSubmitButton {
+SaveButton : WOSubmitButton {
   action = save;
   value = application.strings.Reusables_Strings.uiElements.Done;
   style = "font-size:larger;font-weight:bold;";
+  onclick = "return ajaxPost(this);";
 }
 
 CurrYear : WOCheckBox {
@@ -85,13 +86,6 @@ SubjectRegex : WOTextField {
 }
 
 EditorPresent : DisplayAny {
-  WOComponentName = currEditor.editorPresent.presenter;
-  editingContext = ec;
-  onclick = onclick;
-  selectAction = doneEditing;
-  selection = value;
-  ajaxReturn = true;
-  useAjaxPost = true;
   value = value;
   dict = currEditor.editorPresent;
 }
@@ -136,4 +130,88 @@ QueryParams : QueryParams {
 
 Form : WOForm {
   multipleSubmit = true;
+}
+
+SelectorTitle : WOString {
+  value = session.strings.RujelBase_Base.SettingsBase.selectorTitle;
+  escapeHTML = false;
+}
+
+SingleGradeTitle : WOString {
+  value = currEditor.singleTitle;
+  escapeHTML = false;
+}
+
+GradeRangeTitle : WOString {
+  value = currEditor.rangeTitle;
+  escapeHTML = false;
+}
+
+SubmitButton : WOGenericElement {
+  elementName = "input";
+  type = "button";
+  onclick  = "ajaxPost(form);";
+  value = session.strings.Reusables_Strings.uiElements.Submit;
+  style = "margin:1em;";
+}
+
+NotAdvanced : WOConditional {
+  condition = advanced;
+  negate = true;
+}
+
+IsAdvanced : WOConditional {
+  condition = advanced;
+}
+
+FormatField : WOText {
+  value = tmpValues.format;
+  rows = 2;
+  cols = 40;
+}
+ArgumentsField : WOText {
+  value = tmpValues.arguments;
+  rows = 2;
+  cols = 40;
+}
+
+HasMessage : WOConditional {
+  condition = session.message;
+}
+
+Message : WOString {
+	value = session.message;
+	escapeHTML = false;
+}
+
+ExpertButton : WOSubmitButton {
+  action = toggleAdvanced;
+  value = session.strings.RujelBase_Base.SettingsBase.advancedMode;
+  onclick = "return ajaxPost(this);";
+  style = "font-size:small;";
+}
+SimpleButton : WOSubmitButton {
+  action = toggleAdvanced;
+  value = session.strings.RujelBase_Base.SettingsBase.simpleMode;
+  onclick = "return ajaxPost(this);";
+  style = "font-size:small;float:right;";
+}
+
+
+SectionTabs : Tabs {
+  idAttribute = "idx";
+  currTab = tmpValues.section;
+  tablist = application.strings.sections.list;
+  titleAttribute = "value";
+  selectAction = sectionChanged;
+  vertical = true;
+  onClick = onclick;
+}
+
+HasSections : WOConditional {
+  condition = showSections;
+}
+
+CurrSection : WOString {
+  value = tmpValues.section.value;
 }

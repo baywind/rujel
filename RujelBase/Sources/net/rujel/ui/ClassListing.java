@@ -63,14 +63,6 @@ public class ClassListing extends WOComponent {
 		if(today == null)
 			today = new NSTimestamp();
 		return EduGroup.Lister.listGroups(today,ec);
-		/*
-		NSArray result = null;
-		try {
-			result = (NSArray)method.invoke(null,today,ec);
-		} catch (Exception ex) {
-			throw new NSForwardException(ex,"Could not get group list");
-		}
-		return result;*/
 	}
 	
 	public NSArray groups() {

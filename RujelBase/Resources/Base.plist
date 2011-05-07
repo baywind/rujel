@@ -34,6 +34,10 @@
 	<dict>
 		<key>addByCourse</key>
 		<string>уточнить для отдельных курсов</string>
+		<key>advancedMode</key>
+		<string>Режим эксперта</string>
+		<key>advancedSetting</key>
+		<string>Ручная настройка не может быть преобразована в визуальную</string>
 		<key>byCourse</key>
 		<string>Привязка</string>
 		<key>default</key>
@@ -59,8 +63,12 @@
 				<true/>
 				<key>popup</key>
 				<true/>
+				<key>sections</key>
+				<true/>
 				<key>showCycle</key>
 				<true/>
+				<key>sort</key>
+				<integer>50</integer>
 				<key>title</key>
 				<string>Учебный цикл</string>
 			</dict>
@@ -87,6 +95,8 @@
 						<string>$doneEditing</string>
 						<key>selection</key>
 						<string>.</string>
+						<key>width</key>
+						<string>60</string>
 					</dict>
 				</dict>
 				<key>format</key>
@@ -97,8 +107,14 @@
 				<true/>
 				<key>popup</key>
 				<true/>
+				<key>sectionInSession</key>
+				<true/>
+				<key>sections</key>
+				<true/>
+				<key>sort</key>
+				<integer>25</integer>
 				<key>title</key>
-				<string>Указать класс</string>
+				<string>Класс</string>
 			</dict>
 			<dict>
 				<key>attribute</key>
@@ -117,8 +133,14 @@
 				<true/>
 				<key>range</key>
 				<true/>
+				<key>rangeTitle</key>
+				<string>От и/или до:</string>
 				<key>showGrade</key>
 				<true/>
+				<key>singleTitle</key>
+				<string>Один поток:</string>
+				<key>sort</key>
+				<integer>20</integer>
 				<key>title</key>
 				<string>Поток</string>
 				<key>valueWhenEmpty</key>
@@ -137,6 +159,8 @@
 				<integer>4</integer>
 				<key>qualifierSelector</key>
 				<string>caseInsensitiveLike</string>
+				<key>sort</key>
+				<integer>40</integer>
 				<key>title</key>
 				<string>Название предмета</string>
 			</dict>
@@ -192,14 +216,20 @@
 					<key>valueWhenEmpty</key>
 					<string>&lt;em&gt;Вакансия&lt;/em&gt;</string>
 				</dict>
+				<key>sort</key>
+				<integer>60</integer>
 				<key>title</key>
 				<string>Преподаватель</string>
 			</dict>
 		</array>
+		<key>failedToParce</key>
+		<string>Не удалось считать ручную настройку выбора</string>
 		<key>selectorTitle</key>
 		<string>Для каких курсов действует настройка</string>
 		<key>setDefault</key>
 		<string>установить "для всех"</string>
+		<key>simpleMode</key>
+		<string>Простой режим</string>
 		<key>testSettings</key>
 		<string>Определение настройки для курса</string>
 		<key>unspecified</key>

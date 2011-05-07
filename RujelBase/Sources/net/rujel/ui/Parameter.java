@@ -405,8 +405,4 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		values.removeObject(value());
 		return null;
 	}
-
-	public void setItem(Object item) {
-		this.item = item;
-	}
 }

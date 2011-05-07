@@ -140,6 +140,27 @@ public class QualifiedSetting extends _QualifiedSetting {
 		else
 			return false;
 	}
+	
+	public String printQualifier() {
+		String qualifierString = qualifierString();
+		if(qualifierString.equals("IS"))
+			return "= " + argumentsString();
+		if(qualifierString.equals("IN"))
+			return "IN " + argumentsString();
+		StringBuilder buf = new StringBuilder(qualifierString);
+		NSArray list = NSPropertyListSerialization.arrayForString(argumentsString());
+		int idx = buf.indexOf("%");
+		int i = 0;
+		while (idx >= 0) {
+			String val = (String)list.objectAtIndex(i);
+			if(buf.charAt(idx +1) != '%') {
+				buf.replace(idx, idx+2, val);
+				i++;
+			}
+			idx = buf.indexOf("%", idx+2);
+		}
+		return buf.toString();
+	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -216,7 +237,7 @@ public class QualifiedSetting extends _QualifiedSetting {
 					throw new AdvancedQualifierException(qual);
 				if(dict == null) {
 					dict = analyseKeyValue(kq,params,editors);
-					if(dict == null)
+					if(dict == null || !Various.boolForObject(dict.valueForKey("or")))
 						throw new AdvancedQualifierException(qual);
 					values = (NSMutableArray)params.valueForKey(Parameter.attribute(dict));
 					keyPath = (String)dict.valueForKey("attribute");

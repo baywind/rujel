@@ -95,5 +95,5 @@ AddParam : OnClickContainer {
   elementName = "strong";
   class = plusClass;
   onclick = "getElementsByTagName('input')[0].click();";
-  style = "color:green;";
+  style = "color:green;padding:1px 4px;border:1px solid green;";
 }

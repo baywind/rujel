@@ -84,18 +84,29 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 		}
 		grades = new NSArray(grds);
 		editors = QualifiedSetting.editors(context.session());
-    }
+    	if(Various.boolForObject(session().valueForKeyPath("strings.sections.hasSections")))
+    		tmpValues.takeValueForKey(session().valueForKeyPath("state.section"), "section");
+   }
 
     public void setQualifier(EOQualifier qual) {
     	if(qual == null)
     		return;
-    	advanced = (editors == null || editors.count() == 0);
-    	if(advanced) return;
-    	params.removeAllObjects();
-    	try {
-			QualifiedSetting.analyseQual(qual, params, editors);
-		} catch (QualifiedSetting.AdvancedQualifierException aqe) {
-			advanced = true;
+    	advanced = (advanced || editors == null || editors.count() == 0);
+    	if(!advanced) {
+        	params.removeAllObjects();
+    		try {
+    			QualifiedSetting.analyseQual(qual, params, editors);
+    		} catch (QualifiedSetting.AdvancedQualifierException aqe) {
+    			advanced = true;
+    		}
+    	}
+		if(advanced) {
+    		StringBuilder buf = new StringBuilder();
+    		NSMutableArray args = new NSMutableArray();
+    		Various.formatQualifier(qual, buf, args);
+    		tmpValues.takeValueForKey(buf.toString(),"format");
+    		tmpValues.takeValueForKey(NSPropertyListSerialization.stringFromPropertyList(
+    				args,false),"arguments");
 		}
     }
 
@@ -144,22 +155,11 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     	}
     }
     
-    public String editorClass() {
-    	if(currEditor == null) {
-    		if(item == null)
-    			return "selection";
-    		else
-    			return "grey";
-    	} else {
-    		if (currEditor == item)
-    			return "selection";
-    		else
-    			return "backfield2"; 
-    	}
-    }
-    
     public WOActionResults doneEditing() {
     	currEditor = null;
+		NSDictionary saved = (NSDictionary)tmpValues.removeObjectForKey("savedSection");
+		if(saved != null)
+			session().takeValueForKeyPath(saved, "state.section");
     	return null;
     }
     
@@ -178,63 +178,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		currEditor.takeValueForKey(">=", "qualifierSelector");
     		currEditor.takeValueForKey("<=", "secondSelector");
     	}
-    	currEditor = null;
-    	return null;
-    	/*
-    	Integer value = (Integer)tmpValues.valueForKey("value");
-    	NSMutableDictionary dict = currDict();
-    	if(dict == null || !"grade".equals(dict.valueForKeyPath("editor")) 
-    			|| (currQ != common)) {
-    		dict = ((NSDictionary)currEditor).mutableClone();
-    		currQ[crIdx.intValue()] = dict;
-    	}
-		dict.takeValueForKey(value, "value");
-    	if(value != null) {
-    		EOQualifier qual = new EOKeyValueQualifier("cycle.grade",
-    				EOQualifier.QualifierOperatorEqual, value);
-    		dict.takeValueForKey(qual, "qualifier");
-    		dict.takeValueForKey(value, "value");
-    		dict.takeValueForKey(null, "max");
-    		dict.takeValueForKey(null, "qualifierLow");
-    		dict.takeValueForKey(null, "min");
-    		dict.takeValueForKey(null, "qualifierHigh");
-    	} else {
-    		dict.takeValueForKey(null, "qualifier");
-    		value = (Integer)tmpValues.valueForKey("min");
-    		boolean none = (value == null);
-    		dict.takeValueForKey(value, "min");
-    		StringBuilder buf = new StringBuilder(8);
-    		if(!none) {
-        		EOQualifier qual = new EOKeyValueQualifier("cycle.grade",
-        				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, value);
-        		dict.takeValueForKey(qual, "qualifierLow");
-        		buf.append(value);
-    		} else {
-        		dict.takeValueForKey(null, "qualifierLow");
-    		}
-    		value = (Integer)tmpValues.valueForKey("max");
-    		dict.takeValueForKey(value, "max");
-    		if(value != null) {
-    			none = false;
-        		EOQualifier qual = new EOKeyValueQualifier("cycle.grade",
-        				EOQualifier.QualifierOperatorLessThanOrEqualTo, value);
-        		dict.takeValueForKey(qual, "qualifierHigh");
-        		if(buf.length() == 0)
-        			buf.append("&le;");
-        		else
-        			buf.append("...");
-        		buf.append(value);
-    		} else {
-        		dict.takeValueForKey(null, "qualifierHigh");
-        		if(buf.length() > 0)
-        			buf.insert(0, "&ge;");
-    		}
-    		if(buf.length() > 0)
-    			dict.takeValueForKey(buf.toString(), "value");
-    		else
-    			currQ[crIdx.intValue()] = null;
-    	}
-    	return doneEditing(); */
+    	return doneEditing();
     }
     
     public void setPushToKeyPath(String path) {
@@ -267,15 +211,61 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 		return result;
     }
     
+    public boolean showSections() {
+    	return(Various.boolForObject(currEditor.valueForKey("sections")) &&
+    			Various.boolForObject(session().valueForKeyPath("strings.sections.hasSections")));
+    }
+    
+    public void sectionChanged() {
+    	if(Various.boolForObject(currEditor.valueForKey("showCycle"))) {
+    		cyclesForGrade();
+    	}
+    	if(!Various.boolForObject(currEditor.valueForKey("sectionInSession")))
+    		return;
+    	NSDictionary saved = (NSDictionary)tmpValues.objectForKey("savedSection");
+    	Number selected = (Number)tmpValues.valueForKeyPath("section.idx");
+    	if(selected == null) {
+    		if(saved != null)
+    	    	session().takeValueForKeyPath(saved, "state.section");
+    		return;
+    	}
+    	NSDictionary inSes = (NSDictionary)session().valueForKeyPath("state.section");
+    	if(selected.equals(inSes.valueForKey("idx"))) {
+    		if(saved != null && selected.equals(saved.valueForKey("idx")))
+    			tmpValues.removeObjectForKey("savedSection");
+    		return;
+    	}
+    	if(saved == null)
+    		tmpValues.takeValueForKey(inSes, "savedSection");
+    	session().takeValueForKeyPath(tmpValues.valueForKey("section"), "state.section");
+    }
+    
     public WOActionResults save() {
-    	returnPage.ensureAwakeInContext(context());
+    	{
+    		NSDictionary saved = (NSDictionary)tmpValues.removeObjectForKey("savedSection");
+    		if(saved != null)
+    			session().takeValueForKeyPath(saved, "state.section");
+    	}
     	if(base == null)
-    		return returnPage;
-//		NSComparator comparator = new SettingsBase.Comparator();
+			return RedirectPopup.getRedirect(context(), returnPage, null);
     	EOEditingContext ec = base.editingContext();
-    	EOQualifier qual = QueryParams.paramsToQual(params, editors, EduCourse.entityName, this, ec, null);
+    	EOQualifier qual = null;
+    	if(advanced) {
+    		try {
+    			String tmp = (String)tmpValues.valueForKey("arguments");
+				NSArray list = Various.argumentsFromString(tmp,ec);
+				tmp = (String)tmpValues.valueForKey("format");
+				qual = EOQualifier.qualifierWithQualifierFormat(tmp, list);
+			} catch (Exception e) {
+				session().takeValueForKey(session().valueForKeyPath(
+						"strings.RujelBase_Base.SettingsBase.failedToParce"), "message");
+				return this;
+			}
+    	} else {
+    		qual = QueryParams.paramsToQual(params, editors, EduCourse.entityName, this, ec, null);
+    	}
     	if(qual == null)
-    		return returnPage;
+			return RedirectPopup.getRedirect(context(), returnPage, null);
     	Integer num = (byCourse == null)?null:byCourse.sort();
     	if(!base.isSingle()) {
     		Enumeration enu = base.qualifiedSettings().objectEnumerator();
@@ -285,13 +275,12 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     			QualifiedSetting bc = (QualifiedSetting) enu.nextElement();
     			if(bc == byCourse)
     				continue;
-    			if(bc.valueForKey("eduYear") != null 
-    					&& !eduYear.equals(bc.valueForKey("eduYear")))
+    			if(bc.valueForKey("eduYear") != null && !eduYear.equals(bc.valueForKey("eduYear")))
     				continue;
     			if(qual.equals(bc.getQualifier())) {
-    				session().takeValueForKey(application().valueForKeyPath(
+    				session().takeValueForKey(session().valueForKeyPath(
     						"strings.RujelBase_Base.SettingsBase.duplicateByCourse"), "message");
-    				return returnPage;
+    				return this;
     			}
     			if(num == null && numb < bc.sort().intValue())
     				numb = bc.sort().intValue();
@@ -349,7 +338,52 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     	} finally {
     		ec.unlock();
     	}
-    	return returnPage;
+		return RedirectPopup.getRedirect(context(), returnPage, null);
+    }
+    
+    public WOActionResults toggleAdvanced() {
+    	advanced = !advanced;
+    	if(advanced) {
+    		EOQualifier qual = QueryParams.paramsToQual(params, editors, 
+    				EduCourse.entityName, this, ec(), null);
+			setQualifier(qual);
+    	} else {
+    		try {
+    			String tmp = (String)tmpValues.valueForKey("arguments");
+				NSArray list = Various.argumentsFromString(tmp,ec());
+				tmp = (String)tmpValues.valueForKey("format");
+				EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(tmp, list);
+				setQualifier(qual);
+			} catch (Exception e) {
+				session().takeValueForKey(session().valueForKeyPath(
+						"strings.RujelBase_Base.SettingsBase.failedToParce"), "message");
+				advanced = true;
+				return null;
+			}
+    		if(advanced)
+				session().takeValueForKey(session().valueForKeyPath(
+						"strings.RujelBase_Base.SettingsBase.advancedSetting"), "message");
+    	}
+    	return null;
+    }
+    
+    public void setCurrEditor(NSKeyValueCoding editor) {
+    	currEditor = editor;
+    	if(editor != null && Various.boolForObject(editor.valueForKey("showCycle"))) {
+    		EduCycle c = (EduCycle)value();
+    		if(c != null) {
+    			tmpValues.takeValueForKey(c.grade(), "currGrade");
+    			cyclesForGrade();
+    		}
+    	}
+    	if(currEditor != null && 
+    			Various.boolForObject(currEditor.valueForKey("sectionInSession"))) {
+    		sectionChanged();
+    	} else {
+    		NSDictionary saved = (NSDictionary)tmpValues.removeObjectForKey("savedSection");
+    		if(saved != null)
+    			session().takeValueForKeyPath(saved, "state.section");
+    	}
     }
 
     public WOActionResults pickGrade() {
@@ -373,8 +407,12 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     	NSMutableArray resut = new NSMutableArray();
     	Object currCycle = value();
     	Boolean hasExtra = Boolean.FALSE;
+    	Number section = (EduCycle.entityName.equals("PlanCycle"))?
+    			(Number)tmpValues.valueForKeyPath("section.idx") : null;
     	while (enu.hasMoreElements()) {
 			EduCycle cycle = (EduCycle) enu.nextElement();
+			if(section != null && !section.equals(cycle.valueForKey("section")))
+				continue;
 			NSMutableDictionary row = new NSMutableDictionary(cycle,"cycle");
 			row.takeValueForKey(cycle.subject(), "subject");
 			row.takeValueForKey((cycle == currCycle)?"selection":"highlight", "styleClass");
@@ -398,7 +436,6 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
 	public WOActionResults selectCycle() {
     	EduCycle value = (EduCycle)NSKeyValueCoding.Utility.valueForKey(item,"cycle");
     	setValue(value);
-    	return null;
-//		return doneEditing();
+    	return doneEditing();
 	}
 }

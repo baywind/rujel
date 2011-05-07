@@ -168,3 +168,17 @@ ShowCell : WOConditional {
 ShowMatrix : WOConditional {
   condition = showCell;
 }
+IsAdvanced : WOConditional {
+  condition = advanced;
+}
+
+PrintQualifier : WOString {
+  value = bc.printQualifier;
+}
+
+EmptyCell : WOGenericContainer {
+  elementName = "td";
+  omitTags = advanced;
+  colspan = "3";
+  style = "height:0px;";
+}

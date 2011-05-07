@@ -55,6 +55,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 	public static final int TEACHER = 3;
 	
 	protected NSKeyValueCoding _bc;
+    public boolean isBase;
 	public Object[] matrix;
 	protected NSMutableDictionary params;
 	public NSMutableArray rows; 
@@ -64,7 +65,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 	public Object item;
 	public int index;
 //	protected NSArray descriptions;
-	public Boolean noEdit;
+	public Boolean advanced;
 	
     public ByCoursePresenter(WOContext context) {
         super(context);
@@ -77,7 +78,9 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     }
     
     public WOElement template() {
-    	prepare();
+    	isBase = (bc() instanceof SettingsBase);
+    	if(!isBase)
+    		prepare();
     	if(hasBinding("rowspan"))
     		setValueForBinding(rowspan, "rowspan");
     	return super.template();
@@ -109,7 +112,8 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     	try {
     		QualifiedSetting.analyseQual(qual, params, editors);
     	} catch (QualifiedSetting.AdvancedQualifierException aqe) {
-			noEdit = Boolean.TRUE;
+			advanced = Boolean.TRUE;
+			islist = true;
 			return;
 		}
     	Enumeration enu = editors.objectEnumerator();
@@ -264,10 +268,6 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     	}
     	return null;
 	}
-	
-    public boolean isBase() {
-    	return (bc() instanceof SettingsBase);
-    }
 
     public boolean isStateless() {
 		return true;
@@ -285,7 +285,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		item = null;
 		matrix = null;
 		index = -1;
-		noEdit = null;
+		advanced = null;
 		rowspan = null;
 		rows = null;
 		super.reset();
