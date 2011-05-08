@@ -228,20 +228,20 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	
     public static Object valueFromDict(NSKeyValueCodingAdditions itemDict, 
     		Object itemRow,WOComponent page) {
-    	Object item = null;
     	if(itemRow == null || itemDict == null) {
-    		item = null;
-    	} else if(itemDict.valueForKey("value") != null) {
-    		item = DisplayAny.ValueReader.evaluateValue(itemDict.valueForKey("value"),
-    				itemRow, page); //valueOf.valueForKeyPath("itemRow.itemDict.value");
-    	} else {
-    		String keyPath = (String)itemDict.valueForKey("keyPath");
-    		if(keyPath == null || keyPath.equals("."))
-    			item = itemRow;
-    		else
-    			item = NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, keyPath);
+    		return null;
     	}
-    	return item;
+    	String keyPath = (String)itemDict.valueForKey("keyPath");
+    	if(keyPath != null) {
+    		if(keyPath.equals("."))
+    			return itemRow;
+    		return NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, keyPath);
+    	}
+    	if(itemDict.valueForKey("value") != null) {
+    		return DisplayAny.ValueReader.evaluateValue(itemDict.valueForKey("value"),
+    				itemRow, page);
+    	}
+    	return itemRow;
      }
     
     public String rowspan() {

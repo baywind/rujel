@@ -323,7 +323,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 				EOObjectStore os = DataBaseConnector.objectStoreForTag(nextYear.toString());
 				if(os == null) {
 					String msg = (String)WOApplication.application().valueForKeyPath(
-					"strings.Strings.messages.unavailableYearlyDb");
+						"strings.Strings.messages.unavailableYearlyDb");
 					msg = String.format(msg, MyUtility.presentEduYear(nextYear.intValue()));
 					setMessage(msg);
 					logger.log(WOLogLevel.INFO,msg);
