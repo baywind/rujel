@@ -69,8 +69,25 @@ public class CoursesSelector extends WOComponent {
 					setSelection(newSelection);
 				}
 			} else if(currTab < 0) {
-				currTab = 0;
-				clean();
+				EOGlobalID gid = (EOGlobalID)session().valueForKey("userPersonGID");
+				if(gid != null) {
+					EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
+					EOEnterpriseObject pLink = ec.faultForGlobalID(gid, ec);
+					if(pLink instanceof Teacher) {
+						currTab = TEACHER_TAB;
+						if(setSelection(pLink)) {
+							session().takeValueForKeyPath(new Integer(currTab),"state.courseSelector");
+							session().takeValueForKeyPath(gid,"state.coursesSelection");
+						} else {
+							gid = null;
+						}
+					}
+				}
+				if(gid == null) {
+					currTab = 0;
+					session().takeValueForKeyPath(new Integer(currTab),"state.courseSelector");
+					clean();
+				}
 			}/*
 		} else if(sesTab != null && sesTab.intValue() != currTab) {
 			currTab = sesTab.intValue();
@@ -89,7 +106,7 @@ public class CoursesSelector extends WOComponent {
 		return null;
 	}
 	
-	public void setSelection(Object val) {
+	public boolean setSelection(Object val) {
 		selection = val;
 		if(selection == NullValue)
 			selection = null;
@@ -99,9 +116,10 @@ public class CoursesSelector extends WOComponent {
 			if(hasBinding("courses"))
 				setValueForBinding(null, "courses");
 			session().takeValueForKeyPath(val, "state.coursesSelection");
-			return;
+			return false;
 		}
 		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
+		NSArray courses = null;
 		if(hasBinding("courses")) {
 			boolean smartEduPlan = (EduCycle.className.equals("net.rujel.eduplan.PlanCycle"));
 			EOQualifier quals[] = new EOQualifier[2];
@@ -161,7 +179,7 @@ public class CoursesSelector extends WOComponent {
 					session().valueForKey("eduYear"));
 			quals[0] = new EOAndQualifier(new NSArray(quals));
 			EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,quals[0],null);
-			NSArray courses = ec.objectsWithFetchSpecification(fs);
+			courses = ec.objectsWithFetchSpecification(fs);
 			if(smartEduPlan && courses != null && courses.count() > 0) {
 				quals[0] = new EOKeyValueQualifier("cycle.school",
 						EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
@@ -195,6 +213,7 @@ public class CoursesSelector extends WOComponent {
 							}
 						}
 					}
+					courses = collect;
 				} else {
 					courses = EOQualifier.filteredArrayWithQualifier(courses, quals[0]);
 				}
@@ -205,17 +224,14 @@ public class CoursesSelector extends WOComponent {
 		if(val instanceof EOEnterpriseObject)
 			val = ec.globalIDForObject((EOEnterpriseObject)val);
 		session().takeValueForKeyPath(val, "state.coursesSelection");
+		return (courses != null && courses.count() > 0); 
 	}
 	
 	public boolean showTeachers() {
-//		Integer tmp = (Integer)session().valueForKeyPath("state.courseSelector");
-//		return (tmp!= null && tmp.intValue() == TEACHER_TAB);
 		return (currTab == TEACHER_TAB);
 	}
 
 	public boolean showSubjects() {
-//		Integer tmp = (Integer)session().valueForKeyPath("state.courseSelector");
-//		return (tmp!= null && tmp.intValue() == CLASS_TAB);
 		return (currTab == SUBJECT_TAB);
 	}
 	

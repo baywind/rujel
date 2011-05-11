@@ -69,60 +69,8 @@ public class SrcMark extends WOComponent {
         super(context);
 		ec = new SessionedEditingContext(session());
 		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.SrcMark");
-		EOGlobalID gid = (EOGlobalID)session().valueForKey("userPersonGID");
-		if(gid != null) {
-			EOEnterpriseObject pLink = ec.faultForGlobalID(gid, ec);
-			if(pLink instanceof Teacher) {
-				selection = (Teacher)pLink;
-				session().takeValueForKeyPath(new Integer(CoursesSelector.TEACHER_TAB),
-					"state.courseSelector");
-				session().takeValueForKeyPath(gid,"state.coursesSelection");
-//				coursesForTeacher(currTeacher);
-			}
-		}
-//		prepareSections();
     }
-    /*
-    public void prepareSections() {
-		Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, true);
-		if(sidx != null)
-			sections = sidx.sortedIndex();
-		Integer sect = (Integer)session().valueForKeyPath("state.section");
-		if(sections != null && sections.count() > 0) {
-			if(sect == null) {
-				currSection = (IndexRow)sections.objectAtIndex(0);
-				session().takeValueForKeyPath(currSection.idx(), "state.section");
-			} else {
-				for (int i = sections.count() -1; i >= 0; i--) {
-					currSection = (IndexRow)sections.objectAtIndex(i);
-					if(sect.equals(currSection.idx()))
-						break;
-				}
-				if(!sect.equals(currSection.idx())) {
-					sect = currSection.idx();
-					session().takeValueForKeyPath(sect, "state.section");
-				}
-			}
-			if (sections.count() == 1)
-				sections = null;
-		} else if(sect == null) {
-			sections = null;
-			session().takeValueForKeyPath(new Integer(0), "state.section");
-		}
-    }
-	
-    public void setCurrSection(Object sect) {
-    	if(sect instanceof Number) {
-			for (int i = sections.count() -1; i >= 0; i--) {
-				currSection = (IndexRow)sections.objectAtIndex(i);
-				if(sect.equals(currSection.idx()))
-					break;
-			}
-    	} else {
-    		currSection = (IndexRow)sect;
-    	}
-		session().takeValueForKeyPath(currSection.idx(), "state.section");
-    } */
+
     
     public WOActionResults sectionChanged() {
 		dict.removeAllObjects();
@@ -395,38 +343,10 @@ public class SrcMark extends WOComponent {
 			return Person.Utility.fullName((Teacher)teacher,false,2,2,2);
 		return null;
 	}
-	/*
-	public String currFullname() {
-		if(currTeacher instanceof Teacher) {
-			return Person.Utility.fullName((Teacher)currTeacher,false,2,2,2);
-		}
-		return null;
-	}
 	
 	public Boolean teacherIsSelected() {
 		return Boolean.valueOf(dict.valueForKey("teacher") != null);
 	}
-	
-	public String currTeacherName() {
-		return teacherName(currTeacher);
-	}
-		
-	public String teacherName() {
-		return teacherName(dict.valueForKey("teacher"));
-	}
-	
-	public String teacherName(Object teacher) {
-		if(teacher == null)
-			return null;//(String)session().valueForKeyPath(
-					//"strings.Reusables_Strings.uiElements.Select");
-		if(teacher == NullValue)
-			return (String)session().valueForKeyPath(
-					"strings.RujelBase_Base.vacant");
-		if(teacher instanceof PersonLink)
-			return Person.Utility.fullName((PersonLink)teacher,true,2,1,1);
-		
-		return "???";
-	}*/
 	
     public boolean cantCreate() {
 		if (!(selection instanceof EduGroup) || courses == null || currIndex >= courses.count() ||
