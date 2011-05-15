@@ -293,10 +293,12 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		if(byCourse == null) {
 				byCourse = (QualifiedSetting)EOUtilities.createAndInsertInstance(
 						ec,QualifiedSetting.ENTITY_NAME);
-				byCourse.takeValueForKey(tmpValues.valueForKey(
-						SettingsBase.NUMERIC_VALUE_KEY), SettingsBase.NUMERIC_VALUE_KEY);
-				byCourse.takeValueForKey(tmpValues.valueForKey(
-						SettingsBase.TEXT_VALUE_KEY), SettingsBase.TEXT_VALUE_KEY);
+				Object val = tmpValues.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				if(val != null && val != NullValue)
+					byCourse.takeValueForKey(val, SettingsBase.NUMERIC_VALUE_KEY);
+				val = tmpValues.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				if(val != null && val != NullValue)
+					byCourse.takeValueForKey(val, SettingsBase.TEXT_VALUE_KEY);
 				byCourse.addObjectToBothSidesOfRelationshipWithKey(base, "settingsBase");
 			} // create from dict
     		byCourse.setQualifier(qual);

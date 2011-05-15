@@ -1064,13 +1064,6 @@ public class LessonNoteEditor extends WOComponent {
 	public Boolean hideCustomTab() {
 		if(present == null || present.valueForKey("params") == null)
 			return Boolean.TRUE;
-		try {
-			Class query = Class.forName("net.rujel.reports.QueryParams");
-			if(query == null)
-				return Boolean.TRUE;
-		} catch (Exception e) {
-			return Boolean.TRUE;
-		}
 		return Boolean.FALSE;
 	}
 	
