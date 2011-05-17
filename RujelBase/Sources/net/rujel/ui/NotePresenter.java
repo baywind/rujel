@@ -229,6 +229,8 @@ public class NotePresenter extends WOComponent {
 		ident.takeValueForKey(student(), "student");
 		ident.takeValueForKey(lesson().course(), "eduCourse");
 		ident.takeValueForKey(lesson().editingContext(), "editingContext");
+		if(lesson().forPersonLink(student()) == null)
+			ident.takeValueForKey(Boolean.TRUE, "isEmpty");
 		return ident;
     }
 

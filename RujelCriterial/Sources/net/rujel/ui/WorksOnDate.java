@@ -78,6 +78,7 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
 	   	EduLesson lesson = (EduLesson)valueForBinding("lesson");
 	    if(lesson.date().equals(workItem.date()))
 	    	result.append("font-weight:bold;");
+	    result.append(workItem.font());
 		return (result.length() == 0)?null:result.toString();
 	}
     

@@ -32,6 +32,7 @@ package net.rujel.markarchive;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -189,7 +190,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 			EOEditingContext ec = archive.editingContext();
 			try {
 				ec.lock();
-				archive.setReason(reason);
+				if(reason != null || !isEmpty())
+					archive.setReason(reason);
 				ec.saveChanges();
 	        	session().removeObjectForKey("MarkArchive.reason");
 				session().setObjectForKey(initData, "objectSaved");
@@ -234,7 +236,15 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public boolean disableSave() {
+		if(isEmpty())
+			return false;
 		return (reason == null || reason.length() == 0);
+	}
+	
+	public boolean isEmpty() {
+		return (initData == null || (initData instanceof NSDictionary &&
+				Various.boolForObject(((NSDictionary)initData).valueForKey("isEmpty"))));
+
 	}
 	
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {

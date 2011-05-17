@@ -774,7 +774,9 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	}
 	
 	public boolean isOptional() {
-		if(!isCompulsory())
+		if(!isCompulsory() || !hasWeight())
+			return true;
+		if(criterMask() == null || criterMask().count() == 0)
 			return true;
 		if(EOPeriod.Utility.compareDates(date(), null) > 0)
 			return true;
@@ -862,5 +864,12 @@ public class Work extends _Work implements EduLesson {	// EOObserving
     			return "#ffcc66";
     	}
     	return result;
+    }
+    
+    public String font() {
+    	if(!isCompulsory() || !hasWeight() || criterMask() == null || criterMask().count() == 0)
+    		return "font-family: serif;";
+    	else
+    		return "font-family: sans-serif;";
     }
 }
