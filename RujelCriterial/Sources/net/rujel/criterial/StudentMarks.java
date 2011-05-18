@@ -435,10 +435,11 @@ public class StudentMarks extends WOComponent {
 //			if(BigDecimal.ZERO.compareTo(currWork.weight()) == 0) {
 			if(weight.equals(BigDecimal.ZERO)) {
 				curr.setObjectForKey("noWeight","kind");
-				curr.setObjectForKey("color:#333333;","style");
+				curr.setObjectForKey("color:#333333;" + currWork.font(),"style");
 				curr.takeValueForKey(theme,"theme");
 			} else {
 				curr.setObjectForKey("withWeight","kind");
+				curr.setObjectForKey(currWork.font(),"style");
 				StringBuilder buf = new StringBuilder("<strong>");
 				buf.append(theme).append("</strong>");
 //				if(BigDecimal.ONE.compareTo(currWork.weight()) != 0) {
@@ -486,11 +487,12 @@ public class StudentMarks extends WOComponent {
 			BigDecimal weight = (BigDecimal)workItem.valueForKey("weight");
 			aResponse.appendContentString("<span");
 			aResponse.appendContentString(" style = \"");
+			aResponse.appendContentString(work.font());
 			String tmp = (String)workItem.valueForKey("url");
 			if(tmp != null)
 				aResponse.appendContentString("cursor:pointer;color:blue;");
 			if(weight.equals(BigDecimal.ZERO))
-				aResponse.appendContentString("font-style:italic;");
+				aResponse.appendContentString("color:#666666;");
 			if(tmp != null) {
 				aResponse.appendContentString("\" onclick = \"window.open('");
 				aResponse.appendContentString(tmp);
@@ -543,11 +545,11 @@ public class StudentMarks extends WOComponent {
 				if(mark == null || mark.value() == null)
 					aResponse.appendContentString("&oslash;");
 				else
-					aResponse.appendContentString(mark.value().toString());
+					aResponse.appendContentString(mark.present());
 				if(!hideMax) {
 					aResponse.appendContentString(
 							"<sub style = \"font-size:60%;color:#999999\">");
-					aResponse.appendContentString(crMask.valueForKey("max").toString());
+					aResponse.appendContentString(work.maxForCriter(cr).toString());
 					aResponse.appendContentString("</sub>");
 				}
 				if(cenu.hasMoreElements())
