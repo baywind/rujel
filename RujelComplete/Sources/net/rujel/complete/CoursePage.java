@@ -32,6 +32,7 @@ package net.rujel.complete;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.FileWriterUtil;
 
@@ -186,7 +187,14 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			String key = gid.keyValues()[0].toString();
 			cDir = key + '/';
     	}
-//    	exec.writeFile(cDir, null);
+    	boolean sections = Various.boolForObject(WOApplication.application().valueForKeyPath(
+    			"strings.sections.hasSections")) && EduCycle.entityName.equals("PlanCycle");
+    	if(sections) {
+    		Integer section = (Integer)course.valueForKeyPath("cycle.section");
+    		StringBuilder buf = new StringBuilder(4);
+    		buf.append('S').append(section);
+    		exec.enterDir(buf.toString(), false);
+    	}
     	exec.enterDir(cDir,false);
 		if(reports == null)
 			reports = (NSArray)exec.ctx.session().valueForKeyPath("modules.courseComplete");
@@ -213,6 +221,8 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			exec.writeFile(id + ".html", page);
 		}
     	exec.leaveDir();
+    	if(sections)
+    		exec.leaveDir();
     }
     
     public String students() {

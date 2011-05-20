@@ -326,6 +326,7 @@ public class CptAddOn extends AddOnPresenter.AddOn {
 			closingLock.setCourse(null);
 		Executor.Task executor = new Executor.Task();
 		executor.date = session.valueForKey("eduYear");
+		executor.section = session.valueForKeyPath("state.section");
 		executor.setCourse(_course);
 		if(cd.valueForKey("toClose") == null) {
 			Object releaseStudent = cd.valueForKey("releaseStudent");

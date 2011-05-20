@@ -55,7 +55,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	public Student student;
 	public EOEditingContext ec;
 	public NSKeyValueCoding catalog;
-	protected NSDictionary grDict;
+	public NSDictionary grDict;
 	protected String grFolder;
 	
     public StudentCatalog(WOContext context) {
@@ -105,12 +105,15 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public String studentLink() {
-    	if(student == null)
-    		return null;
-       	EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(student); 
        	StringBuilder result = new StringBuilder(30);
        	result.append(grFolder).append('/');
-       	result.append(gid.keyValues()[0]).append("/index.html");
+    	if(student == null) {
+    		result.append("group");
+    	} else {
+           	EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(student); 
+           	result.append(gid.keyValues()[0]);
+    	}
+       	result.append("/index.html");
        	return result.toString();
     }
     
@@ -121,18 +124,41 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     public NSArray list;
     
     public static void prepareStudents(FileWriterUtil folder) {
-    	Executor.prepareFolder(folder, "list.html");
     	WOSession ses = folder.ctx.session();
     	EOEditingContext ec = ses.defaultEditingContext();
-		NSArray groups = EduGroup.Lister.listGroups(
-				(NSTimestamp)ses.valueForKey("today"), ec);
-		{
-			WOComponent page = WOApplication.application().pageWithName("StudentCatalog",
-					folder.ctx);
-			page.takeValueForKey(ec, "ec");
-			page.takeValueForKey(groups, "eduGroups");
-
-			folder.writeFile("list.html", page);
+		NSDictionary sect = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.sections");
+		NSArray groups = null;
+		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
+			NSArray list = (NSArray)sect.valueForKey("list");
+			sect = (NSDictionary)list.objectAtIndex(0);
+			Executor.prepareFolder(folder, "list" + sect.valueForKey("idx") + ".html");
+			Enumeration enu = list.objectEnumerator();
+			sect = (NSDictionary)ses.valueForKeyPath("state.section");
+			NSMutableArray allGroups = new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				NSDictionary item = (NSDictionary) enu.nextElement();
+				ses.takeValueForKeyPath(item, "state.section");
+		    	groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
+		    	allGroups.addObject(item);
+		    	allGroups.addObjectsFromArray(groups);
+		    	WOComponent page = WOApplication.application().pageWithName("StudentCatalog",
+		    			folder.ctx);
+		    	page.takeValueForKey(ec, "ec");
+		    	page.takeValueForKey(groups, "eduGroups");
+		    	folder.writeFile("list" + item.valueForKey("idx") + ".html", page);
+			}
+			groups = allGroups;
+			ses.takeValueForKeyPath(sect, "state.section");
+		} else {
+	    	Executor.prepareFolder(folder, "list.html");
+			sect = (NSDictionary)ses.valueForKeyPath("state.section");
+	    	groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
+	    	WOComponent page = WOApplication.application().pageWithName("StudentCatalog",
+	    			folder.ctx);
+	    	page.takeValueForKey(ec, "ec");
+	    	page.takeValueForKey(groups, "eduGroups");
+	    	folder.writeFile("list.html", page);
 		}
 		Enumeration grenu = groups.objectEnumerator();
 		NSMutableArray reports = (NSMutableArray)ses.valueForKeyPath(
@@ -142,7 +168,13 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		Integer year = (Integer) ses.valueForKey("eduYear");
 		int[] idx = new int [] {0,0};
 		while (grenu.hasMoreElements()) {
-			EduGroup gr = (EduGroup) grenu.nextElement();
+			Object next = grenu.nextElement();
+			if(next instanceof NSDictionary) {
+				ses.takeValueForKeyPath(next, "state.section");
+				idx[0]++;
+				continue;
+			}
+			EduGroup gr = (EduGroup) next;
 //			File grDir = new File(folder,groupDirName(gr));
 			EOEditingContext tmpEC = new SessionedEditingContext(
 					ec.parentObjectStore(), folder.ctx.session(), false);
@@ -176,6 +208,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			tmpEC.dispose();
 			folder.leaveDir();
 		}
+		ses.takeValueForKeyPath(sect, "state.section");
 	}
 
     public static String groupDirName(EduGroup gr, boolean endslash) {
@@ -242,5 +275,19 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(student); 
 		String key = gid.keyValues()[0].toString();
 		return Boolean.valueOf(!Various.boolForObject(grDict.valueForKey(key)));
+	}
+	
+	public String sectionHref() {
+		StringBuilder buf = new StringBuilder("list");
+		buf.append(grDict.valueForKey("idx"));
+		buf.append(".html");
+		return buf.toString();
+	}
+	
+	public String style() {
+		Integer cur = (Integer)session().valueForKeyPath("state.section.idx");
+		if (cur != null && cur.equals(grDict.valueForKey("idx")))
+			return "font-weight:bold;";
+		return null;
 	}
 }

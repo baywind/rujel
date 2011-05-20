@@ -208,7 +208,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 				}
         	}
     		return value;
-    	} else if(Various.boolForObject(dict().valueForKey("range"))) {
+    	} else if(Various.boolForObject(dict.valueForKey("range"))) {
     		StringBuilder buf = new StringBuilder();
     		value = params.valueForKey("min_" + attribute);
     		if(value != null)
@@ -281,6 +281,7 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		_bc = null;
 		_access = null;
 //		descriptions = null;
+		params = null;
 		list = null;
 		item = null;
 		matrix = null;

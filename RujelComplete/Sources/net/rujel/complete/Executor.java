@@ -66,6 +66,7 @@ public class Executor implements Runnable {
 		public EOGlobalID courseID;
 		public EOGlobalID[] studentIDs;
 		public Object date;
+		public Object section;
 		public Integer year;
 
 		public void setCourse(EduCourse course) {
@@ -123,6 +124,7 @@ public class Executor implements Runnable {
 				}
 				progress().takeValueForKey(task, "task");
 				ses.takeValueForKey(task.date, "today");
+				ses.takeValueForKeyPath(task.section, "state.section");
 //				MultiECLockManager lm = ((MultiECLockManager.Session)ses).ecLockManager();
 //				lm.lock();
 				if(task.courseID != null) { // Completion closing
@@ -184,7 +186,7 @@ public class Executor implements Runnable {
 				logger.log(WOLogLevel.WARNING,"Error in Completion process"
 						,new Object[] {ses,e});
 			}
-		}
+		} // queue loop
 		ses.terminate();
 		thread = null;
 	}
@@ -257,9 +259,9 @@ public class Executor implements Runnable {
 		}
 		FileWriterUtil folder = completeFolder(task.year, STUDENTS, false, false, true);
 		folder.ctx = ctx;
-		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());
-		NSMutableArray reports = (NSMutableArray)ctx.session().valueForKeyPath(
-				"modules.studentReporter");
+		WOSession ses = ctx.session();
+		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ses);
+		NSMutableArray reports = (NSMutableArray)ses.valueForKeyPath("modules.studentReporter");
 		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
 				"strings.Strings.Overview.defaultReporter"),0);
 //		File groupDir = new File(folder,grDir);
@@ -319,20 +321,41 @@ public class Executor implements Runnable {
 		}
 		if(updateList) {
 			File file = new File(folder.getBase(),"index.html");
-			if(!file.exists())
-				prepareFolder(folder,"list.html");
-			NSArray groups = EduGroup.Lister.listGroups(
-					(NSTimestamp)ctx.session().valueForKey("today"), ec);
+			Integer section = getDefaultSection();
+			if(!file.exists()) {
+				prepareFolder(folder,(section == null)? "list.html" :
+						"list" + section  + ".html");
+			}
+			NSArray groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
 			WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
 			page.takeValueForKey(ec, "ec");
 			page.takeValueForKey(catalog, "catalog");
 			page.takeValueForKey(groups, "eduGroups");
-			folder.writeFile("list.html", page);
+			if(section != null)
+				section = (Integer)ses.valueForKeyPath("state.section.idx");
+			String filename = (section == null)? "list.html" : "list" + section  + ".html";
+			folder.writeFile(filename, page);
 			catalog.writeCatalog();
 		}
 /*		found = Completion.findCompletions(course,null,"student",Boolean.FALSE, ec);
 		if(found == null || found.count() == 0)
 			studentIDs = null;*/
+	}
+	
+	public static Integer getActiveSection(WOSession ses) {
+		if(!Various.boolForObject(WOApplication.application().valueForKeyPath(
+				"strings.sections.hasSections")))
+			return null;
+		return (Integer)ses.valueForKeyPath("state.section.idx");
+	}
+	public static Integer getDefaultSection() {
+		NSDictionary sections = (NSDictionary)WOApplication.application().valueForKeyPath(
+			"strings.sections");
+		if(!Various.boolForObject(sections.valueForKey("hasSections")))
+			return null;
+		NSArray list = (NSArray)sections.valueForKey("list");
+		sections = (NSDictionary)list.objectAtIndex(0);
+		return (Integer)sections.valueForKey("idx");
 	}
 	
 	protected void writeCourse(EduCourse course) {

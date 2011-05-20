@@ -3,6 +3,7 @@ package net.rujel.complete;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
@@ -10,8 +11,12 @@ import net.rujel.reusables.FileWriterUtil;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyGlobalID;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -30,27 +35,53 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
 	public static final NSArray byTeacher = new NSArray(
 			new EOSortOrdering[] {orders[2],orders[0],orders[1]});
 	
+	
 	public EOEditingContext ec;
 	public NSArray allCourses;
 	public String grouping;
-	protected Object currGrouping;
 	public EduCourse item;
-	public Integer courseID;
+	public Object courseID;
 	public String grHead;
 	public NSKeyValueCoding catalog;
+	public boolean sections;
 	
     public CoursesCatalog(WOContext context) {
         super(context);
+    	sections = Various.boolForObject(WOApplication.application().valueForKeyPath(
+			"strings.sections.hasSections")) && EduCycle.entityName.equals("PlanCycle");
+    }
+    
+    public NSArray types() { 
+    	return new NSArray(new String[] {"eduGroup","cycle","teacher"});
     }
     
     public NSArray allCourses() {
+    	EOQualifier qual = null;
+    	if(sections && !grouping.equals("teacher")) {
+    		qual = new EOKeyValueQualifier("cycle.section", EOQualifier.QualifierOperatorEqual, 
+    					 session().valueForKeyPath("state.section.idx"));
+    	}
     	if(allCourses != null)
-    		return allCourses;
-    	allCourses = EOUtilities.objectsMatchingKeyAndValue(ec,
-    			EduCourse.entityName, "eduYear", session().valueForKey("eduYear"));
+    		return (qual == null)? allCourses : 
+    			EOQualifier.filteredArrayWithQualifier(allCourses, qual);
+    	if(EduCycle.entityName.equals("PlanCycle")) {
+    		allCourses = EOUtilities.objectsMatchingKeyAndValue(ec,EduCycle.entityName,
+    				"school",session().valueForKey("school"));
+    		EOQualifier[] quals = new EOQualifier[2];
+    		quals[0] = Various.getEOInQualifier("cycle", allCourses);
+    		quals[1] = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,
+    				session().valueForKey("eduYear"));
+    		quals[0] = new EOAndQualifier(new NSArray(quals));
+    		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,quals[0],null);
+    		allCourses = ec.objectsWithFetchSpecification(fs);
+    	} else {
+    		allCourses = EOUtilities.objectsMatchingKeyAndValue(ec,
+    				EduCourse.entityName, "eduYear", session().valueForKey("eduYear"));
+    	}
     	if(allCourses != null && allCourses.count() > 1)
     		sort();
-     	return allCourses;
+		return (qual == null)? allCourses : 
+			EOQualifier.filteredArrayWithQualifier(allCourses, qual);
     }
     
     protected void sort() {
@@ -68,6 +99,42 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     		sort();
     }
     
+    public String groupLink() {
+    	if(courseID instanceof NSDictionary) {
+    		Object idx = ((NSDictionary)courseID).valueForKey("idx");
+    		return grHead + idx + ".html";
+    	} else {
+    		return grHead + ".html";
+    	}
+    }
+    
+    public String style() {
+    	if(courseID instanceof NSDictionary) {
+    		if(!grHead.equals(grouping))
+    			return null;
+    		Object idx = ((NSDictionary)courseID).valueForKey("idx");
+    		if (idx.equals(session().valueForKeyPath("state.section.idx")))
+    			return "font-weight:bold;";
+    	} else if (grHead.equals(grouping)) {
+    		return "font-weight:bold;";
+    	} else if (grHead.equals("teacher")) {
+    		return null;
+    	} else if (Various.boolForObject(application().valueForKeyPath(
+    				"strings.sections.hasSections"))) {
+    		return "font-style:italic;";
+    	}
+    	return null;
+    }
+    
+    public boolean showSections() {
+    	return (!grHead.equals("teacher") &&  Various.boolForObject(application().valueForKeyPath(
+    				"strings.sections.hasSections")));
+    }
+    
+    public String groupTitle() {
+    	return (String)session().valueForKeyPath("strings.RujelComplete_Complete." + grHead);
+    }
+    
     public void setItem(EduCourse course) {
     	grHead = null;
     	if(course == null) {
@@ -76,7 +143,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     		return;
     	}
     	EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(course);
-    	courseID = (Integer)gid.keyValues()[0];
+    	courseID = gid.keyValues()[0];
 		if(item != null && grouping.equals("cycle")){
 			if(item.cycle().subject().equals(course.cycle().subject())) {
 				item = course;
@@ -100,19 +167,6 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     	}
     	item = course;
     }
-    /*
-    public Boolean disabled() {
-    	if(catalog == null || courseID == null)
-    		return Boolean.FALSE;
-    	NSDictionary crDict = (NSDictionary)catalog.valueForKey(courseID.toString());
-    	return Boolean.valueOf(crDict == null || crDict.count() == 0);
-    }
-    
-    public String link() {
-    	if(courseID == null)
-    		return null;
-       	return courseID.toString() + "/index.html";
-    }*/
     
     public String present() {
     	if(courseID == null)
@@ -135,7 +189,10 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     	}
     	StringBuilder buf = new StringBuilder(50);
     	if(state > 0) {
-    		buf.append("<a href = \"").append(courseID).append("/index.html\"");
+    		buf.append("<a href = \"");
+    		if(sections)
+    			buf.append('S').append(item.valueForKeyPath("cycle.section")).append('/');
+    		buf.append(courseID).append("/index.html\"");
     		if(state < 10)
     			buf.append(" class = \"partial\"");
     		buf.append(" onclick = \"updateFrame(this.href);\">");
@@ -166,20 +223,48 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     
     public static void prepareCourses(FileWriterUtil exec,
     		NSKeyValueCoding catalog, boolean write) {
-    	if(catalog == null)
-    		Executor.prepareFolder(exec, "eduGroup.html");
+		NSDictionary sect = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.sections");
+		NSArray list = null;
+		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
+				list = (NSArray)sect.valueForKey("list");
+				sect = (NSDictionary)list.objectAtIndex(0);
+		} else {
+			sect = null;
+		}
+    	if(catalog == null) {
+    		String filename = (sect == null)?"eduGroup.html":
+    			"eduGroup" + sect.valueForKey("idx") + ".html";
+    		Executor.prepareFolder(exec, filename);
+    	}
     	EOEditingContext ec = exec.ctx.session().defaultEditingContext();
-		WOComponent page = WOApplication.application().pageWithName("CoursesCatalog", exec.ctx);
+		CoursesCatalog page = new CoursesCatalog(exec.ctx);
 		page.takeValueForKey(ec, "ec");
 		page.takeValueForKey(catalog, "catalog");
 		page.takeValueForKey("teacher", "grouping");
 		exec.writeFile("teacher.html", page);
-		page.takeValueForKey("cycle", "grouping");
-		exec.writeFile("cycle.html", page);
-		page.takeValueForKey("eduGroup", "grouping");
-		exec.writeFile("eduGroup.html", page);
+		if(list == null) {
+			page.takeValueForKey("cycle", "grouping");
+			exec.writeFile("cycle.html", page);
+			page.takeValueForKey("eduGroup", "grouping");
+			exec.writeFile("eduGroup.html", page);
+		} else {
+			Enumeration enu = list.objectEnumerator();
+			WOSession ses = exec.ctx.session();
+			sect = (NSDictionary)ses.valueForKeyPath("state.section");
+			while (enu.hasMoreElements()) {
+				NSDictionary s = (NSDictionary)enu.nextElement();
+				Integer idx = (Integer)s.valueForKey("idx");
+				ses.takeValueForKeyPath(s, "state.section");
+				page.takeValueForKey("cycle", "grouping");
+				exec.writeFile("cycle" + idx + ".html", page);
+				page.takeValueForKey("eduGroup", "grouping");
+				exec.writeFile("eduGroup" + idx + ".html", page);
+			}
+			ses.takeValueForKeyPath(sect, "state.section");
+		}
 		if(write) {
-			NSArray courses = (NSArray)page.valueForKey("allCourses");
+			NSArray courses = page.allCourses;
 			NSArray reports = (NSArray)exec.ctx.session().valueForKeyPath(
 					"modules.courseComplete");
 			Enumeration enu = courses.objectEnumerator();
