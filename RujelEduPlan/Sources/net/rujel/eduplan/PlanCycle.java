@@ -203,8 +203,14 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	}
 	
 	public static NSArray cyclesForEduGroup(EduGroup group) {
+		Integer section = null;
+		try {
+			section = (Integer)group.valueForKey(SECTION_KEY);
+		} catch (UnknownKeyException e) {
+			;
+		}
 		EOEditingContext ec = group.editingContext();
-		NSArray found = allCyclesFor(group.grade(),null, null,school(ec), ec);
+		NSArray found = allCyclesFor(group.grade(),null, section,school(ec), ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		Enumeration enu = found.objectEnumerator();

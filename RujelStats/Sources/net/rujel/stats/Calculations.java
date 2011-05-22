@@ -31,6 +31,8 @@ package net.rujel.stats;
 
 import java.lang.reflect.Method;
 
+import net.rujel.reusables.WOLogLevel;
+
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -81,7 +83,7 @@ public class Calculations {
 						new Object[] {"methodName","parsedMethod","paramValues"});
 				col.setObjectForKey(tmp, "value");
 			} catch (Exception e) {
-//				StatsModule.logger
+				StatsModule.logger.log(WOLogLevel.WARNING,"Error getting stat method", e);
 			}
 			col.setObjectForKey(new Integer(20 + i), "sort");
 			result.addObject(col);

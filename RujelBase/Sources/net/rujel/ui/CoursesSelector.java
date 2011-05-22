@@ -129,7 +129,8 @@ public class CoursesSelector extends WOComponent {
 			NSArray cycles = null;
 			switch (currTab) {
 			case CLASS_TAB:
-				if(smartEduPlan) {
+				cycles = EduCycle.Lister.cyclesForEduGroup((EduGroup)selection);
+			/*	if(smartEduPlan) {
 					NSMutableDictionary values = new NSMutableDictionary();
 					values.takeValueForKey(session().valueForKeyPath("state.section.idx"), 
 							"section");
@@ -139,7 +140,7 @@ public class CoursesSelector extends WOComponent {
 				} else {
 					cycles = EOUtilities.objectsMatchingKeyAndValue(ec, EduCycle.entityName, 
 							"grade", ((EduGroup)selection).grade());
-				}
+				}*/
 				if(cycles != null && cycles.count() > 0) {
 					quals[1] = Various.getEOInQualifier("cycle", cycles);
 					quals[0] = new EOKeyValueQualifier("eduGroup", 

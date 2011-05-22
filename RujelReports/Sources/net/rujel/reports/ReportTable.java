@@ -237,7 +237,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     			return itemRow;
     		return NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, keyPath);
     	}
-    	if(itemDict.valueForKey("value") != null) {
+    	if(itemDict.valueForKey("value") != null && itemDict.valueForKey("subParams") != null) {
     		return DisplayAny.ValueReader.evaluateValue(itemDict.valueForKey("value"),
     				itemRow, page);
     	}
