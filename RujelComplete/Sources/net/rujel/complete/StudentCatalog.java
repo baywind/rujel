@@ -41,6 +41,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSData;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
@@ -57,9 +58,16 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCoding catalog;
 	public NSDictionary grDict;
 	protected String grFolder;
+	public boolean grReports;
+	public int total;
 	
     public StudentCatalog(WOContext context) {
         super(context);
+    }
+    
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	total = 0;
+    	super.appendToResponse(aResponse, aContext);
     }
     
     public void setGroup(EduGroup newGroup) {
@@ -74,6 +82,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     	if(ec == null)
     		ec = group.editingContext();
     	list = group.list();
+    	total += list.count();
     	EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(group);
     	groupID = "gr" + gid.keyValues()[0];
     	StringBuilder buf = new StringBuilder(7);
@@ -84,10 +93,9 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public String ready() {
-    	if(catalog == null)
-    		return null;
     	StringBuilder buf = new StringBuilder("<span style = \"float:right\">");
-    	if(grDict == null) {
+    	if(catalog == null) {
+    	} else if(grDict == null) {
     		buf.append("&oslash;");
     	} else {
     		int count = 0;
@@ -96,10 +104,10 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 				if(Various.boolForObject(enu.nextElement()))
 						count++;
 			}
-    		if(count >= list.count())
-    			return null;
-    		buf.append(count).append('/').append(list.count());
+    		if(count < list.count())
+    			buf.append(count).append('/');
     	}
+    	buf.append(list.count());
     	buf.append("</span>");
     	return buf.toString();
     }
@@ -128,6 +136,9 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     	EOEditingContext ec = ses.defaultEditingContext();
 		NSDictionary sect = (NSDictionary)WOApplication.application().valueForKeyPath(
 				"strings.sections");
+		NSArray grReports = (NSArray)ses.valueForKeyPath("modules.groupComplete");
+		if(grReports != null && grReports.count() == 0)
+			grReports = null;
 		NSArray groups = null;
 		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
 			NSArray list = (NSArray)sect.valueForKey("list");
@@ -146,6 +157,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		    			folder.ctx);
 		    	page.takeValueForKey(ec, "ec");
 		    	page.takeValueForKey(groups, "eduGroups");
+		    	page.takeValueForKey(Boolean.valueOf(grReports != null), "grReports");
 		    	folder.writeFile("list" + item.valueForKey("idx") + ".html", page);
 			}
 			groups = allGroups;
@@ -158,6 +170,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	    			folder.ctx);
 	    	page.takeValueForKey(ec, "ec");
 	    	page.takeValueForKey(groups, "eduGroups");
+	    	page.takeValueForKey(Boolean.valueOf(grReports != null), "grReports");
 	    	folder.writeFile("list.html", page);
 		}
 		Enumeration grenu = groups.objectEnumerator();
@@ -184,6 +197,9 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			folder.enterDir(grDir, false);
 			grDir = gr.name();
 			NSArray list = gr.list();
+			if(grReports != null) {
+				completeGroup(gr, grReports, folder);
+			}
 			Enumeration stenu = list.objectEnumerator();
 			NSArray args = new NSArray(new Object[] {year, gr });
 			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(tmpEC,
@@ -202,7 +218,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 //		    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
 //				File stDir = new File(grDir,gid.keyValues()[0].toString());
 				completeStudent(gr, student, reports, existingCourses,
-						folder, false);
+						folder);
 			}
 			tmpEC.unlock();
 			tmpEC.dispose();
@@ -237,9 +253,26 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			completeStudent(gr, student, reports, existingCourses, grDir, ctx, false);
 		}
     } */
-    
+    public static void completeGroup(EduGroup gr, NSArray reports, 
+    		FileWriterUtil exec) {
+    	exec.enterDir("group", false);
+		WOComponent page = WOApplication.application().pageWithName("StudentPage", exec.ctx);
+		page.takeValueForKey(gr, "eduGroup");
+		page.takeValueForKey(reports, "reports");
+		exec.writeFile("index.html", page);
+		Enumeration repEnu = reports.objectEnumerator();
+		while (repEnu.hasMoreElements()) {
+			NSDictionary reporter = (NSDictionary) repEnu.nextElement();
+			String id = (String)reporter.valueForKey("id");
+			String name = (String)reporter.valueForKey("component");
+			page = WOApplication.application().pageWithName(name,exec.ctx);
+			page.takeValueForKey(gr,"eduGroup");
+			exec.writeFile(id + ".html", page);
+		}
+		exec.leaveDir();
+    }    
     public static void completeStudent(EduGroup gr, Student student, NSArray reports,
-    		NSArray existingCourses, FileWriterUtil exec, boolean overwrite) {
+    		NSArray existingCourses, FileWriterUtil exec) {
     	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
     	exec.enterDir(gid.keyValues()[0].toString(), false);
 //		if(!stDir.exists())
@@ -262,6 +295,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			page.takeValueForKey(existingCourses,"courses");
 			page.takeValueForKey(array,"students");
 			String filename = reporter.valueForKey("id") + ".html";
+//			exec.writeData(filename, NSData.EmptyData); // TODO:remove this 
 			exec.writeFile(filename, page);
 		}
 		exec.leaveDir();

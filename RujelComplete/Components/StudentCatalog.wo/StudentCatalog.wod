@@ -81,3 +81,17 @@ LI : WOGenericContainer {
 	elementName = "li";
 	style = style;
 }
+
+ShowGroupView : WOConditional {
+  condition = grReports;
+}
+
+GroupCount : WOString {
+  value = eduGroups.count;
+  numberformat = "0";
+}
+
+TotalStudents : WOString {
+  value = total;
+  numberformat = "0";
+}

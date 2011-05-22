@@ -9,10 +9,11 @@
 	<link rel="stylesheet" type="text/css" href = "styles.css"/>
 	<script type="text/javascript" language="JavaScript" src = "scripts.js"></script>
 	<script type="text/javascript" language="JavaScript">
-	var grPage = "itogs.html";
+	var grPage = "/groupItogs.html";
 	function grFrame(head) {
 		var frame = window.parent.frames["content"];
-		frame.location = head.substring(0,head.lastIndexOf("/")) + grPage; 
+		frame.location = head.substring(0,head.lastIndexOf("/")) + grPage;
+		otherPage = true; 
 	}
 	</script>
 </head>
@@ -22,11 +23,12 @@
 		<webobject name = "SectionTitle"/></webobject></webobject>
 </webobject></ul>
 </webobject><webobject name = "GroupsList"><div style = "clear:both;">
-	<webobject name = "GroupView">&gt;&gt;</webobject>
+	<webobject name = "ShowGroupView"><webobject name = "GroupView">&gt;&gt;</webobject></webobject>
 	<webobject name = "GroupContainer"><webobject name = "Count"/><webobject name = "GroupName"/></webobject>
 	<webobject name = "StudentsDiv"><webobject name = "StudentsList">
 		<webobject name = "StudentLink"><webobject name = "StudentName"/></webobject>
 	</webobject></webobject></div>
 </webobject>
+<div>Total groups: <webobject name = "GroupCount"/> ; students: <webobject name = "TotalStudents"/></div>
 </body>
 </html>

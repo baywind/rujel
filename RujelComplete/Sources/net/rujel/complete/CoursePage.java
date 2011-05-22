@@ -44,6 +44,7 @@ import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSData;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -219,6 +220,7 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			page = WOApplication.application().pageWithName(name,exec.ctx);
 			page.takeValueForKey(course,"course");
 			exec.writeFile(id + ".html", page);
+//			exec.writeData(id + ".html", NSData.EmptyData); //TODO: remove this;
 		}
     	exec.leaveDir();
     	if(sections)

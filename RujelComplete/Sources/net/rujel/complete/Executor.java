@@ -297,8 +297,7 @@ public class Executor implements Runnable {
 			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
 //			File stDir = new File(groupDir,key);
 			if(Completion.studentIsReady(student, gr, task.year)) {
-				StudentCatalog.completeStudent(gr, student, reports,
-						courses, folder, true);
+				StudentCatalog.completeStudent(gr, student, reports,courses, folder);
 				grDict.takeValueForKey(Boolean.TRUE, key);
 			} else {
 				File stDir = new File(folder.currDir(),key);
