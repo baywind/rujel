@@ -76,9 +76,6 @@ public class LessonNoteEditor extends WOComponent {
 	public LessonNoteEditor(WOContext context) {
 		super(context);
 		ec = new SessionedEditingContext(session());
-		ec.lock();
-		ec.unlock();
-//		session().savePageInPermanentCache(this);
 	}
 
 	public boolean showTabs() {
@@ -297,26 +294,20 @@ public class LessonNoteEditor extends WOComponent {
 
 	//	public NSArray lessonsListForTable;
 	protected static NSArray lessonListForCourseAndPresent(EduCourse course,
-			NSKeyValueCoding present, NSMutableArray qualifiers) {
+			NSKeyValueCoding present, EOQualifier qualifier) {
 		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
 		if(entityName == null)
 			entityName = EduLesson.entityName;
 		/*String courseAttribute = (String)valueForKeyPath("present.courseAttribute");
 		if(courseAttribute == null)
 			courseAttribute = "course";*/
-		EOQualifier qual = new EOKeyValueQualifier
-		("course",EOQualifier.QualifierOperatorEqual,course);
+		EOQualifier qual = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,course);
 		EOQualifier extraQualifier = (present == null)?null:
 			(EOQualifier)present.valueForKey("extraQualifier");
-		if(extraQualifier != null) {
-			if(qualifiers == null)
-				qualifiers = new NSMutableArray(extraQualifier);
-			else
-				qualifiers.addObject(extraQualifier);
-		}
-		if(qualifiers != null && qualifiers.count() > 0) {
-			qualifiers.addObject(qual);
-			qual = new EOAndQualifier(qualifiers);
+		if(extraQualifier != null || qualifier != null) {
+			EOQualifier[] quals = new EOQualifier[] {qual,extraQualifier,qualifier};
+			qual = new EOAndQualifier(new NSArray(quals));
 		}
 		EOFetchSpecification fs = new EOFetchSpecification(entityName,qual,EduLesson.sorter);
 		NSArray prefetchPaths = (NSArray)present.valueForKey("prefetchPaths");
@@ -326,15 +317,14 @@ public class LessonNoteEditor extends WOComponent {
 	}
 
 	public void updateLessonList() {
-		NSMutableArray qualifiers = new NSMutableArray();
-		if(currTab() != null && currTab().qualifier() != null) {
-			qualifiers.addObject(currTab().qualifier());
+		EOQualifier qualifier = null;
+		if(currTab() != null) {
+			qualifier = currTab().qualifier();
 		}
 		if(valueForKeyPath("currLesson.editingContext") != null) {
 			ec.refaultObject(currLesson());
 		}
-
-		lessonsList = lessonListForCourseAndPresent(course, present, qualifiers);
+		lessonsList = lessonListForCourseAndPresent(course, present, qualifier);
 		if(lessonsList != null && lessonsList.count() > 0) {
 			EduLesson lesson = (EduLesson)lessonsList.lastObject();
 			session().setObjectForKey(lesson.date(), "recentDate");

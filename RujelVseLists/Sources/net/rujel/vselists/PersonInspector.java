@@ -198,7 +198,6 @@ public class PersonInspector extends com.webobjects.appserver.WOComponent {
 
 	public WOActionResults save() {
 		EOEditingContext ec = person.editingContext();
-		ec.lock();
 		String newCode = absCodeFromDict(currUsage);
 		if(newCode != null) {
 			setCode(newCode);
@@ -225,8 +224,6 @@ public class PersonInspector extends com.webobjects.appserver.WOComponent {
 					new Object[] {session(),person,currUsage.valueForKey("entity"),e});
 			session().takeValueForKey(e.getMessage(), "message");
 			ec.revert();
-		} finally {
-			ec.unlock();
 		}
 		returnPage.ensureAwakeInContext(context());
 		if(resultPath != null) {
@@ -242,12 +239,7 @@ public class PersonInspector extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults cancel() {
 		EOEditingContext ec = person.editingContext();
-		ec.lock();
-		try {
-			ec.revert();
-		} finally {
-			ec.unlock();
-		}
+		ec.revert();
 		returnPage.ensureAwakeInContext(context());
 		return returnPage;
 	}

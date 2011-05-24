@@ -102,8 +102,6 @@ public class Overview extends WOComponent {
     public Overview(WOContext context) {
         super(context);
 		ec = new SessionedEditingContext(session());
-		ec.lock();
-		ec.unlock();
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.setTime((NSTimestamp)session().valueForKey("today"));
 		cal.set(GregorianCalendar.HOUR_OF_DAY, 0);
@@ -188,28 +186,39 @@ public class Overview extends WOComponent {
 		notesAddOns = null;*/
 	}
 	
+	protected EOQualifier periodQualifier(String field) {
+		if(since == null) {
+			if(to == null)
+				return null;
+			else
+				return new EOKeyValueQualifier(field,
+						EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+		} else if(to == null) {
+			return new EOKeyValueQualifier(field,
+					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+		}
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier(field,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+		quals[1] = new EOKeyValueQualifier(field,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+		return new EOAndQualifier(new NSArray(quals));
+	}
+	
 	public void updateLessonLists() {
 		if(courses == null || courses.count() == 0) return;
 		Enumeration enu = courses.objectEnumerator();
-		NSMutableArray qualifiers = new NSMutableArray();
-		if(to != null) {
-			session().setObjectForKey(to, "recentDate");
-			qualifiers.addObject(new EOKeyValueQualifier("date",
-					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
-		} else {
+		if(to == null) {
 			session().removeObjectForKey("recentDate");	
 		}
-		if(since != null) {
-			qualifiers.addObject(new EOKeyValueQualifier("date",
-					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
-		}
+		EOQualifier qual = periodQualifier("date");
 		NSKeyValueCoding present = present();
 		while(enu.hasMoreElements()) {
 			courseItem = (NSMutableDictionary)enu.nextElement();
 			//NSArray tmp = (NSArray)courseItem.valueForKeyPath("course.lessons");
 			EduCourse course = (EduCourse)courseItem.valueForKey("course");
 			NSArray lessons = LessonNoteEditor.lessonListForCourseAndPresent(
-					course, present, qualifiers.mutableClone());
+					course, present, qual);
 			courseItem.setObjectForKey(lessons,"lessonsList");
 		}
 		/*NSArray notesAddOns = (NSArray)session().objectForKey("notesAddOns");
@@ -230,24 +239,15 @@ public class Overview extends WOComponent {
 		courses = (NSArray)currSubject.valueForKey("courses");
 		if(courses == null || courses.count() == 0) return;
 		Enumeration enu = courses.objectEnumerator();
-		NSArray args = new NSArray(new Object[] { since,to });
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
+		EOQualifier qual = periodQualifier("date");
 		courses = new NSMutableArray();
 		NSKeyValueCoding present = present();
 		while(enu.hasMoreElements()) {
 			EduCourse currCourse = (EduCourse)enu.nextElement();
 			courseItem = new NSMutableDictionary();
 			courseItem.setObjectForKey(currCourse,"course");
-			/*NSArray tablist = (NSArray)currCourse.valueForKey("sortedTabs");
-			if(tablist != null && tablist.count() > 0) {
-				courseItem.setObjectForKey(tablist,"tablist");
-				courseItem.setObjectForKey(Boolean.TRUE,"hasTabs");
-			} else {
-				courseItem.setObjectForKey(Boolean.FALSE,"hasTabs");
-			}*/
-			NSMutableArray qualifiers = new NSMutableArray(qual);
 			NSArray lessons = LessonNoteEditor.lessonListForCourseAndPresent(
-					currCourse, present, qualifiers);
+					currCourse, present, qual);
 			courseItem.setObjectForKey(lessons,"lessonsList");
 			((NSMutableArray)courses).addObject(courseItem);
 		}

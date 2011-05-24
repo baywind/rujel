@@ -338,7 +338,6 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			return this;
 		}
 		String action = "modified";
-		ec.lock();
 		if(substitute == null) {
 			substitute = (Substitute)EOUtilities.createAndInsertInstance(ec, 
 					Substitute.ENTITY_NAME);
@@ -400,7 +399,6 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults delete() {
 		EOEditingContext ec = lesson.editingContext(); 
-		ec.lock();
 		if(substitute != null && substitute.editingContext() != null) {
 			logger.log(WOLogLevel.EDITING,"Deleting substitute",substitute);
 			if(others != null && others.count() > 1) {
@@ -450,8 +448,6 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 			session().takeValueForKey(e.getMessage(), "message");
 			Object[] args = new Object[] {session(),lesson,e};
 			logger.log(WOLogLevel.WARNING,"Failed to save "+ action + " Substitute for lesson ",args);
-		} finally {
-			ec.unlock();
 		}
 		session().removeObjectForKey("lessonProperties");
 	}

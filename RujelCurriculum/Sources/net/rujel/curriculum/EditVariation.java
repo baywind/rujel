@@ -175,7 +175,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(variation != null && variation.date().equals(date) && variation.value().equals(value)
     			 && variation.reason() == reason && !ec.updatedObjects().contains(reason))
     		return done(false);
-    	ec.lock();
     	if(variation == null) {
     		variation = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
     		variation.setCourse(course);
@@ -202,8 +201,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),e,variation}; 
 			Curriculum.logger.log(WOLogLevel.WARNING,"Error saving negative Variation",args);
 			session().takeValueForKey(e.getMessage(), "message");
-		} finally {
-			ec.unlock();
 		}
     	return done(true);
     }
@@ -218,7 +215,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(variation == null)
     		return done(false);
     	EOEditingContext ec = variation.editingContext();
-    	ec.lock();
     	ec.deleteObject(variation);
     	try {
     		ec.saveChanges();
@@ -239,8 +235,6 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 			Object[] args = new Object[] {session(),e,variation}; 
 			Curriculum.logger.log(WOLogLevel.WARNING, "Error deleting negative Variation",args);
 			session().takeValueForKey(e.getMessage(), "message");
-		} finally {
-			ec.unlock();
     	}
     	return done(true);
     }

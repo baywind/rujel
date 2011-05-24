@@ -311,13 +311,11 @@ public class SrcMark extends WOComponent {
 
     public void undoCreation() {
 		currIndex = -1;
-		ec.lock();
 		try {
 			ec.revert();
 		} catch (NSValidation.ValidationException vex) {
 			session().takeValueForKey(vex.getMessage(),"message");
 		}
-		ec.unlock();
         //return null;
     }
 	

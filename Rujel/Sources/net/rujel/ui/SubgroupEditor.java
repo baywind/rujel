@@ -209,7 +209,6 @@ public class SubgroupEditor extends WOComponent {
 		WOActionResults nextPage = null;
 		EOEditingContext ec = course.editingContext();
 //		if(ec.hasChanges()) {
-			ec.lock();
 			course.setSubgroup(subgroup.allObjects());
 			WOLogLevel level = WOLogLevel.EDITING;
 			try {
@@ -244,8 +243,6 @@ public class SubgroupEditor extends WOComponent {
 						new Object[] {session(),course,ex});
 				session().takeValueForKey(ex.toString(),"message");
 			}
-			ec.unlock();
-			
 //		}
 		return nextPage;
 	}

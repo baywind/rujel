@@ -165,9 +165,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     
     protected void revert() {
     	if(ec.hasChanges()) {
-    		ec.lock();
     		ec.revert();
-    		ec.unlock();
     		if(currReason != null && currReason.editingContext() == null)
     			currReason = null;
     	}
@@ -504,7 +502,6 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void createReason() {
-		ec.lock();
 		if(ec.hasChanges()) {
 			ec.revert();
 		}
@@ -516,7 +513,6 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		} else {
 			currReason.setReason((String)plist.valueForKey("newReason"));
 		}
-		ec.unlock();
 		currObject = currReason;
 		tmpDict.takeValueForKey(null, "archivesCount");
 	}
@@ -614,7 +610,6 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		if(set == null || set.count() == 0) {
 			return;
 		}
-		ec.lock();
 		Number idx = (Number)tmpDict.removeObjectForKey("selectedReason");
 		Reason.Props props = (Reason.Props)tmpDict.removeObjectForKey("reasonProps");
 		boolean newReason = (idx == null || idx.intValue() < 0);
@@ -640,7 +635,6 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			save();
 			ifArchive = newReason;
 		}
-		ec.unlock();
 		set.removeAllObjects();
 	}
 	
