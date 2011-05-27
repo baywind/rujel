@@ -221,7 +221,15 @@ public class TableLoginHandler implements LoginHandler {
 				au.removeObjectFromBothSidesOfRelationshipWithKey(gr, AutUser.GROUPS_KEY);
 			}
 		}
-
+		if(au.editingContext().hasChanges()) {
+			try{
+				au.editingContext().saveChanges();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING, "Error updating user goups",
+						new Object[] {au,parent,e});
+				au.editingContext().revert();
+			}
+		}
 	}
 	
 	public static String getPasswordDigest(String password) {
