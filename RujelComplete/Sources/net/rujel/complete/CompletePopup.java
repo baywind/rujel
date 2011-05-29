@@ -40,7 +40,6 @@ import net.rujel.reusables.WOLogLevel;
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
-import com.webobjects.appserver.WORequest;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.*;

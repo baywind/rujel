@@ -52,6 +52,7 @@ public class Application extends UTF8Application {
 	public Integer year;
 	protected String serverUrl;
 	protected String urlPrefix;
+	protected String errorMessage;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -69,6 +70,11 @@ public class Application extends UTF8Application {
 		if(propertiesPath != null) {
 			LogInitialiser.initLogging(null, propertiesPath, logger);
 		}
+		BufferHandler handler = new BufferHandler(
+				"Sorry!\nRUJEL failed to start.\nPlease review log for details.\r-----\r\r");
+		handler.setLevel(WOLogLevel.INFO);
+		Logger.getLogger("").addHandler(handler);
+		
 		ModulesInitialiser.readModules(SettingsReader.rootSettings(), "modules");
 		propertiesPath = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
 		if(propertiesPath != null) {
@@ -83,6 +89,7 @@ public class Application extends UTF8Application {
 			else
 				_strings = new StringStorage(propertiesPath,null);
 		}
+		
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
 			NSTimestamp today = null;
@@ -102,12 +109,15 @@ public class Application extends UTF8Application {
 			if(!DataBaseConnector.makeConnections(
 					EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
 				year = new Integer(year.intValue() -1);
-				logger.log(WOLogLevel.INFO,"Trying to connect to previous year database:" + year);
+				logger.log(WOLogLevel.INFO,"Trying to connect to previous year database: " + year);
 				if(!DataBaseConnector.makeConnections(
 						EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
 					logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
 					System.err.println("Could not connect to database!");
-					terminate();
+					errorMessage = handler.toString();
+					Logger.getLogger("").removeHandler(handler);
+					handler.close();
+//					terminate();
 					return;
 				}
 			}
@@ -115,7 +125,10 @@ public class Application extends UTF8Application {
 			if(!DataBaseConnector.makeConnections()) {
 				logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
 				System.err.println("Could not connect to database!");
-				terminate();
+				errorMessage = handler.toString();
+				Logger.getLogger("").removeHandler(handler);
+				handler.close();
+//				terminate();
 				return;
 			}
 		}
@@ -169,6 +182,8 @@ public class Application extends UTF8Application {
 		if(slash > 0)
 			serverUrl = serverUrl.substring(slash0,slash);
 		urlPrefix = SettingsReader.stringForKeyPath("ui.urlPrefix", "?/Apps/WebObjects/Rujel.woa");
+		Logger.getLogger("").removeHandler(handler);
+		handler.close();
 		logger.log(WOLogLevel.INFO,"Rujel started. Version:" + System.getProperty("RujelVersion")
 				 + ' ' + System.getProperty("RujelRevision"), webserverConnectURL());
 	}
@@ -304,10 +319,20 @@ public class Application extends UTF8Application {
 		return urlPrefix;
 	}
 	
+	public WOResponse dispatchRequest(WORequest aRequest) {
+		if(errorMessage == null)
+			return super.dispatchRequest(aRequest);
+		WOResponse response = createResponseInContext(aRequest.context());
+		response.setContent(errorMessage);
+		return response;
+	}
+	
 	public WORequest createRequest(String aMethod, String aURL, String anHTTPVersion, 
 			Map someHeaders, NSData aContent, Map someInfo) {
 		WORequest result = super.createRequest(
 				aMethod, aURL, anHTTPVersion, someHeaders, aContent, someInfo);
+		if(errorMessage != null)
+			return result;
 		if(serverUrl == null || serverUrl.charAt(0) == '?') {
 			String url = WORequestAdditions.hostName(result);
 	        if(url != null && url.length() > 0 && 
