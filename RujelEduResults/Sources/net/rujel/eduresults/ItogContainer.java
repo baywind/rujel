@@ -73,15 +73,43 @@ public class ItogContainer extends _ItogContainer {
 	}
 	
 	public String title() {
+		return title(false);
+	}
+	public String titleHTML() {
+		return title(true);
+	}
+
+	public boolean noNum() {
+		return  (itogType().inYearCount().intValue() == 0 && num().intValue() == 0);
+	}
+	
+	public String title(boolean html) {
 		ItogType type = itogType();
 		int count = type.inYearCount().intValue();
 		int num = num().intValue();
+		if(count <= 1 && num <= count)
+			return type.title();
+		StringBuilder buf = new StringBuilder();
 		if(count > 1) {
-			return Various.makeRoman(num) + ' ' + type.title();
-		} else if(count == 0 && num > 0) {
-			return type.title() + ' ' + Integer.toString(num);			
+			buf.append(Various.makeRoman(num));
+			if(html)
+				buf.append("<br/><small>");
+			else
+				buf.append(' ');
+			buf.append(type.title());
+			if(html)
+				buf.append("</small>");
+		} else {
+			buf.append(type.title());
+			if(html)
+				buf.append("<br/><small>");
+			else
+				buf.append(' ');
+			buf.append(num);
+			if(html)
+				buf.append("</small>");
 		}
-		return type.title();
+		return buf.toString();
 	}
 	
 	public String name() {

@@ -266,12 +266,14 @@ public class Executor implements Runnable {
 				"strings.Strings.Overview.defaultReporter"),0);
 //		File groupDir = new File(folder,grDir);
 		NSMutableDictionary grDict = null;
+		NSMutableArray updateGroups = new NSMutableArray();
 		if(gr != null) {
 			String grDir = StudentCatalog.groupDirName(gr,false);
 			grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
 			if(grDict == null)
 				grDict = new NSMutableDictionary();
 			folder.enterDir(grDir, true);
+			updateGroups.addObject(gr);
 		}
 		boolean updateList = false;
 		for (int i = 0; i < task.studentIDs.length; i++) {
@@ -293,6 +295,7 @@ public class Executor implements Runnable {
 				if(grDict == null)
 					grDict = new NSMutableDictionary();
 				folder.enterDir(grDir, true);
+				updateGroups.addObject(gr);
 			}
 			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
 //			File stDir = new File(groupDir,key);
@@ -318,6 +321,19 @@ public class Executor implements Runnable {
 			}
 			folder.leaveDir();
 		}
+		NSArray grReports = (NSArray)ses.valueForKeyPath("modules.groupComplete");
+		if(grReports != null && grReports.count() > 0) {
+			Enumeration enu = updateGroups.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				gr = (EduGroup) enu.nextElement();
+				String grDir = StudentCatalog.groupDirName(gr,false);
+				folder.enterDir(grDir, true);
+				StudentCatalog.completeGroup(gr, gr.list(), grReports, folder);
+				folder.leaveDir();
+			}
+		} else {
+			grReports = null;
+		}
 		if(updateList) {
 			File file = new File(folder.getBase(),"index.html");
 			Integer section = getDefaultSection();
@@ -330,6 +346,7 @@ public class Executor implements Runnable {
 			page.takeValueForKey(ec, "ec");
 			page.takeValueForKey(catalog, "catalog");
 			page.takeValueForKey(groups, "eduGroups");
+	    	page.takeValueForKey(Boolean.valueOf(grReports != null), "grReports");
 			if(section != null)
 				section = (Integer)ses.valueForKeyPath("state.section.idx");
 			String filename = (section == null)? "list.html" : "list" + section  + ".html";
@@ -365,8 +382,12 @@ public class Executor implements Runnable {
 		FileWriterUtil folder = Executor.completeFolder(task.year, COURSES,false,false,true);
 		folder.ctx = ctx;
 		File file = new File(folder.getBase(),"index.html");
-		if(!file.exists())
-			prepareFolder(folder, "eduGroup.html");
+		if(!file.exists()) {
+			Integer section = getDefaultSection();
+			String filename = (section == null)?"eduGroup.html":
+				"eduGroup" + section + ".html";
+			prepareFolder(folder, filename);
+		}
 		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());
 		String crID = ((EOKeyGlobalID)task.courseID).keyValues()[0].toString();
 		catalog.takeValueForKey(ready, crID);
@@ -422,50 +443,30 @@ public class Executor implements Runnable {
     }
     
     protected static void createIndex(FileWriterUtil folder, String title,String list) {
-////    	File file = new File(folder,"index.html");
-//    	if(file.exists())
-//    		return file;
     	try {
 			InputStream str = WOApplication.application().resourceManager().
 					inputStreamForResourceNamed("index.html", "RujelComplete", null);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(str,"utf8"));
-//			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-//					new FileOutputStream(file),"utf8"));
-			NSMutableData content = new NSMutableData();
+			StringBuilder buf = new StringBuilder();
 			while (reader.ready()) {
 				String line = reader.readLine();
 				if(line == null)
 					break;
 				line = line.replace("$title", title);
 				line = line.replace("$list", list);
-//				writer.write(line);
-//				writer.newLine();
-				content.appendBytes(line.getBytes("utf8"));
+				buf.append(line).append('\n');
 			}
 			reader.close();
-			folder.writeData("index.html", content);
-//			writer.close();
+			folder.writeData("index.html", new NSData(buf.toString(),"utf8"));
 		} catch (IOException e) {
 			logger.log(WOLogLevel.WARNING,"Error preparing index file",e);
 		}
-//    	return file;
     }
     
     protected static void copyResource(FileWriterUtil folder, String fileName) {
-//    	File file = new File(folder, fileName);
-//    	if(file.exists())
-//    		return file;
-//    	try {
-			byte[] fileBites = WOApplication.application().resourceManager().
+    	byte[] fileBytes = WOApplication.application().resourceManager().
 			bytesForResourceNamed(fileName, "RujelComplete", null);
-			folder.writeData(fileName, new NSData(fileBites));
-//			FileOutputStream fos = new FileOutputStream(file);
-//			fos.write(fileBites);
-//			fos.close();
-//		} catch (IOException e) {
-//			logger.log(WOLogLevel.WARNING,"Could not copy resource file: " + fileName,e);
-//		}
-//    	return file;
+    	folder.writeData(fileName, new NSData(fileBytes));
     }
     
     public static void prepareFolder(FileWriterUtil folder, String listName) {

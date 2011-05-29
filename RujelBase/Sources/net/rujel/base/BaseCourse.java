@@ -303,7 +303,7 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	public NSArray groupList() {
 		NSArray studentsList = (namedFlags().flagForKey("mixedGroup"))?null
 				:eduGroup().list();
-		NSArray audience = (NSArray)storedValueForKey("audience");
+		NSArray audience = (NSArray)valueForKey("audience");
 		if(audience == null || audience.count() == 0) {
 			return (studentsList==null)?NSArray.EmptyArray:studentsList;
 		}

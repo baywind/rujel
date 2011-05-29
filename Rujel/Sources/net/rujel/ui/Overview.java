@@ -517,4 +517,15 @@ public class Overview extends WOComponent {
 	public void setTo(NSTimestamp to) {
 		this.to = to;
 	}
+	
+	public boolean showGroupReports() {
+		return (currClass != null && currStudent == null);
+	}
+	
+	public WOActionResults groupReport() {
+		String name = (String)reporterItem.valueForKey("component");
+		WOComponent page = pageWithName(name);
+		page.takeValueForKey(currClass,"eduGroup");
+		return page;
+	}
 }

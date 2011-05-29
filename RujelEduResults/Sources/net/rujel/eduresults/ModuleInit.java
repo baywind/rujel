@@ -69,6 +69,9 @@ public class ModuleInit {
 		} else if("planTabs".equals(obj)) {
 			return WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.planTab");
+		} else if("groupComplete".equals(obj)) {
+//			return null; 
+			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.groupItogs");
 		} else if("completionLock".equals(obj)) {
 			return new NSDictionary(
 					new String[] {ItogMark.ENTITY_NAME,"student","cycle","cycle"},

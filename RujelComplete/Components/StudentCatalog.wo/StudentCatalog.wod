@@ -95,3 +95,15 @@ TotalStudents : WOString {
   value = total;
   numberformat = "0";
 }
+
+TotalGrTitle : WOString {
+  value = session.strings.RujelComplete_Complete.totalGroups;
+  valueWhenEmpty = "Total groups";
+  escapeHTML = false;
+}
+
+StudentsTitle : WOString {
+  value = session.strings.RujelComplete_Complete.students;
+  valueWhenEmpty = "Students";
+  escapeHTML = false;
+}

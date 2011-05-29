@@ -34,6 +34,10 @@
 	<string>Выполняется</string>
 	<key>progress</key>
 	<string>Состояние</string>
+	<key>totalGroups</key>
+	<string>Всего групп</string>
+	<key>students</key>
+	<string>Учащихся</string>
 	<key>messages</key>
 	<dict>
 		<key>closingTitle</key>

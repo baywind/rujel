@@ -138,14 +138,6 @@ public class ItogsPresenter extends AddOnPresenter {
 		return "<sup style=\"font-size:smaller;\">*</sup>";
 	}
 	
-	public String periodTitle() {
-		if(periodItem.num() > 0) {
-			return Various.makeRoman(periodItem.num().intValue()) + 
-					"<br/>\n<small>" + periodItem.itogType().title() + "</small>";
-		}
-		return periodItem.itogType().title();
-	}
-	
     public WOComponent moreInfo() {
 		course().editingContext().revert();
         WOComponent nextPage = pageWithName("ItogPopup");
