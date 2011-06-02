@@ -12,7 +12,6 @@ import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
@@ -107,8 +106,29 @@ public class GroupItogs extends WOComponent {
 				while (fenu.hasMoreElements()) {
 					ItogMark itog = (ItogMark) fenu.nextElement();
 					EduCycle cycle = itog.cycle();
-					if(!cycles.containsObject(cycle))
+					index = cycles.indexOf(cycle);
+					if(index < 0) {
+						index = cycles.count();
 						cycles.addObject(cycle);
+						if(byCycle.length <= index) {
+							NSArray[] tmp = byCycle;
+							byCycle = new NSArray[index + 10];
+							for (int i = 0; i < tmp.length; i++) {
+								byCycle[i] = tmp[i];
+							}
+						}
+						
+					}
+					if(byCycle[index] == null) {
+						byCycle[index] = new NSArray(itog.container());
+					} else if(!byCycle[index].containsObject(itog.container())) {
+						NSMutableArray tmp = (byCycle[index] instanceof NSMutableArray)?
+								(NSMutableArray)byCycle[index] : byCycle[index].mutableClone();
+						tmp.addObject(itog.container());
+						EOSortOrdering.sortArrayUsingKeyOrderArray(tmp, ItogContainer.sorter);
+						byCycle[index] = tmp;
+					}
+					index = 0;
 					NSMutableDictionary md = (NSMutableDictionary)dict.objectForKey(cycle);
 					if(md == null) {
 						md = new NSMutableDictionary(itog.mark(),itog.container());
@@ -136,7 +156,11 @@ public class GroupItogs extends WOComponent {
 				}
 			}
 		}
-		list = EOUtilities.objectsMatchingKeyAndValue(ec, EduCourse.entityName, "eduGroup", group);
+		quals[0] = new EOKeyValueQualifier("eduGroup", EOQualifier.QualifierOperatorEqual, group);
+		quals[1] = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,year);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		fs = new EOFetchSpecification(EduCourse.entityName,quals[0],null);
+		list = ec.objectsWithFetchSpecification(fs);
 		if(list != null && list.count() > 0) {
 			enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -176,6 +200,8 @@ public class GroupItogs extends WOComponent {
 			itogs = ItogType.itogsForTypeList(itogs,crs.eduYear());
 			forListName.takeValueForKey(itogs, listName);
 		}
+		if(itogs == null || itogs.count() == 0)
+			return;
 		EduCycle cycle = crs.cycle();
 		if(complete != null) { // put dots
 		if(stDict == null) {
@@ -211,8 +237,14 @@ public class GroupItogs extends WOComponent {
 		if(index < 0) {
 			index = cycles.count();
 			cycles.addObject(cycle);
+			if(byCycle.length <= index) {
+				NSArray[] tmp = byCycle;
+				byCycle = new NSArray[index + 10];
+				for (int i = 0; i < tmp.length; i++) {
+					byCycle[i] = tmp[i];
+				}
+			}
 		}
-			
 		if(byCycle[index] == itogs)
 			return;
 		if(byCycle[index] != null) {
@@ -249,6 +281,14 @@ public class GroupItogs extends WOComponent {
 	
 	public EduCycle cycle() {
 		return (EduCycle)cycles.objectAtIndex(index);
+	}
+	public String cycleTitle() {
+		EduCycle cycle = cycle();
+		if(cycle.grade().equals(eduGroup.grade()))
+			return cycle().subject();
+		StringBuilder buf = new StringBuilder(cycle().subject());
+		buf.append(' ').append('(').append(cycle.grade()).append(')');
+		return buf.toString();
 	}
 	
 	public String itog() {
