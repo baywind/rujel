@@ -52,7 +52,7 @@ public class Application extends UTF8Application {
 	public Integer year;
 	protected String serverUrl;
 	protected String urlPrefix;
-	protected String errorMessage;
+	protected String _errorMessage;
 	
 	public SettingsReader prefs() {
 		return SettingsReader.rootSettings();
@@ -114,7 +114,7 @@ public class Application extends UTF8Application {
 						EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
 					logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
 					System.err.println("Could not connect to database!");
-					errorMessage = handler.toString();
+					_errorMessage = handler.toString();
 					Logger.getLogger("").removeHandler(handler);
 					handler.close();
 //					terminate();
@@ -125,7 +125,7 @@ public class Application extends UTF8Application {
 			if(!DataBaseConnector.makeConnections()) {
 				logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
 				System.err.println("Could not connect to database!");
-				errorMessage = handler.toString();
+				_errorMessage = handler.toString();
 				Logger.getLogger("").removeHandler(handler);
 				handler.close();
 //				terminate();
@@ -212,6 +212,9 @@ public class Application extends UTF8Application {
     }
     
     public WOResponse handleSessionRestorationErrorInContext(WOContext aContext) {
+    	if(_errorMessage != null) {
+    		return errorResponse(aContext);
+    	}
     	WOComponent page = pageWithName("MessagePage", aContext);
     	logger.log(WOLogLevel.FINE, "SessionRestorationErrorInContext",
     			(aContext.hasSession())?aContext.session():aContext.request().sessionID());
@@ -223,6 +226,9 @@ public class Application extends UTF8Application {
     }
     
     public WOResponse handleSessionCreationErrorInContext(WOContext aContext) {
+    	if(_errorMessage != null) {
+    		return errorResponse(aContext);
+    	}
     	WOComponent page = pageWithName("MessagePage", aContext);
     	Object[] args = new Object[3];
     	args[0] = (aContext.hasSession())?aContext.session():aContext.request().sessionID();
@@ -319,19 +325,32 @@ public class Application extends UTF8Application {
 		return urlPrefix;
 	}
 	
-	public WOResponse dispatchRequest(WORequest aRequest) {
+	public static WOResponse errorResponse(WOContext context) {
+		String errorMessage = ((Application)application())._errorMessage;
 		if(errorMessage == null)
-			return super.dispatchRequest(aRequest);
-		WOResponse response = createResponseInContext(aRequest.context());
+			return null;
+		WOResponse response = context.response();
+		if(response == null)
+			response = application().createResponseInContext(context);
 		response.setContent(errorMessage);
+		response.setHeader("text/plain; charset=UTF-8","Content-Type");
 		return response;
+	}
+	
+	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
+		if(_errorMessage == null) {
+			super.appendToResponse(aResponse,aContext);
+		} else {
+			aResponse.setContent(_errorMessage);
+			aResponse.setHeader("text/plain; charset=UTF-8","Content-Type");
+		}
 	}
 	
 	public WORequest createRequest(String aMethod, String aURL, String anHTTPVersion, 
 			Map someHeaders, NSData aContent, Map someInfo) {
 		WORequest result = super.createRequest(
 				aMethod, aURL, anHTTPVersion, someHeaders, aContent, someInfo);
-		if(errorMessage != null)
+		if(_errorMessage != null)
 			return result;
 		if(serverUrl == null || serverUrl.charAt(0) == '?') {
 			String url = WORequestAdditions.hostName(result);

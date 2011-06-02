@@ -45,6 +45,13 @@ public class DirectAction extends WODirectAction {
         super(aRequest);
     }
     
+    public WOActionResults performActionNamed(String anActionName) {
+		WOResponse response = Application.errorResponse(context());
+		if(response != null)
+			return response;
+		return super.performActionNamed(anActionName);
+    }
+    
     public WOActionResults defaultAction() {
     	WOActionResults result;
 		WOSession ses = WOApplication.application().restoreSessionWithID(

@@ -177,6 +177,7 @@ public class GroupItogs extends WOComponent {
 			forListName.takeValueForKey(itogs, listName);
 		}
 		EduCycle cycle = crs.cycle();
+		if(complete != null) { // put dots
 		if(stDict == null) {
 			NSArray list = (NSArray)crs.valueForKey("audience");
 			if(list == null || list.count() == 0) { //prepare dots for students
@@ -204,6 +205,7 @@ public class GroupItogs extends WOComponent {
 			}
 			if(isComplete)
 				dots.takeValueForKey(Boolean.TRUE, "complete");
+		}
 		}
 		index = cycles.indexOfObject(cycle);
 		if(index < 0) {
