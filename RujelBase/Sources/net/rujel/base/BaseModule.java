@@ -30,18 +30,26 @@
 package net.rujel.base;
 
 
+import java.util.Enumeration;
+
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
+import net.rujel.ui.DateAgregate;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.eocontrol.EOAndQualifier;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class BaseModule {
@@ -61,6 +69,8 @@ public class BaseModule {
 			if(lessonsTab == null)
 				return new NSMutableDictionary();
 			return PlistReader.cloneDictionary(lessonsTab, true);
+		} else if ("dateAgregate".equals(obj)) {
+			return dateAgregate(ctx);
 		} else if("reportForStudent".equals(obj)) {
 			NSDictionary settings = (NSDictionary)ctx.session().objectForKey("reportForStudent");
 			return LessonReport.reportForStudent(settings);
@@ -133,6 +143,70 @@ public class BaseModule {
 		if(found != null && found.count() > 0) {
 			return ctx.session().valueForKeyPath(
 					"strings.RujelBase_Base.relatedNotesFound");
+		}
+		return null;
+	}
+	
+	public static Object dateAgregate(WOContext ctx) {
+		DateAgregate agr = (DateAgregate)ctx.session().objectForKey("dateAgregate");
+		if (agr == null)
+			return null;
+		EOQualifier qual = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,agr.course());
+		if(agr.begin != null || agr.end != null) {
+			NSMutableArray quals = new NSMutableArray(qual);
+			if(agr.begin != null) {
+				quals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY, 
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo, agr.begin));
+			}
+			if(agr.end != null) {
+				quals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY, 
+						EOQualifier.QualifierOperatorLessThanOrEqualTo, agr.end));
+			}
+			if(quals.count() > 1)
+				qual = new EOAndQualifier(quals);
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(
+				BaseLesson.ENTITY_NAME,qual,MyUtility.dateSorter);
+		EOEditingContext ec = agr.course().editingContext();
+		NSArray lessons = ec.objectsWithFetchSpecification(fs);
+		if(lessons == null || lessons.count() == 0)
+			return null;
+		Enumeration enu = lessons.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			BaseLesson lesson = (BaseLesson) enu.nextElement();
+			NSArray notes = lesson.notes();
+			if(notes == null || notes.count() == 0)
+				continue;
+			NSMutableDictionary lDict = agr.getOnDate(lesson.date());
+			if(lDict == null) {
+				lDict = new NSMutableDictionary();
+				agr.setOnDate(lDict, lesson.date());
+			}
+			Enumeration nEnu = notes.objectEnumerator();
+			while (nEnu.hasMoreElements()) {
+				EOEnterpriseObject note = (EOEnterpriseObject) nEnu.nextElement();
+				String value = (String)note.valueForKey("note");
+				if(value == null || value.length() == 0)
+					continue;
+				Student student = (Student)note.valueForKey("student");
+				NSMutableDictionary stDict = (NSMutableDictionary)lDict.objectForKey(student);
+				if(stDict == null) {
+					stDict = new NSMutableDictionary();
+					lDict.setObjectForKey(stDict, student);
+				}
+				String key = (value.length() <= 3)?"prefix":"hover";
+				StringBuilder buf = (StringBuilder)stDict.valueForKey(key);
+				if(buf == null) {
+					buf = new StringBuilder();
+					stDict.takeValueForKey(buf, key);
+				} else {
+					if(buf.indexOf(value) >= 0)
+						continue;
+					buf.append((value.length() <= 3)?',':'\n');
+				}
+				buf.append(value);
+			}
 		}
 		return null;
 	}

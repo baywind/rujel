@@ -66,18 +66,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		if(_integralPresenter == null) {
 			boolean weightless = !hasWeight();//(weight().compareTo(BigDecimal.ZERO) == 0);
 			String key = (weightless)?"presenters.weightless":"presenters.workIntegral";
-			EOEditingContext ec = editingContext();
-			EOEnterpriseObject setting = SettingsBase.settingForCourse(key, course(), ec);
-			if(setting != null) {
-				Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-				key = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
-				if (pKey != null) {
-					_integralPresenter = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
-							ec, BorderSet.ENTITY_NAME, pKey);
-				} else if(key != null) {
-					_integralPresenter = BorderSet.fractionPresenterForTitle(ec, key);
-				}
-			}
+			_integralPresenter = BorderSet.presenterForCourse(course(), key);
 			if(_integralPresenter == null) {
 				if(weightless)
 					_integralPresenter = new FractionPresenter.None("#"); 

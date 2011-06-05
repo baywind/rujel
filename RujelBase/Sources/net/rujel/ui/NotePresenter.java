@@ -279,13 +279,13 @@ public class NotePresenter extends WOComponent {
 		return titleForLesson(lesson());
 	}
 	
-	public static String titleForLesson(EduLesson lesson) {
+	public static String titleForLesson(NSKeyValueCoding lesson) {
 		if(lesson==null)return "@";
-        String result = lesson.title();
+        String result = (String)lesson.valueForKey("title");
 		if(result != null)
 			return result;
 		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(lesson.date());
+		cal.setTime((NSTimestamp)lesson.valueForKey("date"));
 		int day = cal.get(GregorianCalendar.DAY_OF_MONTH);
 		int month = cal.get(GregorianCalendar.MONTH);
 		NSArray months = (NSArray)WOApplication.application().valueForKeyPath("strings.Reusables_Strings.presets.monthShort");

@@ -36,6 +36,9 @@ import com.webobjects.eoaccess.EOUtilities;
 import java.math.*;
 import java.util.Enumeration;
 
+import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduCourse;
+
 public class BorderSet extends _BorderSet implements FractionPresenter
 {
 	protected static final EOSortOrdering so = EOSortOrdering.sortOrderingWithKey(
@@ -67,7 +70,24 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		BorderSet result = (BorderSet)found.objectAtIndex(0);
 		return result;//.getPresenter();
 	}
-	
+    
+    public static FractionPresenter presenterForCourse(EduCourse course, String key) {
+    	if(!key.startsWith("presenters."))
+			key = "presenters." + key;
+		EOEditingContext ec = course.editingContext();
+		EOEnterpriseObject setting = SettingsBase.settingForCourse(key, course, ec);
+		if(setting != null) {
+			Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+			key = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+			if (pKey != null) {
+				return (BorderSet)EOUtilities.objectWithPrimaryKeyValue(ec, ENTITY_NAME, pKey);
+			} else if(key != null) {
+				return BorderSet.fractionPresenterForTitle(ec, key);
+			}
+		}
+		return null;
+    }
+    
     private FractionPresenter _presenter;
     public FractionPresenter getPresenter() {
     	if(_presenter != null) return _presenter;

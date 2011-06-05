@@ -75,8 +75,29 @@ public class NotesPage extends WOComponent {
 			else
 				return null;
 		} 
-		return (NSArray)valueForBinding("lessonsList");
-		//return lessonsList;
+		NSArray lessons = (NSArray)valueForBinding("lessonsList");
+		if("ConsolidatedCell".equals(presenter())) {
+			DateAgregate agr = (DateAgregate)valueForBinding("dateAgregate");
+			if(agr == null) {
+				agr = new DateAgregate((EduCourse)valueForBinding("course"));
+				if(canSetValueForBinding("dateAgregate"))
+					setValueForBinding(agr, "dateAgregate");
+			}
+			NSArray list = agr.listForMask(lessons);
+			if(list == null) {
+				EduLesson lesson = (EduLesson)lessons.objectAtIndex(0);
+				agr.begin = lesson.date();
+				lesson = (EduLesson)lessons.lastObject();
+				agr.end = lesson.date();
+				session().setObjectForKey(agr, "dateAgregate");
+				session().valueForKeyPath("modules.dateAgregate");
+				session().removeObjectForKey("dateAgregate");
+				agr.setInitialized(true);
+				list = agr.listForMask(lessons);
+			}
+			return list;
+		}
+		return lessons;
 	}
 	
 	protected PerPersonLink _currLesson;

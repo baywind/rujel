@@ -34,7 +34,6 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
 import net.rujel.base.Indexer;
-import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -356,9 +355,7 @@ public class MarksPresenter extends NotePresenter {
 		if(lesson() == null)
 			return FractionPresenter.NONE;
 		FractionPresenter result = null;
-		String key = "integralColor";
-		if(BigDecimal.ZERO.compareTo(lesson().weight()) == 0)
-			key = "weightlessColor";
+		String key = ((lesson().hasWeight()))?"integralColor":"weightlessColor";
 		NSMutableDictionary presenterCache = (NSMutableDictionary)valueForBinding("presenterCache");
 		if(presenterCache != null) {
 			result = (FractionPresenter)presenterCache.valueForKey(key);
@@ -366,21 +363,8 @@ public class MarksPresenter extends NotePresenter {
 				return result;
 		}
 		EOEditingContext ec = lesson().editingContext(); 
-		String key2 = "presenters." + key;
-		EOEnterpriseObject setting = SettingsBase.settingForCourse(key2,
-				lesson().course(), ec);
-		if(setting != null) {
-			Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-			key2 = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
-			if (pKey != null) {
-				result = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
-						ec, BorderSet.ENTITY_NAME, pKey);
-			} else if(key2 != null) {
-				result = BorderSet.fractionPresenterForTitle(ec, key2);
-			} else {
-				result = BorderSet.fractionPresenterForTitle(ec, "color");
-			}
-		} else {
+		result = BorderSet.presenterForCourse(lesson().course(), key);
+		if(result == null) {
 			result = BorderSet.fractionPresenterForTitle(ec, "color");
 		}
 		if(presenterCache != null)

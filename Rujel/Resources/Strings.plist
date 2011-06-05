@@ -109,6 +109,71 @@
 		<string>Выбор</string>
 		<key>manualTab</key>
 		<string>Задать параметры выборки вручную</string>
+		<key>consolidatedTab</key>
+		<dict>
+			<key>sort</key>
+			<string>00</string>
+			<key>title</key>
+			<string>обзор</string>
+			<key>hover</key>
+			<string>сводные данные</string>
+			<key>id</key>
+			<string>consolidatedTab</string>
+			<key>listPresenter</key>
+			<string>LessonList</string>
+			<key>presenter</key>
+			<string>ConsolidatedCell</string>
+			<key>params</key>
+			<array>
+				<dict>
+					<key>active</key>
+					<true/>
+					<key>attribute</key>
+					<string>date</string>
+					<key>defaultMax</key>
+					<string>$session.today</string>
+					<key>defaultMin</key>
+					<dict>
+						<key>cacheResult</key>
+						<true/>
+						<key>methodName</key>
+						<string>timestampByAddingGregorianUnits</string>
+						<key>object</key>
+						<string>$session.today</string>
+						<key>paramClasses</key>
+						<array>
+							<string>int</string>
+							<string>int</string>
+							<string>int</string>
+							<string>int</string>
+							<string>int</string>
+							<string>int</string>
+						</array>
+						<key>paramValues</key>
+						<array>
+							<integer>0</integer>
+							<integer>-1</integer>
+							<integer>0</integer>
+							<integer>0</integer>
+							<integer>0</integer>
+							<integer>0</integer>
+						</array>
+					</dict>
+					<key>fieldSize</key>
+					<integer>10</integer>
+					<key>formatter</key>
+					<string>date</string>
+					<key>qualifierSelector</key>
+					<string>&gt;=</string>
+					<key>secondSelector</key>
+					<string>&lt;=</string>
+					<key>title</key>
+					<string>Дата</string>
+				</dict>
+			</array>
+			<key>checkAccess</key>
+			<string>LessonNoteEditor</string>
+		</dict>
 	</dict>
 	<key>SubgroupEditor</key>
 	<dict>

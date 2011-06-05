@@ -63,6 +63,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	public Object selector;
 	public Student student;
+	public DateAgregate dateAgregate;
 
 	private EOEditingContext ec;
 
@@ -145,6 +146,7 @@ public class LessonNoteEditor extends WOComponent {
 			student = (Student)selector;
 			if(currLesson() != null) {
 				String ent = currLesson().entityName();
+				// TODO: review this
 				if(!ent.equals(present.valueForKey("entityName"))) {
 					Enumeration enu = presentTabs.objectEnumerator();
 					while (enu.hasMoreElements()) {
@@ -226,9 +228,15 @@ public class LessonNoteEditor extends WOComponent {
 		else
 			regime = NORMAL;
 
-		presentTabs = (NSArray)session().valueForKeyPath("modules.presentTabs");
-		if(presentTabs != null && presentTabs.count() > 0)
-			present = (NSKeyValueCoding)presentTabs.objectAtIndex(0);
+		present = (NSKeyValueCoding)session().valueForKeyPath(
+				"strings.Strings.LessonNoteEditor.consolidatedTab");
+		NSMutableArray tabs = (NSMutableArray)session().valueForKeyPath("modules.presentTabs");
+		if(tabs != null && tabs.count() > 0) {
+			tabs.insertObjectAtIndex(present, 0);
+			presentTabs = tabs.immutableClone();
+		} else {
+			presentTabs = new NSArray(present);
+		}
 		
 		refresh();
 //		notesAddOns = null;
@@ -992,12 +1000,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(regime == BIGTABLE) {
 			return (String)application().valueForKeyPath(key + "normal");
 		} else {
-			String result = (String)application().valueForKeyPath(key + "left");
-			if(present != null) {
-				result = result.substring(0,result.indexOf(' ') + 1);
-				result = result + present.valueForKey("title");
-			}
-			return result;
+			return (String)application().valueForKeyPath(key + "left");
 		}
 	}
 	

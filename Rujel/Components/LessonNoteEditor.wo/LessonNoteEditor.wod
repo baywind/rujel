@@ -92,6 +92,7 @@ NotesPage1: NotesPage {
 	selectStudentAction = selectStudent;
 	single = single;
 	present = present;
+	dateAgregate = dateAgregate;
 }
 
 OverGroupName: WOString {

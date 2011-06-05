@@ -1,0 +1,55 @@
+Container : WOGenericContainer {
+  elementName = "td";
+  colspan = datePlink.colspan;
+  style = "white-space:nowrap;";
+  align = "center";
+  class = dict.styleClass;
+  title = dict.hover;
+}
+
+HasStudent : WOConditional {
+  condition = student;
+}
+
+NoStudent : WOConditional {
+  condition = student;
+  negate = true;
+}
+
+NoSpan : WOConditional {
+  condition = datePlink.colspan;
+  negate = true;
+}
+HasColspan : WOConditional {
+  condition = datePlink.colspan;
+}
+
+TitleContainer : OnClickContainer {
+  elementName = "th";
+  invokeAction = ^selectAction;
+  onclick = session.checkRun;
+  title = titleHover;
+  align = "center";
+}
+
+Title : WOString {
+  value = lessonTitle;
+  escapeHTML = false;
+}
+
+Multicols : WORepetition {
+  count = datePlink.colspan;
+}
+
+Single : WOConditional {
+  condition = ^single;
+}
+NotSingle : WOConditional {
+  condition = ^single;
+  negate = true;
+}
+
+Value : WOString {
+  value = value;
+  escapeHTML = false;
+}

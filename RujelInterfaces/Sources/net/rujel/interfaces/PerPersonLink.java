@@ -29,8 +29,12 @@
 
 package net.rujel.interfaces;
 
+import java.util.Enumeration;
+
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableArray;
 
 public interface PerPersonLink {
 
@@ -40,15 +44,38 @@ public interface PerPersonLink {
 	
 	public int count();
 	
-	public static class Dictionary implements PerPersonLink {
-		private NSDictionary storage;
+	public static class Dictionary implements PerPersonLink , NSKeyValueCoding {
+		protected NSDictionary storage;
+		protected int count;
+		protected NSArray values;
 		
 		public Dictionary(NSDictionary dict) {
 			storage = dict;
+			Enumeration enu = dict.keyEnumerator();
+			count = 0;
+			while (enu.hasMoreElements()) {
+				Object key = (Object) enu.nextElement();
+				if(key instanceof PersonLink)
+					count++;
+			}
 		}
 		
 		public NSArray allValues() {
-			return storage.allValues();
+			if(values != null)
+				return values;
+			if(count == 0)
+				return NSArray.EmptyArray;
+			if(count == storage.count())
+				return storage.allValues();
+			NSMutableArray result = new NSMutableArray();
+			Enumeration enu = storage.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				Object key = (Object) enu.nextElement();
+				if(key instanceof PersonLink)
+					result.addObject(storage.objectForKey(key));
+			}
+			values = result.immutableClone();
+			return values;
 		}
 		
 		public Object forPersonLink(PersonLink pers) {
@@ -56,7 +83,15 @@ public interface PerPersonLink {
 		}
 		
 		public int count() {
-			return storage.count();
+			return count;
+		}
+
+		public void takeValueForKey(Object value, String key) {
+			storage.takeValueForKey(value, key);
+		}
+
+		public Object valueForKey(String key) {
+			return storage.valueForKey(key);
 		}
 	}
 }

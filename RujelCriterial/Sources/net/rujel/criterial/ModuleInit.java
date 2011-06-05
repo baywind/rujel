@@ -34,12 +34,15 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.BaseLesson;
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.DateAgregate;
 
 import com.webobjects.eoaccess.EOJoin;
 import com.webobjects.eoaccess.EORelationship;
@@ -48,17 +51,11 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOMessage;
 import com.webobjects.appserver.WOSession;
 
 public class ModuleInit {
 
-/*	public static Object init(Object obj) {
-		if("presentTabs".equals(obj)) {
-			return init(obj, null);
-		}
-		return null;
-	}
-*/	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			try {
@@ -85,6 +82,8 @@ public class ModuleInit {
 			return PlistReader.cloneDictionary(reportSettings, true);
 		} else if ("lessonProperties".equals(obj)) {
 			return lessonProperties(ctx);
+		} else if ("dateAgregate".equals(obj)) {
+			return dateAgregate(ctx);
 		} else if ("diary".equals(obj)) {
 			NSArray diaryTabs = (NSArray)WOApplication.application().
 					valueForKeyPath("strings.RujelCriterial_Strings.diaryTabs");
@@ -238,6 +237,127 @@ public class ModuleInit {
 		if(found != null && found.count() > 0) {
 			return ctx.session().valueForKeyPath(
 					"strings.RujelCriterial_Strings.messages.relatedMarksFound");
+		}
+		return null;
+	}
+	
+	public static Object dateAgregate(WOContext ctx) {
+		DateAgregate agr = (DateAgregate)ctx.session().objectForKey("dateAgregate");
+		if (agr == null)
+			return null;
+		EOQualifier qual = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,agr.course());
+		if(agr.begin != null || agr.end != null) {
+			NSMutableArray quals = new NSMutableArray(qual);
+			if(agr.begin != null) {
+				quals.addObject(new EOKeyValueQualifier(Work.DATE_KEY, 
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo, agr.begin));
+			}
+			if(agr.end != null) {
+				quals.addObject(new EOKeyValueQualifier(Work.DATE_KEY, 
+						EOQualifier.QualifierOperatorLessThanOrEqualTo, agr.end));
+			}
+			if(quals.count() > 1)
+				qual = new EOAndQualifier(quals);
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(
+				Work.ENTITY_NAME,qual,MyUtility.dateSorter);
+		EOEditingContext ec = agr.course().editingContext();
+		NSArray works = ec.objectsWithFetchSpecification(fs);
+		if(works == null || works.count() == 0)
+			return null;
+		Enumeration enu = works.objectEnumerator();
+		NSMutableDictionary presenterCache = new NSMutableDictionary();
+		NSArray students = agr.course().groupList();
+		while (enu.hasMoreElements()) {
+			Work work = (Work) enu.nextElement();
+			boolean optional = work.isOptional();
+			if(optional && (work.marks() == null || work.marks().count() == 0 ) &&
+					(work.notes() == null || work.notes().count() == 0 ))
+				continue;
+			NSMutableDictionary wDict = agr.getOnDate(work.date());
+			if(wDict == null) {
+				wDict = new NSMutableDictionary();
+				agr.setOnDate(wDict, work.date());
+			}
+			StringBuilder value = (StringBuilder)wDict.valueForKey("hover");
+			if(value == null) {
+				value = new StringBuilder();
+				wDict.takeValueForKey(value, "hover");
+			} else {
+				value.append('\n');
+			}
+			value.append('\'').append(work.theme()).append('\'');
+			boolean hasWeight = work.hasWeight();
+			String workColor = work.color();
+			Enumeration stEnu = students.objectEnumerator();
+			while (stEnu.hasMoreElements()) {
+				Student student = (Student) stEnu.nextElement();
+				NSMutableDictionary stDict = (NSMutableDictionary)wDict.objectForKey(student);
+				if(stDict == null) {
+					stDict = new NSMutableDictionary();
+					wDict.setObjectForKey(stDict, student);
+				}
+				String note = work.noteForStudent(student);
+				BigDecimal integral = work.integralForStudent(student);
+				if(optional && integral == null && note == null)
+					continue;
+				value = (StringBuilder)stDict.valueForKey("value");
+				if(value == null) {
+					value = new StringBuilder();
+					stDict.takeValueForKey(value, "value");
+				} else {
+					value.append(',');
+				}
+				value.append("<span style = \"padding:2px;margin:1px;border:1px solid ");
+				value.append(workColor).append(';');
+				if(hasWeight)
+					value.append("font-weight:bold;");
+				if(integral != null) {
+					String key = (hasWeight)?"integralColor":"weightlessColor";
+					FractionPresenter pres = (FractionPresenter)presenterCache.valueForKey(key);
+					if(pres == null) {
+						pres = BorderSet.presenterForCourse(agr.course(), key);
+						if(pres == null)
+							pres = BorderSet.fractionPresenterForTitle(ec, "color");
+						if(pres == null)
+							pres = FractionPresenter.NONE;
+						presenterCache.takeValueForKey(pres, key);
+					}
+					if(pres != FractionPresenter.NONE) {
+						value.append("color:").append(pres.presentFraction(integral)).append(';');
+					}
+					if(note != null) {
+						value.append("\" title = \"");
+						value.append(WOMessage.stringByEscapingHTMLAttributeValue(note));
+					}
+					value.append('"').append('>');
+					
+					key = (hasWeight)?"workIntegral":"weightless";
+					pres = (FractionPresenter)presenterCache.valueForKey(key);
+					if(pres == null) {
+						pres = BorderSet.presenterForCourse(agr.course(), key);
+						if(pres == null) {
+							if(hasWeight)
+								pres = FractionPresenter.PERCENTAGE;
+							else
+								pres = new FractionPresenter.None("#");
+						}
+						presenterCache.takeValueForKey(pres, key);
+					}
+					value.append(pres.presentFraction(integral));
+				} else if(note != null) {
+					value.append("\" title = \"");
+					value.append(WOMessage.stringByEscapingHTMLAttributeValue(note));
+					value.append('"').append('>');
+					if(!optional)
+						value.append('.');
+					value.append('*');
+				} else if(!optional) {
+					value.append("\">.");
+				}
+				value.append("</span>");
+			}
 		}
 		return null;
 	}
