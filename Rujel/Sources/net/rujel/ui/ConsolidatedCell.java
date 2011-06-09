@@ -133,6 +133,8 @@ public class ConsolidatedCell extends WOComponent {
 	public String value() {
 		NSDictionary dict = dict();
 		Object result = dict.valueForKey("prefix");
+		if(result != null)
+			result = result.toString();
 		result = concatValues(result, dict.valueForKey("value"));
 		result = concatValues(result, dict.valueForKey("suffix"));
 		if(result == null)
@@ -147,7 +149,7 @@ public class ConsolidatedCell extends WOComponent {
 	
 	private static Object concatValues(Object result, Object value) {
 		if(result == null)
-			return value;
+			return (value == null)?null:value.toString();
 		if(value == null)
 			return result;
 		if(!(result instanceof StringBuilder))

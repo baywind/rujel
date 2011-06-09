@@ -178,11 +178,7 @@ public class BaseModule {
 			NSArray notes = lesson.notes();
 			if(notes == null || notes.count() == 0)
 				continue;
-			NSMutableDictionary lDict = agr.getOnDate(lesson.date());
-			if(lDict == null) {
-				lDict = new NSMutableDictionary();
-				agr.setOnDate(lDict, lesson.date());
-			}
+			NSMutableDictionary lDict = agr.getOrCreateOnDate(lesson.date());
 			Enumeration nEnu = notes.objectEnumerator();
 			while (nEnu.hasMoreElements()) {
 				EOEnterpriseObject note = (EOEnterpriseObject) nEnu.nextElement();
@@ -195,17 +191,10 @@ public class BaseModule {
 					stDict = new NSMutableDictionary();
 					lDict.setObjectForKey(stDict, student);
 				}
-				String key = (value.length() <= 3)?"prefix":"hover";
-				StringBuilder buf = (StringBuilder)stDict.valueForKey(key);
-				if(buf == null) {
-					buf = new StringBuilder();
-					stDict.takeValueForKey(buf, key);
-				} else {
-					if(buf.indexOf(value) >= 0)
-						continue;
-					buf.append((value.length() <= 3)?',':'\n');
-				}
-				buf.append(value);
+				if(value.length() <= 3)
+					DateAgregate.appendValueToKeyInDict(value, "prefix", stDict, ',');
+				else
+					DateAgregate.appendValueToKeyInDict(value, "hover", stDict, '\n');
 			}
 		}
 		return null;

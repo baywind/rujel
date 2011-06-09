@@ -128,30 +128,7 @@ public class ModuleInit {
 	}
 	
 	public static NSKeyValueCoding extendLesson(WOContext ctx) {
-		EduLesson lesson = (EduLesson)ctx.session().objectForKey("currentLesson");
-		EOEditingContext ec = lesson.editingContext();
-		if(ec == null) return null;
-		EOQualifier qual = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,lesson.course());
-		NSMutableArray quals = new NSMutableArray(qual);
-		NSTimestamp date = lesson.date();
-		qual = new EOKeyValueQualifier("date",EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
-		quals.addObject(qual);
-		qual = new EOKeyValueQualifier("announce",EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
-		quals.addObject(qual);
-		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,null);
-		NSArray related = ec.objectsWithFetchSpecification(fs);
-		if(related != null && related.count() > 1) {
-			EOSortOrdering so = new EOSortOrdering("workType.sort",EOSortOrdering.CompareAscending);
-			NSMutableArray sorter = new NSMutableArray(so);
-			so = new EOSortOrdering("announce",EOSortOrdering.CompareDescending);
-			sorter.addObject(so);
-			so = new EOSortOrdering("date",EOSortOrdering.CompareAscending);
-			sorter.addObject(so);
-			related = EOSortOrdering.sortedArrayUsingKeyOrderArray(related, sorter);
-		}
 		NSMutableDictionary result = new NSMutableDictionary("05", "sort");
-		result.takeValueForKey(related,"works");
 		result.takeValueForKey("WorksOnDate", "component");
 		return result;
 	}
@@ -289,6 +266,15 @@ public class ModuleInit {
 			}
 			value.append('\'').append(work.theme()).append('\'');
 			boolean hasWeight = work.hasWeight();
+			if(hasWeight) {
+				value = (StringBuilder)wDict.valueForKey("rowStyle");
+				if(value == null) {
+					value = new StringBuilder("font-weight:bold;");
+					wDict.takeValueForKey(value, "rowStyle");
+				} else if(value.indexOf("bold") < 0) {
+					value.append("font-weight:bold;");
+				}
+			}
 			String workColor = work.color();
 			Enumeration stEnu = students.objectEnumerator();
 			while (stEnu.hasMoreElements()) {
@@ -307,9 +293,10 @@ public class ModuleInit {
 					value = new StringBuilder();
 					stDict.takeValueForKey(value, "value");
 				} else {
-					value.append(',');
+					value.append(' ');
 				}
-				value.append("<span style = \"padding:2px;margin:1px;border:1px solid ");
+				value.append(
+					"<span style = \"margin:2px;border-bottom:3px solid ");
 				value.append(workColor).append(';');
 				if(hasWeight)
 					value.append("font-weight:bold;");
@@ -354,7 +341,7 @@ public class ModuleInit {
 						value.append('.');
 					value.append('*');
 				} else if(!optional) {
-					value.append("\">.");
+					value.append("\">&nbsp;.&nbsp;");
 				}
 				value.append("</span>");
 			}

@@ -230,6 +230,7 @@ public class LessonNoteEditor extends WOComponent {
 
 		present = (NSKeyValueCoding)session().valueForKeyPath(
 				"strings.Strings.LessonNoteEditor.consolidatedTab");
+		present = PlistReader.cloneDictionary((NSDictionary)present,true);
 		NSMutableArray tabs = (NSMutableArray)session().valueForKeyPath("modules.presentTabs");
 		if(tabs != null && tabs.count() > 0) {
 			tabs.insertObjectAtIndex(present, 0);
@@ -333,11 +334,49 @@ public class LessonNoteEditor extends WOComponent {
 			ec.refaultObject(currLesson());
 		}
 		lessonsList = lessonListForCourseAndPresent(course, present, qualifier);
-		if(lessonsList != null && lessonsList.count() > 0) {
-			EduLesson lesson = (EduLesson)lessonsList.lastObject();
-			session().setObjectForKey(lesson.date(), "recentDate");
-		} else {
+		if(lessonsList == null || lessonsList.count() == 0) {
 			session().setObjectForKey(session().valueForKey("today"), "recentDate");
+			return;
+		}
+		EduLesson lesson = (EduLesson)lessonsList.lastObject();
+		session().setObjectForKey(lesson.date(), "recentDate");
+		if("ConsolidatedCell".equals(present.valueForKey("presenter"))) {
+			if(dateAgregate == null)
+				dateAgregate = new DateAgregate(course);
+			NSArray list = dateAgregate.listForMask(lessonsList);
+			if(list == null) {
+				dateAgregate.end = lesson.date();
+				lesson = (EduLesson)lessonsList.objectAtIndex(0);
+				dateAgregate.begin = lesson.date();
+				session().setObjectForKey(dateAgregate, "dateAgregate");
+				session().valueForKeyPath("modules.dateAgregate");
+				session().removeObjectForKey("dateAgregate");
+				dateAgregate.setInitialized(true);
+				list = dateAgregate.listForMask(lessonsList);
+			}
+			lessonsList = list;
+		}
+	}
+	
+	public void setRefreshDate(Object refresh) {
+		if(dateAgregate == null)
+			return;
+		if(refresh instanceof java.util.Date) {
+			dateAgregate.begin = (java.util.Date)refresh;
+			dateAgregate.end = (java.util.Date)refresh;
+		} else if (refresh instanceof Period) {
+			dateAgregate.begin = ((Period)refresh).begin();
+			dateAgregate.end = ((Period)refresh).end();
+		} else {
+			throw new IllegalArgumentException("Only Date or Period accepted");
+		}
+		boolean restore = dateAgregate.isInitialized();
+		dateAgregate.setInitialized(false);
+		if(restore) {
+			session().setObjectForKey(dateAgregate, "dateAgregate");
+			session().valueForKeyPath("modules.dateAgregate");
+			session().removeObjectForKey("dateAgregate");
+			dateAgregate.setInitialized(true);
 		}
 	}
 	

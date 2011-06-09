@@ -120,7 +120,7 @@
 			<key>id</key>
 			<string>consolidatedTab</string>
 			<key>listPresenter</key>
-			<string>LessonList</string>
+			<string>ConsolidatedList</string>
 			<key>presenter</key>
 			<string>ConsolidatedCell</string>
 			<key>params</key>

@@ -358,6 +358,7 @@ public class MyUtility {
 	public static void setTime(Calendar cal, String time) {
 		int hour = 0;
 		int minute = 0;
+		time = time.trim();
 		int idx = time.indexOf(':');
 		if(idx < 0) {
 			hour = Integer.parseInt(time);

@@ -95,7 +95,7 @@ public class LessonList extends WOComponent {
 	}
 	
 	public String rowClass() {
-		if(lessonItem == valueForBinding("currLesson")) return "selection";
+		if(isCurrent()) return "selection";
 		Object fromProps = lessonProperties().valueForKey("class");
 		if(fromProps != null)
 			return fromProps.toString();
@@ -104,7 +104,7 @@ public class LessonList extends WOComponent {
 	}
 	
 	public Boolean canEdit() {
-		if(lessonItem == valueForBinding("currLesson")) {
+		if(isCurrent()) {
 			Boolean acc = (Boolean)access().valueForKey("edit");
 //				(Boolean)session().valueForKeyPath("readAccess.edit.currLesson");
 			return acc;
@@ -199,6 +199,14 @@ public class LessonList extends WOComponent {
 		return false;
 	}
 	
+	public boolean isSelector() {
+		return (lessonItem != null && lessonItem == valueForBinding("selector"));
+	}
+	
+	public boolean isCurrent() {
+		return (lessonItem != null && lessonItem == valueForBinding("currLesson"));
+	}
+
 	public void reset() {
 		super.reset();
 		_studentPresenter = null;
@@ -210,13 +218,10 @@ public class LessonList extends WOComponent {
 
 	protected NSArray _extentions;
 	public NSArray extentions() {
-		if(lessonItem == null || lessonItem != valueForBinding("selector") ||
-				Various.boolForObject(valueForBinding("wide")))
+		if(!isSelector())
 			return null;
 		if(_extentions == null) {
-			session().setObjectForKey(lessonItem, "currentLesson");
 			_extentions = (NSArray)session().valueForKeyPath("modules.extendLesson");
-			session().removeObjectForKey("currentLesson");
 			if(_extentions == null)
 				_extentions = NSArray.EmptyArray;
 		}
@@ -246,20 +251,20 @@ public class LessonList extends WOComponent {
 	}
 
 	public String dateCellStyle() {
-		if(lessonItem == valueForBinding("selector"))
+		if(isSelector())
 			return "selection";
 		if(expiredDate(lessonItem.date()))
 			return "grey";
 		return null;
 	}
 	
-	protected NSMutableDictionary lessonProperties;
-	public NSDictionary lessonProperties() {
+	protected NSKeyValueCoding lessonProperties;
+	public NSKeyValueCoding lessonProperties() {
 		if(lessonProperties == null)
 			lessonProperties = (NSMutableDictionary)session().objectForKey("lessonProperties");
 		NSDictionary lProps = null;
 		if(lessonProperties != null)
-			lProps = (NSDictionary)lessonProperties.objectForKey(lessonItem);
+			lProps = (NSDictionary)((NSDictionary) lessonProperties).objectForKey(lessonItem);
 		if(lProps != null)
 			return lProps;
 		NSArray lessonsList = (NSArray)valueForBinding("lessonsList");
@@ -306,7 +311,7 @@ public class LessonList extends WOComponent {
 					}
 				}// lm.keyEnumerator();
 			} // propertiesList.objectEnumerator();
-			lessonProperties.setObjectForKey((currProperties.count() > 0)?
+			((NSMutableDictionary) lessonProperties).setObjectForKey((currProperties.count() > 0)?
 					currProperties:NSDictionary.EmptyDictionary, lesson);
 			if(lesson == lessonItem)
 				lProps = currProperties;
@@ -367,7 +372,7 @@ public class LessonList extends WOComponent {
 			return (String)session().valueForKey("ajaxPopup");
 		if(Various.boolForObject(valueForBinding("wide")))
 			return null;
-		if(lessonItem != valueForBinding("currLesson"))
+		if(!isCurrent())
 			return (String)session().valueForKey("checkRun");
 		return "returnField=document.getElementById('homeTask');myPrompt(htTitle,null,this);";
 	}
@@ -382,7 +387,7 @@ public class LessonList extends WOComponent {
 	protected NamedFlags _access;
 	public NamedFlags access() {
 		if(_access == null) {
-			if(valueForBinding("currLesson") == null) {
+			if(isCurrent()) {
 				String ent = EduLesson.entityName; 
 				try {
 					ent = (String)parent().valueForKeyPath("present.entityName");

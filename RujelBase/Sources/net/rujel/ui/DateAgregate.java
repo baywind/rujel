@@ -33,11 +33,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.reusables.SettingsReader;
 
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -50,8 +52,8 @@ public class DateAgregate {
 	protected NSTimestamp beginDate;
 	protected int beginDay;
 	protected EduCourse forCourse;
-	public NSTimestamp begin;
-	public NSTimestamp end;
+	public Date begin;
+	public Date end;
 	
 	public DateAgregate(EduCourse course) {
 		forCourse = course;
@@ -108,6 +110,13 @@ public class DateAgregate {
 					out[day] = new PerPersonLink.Dictionary(array[day].mutableClone());
 					out[day].takeValueForKey(lesson.date(), "date");
 				}
+				out[day].takeValueForKey(new NSMutableArray(lesson), "lessons");
+			} else {
+				NSMutableArray related = (NSMutableArray)out[day].valueForKey("lessons");
+				if(related.containsObject(lesson))
+					continue;
+				related.addObject(lesson);
+				EOSortOrdering.sortArrayUsingKeyOrderArray(related, EduLesson.sorter);
 			}
 			colspan[day]++;
 			if(colspan[day] > 1)
@@ -119,6 +128,13 @@ public class DateAgregate {
 	public NSMutableDictionary getOnDate(Date date) {
 		return array[dateIndex(date)];
 	}
+
+	public NSMutableDictionary getOrCreateOnDate(Date date) {
+		if(array[dateIndex(date)] == null)
+			array[dateIndex(date)] = new NSMutableDictionary();
+		return array[dateIndex(date)];
+	}
+
 	
 	public void setOnDate(NSMutableDictionary dict, Date date) {
 		array[dateIndex(date)] = dict;
@@ -136,10 +152,36 @@ public class DateAgregate {
 		return forCourse;
 	}
 	
+	public boolean isInitialized() {
+		int fin = (end == null)?initialized.length -1: dateIndex(end);
+		for (int i = (begin==null)?0:dateIndex(begin); i <= fin; i++) {
+			if(!initialized[i])
+				return false;
+		}
+		return true;
+	}
+	
 	public void setInitialized(boolean set) {
 		int fin = (end == null)?initialized.length -1: dateIndex(end);
 		for (int i = (begin==null)?0:dateIndex(begin); i <= fin; i++) {
 			initialized[i] = set;
+			if(!set)
+				array[i] = null;
 		}
+	}
+	
+	public static StringBuilder appendValueToKeyInDict(String value, String key, 
+			NSMutableDictionary dict, char separator) {
+		StringBuilder buf = (StringBuilder)dict.valueForKey(key);
+		if(buf == null) {
+			buf = new StringBuilder();
+			dict.takeValueForKey(buf, key);
+		} else {
+			if(buf.indexOf(value) >= 0)
+				return buf;
+			buf.append(separator);
+		}
+		buf.append(value);
+		return buf;
 	}
 }

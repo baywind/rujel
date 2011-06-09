@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.TimerTask;
 import java.util.logging.Logger;
 
+import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.EduPeriod;
@@ -43,6 +44,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
+import net.rujel.ui.DateAgregate;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
@@ -84,6 +86,8 @@ public class CurriculumModule {
 			return extendLesson(ctx);
 		} else if ("lessonProperties".equals(obj)) {
 			return lessonProperties(ctx);
+		} else if ("dateAgregate".equals(obj)) {
+			return dateAgregate(ctx);
 		} else if ("journalPlugins".equals(obj)) {
 			return journalPlugins(ctx);
 		} else if("scheduleTask".equals(obj)) {
@@ -112,14 +116,100 @@ public class CurriculumModule {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Substitute")))
 			return null;
 		NSMutableDictionary result = new NSMutableDictionary("ShowSubstitute","component");
-		//result.takeValueForKey(sub,"substitute");
+		result.takeValueForKey(Boolean.TRUE,"lessonRequired");
 		result.takeValueForKey("20","sort");
 		return result;
 	}
 	
+	public static Object dateAgregate(WOContext ctx) {
+		DateAgregate agr = (DateAgregate)ctx.session().objectForKey("dateAgregate");
+		if (agr == null)
+			return null;
+		EOQualifier qual = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,agr.course());
+		if(agr.begin != null || agr.end != null) {
+			NSMutableArray quals = new NSMutableArray(qual);
+			if(agr.begin != null) {
+				quals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY, 
+						EOQualifier.QualifierOperatorGreaterThanOrEqualTo, agr.begin));
+			}
+			if(agr.end != null) {
+				quals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY, 
+						EOQualifier.QualifierOperatorLessThanOrEqualTo, agr.end));
+			}
+			if(quals.count() > 1)
+				qual = new EOAndQualifier(quals);
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(
+				Variation.ENTITY_NAME,qual,MyUtility.dateSorter);
+		EOEditingContext ec = agr.course().editingContext();
+		NSArray list = (Various.boolForObject(ctx.session().valueForKeyPath(
+				"readAccess.read.Variation")))?
+			ec.objectsWithFetchSpecification(fs):null;
+		if(list != null && list.count() > 0) {
+			Enumeration enu = list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Variation var = (Variation) enu.nextElement();
+				NSMutableDictionary dDict = agr.getOrCreateOnDate(var.date());
+				if(var.value().intValue() > 0 && var.relatedLesson() != null) {
+					NSMutableDictionary byLesson = (NSMutableDictionary)
+						dDict.valueForKey("byLesson");
+					NSMutableDictionary dict = (byLesson == null)?null:(NSMutableDictionary)
+						byLesson.objectForKey(var.relatedLesson());
+					if(dict == null) {
+						dict = new NSMutableDictionary();
+						if(byLesson == null) {
+							byLesson = new NSMutableDictionary(dict,var.relatedLesson());
+							dDict.takeValueForKey(byLesson, "byLesson");
+						} else {
+							byLesson.setObjectForKey(dict, var.relatedLesson());
+						}
+					}
+					DateAgregate.appendValueToKeyInDict("color:#006600;","rowStyle", dict, ' ');
+					String title = (String)ctx.session().valueForKeyPath(
+							"strings.RujelCurriculum_Curriculum.Variation.plus");
+					DateAgregate.appendValueToKeyInDict(title, "rowHover", dict, '\n');
+				} else {
+					DateAgregate.appendValueToKeyInDict("grey", "class", dDict, ' ');
+				}
+			}
+		}
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Substitute")))
+			return null;
+		fs.setEntityName(EduLesson.entityName);
+		list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0)
+			return null;
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduLesson lesson = (EduLesson) enu.nextElement();
+			String sTitle = Substitute.subsTitleForLesson(lesson);
+			if(sTitle == null)
+				continue;
+			NSMutableDictionary dDict = agr.getOrCreateOnDate(lesson.date());
+			NSMutableDictionary byLesson = (NSMutableDictionary)dDict.valueForKey("byLesson");
+			NSMutableDictionary dict = (byLesson == null)?null:(NSMutableDictionary)
+					byLesson.objectForKey(lesson);
+			if(dict == null) {
+				dict = new NSMutableDictionary();
+				if(byLesson == null) {
+					byLesson = new NSMutableDictionary(dict,lesson);
+					dDict.takeValueForKey(byLesson, "byLesson");
+				} else {
+					byLesson.setObjectForKey(dict, lesson);
+				}
+			}
+			DateAgregate.appendValueToKeyInDict(sTitle,"rowHover", dict, '\n');
+			DateAgregate.appendValueToKeyInDict("highlight2","class", dict, '\n');
+		}
+		return null;
+	}
+	
 	public static NSDictionary lessonProperties(WOContext ctx) {
-		boolean showSubs = Various.boolForObject("readAccess.read.Substitute");
-		boolean showVars = Various.boolForObject("readAccess.read.Variation");
+		boolean showSubs = Various.boolForObject(ctx.session().valueForKeyPath(
+				"readAccess.read.Substitute"));
+		boolean showVars = Various.boolForObject(ctx.session().valueForKeyPath(
+				"readAccess.read.Variation"));
 		if(!showSubs && !showVars)
 			return null;
 		NSArray lessonsList = (NSArray)ctx.session().objectForKey("lessonsList");

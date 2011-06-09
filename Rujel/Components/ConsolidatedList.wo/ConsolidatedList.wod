@@ -1,0 +1,272 @@
+HasStudent: WOConditional {
+	condition = ^student;
+}
+TitlePresenter: WOSwitchComponent {
+	cycle = ^course.cycle;
+	WOComponentName = studentPresenter;
+	isSelected = false;
+	cellID = cellID;
+	readOnly = true;
+	denyCreation = true;
+	single=true;
+	full=true;
+}
+
+DateTitle: WOString {
+	value = application.strings.Reusables_Strings.dataTypes.date;
+}
+
+ThemeTitle: WOString {
+	value = application.strings.RujelInterfaces_Names.EduLesson.theme;
+}
+
+IfAbbreviated: WOConditional {
+	condition = ^wide;
+	negate = true;
+}
+
+HTtitle: WOString {
+	value = application.strings.RujelInterfaces_Names.EduLesson.ht;
+	valueWhenEmpty = "HT";
+}
+
+IfFull: WOConditional {
+	condition = ^wide;
+}
+
+HomeTaskTitle: WOString {
+	value = application.strings.RujelInterfaces_Names.EduLesson.homeTask;
+	valueWhenEmpty = "Home Task";
+}
+
+LessonsListing: WORepetition {
+	elementName = "tr";
+	useStyles = true;
+	selection = ^currLesson;
+	item = dateItem;
+	list = ^lessonsList;
+	inactivateSelection = true;
+	selectAction = selectLesson;
+}
+
+Regular: WOConditional {
+	negate = true;
+	condition = canEdit;
+}
+
+LessonRow: OnClickContainer {
+	elementName = "tr";
+	onclick = session.checkRun;
+	invokeAction = selectLesson;
+	class = rowClass;
+	disabled = disableRow;
+	style = "vertical-align:middle;";
+}
+
+StudentPresenter: ConsolidatedCell {
+	lesson = dateItem;
+	isSelected = false;
+	readOnly = true;
+	student = ^student;
+	denyCreation = false;
+	single=false;
+	full=true;
+}
+
+LessonDate: WOString {
+	value = dateItem.date;
+	dateformat = application.prefs.ui.shortDateFormat;
+}
+
+LessonTheme: WOString {
+	value = lessonItem.theme;
+}
+
+HomeTaskImage: WOImage {
+	filename = "text.png";
+	framework = "app";
+	title = lastLessonItem.homeTask;
+}
+
+LessonHomeTask: WOString {
+	value = lastLessonItem.homeTask;
+}
+
+IsRecent: WOConditional {
+	condition = canEdit;
+}
+
+MoveUp: WOImageButton {
+	action = ^up;
+	filename = "up.png";
+	framework = "app";
+	align = "center";
+	valign = "top";
+}
+
+SplitTab: WOImageButton {
+	action = ^splitTab;
+	filename = "tab.png";
+	framework = "app";
+	align = "center";
+	valign = "middle";
+	style = "margin:3px 0;";
+	onmouseover = "this.style.backgroundColor='blue';";
+	onmouseout = "this.style.backgroundColor='';";
+	title=^splitTitle;
+}
+
+MoveDown: WOImageButton {
+	action = ^down;
+	filename = "down.png";
+	framework = "app";
+}
+CurrLessonThemeField: WOText {
+	style = "width:100%";
+	rows = 2;
+	value = oneLesson.theme;
+	disabled = access._edit;
+	class = "checkChanges";
+	onFocus = "if(!tryLoad(false)) blur();";
+	id = themeFieldID;
+	tabindex = "2";
+}
+LessonItemThemeField: WOTextField {
+	style = "width:100%";
+	value = lessonItem.theme;
+	disabled = access._edit;
+	class = "checkChanges";
+	onFocus = "if(!tryLoad(false)) blur();";
+	tabindex = "2";
+}
+
+HomeTaskImage2: WOImage {
+	filename = "text.png";
+	framework = "app";
+	title = lastLessonItem.homeTask;
+	style = "cursor:pointer;";
+}
+
+HomeTaskHiddenField: WOTextField {
+	id = "homeTask";
+	onchange = "checkChanges(this);t=document.getElementById('taskImage');if(t)t.title=this.value;";
+	value = lastLessonItem.homeTask;
+	style = "display:none;";
+}
+
+CurrLessonHomeTaskField: WOText {
+	style = "width:100%;";
+	rows = 2;
+	value = lastLessonItem.homeTask;
+	disabled = access._edit;
+	class = "checkChanges";
+	onFocus = "if(!tryLoad(false)) blur();";
+}
+
+Conditional1: WOConditional {
+	condition = ^currLesson;
+}
+
+SaveButton: WOSubmitButton {
+	action = ^save;
+	value = application.strings.Reusables_Strings.uiElements.Save;
+	disabled = access._edit;
+}
+
+DeleteButton: WOGenericElement {
+	elementName = "input";
+	type = "button";
+	invokeAction = ^delete;
+	value = application.strings.Reusables_Strings.uiElements.Delete;
+	onclick = session.confirmMessage;
+}
+
+CanMove: WOString {
+	value = canMove;
+}
+
+ShowExtentions : WOConditional {
+  condition = extentions.count;
+}
+
+LessonExtentions : WORepetition {
+  list = extentions;
+  item = extItem;
+}
+ExtItemComponent : WOSwitchComponent {
+  WOComponentName = extItem.component;
+  extention = extItem;
+  lesson = lessonItem;
+  date = dateItem.date;
+  course = ^course;
+}
+ExtComponent : WOSwitchComponent {
+  WOComponentName = extItem.component;
+  extention = extItem;
+  lesson = oneLesson;
+  date = dateItem.date;
+  course = ^course;
+}
+
+HasTask : WOConditional {
+  condition = lastLessonItem.homeTask;
+}
+
+RowCell : OnClickContainer {
+  elementName = "td";
+  align="center";
+  parent = "tr";
+  onclick = session.checkRun;
+  invokeAction = selectLesson;
+  disabled = disableCell;
+}
+
+ThemeCell : WOGenericContainer {
+  elementName = "td";
+  class = rowClass;
+  title = lessonProperties.rowHover;
+  style = lessonProperties.rowStyle;
+}
+
+CanCreate : WOConditional {
+  condition = access.create;
+}
+
+ShowAdd : WOSubmitButton {
+  value = application.strings.Reusables_Strings.uiElements.Add;
+  action = newLessonPopup;
+  onclick = "ajaxPost(this);return false;";
+}
+
+TaskCell : OnClickContainer {
+  elementName = "td";
+  onclick = showHomeTaskOnClick;
+  invokeAction = popupHomeTask;
+  disabled = disableCell;
+}
+
+CanSave: WOConditional {
+	condition = access.edit;
+}
+
+CanDelete : WOConditional {
+  condition = access.delete;
+}
+
+RelatedLessons : WORepetition {
+  list = dateItem.lessons;
+  item = lessonItem;
+}
+
+SingleTheme : WOString {
+  value = oneLesson.theme;
+}
+
+MultipleLessons : WOConditional {
+  condition = oneLesson;
+  negate = true;
+}
+
+SingleLesson : WOConditional {
+  condition = oneLesson;
+}

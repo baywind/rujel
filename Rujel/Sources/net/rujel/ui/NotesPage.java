@@ -74,9 +74,9 @@ public class NotesPage extends WOComponent {
 				return new NSArray(currLesson());
 			else
 				return null;
-		} 
+		}
 		NSArray lessons = (NSArray)valueForBinding("lessonsList");
-		if("ConsolidatedCell".equals(presenter())) {
+/*		if("ConsolidatedCell".equals(presenter())) {
 			DateAgregate agr = (DateAgregate)valueForBinding("dateAgregate");
 			if(agr == null) {
 				agr = new DateAgregate((EduCourse)valueForBinding("course"));
@@ -96,7 +96,7 @@ public class NotesPage extends WOComponent {
 				list = agr.listForMask(lessons);
 			}
 			return list;
-		}
+		}*/
 		return lessons;
 	}
 	

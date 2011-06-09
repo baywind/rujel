@@ -50,6 +50,9 @@ import net.rujel.reusables.WOLogLevel;
 public class HomeWorkDelegate extends TaskDelegate {
 	
 	public String homeTaskForLesson(EduLesson lesson) {
+		if(lesson instanceof Work) {
+			return (String)lesson.valueForKeyPath("taskText.storedText");
+		}
 		Work work = homeWorkForLesson(lesson);
 		if(work == null)
 			return null;
@@ -57,6 +60,10 @@ public class HomeWorkDelegate extends TaskDelegate {
 	}
 	
 	public void setHomeTaskForLesson(String newTask, EduLesson lesson) {
+		if(lesson instanceof Work) {
+			super.setHomeTaskForLesson(newTask, lesson);
+			return;
+		}
 		 if(newTask == null) {
 			 Work work = homeWorkForLesson(lesson);
 			 if(work != null) {
@@ -77,6 +84,8 @@ public class HomeWorkDelegate extends TaskDelegate {
 	}
 	
 	public WOComponent homeWorkPopupForLesson(WOContext context, EduLesson lesson) {
+		if(lesson instanceof Work)
+			return null;
     	WOComponent nextPage = WOApplication.application().pageWithName("WorkInspector", context);
     	nextPage.takeValueForKey(context.page(), "returnPage");
     	Object init = homeWorkForLesson(lesson);
@@ -93,7 +102,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 	}
 	
 	public boolean hasPopup() {
-		return true;
+		return (!Work.ENTITY_NAME.equals(EduLesson.entityName));
 	}
 	
 	protected Work homeWorkForLesson(EduLesson lesson) {
