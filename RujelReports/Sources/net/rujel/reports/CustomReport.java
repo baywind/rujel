@@ -32,6 +32,7 @@ package net.rujel.reports;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
@@ -152,6 +153,11 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
     			item = (NSKeyValueCoding) listEnu.nextElement();
     			for (int i = 0; i < prop.length; i++) {
 					Object param = ReportTable.valueFromDict((NSDictionary)prop[i], item, this);
+					if(param == item) {
+						Object valDict = ((NSDictionary)prop[i]).valueForKey("value");
+						if(valDict != null)
+							param = DisplayAny.ValueReader.evaluateValue(valDict,item, this);
+					}
 					if(count == 0) {
 						ref[i] = param;
 					} else if (param != ref[i]) {
