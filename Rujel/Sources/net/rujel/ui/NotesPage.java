@@ -37,6 +37,7 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 
 import java.lang.ref.WeakReference;
+import java.util.Calendar;
 import java.util.Enumeration;
 
 public class NotesPage extends WOComponent {
@@ -249,7 +250,7 @@ public class NotesPage extends WOComponent {
     public NSArray allAddOns;
     public NSKeyValueCoding addOnItem;
     /** @TypeInfo java.lang.String */
-    public NSMutableArray activeAddOns;
+    protected NSMutableArray activeAddOns;
 //    public String activeAddOnItem;
 	
 	public String number() {
@@ -397,6 +398,93 @@ public class NotesPage extends WOComponent {
 				EOQualifier.filterArrayWithQualifier(activeAddOns, inSingle);
 		}
 		return activeAddOns;
+	}
+	
+	public int addOnsSpan() {
+		NSArray addOns = activeAddOns();
+		if(addOns == null || addOns.count() == 0)
+			return 0;
+		int span = 0;
+		Enumeration enu = addOns.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSKeyValueCoding addon = (NSKeyValueCoding) enu.nextElement();
+			Number aspan = (Number)addon.valueForKey("span");
+			if(aspan == null)
+				span++;
+			else
+				span += aspan.intValue();
+		}
+		return span;
+	}
+	
+	public String monthsRow() {
+		if(single())
+			return null;
+		NSArray lessons = (NSArray)valueForBinding("lessonsList");
+		if(lessons == null || lessons.count() == 0)
+			return null;
+		StringBuilder buf = new StringBuilder();
+		Enumeration enu = lessons.objectEnumerator();
+		int colspan = 0;
+		int month = -1;
+		Calendar cal = Calendar.getInstance();
+		boolean cons = "ConsolidatedCell".equals(presenter());
+		NSArray months = (NSArray)WOApplication.application().valueForKeyPath(
+				"strings.Reusables_Strings.presets.monthLong");
+		NSArray monthsShort = (NSArray)WOApplication.application().valueForKeyPath(
+				"strings.Reusables_Strings.presets.monthShort");
+		while (enu.hasMoreElements()) {
+			NSKeyValueCoding lesson = (NSKeyValueCoding) enu.nextElement();
+			cal.setTime((java.util.Date)lesson.valueForKey("date"));
+			if(month != cal.get(Calendar.MONTH)) {
+				if (colspan > 0) {
+					buf.append("<th class = \"lbd rbd\"");
+					if(colspan == 1) {
+						buf.append('>').append(monthsShort.objectAtIndex(month));
+					} else {
+						buf.append(" align = \"left\" colspan = \"").append(colspan).append('"');
+						buf.append('>').append(months.objectAtIndex(month));
+					}
+					buf.append("</th>");
+				}
+				colspan = 0;
+				month = cal.get(Calendar.MONTH);
+			}
+			if(cons) {
+				Number span = (Number)lesson.valueForKey("span");
+				if(span == null)
+					colspan++;
+				else
+					colspan += span.intValue();
+			} else {
+				colspan++;
+			}
+		} // lessons Enumeration
+		if (colspan > 0) {
+			buf.append("<th class = \"lbd rbd\"");
+			if(colspan == 1) {
+				buf.append('>').append(monthsShort.objectAtIndex(month));
+			} else {
+				buf.append(" align = \"left\" colspan = \"").append(colspan).append('"');
+				buf.append('>').append(months.objectAtIndex(month));
+			}
+		}
+		buf.append("</th>");
+		/*
+		colspan = addOnsSpan();
+		if(colspan > 0) {
+			if(colspan == 1)
+				buf.append("<th></th>");
+			else
+				buf.append("<th colspan = \"").append(colspan).append("\"></th>");
+		}*/
+		return buf.toString();
+	}
+	
+	public String rowspan() {
+		if("ConsolidatedCell".equals(presenter()))
+			return "2";
+		return null;
 	}
 	
 	public static void resetAddons(WOSession ses) {

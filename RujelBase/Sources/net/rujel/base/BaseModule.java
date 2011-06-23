@@ -40,6 +40,7 @@ import net.rujel.ui.DateAgregate;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOMessage;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
@@ -170,33 +171,81 @@ public class BaseModule {
 				BaseLesson.ENTITY_NAME,qual,MyUtility.dateSorter);
 		EOEditingContext ec = agr.course().editingContext();
 		NSArray lessons = ec.objectsWithFetchSpecification(fs);
-		if(lessons == null || lessons.count() == 0)
+		if(lessons == null || lessons.count() == 0) {
 			return null;
-		Enumeration enu = lessons.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			BaseLesson lesson = (BaseLesson) enu.nextElement();
-			NSArray notes = lesson.notes();
-			if(notes == null || notes.count() == 0)
-				continue;
-			NSMutableDictionary lDict = agr.getOrCreateOnDate(lesson.date());
-			Enumeration nEnu = notes.objectEnumerator();
-			while (nEnu.hasMoreElements()) {
-				EOEnterpriseObject note = (EOEnterpriseObject) nEnu.nextElement();
-				String value = (String)note.valueForKey("note");
-				if(value == null || value.length() == 0)
-					continue;
-				Student student = (Student)note.valueForKey("student");
-				NSMutableDictionary stDict = (NSMutableDictionary)lDict.objectForKey(student);
-				if(stDict == null) {
-					stDict = new NSMutableDictionary();
-					lDict.setObjectForKey(stDict, student);
+		} else {
+			Enumeration enu = lessons.objectEnumerator();
+			NSMutableArray dates = new NSMutableArray(lessons.count());
+			int lDate = 0;
+			NSMutableArray tmp = null;
+			while (enu.hasMoreElements()) {
+				BaseLesson work = (BaseLesson) enu.nextElement();
+				int wDate = agr.dateIndex(work.date());
+				if(tmp == null || wDate != lDate) {
+					if(tmp != null) {
+						dates.addObject(tmp.toArray(new BaseLesson[tmp.count()]));
+					}
+					tmp = new NSMutableArray(work);
+				} else {
+					tmp.addObject(work);
 				}
-				if(value.length() <= 3)
-					DateAgregate.appendValueToKeyInDict(value, "prefix", stDict, ',');
-				else
-					DateAgregate.appendValueToKeyInDict(value, "hover", stDict, '\n');
 			}
+			if(tmp != null)
+				dates.addObject(tmp.toArray(new BaseLesson[tmp.count()]));
+			lessons = dates.immutableClone();
 		}
-		return null;
+		Enumeration enu = lessons.objectEnumerator();
+		String txt = null;
+		while (enu.hasMoreElements()) {
+			BaseLesson[] lesson = (BaseLesson[]) enu.nextElement();
+			NSMutableDictionary lDict = agr.getOrCreateOnDate(lesson[0].date());
+			boolean comments = false;
+			for (int i = 0; i < lesson.length; i++) {
+				NSArray notes = lesson[i].notes();
+				if(notes == null || notes.count() == 0)
+					continue;
+				Enumeration nEnu = notes.objectEnumerator();
+				NSDictionary skip = new NSDictionary("grey","styleClass");
+				while (nEnu.hasMoreElements()) {
+					EOEnterpriseObject note = (EOEnterpriseObject) nEnu.nextElement();
+					String value = (String)note.valueForKey("note");
+					if(value == null || value.length() == 0)
+						continue;
+					Student student = (Student)note.valueForKey("student");
+					NSMutableDictionary stDict = (NSMutableDictionary)lDict.objectForKey(student);
+					if(stDict == null) {
+						stDict = new NSMutableDictionary();
+						lDict.setObjectForKey(stDict, student);
+					}
+					int idx = BaseLesson.isSkip(value);
+					if(idx > 0) {
+						stDict.takeValueForKey(skip, "baseAttendance");
+						if(value.length() > idx+1)
+							value = value.substring(idx +1);
+						else
+							continue;
+					}
+					comments = true;
+					if(txt == null) {
+						txt = WOApplication.application().resourceManager().
+						urlForResourceNamed("text.png","RujelBase",null,ctx.request());
+						txt = "<img src=\"" + txt + 
+							"\" alt=\"txt\" height=\"16\" width=\"16\">";
+					}
+					NSMutableDictionary[] nts = (NSMutableDictionary[])
+						stDict.valueForKey("BaseNote");
+					if(nts == null) {
+						nts = new NSMutableDictionary[] {new NSMutableDictionary(txt,"value")};
+						stDict.takeValueForKey(nts, "BaseNote");
+					}
+					value = WOMessage.stringByEscapingHTMLAttributeValue(value);
+					DateAgregate.appendValueToKeyInDict(value, "hover", nts[0], "\n");
+				} // notes in lesson
+				if(comments) {
+					lDict.takeValueForKey(new NSMutableDictionary[1], "BaseNote");
+				}
+			} // lessons in date
+		}
+		return ctx.session().valueForKeyPath("strings.RujelBase_Base.consolidatedView");
 	}
 }

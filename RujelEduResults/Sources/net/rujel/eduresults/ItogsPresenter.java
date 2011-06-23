@@ -68,6 +68,7 @@ public class ItogsPresenter extends AddOnPresenter {
 				if(_periods == null)
 					_periods = NSArray.EmptyArray;
 				currAddOn().takeValueForKey(_periods,"periods");
+				currAddOn().takeValueForKey(new Integer(_periods.count()), "span");
 				currAddOn().agregate = null;
 			}
 		}

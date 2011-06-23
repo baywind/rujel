@@ -341,18 +341,21 @@ public class LessonNoteEditor extends WOComponent {
 		EduLesson lesson = (EduLesson)lessonsList.lastObject();
 		session().setObjectForKey(lesson.date(), "recentDate");
 		if("ConsolidatedCell".equals(present.valueForKey("presenter"))) {
+			NSArray views = (NSArray)session().valueForKeyPath("state.consolidatedView");
 			if(dateAgregate == null)
 				dateAgregate = new DateAgregate(course);
-			NSArray list = dateAgregate.listForMask(lessonsList);
+			NSArray list = dateAgregate.listForMask(lessonsList,views);
 			if(list == null) {
 				dateAgregate.end = lesson.date();
 				lesson = (EduLesson)lessonsList.objectAtIndex(0);
 				dateAgregate.begin = lesson.date();
 				session().setObjectForKey(dateAgregate, "dateAgregate");
-				session().valueForKeyPath("modules.dateAgregate");
+				views = (NSArray)session().valueForKeyPath("modules.dateAgregate");
 				session().removeObjectForKey("dateAgregate");
+				views = (NSArray)views.valueForKey("id");
+				session().takeValueForKeyPath(views, "state.consolidatedView");
 				dateAgregate.setInitialized(true);
-				list = dateAgregate.listForMask(lessonsList);
+				list = dateAgregate.listForMask(lessonsList,views);
 			}
 			lessonsList = list;
 		}

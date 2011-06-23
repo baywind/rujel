@@ -30,6 +30,8 @@
 		<string>Отсрочка</string>
 		<key>title</key>
 		<string>Прогноз</string>
+		<key>sort</key>
+		<string>40</string>
 	</dict>
 	<key>allCycles</key>
 	<string>По всем предметам</string>

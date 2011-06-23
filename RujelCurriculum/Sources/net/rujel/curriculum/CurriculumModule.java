@@ -165,12 +165,12 @@ public class CurriculumModule {
 							byLesson.setObjectForKey(dict, var.relatedLesson());
 						}
 					}
-					DateAgregate.appendValueToKeyInDict("color:#006600;","rowStyle", dict, ' ');
+					DateAgregate.appendValueToKeyInDict("color:#006600;","rowStyle", dict, null);
 					String title = (String)ctx.session().valueForKeyPath(
 							"strings.RujelCurriculum_Curriculum.Variation.plus");
-					DateAgregate.appendValueToKeyInDict(title, "rowHover", dict, '\n');
+					DateAgregate.appendValueToKeyInDict(title, "rowHover", dict, "\n");
 				} else {
-					DateAgregate.appendValueToKeyInDict("grey", "class", dDict, ' ');
+					DateAgregate.appendValueToKeyInDict("grey", "class", dDict, " ");
 				}
 			}
 		}
@@ -199,8 +199,8 @@ public class CurriculumModule {
 					byLesson.setObjectForKey(dict, lesson);
 				}
 			}
-			DateAgregate.appendValueToKeyInDict(sTitle,"rowHover", dict, '\n');
-			DateAgregate.appendValueToKeyInDict("highlight2","class", dict, '\n');
+			DateAgregate.appendValueToKeyInDict(sTitle,"rowHover", dict, "\n");
+			DateAgregate.appendValueToKeyInDict("highlight2","class", dict, "\n");
 		}
 		return null;
 	}

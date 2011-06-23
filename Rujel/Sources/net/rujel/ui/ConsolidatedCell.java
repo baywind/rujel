@@ -30,22 +30,21 @@
 package net.rujel.ui;
 
 import java.util.Enumeration;
+import java.util.GregorianCalendar;
 
-import net.rujel.base.MyUtility;
-import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.interfaces.Student;
-import net.rujel.reusables.Period;
 
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOMessage;
-import com.webobjects.appserver.WOSession;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSTimestamp;
 
 public class ConsolidatedCell extends WOComponent {
     public ConsolidatedCell(WOContext context) {
@@ -106,6 +105,15 @@ public class ConsolidatedCell extends WOComponent {
     	return agr;
     }*/
     
+    public Object item;
+    
+    protected NSArray views;
+    protected Enumeration viewsEnu() {
+    	if(views == null)
+    		views = (NSArray)session().valueForKeyPath("state.consolidatedView");
+    	return views.objectEnumerator();
+    }
+    
     public PerPersonLink.Dictionary datePlink() {
     	return (PerPersonLink.Dictionary)valueForBinding("lesson");
     }
@@ -114,24 +122,177 @@ public class ConsolidatedCell extends WOComponent {
     	return (Student)valueForBinding("student");
     }
     
+    public Boolean showTitle() {
+    	return (student() == null && valueForBinding("titleRow") == null);
+    }
     
-    protected NSDictionary _dict;
+    protected NSKeyValueCoding _dict;
     
-    public NSDictionary dict() {
+    public NSKeyValueCoding dict() {
     	if(_dict == null) {
-    		_dict = (NSMutableDictionary)datePlink().forPersonLink(student());
+    		if(student() == null)
+    			_dict = datePlink();
+    		else
+    			_dict = (NSMutableDictionary)datePlink().forPersonLink(student());
     		if(_dict == null)
     			_dict = NSDictionary.EmptyDictionary;
     	}
     	return _dict;
     }
     
+    public NSArray cells() {
+    	NSMutableArray result = new NSMutableArray();
+    	PerPersonLink.Dictionary dict = (student()==null)?null:datePlink();
+    	CharSequence style = null;
+    	CharSequence styleClass = null;
+    	Enumeration enu = viewsEnu();
+    	while (enu.hasMoreElements()) {
+    		String view = (String)enu.nextElement();
+			Object local = dict().valueForKey(view);
+			Object global = (dict==null)?null:dict.valueForKey(view);
+			if(local == null) {
+				if(global instanceof NSDictionary[]) {
+					for (int i = 0; i < ((NSDictionary[])global).length; i++) {
+						result.addObject(NSDictionary.EmptyDictionary);
+					}
+				}
+				continue;
+			}
+			if(local instanceof NSDictionary[]) {
+				NSDictionary[] found = (NSDictionary[])local;
+				int length = (global instanceof NSDictionary[])?((NSDictionary[])global).length:
+					found.length;
+				for (int i = 0; i < length; i++) {
+					if(i >= found.length || found[i] == null) {
+						result.addObject(NSDictionary.EmptyDictionary);
+					} else {
+						result.addObject(found[i].mutableClone());
+					}
+				}
+			} else if(local instanceof NSDictionary) {
+				NSDictionary found = (NSDictionary)local;
+				if(found.count() == 0)
+					continue;
+				style = appendFromDict(style, found, "style");
+				styleClass = appendFromDict(styleClass, found, "styleClass");
+			}
+		}
+    	if(result.count() <= 1) {
+    		if(styleClass == null)
+    			styleClass = "lbd rbd";
+    		else
+    			styleClass = styleClass + " lbd rbd";
+    	}
+    	NSDictionary generic = NSDictionary.EmptyDictionary;
+    	if(style != null || styleClass != null) {
+    		generic = new NSMutableDictionary();
+    		generic.takeValueForKey(style, "style");
+    		generic.takeValueForKey(styleClass, "styleClass");
+    		generic = generic.immutableClone();
+    	}
+    	if(result.count() == 0) {
+    		return new NSArray(generic);
+    	} else if(result.count() <= 1) {
+    		NSDictionary rd = (NSDictionary)result.objectAtIndex(0);
+    		if(rd == NSDictionary.EmptyDictionary)
+    			return new NSArray(generic);
+//    		if(!(rd instanceof NSMutableDictionary))
+//				rd = rd.mutableClone();
+    		rd.takeValueForKey(appendFromDict(styleClass, rd, "styleClass"), "styleClass");
+			if(style != null)
+				rd.takeValueForKey(appendFromDict(style, rd, "style"), "style");
+    		return new NSArray(rd);
+    	} else {
+    		for (int i = 0; i < result.count(); i++) {
+				String val = null;
+    			if(i == 0)
+    				val = "lbd";
+    			else if (i == result.count() -1)
+    				val = "rbd";
+    			else if (generic == NSDictionary.EmptyDictionary)
+    				continue;
+				NSDictionary rd = (NSDictionary)result.objectAtIndex(i);
+				if(rd == NSDictionary.EmptyDictionary) {
+					if(val == null) {
+						rd = generic;
+					} else {
+						if(styleClass != null)
+							val = val + ' ' + styleClass;
+						if(style == null) {
+							rd = new NSDictionary(val,"styleClass");
+						} else {
+							rd = generic.mutableClone();
+							rd.takeValueForKey(val, "styleClass");
+						}
+					}
+					result.replaceObjectAtIndex(rd, i);
+				} else {
+//					if(!(rd instanceof NSMutableDictionary)) {
+//						rd = rd.mutableClone();
+//						result.replaceObjectAtIndex(rd, i);
+//					}
+					if(styleClass != null) {
+						if(val == null)
+							val = styleClass.toString();
+						else 
+							val = val + ' ' + styleClass;
+					}
+					if(val != null)
+						rd.takeValueForKey(appendFromDict(val, rd, "styleClass"), "styleClass");
+					if(style != null)
+						rd.takeValueForKey(appendFromDict(style, rd, "style"), "style");
+				}
+			}
+    	}
+    	// add borders
+    	return result;
+    }
+    
+    private CharSequence appendFromDict(CharSequence initial, NSDictionary dict, String key) {
+    	if(initial == null)
+    		return (CharSequence)dict.valueForKey(key);
+    	CharSequence value = (CharSequence)dict.valueForKey(key);
+    	if(value == null)
+    		return initial;
+		StringBuilder buf = new StringBuilder();
+		buf.append(initial).append(' ').append(value);
+		return buf;
+    }
+    
 	public String lessonTitle() {
-		return NotePresenter.titleForLesson(datePlink());
+		NSKeyValueCoding lesson = datePlink();
+		if(lesson==null)return null;
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTime((NSTimestamp)lesson.valueForKey("date"));
+		StringBuilder buf = new StringBuilder("<strong>");
+		buf.append(cal.get(GregorianCalendar.DAY_OF_MONTH)).append("</strong>");
+		try {
+			NSArray days = (NSArray)WOApplication.application().valueForKeyPath(
+			"strings.Reusables_Strings.presets.weekdayShort");
+			int day = cal.get(GregorianCalendar.DAY_OF_WEEK);
+			String weekday = (String)days.objectAtIndex(day);
+			buf.append("<br/><small>").append(weekday).append("</small>");
+		} catch (Exception e) {
+			; //failed to get weekday
+		}
+		NSArray lessons = (NSArray)lesson.valueForKey("lessons");
+		if(lessons != null && lessons.count() > 1) {
+			String result = buf.toString();
+			buf.delete(0, buf.length());
+			buf.append("<table cellspacing = \"0\" width = \"100%\"><tr>\n\t");
+			for (int i = 0; i < lessons.count(); i++) {
+				buf.append("<th>").append(result).append("</th>\n\t");
+			}
+			buf.append("\n</tr></table>");
+		} else {
+			buf.insert(0,"<div style = \"width:2em\">");
+			buf.append("</div>");
+		}
+		return buf.toString();
 	}
 
 	public String value() {
-		NSDictionary dict = dict();
+		NSKeyValueCoding dict = dict();
 		Object result = dict.valueForKey("prefix");
 		if(result != null)
 			result = result.toString();
@@ -175,6 +336,7 @@ public class ConsolidatedCell extends WOComponent {
 	
 	public void reset() {
 		_dict = null;
+		views = null;
 		super.reset();
 	}
 }

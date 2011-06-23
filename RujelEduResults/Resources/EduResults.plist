@@ -32,6 +32,8 @@
 		<string>tickDim.png</string>
 		<key>title</key>
 		<string>Итоговые</string>
+		<key>sort</key>
+		<string>70</string>
 	</dict>
 	<key>properties</key>
 	<dict>

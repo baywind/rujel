@@ -290,6 +290,8 @@
 	<string>Запись уроков вперед запрещена</string>
 	<key>lessons</key>
 	<string>Уроки</string>
+	<key>skipStrings</key>
+	<string>н Н H Б</string>
 	<key>lessonsTab</key>
 	<dict>
 		<key>checkAccess</key>
@@ -499,5 +501,18 @@
 	</array>
 	<key>vacant</key>
 	<string>Вакансия</string>
+	<key>consolidatedView</key>
+	<array>
+		<dict>
+			<key>id</key>
+			<string>baseAttendance</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>BaseNote</string>
+			<key>sort</key>
+			<integer>20</integer>
+		</dict>
+	</array>
 </dict>
 </plist>

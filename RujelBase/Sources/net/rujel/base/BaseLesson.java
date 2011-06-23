@@ -131,6 +131,30 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public void setNoteForStudent(String newNote, Student student) {
 		setNoteForStudent(this, newNote, student);
 	}
+	
+	private static String[] skipStrings;
+	public static int isSkip(String note) {
+		if(note == null)
+			return 0;
+		note = note.trim();
+		if(note.length() == 0)
+			return 0;
+		if(skipStrings == null) {
+			String sk = (String)WOApplication.application().valueForKeyPath(
+					"strings.RujelBase_Base.skipStrings");
+			if(sk == null) return 0;
+			skipStrings = sk.split(" ");
+		}
+		for (int i = 0; i < skipStrings.length; i++) {
+			if(note.startsWith(skipStrings[i])) {
+				if(note.length() <= skipStrings[i].length())
+					return skipStrings[i].length();
+				if(!Character.isLetterOrDigit(note.charAt(skipStrings[i].length())))
+					return skipStrings[i].length();
+			}
+		}
+		return 0;
+	}
 	/*
 	public Integer number() {
 		return (Integer)super.number();

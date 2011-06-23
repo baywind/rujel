@@ -123,6 +123,8 @@
 			<string>ConsolidatedList</string>
 			<key>presenter</key>
 			<string>ConsolidatedCell</string>
+			<key>consolidated</key>
+			<true/>
 			<key>params</key>
 			<array>
 				<dict>

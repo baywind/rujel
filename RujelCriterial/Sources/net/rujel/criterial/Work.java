@@ -840,19 +840,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	}
 
     public String color() {
-    	String result = null;
-    	if(Various.boolForObject(valueForKeyPath("workType.namedFlags.unused")))
-    		return "#999999";
-    	if(hasWeight()) {
-    		result = (String)valueForKeyPath("workType.colorWeight");
-    		if(result == null)
-    			return "#ff9966";
-    	} else {
-    		result = (String)valueForKeyPath("workType.colorNoWeight");
-    		if(result == null)
-    			return "#ffcc66";
-    	}
-    	return result;
+    	return WorkType.color(this);
     }
     
     public String font() {

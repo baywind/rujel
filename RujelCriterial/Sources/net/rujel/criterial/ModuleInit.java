@@ -43,6 +43,7 @@ import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.DateAgregate;
+import net.rujel.ui.MarksPresenter;
 
 import com.webobjects.eoaccess.EOJoin;
 import com.webobjects.eoaccess.EORelationship;
@@ -241,111 +242,159 @@ public class ModuleInit {
 				Work.ENTITY_NAME,qual,MyUtility.dateSorter);
 		EOEditingContext ec = agr.course().editingContext();
 		NSArray works = ec.objectsWithFetchSpecification(fs);
-		if(works == null || works.count() == 0)
+		if(works == null || works.count() == 0) {
 			return null;
+		} else {
+			Enumeration enu = works.objectEnumerator();
+			NSMutableArray dates = new NSMutableArray(works.count());
+			int lDate = 0;
+			NSMutableArray tmp = null;
+			while (enu.hasMoreElements()) {
+				Work work = (Work) enu.nextElement();
+				if(work.isOptional() && (work.marks() == null || work.marks().count() == 0 ) &&
+						(work.notes() == null || work.notes().count() == 0 ))
+					continue;
+				int wDate = agr.dateIndex(work.date());
+				if(tmp == null || wDate != lDate) {
+					if(tmp != null) {
+						dates.addObject(tmp.toArray(new Work[tmp.count()]));
+					}
+					tmp = new NSMutableArray(work);
+					lDate = wDate;
+				} else {
+					tmp.addObject(work);
+				}
+			}
+			if(tmp != null)
+				dates.addObject(tmp.toArray(new Work[tmp.count()]));
+			works = dates.immutableClone();
+		}
 		Enumeration enu = works.objectEnumerator();
 		NSMutableDictionary presenterCache = new NSMutableDictionary();
 		NSArray students = agr.course().groupList();
 		while (enu.hasMoreElements()) {
-			Work work = (Work) enu.nextElement();
-			boolean optional = work.isOptional();
-			if(optional && (work.marks() == null || work.marks().count() == 0 ) &&
-					(work.notes() == null || work.notes().count() == 0 ))
-				continue;
-			NSMutableDictionary wDict = agr.getOnDate(work.date());
+			Work[] work = (Work[]) enu.nextElement();
+			NSMutableDictionary wDict = agr.getOnDate(work[0].date());
 			if(wDict == null) {
 				wDict = new NSMutableDictionary();
-				agr.setOnDate(wDict, work.date());
+				agr.setOnDate(wDict, work[0].date());
 			}
-			StringBuilder value = (StringBuilder)wDict.valueForKey("hover");
-			if(value == null) {
-				value = new StringBuilder();
-				wDict.takeValueForKey(value, "hover");
-			} else {
-				value.append('\n');
-			}
-			value.append('\'').append(work.theme()).append('\'');
-			boolean hasWeight = work.hasWeight();
-			if(hasWeight) {
-				value = (StringBuilder)wDict.valueForKey("rowStyle");
-				if(value == null) {
-					value = new StringBuilder("font-weight:bold;");
-					wDict.takeValueForKey(value, "rowStyle");
-				} else if(value.indexOf("bold") < 0) {
-					value.append("font-weight:bold;");
+			for (int i = 0; i < work.length; i++) {
+				boolean optional = work[i].isOptional();
+				boolean hasWeight = work[i].hasWeight();
+				if(hasWeight) {
+					DateAgregate.appendValueToKeyInDict("font-weight:bold;","rowStyle",wDict,null);
 				}
-			}
-			String workColor = work.color();
-			Enumeration stEnu = students.objectEnumerator();
-			while (stEnu.hasMoreElements()) {
-				Student student = (Student) stEnu.nextElement();
-				NSMutableDictionary stDict = (NSMutableDictionary)wDict.objectForKey(student);
-				if(stDict == null) {
-					stDict = new NSMutableDictionary();
-					wDict.setObjectForKey(stDict, student);
+				//prepare titleCells
+				NSMutableDictionary cells[] = 
+					(NSMutableDictionary[])wDict.valueForKey(Work.ENTITY_NAME);
+				if(cells == null) {
+					cells = new NSMutableDictionary[work.length];
+					wDict.takeValueForKey(cells, Work.ENTITY_NAME);
 				}
-				String note = work.noteForStudent(student);
-				BigDecimal integral = work.integralForStudent(student);
-				if(optional && integral == null && note == null)
-					continue;
-				value = (StringBuilder)stDict.valueForKey("value");
-				if(value == null) {
-					value = new StringBuilder();
-					stDict.takeValueForKey(value, "value");
-				} else {
-					value.append(' ');
-				}
-				value.append(
-					"<span style = \"margin:2px;border-bottom:3px solid ");
-				value.append(workColor).append(';');
-				if(hasWeight)
-					value.append("font-weight:bold;");
-				if(integral != null) {
-					String key = (hasWeight)?"integralColor":"weightlessColor";
-					FractionPresenter pres = (FractionPresenter)presenterCache.valueForKey(key);
-					if(pres == null) {
-						pres = BorderSet.presenterForCourse(agr.course(), key);
-						if(pres == null)
-							pres = BorderSet.fractionPresenterForTitle(ec, "color");
-						if(pres == null)
-							pres = FractionPresenter.NONE;
-						presenterCache.takeValueForKey(pres, key);
+				cells[i] = new NSMutableDictionary(Work.ENTITY_NAME,"id");
+				cells[i].takeValueForKey(work[i].theme(), "hover");
+				cells[i].takeValueForKey("background-color:" + WorkType.color(work[i]), "style");
+				//byStudent
+				Enumeration stEnu = students.objectEnumerator();
+				while (stEnu.hasMoreElements()) {
+					Student student = (Student) stEnu.nextElement();
+					NSMutableDictionary stDict = (NSMutableDictionary)wDict.objectForKey(student);
+					if(stDict == null) {
+						stDict = new NSMutableDictionary();
+						wDict.setObjectForKey(stDict, student);
 					}
-					if(pres != FractionPresenter.NONE) {
-						value.append("color:").append(pres.presentFraction(integral)).append(';');
+					cells = (NSMutableDictionary[])stDict.valueForKey(Work.ENTITY_NAME);
+					if(cells == null) {
+						cells = new NSMutableDictionary[work.length];
+						stDict.takeValueForKey(cells, Work.ENTITY_NAME);
+					}
+					cells[i] = new NSMutableDictionary(Work.ENTITY_NAME,"id");
+					if(hasWeight)
+						cells[i].takeValueForKey("font-weight:bold;", "style");
+					BigDecimal integral = work[i].integralForStudent(student);
+					String note = work[i].noteForStudent(student);
+					if(integral != null) {
+						String key = (hasWeight)?"integralColor":"weightlessColor";
+						FractionPresenter pres = (FractionPresenter)presenterCache.valueForKey(key);
+						if(pres == null) {
+							pres = BorderSet.presenterForCourse(agr.course(), key);
+							if(pres == null)
+								pres = BorderSet.fractionPresenterForTitle(ec, "color");
+							if(pres == null)
+								pres = FractionPresenter.NONE;
+							presenterCache.takeValueForKey(pres, key);
+						}
+						if(pres != FractionPresenter.NONE) {
+							StringBuilder style = new StringBuilder();
+							key = pres.presentFraction(integral);
+							style.append("color:").append(key).append(';');
+							if(hasWeight)
+								style.append("font-weight:bold;");
+							cells[i].takeValueForKey(style.toString(), "style");
+						}
+						key = (hasWeight)?"workIntegral":"weightless";
+						pres = (FractionPresenter)presenterCache.valueForKey(key);
+						if(pres == null) {
+							pres = BorderSet.presenterForCourse(agr.course(), key);
+							if(pres == null) {
+								pres = FractionPresenter.NONE;
+							}
+							presenterCache.takeValueForKey(pres, key);
+						}
+						if(pres == FractionPresenter.NONE) {
+							Mark[] marks = work[i].forPersonLink(student);
+							if(marks.length == 1 && note == null) {
+								cells[i].takeValueForKey(marks[i].present(),"value");
+							} else {
+								StringBuilder buf = new StringBuilder();
+								for (int j = 0; j < marks.length; j++) {
+									buf.append(marks[j].present());
+									if(j < marks.length -1)
+										buf.append('/');
+								}
+								if(note != null)
+									buf.append('*');
+								cells[i].takeValueForKey(buf.toString(),"value");
+							}
+						} else {
+							String value = pres.presentFraction(integral);
+							if(note != null)
+								value = value + '*';
+							cells[i].takeValueForKey(value,"value");
+						}
+					} // if(integral != null)
+					else if(!optional) {
+						if(note == null)
+							cells[i].takeValueForKey(".","value");
+						else
+							cells[i].takeValueForKey(".*","value");
+					} else if(note != null) {
+						String link = MarksPresenter.linkFromNote(note);
+						String img = (link==null)?"text.png":"link.png";
+						String value = (String)presenterCache.valueForKey(img);
+						if(value == null) {
+							img = WOApplication.application().resourceManager().
+							urlForResourceNamed(img,"RujelBase",null,ctx.request());
+							value = "<img src=\"" + img + 
+								"\" alt=\"txt\" height=\"16\" width=\"16\">";
+							presenterCache.takeValueForKey(value, img);
+						}
+						if(link != null) {
+							StringBuilder buf = new StringBuilder("<a href=\"");
+							buf.append(link).append("\" target = \"_blank\">");
+							buf.append(value).append("</a>");
+							value = buf.toString();
+						}
+						cells[i].takeValueForKey(value,"value");
 					}
 					if(note != null) {
-						value.append("\" title = \"");
-						value.append(WOMessage.stringByEscapingHTMLAttributeValue(note));
+						cells[i].takeValueForKey(
+								WOMessage.stringByEscapingHTMLAttributeValue(note), "hover");
 					}
-					value.append('"').append('>');
-					
-					key = (hasWeight)?"workIntegral":"weightless";
-					pres = (FractionPresenter)presenterCache.valueForKey(key);
-					if(pres == null) {
-						pres = BorderSet.presenterForCourse(agr.course(), key);
-						if(pres == null) {
-							if(hasWeight)
-								pres = FractionPresenter.PERCENTAGE;
-							else
-								pres = new FractionPresenter.None("#");
-						}
-						presenterCache.takeValueForKey(pres, key);
-					}
-					value.append(pres.presentFraction(integral));
-				} else if(note != null) {
-					value.append("\" title = \"");
-					value.append(WOMessage.stringByEscapingHTMLAttributeValue(note));
-					value.append('"').append('>');
-					if(!optional)
-						value.append('.');
-					value.append('*');
-				} else if(!optional) {
-					value.append("\">&nbsp;.&nbsp;");
-				}
-				value.append("</span>");
-			}
+				} // students Enumerations
+			} // works on date
 		}
-		return null;
+		return ctx.session().valueForKeyPath("strings.RujelCriterial_Strings.consolidatedView");
 	}
 }

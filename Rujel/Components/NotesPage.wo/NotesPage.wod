@@ -37,8 +37,16 @@ ActiveAddOnComponent: WOSwitchComponent {
 	course = ^course;
 	single=single;
 	currAddOn = addOnItem;
+	rowspan = rowspan;
 }
 
+TitleAddOnComponent: WOSwitchComponent {
+	WOComponentName = addOnItem.activeComponent;
+	course = ^course;
+	single=single;
+	currAddOn = addOnItem;
+	titleRow = true;
+}
 Repetition1: WORepetition {
 	list = ^studentsList;
 	item = studentItem;
@@ -122,4 +130,37 @@ NotePresenter2: WOSwitchComponent {
 StudentNotes : WOString {
   value = studentNotes;
   escapeHTML = false;
+}
+
+IsConsolidated : WOConditional {
+  condition = ^present.consolidated;
+}
+
+AddonsSpan : WOGenericContainer {
+  elementName = "td";
+  colspan = addOnsSpan;
+}
+
+HasAddons : WOConditional {
+  condition = addOnsSpan;
+}
+
+MonthsRow : WOString {
+  value = monthsRow;
+  escapeHTML = false;
+}
+
+ConsolidatedTitle : ConsolidatedCell {
+	lesson = lessonItem;
+	single=single;
+	presenterCache = presenterCache;
+	titleRow = true;
+}
+
+AllAddonsCell : WOGenericContainer {
+  elementName = "td";
+  align="right";
+  style="padding:5pt;vertical-align:middle;";
+  valign="middle";
+  rowspan = rowspan;
 }

@@ -4,12 +4,13 @@ IsTitle: WOConditional {
 }
 
 PrognosTitleContainer: OnClickContainer {
-	elementName = "td";
+	elementName = "th";
 	invokeAction = inspectPrognosis;
 	onclick = session.ajaxPopup;
 	style = "width:2em;border-style:none double;border-width:0px 3px;text-align:center;";
 	class = styleClass;
 	title = currAddOn.periodItem.itogContainer.name;
+	rowspan = ^rowspan;
 }
 
 Header: WOString {
@@ -41,6 +42,7 @@ TimeoutContainer: OnClickContainer {
 	class = styleClass;
 	onclick = session.ajaxPopup;
 	invokeAction = editTimeout;
+	rowspan = ^rowspan;
 }
 
 PrognosisPresentValue: WOString {
@@ -49,7 +51,8 @@ PrognosisPresentValue: WOString {
 }
 
 PeriodTitle : WOString {
-  value = currAddOn.periodItem.itogContainer.title;
+  value = currAddOn.periodItem.itogContainer.titleHTML;
+  escapeHTML = false;
 }
 
 PeriodsRepetition : WORepetition {
@@ -73,5 +76,15 @@ FireDate : WOString {
 
 RequestedBonus : WOString {
   value = bonusState;
+  escapeHTML = false;
+}
+
+NotTitleRow : WOConditional {
+  condition = ^titleRow;
+  negate = true;
+}
+
+TitleCell : WOString {
+  value = titleCell;
   escapeHTML = false;
 }

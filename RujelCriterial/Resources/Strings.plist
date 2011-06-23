@@ -549,5 +549,12 @@
 		<key>sort</key>
 		<string>20</string>
 	</dict>
+	<key>consolidatedView</key>
+	<dict>
+		<key>id</key>
+		<string>Work</string>
+		<key>sort</key>
+		<integer>60</integer>
+	</dict>
 </dict>
 </plist>

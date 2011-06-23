@@ -229,7 +229,7 @@ public class MarksPresenter extends NotePresenter {
 				}
 			}
 			return result.toString();
-		}
+		} // if(student() == null)
 		if(!access().flagForKey("read")) return "#";
         if (mark() == null) {
 			if(Various.boolForObject(valueForBinding("full")) 
@@ -606,6 +606,22 @@ public class MarksPresenter extends NotePresenter {
 			return note.substring(pre);
 		else
 			return note;
+	}
+	
+	public static String linkFromNote(String note) {
+		int idx = note.indexOf("://");		
+		if(idx < 0)
+			return null;
+		int pre = note.lastIndexOf(' ', idx);
+		if(pre < 0)
+			pre = 0;
+		int post = note.indexOf(' ', idx);
+		String link = note;
+		if(post > 0)
+			link = note.substring(pre, post);
+		else if(pre > 0)
+			link = note.substring(pre);
+		return link;
 	}
 	
 	public String shortNoteForStudent() {

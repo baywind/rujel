@@ -265,6 +265,22 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 		inTimeout = (!periodItem.namedFlags().flagForKey("noTimeouts"));
 		return inTimeout;
 	}
+	
+	public int span() {
+		if(_periods == null)
+			return 0;
+		int count = _periods.count();
+		if(count == 0)
+			return 0;
+		if(timeOuts) {
+			for (int i = 0; i < _periods.count(); i++) {
+				AutoItog ai = (AutoItog)_periods.objectAtIndex(i);
+				if(!ai.namedFlags().flagForKey("noTimeouts"))
+					count++;
+			}
+		}
+		return count;
+	}
 
 	public CourseTimeout courseTimeout() {
 		Object result = _courseTimeouts.objectForKey(periodItem.itogContainer());

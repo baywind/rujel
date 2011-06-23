@@ -33,7 +33,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.PerPersonLink;
@@ -92,9 +91,8 @@ public class DateAgregate {
 		return result;
 	}
 	
-	public NSArray listForMask(NSArray lessons) {
+	public NSArray listForMask(NSArray lessons, NSArray views) {
     	Enumeration enu = lessons.objectEnumerator();
-    	int[] colspan = new int[array.length];
     	PerPersonLink.Dictionary[] out = new PerPersonLink.Dictionary[array.length];
     	while (enu.hasMoreElements()) {
     		EduLesson lesson = (EduLesson) enu.nextElement();
@@ -102,13 +100,24 @@ public class DateAgregate {
     		if(!initialized[day])
     			return null;
 			if(out[day] == null) {
-				colspan[day] = 0;
 				if(array[day] == null) {
 					out[day] = new PerPersonLink.Dictionary(
 						new NSMutableDictionary(lesson.date(),"date"));
 				} else {
 					out[day] = new PerPersonLink.Dictionary(array[day].mutableClone());
 					out[day].takeValueForKey(lesson.date(), "date");
+					if(views != null && views.count() > 0) {
+						Enumeration venu = views.objectEnumerator();
+						int span = 0;
+						while (venu.hasMoreElements()) {
+							String key = (String) venu.nextElement();
+							Object view = array[day].valueForKey(key);
+							if(view instanceof Object[])
+								span += ((Object[])view).length;
+						}
+						if(span > 0)
+							out[day].takeValueForKey(new Integer(span), "span");
+					}
 				}
 				out[day].takeValueForKey(new NSMutableArray(lesson), "lessons");
 			} else {
@@ -118,9 +127,6 @@ public class DateAgregate {
 				related.addObject(lesson);
 				EOSortOrdering.sortArrayUsingKeyOrderArray(related, EduLesson.sorter);
 			}
-			colspan[day]++;
-			if(colspan[day] > 1)
-				out[day].takeValueForKey(new Integer(colspan[day]), "colspan");
 		}
     	return new NSArray(out);
 	}
@@ -134,7 +140,6 @@ public class DateAgregate {
 			array[dateIndex(date)] = new NSMutableDictionary();
 		return array[dateIndex(date)];
 	}
-
 	
 	public void setOnDate(NSMutableDictionary dict, Date date) {
 		array[dateIndex(date)] = dict;
@@ -171,7 +176,7 @@ public class DateAgregate {
 	}
 	
 	public static StringBuilder appendValueToKeyInDict(String value, String key, 
-			NSMutableDictionary dict, char separator) {
+			NSMutableDictionary dict, String separator) {
 		StringBuilder buf = (StringBuilder)dict.valueForKey(key);
 		if(buf == null) {
 			buf = new StringBuilder();
@@ -179,7 +184,8 @@ public class DateAgregate {
 		} else {
 			if(buf.indexOf(value) >= 0)
 				return buf;
-			buf.append(separator);
+			if(separator != null)
+				buf.append(separator);
 		}
 		buf.append(value);
 		return buf;

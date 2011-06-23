@@ -34,3 +34,32 @@ Star : WOString {
   value = star;
   escapeHTML = false;
 }
+
+TitleRow : WOConditional {
+  condition = ^titleRow;
+}
+
+NotTitle : WOConditional {
+  condition = ^titleRow;
+  negate = true;
+}
+
+HasPeriods : WOConditional {
+  condition = periods.count;
+}
+
+TitleCell : WOGenericContainer {
+  elementName = "th";
+  colspan = periods.count;
+  class = "lbd rbd";
+}
+
+Title : WOString {
+  value = currAddOn.title;
+}
+
+TitleContainer : WOGenericContainer {
+  elementName = "th";
+  style="width:2em;";
+  rowspan = ^rowspan;
+}

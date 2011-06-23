@@ -33,6 +33,7 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 
 import net.rujel.reusables.Flags;
+import net.rujel.reusables.Various;
 import net.rujel.ui.AddOnPresenter;
 
 import com.webobjects.appserver.*;
@@ -165,6 +166,34 @@ public class PrognosPresenter extends AddOnPresenter {
 		if(progn == null)
 			return null;
 		return bonusState(progn.bonus(),progn.flags());
+	}
+	
+	public String titleCell() {
+		if(!Various.boolForObject(valueForBinding("titleRow")))
+			return null;
+		int span = currAddOn().span();
+		if(span == 0)
+			return null;
+		StringBuilder buf = new StringBuilder();
+		if(span == 1)
+			buf.append("<td style = \"font-size:x-small;\" class = \"lbd rbd\">");
+		else
+			buf.append("<th colspan = \"").append(span).append("\" class = \"lbd rbd\">");
+		buf.append(currAddOn().valueForKey("title"));
+		if(span == 1)
+			buf.append("</td>");
+		else
+			buf.append("</th>");
+		return buf.toString();
+	}
+	
+	public String rowspan() {
+		try {
+			if("ConsolidatedCell".equals(parent().valueForKey("presenter")))
+				return "2";
+		} finally {
+			return null;
+		}
 	}
 	
 	public static String bonusState(Bonus bonus, Integer flags) {

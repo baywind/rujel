@@ -82,7 +82,8 @@ public class CompletePresenter extends AddOnPresenter {
 	
 	public boolean disabled() {
 		if(student() == null) {
-			return (!currAddOn().access().flagForKey("create"));
+			return (Various.boolForObject(valueForBinding("titleRow")) ||
+					!currAddOn().access().flagForKey("create"));
 		} else {
 			NSMutableDictionary dict = dict();
 			if(dict == null)

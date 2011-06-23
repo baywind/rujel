@@ -161,4 +161,27 @@ public class WorkType extends _WorkType {
 			return weight.setScale(0);
 		return weight;
 	}
+	
+	public String color(boolean weight) {
+		if(namedFlags().flagForKey("unused"))
+			return "#999999";
+		if(weight) {
+			String result = colorWeight();
+    		if(result == null)
+    			return "#ff9966";
+    		return result;
+		} else {
+    		String result = colorNoWeight();
+    		if(result == null)
+    			return "#ffcc66";
+    		return result;
+		}
+	}
+	
+    public static String color(Work work) {
+    	WorkType type = work.workType();
+    	if (type == null)
+    		return "#999999";
+    	return type.color(work.hasWeight());
+    }
 }

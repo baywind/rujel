@@ -87,6 +87,7 @@ public class ModuleInit {
 		if(access.getFlag(0)) {
 			NSDictionary itogAddOn = (NSDictionary)WOApplication.application().
 					valueForKeyPath("strings.RujelEduResults_EduResults.itogAddOn");
+			itogAddOn = itogAddOn.mutableClone();
 			itogAddOn.takeValueForKey(access,"access");
 			return new AddOnPresenter.AddOn(itogAddOn, access);
 		}
