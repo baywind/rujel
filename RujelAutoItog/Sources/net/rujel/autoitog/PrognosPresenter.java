@@ -176,9 +176,9 @@ public class PrognosPresenter extends AddOnPresenter {
 			return null;
 		StringBuilder buf = new StringBuilder();
 		if(span == 1)
-			buf.append("<td style = \"font-size:x-small;\" class = \"lbd rbd\">");
+			buf.append("<td style = \"font-size:x-small;\" class = \"lbd\">");
 		else
-			buf.append("<th colspan = \"").append(span).append("\" class = \"lbd rbd\">");
+			buf.append("<th colspan = \"").append(span).append("\" class = \"lbd\">");
 		buf.append(currAddOn().valueForKey("title"));
 		if(span == 1)
 			buf.append("</td>");

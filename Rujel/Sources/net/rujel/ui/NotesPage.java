@@ -438,7 +438,7 @@ public class NotesPage extends WOComponent {
 			cal.setTime((java.util.Date)lesson.valueForKey("date"));
 			if(month != cal.get(Calendar.MONTH)) {
 				if (colspan > 0) {
-					buf.append("<th class = \"lbd rbd\"");
+					buf.append("<th class = \"lbd\"");
 					if(colspan == 1) {
 						buf.append('>').append(monthsShort.objectAtIndex(month));
 					} else {
@@ -461,7 +461,7 @@ public class NotesPage extends WOComponent {
 			}
 		} // lessons Enumeration
 		if (colspan > 0) {
-			buf.append("<th class = \"lbd rbd\"");
+			buf.append("<th class = \"lbd\"");
 			if(colspan == 1) {
 				buf.append('>').append(monthsShort.objectAtIndex(month));
 			} else {

@@ -163,4 +163,6 @@ AllAddonsCell : WOGenericContainer {
   style="padding:5pt;vertical-align:middle;";
   valign="middle";
   rowspan = rowspan;
+  colspan = 2;
+  width = "90%";
 }

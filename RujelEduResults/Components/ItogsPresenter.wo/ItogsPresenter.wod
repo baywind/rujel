@@ -51,7 +51,7 @@ HasPeriods : WOConditional {
 TitleCell : WOGenericContainer {
   elementName = "th";
   colspan = periods.count;
-  class = "lbd rbd";
+  class = "lbd";
 }
 
 Title : WOString {

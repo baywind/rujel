@@ -22,7 +22,8 @@ TitleContainer : OnClickContainer {
   title = titleHover;
   align = "center";
   colspan = datePlink.span;
-  class = "lbd rbd";
+  class = "lbd";
+  style = titleStyle;
 }
 
 Title : WOString {

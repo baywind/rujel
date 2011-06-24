@@ -8,6 +8,7 @@ TitleContainer : OnClickContainer {
   invokeAction = stamp;
   style = "width:42px;";
   rowspan = ^rowspan;
+  class = "lbd";
 }
 
 Container : OnClickContainer {
@@ -18,6 +19,7 @@ Container : OnClickContainer {
   align = "center";
   hide = currAddOn.hide;
   invokeAction = stamp;
+  class = "lbd";
 }
 
 Header : WOConditional {

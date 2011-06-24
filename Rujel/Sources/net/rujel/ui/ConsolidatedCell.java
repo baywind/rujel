@@ -179,9 +179,9 @@ public class ConsolidatedCell extends WOComponent {
 		}
     	if(result.count() <= 1) {
     		if(styleClass == null)
-    			styleClass = "lbd rbd";
+    			styleClass = "lbd";
     		else
-    			styleClass = styleClass + " lbd rbd";
+    			styleClass = styleClass + " lbd";
     	}
     	NSDictionary generic = NSDictionary.EmptyDictionary;
     	if(style != null || styleClass != null) {
@@ -206,7 +206,7 @@ public class ConsolidatedCell extends WOComponent {
     		for (int i = 0; i < result.count(); i++) {
 				String val = null;
     			if(i == 0)
-    				val = "lbd";
+    				val = "lbd2";
     			else if (i == result.count() -1)
     				val = "rbd";
     			else if (generic == NSDictionary.EmptyDictionary)
@@ -259,6 +259,13 @@ public class ConsolidatedCell extends WOComponent {
 		return buf;
     }
     
+    public String titleStyle() {
+    	NSArray lessons = (NSArray)valueForKeyPath("datePlink.lessons");
+    	if(lessons != null && lessons.count() > 1)
+    		return "padding:0px;";
+    	return null;
+    }
+    
 	public String lessonTitle() {
 		NSKeyValueCoding lesson = datePlink();
 		if(lesson==null)return null;
@@ -279,9 +286,14 @@ public class ConsolidatedCell extends WOComponent {
 		if(lessons != null && lessons.count() > 1) {
 			String result = buf.toString();
 			buf.delete(0, buf.length());
-			buf.append("<table cellspacing = \"0\" width = \"100%\"><tr>\n\t");
+			buf.append(
+	"<table width = \"100%\" style = \"border-collapse:collapse;\"><tr>\n\t");
 			for (int i = 0; i < lessons.count(); i++) {
-				buf.append("<th>").append(result).append("</th>\n\t");
+				if(i > 0)
+					buf.append("<th class = \"lbd \">");
+				else
+					buf.append("<th>");
+				buf.append(result).append("</th>\n\t");
 			}
 			buf.append("\n</tr></table>");
 		} else {
