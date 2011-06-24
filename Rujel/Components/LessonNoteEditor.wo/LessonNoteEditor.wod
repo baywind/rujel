@@ -159,6 +159,7 @@ CriterSelector1: WOSwitchComponent {
 	WOComponentName = present.selector;
 	cycle = course.cycle;
 	course = course;
+	present = present;
 }
 
 PresentTabs: Tabs {

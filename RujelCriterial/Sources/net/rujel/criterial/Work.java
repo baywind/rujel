@@ -46,8 +46,15 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class Work extends _Work implements EduLesson {	// EOObserving
-	public transient FractionPresenter _integralPresenter;
+	public FractionPresenter _integralPresenter;
 
+	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
+			new EOSortOrdering(DATE_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering(NUMBER_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering("workType.sort",EOSortOrdering.CompareAscending),
+			new EOSortOrdering(ANNOUNCE_KEY,EOSortOrdering.CompareDescending)
+	});
+	
 	public Work() {
 		super();
 	}
@@ -59,6 +66,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		setLoad(zero);
 		setFlags(zero);
 		setAnnounce(new NSTimestamp());
+		setNumber(zero);
 //		setWorkType(WorkType.defaultType(ctx));
 	}
 	

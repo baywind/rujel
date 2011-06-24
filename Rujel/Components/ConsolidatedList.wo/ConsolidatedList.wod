@@ -226,6 +226,8 @@ ThemeCell : WOGenericContainer {
   class = rowClass;
   title = lessonProperties.rowHover;
   style = lessonProperties.rowStyle;
+  onmouseover = "dim(this);";
+  onmouseout = "unDim(this);";
 }
 
 CanCreate : WOConditional {

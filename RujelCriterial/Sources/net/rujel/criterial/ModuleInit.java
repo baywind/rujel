@@ -257,6 +257,8 @@ public class ModuleInit {
 				int wDate = agr.dateIndex(work.date());
 				if(tmp == null || wDate != lDate) {
 					if(tmp != null) {
+						if(tmp.count() > 1)
+							EOSortOrdering.sortArrayUsingKeyOrderArray(tmp, Work.sorter);
 						dates.addObject(tmp.toArray(new Work[tmp.count()]));
 					}
 					tmp = new NSMutableArray(work);

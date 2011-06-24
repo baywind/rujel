@@ -205,6 +205,8 @@
 		<string>RujelCriterial</string>
 		<key>scriptResource</key>
 		<string>criterial.js</string>
+		<key>filter</key>
+		<string>criterMask.count > 0</string>
 		<key>prefetchPaths</key>
 		<array>
 			<string>marks</string>

@@ -199,7 +199,29 @@ public class CriterSelector extends WOComponent {
 			else
 				session().removeObjectForKey("activeCriterion");
 		}
+		NSKeyValueCoding present = (NSKeyValueCoding)valueForBinding("present");
+		if(present == null) {
+			return (WOActionResults)valueForBinding("selectAction");
+		}
+		Object filter = present.valueForKey("filter");
+		String key = (sel != null && sel.intValue() < 0)?"notes.count":"criterMask.count";
 		if((sel==null)?currSel==null:sel.equals(currSel)) {
+			if(filter == null) {
+				filter = new EOKeyValueQualifier(key,
+						EOQualifier.QualifierOperatorGreaterThan,new Integer(0));
+			} else {
+				filter = null;
+			}
+			present.takeValueForKey(filter, "filter");
+		} else if(filter != null) {
+			if(!(filter instanceof EOKeyValueQualifier) ||
+					!((EOKeyValueQualifier)filter).key().equals(key)) {
+				filter = new EOKeyValueQualifier(key,
+						EOQualifier.QualifierOperatorGreaterThan,new Integer(0));
+				present.takeValueForKey(filter, "filter");
+			}
+		}
+		/*
 			Boolean hide = (Boolean)session().objectForKey("hideMarkless");
 			if(hide == null) {
 				hide = new Boolean(sel != null && sel.intValue() < 0);
@@ -207,7 +229,7 @@ public class CriterSelector extends WOComponent {
 				hide = new Boolean(!hide.booleanValue());
 			}
 			session().setObjectForKey(hide,"hideMarkless");
-		}
+		}*/
 		_selection = sel;
 		return (WOActionResults)valueForBinding("selectAction");
 	}

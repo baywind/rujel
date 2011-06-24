@@ -385,6 +385,8 @@ public class MarksPresenter extends NotePresenter {
 	public Boolean hideIntegralCell() {
 		if(valueForBinding("initData") != null)
 			return Boolean.TRUE;
+		return Boolean.FALSE;
+		/*
 		if(lesson() == null)
 			return Boolean.FALSE;
 		if(Various.boolForObject(valueForBinding("full")))
@@ -400,7 +402,7 @@ public class MarksPresenter extends NotePresenter {
 		} else {
 			return new Boolean(lesson().criterMask() == null 
 					|| lesson().criterMask().count() == 0);
-		}
+		}*/
 	}
 	
     public String integralTitle() {

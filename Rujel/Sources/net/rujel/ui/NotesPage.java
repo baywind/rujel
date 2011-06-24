@@ -77,6 +77,16 @@ public class NotesPage extends WOComponent {
 				return null;
 		}
 		NSArray lessons = (NSArray)valueForBinding("lessonsList");
+		NSKeyValueCoding present = (NSKeyValueCoding)valueForBinding("present");
+		if(present == null)
+			return lessons;
+		Object filter = present.valueForKey("filter");
+		if(filter == null)
+			return lessons;
+		if(filter instanceof CharSequence)
+			filter = EOQualifier.qualifierWithQualifierFormat(filter.toString(), null);
+		if(filter instanceof EOQualifier)
+			lessons = EOQualifier.filteredArrayWithQualifier(lessons, (EOQualifier)filter);
 /*		if("ConsolidatedCell".equals(presenter())) {
 			DateAgregate agr = (DateAgregate)valueForBinding("dateAgregate");
 			if(agr == null) {
@@ -420,7 +430,7 @@ public class NotesPage extends WOComponent {
 	public String monthsRow() {
 		if(single())
 			return null;
-		NSArray lessons = (NSArray)valueForBinding("lessonsList");
+		NSArray lessons = lessonsListing();//(NSArray)valueForBinding("lessonsList");
 		if(lessons == null || lessons.count() == 0)
 			return null;
 		StringBuilder buf = new StringBuilder();

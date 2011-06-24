@@ -87,13 +87,14 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
     	if(_workList == null) {
     		_workList =NSArray.EmptyArray;
     	} else if(_workList.count() > 1) {
+/*
     		EOSortOrdering so = new EOSortOrdering("workType.sort",EOSortOrdering.CompareAscending);
     		NSMutableArray sorter = new NSMutableArray(so);
-    		so = new EOSortOrdering("announce",EOSortOrdering.CompareDescending);
+    		so = new EOSortOrdering("announce",EOSortOrdering.CompareAscending);
     		sorter.addObject(so);
     		so = new EOSortOrdering("date",EOSortOrdering.CompareAscending);
-    		sorter.addObject(so);
-    		_workList = EOSortOrdering.sortedArrayUsingKeyOrderArray(_workList, sorter);
+    		sorter.addObject(so);*/
+    		_workList = EOSortOrdering.sortedArrayUsingKeyOrderArray(_workList, Work.sorter);
     	}
     	return _workList;
     }
