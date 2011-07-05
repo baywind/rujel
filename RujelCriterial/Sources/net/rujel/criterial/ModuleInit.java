@@ -249,25 +249,35 @@ public class ModuleInit {
 			NSMutableArray dates = new NSMutableArray(works.count());
 			int lDate = 0;
 			NSMutableArray tmp = null;
+			NSMutableArray worksOnDate = null;
 			while (enu.hasMoreElements()) {
 				Work work = (Work) enu.nextElement();
-				if(work.isOptional() && (work.marks() == null || work.marks().count() == 0 ) &&
-						(work.notes() == null || work.notes().count() == 0 ))
-					continue;
+				boolean skip = (work.isOptional() &&
+						(work.marks() == null || work.marks().count() == 0 ) &&
+						(work.notes() == null || work.notes().count() == 0 ));
 				int wDate = agr.dateIndex(work.date());
 				if(tmp == null || wDate != lDate) {
-					if(tmp != null) {
+					if(tmp != null && tmp.count() > 0) {
 						if(tmp.count() > 1)
 							EOSortOrdering.sortArrayUsingKeyOrderArray(tmp, Work.sorter);
 						dates.addObject(tmp.toArray(new Work[tmp.count()]));
 					}
-					tmp = new NSMutableArray(work);
+					tmp = new NSMutableArray();
+					worksOnDate = new NSMutableArray(workRow(work));
+					if(agr.getArray()[wDate] == null) {
+						agr.getArray()[wDate] = new NSMutableDictionary(worksOnDate,"works");
+					} else {
+						agr.getArray()[wDate].takeValueForKey(worksOnDate, "works");
+					}
 					lDate = wDate;
 				} else {
+					worksOnDate.addObject(workRow(work));
+				}
+				if(!skip) {
 					tmp.addObject(work);
 				}
 			}
-			if(tmp != null)
+			if(tmp != null && tmp.count() > 0)
 				dates.addObject(tmp.toArray(new Work[tmp.count()]));
 			works = dates.immutableClone();
 		}
@@ -277,10 +287,10 @@ public class ModuleInit {
 		while (enu.hasMoreElements()) {
 			Work[] work = (Work[]) enu.nextElement();
 			NSMutableDictionary wDict = agr.getOnDate(work[0].date());
-			if(wDict == null) {
+		/*	if(wDict == null) {
 				wDict = new NSMutableDictionary();
 				agr.setOnDate(wDict, work[0].date());
-			}
+			}*/
 			for (int i = 0; i < work.length; i++) {
 				boolean optional = work[i].isOptional();
 				boolean hasWeight = work[i].hasWeight();
@@ -297,6 +307,7 @@ public class ModuleInit {
 				cells[i] = new NSMutableDictionary(Work.ENTITY_NAME,"id");
 				cells[i].takeValueForKey(work[i].theme(), "hover");
 				cells[i].takeValueForKey("background-color:" + WorkType.color(work[i]), "style");
+//				cells[i].takeValueForKey(work[i],"object");
 				//byStudent
 				Enumeration stEnu = students.objectEnumerator();
 				while (stEnu.hasMoreElements()) {
@@ -398,5 +409,28 @@ public class ModuleInit {
 			} // works on date
 		}
 		return ctx.session().valueForKeyPath("strings.RujelCriterial_Strings.consolidatedView");
+	}
+	
+	private static NSMutableDictionary workRow(Work work) {
+		if(work == null)
+			return null;
+		NSMutableDictionary row = new NSMutableDictionary(work,"object");
+		row.takeValueForKey(Boolean.TRUE, "skipDate");
+		row.takeValueForKey(work.date(), "date");
+		row.takeValueForKey(work.workType().typeName(), "rowHover");
+		row.takeValueForKey(work.workType().typeName(), "title");
+		row.takeValueForKey(work.theme(), "theme");
+		row.takeValueForKey(work.announce(), "otherDate");
+		row.takeValueForKey(work.trimmedWeight().toString(), "extShort");
+		if(work.isCompulsory())
+			row.takeValueForKey("font-weight:bold;", "extStyle");
+		StringBuilder buf = new StringBuilder("background-color:");
+		buf.append(work.color()).append(';');
+		if(!work.isOptional())
+			buf.append("font-weight:bold;");
+		row.takeValueForKey(buf.toString(), "cellStyle");
+		row.takeValueForKey(work.color(), "rowColor");
+		row.takeValueForKey(new Integer(work.usedCriteria().count() +2), "editorSpan");
+		return row;
 	}
 }

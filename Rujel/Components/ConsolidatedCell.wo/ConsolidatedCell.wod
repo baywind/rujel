@@ -48,3 +48,43 @@ Cells : WORepetition {
   list = cells;
   item = item;
 }
+
+Editors : WORepetition {
+  list = editors;
+  item = item;
+}
+
+Editor : WOSwitchComponent {
+  WOComponentName = item.editor;
+  student = student;
+  lesson = item.object;
+  presenterCache = ^presenterCache;
+  access = access;
+  single = true;
+  isSelected = true;
+  params = item.params;
+}
+
+TitleCell : WOGenericContainer {
+  elementName = "th";
+  colspan = item.colspan;
+  bgcolor = item.bgcolor;
+  class = item.styleClass;
+  style = item.style;
+}
+
+NoTitle : WOConditional {
+  condition = ^titleRow;
+  negate = true;
+}
+
+Theme : WOString {
+  value = item.title;
+}
+
+SeparatorCol : WOGenericContainer {
+  elementName = "td";
+  rowspan = fullRowspan;
+  class = "grey";
+  omitTags = ^index;
+}

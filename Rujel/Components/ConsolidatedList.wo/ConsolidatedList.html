@@ -1,17 +1,4 @@
-<script language="JavaScript"><!--
-	var htTitle = '<webobject name="HomeTaskTitle"/>';
-	function navigate(ifnav) {
-		var canEdit = <webobject name="CanMove"></webobject>;
-		if(canEdit) {
-			var nav = document.getElementById("control");
-			var num = document.getElementById("number");
-			nav.style.display = (ifnav)?"":"none";
-			num.style.display = (ifnav)?"none":"";
-		}
-		return canEdit;
-	}
---></script>
-<table border="0" width="100%">
+<table border="0" width="100%" cellspacing = "2" class = "backfield2">
 <thead>
 <tr><webobject name="HasStudent">
 <webobject name="TitlePresenter"></webobject><td class="selection" width="2"></td></webobject>
@@ -21,45 +8,14 @@
 <webobject name="IfFull"><th width="35%"><webobject name="HomeTaskTitle"/></th></webobject></tr>
 </thead>
 <tbody>
-<webobject name="LessonsListing"><webobject name="Regular"><webobject name="LessonRow">
-<webobject name="HasStudent">
-<webobject name="StudentPresenter"></webobject><td class="selection" width="2"></td></webobject>
-<webobject name = "RowCell"><webobject name="LessonDate"/></webobject>
-<webobject name = "RowCell"><webobject name = "SingleTheme"/><webobject name = "MultipleLessons">
-<table width = "100%"><webobject name = "RelatedLessons"><tr><webobject name = "ThemeCell">
-<webobject name="LessonTheme"/></webobject></tr></webobject>
-</table></webobject></webobject><webobject name="IfAbbreviated">
-<webobject name = "TaskCell"><webobject name = "HasTask">
-	<webobject name="HomeTaskImage"/></webobject></webobject></webobject>
-<webobject name="IfFull"><td align="left"><webobject name="LessonHomeTask"></webobject></td></webobject>
-</webobject></webobject><webobject name="IsRecent"><tr class="selection"><webobject name="HasStudent">
-<webobject name="StudentPresenter"></webobject><td class="selection" width="2"></td></webobject>
-<td align="center"><webobject name="LessonDate"/><webobject name="HomeTaskHiddenField"/></td>
-<webobject name = "SingleLesson">
-<td><webobject name="CurrLessonThemeField"/></td><webobject name = "TaskCell">
-	<webobject name="IfAbbreviated">
-	<webobject name="HomeTaskImage2"/></webobject><webobject name="IfFull">
-	<webobject name="CurrLessonHomeTaskField"></webobject></webobject>
-</webobject>
-</webobject><webobject name = "MultipleLessons"><td colspan = "2" style = "padding:0px;">
-<table width = "100%" cellspacing = "0"><col style = "width:2em;"/><col/><col style = "width:3em;"/>
-<webobject name = "RelatedLessons"><tr><td colspan = "2">
-<webobject name="LessonItemThemeField"/></td><webobject name = "TaskCell">
-	<webobject name="IfAbbreviated">
-	<webobject name="HomeTaskImage2"/></webobject><webobject name="IfFull">
-	<webobject name="CurrLessonHomeTaskField"></webobject></webobject>
-</webobject></tr><webobject name = "LessonExtentions"><tr class = "selection">
-<webobject name = "ExtItemComponent"/>
-</tr></webobject></webobject>
-</table></td></webobject>
-</tr></webobject>
-<webobject name = "ShowExtentions">
-<webobject name = "LessonExtentions"><tr class = "selection">
-<webobject name = "ExtComponent"/>
-</tr></webobject>
-<tr class = "selection" style = "heigt:2pt;"><td colspan = "3"></td></tr>
-</webobject>
-</webobject>
+<webobject name = "InternalRows"><webobject name = "ShowSeparator">
+	<tr><webobject name = "Separator"></webobject></tr></webobject>
+	<webobject name="LessonRow">
+	<webobject name = "DateCell"><webobject name="LessonDate"/></webobject>
+	<webobject name = "ThemeCell"><webobject name="LessonTheme"/></webobject>
+	<webobject name = "ExtCell"><webobject name = "ExtValue"/></webobject>
+</webobject></webobject><webobject name = "LastCurrent">
+	<tr height = "3" class = "selection"><td colspan = "3"></td></tr></webobject>
 <!-- tr><td colspan="3" class="grey" height="4"></td></tr -->
 </tbody></table>
 <p align="center">

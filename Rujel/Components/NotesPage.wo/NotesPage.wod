@@ -24,6 +24,8 @@ TitlePresenter: WOSwitchComponent {
 	readOnly = ^readOnly;
 	single=single;
 	selectAction = selectLesson;
+	views = ^views;
+	course = ^course;
 }
 
 ActiveAddOnsRepetition: WORepetition {
@@ -94,6 +96,9 @@ NotePresenter1: WOSwitchComponent {
 	single=single;
 	presenterCache = presenterCache;
 	access = access;
+	views = ^views;
+	index = idx;
+	course = ^course;
 }
 
 AllAddOnsRepetition: WORepetition {
@@ -155,6 +160,7 @@ ConsolidatedTitle : ConsolidatedCell {
 	single=single;
 	presenterCache = presenterCache;
 	titleRow = true;
+	views = ^views;
 }
 
 AllAddonsCell : WOGenericContainer {
@@ -165,4 +171,9 @@ AllAddonsCell : WOGenericContainer {
   rowspan = rowspan;
   colspan = 2;
   width = "90%";
+}
+
+NotSingle : WOConditional {
+  condition = single;
+  negate = true;
 }

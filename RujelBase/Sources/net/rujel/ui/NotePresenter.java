@@ -131,7 +131,8 @@ public class NotePresenter extends WOComponent {
 	}
 	
 	public String tdStyle() {
-		if(Various.boolForObject(valueForBinding("isSelected")))
+		if(valueForBinding("params") == null &&
+				Various.boolForObject(valueForBinding("isSelected")))
 			return "selection";
 		return null;
     }
@@ -159,9 +160,13 @@ public class NotePresenter extends WOComponent {
 
     public int len() {
     	Number maxlen = (Number)valueForBinding("maxlen");
-    	if (maxlen == null && hasBinding("initData")) {
-    		NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("initData");
-    		maxlen = (Number)data.valueForKey("maxlen");
+    	if (maxlen == null) {
+    		NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("params");
+    		if(data == null)
+    			data = (NSKeyValueCoding)valueForBinding("initData");
+    		if(data != null) {
+    			maxlen = (Number)data.valueForKey("maxlen");
+    		}
     	}
     	if (maxlen == null)
     		maxlen = new Integer((single())?20:3);
@@ -296,7 +301,7 @@ public class NotePresenter extends WOComponent {
 		//boolean single = Various.boolForObject(valueForBinding("single"));
 		StringBuilder buf = new StringBuilder(30);
 		//int len = (len() * 2) / 3;
-		buf.append("width:").append(len() +1).append("ex;text-align:");
+		buf.append("width:").append(len()).append("ex;text-align:");
 		if(noteForStudent() != null) {
 			if(single() && noteForStudent().length() >= len())
 				buf.append("left;overflow:hidden;");

@@ -11,9 +11,14 @@
         <webobject name = "JsAndCSS"/>
         <webobject name = "OuterResources"/>
 <webobject name="HasCSS"><webobject name="CSSurl"/>
-</webobject><webobject name="HasStyles"><style type="text/css">
+</webobject><style type="text/css">
   <webobject name="Styles"/>
-</style></webobject><webobject name="HasScript">
+  .hasText {
+  	background-image: url(<webobject name = "ImageUrl"/>);
+    background-position: center center;
+    background-repeat: no-repeat;
+  }
+</style><webobject name="HasScript">
 <webobject name="ScriptLink"></webobject></webobject>
 <webobject name = "HasSesion">
 <script type="text/javascript" language="JavaScript">

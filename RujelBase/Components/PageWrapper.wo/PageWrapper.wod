@@ -214,3 +214,8 @@ EduYear : WOString {
 RefreshPage : WOActionURL {
   action = refreshPage;
 }
+
+ImageUrl : WOResourceURL {
+  framework = "RujelBase";
+  filename = "text.png";
+}

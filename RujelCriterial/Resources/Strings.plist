@@ -557,6 +557,12 @@
 		<string>Work</string>
 		<key>sort</key>
 		<integer>60</integer>
+		<key>rows</key>
+		<string>works</string>
+		<key>otherDate</key>
+		<true/>
+		<key>editor</key>
+		<string>MarksPresenter</string>
 	</dict>
 </dict>
 </plist>

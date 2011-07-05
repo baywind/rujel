@@ -512,6 +512,13 @@
 			<string>BaseNote</string>
 			<key>sort</key>
 			<integer>20</integer>
+			<key>editor</key>
+			<string>NotePresenter</string>
+			<key>editorParams</key>
+			<dict>
+				<key>maxlen</key>
+				<integer>10</integer>
+			</dict>
 		</dict>
 	</array>
 </dict>

@@ -105,6 +105,10 @@ public class HomeWorkDelegate extends TaskDelegate {
 		return (!Work.ENTITY_NAME.equals(EduLesson.entityName));
 	}
 	
+	public boolean byDate() {
+		return (!Work.ENTITY_NAME.equals(EduLesson.entityName));
+	}
+	
 	protected Work homeWorkForLesson(EduLesson lesson) {
 		EOEditingContext ec = lesson.editingContext();
 		if(ec == null) {

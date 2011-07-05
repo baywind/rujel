@@ -59,6 +59,7 @@ LessonList1: WOSwitchComponent {
 	splitTab = splitTab;
 	splitTitle = splitTitle;
 	up = up;
+	views = views;
 }
 
 LessonTabs1: Tabs {
@@ -93,6 +94,7 @@ NotesPage1: NotesPage {
 	single = single;
 	present = present;
 	dateAgregate = dateAgregate;
+	views = views;
 }
 
 OverGroupName: WOString {

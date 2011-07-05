@@ -32,6 +32,7 @@ package net.rujel.ui;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.interfaces.Student;
 
@@ -146,19 +147,19 @@ public class ConsolidatedCell extends WOComponent {
     	CharSequence style = null;
     	CharSequence styleClass = null;
     	Enumeration enu = viewsEnu();
-    	while (enu.hasMoreElements()) {
+    	while (enu.hasMoreElements()) { // active views enumeration
     		String view = (String)enu.nextElement();
 			Object local = dict().valueForKey(view);
 			Object global = (dict==null)?null:dict.valueForKey(view);
-			if(local == null) {
+			if(local == null) { // add empty cells
 				if(global instanceof NSDictionary[]) {
 					for (int i = 0; i < ((NSDictionary[])global).length; i++) {
 						result.addObject(NSDictionary.EmptyDictionary);
 					}
 				}
 				continue;
-			}
-			if(local instanceof NSDictionary[]) {
+			} // add empty cells for view
+			if(local instanceof NSDictionary[]) { // add cells for view
 				NSDictionary[] found = (NSDictionary[])local;
 				int length = (global instanceof NSDictionary[])?((NSDictionary[])global).length:
 					found.length;
@@ -169,20 +170,21 @@ public class ConsolidatedCell extends WOComponent {
 						result.addObject(found[i].mutableClone());
 					}
 				}
-			} else if(local instanceof NSDictionary) {
+			} else if(local instanceof NSDictionary) { // properties for view
 				NSDictionary found = (NSDictionary)local;
 				if(found.count() == 0)
 					continue;
 				style = appendFromDict(style, found, "style");
 				styleClass = appendFromDict(styleClass, found, "styleClass");
 			}
-		}
+		} // active views enumeration
     	if(result.count() <= 1) {
     		if(styleClass == null)
     			styleClass = "lbd";
     		else
     			styleClass = styleClass + " lbd";
     	}
+    	// combine cell styles
     	NSDictionary generic = NSDictionary.EmptyDictionary;
     	if(style != null || styleClass != null) {
     		generic = new NSMutableDictionary();
@@ -196,8 +198,6 @@ public class ConsolidatedCell extends WOComponent {
     		NSDictionary rd = (NSDictionary)result.objectAtIndex(0);
     		if(rd == NSDictionary.EmptyDictionary)
     			return new NSArray(generic);
-//    		if(!(rd instanceof NSMutableDictionary))
-//				rd = rd.mutableClone();
     		rd.takeValueForKey(appendFromDict(styleClass, rd, "styleClass"), "styleClass");
 			if(style != null)
 				rd.takeValueForKey(appendFromDict(style, rd, "style"), "style");
@@ -227,10 +227,6 @@ public class ConsolidatedCell extends WOComponent {
 					}
 					result.replaceObjectAtIndex(rd, i);
 				} else {
-//					if(!(rd instanceof NSMutableDictionary)) {
-//						rd = rd.mutableClone();
-//						result.replaceObjectAtIndex(rd, i);
-//					}
 					if(styleClass != null) {
 						if(val == null)
 							val = styleClass.toString();
@@ -244,7 +240,6 @@ public class ConsolidatedCell extends WOComponent {
 				}
 			}
     	}
-    	// add borders
     	return result;
     }
     
@@ -338,6 +333,82 @@ public class ConsolidatedCell extends WOComponent {
 		return WOMessage.stringByEscapingHTMLAttributeValue(hover.toString());
 	}
 	
+	protected NSMutableArray editors;
+	public NSArray editors() {
+		NSKeyValueCoding currLesson = (NSKeyValueCoding)valueForBinding("lesson");
+		if(currLesson == null)
+			return null;
+		if(editors != null)
+			return editors;
+		NSArray allViews = (NSArray)valueForBinding("views");
+		if(allViews == null || allViews.count() == 0)
+			return null;
+		views = (NSArray)session().valueForKeyPath("state.consolidatedView");
+		if(views == null || views.count() == 0)
+			return null;
+		Enumeration enu = allViews.objectEnumerator();
+		editors = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			NSDictionary view = (NSDictionary) enu.nextElement();
+			if(view.valueForKey("editor") == null)
+				continue;
+			String viewID = (String)view.valueForKey("id");
+			if(!views.containsObject(viewID))
+				continue;
+			Object val = view.valueForKey("rows");
+			if(val != null) {
+				NSArray rows = (NSArray)currLesson.valueForKey((String)val);
+				if(rows == null || rows.count() == 0)
+					continue;
+				Enumeration renu = rows.objectEnumerator();
+				while (renu.hasMoreElements()) {
+					NSDictionary row = (NSDictionary) renu.nextElement();
+					editors.addObject(convertDict(row,view));
+				}
+				continue;
+			} //has rows
+			val = currLesson.valueForKey(viewID);
+			if(val == null)
+				continue;
+			if(val instanceof NSMutableDictionary[]) {
+				NSMutableDictionary[] arr = (NSMutableDictionary[])val;
+				for (int i = 0; i < arr.length; i++) {
+					editors.addObject(convertDict(arr[i],view));
+				}
+			} else if (val instanceof NSDictionary) {
+				NSMutableDictionary dict = convertDict((NSDictionary)val, view);
+				dict.takeValueForKey(currLesson, "object");
+				editors.addObject(dict);
+			}
+		}
+		return editors;
+	}
+	
+	private NSMutableDictionary convertDict(NSDictionary source, NSDictionary view) {
+		String editor = (String)view.valueForKey("editor");
+		NSMutableDictionary dict = new NSMutableDictionary(editor,"editor");
+		dict.takeValueForKey(view.valueForKey("editorParams"), "params");
+		dict.takeValueForKey(source.valueForKey("editorSpan"), "colspan");
+		dict.takeValueForKey(source.valueForKey("object"), "object");
+		dict.takeValueForKey(source.valueForKey("rowColor"), "bgcolor");
+//		dict.takeValueForKey(source.valueForKey("rowClass"), "styleClass");
+		dict.takeValueForKey(source.valueForKey("rowStyle"), "style");
+		dict.takeValueForKey(source.valueForKey("title"), "title");
+		return dict;
+	}
+	
+	protected Integer fullRowspan;
+	public Integer fullRowspan() {
+		if(fullRowspan != null)
+			return fullRowspan;
+		EduCourse course = (EduCourse)valueForBinding("course");
+		if(course == null)
+			return null;
+		int count = course.groupList().count();
+		fullRowspan = new Integer(count);
+		return fullRowspan;
+	}
+	
 	public boolean isStateless() {
 		return true;
 	}
@@ -349,6 +420,8 @@ public class ConsolidatedCell extends WOComponent {
 	public void reset() {
 		_dict = null;
 		views = null;
+		editors = null;
+		fullRowspan = null;
 		super.reset();
 	}
 }

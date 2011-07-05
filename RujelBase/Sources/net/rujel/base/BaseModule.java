@@ -177,21 +177,21 @@ public class BaseModule {
 			Enumeration enu = lessons.objectEnumerator();
 			NSMutableArray dates = new NSMutableArray(lessons.count());
 			int lDate = 0;
-			NSMutableArray tmp = null;
+			NSMutableArray array = null;
 			while (enu.hasMoreElements()) {
-				BaseLesson work = (BaseLesson) enu.nextElement();
-				int wDate = agr.dateIndex(work.date());
-				if(tmp == null || wDate != lDate) {
-					if(tmp != null) {
-						dates.addObject(tmp.toArray(new BaseLesson[tmp.count()]));
+				BaseLesson lesson = (BaseLesson) enu.nextElement();
+				int wDate = agr.dateIndex(lesson.date());
+				if(array == null || wDate != lDate) {
+					if(array != null) {
+						dates.addObject(array.toArray(new BaseLesson[array.count()]));
 					}
-					tmp = new NSMutableArray(work);
+					array = new NSMutableArray(lesson);
 				} else {
-					tmp.addObject(work);
+					array.addObject(lesson);
 				}
 			}
-			if(tmp != null)
-				dates.addObject(tmp.toArray(new BaseLesson[tmp.count()]));
+			if(array != null)
+				dates.addObject(array.toArray(new BaseLesson[array.count()]));
 			lessons = dates.immutableClone();
 		}
 		Enumeration enu = lessons.objectEnumerator();
@@ -242,7 +242,8 @@ public class BaseModule {
 					DateAgregate.appendValueToKeyInDict(value, "hover", nts[0], "\n");
 				} // notes in lesson
 				if(comments) {
-					lDict.takeValueForKey(new NSMutableDictionary[1], "BaseNote");
+					lDict.takeValueForKey(new NSMutableDictionary[] {
+						new NSMutableDictionary(lesson[0],"object") } , "BaseNote");
 				}
 			} // lessons in date
 		}

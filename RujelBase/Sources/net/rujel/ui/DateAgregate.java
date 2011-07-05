@@ -40,6 +40,7 @@ import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
@@ -70,13 +71,16 @@ public class DateAgregate {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
 		int result = cal.get(Calendar.DAY_OF_YEAR) - beginDay;
-//		if(result >= array.length)
-//			return array.length -1;
 		if(result < 0)
 			result += array.length;
-//		if(result < 0)
-//			return 0;
 		return result;
+	}
+	
+	public NSTimestamp dateForIndex(int index) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(beginDate);
+		cal.add(Calendar.DATE, index);
+		return new NSTimestamp(cal.getTimeInMillis());
 	}
 	
 	public NSArray listInDates() {
@@ -190,4 +194,20 @@ public class DateAgregate {
 		buf.append(value);
 		return buf;
 	}
+	
+    public static CharSequence appendFromDict(CharSequence initial,
+    		NSDictionary dict, String key, Object separator) {
+    	if(dict == null && key == null)
+    		return initial;
+    	CharSequence value = (dict == null)?key:(CharSequence)dict.valueForKey(key);
+    	if(initial == null)
+    		return value;
+    	if(value == null)
+    		return initial;
+		StringBuilder buf = new StringBuilder(initial);
+		if(separator != null)
+			buf.append(separator);
+		buf.append(value);
+		return buf;
+    }
 }

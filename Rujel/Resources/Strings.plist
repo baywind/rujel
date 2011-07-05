@@ -125,6 +125,8 @@
 			<string>ConsolidatedCell</string>
 			<key>consolidated</key>
 			<true/>
+			<key>single</key>
+			<true/>
 			<key>params</key>
 			<array>
 				<dict>

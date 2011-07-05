@@ -187,6 +187,10 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 			}		
 		}
 		
+		public boolean byDate() {
+			return false;
+		}
+		
 		public boolean hasPopup() {
 			return false;
 		}

@@ -200,7 +200,7 @@ public class CurriculumModule {
 				}
 			}
 			DateAgregate.appendValueToKeyInDict(sTitle,"rowHover", dict, "\n");
-			DateAgregate.appendValueToKeyInDict("highlight2","class", dict, "\n");
+			DateAgregate.appendValueToKeyInDict("highlight2","rowClass", dict, "\n");
 		}
 		return null;
 	}
