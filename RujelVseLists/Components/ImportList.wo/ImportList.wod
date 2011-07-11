@@ -1,0 +1,30 @@
+PageWrapper : PageWrapper {
+  title = session.strings.RujelVseLists_VseStrings.title;
+}
+
+Lines : WORepetition {
+  list = list;
+  item = item;
+}
+
+Name : WOString {
+  value = value;
+}
+
+Array : WORepetition {
+  count = titles.count;
+  index = index;
+}
+
+Titles : WORepetition {
+  list = titles;
+  item = item;
+}
+
+Item : WOString {
+  value = item.best;
+}
+
+Matches : WOString {
+  value = item.matches;
+}

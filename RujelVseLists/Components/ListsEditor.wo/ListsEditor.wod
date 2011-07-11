@@ -1,5 +1,5 @@
 PageWrapper : PageWrapper {
-  title = session.strings.RujelVseLists_VseStrings.title;
+  title = title;
 }
 
 Title : WOString {
@@ -183,26 +183,6 @@ DictCount : WOString {
   numberformat = "0";
 }
 
-UploadForm : WOForm {
-  target = "_blank";
-  enctype = "multipart/form-data";
-}
-
-FileUpload : WOFileUpload {
-  inputStream = uploadStream;
-  filePath = uploadDict.filePath;
-  mimeType = uploadDict.mimeType;
-}
-
-SubmitUpload : WOGenericElement {
-  elementName = "input";
-  type = "submit";
-}
-
-SubmitButton : WOSubmitButton {
-  action = upload;
-}
-
 Ticker: Ticker {
 	align = "left";
 	inline = true;
@@ -301,4 +281,16 @@ SectionTabs : Tabs {
 
 HasSections : WOConditional {
   condition = application.strings.sections.hasSections;
+}
+
+UploadForm : WOForm {
+  action = importFile;  
+  enctype = "multipart/form-data";
+}
+
+SubmitUpload : WOGenericElement {
+  elementName = "input";
+  type = "button";
+  onclick = "form.submit()";
+  value = "GO";
 }

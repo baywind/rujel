@@ -159,5 +159,92 @@
 		<key>fire</key>
 		<string>Исключить</string>
 	</dict>
+	<key>charsets</key>
+	<array>
+		<string>UTF-8</string>
+		<string>windows-1251</string>
+		<string>KOI8-R</string>
+	</array>
+	<key>importAssistance</key>
+	<array>
+		<dict>
+			<key>regex</key>
+			<string>\d{1,3}[\.\)\>-]?</string>
+			<key>field</key>
+			<string>num</string>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>[мm]</string>
+			<key>field</key>
+			<string>sexLetter</string>
+			<key>sex</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>[жf]</string>
+			<key>field</key>
+			<string>sexLetter</string>
+			<key>sex</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>\'?\d{1,4}[\./-]\d{1,2}[\./-]\d{1,4}</string>
+			<key>field</key>
+			<string>date</string>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>\p{L}+вич</string>
+			<key>field</key>
+			<string>secondName</string>
+			<key>sex</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>\p{L}+вна</string>
+			<key>field</key>
+			<string>secondName</string>
+			<key>sex</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>[\p{L}- ]+(ов|ев|ин)</string>
+			<key>field</key>
+			<string>lastName</string>
+			<key>sex</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>[\p{L}- ]+(ов|ев|ин)а</string>
+			<key>field</key>
+			<string>lastName</string>
+			<key>sex</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>[\p{L}- ]+(ко|ь)</string>
+			<key>field</key>
+			<string>lastName</string>
+		</dict>
+		<dict>
+			<key>regex</key>
+			<string>[\p{L}\- ]+</string>
+			<key>field</key>
+			<string>firstName</string>
+		</dict>
+	</array>
+	<key>dateFormats</key>
+	<array>
+		<string>dd.MM.yyyy</string>
+		<string>MM/dd/yyyy</string>
+		<string>yyyy-MM-dd</string>
+	</array>
 </dict>
 </plist>

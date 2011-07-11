@@ -682,6 +682,17 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		return Person.Utility.composeName(pers, 2, 2);
 	}
 	
+	
+	public WOActionResults importFile() {
+		WOComponent page = pageWithName("ImportList");
+		session().takeValueForKey(this,"pushComponent");
+		return page;
+	}
+
+	public String title() {
+		return (String)session().valueForKeyPath("strings.RujelVseLists_VseStrings.title");
+	}
+	
 	/*
 	public InputStream uploadStream;
 	public NSMutableDictionary uploadDict = new NSMutableDictionary(); 

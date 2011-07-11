@@ -29,7 +29,12 @@
 
 package net.rujel.vselists;
 
+import java.util.Calendar;
+
+import net.rujel.base.MyUtility;
+
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 
@@ -55,6 +60,43 @@ public class VseList extends _VseList {
 	public void validateForSave() {
 		super.validateForSave();
 		validateDates(enter(), leave());
+	}
+	
+	public static boolean isActual(EOEnterpriseObject l, long now) {
+		NSTimestamp border = (NSTimestamp)l.valueForKey("leave");
+		if(border != null) {
+			if(border.getTime() < now - NSLocking.OneDay) {
+				return false;
+			} else {
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(border);
+				cal.set(Calendar.HOUR, 23);
+				cal.set(Calendar.MINUTE, 59);
+				if(cal.getTimeInMillis() < now)
+					return false;
+			}
+		}
+		border = (NSTimestamp)l.valueForKey("enter");
+		if(border != null) {
+			if(border.getTime() > now) {
+				return false;
+			} else if(border.getTime() - now < NSLocking.OneDay){
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(border);
+				cal.set(Calendar.HOUR, 0);
+				cal.set(Calendar.MINUTE, 0);
+				return (cal.getTimeInMillis() <= now);
+			}
+		}
+		return true;
+	}
+	
+	public boolean isActual(NSTimestamp onDate) {
+		return isActual(this, onDate.getTime());
+	}
+	
+	public boolean isActual() {
+		return isActual(MyUtility.date(editingContext()));
 	}
 	
 	public static void validateDates(NSTimestamp enter, NSTimestamp leave) {
