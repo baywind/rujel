@@ -1,0 +1,123 @@
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  align = "right";
+  height = 10;
+  width = 10;
+  onclick = "closePopup();";
+  style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
+}
+
+Rows : WORepetition {
+  list = list;
+  item = rowItem;
+  index = rowIndex;
+}
+
+Cols : WORepetition {
+  count = cols;
+  index = cellIndex;
+}
+
+Cell : OnClickContainer {
+  elementName = "td";
+  class = cellClass;
+  disabled = disabled;
+  onclick = "schedCell(this)";
+}
+
+Content : WOString {
+  value = cellValue;
+  escapeHTML = false;
+}
+
+Form : WOForm {
+  action = submit;
+  style = "border: 1px solid #666666;";
+}
+
+Num : WOString {
+  value = rowIndex;
+}
+
+Check : WOCheckBox {
+  name = "existingRow";
+  checked = checked;
+  style = "display:none;";
+}
+
+AddRow : OnClickContainer {
+  elementName = "td";
+  onclick = "addSchedRow();";
+  style = "padding:2px 6px;border: 3px double #009900;font-weight:bold;";
+  class = "green";
+  hide = rowIndex;
+}
+
+HasIndex : WOConditional {
+  condition = rowIndex;
+}
+
+Title : WOString {
+  value = session.strings.RujelSchedule_Schedule.Schedule;
+  escapeHTML = false;
+}
+
+GroupCell : OnClickContainer {
+  elementName = "td";
+  class = groupClass;
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = useGroup;
+  style = "white-space:nowrap;";
+}
+
+GroupTitle : WOString {
+  value = course.eduGroup.name;
+}
+
+SubjectCell : OnClickContainer {
+  elementName = "td";
+  class = subjectClass;
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = useCourse;
+  style = "white-space:nowrap;";
+}
+
+SubjectTitle : WOString {
+  value = course.subjectWithComment;
+  escapeHTML = false;
+}
+
+TeacherCell : OnClickContainer {
+  elementName = "td";
+  class = teacherClass;
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = useTeacher;
+  style = "white-space:nowrap;";
+}
+
+TeacherTitle : PersonDisplay {
+  person = course.teacher;
+  last = 2;
+  first = 1;
+  second = 1;
+  startWithLast = true;
+}
+
+LeftTabImage: WOImage {
+	border = "0";
+	filename = "leftTab.gif";
+	framework = "JavaWOExtensions";
+	name = "LeftTab";
+	style = "height:2ex;vertical-align:top;";
+	alt = "";
+}
+
+RightTabImage: WOImage {
+	border = "0";
+	filename = "rightTab.gif";
+	framework = "JavaWOExtensions";
+	style = "height:2ex;vertical-align:top;";
+	name = "RightTab";
+	alt = "";
+}

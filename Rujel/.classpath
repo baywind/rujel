@@ -15,6 +15,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduResults"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelReports"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelSchedule"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelStats"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelVseLists"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelUsers"/>
@@ -44,5 +45,6 @@
 	<classpathentry kind="con" path="WOFramework/JavaXML"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="WOFramework/RujelEmail"/>
+	<classpathentry kind="con" path="WOFramework/RujelSchedule"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

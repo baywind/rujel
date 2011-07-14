@@ -43,6 +43,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
+import com.webobjects.foundation.NSMutableArray;
 
 public class LessonNoteEditor extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -72,10 +73,29 @@ public class LessonNoteEditor extends WOComponent {
 	public NSArray allTabs;
 
 	protected NSArray presentTabs;
+	public NSArray dashboard;
+	public NSArray resources;
 
 	public LessonNoteEditor(WOContext context) {
 		super(context);
-		ec = new SessionedEditingContext(session());
+		ec = new SessionedEditingContext(context.session());
+		dashboard = (NSArray)context.session().valueForKeyPath("modules.journalPlugins");
+		if(dashboard != null && dashboard.count() > 0) {
+			NSMutableArray ress = new NSMutableArray();
+			Enumeration enu = dashboard.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSKeyValueCoding plugin = (NSKeyValueCoding) enu.nextElement();
+				Object res = plugin.valueForKey("resources");
+				if(res == null)
+					continue;
+				if(res instanceof NSArray)
+					ress.addObjectsFromArray((NSArray)res);
+				else
+					ress.addObject(res);
+			}
+			if(ress.count() > 0)
+				resources = ress.immutableClone();
+		}
 	}
 
 	public boolean showTabs() {
@@ -1064,5 +1084,4 @@ public class LessonNoteEditor extends WOComponent {
 			return null;
 		}
 	}
-
 }

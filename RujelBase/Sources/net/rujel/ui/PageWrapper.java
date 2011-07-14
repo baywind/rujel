@@ -36,7 +36,7 @@ import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
 public class PageWrapper extends WOComponent {
-    public WOComponent pathItem;
+    public Object item;
 
     public PageWrapper(WOContext context) {
         super(context);
@@ -75,13 +75,13 @@ public class PageWrapper extends WOComponent {
 		if(list != null && list.count() > 0)
 			list.valueForKey("reset");
         list = (NSMutableArray)session().valueForKey("pathStack");
-        if(pathItem == null) {
+        if(item == null) {
         	list.removeAllObjects();
     		session().takeValueForKey(Boolean.FALSE,"prolong");
         	return pageWithName("SrcMark");
         }
-		int idx = list.indexOfIdenticalObject(pathItem);
-		pathItem.ensureAwakeInContext(context());
+		int idx = list.indexOfIdenticalObject(item);
+		((WOComponent)item).ensureAwakeInContext(context());
 		if(idx > 0) {
 			NSRange pastComponents = new NSRange(idx,list.count() - idx);
 			list.removeObjectsInRange(pastComponents);
@@ -89,7 +89,7 @@ public class PageWrapper extends WOComponent {
 			list.removeAllObjects();
 		}
 		session().takeValueForKey(Boolean.FALSE,"prolong");
-		return pathItem;
+		return (WOComponent)item;
     }
 	/*
     public WOActionResults exit() {
