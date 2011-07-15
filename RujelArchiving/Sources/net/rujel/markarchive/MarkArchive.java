@@ -64,10 +64,11 @@ public class MarkArchive extends _MarkArchive
 	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
-		Number zero = new Integer(0);
+		Integer zero = new Integer(0);
 		setKey1(zero);
 		setKey2(zero);
 		setKey3(zero);
+		setActionType(zero);
 		setTimestamp(new NSTimestamp());
 		if(ec instanceof SessionedEditingContext) {
 			WOSession ses = ((SessionedEditingContext)ec).session();
