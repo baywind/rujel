@@ -121,3 +121,9 @@ RightTabImage: WOImage {
 	name = "RightTab";
 	alt = "";
 }
+
+Submit : WOSubmitButton {
+  action = submit;
+  value = session.strings.Reusables_Strings.uiElements.Save;
+  onclick = "return ajaxPost(form);";
+}

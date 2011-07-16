@@ -29,6 +29,7 @@
 
 package net.rujel.schedule;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -52,6 +53,7 @@ import com.webobjects.appserver.WOResponse;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
@@ -120,6 +122,20 @@ public class SchedulePopup extends WOComponent {
     			"ScheduleRing", qual, MyUtility.numSorter);
     	NSArray found = ec.objectsWithFetchSpecification(fs);
     	if(found != null && found.count() > 0) {
+    		titles[0] = (String)session().valueForKeyPath("strings.RujelSchedule_Schedule.Rings");
+    		Enumeration enu = found.objectEnumerator();
+    		SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+    		while (enu.hasMoreElements()) {
+				EOEnterpriseObject ring = (EOEnterpriseObject) enu.nextElement();
+				StringBuilder buf = new StringBuilder();
+				NSTimestamp time = (NSTimestamp)ring.valueForKey("startTime");
+				buf.append(df.format(time)).append(" - ");
+				time = (NSTimestamp)ring.valueForKey("endTime");
+				buf.append(df.format(time));
+				Object[] row = new Object[cols];
+				row[0] = buf.toString();
+				result.addObject(row);
+			}
     		
     	}
     	EOQualifier[] quals = new EOQualifier[4];
@@ -154,16 +170,15 @@ public class SchedulePopup extends WOComponent {
     	if(found == null || found.count() == 0)
     		return result;
     	Enumeration enu = found.objectEnumerator();
-    	int curNum = 0;
     	Object[] row = null;
     	while (enu.hasMoreElements()) {
 			ScheduleEntry schdl = (ScheduleEntry) enu.nextElement();
 			int num = schdl.num().intValue();
-			while (num > curNum) {
-				row = new NSMutableArray[cols];
+			while (num > result.count() -1) {
+				row = new Object[cols];
 				result.addObject(row);
-				curNum++;
 			}
+			row = (Object[])result.objectAtIndex(num);
 			num = schdl.weekdayNum().intValue();
 			num = num - weekStart +1;
 			if(num < 1)
@@ -252,6 +267,8 @@ public class SchedulePopup extends WOComponent {
     }
     
     public String cellClass() {
+    	if(cellIndex.intValue() == 0)
+    		return "orange";
     	Object value = value();
     	if(value == null)
     		return "grey";

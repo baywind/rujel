@@ -6,6 +6,12 @@
 	<string>Расписание</string>
 	<key>Rings</key>
 	<string>Звонки</string>
+	<key>cantParce</key>
+	<string>Не удалось считать значения времени</string>
+	<key>lessonsOverlap</key>
+	<string>Нельзя делать уроки пересекающимися по времени</string>
+	<key>inversedLesson</key>
+	<string>Конец урока должен быть позже начала</string>
 	<key>dashboard</key>
 	<dict>
 		<key>title</key>
@@ -32,7 +38,7 @@
 			<key>filename</key>
 			<string>sched.png</string>
 			<key>style</key>
-			<string>border:double #cc9933;padding:1px;background-color:#ffcc99;</string>
+			<string>border:double #996633;padding:1px;background-color:#ffcc99;</string>
 			<key>onclick</key>
 			<string>$session.ajaxPopupNoPos</string>
 			<key>onmouseover</key>
@@ -57,6 +63,15 @@
 			<key>jsLink</key>
 			<string>schedule.js</string>
 		</dict>
+	</dict>
+	<key>planTab</key>
+	<dict>
+		<key>component</key>
+		<string>RingsSetup</string>
+		<key>sort</key>
+		<string>80</string>
+		<key>title</key>
+		<string>Расписание звонков</string>
 	</dict>
 </dict>
 </plist>

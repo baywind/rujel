@@ -47,6 +47,9 @@ public class SchedModule {
 			ScheduleEntry.init();
 		} else if ("journalPlugins".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelSchedule_Schedule.dashboard");
+		} else if("planTabs".equals(obj)) {
+			return ctx.session().valueForKeyPath(
+				"strings.RujelSchedule_Schedule.planTab");
 		}
 		return null;
 	}
