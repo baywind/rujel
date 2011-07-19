@@ -1,0 +1,65 @@
+Form : WOForm {
+  action = submit;
+  style = "border: 1px solid #666666;";
+}
+
+Rows : WORepetition {
+  list = list;
+  item = rowItem;
+  index = rowIndex;
+}
+
+Cols : WORepetition {
+  count = cols;
+  index = cellIndex;
+}
+
+Cell : OnClickContainer {
+  elementName = "td";
+  class = cellClass;
+  disabled = disabled;
+  onclick = "schedCell(this)";
+}
+
+Content : WOString {
+  value = cellValue;
+  escapeHTML = false;
+}
+
+Num : WOString {
+  value = rowIndex;
+}
+
+Check : WOCheckBox {
+  name = "existingRow";
+  checked = checked;
+  style = "display:none;";
+}
+
+AddRow : OnClickContainer {
+  elementName = "td";
+  onclick = "addSchedRow();";
+  disabled = ^readOnly;
+  style = "padding:2px 6px;border: 3px double #009900;font-weight:bold;";
+  class = "green";
+  hide = rowIndex;
+}
+
+HasIndex : WOConditional {
+  condition = rowIndex;
+}
+
+Submit : WOSubmitButton {
+  action = submit;
+  value = session.strings.Reusables_Strings.uiElements.Save;
+  onclick = "return ajaxPost(form);";
+}
+CanEdit : WOConditional {
+  condition = disabled;
+  negate = true;
+}
+
+CanSave : WOConditional {
+  condition = ^readOnly;
+  negate = true;
+}
