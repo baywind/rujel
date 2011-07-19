@@ -79,7 +79,7 @@ public class CompleteModule {
 	public static Object journalPlugins(WOContext ctx) {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.Completion")))
 			return null;
-		EduCourse course = (EduCourse)ctx.page().valueForKey("course");
+		EduCourse course = (EduCourse)ctx.session().objectForKey("editorCourse");
 		if(course == null)
 			return null;
 		String active = SettingsBase.stringSettingForCourse(

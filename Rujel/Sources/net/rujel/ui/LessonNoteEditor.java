@@ -79,23 +79,6 @@ public class LessonNoteEditor extends WOComponent {
 	public LessonNoteEditor(WOContext context) {
 		super(context);
 		ec = new SessionedEditingContext(context.session());
-		dashboard = (NSArray)context.session().valueForKeyPath("modules.journalPlugins");
-		if(dashboard != null && dashboard.count() > 0) {
-			NSMutableArray ress = new NSMutableArray();
-			Enumeration enu = dashboard.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				NSKeyValueCoding plugin = (NSKeyValueCoding) enu.nextElement();
-				Object res = plugin.valueForKey("resources");
-				if(res == null)
-					continue;
-				if(res instanceof NSArray)
-					ress.addObjectsFromArray((NSArray)res);
-				else
-					ress.addObject(res);
-			}
-			if(ress.count() > 0)
-				resources = ress.immutableClone();
-		}
 	}
 
 	public boolean showTabs() {
@@ -225,7 +208,7 @@ public class LessonNoteEditor extends WOComponent {
 		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
 		if(section != null && !section.equals(course.valueForKeyPath("cycle.section"))) {
 			section = (Integer)course.valueForKeyPath("cycle.section");
-			if(section != null) {
+			if(section != null) { // switch to correct eduSection
 				NSArray sects = (NSArray)application().valueForKeyPath("strings.sections.list");
 				Enumeration enu = sects.objectEnumerator();
 				while (enu.hasMoreElements()) {
@@ -246,26 +229,33 @@ public class LessonNoteEditor extends WOComponent {
 		else
 			regime = NORMAL;
 
+		session().setObjectForKey(course, "editorCourse");
 		presentTabs = (NSArray)session().valueForKeyPath("modules.presentTabs");
 		if(presentTabs != null && presentTabs.count() > 0)
 			present = (NSKeyValueCoding)presentTabs.objectAtIndex(0);
 		
+		dashboard = (NSArray)session().valueForKeyPath("modules.journalPlugins");
+		if(dashboard != null && dashboard.count() > 0) {
+			NSMutableArray ress = new NSMutableArray();
+			Enumeration enu = dashboard.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSKeyValueCoding plugin = (NSKeyValueCoding) enu.nextElement();
+				Object res = plugin.valueForKey("resources");
+				if(res == null)
+					continue;
+				if(res instanceof NSArray)
+					ress.addObjectsFromArray((NSArray)res);
+				else
+					ress.addObject(res);
+			}
+			if(ress.count() > 0)
+				resources = ress.immutableClone();
+		}
+		session().removeObjectForKey("editorCourse");
 		refresh();
-//		notesAddOns = null;
-//		activeNotesAddOns = null;
 	}
 
 	public void refresh() {
-		//		if (ec.hasChanges()) ec.revert();
-		/*if(present != null) {
-			lessonsList = (NSArray)present.valueForKey("list");
-			if(lessonsList != null) {
-				//tablist = null;
-				_currTab = null;
-				return;
-			}
-		}*/
-		//tablist = ((BaseCourse)course).sortedTabs();
 		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
 		if(entityName == null)
 			entityName = EduLesson.entityName;
