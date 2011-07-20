@@ -33,9 +33,11 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.ModulesInitialiser;
 
 import com.webobjects.appserver.*;
@@ -63,6 +65,7 @@ public class Main extends WOComponent {
 	public NSKeyValueCoding currTab;
 	//public Integer tabIndex;
 	public Number currGr;
+	public Number studentID;
 	public String grName;
 
 	public NSKeyValueCoding item;
@@ -101,6 +104,8 @@ public class Main extends WOComponent {
 	*/	
 		currGr = context().request().numericFormValueForKey("grID",
 				new NSNumberFormatter("#"));
+		studentID = context().request().numericFormValueForKey("studentID",
+				new NSNumberFormatter("#"));
 		
 		if(currGr != null) {
 			Enumeration enu = groupList.objectEnumerator();
@@ -110,8 +115,10 @@ public class Main extends WOComponent {
 				if(currGr.intValue() == id.intValue())
 					grName = (String)gr.valueForKey("name");
 			}
-			if(grName == null)
+			if(grName == null) {
 				currGr = null;
+				studentID = null;
+			}
 		}
 		
 		// display tabs
@@ -154,15 +161,26 @@ public class Main extends WOComponent {
 				try {
 					EduGroup eduGroup = (EduGroup) EOUtilities.objectWithPrimaryKeyValue(
 						ec, EduGroup.entityName,currGr);
-//					if(grName == null)
-//						grName = eduGroup.name();
 					NSDictionary dict = new NSDictionary(new Object[] {year,eduGroup},
 							new String[] {"eduYear","eduGroup"});
-					courses = EOUtilities.objectsMatchingValues(ec,
-							EduCourse.entityName, dict);
-					//TODO: respect eduYear
+					courses = EOUtilities.objectsMatchingValues(ec,EduCourse.entityName, dict);
+					if(courses != null && courses.count() > 0 && studentID != null) {
+						Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(
+								ec, Student.entityName,studentID);
+						if(eduGroup.isInGroup(student))
+							courses = BaseCourse.coursesForStudent(courses, student);
+						else
+							studentID = null;
+					}
 				} catch (Exception e) {
-					logger.log(Level.INFO,"Failed to get eduGroup for id: " + currGr,e);
+					logger.log(Level.INFO,"Failed to get courses for eduGroup: " + currGr,e);
+				}
+				if(courses != null && courses.count() > 0 && studentID != null) {
+					try {
+					} catch (Exception e) {
+						logger.log(Level.INFO,"Failed to get courses for studentID: "
+								+ studentID,e);
+					}
 				}
 			}
 		}

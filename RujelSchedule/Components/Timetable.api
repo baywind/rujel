@@ -11,5 +11,13 @@
         <binding defaults="Actions" name="noAction"/>
         <binding name="withAction"/>
         <binding defaults="Boolean" name="readOnly"/>
+    <binding name="date"/>
+        <validation message="'date' must be bound to a settable value">
+            <unsettable name="date"/>
+        </validation>
+        <binding name="list"/>
+        <validation message="'list' must be bound to a settable value">
+            <unsettable name="list"/>
+        </validation>
     </wo>
 </wodefinitions>

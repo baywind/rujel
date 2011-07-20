@@ -42,6 +42,7 @@ import com.webobjects.appserver.WOMessage;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableSet;
 import com.webobjects.foundation.NSTimestamp;
@@ -60,43 +61,52 @@ public class Timetable extends LessonList {
     public Object[] rowItem;
     public Integer rowIndex;
     public Integer cellIndex;
-    public NSArray list;
     public int cols;
     public EduCourse course;
-    protected NSArray courses;
-    protected NSMutableSet toAdd = new NSMutableSet();
-    protected NSMutableSet toDelete = new NSMutableSet();
     public NSTimestamp date;
     protected NSTimestamp lately;
+	protected Format format;
 
 	
 	public Timetable(WOContext context) {
         super(context);
     }
 
+	public NSKeyValueCodingAdditions strings() {
+		NSKeyValueCodingAdditions source = (context().hasSession())?session():application();
+		return (NSKeyValueCodingAdditions)source.valueForKey("strings");
+	}
+	
     public WOElement template() {
     	course = (EduCourse)valueForBinding("course");
-    	NSArray bound = (NSArray)valueForBinding("courses");
-    	if(bound != courses) {
-    		courses = bound;
-    		list = null;
-    	}
-    	if(date == null || Various.boolForObject(valueForBinding("readOnly"))) {
-    		NSTimestamp newDate = (NSTimestamp)valueForBinding("date");
-    		if(newDate == null)
-    			newDate = (NSTimestamp)session().valueForKey("today");
-    		if(date == null || !date.equals(newDate)) {
-    			setDate(newDate);
-    			list = null;
-    		}
-    	}
-    	if(list == null)
-    		list = sequence();
+    	date = (NSTimestamp)valueForBinding("date");
+    	if(date == null)
+    		date = (NSTimestamp)session().valueForKey("today");
+    	if(date == null)
+    		date = new NSTimestamp();
+    	if(canSetValueForBinding("date"))
+    		setValueForBinding(date, "date");
+    	lately = date.timestampByAddingGregorianUnits(0, 0, -cols, 0, 0, 0);
+    	if(valueForBinding("courses") == null)
+    		format = new SimpleDateFormat(
+    				SettingsReader.stringForKeyPath("ui.shortDateFormat","dd.MM"));
     	return super.template();
+    }
+    
+    public NSArray list() {
+    	NSArray list = (NSArray)valueForBinding("list");
+    	if(list == null) {
+    		list = sequence();
+    		if(canSetValueForBinding("list"))
+    			setValueForBinding(list, "list");
+    	}
+    	return list;
     }
     
     public void setDate(NSTimestamp newDate) {
     	date = newDate;
+    	if(canSetValueForBinding("date"))
+    		setValueForBinding(date, "date");
     	lately = date.timestampByAddingGregorianUnits(0, 0, -cols, 0, 0, 0);
     }
 
@@ -109,9 +119,9 @@ public class Timetable extends LessonList {
     	cols = week +1;
 		String[] titles = new String[cols];
     	if(week%7 == 0) {
-    		NSArray weekDays = (NSArray)session().valueForKeyPath((week > 7)?
-    				"strings.Reusables_Strings.presets.weekdayShort":
-    					"strings.Reusables_Strings.presets.weekdayLong");
+    		NSArray weekDays = (NSArray)strings().valueForKeyPath((week > 7)?
+    				"Reusables_Strings.presets.weekdayShort":
+    					"Reusables_Strings.presets.weekdayLong");
     		for (int i = 1; i < cols; i++) {
     			int widx = (weekStart -2 +i)%7;
     			String weekday = (String)weekDays.objectAtIndex(widx);
@@ -135,7 +145,7 @@ public class Timetable extends LessonList {
     			"ScheduleRing", qual, MyUtility.numSorter);
     	NSArray found = ec.objectsWithFetchSpecification(fs);
     	if(found != null && found.count() > 0) {
-    		titles[0] = (String)session().valueForKeyPath("strings.RujelSchedule_Schedule.Rings");
+    		titles[0] = (String)strings().valueForKeyPath("RujelSchedule_Schedule.Rings");
     		Enumeration enu = found.objectEnumerator();
     		SimpleDateFormat df = new SimpleDateFormat("HH:mm");
     		while (enu.hasMoreElements()) {
@@ -152,6 +162,7 @@ public class Timetable extends LessonList {
     		
     	}
     	EOQualifier[] quals = new EOQualifier[2];
+    	NSArray courses = (NSArray)valueForBinding("courses");
     	if(courses == null || courses.count() == 0) {
     		quals[0] = new EOKeyValueQualifier(ScheduleEntry.FLAGS_KEY,
     				EOQualifier.QualifierOperatorEqual,new Integer(0)); // NOT temporary
@@ -161,7 +172,7 @@ public class Timetable extends LessonList {
     		quals[0] = new EOKeyValueQualifier("course",
     				EOQualifier.QualifierOperatorEqual,course); // for current course
         	quals[0] = new EOAndQualifier(new NSArray(quals));
-   	} else {
+    	} else {
     		if(course != null && !courses.containsObject(course))
     			courses = courses.arrayByAddingObject(course);
     		quals[0] = Various.getEOInQualifier("course", courses); // for courses in list
@@ -252,12 +263,10 @@ public class Timetable extends LessonList {
     		StringBuilder buf = new StringBuilder();
     		EduCourse prev = null;
     		int count = 0;
-    		Format format = (courses != null)? null :
-    			new SimpleDateFormat(SettingsReader.stringForKeyPath("ui.shortDateFormat","dd.MM"));
 //    		boolean bracket = false;
     		while (enu.hasMoreElements()) {
     			ScheduleEntry sdl = (ScheduleEntry)enu.nextElement();
-    			if(courses == null) {
+    			if(format != null) {
     				if(buf.length() > 0)
     					buf.append(',').append(' ');
     				NSTimestamp since = sdl.validSince();
@@ -277,15 +286,15 @@ public class Timetable extends LessonList {
     				}
     				buf.append('>');
     				if(since != null && to == null) {
-    					buf.append(session().valueForKeyPath(
-    							"strings.Reusables_Strings.dataTypes.since")).append(' ');
+    					buf.append(strings().valueForKeyPath(
+    							"Reusables_Strings.dataTypes.since")).append(' ');
     				}
     				if(since != null) {
     					buf.append(format.format(since));
     					if(to != null)
     						buf.append(' ').append('-');
     				} else {
-    					buf.append(session().valueForKeyPath("strings.RujelBase_Base.before"));
+    					buf.append(strings().valueForKeyPath("RujelBase_Base.before"));
     				}
     				if(to != null) {
     					buf.append(' ').append(format.format(to));
@@ -402,13 +411,13 @@ public class Timetable extends LessonList {
 		return "grey";
     }
 
-    public Boolean checked() {
+    public String checked() {
     	Integer id = cellID();
     	if(id == null) return null;
-    	if(toAdd.containsObject(id))
-    		return Boolean.TRUE;
+    	/*if(toAdd.containsObject(id))
+    		return "checked";
     	if(toDelete.containsObject(id))
-    		return Boolean.FALSE;
+    		return null;*/
     	Object value = value();
     	if(value instanceof NSMutableArray) {
     		NSMutableArray array = (NSMutableArray)value;
@@ -416,12 +425,12 @@ public class Timetable extends LessonList {
     		while (enu.hasMoreElements()) {
 				ScheduleEntry sdl = (ScheduleEntry) enu.nextElement();
 				if(sdl.course() == course && sdl.isActual(date))
-					return Boolean.TRUE;
+					return "checked";
 			}
     	}
-    	return Boolean.FALSE;
+    	return null;
     }
-    
+    /*
     public void setChecked(Boolean checked) {
     	Integer id = cellID();
     	if(checked.booleanValue()) {
@@ -448,11 +457,12 @@ public class Timetable extends LessonList {
     		toAdd.addObject(id);
     	}
     }
-    
+    */
     public WOActionResults submit() {
-    	NSArray newCells = context().request().formValuesForKey("newCells");
-    	if(newCells != null && newCells.count() > 0) {
-    		Enumeration enu = newCells.objectEnumerator();
+    	NSArray activeCell = context().request().formValuesForKey("activeCell");
+    	NSMutableSet toAdd = new NSMutableSet();
+    	if(activeCell != null && activeCell.count() > 0) {
+    		Enumeration enu = activeCell.objectEnumerator();
     		while (enu.hasMoreElements()) {
 				String idString = (String) enu.nextElement();
 				try {
@@ -463,8 +473,6 @@ public class Timetable extends LessonList {
 				}
 			}
     	}
-    	if(toAdd.count() == 0 && toDelete.count() == 0)
-    		return (WOActionResults)valueForBinding("noAction");
 		int weekStart = SettingsBase.numericSettingForCourse(
 				"weekStart", course, course.editingContext(), Calendar.MONDAY);
     	EOEditingContext ec = course.editingContext();
@@ -484,7 +492,7 @@ public class Timetable extends LessonList {
 				ScheduleEntry sdl = (ScheduleEntry) enu.nextElement();
 				Integer index = new Integer((sdl.weekdayNum().intValue() - weekStart +1)*100 
 						+ sdl.num().intValue());
-				if(toDelete.containsObject(index) && sdl.isActual(date)) {
+				if(!toAdd.containsObject(index) && sdl.isActual(date)) {
 					if(sdl.isTemporary() ||
 							(sdl.validSince() != null && sdl.validSince().after(yesterday))) {
 						if(pool == null)
@@ -495,15 +503,17 @@ public class Timetable extends LessonList {
 						sdl.setValidTo(yesterday);
 					}
 				} else if(toAdd.containsObject(index)){
+					toAdd.removeObject(index);
 					NSTimestamp valid = sdl.validSince();
 					if(valid != null && valid.after(date)) {
 						sdl.setValidSince(date);
-						toAdd.removeObject(index);
 					} else {
 						valid = sdl.validTo();
-						if(valid != null && valid.before(date) && valid.after(lately)) {
-							sdl.setValidTo(null);
-							toAdd.removeObject(index);
+						if(valid != null && valid.before(date)) {
+							if(valid.after(lately))
+								sdl.setValidTo(null);
+							else
+								toAdd.addObject(index);
 						}
 					}
 				}
@@ -550,10 +560,13 @@ public class Timetable extends LessonList {
 						 new Object[] {session(),course,e});
 				session().takeValueForKey(e.getMessage(), "message");
 			}
+    	} else {
+    		return (WOActionResults)valueForBinding("noAction");
     	}
-    	toAdd.removeAllObjects();
-    	toDelete.removeAllObjects();
-    	list = null;
+//    	toAdd.removeAllObjects();
+//    	toDelete.removeAllObjects();
+    	if(canSetValueForBinding("list"))
+    		setValueForBinding(null, "list");
 		return (WOActionResults)valueForBinding("withAction");
     }
     
@@ -569,10 +582,20 @@ public class Timetable extends LessonList {
     }
     
     public boolean isStateless() {
-    	return Various.boolForObject(valueForBinding("readOnly"));
+    	return true;
     }
     
     public boolean synchronizesVariablesWithBindings() {
         return false;
+	}
+    
+    public void reset() {
+		course = null;
+		date = null;
+		lately = null;
+		format = null;
+		cellIndex = null;
+		rowIndex = null;
+		rowItem = null;
 	}
 }

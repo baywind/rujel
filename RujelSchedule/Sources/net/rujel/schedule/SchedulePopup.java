@@ -46,6 +46,7 @@ import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSTimestamp;
 
 public class SchedulePopup extends WOComponent {
 	public static final Logger logger = Logger.getLogger("rujel.schedule");
@@ -55,9 +56,12 @@ public class SchedulePopup extends WOComponent {
     public EduGroup forClass;
     public Student forStudent;
     public NSArray courses;
+    public NSArray list;
+    public NSTimestamp date;
     
     public SchedulePopup(WOContext context) {
         super(context);
+        date = (NSTimestamp)context.session().valueForKey("today");
     }
     
     public void appendToResponse(WOResponse aResponse,WOContext aContext) {
@@ -74,6 +78,7 @@ public class SchedulePopup extends WOComponent {
     		quals[0] = new EOAndQualifier(new NSArray(quals));
     		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,quals[0],null);
     		courses = course.editingContext().objectsWithFetchSpecification(fs);
+    		list = null;
     	}
     	super.appendToResponse(aResponse, aContext);
     }
@@ -105,6 +110,7 @@ public class SchedulePopup extends WOComponent {
 		forClass = null;
 		forTeacher = null;
 		courses = null;
+		list = null;
 		return null;
 	}
 
@@ -112,6 +118,7 @@ public class SchedulePopup extends WOComponent {
 		forClass = course.eduGroup();
 		forTeacher = null;
 		courses = null;
+		list = null;
 		return null;
 	}
 
@@ -119,6 +126,7 @@ public class SchedulePopup extends WOComponent {
 		forClass = null;
 		forTeacher = course.teacher();
 		courses = null;
+		list = null;
 		return null;
 	}
 }

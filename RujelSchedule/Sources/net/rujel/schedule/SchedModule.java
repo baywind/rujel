@@ -33,6 +33,7 @@ import net.rujel.reusables.PlistReader;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 
 public class SchedModule {
@@ -50,6 +51,10 @@ public class SchedModule {
 		} else if("planTabs".equals(obj)) {
 			return ctx.session().valueForKeyPath(
 				"strings.RujelSchedule_Schedule.planTab");
+		} else if ("diary".equals(obj)) {
+			NSDictionary diaryTab = (NSDictionary)WOApplication.application().
+					valueForKeyPath("strings.RujelSchedule_Schedule.diaryTab");
+			return PlistReader.cloneDictionary(diaryTab, true);
 		}
 		return null;
 	}

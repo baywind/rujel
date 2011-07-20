@@ -75,5 +75,18 @@
 		<key>title</key>
 		<string>Расписание звонков</string>
 	</dict>
+	<key>diaryTab</key>
+	<dict>
+		<key>component</key>
+		<string>DiarySchedule</string>
+		<key>id</key>
+		<string>schedule</string>
+		<key>period</key>
+		<false/>
+		<key>sort</key>
+		<string>60</string>
+		<key>title</key>
+		<string>Расписание</string>
+	</dict>
 </dict>
 </plist>

@@ -30,8 +30,11 @@ Num : WOString {
   value = rowIndex;
 }
 
-Check : WOCheckBox {
-  name = "existingRow";
+Check : WOGenericContainer {
+  elementName = "input";
+  type = "checkbox";
+  name = "activeCell";
+  value = cellID;
   checked = checked;
   style = "display:none;";
 }
@@ -39,20 +42,24 @@ Check : WOCheckBox {
 AddRow : OnClickContainer {
   elementName = "td";
   onclick = "addSchedRow();";
-  disabled = ^readOnly;
+  hide = ^readOnly;
   style = "padding:2px 6px;border: 3px double #009900;font-weight:bold;";
   class = "green";
-  hide = rowIndex;
 }
 
 HasIndex : WOConditional {
   condition = rowIndex;
 }
 
+NoIndex : WOConditional {
+  condition = rowIndex;
+  negate = true;
+}
+
 Submit : WOSubmitButton {
   action = submit;
   value = session.strings.Reusables_Strings.uiElements.Save;
-  onclick = "return ajaxPost(form);";
+  onclick = "return ajaxPost(this);";
 }
 CanEdit : WOConditional {
   condition = disabled;
@@ -74,4 +81,8 @@ DateField : WOTextField {
 DateTitle : WOString {
   value = session.strings.RujelSchedule_Schedule.initDate;
   escapeHTML = false;
+}
+
+ReadOnly : WOConditional {
+  condition = ^readOnly;
 }

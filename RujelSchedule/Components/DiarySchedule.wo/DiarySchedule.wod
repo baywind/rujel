@@ -1,0 +1,7 @@
+Timetable : Timetable {
+  ec = ec;
+  courses = courses;
+  readOnly = true;
+  showSubject = true;
+  date = ^date;
+}

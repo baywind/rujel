@@ -13,6 +13,11 @@ GrField : WOHiddenField {
   value = currGr;
 }
 
+StudentField : WOHiddenField {
+  name = "studentID";
+  value = studentID;
+}
+
 DateField : DateField {
   size = 10;
   name = "date";
@@ -140,4 +145,8 @@ Body : WOBody {
 
 SchoolName : WOString {
   value = application.schoolName;
+}
+
+ShowStudent : WOConditional {
+  condition = studentID;
 }

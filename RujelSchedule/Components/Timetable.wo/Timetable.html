@@ -1,16 +1,17 @@
-<webobject name = "Form">
 <table cellpadding = "3"><webobject name = "CanSave">
 	<tr class = "grey" style = "display:none;" id = "newSchedRow">
 	<td class = "backfield1">x</td><webobject name = "Cols">
 	<webobject name = "Cell">
-		<input type = "checkbox" name = "newCells" value = "x" style = "display:none;"/>
+		<input type = "checkbox" name = "activeCell" value = "x" style = "display:none;"/>
 		</webobject></webobject>
 	</tr></webobject><webobject name = "Rows">
-	<tr><webobject name = "AddRow">+</webobject><webobject name = "HasIndex">
+	<tr><webobject name = "NoIndex"><webobject name = "AddRow">+</webobject>
+		<webobject name = "ReadOnly"><td style = "width:3ex;"></td>
+		</webobject></webobject><webobject name = "HasIndex">
 		<td><webobject name = "Num"/></td></webobject>
 		<webobject name = "Cols"><webobject name = "Cell"><webobject name = "CanEdit">
 		<webobject name = "Check"/></webobject><webobject name = "Content"/></webobject>
 	</webobject></tr>
 </webobject></table><webobject name = "CanSave"><div style = "padding:1em;">
 <webobject name = "DateTitle"/>: <webobject name = "DateField"/> &nbsp; 
-<webobject name = "Submit"/></div></webobject></webobject>
+<webobject name = "Submit"/></div></webobject>

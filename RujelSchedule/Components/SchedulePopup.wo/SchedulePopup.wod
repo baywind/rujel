@@ -80,4 +80,10 @@ Timetable : Timetable {
   noAction = noAction;
   showGroupName = forTeacher;
   showSubject = forClass;
+  date =  date;
+  list = list;
+}
+
+Form : WOForm {
+  style = "border-width:2px 1px 1px; border-color:#00ff00 #999999 #999999; border-style:solid;";
 }
