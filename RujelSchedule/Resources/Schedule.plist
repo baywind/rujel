@@ -12,6 +12,8 @@
 	<string>Нельзя делать уроки пересекающимися по времени</string>
 	<key>inversedLesson</key>
 	<string>Конец урока должен быть позже начала</string>
+	<key>initDate</key>
+	<string>Дата вступления изменений</string>
 	<key>dashboard</key>
 	<dict>
 		<key>title</key>

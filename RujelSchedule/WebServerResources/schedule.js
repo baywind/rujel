@@ -1,8 +1,18 @@
 
 function schedCell(cell) {
-	var tick = toggleTick(cell);
+	var tick = cell.getElementsByTagName("input")[0];
+	tick.checked = !tick.checked;
 	unDim(cell);
-	cell.className = (tick)?"selection":"grey";
+	if(tick.checked) {
+		tick.className = cell.className;
+		cell.className = "selection";
+	} else {
+		if(tick.className)
+			cell.className = tick.className
+		else
+			cell.className = "grey";
+		tick.className = null;
+	}
 	dim(cell);
 }
 

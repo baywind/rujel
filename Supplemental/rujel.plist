@@ -16,10 +16,13 @@
 		<string>5</string>
 		<key>maxGrade</key>
 		<string>11</string>
-		<key>defaultDate</key>
-		<string>12.01.2010</string>
 		<key>newYearMonth</key>
 		<string>6</string>
+	</dict>
+	<key>ui</key>
+	<dict>
+		<key>defaultDate</key>
+		<string>12.01.2011</string>
 	</dict>
 </dict>
 </plist>

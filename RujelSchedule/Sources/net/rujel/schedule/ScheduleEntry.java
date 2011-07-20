@@ -40,6 +40,7 @@ import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSLocking;
 import com.webobjects.foundation.NSTimestamp;
 
 public class ScheduleEntry extends _ScheduleEntry {
@@ -113,6 +114,37 @@ public class ScheduleEntry extends _ScheduleEntry {
 	public boolean isTemporary() {
 		return ((flags().intValue() & 8) > 0);
 	}
+	
+	public boolean isActual(NSTimestamp date) {
+		long now = date.getTime();
+		NSTimestamp border = validTo();
+		if(border != null) {
+			if(border.getTime() < now - NSLocking.OneDay) {
+				return false;
+			} else {
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(border);
+				cal.set(Calendar.HOUR, 23);
+				cal.set(Calendar.MINUTE, 59);
+				if(cal.getTimeInMillis() < now)
+					return false;
+			}
+		}
+		border = validSince();
+		if(border != null) {
+			if(border.getTime() > now) {
+				return false;
+			} else if(border.getTime() - now < NSLocking.OneDay){
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(border);
+				cal.set(Calendar.HOUR, 0);
+				cal.set(Calendar.MINUTE, 0);
+				return (cal.getTimeInMillis() <= now);
+			}
+		}
+		return true;
+	}
+
 
 	public static EOQualifier onDate(NSTimestamp date) {
 		EOQualifier[] quals = new EOQualifier[2];

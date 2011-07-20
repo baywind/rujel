@@ -63,3 +63,15 @@ CanSave : WOConditional {
   condition = ^readOnly;
   negate = true;
 }
+
+DateField : WOTextField {
+  value = date;
+  dateformat = application.prefs.ui.dateFormat;
+  class = "date";
+  size = 10;
+}
+
+DateTitle : WOString {
+  value = session.strings.RujelSchedule_Schedule.initDate;
+  escapeHTML = false;
+}
