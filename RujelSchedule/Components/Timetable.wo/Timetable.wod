@@ -1,8 +1,3 @@
-Form : WOForm {
-  action = submit;
-  style = "border: 1px solid #666666;";
-}
-
 Rows : WORepetition {
   list = list;
   item = rowItem;

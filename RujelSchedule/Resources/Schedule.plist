@@ -14,6 +14,10 @@
 	<string>Конец урока должен быть позже начала</string>
 	<key>initDate</key>
 	<string>Дата вступления изменений</string>
+	<key>actual</key>
+	<string>Актуальное расписание на </string>
+	<key>comingChanges</key>
+	<string>Ожидаемые измения в расписании</string>
 	<key>dashboard</key>
 	<dict>
 		<key>title</key>

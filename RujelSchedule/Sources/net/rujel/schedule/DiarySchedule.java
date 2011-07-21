@@ -29,19 +29,35 @@
 
 package net.rujel.schedule;
 
+import java.text.Format;
+import java.util.Enumeration;
+
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOResponse;
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
+import net.rujel.reusables.Various;
 import net.rujel.ui.LessonList;
 
 public class DiarySchedule extends LessonList {
 
 	public NSArray courses;
 	public EOEditingContext ec;
+	public NSMutableArray coming;
+	public NSKeyValueCoding item;
+	public NSTimestamp date;
 	
 	public DiarySchedule(WOContext context) {
         super(context);
@@ -53,12 +69,53 @@ public class DiarySchedule extends LessonList {
 			aResponse.appendContentString("No courses defined");
 			return;
 		}
-		NSTimestamp date = (NSTimestamp)valueForBinding("date");
+		date = (NSTimestamp)valueForBinding("date");
 		Integer year = (date == null)?(Integer)application().valueForKey("year"):
 			MyUtility.eduYearForDate(date);
 		ec = (EOEditingContext)application().valueForKeyPath(
 				"ecForYear." + year.toString());
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = Various.getEOInQualifier("course", courses);
+		quals[1] = new EOKeyValueQualifier(ScheduleEntry.VALID_SINCE_KEY, 
+				EOQualifier.QualifierOperatorGreaterThan, date);
+		quals[2] = new EOKeyValueQualifier(ScheduleEntry.FLAGS_KEY, 
+				EOQualifier.QualifierOperatorEqual, new Integer(0));
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		NSArray list = new NSArray(new EOSortOrdering (
+				ScheduleEntry.VALID_SINCE_KEY,EOSortOrdering.CompareAscending));
+		EOFetchSpecification fs = new EOFetchSpecification(ScheduleEntry.ENTITY_NAME,
+				quals[0],list);
+		list = ec.objectsWithFetchSpecification(fs);
+		if(list != null && list.count() > 0) {
+	    	int week = SettingsBase.numericSettingForCourse("EduPeriod", null, ec,7);
+			ScheduleEntry sdl = (ScheduleEntry)list.objectAtIndex(0);
+			NSTimestamp min = sdl.validSince();
+			NSMutableDictionary dict = new NSMutableDictionary( new Object[] {min,min},
+					new String[] {"since","date"});
+	    	coming = new NSMutableArray(dict);
+			if(list.count() > 1) {
+				NSTimestamp late = min.timestampByAddingGregorianUnits(0, 0, week, 0, 0, 0);
+				Enumeration enu = list.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					sdl = (ScheduleEntry) enu.nextElement();
+					NSTimestamp max = sdl.validSince();
+					if(max.after(late)) {
+						min = max;
+						late = min.timestampByAddingGregorianUnits(0, 0, week, 0, 0, 0);
+						dict = new NSMutableDictionary( new Object[] {min,min},
+								new String[] {"since","date"});
+						coming.addObject(dict);
+					} else {
+						dict.takeValueForKey(max, "date");
+					}
+				}
+			}
+		}
 		super.appendToResponse(aResponse, aContext);
+	}
+	
+	public Format formatter() {
+		return MyUtility.dateFormat();
 	}
 
 	public boolean synchronizesVariablesWithBindings() {
@@ -71,6 +128,9 @@ public class DiarySchedule extends LessonList {
 	public void reset() {
 		courses = null;
 		ec = null;
+		date = null;
+		coming = null;
+		item = null;
 		super.reset();
 	}
 }

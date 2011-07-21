@@ -150,3 +150,9 @@ SchoolName : WOString {
 ShowStudent : WOConditional {
   condition = studentID;
 }
+
+IndTitle : WOString {
+  value = application.strings.Strings.individual;
+  valueWhenEmpty = "/ind/";
+  escapeHTML = false;
+}
