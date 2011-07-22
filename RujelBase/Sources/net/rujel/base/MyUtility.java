@@ -134,8 +134,16 @@ public class MyUtility {
 			WOSession ses = ((SessionedEditingContext)ec).session();
 			eduYear = (Integer)ses.valueForKey("eduYear");
 		}
-		if(eduYear == null)
+		if(eduYear == null) {
+			try {
+				eduYear = (Integer)WOApplication.application().valueForKey("year");
+			} catch (Exception e) {
+				;
+			}
+		}
+		if(eduYear == null) {
 			eduYear = eduYearForDate(null);
+		}
 		return eduYear;
 	}
 	

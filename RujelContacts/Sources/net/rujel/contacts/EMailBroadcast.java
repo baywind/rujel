@@ -110,8 +110,20 @@ public class EMailBroadcast implements Runnable{
 	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter) {
 //		WOContext ctx = MyUtility.dummyContext(null);
 //		WOSession ses = ctx.session();
+		NSTimestamp moment = null;
+		Integer eduYear = (Integer)WOApplication.application().valueForKey("year");
+		String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
+		if(defaultDate != null) {
+			try {
+				moment = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING, "Failed parsing default date " + 
+						defaultDate + ". Using today.",e);
+			}
+		}
+		if(moment == null)
+			moment = MyUtility.dayInEduYear(eduYear.intValue());
 
-		NSTimestamp moment = new NSTimestamp();
 		if(period != null && !period.contains(moment)) {
 			java.util.Date fin = period.end();
 			if(fin instanceof NSTimestamp)
@@ -119,7 +131,7 @@ public class EMailBroadcast implements Runnable{
 			else
 				moment = new NSTimestamp(fin);
 		}
-		Integer eduYear = MyUtility.eduYearForDate(moment);
+		MyUtility.eduYearForDate(moment);
 		EOEditingContext ec = null;
 		if(period instanceof EOEnterpriseObject) {
 			ec = ((EOEnterpriseObject)period).editingContext();
@@ -179,6 +191,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			if(existingCourses == null || existingCourses.count() == 0)
 				continue gr;
 			NSMutableDictionary params = new NSMutableDictionary();
+			params.takeValueForKey(eduGroup, "eduGroup");
 			params.takeValueForKey(students,"students");
 			params.takeValueForKey(existingCourses,"courses");
 			if(periodsByList != null) {
@@ -209,6 +222,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 			params.takeValueForKey("Finished mailing for eduGroup","logMessage");
 			params.takeValueForKey(eduGroup,"logParam");
 			params.takeValueForKey(moment, "date");
+			if(SettingsReader.stringForKeyPath("ui.diaryURL", null) != null)
+				params.takeValueForKey(Boolean.TRUE, "diaryLink");
 //			params.takeValueForKey(ctx,"ctx");
 //			params.takeValueForKey(ec,"editingContext");
 //			params.takeValueForKey(ses,"tmpsession");
@@ -410,7 +425,19 @@ gr:		while (eduGroups.hasMoreElements()) {
 			textBuf.append(mailer.defaultMessageText());
 		else
 			textBuf.append(params.valueForKey("messageText"));
+
 		WOApplication app = WOApplication.application();
+		if(Various.boolForObject(params.valueForKey("diaryLink"))) {
+			textBuf.append("\n\n");
+			String text = (String)app.valueForKeyPath(
+				"strings.RujelContacts_Contacts.diaryLink");
+			textBuf.append(text);
+			textBuf.append(":\n").append(app.valueForKey("diaryUrl"));
+			EduGroup eduGroup = (EduGroup)params.valueForKey("eduGroup");
+			EOKeyGlobalID gid = (EOKeyGlobalID)
+				eduGroup.editingContext().globalIDForObject(eduGroup);
+			textBuf.append("?grID=").append(gid.keyValues()[0]).append("&studentID=%1$d");
+		}
 		if(allowRequest) {
 //			String auto = ctx.completeApplicationURLPrefix(false, 0);
 			textBuf.append("\n\n");
@@ -419,9 +446,13 @@ gr:		while (eduGroups.hasMoreElements()) {
 			textBuf.append(":\n").append(app.valueForKey("serverUrl"));
 			textBuf.append(app.valueForKey("urlPrefix")).append('/');
 			textBuf.append(app.directActionRequestHandlerKey()).append('/');
-			textBuf.append("RequestMail/");
+			textBuf.append("RequestMail/%1$d");
 		}
+		
 		int textLength = textBuf.length();
+		ses.setObjectForKey(params, "broadcastAdditions");
+		NSArray extensions = (NSArray)ses.valueForKeyPath("modules.broadcastAdditions");
+		ses.removeObjectForKey("broadcastAdditions");
 
 		Object since = params.valueForKey("since");
 		Object upTo = params.valueForKey("to");
@@ -464,11 +495,23 @@ st:		while (stEnu.hasMoreElements()) {
 					String subj = (String)params.valueForKey("subject");
 					if(subj != null && subj.length() > 0)
 						subject.append(" : ").append(subj);
-					if(allowRequest) {
+					EOKeyGlobalID stID = (EOKeyGlobalID)ec.globalIDForObject(student);
+					if(extensions != null && extensions.count() > 0) { // append extensions
 						textBuf.delete(textLength, textBuf.length());
-						EOKeyGlobalID stID = (EOKeyGlobalID)ec.globalIDForObject(student);
-						textBuf.append(stID.keyValues()[0]);
+						Enumeration exts = extensions.objectEnumerator();
+						while (exts.hasMoreElements()) {
+							NSDictionary ext = (NSDictionary) exts.nextElement();
+							String text = (String)ext.objectForKey(stID);
+							if(text == null)
+								text = (String)ext.valueForKey("text");
+							if(text == null)
+								continue;
+							textBuf.append('\n').append('\n').append(text);
+						}
 					}
+					String message = String.format(textBuf.toString(), stID.keyValues()[0],
+							Person.Utility.fullName(student, false, 2, 2, 0));
+
 					if(reporter != null) {
 						WOComponent reportPage = app.pageWithName("PrintReport",ctx);
 						reportPage.takeValueForKey(reporter,"reporter");
@@ -477,9 +520,9 @@ st:		while (stEnu.hasMoreElements()) {
 						reportPage.takeValueForKey(period,"period");
 						reportPage.takeValueForKey(since,"since");
 						reportPage.takeValueForKey(upTo,"to");
-						mailer.sendPage(subject.toString(), textBuf.toString(), reportPage, to, zip);
+						mailer.sendPage(subject.toString(), message, reportPage, to, zip);
 					} else {
-						mailer.sendTextMessage(subject.toString(), textBuf.toString(), to);
+						mailer.sendTextMessage(subject.toString(), message, to);
 					}
 					logger.finer("Mail sent \"" + subject + '"');
 				} catch (Exception ex) {

@@ -18,6 +18,8 @@
 	<string>Актуальное расписание на </string>
 	<key>comingChanges</key>
 	<string>Ожидаемые измения в расписании</string>
+	<key>messageAddition</key>
+	<string>Обратите внимание на изменения в расписании</string>
 	<key>dashboard</key>
 	<dict>
 		<key>title</key>

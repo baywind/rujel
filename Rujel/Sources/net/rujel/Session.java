@@ -295,17 +295,17 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			if(_eduYear != null)
 				return null;
 			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
-			if(defaultDate == null) {
-				_eduYear = (Integer)WOApplication.application().valueForKey("year");
-				today = MyUtility.dayInEduYear(_eduYear.intValue());
-			} else {
+			if(defaultDate != null) {
 				try {
 					today = (NSTimestamp)MyUtility.dateFormat().parseObject(defaultDate);
 				} catch (Exception e) {
 					logger.log(WOLogLevel.WARNING, "Failed parsing default date " + 
 							defaultDate + ". Using today.",e);
-					today = new NSTimestamp();
 				}
+			}
+			if(today == null) {
+				_eduYear = (Integer)WOApplication.application().valueForKey("year");
+				today = MyUtility.dayInEduYear(_eduYear.intValue());
 			}
 		}
 		return today;

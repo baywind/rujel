@@ -51,6 +51,7 @@ public class Application extends UTF8Application {
 	protected Timer timer;
 	public Integer year;
 	protected String serverUrl;
+	protected String diaryUrl;
 	protected String urlPrefix;
 	protected String _errorMessage;
 	
@@ -181,6 +182,7 @@ public class Application extends UTF8Application {
 		int slash = serverUrl.indexOf('/',slash0);
 		if(slash > 0)
 			serverUrl = serverUrl.substring(slash0,slash);
+		diaryUrl = SettingsReader.stringForKeyPath("ui.diaryURL", null);
 		urlPrefix = SettingsReader.stringForKeyPath("ui.urlPrefix", "?/Apps/WebObjects/Rujel.woa");
 		Logger.getLogger("").removeHandler(handler);
 		handler.close();
@@ -323,6 +325,21 @@ public class Application extends UTF8Application {
 		if(urlPrefix.charAt(0) == '?')
 			return urlPrefix.substring(1);
 		return urlPrefix;
+	}
+	
+	public String diaryUrl() {
+		if(diaryUrl == null) {
+			StringBuilder buf = new StringBuilder("http://");
+			buf.append(host());
+			String prefix = urlPrefix();
+			int slash = serverUrl.lastIndexOf('/', 4);
+			if(slash > 0)
+				prefix = prefix.substring(0,slash);
+			else
+				prefix = "/Apps/WebObjects/";
+			buf.append(prefix).append("RujelDiary.woa");
+		}
+		return diaryUrl;
 	}
 	
 	public static WOResponse errorResponse(WOContext context) {

@@ -22,7 +22,9 @@
 	<key>ui</key>
 	<dict>
 		<key>defaultDate</key>
-		<string>12.01.2011</string>
+		<string>15.03.2011</string>
+		<key>diaryURL</key>
+		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
 	</dict>
 </dict>
 </plist>
