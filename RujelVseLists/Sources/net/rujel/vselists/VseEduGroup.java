@@ -96,6 +96,11 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		Integer absGrade = new Integer(year.intValue() - grade.intValue());
 		setAbsGrade(absGrade);
 	}
+	
+	public boolean isActual(int eduYear) {
+		return(eduYear <= lastYear().intValue() &&
+				eduYear >= firstYear().intValue());
+	}
 
 	public NSArray fullList() {
 		if(lists() == null)

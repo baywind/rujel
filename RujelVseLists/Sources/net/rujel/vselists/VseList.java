@@ -92,7 +92,8 @@ public class VseList extends _VseList {
 	}
 	
 	public boolean isActual(NSTimestamp onDate) {
-		return isActual(this, onDate.getTime());
+		int eduYear = MyUtility.eduYearForDate(onDate).intValue();
+		return eduGroup().isActual(eduYear) && isActual(this, onDate.getTime());
 	}
 	
 	public boolean isActual() {

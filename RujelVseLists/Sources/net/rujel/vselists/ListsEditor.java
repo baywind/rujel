@@ -47,6 +47,8 @@ import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Counter;
 import net.rujel.reusables.DegenerateFlags;
+import net.rujel.reusables.Export;
+import net.rujel.reusables.ExportCSV;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
@@ -105,11 +107,14 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	public NSMutableSet ticks = new NSMutableSet();
 	public NSArray targets;
 	public VseEduGroup target;
+	public String title;
     
     public ListsEditor(WOContext context) {
         super(context);
     	ec = new SessionedEditingContext(context.session());
 //        switchMode();
+    	title = (String)context.session().valueForKeyPath(
+    			"strings.RujelVseLists_VseStrings.title");
     }
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
@@ -442,7 +447,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				return Boolean.TRUE;
 			if(selection instanceof VseEduGroup)
 				return (Boolean)session().valueForKeyPath("readAccess._create.VseList");
-			return (Boolean)session().valueForKeyPath("readAccess._create.VseStudent");
+			return Boolean.TRUE; 
+			//(Boolean)session().valueForKeyPath("readAccess._create.VseStudent");
 		} else {
 			return (Boolean)session().valueForKeyPath("readAccess._create.VseTeacher");
 		}
@@ -684,14 +690,56 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 	
 	
 	public WOActionResults importFile() {
-		WOComponent page = pageWithName("ImportList");
-		session().takeValueForKey(this,"pushComponent");
+		WOComponent page = pageWithName("Importer");
+		page.takeValueForKey(this, "returnPage");
+		page.takeValueForKey("ImportList", "consumerComponent");		
+		page.takeValueForKey(session().valueForKeyPath(
+				"strings.RujelVseLists_VseStrings.importAssistance"), "fields");		
+		if (selection instanceof VseEduGroup)
+			page.takeValueForKey(selection, "consumerParams");
 		return page;
 	}
-
-	public String title() {
-		return (String)session().valueForKeyPath("strings.RujelVseLists_VseStrings.title");
+	
+	public WOActionResults export() {
+		if(list == null || list.count() == 0) {
+			return null;
+		}
+		Export export = new ExportCSV(context(), "grouplist");
+		Enumeration enu = list.objectEnumerator();
+		int num = 1;
+		while (enu.hasMoreElements()) {
+			item = (EOEnterpriseObject) enu.nextElement();
+			export.beginRow();
+			export.addValue(Integer.toString(num));
+			num++;
+			PersonLink plink = plink();
+			export.addValue(Person.Utility.fullName(plink, true, 2, 0, 0));
+			Person person = plink.person();
+			if(person != null) {
+				export.addValue(person.firstName());
+				export.addValue(person.secondName());
+				if(showAll) {
+					NSTimestamp aDate = (NSTimestamp)item.valueForKey("enter");
+					if(aDate == null)
+						export.addValue(null);
+					else
+						export.addValue(MyUtility.dateFormat().format(aDate));
+					aDate = (NSTimestamp)item.valueForKey("leave");
+					if(aDate == null)
+						export.addValue(null);
+					else
+						export.addValue(MyUtility.dateFormat().format(aDate));
+				} else {
+					if(person.birthDate() != null)
+						export.addValue(MyUtility.dateFormat().format(person.birthDate()));
+					else
+						export.addValue(null);
+				}
+			}
+		}
+		return export;
 	}
+
 	
 	/*
 	public InputStream uploadStream;

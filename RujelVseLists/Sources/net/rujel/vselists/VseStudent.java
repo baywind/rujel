@@ -59,31 +59,86 @@ public class VseStudent extends _VseStudent implements Student {
 		setAbsGrade(new Integer(0));
 	}
 
-	protected static final NSArray memberSorter = new NSArray(
-			new EOSortOrdering("eduGroup.section",EOSortOrdering.CompareAscending));
 	public VseEduGroup recentMainEduGroup() {
+		VseList member = memberOf(MyUtility.date(editingContext()));
+		if(member != null && member.isActual())
+			return member.eduGroup();
+		return null;
+	}
+		
+	public VseList memberOf(NSTimestamp date) {
 		NSArray lists = lists();
 		if(lists == null || lists.count() == 0)
 			return null;
-		NSTimestamp date = MyUtility.date(editingContext());
-		NSArray args = new NSArray(new Object[] {date,date});
-		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
-				"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
-		lists = EOQualifier.filteredArrayWithQualifier(lists, qual);
-		if(lists == null || lists.count() == 0)
-			return null;
-		int year = MyUtility.eduYearForDate(date);
-		if(lists.count() > 1) {
-			lists = EOSortOrdering.sortedArrayUsingKeyOrderArray(lists, memberSorter);
-		}
 		Enumeration enu = lists.objectEnumerator();
+		VseList beslVL = null;
 		while (enu.hasMoreElements()) {
 			VseList vl = (VseList) enu.nextElement();
-			VseEduGroup grp = vl.eduGroup();
-			if(grp.firstYear().intValue() <= year && grp.lastYear().intValue() >= year)
-				return grp;
+			beslVL = betterVseList(beslVL, vl, date);
 		}
-		return null;	
+		return beslVL;	
+	}
+	
+	private VseList betterVseList(VseList vl1, VseList vl2, NSTimestamp date) {
+		if(vl1 == null) return vl2;
+		if(vl2 == null) return vl1;
+		boolean actual = vl1.isActual(date);
+		if(actual) {
+			if(!vl2.isActual(date))
+				return vl1;
+		} else {
+			if(vl2.isActual(date))
+				return vl2;
+		}
+		// choose equivalent
+		Integer s1 = vl1.eduGroup().section();
+		Integer s2 = vl2.eduGroup().section();
+		if(s1.intValue() < s2.intValue())
+			return vl1;
+		if (s1.intValue() > s2.intValue())
+			return vl2;
+		Integer eduYear = MyUtility.eduYearForDate(date);
+		if(!actual) {
+			// choose not actual
+			NSTimestamp d1 = vl1.leave();
+			Integer y1 = (d1 == null)?vl1.eduGroup().lastYear():MyUtility.eduYearForDate(d1);
+			if(y1.intValue() > eduYear.intValue() || (d1 != null && d1.after(date))) {
+				d1 = vl1.enter();
+				y1 = (d1 == null)?vl1.eduGroup().firstYear():MyUtility.eduYearForDate(d1);
+			}
+			
+			NSTimestamp d2 = vl2.leave();
+			Integer y2 = (d2 == null)?vl2.eduGroup().lastYear():MyUtility.eduYearForDate(d2);
+			if(y2.intValue() > eduYear.intValue() || (d2 != null && d2.after(date))) {
+				d2 = vl2.enter();
+				y2 = (d2 == null)?vl2.eduGroup().firstYear():MyUtility.eduYearForDate(d2);
+			}
+			
+			int c1 = Math.abs(eduYear.intValue() - y1.intValue());
+			int c2 = Math.abs(eduYear.intValue() - y2.intValue());
+			if(c1 > c2)
+				return vl2;
+			if(c1 < c2)
+				return vl1;
+
+			if(d1 == null) d1 = MyUtility.dayInEduYear(y1);
+			if(d2 == null) d2 = MyUtility.dayInEduYear(y2);
+
+			
+			long now = date.getTime();
+			c1 = (int)Math.abs(d1.getTime() - now);
+			c2 = (int)Math.abs(d2.getTime() - now);
+			if(c1 > c2)
+				return vl2;
+			if(c1 < c2)
+				return vl1;
+		} else {
+			if(vl1.leave() == null)
+				return vl1;
+			if(vl2.leave() == null)
+				return vl2;
+		}
+		return vl1;
 	}
 	
 	public static VseStudent studentForPerson(Person person, NSTimestamp date) {

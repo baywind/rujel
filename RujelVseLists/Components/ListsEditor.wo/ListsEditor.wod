@@ -283,14 +283,20 @@ HasSections : WOConditional {
   condition = application.strings.sections.hasSections;
 }
 
-UploadForm : WOForm {
-  action = importFile;  
-  enctype = "multipart/form-data";
+Export : WOHyperlink {
+  action = export;
+  string = session.strings.RujelReports_Reports.export;
 }
 
-SubmitUpload : WOGenericElement {
-  elementName = "input";
-  type = "button";
-  onclick = "form.submit()";
-  value = "GO";
+Import : OnClickContainer {
+  elementName = "div";
+  invokeAction = importFile;
+  onclick = session.ajaxPopup;
+  hide = hideAddButton;
+  class = "orange";
+  style = "float:right;padding:0px 4px;border:double 3px #ff9933;margin:4px;";
+}
+
+ImportTitle : WOString {
+  value = session.strings.RujelBase_Base.import.Import;
 }
