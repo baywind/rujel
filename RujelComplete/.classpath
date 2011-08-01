@@ -6,6 +6,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
+	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>

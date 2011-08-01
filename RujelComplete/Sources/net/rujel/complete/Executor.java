@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.rujel.base.MyUtility;
+import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
@@ -142,7 +143,11 @@ public class Executor implements Runnable {
 						buf.append(course.subjectWithComment()).append(' ');
 						buf.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
 						progress().takeValueForKey(buf.toString(), "running");
-						
+						NSArray periods = EduPeriod.periodsForCourse(course);
+						if(periods != null && periods.count() > 0) {
+							EduPeriod per = (EduPeriod)periods.lastObject();
+							ses.takeValueForKey(per.end(), "today");
+						}
 					}
 					if(task.studentIDs != null) {
 						writeStudents(course, ec);
@@ -150,6 +155,11 @@ public class Executor implements Runnable {
 					writeCourse(course);
 					progress().removeAllObjects();
 				} else { //forced closing
+					NSArray periods = EduPeriod.defaultPeriods(ses.defaultEditingContext());
+					if(periods != null && periods.count() > 0) {
+						EduPeriod per = (EduPeriod)periods.lastObject();
+						ses.takeValueForKey(per.end(), "today");
+					}
 					if(task.writeStudents) {
 						FileWriterUtil folder = completeFolder(task.year, STUDENTS, true, true,false);
 						{
