@@ -39,9 +39,12 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
+import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
+import net.rujel.base.BaseLesson.NoteDelegate;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
@@ -205,5 +208,60 @@ public class HomeWorkDelegate extends TaskDelegate {
 			result.takeValueForKey(namedFlags, "namedFlags");*/
 		}
 		return result;
+	}
+	
+	public NoteDelegate getNoteDelegateForLesson(EduLesson lesson, boolean create) {
+		EOEditingContext ec = lesson.editingContext();
+		if(ec == null) {
+			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+					"Lesson not in EditingContext");
+			return null;
+		}
+		WorkType type = WorkType.getSpecType(ec, "onLesson");
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,lesson.course());
+		quals[1] = new EOKeyValueQualifier(Work.WORK_TYPE_KEY,
+				EOQualifier.QualifierOperatorEqual, type);
+		NSTimestamp date = (NSTimestamp)lesson.valueForKey("date");//lesson.date();
+		quals[2] = new EOKeyValueQualifier(Work.DATE_KEY,
+				EOQualifier.QualifierOperatorEqual,date);
+		quals[2] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
+				quals[2],EduLesson.sorter);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0)
+			return (Work)found.objectAtIndex(0);
+		if(!create)
+			return new TmpNoteDelegate(this);
+		 Work work = (Work)EOUtilities.createAndInsertInstance(
+				 lesson.editingContext(), Work.ENTITY_NAME);
+		 work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
+		 work.setDate(date);
+		 work.setAnnounce(date);
+		 work.setWorkType(type);
+		 work.setTheme((String)WOApplication.application().valueForKeyPath(
+				 "strings.RujelCriterial_Strings.spesTypes.onLesson.typeName"));
+		 MyUtility.setNumberToNewLesson(work);
+		 return work;
+	}
+
+	public static class TmpNoteDelegate implements BaseLesson.NoteDelegate {
+		protected HomeWorkDelegate htd;
+		
+		public TmpNoteDelegate(HomeWorkDelegate delegate) {
+			super();
+			htd = delegate;
+		}
+		
+		public String lessonNoteForStudent(EduLesson lesson, Student student) {
+			return null;
+		}
+
+		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student) {
+			NoteDelegate work = htd.getNoteDelegateForLesson(lesson, true);
+			work.setLessonNoteForStudent(note, lesson, student);
+			lesson.takeValueForKey(work, "noteDelegate");
+		}
 	}
 }

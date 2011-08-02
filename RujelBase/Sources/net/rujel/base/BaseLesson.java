@@ -68,6 +68,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
     }
 */	
 	public void turnIntoFault(EOFaultHandler handler) {
+		_noteDelegate = null;
 		super.turnIntoFault(handler);
 	}
 	
@@ -125,12 +126,73 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		}
 	}
 	
+	public NoteDelegate _noteDelegate;
+
 	public String noteForStudent(Student student) {
-		return noteForStudent(this, student);
+		if(_noteDelegate == null)
+			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this, false);
+		String delegateNote = (_noteDelegate == null)?null :
+			_noteDelegate.lessonNoteForStudent(this, student);
+		String note = noteForStudent(this, student);
+		if(delegateNote == null)
+			return note;
+		if(note == null)
+			return delegateNote;
+		return note + " : " + delegateNote;
 	}
 	public void setNoteForStudent(String newNote, Student student) {
-		setNoteForStudent(this, newNote, student);
+		if(_noteDelegate == null)
+			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this, true);
+		if(_noteDelegate == null) {
+			setNoteForStudent(this, newNote, student);
+			_noteDelegate.setLessonNoteForStudent(null, this, student);
+			return;
+		}
+		int skip = isSkip(newNote);
+		if(skip == 0) {
+			_noteDelegate.setLessonNoteForStudent(newNote, this, student);
+			return;
+		}
+		newNote = newNote.trim();
+		if(skip < 0) {
+			setNoteForStudent(this, newNote, student);
+			_noteDelegate.setLessonNoteForStudent(null, this, student);
+			return;
+		}
+		setNoteForStudent(this, newNote.substring(0,skip), student);
+		int idx = skip;
+		while (idx < newNote.length()) {
+			if(Character.isLetterOrDigit(newNote.charAt(idx)))
+					break;
+			idx++;
+		}
+		if(idx < newNote.length())
+			_noteDelegate.setLessonNoteForStudent(newNote.substring(idx), this, student);
 	}
+
+	private static String[] skipStrings;
+	public static int isSkip(String note) {
+		if(note == null)
+			return 0;
+		note = note.trim();
+		if(note.length() == 0)
+			return 0;
+		if(skipStrings == null) {
+    		String sk = (String)WOApplication.application().valueForKeyPath(
+    				"strings.RujelBase_Base.skipStrings");
+    		if(sk == null) return 0;
+    		skipStrings = sk.split(" ");
+    	}
+    	for (int i = 0; i < skipStrings.length; i++) {
+    		if(note.startsWith(skipStrings[i])) {
+    			if(note.length() <= skipStrings[i].length())
+    				return -skipStrings[i].length();
+    			if(!Character.isLetterOrDigit(note.charAt(skipStrings[i].length())))
+    				return skipStrings[i].length();
+    		}
+    	}
+    	return 0;
+    }
 	/*
 	public Integer number() {
 		return (Integer)super.number();
@@ -170,8 +232,17 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		public WOComponent homeWorkPopupForLesson(WOContext context, EduLesson lesson) {
 			return null;
 		}
+		
+		public NoteDelegate getNoteDelegateForLesson(EduLesson lesson, boolean create) {
+			return null;
+		}
 	}
 
+	public static interface NoteDelegate {
+		public String lessonNoteForStudent(EduLesson lesson, Student student);
+		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student);
+	}
+	
 	protected static TaskDelegate taskDelegate = new TaskDelegate();
 	public static void setTaskDelegate(TaskDelegate delegate) {
 		taskDelegate = delegate;
@@ -229,5 +300,10 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 			}
 		}
 		return MyUtility.validateDateInEduYear(aDate,course().eduYear(),DATE_KEY);
+	}
+	
+	public void validateForSave() throws NSValidation.ValidationException {
+		super.validateForSave();
+		_noteDelegate = null;
 	}
 }

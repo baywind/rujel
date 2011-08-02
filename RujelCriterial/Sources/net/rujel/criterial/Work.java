@@ -45,7 +45,7 @@ import java.math.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-public class Work extends _Work implements EduLesson {	// EOObserving
+public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	// EOObserving
 	public transient FractionPresenter _integralPresenter;
 
 	public Work() {
@@ -872,4 +872,97 @@ public class Work extends _Work implements EduLesson {	// EOObserving
     	else
     		return "font-family: sans-serif;";
     }
+
+	public String lessonNoteForStudent(EduLesson lesson, Student student) {
+		Mark mark = markForStudentAndCriterion(student, new Integer(0));
+		String note = noteForStudent(student);
+		if(mark == null)
+			return note;
+		if(note == null)
+			return mark.value().toString();
+		return mark.value().toString() + " : " + note;
+	}
+
+	public void setLessonNoteForStudent(String note, EduLesson lesson, Student student) {
+		if(note != null)
+			note = note.trim();
+		Integer num = null;
+		if(note != null && note.length() > 0 && Character.isDigit(note.charAt(0))) {
+			int idx = 1;
+			while (idx < note.length()) {
+				if(!Character.isDigit(note.charAt(idx)))
+						break;
+				idx++;
+			}
+			if(idx < note.length()) {
+				if(!Character.isLetter(note.charAt(idx)))
+					num = new Integer(note.substring(0,idx));
+			} else {
+				try {
+					num = new Integer(note);
+				} catch (Exception e) {
+					;
+				}
+			}
+			Integer max = null;
+			NSArray criterMask = criterMask();
+			if(num != null) {
+				if(criterMask != null && criterMask.count() > 0) {
+					if(criterMask.count() == 1) {
+						EOEnterpriseObject mask = (EOEnterpriseObject)criterMask.objectAtIndex(0);
+						max = (Integer)mask.valueForKey("criterion");
+						if(max.intValue() == 0)
+							max = (Integer)mask.valueForKey("max");
+						else
+							max = null;
+					}
+				} else {
+					max = SettingsBase.numericSettingForCourse("CriterlessMax",
+							course(), editingContext());
+					if(max == null) max = new Integer(5);
+				}
+				if(max == null)
+					num = null;
+			}
+			if(num != null && num.intValue() <= max.intValue()) {
+				while (idx < note.length()) {
+					if(Character.isLetterOrDigit(note.charAt(idx)))
+							break;
+					idx++;
+				}
+				if(idx < note.length())
+					note = note.substring(idx);
+				else
+					note = null;
+				Mark mark = null;
+				if(criterMask == null || criterMask.count() == 0) {
+					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
+							editingContext(), "CriterMask");
+					mask.takeValueForKey(new Integer(0), "criterion");
+					this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
+					mask.takeValueForKey(max, "max");
+				} else {
+					Mark[] marks = forPersonLink(student);
+					if(marks != null) 
+						mark = marks[0];
+				}
+				if(mark == null) {
+					mark = (Mark)EOUtilities.createAndInsertInstance(editingContext(),"Mark");
+					mark.setCriterion(new Integer(0));
+					mark.setStudent(student);
+					this.addObjectToBothSidesOfRelationshipWithKey(mark,MARKS_KEY);
+				}
+				mark.setValue(num);
+			}
+		} // set criteress mark
+		if(num == null) {
+			Mark mark = markForStudentAndCriterion(student, new Integer(0));
+			if(mark != null) {
+				removeObjectFromBothSidesOfRelationshipWithKey(mark, MARKS_KEY);
+				editingContext().deleteObject(mark);
+				nullify();
+			}
+		}
+		setNoteForStudent(note, student);
+	}
 }

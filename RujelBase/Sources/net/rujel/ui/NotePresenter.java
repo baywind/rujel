@@ -94,7 +94,7 @@ public class NotePresenter extends WOComponent {
 		if (noteForStudent() == null)
 			return false;
 		EOEnterpriseObject note = BaseLesson.lessonNoteforStudent(lesson(), student());
-		return (note != null &&
+		return (note == null ||
 				!note.editingContext().globalIDForObject(note).isTemporary());
 	}
 

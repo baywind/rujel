@@ -34,23 +34,29 @@ import java.util.logging.Logger;
 
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class WorkType extends _WorkType {
 
 	public static final NSArray flagNames = new NSArray (new String[] {
-			"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","-32-","unused"});
+			"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","system","unused"});
 
 	public static final EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
 			EOQualifier.QualifierOperatorLessThan,new Integer(64));
+	
+	public static final NSDictionary specTypes = new NSDictionary (
+			new Integer[] {new Integer(38)}, new String[] {"onLesson"});
 
 	
 	public static WorkType defaultType(EOEditingContext ctx) {
-		EOQualifier qual = new EOKeyValueQualifier("dfltFlags",
+		EOQualifier qual = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
 				EOQualifier.QualifierOperatorLessThan, new Integer(16));
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,
 				ModulesInitialiser.sorter);
@@ -61,6 +67,53 @@ public class WorkType extends _WorkType {
 			return type;
 		}
 		return null;
+	}
+	
+	public static WorkType getSpecType(EOEditingContext ec, String type) {
+		Integer typeFlags = (Integer)specTypes.valueForKey(type);
+		if(typeFlags == null)
+			throw new IllegalArgumentException("Unknown type name");
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME,
+				DFLT_FLAGS_KEY, typeFlags);
+		if(found != null && found.count() > 0)
+			return (WorkType)found.objectAtIndex(0);
+		NSDictionary typeProps = (NSDictionary)WOApplication.application().valueForKeyPath(
+				"strings.RujelCriterial_Strings.spesTypes." + type);
+		if(typeProps == null)
+			throw new IllegalArgumentException("Could not get system type properties");
+		EOEditingContext tmpEc = ec;
+		if(ec.hasChanges())
+			tmpEc = new EOEditingContext(ec.rootObjectStore());
+		NSArray sort = new NSArray(new EOSortOrdering(SORT_KEY,EOSortOrdering.CompareDescending));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,null,sort);
+		fs.setFetchLimit(0);
+		found = tmpEc.objectsWithFetchSpecification(fs);
+		WorkType workType = (WorkType)EOUtilities.createAndInsertInstance(tmpEc, ENTITY_NAME);
+		workType.takeValuesFromDictionary(typeProps);
+		if(found == null || found.count() == 0) {
+			workType.setSort(new Integer(1));
+		} else {
+			WorkType oldType = (WorkType)found.objectAtIndex(0);
+			workType.setSort(new Integer(oldType.sort().intValue() +1));
+		}
+		try {
+			tmpEc.saveChanges();
+			if(tmpEc != ec)
+				workType = (WorkType)EOUtilities.localInstanceOfObject(ec, workType);
+			Logger.getLogger("rujel.criterial").log(WOLogLevel.COREDATA_EDITING,
+					"Autocreated system WorkType '" + type + '\'',workType);
+		} catch (Exception e) {
+			if (ec instanceof SessionedEditingContext) {
+				WOSession ses = ((SessionedEditingContext)ec).session();
+				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+					"Failed autocreating system WorkType '" + type + '\'',new Object[] {ses,e});
+			} else {
+				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+						"Failed autocreating system WorkType '" + type + '\'',e);
+			}
+			throw new NSForwardException(e, "Failed to autocreate system WorkType");
+		}
+		return workType;
 	}
 
 	public int useCount() {

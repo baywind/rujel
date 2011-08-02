@@ -107,6 +107,11 @@ public class WorkTypeSetup extends WOComponent {
     public boolean cantEdit() {
     	return (typeItem != currType);
     }
+
+    public boolean cantEditFlags() {
+    	return (typeItem != currType || currType.namedFlags().flagForKey("system"));
+    }
+
     
     public Boolean cantClick() {
     	if(typeItem == currType)
