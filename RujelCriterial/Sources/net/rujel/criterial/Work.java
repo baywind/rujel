@@ -965,4 +965,50 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		}
 		setNoteForStudent(note, student);
 	}
+	
+	public NSDictionary archiveDict() {
+		boolean shouldArchive = editingContext().globalIDForObject(this).isTemporary();
+		if(!shouldArchive) {
+			NSDictionary snapshot = (shouldArchive)? null :
+				editingContext().committedSnapshotForObject(this);
+			snapshot = changesFromSnapshot(snapshot);
+			if(snapshot != null && snapshot.count() > 0) {
+				NSMutableArray keys = snapshot.allKeys().mutableClone();
+				keys.removeObject(MARKS_KEY);
+				keys.removeObject(NOTES_KEY);
+				shouldArchive = (keys.count() > 0);
+			}
+		}
+		NSMutableDictionary dict = new NSMutableDictionary();
+		if(criterMask() != null) { // put criterMask into dict
+			Enumeration enu = criterMask().objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject cm = (EOEnterpriseObject) enu.nextElement();
+				Integer crit = (Integer)cm.valueForKey("criterion");
+				StringBuilder buf = new StringBuilder();
+				buf.append('m').append(crit);
+				dict.takeValueForKey(cm.valueForKey("max"), buf.toString());
+				Object weight = cm.valueForKey("weight");
+				if(weight == null)
+					continue;
+				buf.deleteCharAt(0).insert(0, 'w');
+				dict.takeValueForKey(weight, buf.toString());
+				if(!shouldArchive) {
+					NSDictionary cSnp = editingContext().committedSnapshotForObject(cm);
+					shouldArchive = (cm.changesFromSnapshot(cSnp).count() > 0);
+				}
+			}
+		}
+		if(!shouldArchive)
+			return null;
+		Enumeration enu = attributeKeys().objectEnumerator();
+		while (enu.hasMoreElements()) { // put all attributes into dict
+			String key = (String) enu.nextElement();
+			dict.takeValueForKey(valueForKey(key), key);
+//			shouldArchive = shouldArchive || snapshot.containsKey(key);
+		}
+		dict.takeValueForKey(WOLogFormatter.formatEO(workType()), WORK_TYPE_KEY);
+		dict.takeValueForKey(homeTask(), TASK_TEXT_KEY);
+		return dict;
+	}
 }

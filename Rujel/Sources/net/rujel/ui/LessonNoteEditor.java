@@ -39,6 +39,7 @@ import net.rujel.reusables.Tabs.GenericTab;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
+import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -403,13 +404,70 @@ public class LessonNoteEditor extends WOComponent {
 			if(objects != null && objects.count() > 0)
 				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
 			try {
-				if(currPerPersonLink != null)
-					((EOEnterpriseObject)currPerPersonLink).validateForSave();
 				if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
-					if(newLesson && currLesson() != null) {
-						MyUtility.setNumberToNewLesson(currLesson());
+					NSMutableDictionary archiveDict = null;
+					if(currLesson() != null) {
+						if(newLesson)
+							MyUtility.setNumberToNewLesson(currLesson());
+						currLesson().validateForSave();
+						boolean shouldArchive = SettingsReader.boolForKeyPath(
+								"markarchive." + currLesson().entityName(), 
+								SettingsReader.boolForKeyPath("markarchive.forceArchives",false));
+						if(shouldArchive) {
+							try {
+								archiveDict = (NSMutableDictionary)currLesson().valueForKey(
+								"archiveDict");
+							} catch (Exception e) {
+								NSDictionary snapshot = (newLesson)? null :
+									ec.committedSnapshotForObject(currLesson());
+								if(!newLesson)
+									snapshot = currLesson().changesFromSnapshot(snapshot);
+								if(newLesson || snapshot.count() > 0) {
+									archiveDict = new NSMutableDictionary();
+									NSArray keys = currLesson().attributeKeys();
+									Enumeration enu = keys.objectEnumerator();
+									shouldArchive = newLesson;
+									while (enu.hasMoreElements()) {
+										String key = (String) enu.nextElement();
+										archiveDict.takeValueForKey(
+												currLesson().valueForKey(key), key);
+										shouldArchive = shouldArchive || snapshot.containsKey(key);
+									}
+									if(!shouldArchive)
+										archiveDict = null;
+								}
+							}
+						}
 					}
 					ec.saveChanges();
+					if(archiveDict != null) {
+						EOEnterpriseObject ue = null;
+						NSDictionary identifier = EOUtilities.primaryKeyForObject(ec, currLesson());
+						String entityName = currLesson().entityName();
+						try {
+							ue = EOUtilities.objectMatchingKeyAndValue(ec,
+									"UsedEntity", "usedEntity", entityName);
+						} catch (EOObjectNotAvailableException e) {
+							ue = EOUtilities.createAndInsertInstance(ec, "UsedEntity");
+							ue.takeValueForKey(entityName, "usedEntity");
+							Object key1 = identifier.allKeys().objectAtIndex(0);
+							ue.takeValueForKey(key1, "key1");
+							ue.takeValueForKey("course","key2");
+						} catch (EOUtilities.MoreThanOneException  e) {
+							NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec,
+									"UsedEntity", "usedEntity", entityName);
+							ue = (EOEnterpriseObject)found.objectAtIndex(0);
+						}
+						EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+								ec,"MarkArchive");
+						archive.takeValueForKey(ue, "usedEntity");
+						identifier = identifier.mutableClone();
+						identifier.takeValueForKey(course, "course");
+						archive.takeValueForKey(identifier, "identifierDictionary");
+						archive.takeValueForKey(archiveDict, "archiveDict");
+						archive.takeValueForKey(new Integer((newLesson)?1:2), "actionType");
+						ec.saveChanges();
+					}
 					WOLogLevel level = WOLogLevel.EDITING;
 					if(newLesson) {
 						logger.log(level,"Created new lesson. " + changes,
@@ -520,17 +578,32 @@ public class LessonNoteEditor extends WOComponent {
 				}
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
 				if(currLesson() != null) {
-					dict.takeValueForKey(currLesson().entityName(), "entityName");
+					NSDictionary identifier = EOUtilities.primaryKeyForObject(ec, currLesson());
+					String entityName = currLesson().entityName();
+					dict.takeValueForKey(entityName, "entityName");
 					dict.takeValueForKey(currLesson().date(), "date");
-					dict.takeValueForKey(EOUtilities.
-							primaryKeyForObject(ec, currLesson()), "pKey");
+					dict.takeValueForKey(identifier, "pKey");
+					try {
+						EOEnterpriseObject ue = EOUtilities.objectMatchingKeyAndValue(ec,
+								"UsedEntity", "usedEntity", entityName);
+						identifier = identifier.mutableClone();
+						identifier.takeValueForKey(course, "course");
+						EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+								ec,"MarkArchive");
+						archive.takeValueForKey(ue, "usedEntity");
+						archive.takeValueForKey(identifier, "identifierDictionary");
+						archive.takeValueForKey(NSDictionary.EmptyDictionary, "archiveDict");
+						archive.takeValueForKey(new Integer(3), "actionType");
+
+					} catch (Exception e) {
+						;
+					}
 				} else {
 					String entityName = (String)valueForKeyPath("present.entityName");
 					if(entityName == null)
 						entityName = EduLesson.entityName;
 					dict.takeValueForKey(entityName, "entityName");
 				}
-				
 				ec.deleteObject(currLesson());
 				if(idx < (allLessons.count() - 1)) { //lower numbers of following lessons
 					idx++;
