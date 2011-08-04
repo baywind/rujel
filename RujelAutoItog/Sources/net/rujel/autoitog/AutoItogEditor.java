@@ -235,10 +235,16 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	
     	public void run() {
     		ec.lock();
+			WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
     		try {
     			ItogContainer itog = ai.itogContainer();
     			SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
     			NSArray courses = base.coursesForSetting(listName, null,itog.eduYear());
+    			if(courses == null || courses.count() == 0) {
+    				logger.log(WOLogLevel.FINER,"No Prognoses to update",
+    						new Object[] {ses,ai});
+    				return;
+    			}
     			Enumeration enu = courses.objectEnumerator();
     			Calculator calculator = ai.calculator();
     			while (enu.hasMoreElements()) {
@@ -257,7 +263,6 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     				prognoses.takeValueForKey(cto, "updateWithCourseTimeout");
     				ec.saveChanges();
     			}
-				WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
 				if(ses != null) {
 					StringBuilder message = new StringBuilder();
 					message.append(ses.valueForKeyPath(
@@ -268,7 +273,6 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 				logger.log(WOLogLevel.INFO,"Prognoses update complete",
 						new Object[] {ses,ai});
 			} catch (Exception e) {
-				WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
 				logger.log(WOLogLevel.WARNING,"Error updating prognoses",
 						new Object [] {ses,ai,e});
 				if(ses != null) {
