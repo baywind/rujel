@@ -130,7 +130,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 
 	public String noteForStudent(Student student) {
 		if(_noteDelegate == null)
-			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this, false);
+			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
 		String delegateNote = (_noteDelegate == null)?null :
 			_noteDelegate.lessonNoteForStudent(this, student);
 		String note = noteForStudent(this, student);
@@ -141,19 +141,24 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		return note + " : " + delegateNote;
 	}
 	public void setNoteForStudent(String newNote, Student student) {
-		if(_noteDelegate == null)
-			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this, true);
-		if(_noteDelegate == null) {
-			setNoteForStudent(this, newNote, student);
-			_noteDelegate.setLessonNoteForStudent(null, this, student);
-			return;
+		if(newNote != null) {
+			newNote = newNote.trim();
+			if(newNote.length() == 0)
+				newNote = null;
 		}
 		int skip = isSkip(newNote);
+		if(_noteDelegate == null)
+			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
+		if(_noteDelegate == null) {
+			setNoteForStudent(this, newNote, student);
+			return;
+		}
 		if(skip == 0) {
+			if(newNote == null)
+				setNoteForStudent(this, null, student);
 			_noteDelegate.setLessonNoteForStudent(newNote, this, student);
 			return;
 		}
-		newNote = newNote.trim();
 		if(skip < 0) {
 			setNoteForStudent(this, newNote, student);
 			_noteDelegate.setLessonNoteForStudent(null, this, student);
@@ -233,7 +238,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 			return null;
 		}
 		
-		public NoteDelegate getNoteDelegateForLesson(EduLesson lesson, boolean create) {
+		public NoteDelegate getNoteDelegateForLesson(EduLesson lesson) {
 			return null;
 		}
 	}
@@ -304,6 +309,5 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	
 	public void validateForSave() throws NSValidation.ValidationException {
 		super.validateForSave();
-		_noteDelegate = null;
 	}
 }

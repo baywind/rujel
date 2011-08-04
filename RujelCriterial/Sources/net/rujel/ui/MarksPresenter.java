@@ -291,10 +291,13 @@ public class MarksPresenter extends NotePresenter {
 			lesson().removeObjectFromBothSidesOfRelationshipWithKey(_mark,"marks");
 			lesson().editingContext().deleteObject(_mark);
 			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
+			if(_archive != null)
+				_archive.takeValueForKey(new Integer(3), "actionType");
 			_mark = null;
 			return;
 		}
         boolean archive = (mark().value() == null);
+        boolean notNew = !archive;
         if(newMarkValue instanceof Number) {
         	int value = ((Number)newMarkValue).intValue();
         	archive = (archive || value != mark().value().intValue());
@@ -317,6 +320,8 @@ public class MarksPresenter extends NotePresenter {
         }
         if(archive) {
 			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
+			if(notNew && shouldUpdateArchive())
+				_archive.takeValueForKey(new Integer(2), "actionType");
 		}
 		/*if(mark().value() == null || mark().value().intValue() != newMarkValue.intValue()) {
 			NSTimestamp today = (NSTimestamp)session().valueForKey("today");

@@ -138,8 +138,11 @@ public class NotePresenter extends WOComponent {
 	
     public void setNoteForStudent(String note) {
     	archiveMarkValue(note, "text");
-       lesson().setNoteForStudent(note,student());
-        _noteForStudent = note;
+    	if(shouldUpdateArchive() && noteForStudent() != null && !noteForStudent().equals(note)) {
+    		_archive.takeValueForKey(new Integer((note==null)?3:2), "actionType");
+    	}
+    	lesson().setNoteForStudent(note,student());
+    	_noteForStudent = note;
     }
 
     protected String _noteForStudent;
@@ -215,10 +218,17 @@ public class NotePresenter extends WOComponent {
 				return;
 			_archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 			_archive.takeValueForKey(identifierDictionary(), "identifierDictionary");
+			_archive.takeValueForKey(new Integer(1), "actionType");
 			if(hasBinding("archive"))
 				setValueForBinding(_archive, "archive");
 		}
 		_archive.takeValueForKey(value, '@' + name);
+	}
+	
+	protected boolean shouldUpdateArchive() {
+		if(!enableArchive || _archive == null) return false;
+		Integer actionType = (Integer)_archive.valueForKey("actionType");
+		return (actionType == null || actionType.intValue() < 2);
 	}
 
 	protected NSMutableDictionary identifierDictionary() {

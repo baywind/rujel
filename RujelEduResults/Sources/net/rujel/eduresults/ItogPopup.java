@@ -220,6 +220,8 @@ public class ItogPopup extends WOComponent {
 						Integer count = (Integer)archive.valueForKey("archivesCount");
 						itog.readFlags().setFlagForKey(count.intValue() > 0,"changed");
 					}
+					if(!same)
+						archive.takeValueForKey(new Integer((newItog)?1:2), "actionType");
 				}
 				//}
 
@@ -268,6 +270,7 @@ public class ItogPopup extends WOComponent {
 				archive.takeValueForKey(itog, "objectIdentifier");
 				archive.takeValueForKey(".", '@' + "mark");
 				archive.takeValueForKey(changeReason, "reason");
+				archive.takeValueForKey(new Integer(3), "actionType");
 			}
 			EduCourse course = course();
 			ec.deleteObject(itog);

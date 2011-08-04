@@ -210,40 +210,36 @@ public class HomeWorkDelegate extends TaskDelegate {
 		return result;
 	}
 	
-	public NoteDelegate getNoteDelegateForLesson(EduLesson lesson, boolean create) {
+	public NoteDelegate getNoteDelegateForLesson(EduLesson lesson) {
 		EOEditingContext ec = lesson.editingContext();
 		if(ec == null) {
 			Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
 					"Lesson not in EditingContext");
 			return null;
 		}
+		NoteDelegate work = findWork(lesson);
+		if(work != null)
+			return work;
+		return new TmpNoteDelegate(this);
+	}
+	
+	private static Work findWork(EduLesson lesson) {
+		EOEditingContext ec = lesson.editingContext();
 		WorkType type = WorkType.getSpecType(ec, "onLesson");
 		EOQualifier[] quals = new EOQualifier[3];
 		quals[0] = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual,lesson.course());
 		quals[1] = new EOKeyValueQualifier(Work.WORK_TYPE_KEY,
 				EOQualifier.QualifierOperatorEqual, type);
-		NSTimestamp date = (NSTimestamp)lesson.valueForKey("date");//lesson.date();
 		quals[2] = new EOKeyValueQualifier(Work.DATE_KEY,
-				EOQualifier.QualifierOperatorEqual,date);
+				EOQualifier.QualifierOperatorEqual,lesson.date());
 		quals[2] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
 				quals[2],EduLesson.sorter);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0)
 			return (Work)found.objectAtIndex(0);
-		if(!create)
-			return new TmpNoteDelegate(this);
-		 Work work = (Work)EOUtilities.createAndInsertInstance(
-				 lesson.editingContext(), Work.ENTITY_NAME);
-		 work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
-		 work.setDate(date);
-		 work.setAnnounce(date);
-		 work.setWorkType(type);
-		 work.setTheme((String)WOApplication.application().valueForKeyPath(
-				 "strings.RujelCriterial_Strings.spesTypes.onLesson.typeName"));
-		 MyUtility.setNumberToNewLesson(work);
-		 return work;
+		return null;
 	}
 
 	public static class TmpNoteDelegate implements BaseLesson.NoteDelegate {
@@ -259,7 +255,21 @@ public class HomeWorkDelegate extends TaskDelegate {
 		}
 
 		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student) {
-			NoteDelegate work = htd.getNoteDelegateForLesson(lesson, true);
+			if(note == null || note.length() == 0)
+				return;
+			Work work = findWork(lesson);
+			if(work == null) {
+				work = (Work)EOUtilities.createAndInsertInstance(
+						lesson.editingContext(), Work.ENTITY_NAME);
+				work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
+				NSTimestamp date = (NSTimestamp)lesson.valueForKey("date");
+				work.setDate(date);
+				work.setAnnounce(date);
+				work.setWorkType(WorkType.getSpecType(lesson.editingContext(), "onLesson"));
+				work.setTheme((String)WOApplication.application().valueForKeyPath(
+				"strings.RujelCriterial_Strings.spesTypes.onLesson.typeName"));
+				MyUtility.setNumberToNewLesson(work);
+			}
 			work.setLessonNoteForStudent(note, lesson, student);
 			lesson.takeValueForKey(work, "noteDelegate");
 		}

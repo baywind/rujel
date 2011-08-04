@@ -160,6 +160,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	if(prognosis !=null || mark != null) {
     		EOEditingContext ec = course.editingContext();
 	    	Logger logger = Logger.getLogger("rujel.autoitog");
+	    	int actionType = 0;
     		if(mark == null) {
     			if(calculation) {
     				prognosis = eduPeriod.calculator().calculateForStudent(student, course, 
@@ -168,10 +169,12 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     				if(prognosis != null)
     					mark = prognosis.mark();
     			} else {
-    				if(ec.globalIDForObject(prognosis).isTemporary())
+    				if(ec.globalIDForObject(prognosis).isTemporary()) {
     					ec.revert();
-    				else
+    				} else {
     					ec.deleteObject(prognosis);
+    					actionType = 3;
+    				}
     				prognosis = null;
     			}
     		}
@@ -181,10 +184,12 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
        				prognosis.setStudent(student);
        				prognosis.setCourse(course);
        				prognosis.setAutoItog(eduPeriod);
+       				actionType = 1;
      			}
-    			if(mark != null && !mark.equals(prognosis.mark()) &&
-    					eduPeriod.namedFlags().flagForKey("manual")) {
+    			if(!mark.equals(prognosis.mark()) && eduPeriod.namedFlags().flagForKey("manual")) {
     				prognosis.setMark(mark);
+    				if(actionType != 1)
+    					actionType = 2;
     			}
    				prognosis.updateFireDate();
 	    		Bonus bonus = prognosis.bonus();
@@ -247,6 +252,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     						archive.takeValueForKey(null,"@mark");
     					}
     					archive.takeValueForKey(changeReason, "reason");
+    					archive.takeValueForKey(new Integer(actionType), "actionType");	
         				ec.saveChanges();
     				}
 					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod.itogContainer());
