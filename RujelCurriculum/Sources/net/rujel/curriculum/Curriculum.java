@@ -50,7 +50,8 @@ import net.rujel.interfaces.Teacher;
 public class Curriculum extends com.webobjects.appserver.WOComponent {
 	
 	public static Logger logger = Logger.getLogger("rujel.curriculum"); 
-	public boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.Reason", false);
+	public boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.Reason", 
+			SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
 	
 	public EOEditingContext ec;
 	public NSKeyValueCodingAdditions currTab;

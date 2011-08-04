@@ -82,7 +82,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	calculation = (eduPeriod.calculator() != null);
     	flags = new NamedFlags(Prognosis.flagNames);
        	ifArchive = (eduPeriod.namedFlags().flagForKey("manual") &&
-       			SettingsReader.boolForKeyPath("markarchive.Prognosis", false));
+       			SettingsReader.boolForKeyPath("markarchive.Prognosis", 
+       					SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
     	if(prognosis == null)  {
     		Calculator calc = eduPeriod.calculator();
     		if(calc != null) {
@@ -379,7 +380,8 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     	Logger logger = Logger.getLogger("rujel.autoitog");
     	EOEditingContext ec = prognosis.editingContext();
     	try {
-    		if(SettingsReader.boolForKeyPath("markarchive.ItogMark", false)) {
+    		if(SettingsReader.boolForKeyPath("markarchive.ItogMark", 
+    				SettingsReader.boolForKeyPath("markarchive.archiveAll", false))) {
 				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 				archive.takeValueForKey(itog, "object");
     		}

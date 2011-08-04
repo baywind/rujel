@@ -12,6 +12,8 @@
 		<string>15</string>
 		<key>forceArchives</key>
 		<string>true</string>
+		<key>archiveAll</key>
+		<string>true</string>
 		<key>Mark</key>
 		<string>true</string>
 		<key>ItogMark</key>

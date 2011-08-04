@@ -412,7 +412,8 @@ public class LessonNoteEditor extends WOComponent {
 						currLesson().validateForSave();
 						boolean shouldArchive = SettingsReader.boolForKeyPath(
 								"markarchive." + currLesson().entityName(), 
-								SettingsReader.boolForKeyPath("markarchive.forceArchives",false));
+								SettingsReader.boolForKeyPath("markarchive.archiveAll",
+								SettingsReader.boolForKeyPath("markarchive.forceArchives",false)));
 						if(shouldArchive) {
 							try {
 								archiveDict = (NSMutableDictionary)currLesson().valueForKey(

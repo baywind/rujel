@@ -63,7 +63,8 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
 	public String aDate;
 	public String begin;
 	public String end;
-	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.Reason", false);
+	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.Reason", 
+			SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
 	
 	public final String teacherRelated = (String)application().valueForKeyPath(
 			"strings.RujelCurriculum_Curriculum.Reason.relatedTo") + ' '

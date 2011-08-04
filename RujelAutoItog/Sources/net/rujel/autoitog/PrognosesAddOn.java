@@ -342,8 +342,8 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 			PerPersonLink prognoses = calc.calculatePrognoses(_course,periodItem);
 			boolean um = (agregate!=null && _periods.containsObject(periodItem));
 			Enumeration enu = _course.groupList().objectEnumerator();
-			boolean ifArchive = (SettingsReader.boolForKeyPath(
-					"markarchive.Prognosis", false)
+			boolean ifArchive = (SettingsReader.boolForKeyPath("markarchive.Prognosis", 
+					SettingsReader.boolForKeyPath("markarchive.archiveAll", false))
 					&& periodItem.namedFlags().flagForKey("manual"));
 			while (enu.hasMoreElements()) {
 				Student student = (Student) enu.nextElement();

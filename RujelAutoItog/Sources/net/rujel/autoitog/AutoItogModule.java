@@ -298,7 +298,8 @@ public class AutoItogModule {
 		if(student == null && addOn != null) {
 			addOn.setCourse(course, date);
 		}
-		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", false);
+		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", 
+				SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
 		NSArray autoItogs = AutoItog.relatedToObject(dict, course);
 		boolean newObj = (autoItogs == null || autoItogs.count() == 0);
 		if(newObj) {
@@ -521,7 +522,8 @@ public class AutoItogModule {
 			prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(prognoses, sorter);
 		}
 		EduCourse course = null;
-		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
+		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", 
+				SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
 		boolean overwrite = SettingsReader.boolForKeyPath("edu.overwriteItogsScheduled", false);
 		SettingsBase sb = SettingsBase.baseForKey(ItogMark.ENTITY_NAME,ec, false);
 		String listName = itog.listName();

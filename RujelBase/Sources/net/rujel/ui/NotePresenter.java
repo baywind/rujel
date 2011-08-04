@@ -342,7 +342,8 @@ public class NotePresenter extends WOComponent {
 	
 	public void awake() {
 		super.awake();
-		enableArchive = (SettingsReader.boolForKeyPath("markarchive." + entityName(), false));
+		enableArchive = (SettingsReader.boolForKeyPath("markarchive." + entityName(), 
+				SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
 		forceArchives = (enableArchive && !hasBinding("initData")
 				&& SettingsReader.boolForKeyPath("markarchive.forceArchives", false));
 	}

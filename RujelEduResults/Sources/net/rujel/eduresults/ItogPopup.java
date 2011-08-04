@@ -57,7 +57,8 @@ public class ItogPopup extends WOComponent {
 	public AddOnPresenter.AddOn addOn;
 	public WOComponent returnPage;
 	public String changeReason;
-	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
+	public final boolean ifArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", 
+			SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
 	public EOEnterpriseObject commentEO;
 	public NSDictionary comments;
 

@@ -463,7 +463,8 @@ public class Prognosis extends _Prognosis {
 		NSArray itogs = ItogMark.getItogMarks(course.cycle(),itog,null,ec);
 		boolean overwrite = (scheduled == null || SettingsReader.boolForKeyPath(
 				"edu.overwriteItogsScheduled", false));
-		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", false);
+		boolean enableArchive = SettingsReader.boolForKeyPath("markarchive.ItogMark", 
+				SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
 cycleStudents:
 			while (penu.hasMoreElements()) {
 				Prognosis prognos = (Prognosis)penu.nextElement();
