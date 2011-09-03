@@ -177,7 +177,6 @@ public class Application extends UTF8Application {
 		} else if(what.equals("ec")) {
 			EOSharedEditingContext.defaultSharedEditingContext().invalidateAllObjects();
 		}
-			
 	}
 
 	public NSKeyValueCoding ecForYear = new NSKeyValueCoding() {

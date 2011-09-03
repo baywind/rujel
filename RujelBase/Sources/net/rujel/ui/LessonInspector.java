@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -51,7 +52,11 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	public NSTimestamp newDate;
 	
 	public WOComponent returnPage;
-	protected EduLesson lesson;
+	public EduLesson lesson;
+	public EduCourse course;
+	public Boolean noEdit;
+	public Boolean ifArchive;
+	public Object item;
 	//protected EOEditingContext ec;
 
     public LessonInspector(WOContext context) {
@@ -71,8 +76,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     	}
     	Date date = null;
     	try {
-    		date = (Date)MyUtility.dateFormat().parseObject(
-				newTitle, new java.text.ParsePosition(0));
+    		date = (Date)MyUtility.dateFormat().parseObject(newTitle);
     	} catch (Exception e) {
     		;
     	}
@@ -80,7 +84,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 //		EduLesson lesson = (EduLesson)returnPage.valueForKey("addLesson");
     	
     	if(lesson == null || lesson.editingContext() == null) {
-    		EduCourse course = (EduCourse)returnPage.valueForKey("course");
+//    		EduCourse course = (EduCourse)returnPage.valueForKey("course");
     		lesson = (EduLesson)EOUtilities.createAndInsertInstance(
     				course.editingContext(), EduLesson.entityName);
     		lesson.addObjectToBothSidesOfRelationshipWithKey(course,"course");
@@ -163,6 +167,17 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
     	if(ec != null && ec.hasChanges())
     		ec.revert();
     	return returnPage;
+    }
+    
+    public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+    	if(ifArchive == null) {
+    		if(lesson == null)
+    			ifArchive = Boolean.FALSE;
+    		else
+    			ifArchive = Boolean.valueOf(SettingsReader.boolForKeyPath("markarchive.BaseLesson", 
+    					SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
+    	}
+    	super.appendToResponse(aResponse, aContext);
     }
     
     public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {

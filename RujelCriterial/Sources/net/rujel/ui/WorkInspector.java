@@ -40,6 +40,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -69,6 +70,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 	public String disableWeight;
 	public EduLesson lesson;
 //	protected boolean done = false;
+	public boolean ifArchive;
 
     public WorkInspector(WOContext context) {
         super(context);
@@ -114,6 +116,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		types = ec.objectsWithFetchSpecification(fs);
     	}
     	critIdx = -1;
+    	ifArchive = work != null && SettingsReader.boolForKeyPath("markarchive.Work", 
+    			SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
     	super.appendToResponse(aResponse, aContext);
     }
     
@@ -449,7 +453,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	return work.getCriterMask(criterion());
     }
 	
-    public Number criterMax() {
+    public Integer criterMax() {
 //    	if(critIdx < 0) 
 //    		return null;
     	EOEnterpriseObject _itemMask = itemMask();
@@ -459,10 +463,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
         		return null;
         	if(critSet.namedFlags().flagForKey("fixMax") || cr.valueForKey("indexer") != null ||
         			critSet.namedFlags().flagForKey("fixList"))
-        		return (Number)cr.valueForKey("dfltMax");
+        		return (Integer)cr.valueForKey("dfltMax");
         	return null;
         }
-		return (Number)_itemMask.valueForKey("max");
+		return (Integer)_itemMask.valueForKey("max");
     }
 
     public Number criterWeight() {
@@ -494,5 +498,63 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     
     public EduLesson currLesson() {
     	return work;
+    }
+    
+    public String archiveCriteria() {
+    	NSDictionary archDict = (NSDictionary)valueForKeyPath("item.archiveDictionary");
+    	if(archDict == null)
+    		return null;
+    	NSMutableArray crits = new NSMutableArray();
+    	Enumeration enu = archDict.keyEnumerator();
+    	while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			if((key.charAt(0) == 'm' || key.charAt(0) == 'w') &&
+					Character.isDigit(key.charAt(1))) {
+				try {
+					int crit = Integer.parseInt(key.substring(1));
+					while (crits.count() <= crit) {
+						crits.addObject(new int[2]);
+					}
+					int[] cvals = (int[])crits.objectAtIndex(crit);
+					Object obj = archDict.valueForKey(key);
+					int cval = 0;
+					if(obj instanceof Number)
+						cval = ((Number)obj).intValue();
+					else
+						cval = Integer.parseInt(obj.toString());
+					if(key.charAt(0) == 'm')
+						cvals[0] = cval;
+					else
+						cvals[1] = cval;
+				} catch (Exception e) {
+					;
+				}
+			}
+		}
+    	StringBuilder buf = new StringBuilder();
+    	for (int i = 0; i < crits.count(); i++) {
+    		int[] cvals = (int[])crits.objectAtIndex(i);
+    		if(cvals[0] > 0) {
+    			if(buf.length() > 0)
+    			buf.append(',').append(' ');
+    			if(critSet == null) {
+    				buf.append((char)('A' + i -1));
+    				buf.append(':').append(cvals[0]);
+    			} else {
+    				EOEnterpriseObject criter = critSet.criterionForNum(new Integer(i));
+    				if(criter == null)
+    					continue;
+    				buf.append(criter.valueForKey("title"));
+    				if(!critSet.namedFlags().flagForKey("fixMax") &&
+    						criter.valueForKey("indexer") == null)
+    					buf.append(':').append(cvals[0]);
+    			}
+    			if(cvals[1] > 0)
+    				buf.append('(').append(cvals[1]).append(')');
+    		}
+		}
+    	if(buf.length() == 0)
+    		return null;
+    	return buf.toString();
     }
 }

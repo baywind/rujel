@@ -409,11 +409,41 @@ public class MarkArchive extends _MarkArchive
 		setData(NSPropertyListSerialization.stringFromPropertyList(dict,false));
 	}
 	
+	@SuppressWarnings("deprecation")
 	public Object valueForKey(String key) {
-		if(key.charAt(0) == '@')
-			return getArchiveValueForKey(key.substring(1));
-		else
+		if(key.charAt(0) == '@') {
+			int idx = key.indexOf('_', 2);
+			if(idx < 0)
+				return getArchiveValueForKey(key.substring(1));
+			Object value = getArchiveValueForKey(key.substring(idx +1));
+			if(value == null)
+				return null;
+			key = key.substring(1,idx);
+			if("string".equals(key))
+				return value.toString();
+			if("date".equals(key)) {
+				if(value instanceof NSTimestamp)
+					return value;
+				try {
+					NSTimestampFormatter format = new NSTimestampFormatter();
+					return format.parseObject(value.toString());
+				} catch (Exception e) {
+					return null;
+				}
+			}
+			if("int".equals(key)) {
+				if(value instanceof Number)
+					return value;
+				try {
+					return new Integer(value.toString());
+				} catch (Exception e) {
+					return null;
+				}
+			}
+			throw new IllegalArgumentException("Wrong formatter");
+		} else {
 			return super.valueForKey(key);
+		}
 	}
 	
 	public String getArchiveValueForKey(String key) {

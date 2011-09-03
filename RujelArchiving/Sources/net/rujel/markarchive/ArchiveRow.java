@@ -56,6 +56,8 @@ public class ArchiveRow extends com.webobjects.appserver.WOComponent {
 			if(identifierDict != null) {
 				String entityName = (String)identifierDict.valueForKey("entityName");
 				EOEditingContext ec = (EOEditingContext)identifierDict.valueForKey("editingContext");
+				if(ec == null)
+					ec = (EOEditingContext)valueForBinding("ec");
 				EOQualifier qual = MarkArchive.archiveQualifier(entityName, identifierDict, ec);
 				EOSortOrdering so = EOSortOrdering.sortOrderingWithKey("timestamp", EOSortOrdering.CompareAscending);
 				EOFetchSpecification fs = new EOFetchSpecification("MarkArchive",qual,new NSArray(so));

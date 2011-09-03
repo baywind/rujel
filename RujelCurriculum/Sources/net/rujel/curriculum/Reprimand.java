@@ -126,12 +126,16 @@ public class Reprimand extends _Reprimand {
 					EduPeriod.ENTITY_NAME, ec, false);
 			SettingsBase devForRpr = SettingsBase.baseForKey(
 					"deviationForReprimand", ec, false);
+			SettingsBase widget = SettingsBase.baseForKey(
+					"PlanFactWidget", ec, false);
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EduCourse course = (EduCourse) enu.nextElement();
-				NSArray lessons = course.lessons();
-				if(lessons == null || lessons.count() == 0)
-					continue;
+				if(widget != null) {
+					EOEnterpriseObject setting = widget.forCourse(course);
+					if("hide".equals(setting.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
+						continue;
+				}
 				cal.setTime(now);
 				if(weekStart != null) {
 					EOEnterpriseObject bc = weekStart.forCourse(course);
@@ -141,6 +145,9 @@ public class Reprimand extends _Reprimand {
 					if(cal.get(Calendar.DAY_OF_WEEK) != testDay)
 						continue;
 				}
+				NSArray lessons = course.lessons();
+				if(lessons == null || lessons.count() == 0)
+					continue;
 				EOEnterpriseObject setting = listSettings.forCourse(course);
 				String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 				Integer weekDays = (Integer)setting.valueForKey(

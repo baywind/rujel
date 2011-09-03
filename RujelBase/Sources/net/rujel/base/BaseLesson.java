@@ -310,4 +310,12 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public void validateForSave() throws NSValidation.ValidationException {
 		super.validateForSave();
 	}
+	
+	public NSDictionary archiveIdentifier() {
+		NSDictionary identifier = EOUtilities.primaryKeyForObject(editingContext(), this);
+		identifier = identifier.mutableClone();
+		identifier.takeValueForKey(ENTITY_NAME, "entityName");
+		identifier.takeValueForKey(course(), "course");
+		return identifier;
+	}
 }

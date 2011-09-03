@@ -51,6 +51,9 @@ import com.webobjects.eocontrol.*;
 public class LessonList extends WOComponent {
     public EduLesson lessonItem;
 	public NSKeyValueCoding extItem;
+	public final Boolean noArchive = Boolean.valueOf(!SettingsReader.boolForKeyPath(
+		"markarchive.BaseLesson", SettingsReader.boolForKeyPath("markarchive.archiveAll", 
+				SettingsReader.boolForKeyPath("markarchive.forceArchives",false))));
 	
     protected String _studentPresenter;
 	public String studentPresenter() {
@@ -330,6 +333,7 @@ public class LessonList extends WOComponent {
 			popup = pageWithName("LessonInspector");
 		}
 		popup.takeValueForKey(context().page(), "returnPage");
+		popup.takeValueForKey(valueForBinding("course"), "course");
 		session().setObjectForKey(valueForBinding("course"), "assumeNextLesson");
 		NSArray ls = (NSArray)session().valueForKeyPath("modules.assumeNextLesson");
 		session().removeObjectForKey("assumeNextLesson");
@@ -398,4 +402,15 @@ public class LessonList extends WOComponent {
 		}
 		return _access;
 	}
+	
+	public WOActionResults archivePopup() {
+		WOComponent popup = pageWithName("LessonInspector");
+		popup.takeValueForKey(context().page(), "returnPage");
+		popup.takeValueForKey(valueForBinding("course"), "course");
+		popup.takeValueForKey(valueForBinding("currLesson"), "lesson");
+		popup.takeValueForKey(Boolean.TRUE, "noEdit");
+		popup.takeValueForKey(Boolean.TRUE, "ifArchive");
+		return popup;
+	}
+	
 }

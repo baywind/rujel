@@ -47,6 +47,8 @@ import java.math.BigDecimal;
 public class StudentMarks extends WOComponent {	
 	public static final String workIntegral = SettingsReader.stringForKeyPath(
 			"criterial.workIntegral","%");
+	public static final NSArray noCriteria = new NSArray(new NSDictionary("#","title"));
+
     public NSKeyValueCoding workItem;
     public Object critItem;
     
@@ -334,6 +336,8 @@ public class StudentMarks extends WOComponent {
 				critDicts.addObject(critDict);
 			}
 		}*/
+		if(criteria == null || criteria.count() == 0)
+			criteria = noCriteria;
 		result.setObjectForKey(criteria,"criteria");
 		
 		return result;

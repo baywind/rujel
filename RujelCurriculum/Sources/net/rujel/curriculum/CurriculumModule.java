@@ -179,9 +179,13 @@ public class CurriculumModule {
 	
 	public static Object journalPlugins(WOContext ctx) {
 		Object result = null;
-		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.Variation")))
-				result = WOApplication.application().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.varsPlugin");
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.Variation"))) {
+			EduCourse course = (EduCourse)ctx.session().objectForKey("editorCourse");
+			String state = (course == null) ? null : SettingsBase.stringSettingForCourse(
+					"PlanFactWidget", course, course.editingContext());
+			result = ("hide".equals(state))?null:WOApplication.application().valueForKeyPath(
+				"strings.RujelCurriculum_Curriculum.varsPlugin");
+		}
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.Reprimand"))) {
 			NSDictionary rp = (NSDictionary)WOApplication.application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.reprPlugin");

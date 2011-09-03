@@ -107,7 +107,8 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream in) 
+    	throws java.io.IOException, java.lang.ClassNotFoundException {
     }
 */
 
@@ -1010,5 +1011,13 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		dict.takeValueForKey(WOLogFormatter.formatEO(workType()), WORK_TYPE_KEY);
 		dict.takeValueForKey(homeTask(), TASK_TEXT_KEY);
 		return dict;
+	}
+	
+	public NSDictionary archiveIdentifier() {
+		NSDictionary identifier = EOUtilities.primaryKeyForObject(editingContext(), this);
+		identifier = identifier.mutableClone();
+		identifier.takeValueForKey(ENTITY_NAME, "entityName");
+		identifier.takeValueForKey(course(), "course");
+		return identifier;
 	}
 }
