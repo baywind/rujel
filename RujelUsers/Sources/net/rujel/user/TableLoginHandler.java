@@ -167,9 +167,14 @@ public class TableLoginHandler implements LoginHandler {
 			if(parentHandler != null) {
 				UserPresentation pUser = parentHandler.authenticate(args);
 				if(SettingsReader.boolForKeyPath("auth.autoAddUsers", false)){
+					NSArray found = NSArray.EmptyArray;
 					try {
-						NSArray found = Person.Utility.search(ec, Teacher.entityName,
+						found = Person.Utility.search(ec, Teacher.entityName,
 								pUser.present());
+					} catch (Exception ex) {
+						;
+					}
+					try {
 						AutUser au = (AutUser)EOUtilities.createAndInsertInstance(ec,
 								AutUser.ENTITY_NAME);
 						au.setUserName(user);
@@ -182,8 +187,10 @@ public class TableLoginHandler implements LoginHandler {
 							pUser = null;
 						return new TableUser(au, pUser);
 					} catch (Exception ex) {
-						throw new AuthenticationFailedException(ERROR,
-								"Error autocreating AutUser: " + user, ex);
+						logger.log(WOLogLevel.WARNING,"Error autocreating AutUser: " + user,ex);
+//						throw new AuthenticationFailedException(ERROR,
+//								"Error autocreating AutUser: " + user, ex);
+						return pUser;
 					}
 				} else {
 					return pUser;
