@@ -116,6 +116,16 @@ public class MarkArchive extends _MarkArchive
 		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec,
 				"UsedEntity","usedEntity",entityName);
 		if(found == null || found.count() == 0) {
+			found = ec.insertedObjects();
+			if(found != null && found.count() > 0) {
+				Enumeration enu = found.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+					if(obj.entityName().equals("UsedEntity") && 
+							entityName.equals(obj.valueForKey("usedEntity")))
+						return obj;
+				}
+			}
 			EOEntity entity = EOModelGroup.defaultGroup().entityNamed(entityName);
 			NSArray pKeys = entity.primaryKeyAttributeNames();
 			if(pKeys == null || pKeys.count() == 0 || pKeys.count() > 3)
