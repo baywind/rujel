@@ -44,7 +44,6 @@ public abstract class _PlanCycle extends EOGenericRecord {
 	public static final String GRADE_KEY = "grade";
 	public static final String SCHOOL_KEY = "school";
 	public static final String SECTION_KEY = "section";
-	public static final String SUBJECT_KEY = "subject";
 
 	// Relationships
 	public static final String PLAN_HOURS_KEY = "planHours";
@@ -72,14 +71,6 @@ public abstract class _PlanCycle extends EOGenericRecord {
 
   public void setSection(Integer value) {
     takeStoredValueForKey(value, SECTION_KEY);
-  }
-
-  public String subject() {
-    return (String) storedValueForKey(SUBJECT_KEY);
-  }
-
-  public void setSubject(String value) {
-    takeStoredValueForKey(value, SUBJECT_KEY);
   }
 
   public net.rujel.eduplan.Subject subjectEO() {

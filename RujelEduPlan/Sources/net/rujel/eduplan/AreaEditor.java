@@ -122,6 +122,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     				} else {
 						message.append("deleted: ").append(oldName);
     				}
+					returnPage.takeValueForKey(Boolean.TRUE, "shouldReset");
         			Object[] args = new Object[] {session(),currArea};
     				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
     			}

@@ -73,7 +73,6 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     				StringBuffer message = new StringBuffer("Subject ");
     				if(oldName == null) {
     					message.append("created: ");
-    					returnPage.takeValueForKey(Boolean.TRUE, "shouldReset");
     				} else {
     					message.append("changed: ");
     					if(!oldName.equals(subject.subject())) {
@@ -82,6 +81,7 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     					message.append(subject.subject());
     				}
 //    				returnPage.takeValueForKey(subject, "forced");
+					returnPage.takeValueForKey(Boolean.TRUE, "shouldReset");
         			Object[] args = new Object[] {session(),subject};
     				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,message.toString(),args);
     			}

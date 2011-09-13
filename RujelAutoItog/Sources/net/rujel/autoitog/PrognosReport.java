@@ -92,6 +92,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		SettingsBase sb = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
 		if(sb == null)
 			return null;
+		int count = 0;
 		while (enu.hasMoreElements()) {
 			Prognosis progn = (Prognosis) enu.nextElement();
 			if(progn.namedFlags().flagForKey("disabled"))
@@ -121,6 +122,8 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 			}
 			if(ai.flags().intValue() >= 16) // check disabled
 				continue;
+			else
+				count++;
 			NSMutableDictionary dict = new NSMutableDictionary(eduper,"itog");
 			dict.takeValueForKey(progn.mark(),"mark");
 			dict.takeValueForKey(eduper.title(), "period");
@@ -196,6 +199,10 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 				result.setObjectForKey(dict, course);
 			}
 		}*/
+		if(count == 0)
+			return null;
+		else
+			settings.takeValueForKey(null, "needData");
 
 		return result;
 	}

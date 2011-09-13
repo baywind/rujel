@@ -182,7 +182,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 		}
 		result.takeValueForKey(date, Work.DATE_KEY);
 		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
-				"dfltFlags >= 16 and dfltFlags < 64", null);
+				"dfltFlags >= 16 and dfltFlags < 64 and (dfltFlags < 32 or dfltFlags >= 48)", null);
 		fs = new EOFetchSpecification(WorkType.ENTITY_NAME,qual,ModulesInitialiser.sorter);
 		found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {

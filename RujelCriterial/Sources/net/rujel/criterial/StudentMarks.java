@@ -264,6 +264,7 @@ public class StudentMarks extends WOComponent {
 				result.takeValueForKey(extraCourses, "extraCourses");
 			}
 		}
+		level = 0;
 		for (int i = 0; i < courses.count(); i++) {
 			NSMutableArray works = null;//(NSMutableArray)allWorks.objectAtIndex(i);
 			if(i < allWorks.length)
@@ -275,10 +276,8 @@ public class StudentMarks extends WOComponent {
 				NSMutableDictionary courseItem = formatCourse(c);
 				NSArray criteria = (NSArray)courseItem.valueForKeyPath("criteria.title");
 				synchronized (dateFormat) {
-					if(works != null && works.count() > 0) {
-						boolean hideMax = Various.boolForObject(options.valueForKey("hideMax"));
-						courseItem.setObjectForKey(formatWorks(works,criteria, hideMax),"works");
-					}
+					boolean hideMax = Various.boolForObject(options.valueForKey("hideMax"));
+					courseItem.setObjectForKey(formatWorks(works,criteria, hideMax),"works");
 				}
 				result.setObjectForKey(courseItem, c);
 				level++;
@@ -286,6 +285,8 @@ public class StudentMarks extends WOComponent {
 		}
 		if(level == 0)
 			return null;
+		else
+			settings.takeValueForKey(null, "needData");
 		return result;
 	}
 	

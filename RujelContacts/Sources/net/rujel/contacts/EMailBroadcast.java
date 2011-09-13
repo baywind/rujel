@@ -222,6 +222,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			params.takeValueForKey("Finished mailing for eduGroup","logMessage");
 			params.takeValueForKey(eduGroup,"logParam");
 			params.takeValueForKey(moment, "date");
+			params.takeValueForKey(Boolean.TRUE, "needData");
 			if(SettingsReader.stringForKeyPath("ui.diaryURL", null) != null)
 				params.takeValueForKey(Boolean.TRUE, "diaryLink");
 //			params.takeValueForKey(ctx,"ctx");
@@ -463,8 +464,11 @@ st:		while (stEnu.hasMoreElements()) {
 			Student student = (Student)stEnu.nextElement();
 			NSArray stContacts = (NSArray)contacts.forPersonLink(student);
 			stContacts = contactsInSet(stContacts, adrSet);
-			if(stContacts == null || stContacts.count() == 0)
+			if(stContacts == null || stContacts.count() == 0) {
+				logger.log(WOLogLevel.FINER,
+						"Skipping mail to student as no contacts found",student);
 				continue st;
+			}
 			Enumeration cenu = stContacts.objectEnumerator();
 			boolean zip = false;
 			while (cenu.hasMoreElements()) {
@@ -483,10 +487,33 @@ st:		while (stEnu.hasMoreElements()) {
 			}
 			cenu = stContacts.objectEnumerator();
 			InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(cenu,adrSet != null);
-			if(to == null || to.length == 0)
+			if(to == null || to.length == 0) {
+				logger.log(WOLogLevel.FINER,
+						"Skipping mail to student as no active adresses found",student);
 				continue st;
+			}
 			synchronized (mailer) {
 				try {
+					WOActionResults attach = null;
+					if(reporter != null) {
+						ctx.setUserInfoForKey(params.valueForKey("needData"), "needData");
+						WOComponent reportPage = app.pageWithName("PrintReport",ctx);
+						reportPage.takeValueForKey(reporter,"reporter");
+						reportPage.takeValueForKey(existingCourses,"courses");
+						reportPage.takeValueForKey(new NSArray(student),"students");
+						reportPage.takeValueForKey(period,"period");
+						reportPage.takeValueForKey(since,"since");
+						reportPage.takeValueForKey(upTo,"to");
+						attach = reportPage.generateResponse();
+						if(ctx.userInfoForKey("needData") != null) {
+							attach = null;
+							if(!Various.boolForObject(params.valueForKey("sendEmpty"))) {
+								logger.log(WOLogLevel.FINER,
+										"Skipping mail to student as no data fond",student);
+								continue;
+							}
+						}
+					}
 					StringBuffer subject = new StringBuffer("RUJEL: ");
 					if(groupName != null) {
 						subject.append(groupName).append(" : ");
@@ -512,19 +539,12 @@ st:		while (stEnu.hasMoreElements()) {
 					String message = String.format(textBuf.toString(), stID.keyValues()[0],
 							Person.Utility.fullName(student, false, 2, 2, 0));
 
-					if(reporter != null) {
-						WOComponent reportPage = app.pageWithName("PrintReport",ctx);
-						reportPage.takeValueForKey(reporter,"reporter");
-						reportPage.takeValueForKey(existingCourses,"courses");
-						reportPage.takeValueForKey(new NSArray(student),"students");
-						reportPage.takeValueForKey(period,"period");
-						reportPage.takeValueForKey(since,"since");
-						reportPage.takeValueForKey(upTo,"to");
-						mailer.sendPage(subject.toString(), message, reportPage, to, zip);
+					if(attach != null) {
+						mailer.sendPage(subject.toString(), message, attach, to, zip);
 					} else {
 						mailer.sendTextMessage(subject.toString(), message, to);
 					}
-					logger.finer("Mail sent \"" + subject + '"');
+					logger.finest("Mail sent \"" + subject + '"');
 				} catch (Exception ex) {
 					logger.log(WOLogLevel.WARNING,"Failed to send email for student",new Object[] {student,ex});
 					WeakReference sesRef = (WeakReference)params.valueForKey("callerSession");
@@ -551,8 +571,7 @@ st:		while (stEnu.hasMoreElements()) {
 						}
 						t.setPriority(pr);
 					} catch (Exception ex) {
-						logger.logp(WOLogLevel.FINER,EMailBroadcast.class.getName(),
-								"broadcastMarksForPeriod","Interrupted timeout between mails",ex);
+						logger.log(WOLogLevel.FINER,"Interrupted timeout between mails",ex);
 					}
 				}
 			}

@@ -215,6 +215,8 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 		}
 		if(count == 0)
 			return null;
+		else
+			settings.takeValueForKey(null, "needData");
 		return result;
 	}
 	protected static Format dateFormat = MyUtility.dateFormat();

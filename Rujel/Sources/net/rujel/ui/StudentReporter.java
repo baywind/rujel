@@ -138,7 +138,14 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		if(period != null)
 			reportSettings.takeValueForKey(period,"period");
 		reportSettings.takeValueForKey(courses.immutableClone(), "courses");
+		reportSettings.takeValueForKey(aContext.userInfoForKey("needData"), "needData");
 		reports = ReporterSetup.prepareReports(aContext.session(), reportSettings);
+		if(reportSettings.valueForKey("needData") != null) {
+			t.setPriority(priority);
+			return;
+		} else if (aContext.userInfoForKey("needData") != null) {
+			aContext.setUserInfoForKey(null, "needData");
+		}
 		Enumeration enu = reports.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			NSDictionary rp = (NSDictionary) enu.nextElement();

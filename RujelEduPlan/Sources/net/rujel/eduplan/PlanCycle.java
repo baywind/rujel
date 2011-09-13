@@ -452,10 +452,15 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return new Integer(count);
 	}
 	
-	public void setSubjectEO(EOEnterpriseObject value) {
-		super.setSubjectEO(value);
-		setSubject((value==null)?null:(String)value.valueForKey(Subject.SUBJECT_KEY));
+	public String subject() {
+		return (String)valueForKeyPath("subjectEO.subject");
 	}
+
+	public void setSubject(String newSubject) {
+		throw new UnsupportedOperationException(
+				"PlanCycle subject can be changed only through subjectEO");
+	}
+
 	/*
 	public String extraInfo() {
 		NSArray list = Indexer.indexersOfType(editingContext(), "eduSection");
