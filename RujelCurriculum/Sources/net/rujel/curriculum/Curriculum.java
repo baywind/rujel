@@ -330,7 +330,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	}
     
     public void save() {
-		currObject = null;
+    	currObject = null;
 		ec.lock();
 		try {
     		if(ifArchive && ec.hasChanges()) {
@@ -347,7 +347,12 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     			if(currReason.namedFlags().flagForKey("forEduGroup"))
     				archive.takeValueForKey(currReason.eduGroup().name(),"@eduGroup");
     		}
+			boolean add = (Reason.ENTITY_NAME.equals(currTab.valueForKey("entity")) &&
+					ec.globalIDForObject(currReason).isTemporary());
 			ec.saveChanges();
+			if(add)
+				list = list.arrayByAddingObject(currReason);
+			sort();
 			Object[] args = new Object[] {session(),currReason};
 			logger.log(WOLogLevel.EDITING,"Reason is saved",args);
 		} catch (Exception ex) {

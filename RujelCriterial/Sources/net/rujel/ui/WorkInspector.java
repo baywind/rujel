@@ -426,21 +426,45 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	return "closePopup();";
     }
 
+    public boolean isCheckBox() {
+    	if(critSet == null)
+    		return false;
+    	EOEnterpriseObject critItem = critItem();
+    	if(critItem == null)
+    		return critSet.namedFlags().flagForKey("fixMax");
+    	if(critItem.valueForKey("indexer") != null)
+    		return true;
+    	return (critItem.valueForKey("dfltMax") != null 
+    			&& critSet.namedFlags().flagForKey("fixMax"));
+    }
+    
+    public String criterMaxTitle() {
+    	if(critSet == null)
+    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.criterMax");
+
+    	if(critSet.namedFlags().flagForKey("fixMax"))
+    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Mark");
+    	NSArray criteria = critSet.criteria();
+    	if(criteria.count() == 0)
+    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.criterMax");
+    	Enumeration enu = criteria.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+    		EOEnterpriseObject cr = (EOEnterpriseObject) enu.nextElement();
+    		if(cr.valueForKey("indexer") == null)
+        		return (String)session().valueForKeyPath(
+        				"strings.RujelCriterial_Strings.criterMax");
+    	}
+    	return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Mark");
+    }
+    
     public String inputType() {
-    	if(critSet == null || critItem() == null || critItem().valueForKey("dfltMax") == null)
-    		return "text";
-    	if(critSet.namedFlags().flagForKey("fixMax") ||
-    			critItem().valueForKey("indexer") != null)
+    	if(isCheckBox())
     		return "checkbox";
     	return "text";
     }
     
     public String checked() {
-    	if(critSet == null || critItem() == null || critItem().valueForKey("dfltMax") == null ||
-    			 (itemMask() == null && disableMax == null))
-    		return null;
-    	if(critSet.namedFlags().flagForKey("fixMax") ||
-    			critItem().valueForKey("indexer") != null)
+    	if(isCheckBox() && itemMask() != null)
     		return "checked";
     	return null;
     }
@@ -448,25 +472,30 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     protected EOEnterpriseObject itemMask() {
     	if(work == null)
     		return null;
-//    	if(critIdx < 0)
-//    		return null;
     	return work.getCriterMask(criterion());
     }
 	
     public Integer criterMax() {
-//    	if(critIdx < 0) 
-//    		return null;
     	EOEnterpriseObject _itemMask = itemMask();
-        if(_itemMask == null)  {
+    	if(_itemMask != null)
+    		return (Integer)_itemMask.valueForKey("max");
+        if(critSet != null)  {
         	EOEnterpriseObject cr = critItem();
-        	if(cr == null)
+        	if(cr == null) { 
+        		if(critSet.namedFlags().flagForKey("fixMax")) {
+        			Integer result = SettingsBase.numericSettingForCourse("CriterlessMax",
+        					course, course.editingContext());
+        			if(result == null)
+        				result = new Integer(5);
+        			return result;
+        		}
         		return null;
+        	}
         	if(critSet.namedFlags().flagForKey("fixMax") || cr.valueForKey("indexer") != null ||
         			critSet.namedFlags().flagForKey("fixList"))
         		return (Integer)cr.valueForKey("dfltMax");
-        	return null;
         }
-		return (Integer)_itemMask.valueForKey("max");
+    	return null;
     }
 
     public Number criterWeight() {

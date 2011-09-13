@@ -272,7 +272,17 @@ public class QualifiedSetting extends _QualifiedSetting {
 			String keyPath = (String)ed.valueForKey("attribute");
 			if(checkKeyPath(qual.key(), keyPath)) {
 				keyPath = Parameter.attribute(ed);
-				if(qual.selector() == EOQualifier.QualifierOperatorEqual ||
+				if(qual.selector() == EOQualifier.QualifierOperatorGreaterThanOrEqualTo ||
+						qual.selector() == EOQualifier.QualifierOperatorGreaterThan) {
+					params.takeValueForKey(qual.value(), "min_" + keyPath);
+					if(Various.boolForObject(ed.valueForKey("range")))
+						ed.takeValueForKey(">=", "qualifierSelector");
+				} else if(qual.selector() == EOQualifier.QualifierOperatorLessThanOrEqualTo ||
+						qual.selector() == EOQualifier.QualifierOperatorLessThan) {
+					params.takeValueForKey(qual.value(), "max_" + keyPath);
+					if(Various.boolForObject(ed.valueForKey("range")))
+						ed.takeValueForKey("<=", "secondSelector");
+				} else if(qual.selector() == EOQualifier.QualifierOperatorEqual ||
 						(EOQualifier.stringForOperatorSelector(qual.selector()).equalsIgnoreCase(
 								(String)ed.valueForKey("qualifierSelector")))) {
 					if(Various.boolForObject(ed.valueForKey("or"))) {
@@ -288,16 +298,6 @@ public class QualifiedSetting extends _QualifiedSetting {
 						ed.takeValueForKey("=", "qualifierSelector");
 						ed.takeValueForKey(null, "secondSelector");
 					}
-				} else if(qual.selector() == EOQualifier.QualifierOperatorGreaterThanOrEqualTo ||
-						qual.selector() == EOQualifier.QualifierOperatorGreaterThan) {
-					params.takeValueForKey(qual.value(), "min_" + keyPath);
-					if(Various.boolForObject(ed.valueForKey("range")))
-						ed.takeValueForKey(">=", "qualifierSelector");
-				} else if(qual.selector() == EOQualifier.QualifierOperatorLessThanOrEqualTo ||
-						qual.selector() == EOQualifier.QualifierOperatorLessThan) {
-					params.takeValueForKey(qual.value(), "max_" + keyPath);
-					if(Various.boolForObject(ed.valueForKey("range")))
-						ed.takeValueForKey("<=", "secondSelector");
 				} else {
 					throw new AdvancedQualifierException(qual);
 				}

@@ -39,6 +39,7 @@ import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.Period;
+import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -271,10 +272,20 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			EduPeriod last = (EduPeriod)list.lastObject();
 			if(date == null || date.compare(last.end()) > 0)
 				date = last.end();
+			else
+				list = null;
+		} else {
+			list = null;
 		}
 		//
 		if(date != null) {
 			cal.setTime(date);
+			if(list == null && cal.get(Calendar.MILLISECOND) > 0 && cal.get(Calendar.HOUR_OF_DAY) 
+					< SettingsReader.intForKeyPath("edu.midnightHour", 5)) {
+				cal.add(Calendar.DATE, -1);
+			}
+			cal.set(Calendar.HOUR_OF_DAY, 12);
+			date = new NSTimestamp(cal.getTimeInMillis());
 			weeks = weeks(listName, cal, ec, weekDays, weekStart);
 			if(date != null)
 				extraDays = EOPeriod.Utility.countDays(cal.getTime(), date) -1; 
@@ -359,7 +370,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		int minus = 0;
 //		boolean verifiedOnly = SettingsReader.boolForKeyPath("ignoreUnverifiedReasons", false);
 //		cal.add(Calendar.DATE, +1);
-		cal.set(Calendar.HOUR_OF_DAY,20);
+		cal.set(Calendar.HOUR_OF_DAY,13);
 		long startDate = cal.getTimeInMillis();
 		int verifiedOnly = SettingsBase.numericSettingForCourse(
 				"ignoreUnverifiedReasons", course, ec, 0);

@@ -430,6 +430,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			ec.saveChanges();
 			logger.log(WOLogLevel.EDITING, "Changed enter/leave dates",
 					new Object[] {session(),selection});
+			if(selection instanceof VseEduGroup)
+				((VseEduGroup)selection).nullify();
 			setSelection(selection);
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING, "Error saving enter/leave dates changes",
@@ -609,6 +611,14 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 						objections.componentsJoinedByString("<br/>\n"), "message");
 				return null;
 			}
+			logger.log(WOLogLevel.EDITING,"Deleting " + ticks.count() + " students",session());
+		} else if(target == null) {
+			logger.log(WOLogLevel.EDITING,(date==null)?"Deleting ":"Excluding " + ticks.count() +
+					" students from eduGroup", new Object[] {session(),selection});
+		} else {
+			target.nullify();
+			logger.log(WOLogLevel.EDITING,(selection==null)?"Addind ":"Moving " + ticks.count() +
+					" students to eduGroup", new Object[] {session(),target});
 		}
 		Enumeration enu = ticks.objectEnumerator();
 		while (enu.hasMoreElements()) {
