@@ -52,11 +52,13 @@ import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 
 public class MyUtility {
-	public static NSArray numSorter = new NSArray(
+	public static final NSArray numSorter = new NSArray(
 			new EOSortOrdering("num",EOSortOrdering.CompareAscending));
-	public static NSArray dateSorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
+	public static final NSArray dateSorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
 			"date", EOSortOrdering.CompareAscending));
 	// TODO : replace NSTimestampFormatter with java.text.SimpleDateFormat
+	public static final NSSelector notify = 
+		new NSSelector("notify", new Class[] {NSNotification.class});
 
 	
 	protected static NSNumberFormatter _numformat;

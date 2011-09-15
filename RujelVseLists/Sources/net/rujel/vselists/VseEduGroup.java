@@ -178,31 +178,42 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 			EOEnterpriseObject l = (EOEnterpriseObject) enu.nextElement();
 			NSTimestamp border = (NSTimestamp)l.valueForKey("leave");
 			if(border != null) {
-				if(border.getTime() < now - NSLocking.OneDay) {
+				if(border.getTime() < since - NSLocking.OneDay)
 					continue;
-				} else {
+				if(border.getTime() < to) {
 					cal.setTime(border);
 					cal.set(Calendar.HOUR, 23);
 					cal.set(Calendar.MINUTE, 59);
 					long time = cal.getTimeInMillis(); 
-					if(time < now)
+					if(time < now) {
+						if(since < time)
+							since = time;
 						continue;
-					if(to > time){
+					} else if(to > time) {
 						to = time;
 					}
 				}
 			}
 			border = (NSTimestamp)l.valueForKey("enter");
 			if(border != null) {
-				if(border.getTime() > now) {
+				if(border.getTime() > to)
 					continue;
-				} else if(since < border.getTime()){
+				if(border.getTime() > since - NSLocking.OneDay) {
 					cal.setTime(border);
 					cal.set(Calendar.HOUR, 0);
 					cal.set(Calendar.MINUTE, 0);
 					cal.set(Calendar.SECOND, 0);
 					cal.set(Calendar.MILLISECOND, 0);
-					since = cal.getTimeInMillis();
+					long time = cal.getTimeInMillis();
+					if(time > now) {
+						if(to > time) {
+							cal.add(Calendar.MINUTE, -1);
+							to = cal.getTimeInMillis();
+						}
+						continue;
+					} else if(since < time) {
+						since = time;
+					}
 				}
 			}
 			list.addObject(l);

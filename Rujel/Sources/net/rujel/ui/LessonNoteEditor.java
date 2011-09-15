@@ -77,9 +77,12 @@ public class LessonNoteEditor extends WOComponent {
 	public NSArray dashboard;
 	public NSArray resources;
 
+	
 	public LessonNoteEditor(WOContext context) {
 		super(context);
 		ec = new SessionedEditingContext(context.session());
+		NSNotificationCenter.defaultCenter().addObserver(this,MyUtility.notify,
+				"todayChanged", context.session());
 	}
 
 	public boolean showTabs() {
@@ -253,6 +256,10 @@ public class LessonNoteEditor extends WOComponent {
 				resources = ress.immutableClone();
 		}
 		session().removeObjectForKey("editorCourse");
+		refresh();
+	}
+	
+	public void notify(NSNotification ntf) {
 		refresh();
 	}
 

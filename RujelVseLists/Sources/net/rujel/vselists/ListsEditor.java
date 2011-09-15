@@ -29,15 +29,6 @@
 
 package net.rujel.vselists;
 
-/*
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-*/
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -98,10 +89,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     public NSArray list;
     public NSArray tutors;
 	public Integer mode;
-//	public NSMutableDictionary agregate;
 	public NSArray categories;
 	public Object selection;
-	protected NSTimestamp agrDate;
 	public Boolean cantAddClass;
 	public NSTimestamp date;
 	public NSMutableSet ticks = new NSMutableSet();
@@ -115,15 +104,14 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 //        switchMode();
     	title = (String)context.session().valueForKeyPath(
     			"strings.RujelVseLists_VseStrings.title");
+		NSNotificationCenter.defaultCenter().addObserver(this,MyUtility.notify,
+				"todayChanged", context.session());
     }
     
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    	NSTimestamp sesDate = (NSTimestamp)session().valueForKey("today");
-    	if(!sesDate.equals(agrDate)) {
-    		agrDate = sesDate;
-    		switchMode();
-    	}
-		date = sesDate;
+		date = (NSTimestamp)session().valueForKey("today");
+		if(categories == null)
+			switchMode();
     	super.appendToResponse(aResponse, aContext);
     }
     
@@ -141,15 +129,16 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     	targets = null;
     	ticks.removeAllObjects();
     	list = NSArray.EmptyArray;
+    	date = (NSTimestamp)session().valueForKey("today");
      	if(mode.intValue() > 0) {
 //    		agregate = TeacherSelector.populate(ec, session());
 //    		categories = (NSArray)agregate.removeObjectForKey("subjects");
-    		categories = (NSArray)VseTeacher.agregatedList(ec, agrDate);
+    		categories = (NSArray)VseTeacher.agregatedList(ec, date);
         	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseTeacher");
         	cantAddClass = Boolean.TRUE;
     	} else {
 //    		agregate = VseStudent.studentsAgregate(ec, date);
-    		categories = VseStudent.agregatedList(ec, agrDate);
+    		categories = VseStudent.agregatedList(ec, date);
         	access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.VseStudent");
         	cantAddClass = (Boolean)session().valueForKeyPath(
         			"readAccess._create.VseEduGroup");
@@ -186,7 +175,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     		}
     		if(list != null && list.count() != 0) {
 				if(!showAll) {
-					NSArray args = new NSArray(new Object[] {agrDate,agrDate});
+			    	NSTimestamp today = (NSTimestamp)session().valueForKey("today");
+					NSArray args = new NSArray(new Object[] {today,today});
 					EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(
 					  "(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
 					list = EOQualifier.filteredArrayWithQualifier(list,qual);
@@ -362,7 +352,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		if(date == null)
-			date = agrDate;
+			date = (NSTimestamp)session().valueForKey("today");
 		ec.lock();
 		try {
 			if (student) {
@@ -750,6 +740,14 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		return export;
 	}
 
+	public void notify(NSNotification ntf) {
+     	if(mode != null && mode.intValue() > 0) {
+    		categories = (NSArray)VseTeacher.agregatedList(ec, date);
+    	} else {
+    		categories = VseStudent.agregatedList(ec, date);
+    	}
+     	setSelection(selection);
+	}
 	
 	/*
 	public InputStream uploadStream;

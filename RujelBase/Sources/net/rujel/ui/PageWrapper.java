@@ -32,6 +32,7 @@ package net.rujel.ui;
 import net.rujel.base.MyUtility;
 import net.rujel.reusables.Various;
 
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -89,6 +90,17 @@ public class PageWrapper extends WOComponent {
 			list.removeAllObjects();
 		}
 		session().takeValueForKey(Boolean.FALSE,"prolong");
+		if(Various.boolForObject(valueForBinding("hasChanges"))) {
+			try {
+				WOAssociation as = (WOAssociation)_keyAssociations.valueForKey("hasChanges");
+				String keyPath = as.keyPath();
+				if(keyPath.endsWith(".hasChanges")) {
+					keyPath = keyPath.substring(0, keyPath.length() - 11);
+					EOEditingContext ec = (EOEditingContext)parent().valueForKeyPath(keyPath);
+					ec.revert();
+				}
+			} catch (Exception e) {}
+		}
 		return (WOComponent)item;
     }
 	/*

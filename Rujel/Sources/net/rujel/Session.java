@@ -345,6 +345,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			today = null;
 		else
 			today = (NSTimestamp)day;
+		NSNotificationCenter.defaultCenter().postNotification("todayChanged", this);
 	}
 	
 	protected Integer _eduYear;
