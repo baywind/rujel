@@ -68,8 +68,10 @@ public class SchedModule {
 		} else if ("journalPlugins".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelSchedule_Schedule.dashboard");
 		} else if("planTabs".equals(obj)) {
-			return ctx.session().valueForKeyPath(
-				"strings.RujelSchedule_Schedule.planTab");
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.ScheduleRing")))
+				return ctx.session().valueForKeyPath(
+					"strings.RujelSchedule_Schedule.planTab");
+			return null;
 		} else if ("diary".equals(obj)) {
 			NSDictionary diaryTab = (NSDictionary)WOApplication.application().
 					valueForKeyPath("strings.RujelSchedule_Schedule.diaryTab");

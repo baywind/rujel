@@ -67,8 +67,10 @@ public class ModuleInit {
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
 		} else if("planTabs".equals(obj)) {
-			return WOApplication.application().valueForKeyPath(
-				"strings.RujelEduResults_EduResults.planTab");
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.SetupItogs")))
+				return WOApplication.application().valueForKeyPath(
+					"strings.RujelEduResults_EduResults.planTab");
+			return null;
 		} else if("groupComplete".equals(obj)) {
 //			return null; 
 			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.groupItogs");
