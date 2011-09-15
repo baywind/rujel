@@ -873,6 +873,10 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
     	else
     		return "font-family: sans-serif;";
     }
+    
+    public boolean notValid() {
+    	return editingContext() == null;
+    }
 
 	public String lessonNoteForStudent(EduLesson lesson, Student student) {
 		Mark mark = markForStudentAndCriterion(student, new Integer(0));
@@ -1014,10 +1018,6 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 	}
 	
 	public NSDictionary archiveIdentifier() {
-		NSDictionary identifier = EOUtilities.primaryKeyForObject(editingContext(), this);
-		identifier = identifier.mutableClone();
-		identifier.takeValueForKey(ENTITY_NAME, "entityName");
-		identifier.takeValueForKey(course(), "course");
-		return identifier;
+		return BaseLesson.lessonArchiveIdentifier(this);
 	}
 }

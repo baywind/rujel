@@ -273,5 +273,9 @@ public class HomeWorkDelegate extends TaskDelegate {
 			work.setLessonNoteForStudent(note, lesson, student);
 			lesson.takeValueForKey(work, "noteDelegate");
 		}
+
+		public boolean notValid() {
+			return false;
+		}
 	}
 }

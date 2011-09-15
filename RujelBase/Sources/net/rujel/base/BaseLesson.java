@@ -129,9 +129,9 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public NoteDelegate _noteDelegate;
 
 	public String noteForStudent(Student student) {
-		if(_noteDelegate == null)
+		if(_noteDelegate == null || _noteDelegate.notValid())
 			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
-		String delegateNote = (_noteDelegate == null)?null :
+		String delegateNote = (_noteDelegate == null || _noteDelegate.notValid())?null :
 			_noteDelegate.lessonNoteForStudent(this, student);
 		String note = noteForStudent(this, student);
 		if(delegateNote == null)
@@ -147,9 +147,9 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 				newNote = null;
 		}
 		int skip = isSkip(newNote);
-		if(_noteDelegate == null)
+		if(_noteDelegate == null || _noteDelegate.notValid())
 			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
-		if(_noteDelegate == null) {
+		if(_noteDelegate == null || _noteDelegate.notValid()) {
 			setNoteForStudent(this, newNote, student);
 			return;
 		}
@@ -246,6 +246,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public static interface NoteDelegate {
 		public String lessonNoteForStudent(EduLesson lesson, Student student);
 		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student);
+		public boolean notValid();
 	}
 	
 	protected static TaskDelegate taskDelegate = new TaskDelegate();
@@ -311,11 +312,17 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		super.validateForSave();
 	}
 	
-	public NSDictionary archiveIdentifier() {
-		NSDictionary identifier = EOUtilities.primaryKeyForObject(editingContext(), this);
+	public static NSDictionary lessonArchiveIdentifier(EduLesson lesson) {
+		NSDictionary identifier = EOUtilities.primaryKeyForObject(lesson.editingContext(), lesson);
+		if(identifier == null || identifier.count() == 0)
+			return null;
 		identifier = identifier.mutableClone();
-		identifier.takeValueForKey(ENTITY_NAME, "entityName");
-		identifier.takeValueForKey(course(), "course");
+		identifier.takeValueForKey(lesson.entityName(), "entityName");
+		identifier.takeValueForKey(lesson.course(), "course");
 		return identifier;
+	}
+	
+	public NSDictionary archiveIdentifier() {
+		return lessonArchiveIdentifier(this);
 	}
 }

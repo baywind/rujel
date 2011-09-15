@@ -116,8 +116,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		types = ec.objectsWithFetchSpecification(fs);
     	}
     	critIdx = -1;
-    	ifArchive = work != null && SettingsReader.boolForKeyPath("markarchive.Work", 
-    			SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
+    	ifArchive = (work != null && !ec.globalIDForObject(work).isTemporary() &&
+    			SettingsReader.boolForKeyPath("markarchive.Work", 
+    			SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
     	super.appendToResponse(aResponse, aContext);
     }
     
