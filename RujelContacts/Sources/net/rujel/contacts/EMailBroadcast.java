@@ -187,7 +187,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 			if(students == null || students.count() == 0)
 				continue gr;
 			dict.setObjectForKey(eduGroup,"eduGroup");
-			NSArray existingCourses = EOUtilities.objectsMatchingValues(ec,EduCourse.entityName,dict);
+			NSArray existingCourses = EOUtilities.objectsMatchingValues(ec,
+					EduCourse.entityName,dict);
 			if(existingCourses == null || existingCourses.count() == 0)
 				continue gr;
 			NSMutableDictionary params = new NSMutableDictionary();
@@ -241,7 +242,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 	}
 	
 		/*
-	public static void broadcastMarksToList(NSArray students, Period period, NSDictionary reporter, String groupName, NSArray existingCourses, WOContext ctx) {
+	public static void broadcastMarksToList(NSArray students, Period period, 
+			NSDictionary reporter, String groupName, NSArray existingCourses, WOContext ctx) {
 		NSMutableDictionary params = new NSMutableDictionary();
 		params.takeValueForKey(students,"students");
 		params.takeValueForKey(period,"period");
@@ -546,7 +548,8 @@ st:		while (stEnu.hasMoreElements()) {
 					}
 					logger.finest("Mail sent \"" + subject + '"');
 				} catch (Exception ex) {
-					logger.log(WOLogLevel.WARNING,"Failed to send email for student",new Object[] {student,ex});
+					logger.log(WOLogLevel.WARNING,"Failed to send email for student",
+							new Object[] {student,ex});
 					WeakReference sesRef = (WeakReference)params.valueForKey("callerSession");
 					WOSession callerSession = (sesRef == null)?null:(WOSession)sesRef.get();
 					if(callerSession != null) {

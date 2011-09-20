@@ -942,7 +942,8 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 					buf.append(' ').append('(');
 					buf.append(session().valueForKeyPath(
 							"strings.RujelCurriculum_Curriculum.Substitute.Substitute"));
-					buf.append(':').append(' ').append(bc.cycle().subject()).append(')');
+					String subj = (bc == null)?"???":bc.cycle().subject();
+					buf.append(':').append(' ').append(subj).append(')');
 				}
 				buf.append('\n');
 			}

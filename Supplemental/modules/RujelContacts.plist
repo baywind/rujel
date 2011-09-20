@@ -27,7 +27,7 @@
 		<key>writeToFile</key>
 		<string>true</string>
 		<key>writeFileDir</key>
-		<string>/Users/Shared/test</string>
+		<string>/Users/Shared/test/mail</string>
 		<key>broadcastWeekday</key>
 		<string>6</string>
 		<key>broadcastTime</key>
