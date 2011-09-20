@@ -93,6 +93,23 @@ public class TableUser extends DefaultImplementation implements
 					set.addObject(gr.valueForKey("groupName"));
 				}
 			}
+			Enumeration enu = groups.keyEnumerator();
+			Object dfltSection = null;
+			int dfltCount = 0;
+			while (enu.hasMoreElements()) {
+				Object section = enu.nextElement();
+				NSMutableSet set = (NSMutableSet)groups.objectForKey(section);
+				if(set.count() > dfltCount) {
+					dfltSection = section;
+					dfltCount = set.count();
+				}
+			}
+			if(dfltSection instanceof Number) {
+				if(properties == null)
+					properties = new NSMutableDictionary(dfltSection, "defaultSection");
+				else
+					properties.takeValueForKey(dfltSection, "defaultSection");
+			}
 		}
 		this.parent = parent;
 	}

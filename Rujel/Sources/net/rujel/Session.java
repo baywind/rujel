@@ -40,6 +40,7 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class Session extends WOSession implements MultiECLockManager.Session {
@@ -134,6 +135,22 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		if(user == null) {
 			buf.append("Session created for user: ");
 			buf.append(aUser);
+			if(Various.boolForObject(WOApplication.application().valueForKeyPath(
+					"strings.sections.hasSections"))) {
+			Object defaultSection = aUser.propertyNamed("defaultSection");
+			NSArray sections = (NSArray)WOApplication.application().valueForKeyPath(
+					"strings.sections.list");
+				if(defaultSection != null && sections != null && sections.count() > 0) {
+					Enumeration enu = sections.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						NSDictionary dict = (NSDictionary) enu.nextElement();
+						if(defaultSection.equals(dict.valueForKey("idx"))) {
+							state.takeValueForKey(dict, "section");
+							break;
+						}
+					}
+				}
+			}
 		} else if (user != aUser) {
 			buf.append("Session user changed from ").append(user);
 			buf.append(" to ").append(aUser);		
