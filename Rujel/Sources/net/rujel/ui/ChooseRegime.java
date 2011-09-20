@@ -168,8 +168,9 @@ public class ChooseRegime extends WOComponent {
     }
     
     protected NSArray _regimeGroups;
+    protected Number _section;
     public NSArray regimeGroups() {
-    	if(_regimeGroups != null)
+    	if(_regimeGroups != null && _section == session().valueForKeyPath("state.section.idx"))
     		return _regimeGroups;
     	_regimeGroups = (NSArray)application().valueForKeyPath(
     			"strings.Strings.ChooseRegime.regimeGroups");
@@ -184,7 +185,7 @@ public class ChooseRegime extends WOComponent {
     	NSArray allRegimes = (NSArray)application().valueForKeyPath(
     		"strings.Strings.ChooseRegime.defaultRegimes");
     	_regimeGroups = (NSArray)session().valueForKeyPath("modules.regimes");
-    	if(_regimeGroups != null && regimeGroups().count() > 0) {
+    	if(_regimeGroups != null && _regimeGroups.count() > 0) {
     		allRegimes = allRegimes.arrayByAddingObjectsFromArray(_regimeGroups);
     	}
     	Enumeration enu = allRegimes.objectEnumerator();
@@ -218,7 +219,7 @@ public class ChooseRegime extends WOComponent {
     	if(result.count() > 0)
     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, ModulesInitialiser.sorter);
     	_regimeGroups = result;
-
+    	_section = (Number)session().valueForKeyPath("state.section.idx");
     	return _regimeGroups;
     }
 }

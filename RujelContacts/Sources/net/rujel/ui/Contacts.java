@@ -81,7 +81,7 @@ public class Contacts extends WOComponent {
 		return (String)valueForKeyPath("application.strings.RujelContacts_Contacts.title");
 	}
 
-    public WOComponent selectClass() {
+    public WOActionResults selectClass() {
 		currPerson = null;
         allContacts = Contact.getContactsForList(currClass.list(),currConType);
 		contactsByType = null;
@@ -89,8 +89,23 @@ public class Contacts extends WOComponent {
 		revert();
 		return null;
     }
+    
+    public WOActionResults clear() {
+    	currClass = null;
+    	currPerson = null;
+        allContacts = null;
+        contactsByType = null;
+		selectedContact = null;
+		_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Contacts");
+		revert();
+    	return null;
+    }
 
     public WOComponent selectPerson() {
+    	if(!access().flagForKey("read")) {
+    		currPerson = null;
+    		return null;
+    	}
 		//if(contactsByType == null)
 			contactsByType = new NSMutableDictionary();
 		NSArray persContacts = Contact.getContactsForPerson(currPerson.person(),null);
@@ -127,7 +142,8 @@ public class Contacts extends WOComponent {
 	}
 	
 	public PerPersonLink listContacts() {
-		if(currPerson != null || currClass == null || allContacts == null || contypes == null || contypes.count() == 0)
+		if(currPerson != null || currClass == null || allContacts == null ||
+				contypes == null || contypes.count() == 0)
 			return null;
 		NSMutableDictionary template = new NSMutableDictionary("DynamicCell","presenter");
 		
@@ -142,6 +158,7 @@ public class Contacts extends WOComponent {
 			}
 			NSArray persContacts = (NSArray)allContacts.forPersonLink(pers);
 			if(persContacts != null && persContacts.count() > 0) {
+				boolean canRead = access().flagForKey("read");
 				Enumeration enu = persContacts.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					Contact con = (Contact)enu.nextElement();
@@ -149,7 +166,7 @@ public class Contacts extends WOComponent {
 					if(idx >= 0) {
 						NSMutableDictionary dict = res[idx];
 						String str = (String)dict.objectForKey("string");
-						String out =con.getUtiliser().present();
+						String out = (canRead)?con.getUtiliser().present():"######";
 						if(str == null) {
 							str = out;
 						} else {
@@ -172,7 +189,8 @@ public class Contacts extends WOComponent {
 			Field pFied = uClass.getField("presenter");
 			return (String)pFied.get(null);
 		} catch (Exception ex) {
-			logger.log(WOLogLevel.WARNING,"Failed to initialise Contact.Utiliser for name " + uName,ex);
+			logger.log(WOLogLevel.WARNING,"Failed to initialise Contact.Utiliser for name "
+					+ uName,ex);
 			return null;
 		}
 	}
