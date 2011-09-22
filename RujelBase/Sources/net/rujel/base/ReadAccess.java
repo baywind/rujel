@@ -100,6 +100,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 				defaultAccess = accessForObject("default");
 				if(_user instanceof DummyUser) {
 					defaultAccess = new DegenerateFlags(_user.isInGroup(null));
+					defaultAccess.setKeys(accessKeys);
 					accessCache = null;
 				}
 			}

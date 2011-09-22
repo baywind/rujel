@@ -179,6 +179,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(_accessInterface == null) {
 			_accessInterface = (NamedFlags)session().valueForKeyPath(
 					"readAccess.FLAGS.LessonNoteEditor");
+			_accessInterface = _accessInterface.mutableClone();
 			_accessInterface.setKeys(accessKeys);
 		}
 		return _accessInterface;

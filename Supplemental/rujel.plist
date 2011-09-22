@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>schoolNumber</key>
-	<string>45</string>
+	<string>3</string>
 	<key>diaryLogging</key>
 	<string>CONFIGDIR/diaryLog.properties</string>
 	<key>loggingProperties</key>
@@ -13,7 +13,7 @@
 	<key>edu</key>
 	<dict>
 		<key>minGrade</key>
-		<string>5</string>
+		<string>1</string>
 		<key>maxGrade</key>
 		<string>11</string>
 		<key>newYearMonth</key>
@@ -22,7 +22,7 @@
 	<key>ui</key>
 	<dict>
 		<key>defaultDate</key>
-		<string>15.03.2011</string>
+		<string>20.09.2011</string>
 		<key>diaryURL</key>
 		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
 	</dict>

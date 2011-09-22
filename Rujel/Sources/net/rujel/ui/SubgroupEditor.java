@@ -209,6 +209,7 @@ public class SubgroupEditor extends WOComponent {
 		WOActionResults nextPage = null;
 		EOEditingContext ec = course.editingContext();
 //		if(ec.hasChanges()) {
+			course.namedFlags().setFlagForKey(groups == null,"mixedGroup");
 			course.setSubgroup(subgroup.allObjects());
 			WOLogLevel level = WOLogLevel.EDITING;
 			try {
@@ -307,9 +308,7 @@ public class SubgroupEditor extends WOComponent {
 	}
 	
 	public void toggleMixed() {
-		boolean mixed = (groups == null);
-		course.namedFlags().setFlagForKey(mixed,"mixedGroup");
-		if(mixed) {
+		if(groups == null) {
 			if(course.audience() == null || course.audience().count() == 0)
 				course.setSubgroup(currGroup.list());
 			prepareByGroup();

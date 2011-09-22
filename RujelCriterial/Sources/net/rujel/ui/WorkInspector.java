@@ -93,27 +93,38 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		disableMax = null;
     		disableWeight = null;
     	}
+    	if(types == null) {
+    		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,
+   				WorkType.activeQualifier, ModulesInitialiser.sorter);
+    		types = ec.objectsWithFetchSpecification(fs);
+    	}
     	if(dict == null)
     		dict = new NSMutableDictionary();
-    	if(dict.valueForKey("trimmedWeight") == null)
-    		dict.takeValueForKey(BigDecimal.ZERO, "trimmedWeight");
+    	if(dict.valueForKey(Work.WORK_TYPE_KEY) == null)
+			dict.takeValueForKey(WorkType.defaultType(ec), Work.WORK_TYPE_KEY);
+    	if(dict.valueForKey("trimmedWeight") == null) {
+    		WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
+    		BigDecimal weight = (type == null)?null:type.dfltWeight();
+    		if(weight != null) {
+    			if(weight.compareTo(BigDecimal.ZERO) == 0)
+    				weight = BigDecimal.ZERO;
+    			else
+    				weight = weight.stripTrailingZeros();
+    			if(weight.scale() < 0)
+    				weight = weight.setScale(0);
+    		} else {
+    			weight = BigDecimal.ZERO;
+    		}
+			dict.takeValueForKey(weight, "trimmedWeight");
+    	}
     	if(dict.valueForKey(Work.ANNOUNCE_KEY) == null)
     		dict.takeValueForKey(session().valueForKey("today"), Work.ANNOUNCE_KEY);
     	if(dict.valueForKey(Work.DATE_KEY) == null)
     		dict.takeValueForKey(session().valueForKey("today"), Work.DATE_KEY);
     	if(namedFlags == null) {
     		WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
-    		if(type == null) {
-    			type = WorkType.defaultType(ec);
-    			dict.takeValueForKey(type, Work.WORK_TYPE_KEY);
-    		}
     		namedFlags = (type==null)?new NamedFlags(WorkType.flagNames):
     			type.namedFlags().and(24);
-    	}
-    	if(types == null) {
-    		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,
-   				WorkType.activeQualifier, ModulesInitialiser.sorter);
-    		types = ec.objectsWithFetchSpecification(fs);
     	}
     	critIdx = -1;
     	ifArchive = (work != null && !ec.globalIDForObject(work).isTemporary() &&
