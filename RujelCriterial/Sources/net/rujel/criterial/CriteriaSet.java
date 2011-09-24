@@ -156,8 +156,12 @@ public class CriteriaSet extends _CriteriaSet
 	
 	public static NSArray criteriaForCourse(EduCourse course) {
 		CriteriaSet set = critSetForCourse(course);
-		if (set!=null)
-			return set.sortedCriteria();
+		if (set!=null) {
+			NSArray result = set.sortedCriteria();
+			if(result == null || result .count() == 0)
+				result = criteriaForMax(0);
+			return result;
+		}
 		int maxCriter = maxCriterionForCourse(course);
 		return criteriaForMax(maxCriter);
 	}

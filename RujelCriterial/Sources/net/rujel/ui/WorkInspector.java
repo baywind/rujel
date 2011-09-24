@@ -476,7 +476,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public String checked() {
-    	if(isCheckBox() && itemMask() != null)
+    	if(isCheckBox() && ((work == null && critIdx < 0) || itemMask() != null))
     		return "checked";
     	return null;
     }
@@ -491,6 +491,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	EOEnterpriseObject _itemMask = itemMask();
     	if(_itemMask != null)
     		return (Integer)_itemMask.valueForKey("max");
+    	if(critIdx < 0 && work == null) {
+			Integer result = SettingsBase.numericSettingForCourse("CriterlessMax",
+					course, course.editingContext());
+			if(result == null)
+				result = new Integer(5);
+			return result;
+    	}
         if(critSet != null)  {
         	EOEnterpriseObject cr = critItem();
         	if(cr == null) { 
