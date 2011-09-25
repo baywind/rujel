@@ -180,6 +180,7 @@ public class EMailBroadcast implements Runnable{
 				reporter = (NSDictionary)app.valueForKeyPath(
 						"strings.Strings.Overview.defaultReporter");
 //		ec.unlock();
+		idx = -1;
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
 //			ec.lock();
@@ -230,13 +231,25 @@ gr:		while (eduGroups.hasMoreElements()) {
 //			params.takeValueForKey(ec,"editingContext");
 //			params.takeValueForKey(ses,"tmpsession");
 //			ses.sleep();
-			broadcastMarks(params);
+//			broadcastMarks(params);
+			if(queue == null) {
+				queue = new NSMutableArray(params);
+			} else
+			synchronized (queue) {
+				queue.addObject(params);
+			}
 		} // EduGroup
 		} catch (Exception ex) {
 			logger.log(WOLogLevel.WARNING,"Error broadcasting mail for period",
 					new Object[] {period,ex});
 		} finally {
 			ec.unlock();
+			idx = 0;
+			if(queue != null && queue.count() > 0) {
+				Thread t = new Thread(new EMailBroadcast(),"EMailBroadcast");
+				t.setPriority(Thread.MIN_PRIORITY + 1);
+				t.start();
+			}
 		}
 		logger.log(WOLogLevel.INFO,"Mailing queued",period);
 	}
@@ -260,31 +273,45 @@ gr:		while (eduGroups.hasMoreElements()) {
 	
 	public static synchronized void broadcastMarks(NSDictionary params) {
 		if(queue == null) {
-			/*running = new EMailBroadcast();
-			synchronized (running) {*/
-				queue = new NSMutableArray(params);
+			queue = new NSMutableArray(params);
+			if(idx < 0)
+				return;
+			synchronized (queue) {
+				logger.log(WOLogLevel.FINEST, Thread.currentThread().getName() + '(' +
+						+ Thread.currentThread().getId() + ") Starting queue",
+						params.valueForKey("logParam"));
 				Thread t = new Thread(new EMailBroadcast(),"EMailBroadcast");
 				t.setPriority(Thread.MIN_PRIORITY + 1);
 				t.start();
-			//}
+			}
 		} else {
-			//synchronized (running) {
-//			int pr = Thread.currentThread().getPriority();
+			synchronized (queue) {
+				logger.log(WOLogLevel.FINEST, Thread.currentThread().getName() + '(' +
+					+ Thread.currentThread().getId() + ") Adding to queue",
+					params.valueForKey("logParam"));
+
 				queue.addObject(params);
-			//}
+			}
 		}
 	}
 
 	protected static synchronized NSDictionary nextTask() {
-		NSDictionary result = null;
-		if(queue == null || queue.count() <= idx) {
-			queue = null;
-			idx = 0;
-		} else {
-			result = (NSDictionary)queue.objectAtIndex(idx);
-			idx++;
+		if(queue == null)
+			return null;
+		synchronized(queue) {
+			NSDictionary result = null;
+			if(queue.count() <= idx) {
+				queue = null;
+				idx = 0;
+				logger.log(WOLogLevel.FINEST, Thread.currentThread().getName() + '(' +
+						+ Thread.currentThread().getId() + ") Closing queue");
+				return null;
+			} else {
+				result = (NSDictionary)queue.objectAtIndex(idx);
+				idx++;
+				return result;
+			}
 		}
-		return result;
 	}
 
 	public void run() {
@@ -309,7 +336,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 		idx = 0;
 		queue = null;*/
 		} catch (Throwable ex) {
-			logger.log(WOLogLevel.WARNING,"Error in mail broadcasting",ex);
+			logger.log(WOLogLevel.WARNING,"Error in mail broadcasting",new Object[] {ses,ex});
 			queue = null;
 			idx = 0;
 			/*
@@ -333,9 +360,12 @@ gr:		while (eduGroups.hasMoreElements()) {
 	protected EOEditingContext ec;
 	protected void doBroadcast(NSDictionary params) {
 		NSArray students = (NSArray)params.valueForKey("students");
-		NSArray existingCourses = (NSArray)params.valueForKey("courses");
 		if(students == null || students.count() == 0)
 			return;
+		logger.log(WOLogLevel.FINEST, Thread.currentThread().getName() + '(' +
+				+ Thread.currentThread().getId() + ") Starting broadcast for",
+				new Object[] {ses, params.valueForKey("logParam")});
+		NSArray existingCourses = (NSArray)params.valueForKey("courses");
 
 		Period period = (Period)params.valueForKey("period");
 		WOContext ctx = (WOContext)params.valueForKey("ctx");
@@ -374,11 +404,15 @@ gr:		while (eduGroups.hasMoreElements()) {
 			if(user == null || !user.toString().startsWith("DummyUser"))
 				ec = null;
 		}
-		if(ec==null)	
-			ec = new SessionedEditingContext(ctx.session());
-//		ec.lock();
-		
+		if(ec == null) {
+			EOObjectStore os = (EOObjectStore)ses.objectForKey("objectStore"); 
+			os = EOObjectStoreCoordinator.defaultCoordinator();
+			ec = new SessionedEditingContext(os,ctx.session());
+			params.takeValueForKey(ec, "editingContext");
+		}
 		students = EOUtilities.localInstancesOfObjects(ec,students);
+		params.takeValueForKey(students, "students");
+
 		existingCourses = EOUtilities.localInstancesOfObjects(ec,existingCourses);
 
 		if(period instanceof EOEnterpriseObject) {
@@ -388,6 +422,9 @@ gr:		while (eduGroups.hasMoreElements()) {
 		if(contacts == null) {
 //			ec.unlock();
 //			ses.sleep();
+			logger.log(WOLogLevel.FINEST, Thread.currentThread().getName() + '(' +
+					+ Thread.currentThread().getId() + ") No contacts found",
+					new Object[] {ses, params.valueForKey("logParam")});
 			return;
 		}
 		
@@ -400,14 +437,15 @@ gr:		while (eduGroups.hasMoreElements()) {
 			if(lag != null)
 				timeout = Long.parseLong(lag);
 		} catch (Exception ex) {
-			logger.log(WOLogLevel.INFO,"Failed to define message lag",ex);
+			logger.log(WOLogLevel.INFO,"Failed to define message lag",new Object[] {ses,ex});
 			timeout = 0;
 		}
 		
 		Mailer mailer = (Mailer)params.valueForKey("mailer");
-		if(mailer == null)
+		if(mailer == null) {
 			mailer = new Mailer();
-
+			logger.log(WOLogLevel.FINEST,"Mailer instantiated",ses);
+		}
 		StringBuffer textBuf = new StringBuffer();
 		boolean allowRequest = false;
 		if(reporter != null) {
@@ -453,10 +491,13 @@ gr:		while (eduGroups.hasMoreElements()) {
 		}
 		
 		int textLength = textBuf.length();
+		logger.log(WOLogLevel.FINEST,"Message text prepared",ses);
 		ses.setObjectForKey(params, "broadcastAdditions");
 		NSArray extensions = (NSArray)ses.valueForKeyPath("modules.broadcastAdditions");
 		ses.removeObjectForKey("broadcastAdditions");
-
+		logger.log(WOLogLevel.FINEST,"Found " + extensions.count() + 
+				" broadcastAdditions",ses);
+		
 		Object since = params.valueForKey("since");
 		Object upTo = params.valueForKey("to");
 		NSSet adrSet = (NSSet)params.valueForKey("adrSet");
@@ -468,7 +509,7 @@ st:		while (stEnu.hasMoreElements()) {
 			stContacts = contactsInSet(stContacts, adrSet);
 			if(stContacts == null || stContacts.count() == 0) {
 				logger.log(WOLogLevel.FINER,
-						"Skipping mail to student as no contacts found",student);
+						"Skipping mail to student as no contacts found",new Object[] {ses,student});
 				continue st;
 			}
 			Enumeration cenu = stContacts.objectEnumerator();
@@ -491,7 +532,8 @@ st:		while (stEnu.hasMoreElements()) {
 			InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(cenu,adrSet != null);
 			if(to == null || to.length == 0) {
 				logger.log(WOLogLevel.FINER,
-						"Skipping mail to student as no active adresses found",student);
+						"Skipping mail to student as no active adresses found",
+						new Object[] {ses,student});
 				continue st;
 			}
 			synchronized (mailer) {
@@ -511,7 +553,8 @@ st:		while (stEnu.hasMoreElements()) {
 							attach = null;
 							if(!Various.boolForObject(params.valueForKey("sendEmpty"))) {
 								logger.log(WOLogLevel.FINER,
-										"Skipping mail to student as no data fond",student);
+										"Skipping mail to student as no data fond",
+										new Object[] {ses,student});
 								continue;
 							}
 						}
@@ -546,10 +589,10 @@ st:		while (stEnu.hasMoreElements()) {
 					} else {
 						mailer.sendTextMessage(subject.toString(), message, to);
 					}
-					logger.finest("Mail sent \"" + subject + '"');
+					logger.log(WOLogLevel.FINEST,"Mail sent \"" + subject + '"',ses);
 				} catch (Exception ex) {
 					logger.log(WOLogLevel.WARNING,"Failed to send email for student",
-							new Object[] {student,ex});
+							new Object[] {ses,student,ex});
 					WeakReference sesRef = (WeakReference)params.valueForKey("callerSession");
 					WOSession callerSession = (sesRef == null)?null:(WOSession)sesRef.get();
 					if(callerSession != null) {
@@ -568,13 +611,14 @@ st:		while (stEnu.hasMoreElements()) {
 						int pr = t.getPriority();
 						t.setPriority(Thread.MIN_PRIORITY);
 						while(towait > 0) {
-							logger.finest("Waiting timeout " + towait);
+							logger.log(WOLogLevel.FINEST,"Waiting timeout " + towait,ses);
 							mailer.wait(towait);
 							towait = fin - System.currentTimeMillis();
 						}
 						t.setPriority(pr);
 					} catch (Exception ex) {
-						logger.log(WOLogLevel.FINER,"Interrupted timeout between mails",ex);
+						logger.log(WOLogLevel.FINER,"Interrupted timeout between mails",
+								new Object[] {ses,ex});
 					}
 				}
 			}
@@ -582,7 +626,7 @@ st:		while (stEnu.hasMoreElements()) {
 		String logMessage = (String)params.valueForKey("logMessage");
 		Object logParam = params.valueForKey("logParam");
 		if(logMessage != null)
-			logger.log(WOLogLevel.FINE,logMessage,logParam);
+			logger.log(WOLogLevel.FINE,logMessage,new Object[] {ses,logParam});
 //		ec.unlock();
 //		ses.sleep();
 	}
