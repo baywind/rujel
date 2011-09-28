@@ -46,6 +46,8 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 
 public class TableLoginHandler implements LoginHandler {
@@ -122,6 +124,7 @@ public class TableLoginHandler implements LoginHandler {
 		String password;
 		try {
 			user = (String) args[0];
+			user = user.trim();
 			password = (String) args[1];
 		} catch (Exception exc) {
 			throw new IllegalArgumentException(
@@ -130,8 +133,15 @@ public class TableLoginHandler implements LoginHandler {
 		EOEditingContext ec = new EOEditingContext();
 		ec.lock();
 		try {
-			AutUser au = (AutUser)EOUtilities.objectMatchingKeyAndValue(ec,
-					AutUser.ENTITY_NAME, AutUser.USER_NAME_KEY, user);
+			EOQualifier qual = new EOKeyValueQualifier(AutUser.USER_NAME_KEY,
+					EOQualifier.QualifierOperatorCaseInsensitiveLike, user);
+			EOFetchSpecification fs = new EOFetchSpecification(AutUser.ENTITY_NAME,qual,null);
+			NSArray found = ec.objectsWithFetchSpecification(fs);
+			if(found.count() > 1) {
+				throw new AuthenticationFailedException(ERROR, 
+						"Multiple users with the same name found");
+			} else if(found.count() == 1) {
+			AutUser au = (AutUser)found.objectAtIndex(0);
 			if(au.credential() != null) { 
 				if(au.credential().startsWith(HASH_PREFIX)) { 
 					// compare credential with password digest
@@ -160,14 +170,11 @@ public class TableLoginHandler implements LoginHandler {
 				}
 			}
 			return new TableUser(au, null);
-		} catch (EOUtilities.MoreThanOneException e) {
-			throw new AuthenticationFailedException(ERROR, 
-					"Multiple users with the same name", e);
-		} catch (com.webobjects.eoaccess.EOObjectNotAvailableException e) {
-			if(parentHandler != null) {
+			
+			} else if(parentHandler != null) {
 				UserPresentation pUser = parentHandler.authenticate(args);
 				if(SettingsReader.boolForKeyPath("auth.autoAddUsers", false)){
-					NSArray found = NSArray.EmptyArray;
+					found = NSArray.EmptyArray;
 					try {
 						found = Person.Utility.search(ec, Teacher.entityName,
 								pUser.present());
@@ -177,7 +184,7 @@ public class TableLoginHandler implements LoginHandler {
 					try {
 						AutUser au = (AutUser)EOUtilities.createAndInsertInstance(ec,
 								AutUser.ENTITY_NAME);
-						au.setUserName(user);
+						au.setUserName(user.toLowerCase());
 						au.setCredential(pUser.toString());
 						ajustGroups(au, pUser);
 						if(found.count() == 1)
@@ -196,9 +203,10 @@ public class TableLoginHandler implements LoginHandler {
 					return pUser;
 				}
 			} else {
-				throw new AuthenticationFailedException(IDENTITY, "Unknown user", e);
+				throw new AuthenticationFailedException(IDENTITY, "Unknown user");
 			}
 		} catch (AuthenticationFailedException e) {
+			e.setUserId(user);
 			throw e;
 		} catch (Exception e) {
 			throw new AuthenticationFailedException(ERROR, "Error authenticating", e);

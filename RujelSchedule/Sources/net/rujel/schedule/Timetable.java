@@ -166,7 +166,7 @@ public class Timetable extends LessonList {
     	if(courses == null || courses.count() == 0) {
     		quals[0] = new EOKeyValueQualifier(ScheduleEntry.FLAGS_KEY,
     				EOQualifier.QualifierOperatorEqual,new Integer(0)); // NOT temporary
-        	quals[1] = ScheduleEntry.onDate(date); // OR recantly actual
+        	quals[1] = ScheduleEntry.onDate(date); // OR recently actual
         	quals[1] = new EOOrQualifier(new NSArray(quals));
 
     		quals[0] = new EOKeyValueQualifier("course",

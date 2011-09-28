@@ -85,6 +85,7 @@ public class MarkArchive extends _MarkArchive
 			logger.log(WOLogLevel.FINER, "Archiving delayed for new object",eo);
 			if(dict == null)
 				dict = new NSMutableDictionary();
+			dict.takeValueForKey(actionType(), ACTION_TYPE_KEY);
 			waiterForEc(eo.editingContext()).registerArchive(dict, eo);
 			return;
 		}
@@ -229,7 +230,13 @@ public class MarkArchive extends _MarkArchive
 				if(gid instanceof EOKeyGlobalID) {
 					takeValueForKey(((EOKeyGlobalID)gid).keyValues()[0], keys[i]);
 				} else {
-					NSSelector selector = new NSSelector("notifyOnPKinit",
+					editingContext().deleteObject(this);
+					logger.log(WOLogLevel.FINER, "Archiving delayed for new object",identifierDict);
+					if(dict == null)
+						dict = new NSMutableDictionary();
+					dict.takeValueForKey(actionType(), ACTION_TYPE_KEY);
+					waiterForEc(ec).registerArchive(dict, identifierDict);
+/*					NSSelector selector = new NSSelector("notifyOnPKinit",
 							new Class[] {NSNotification.class});
 					NSNotificationCenter.defaultCenter().addObserver(
 							this, selector, EOGlobalID.GlobalIDChangedNotification, null);
@@ -237,7 +244,7 @@ public class MarkArchive extends _MarkArchive
 					if(awaitedKeys == null)
 						awaitedKeys = new NSMutableDictionary(keys[i],gid);
 					else
-						awaitedKeys.setObjectForKey(keys[i],gid);
+						awaitedKeys.setObjectForKey(keys[i],gid);*/
 				}
 			} else {
 				takeValueForKey(zero, keys[i]);
@@ -246,7 +253,7 @@ public class MarkArchive extends _MarkArchive
 			}
 		}
 	}
-	
+	/*
 	protected NSMutableDictionary awaitedKeys;
 	
 	public void notifyOnPKinit(NSNotification notification) {
@@ -262,7 +269,7 @@ public class MarkArchive extends _MarkArchive
 			takeValueForKey(value, key);
 		}
 		NSNotificationCenter.defaultCenter().removeObserver(this);
-	}
+	}*/
 	
 	public static NSArray archivesForObject(EOEnterpriseObject eo) {
 		EOEditingContext ec = eo.editingContext();
@@ -484,9 +491,9 @@ public class MarkArchive extends _MarkArchive
 		super.turnIntoFault(handler);
 	}
 	
-	protected static NSMutableSet waiters = new NSMutableSet();
+	protected static volatile NSMutableSet waiters = new NSMutableSet();
 	
-	protected static Waiter waiterForEc(EOEditingContext ec) {
+	protected static synchronized Waiter waiterForEc(EOEditingContext ec) {
 		Enumeration enu = waiters.objectEnumerator();
 		Waiter result = null;
 		NSMutableSet empty = null;
@@ -535,13 +542,27 @@ public class MarkArchive extends _MarkArchive
 			dicts.addObject(dict);
 		}
 		
+		public void registerArchive(NSMutableDictionary dict, NSDictionary identifier) {
+			NSMutableDictionary identifierRefs = new NSMutableDictionary();
+			Enumeration enu = identifier.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				Object key = enu.nextElement();
+				Object value = identifier.objectForKey(key);
+				if(value instanceof EOEnterpriseObject)
+					value = new WeakReference(value);
+				identifierRefs.setObjectForKey(value, key);
+			}
+			dict.setObjectForKey(identifierRefs, "archiveIdentifier");
+			dicts.addObject(dict);
+		}
+		
 		public void fire(NSNotification notification) {
 			EOEditingContext ec = editingContext();
 			if(ec == null) {
 				WOSession ses = null;
 				if(ec instanceof SessionedEditingContext)
 					ses = ((SessionedEditingContext)ec).session();
-				Logger.getLogger("rujel.markarchive").log(WOLogLevel.WARNING,
+				logger.log(WOLogLevel.WARNING,
 						"Failed to save archives: editingContext garbage collected",ses);
 				return;
 			}
@@ -551,22 +572,50 @@ public class MarkArchive extends _MarkArchive
 				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
 				WeakReference<EOEnterpriseObject> eoRef = (WeakReference<EOEnterpriseObject>)
 									dict.removeObjectForKey("eoRef");
-				if(eoRef == null) continue;
-				EOEnterpriseObject eo = eoRef.get();
-				if(eo == null) continue;
-				NSDictionary pKey = objectIdentifierDict(eo);
-				if(pKey != null) {				
+				NSDictionary pKey = null;
+				String usedEntity = null;
+				if(eoRef != null) {
+					EOEnterpriseObject eo = eoRef.get();
+					if(eo == null) continue;
+					pKey = objectIdentifierDict(eo);
+					usedEntity = eo.entityName();
+				}
+				NSDictionary identifierRefs = (NSDictionary)dict.removeObjectForKey(
+																	"archiveIdentifier");
+				if(identifierRefs != null) {
+					Enumeration ienu = identifierRefs.keyEnumerator();
+					pKey = new NSMutableDictionary();
+					while (ienu.hasMoreElements()) {
+						String key = ienu.nextElement().toString();
+						Object value = identifierRefs.objectForKey(key);
+						if("entityName".equals(key)) {
+							usedEntity = value.toString();
+						} else {
+							if(value instanceof WeakReference) {
+								value = ((WeakReference)value).get();
+								if(value == null || ec.globalIDForObject(
+										(EOEnterpriseObject)value).isTemporary()) {
+									pKey = null;
+									break;
+								}
+							}
+							pKey.takeValueForKey(value, key);
+						}
+					}
+				}
+				if(pKey != null) {		
+					Integer actionType = (Integer)dict.removeObjectForKey(ACTION_TYPE_KEY);
 					MarkArchive arch = (MarkArchive)EOUtilities.createAndInsertInstance(
 							ec, "MarkArchive");
-					EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), eo.editingContext());
-					arch.setUsedEntity(usedEntity);
+					arch.setUsedEntityName(usedEntity);
+					arch.setActionType(actionType);
 					arch.setIdentifierFromDictionary(usedEntity, pKey);
 					arch.setArchiveDict(dict);
 				} else {
 					if(left == null)
 						left = new NSMutableSet(dict);
 					else
-						left.addObject(dict);					
+						left.addObject(dict);
 				}
 			} // dicts.objectEnumerator()
 			try {
@@ -577,7 +626,7 @@ public class MarkArchive extends _MarkArchive
 				Object args[] = new Object[] {e};
 				if(ec instanceof SessionedEditingContext)
 					args = new Object[] {e,((SessionedEditingContext)ec).session()};
-				Logger.getLogger("rujel.markarchive").log(WOLogLevel.WARNING,
+				logger.log(WOLogLevel.WARNING,
 						"Failed to save archives",args);
 				if(ec.hasChanges())
 					ec.revert();

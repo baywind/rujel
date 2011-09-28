@@ -29,8 +29,10 @@
 
 package net.rujel.base;
 
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOApplication;
@@ -38,6 +40,7 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WOSession;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.Format;
 import java.text.ParseException;
@@ -291,35 +294,77 @@ public class MyUtility {
 		return value;
 	}
 
+	protected static NSArray scheduleMethods;
 	public static Integer setNumberToNewLesson(EduLesson currLesson) {
 		EOEditingContext ec = currLesson.editingContext();
-		NSMutableArray allLessons = EOUtilities.objectsMatchingKeyAndValue(ec, 
-				currLesson.entityName(),"course", currLesson.course()).mutableClone();
-		if(allLessons != null && allLessons.count() > 0) {
-			allLessons.removeIdenticalObject(currLesson);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(allLessons, EduLesson.sorter);
+		if(scheduleMethods == null) {
+			if (ec instanceof SessionedEditingContext) {
+				WOSession ses = ((SessionedEditingContext)ec).session();
+				scheduleMethods = (NSArray)ses.valueForKeyPath("modules.dateSchedule");
+				if(scheduleMethods.count() > 0)
+					scheduleMethods = (NSArray)scheduleMethods.valueForKey("method");
+			}
 		}
-		if(allLessons == null || allLessons.count() == 0) {
+		EOQualifier qual = new EOKeyValueQualifier("date",
+				EOQualifier.QualifierOperatorEqual, currLesson.date());
+		EOFetchSpecification fs = new EOFetchSpecification(currLesson.entityName(),
+				qual,EduLesson.sorter);
+		NSArray existing = ec.objectsWithFetchSpecification(fs);
+		if(existing.contains(currLesson))
+			return currLesson.number();
+		if(currLesson.entityName().equals(EduLesson.entityName) &&
+				scheduleMethods != null && scheduleMethods.count() > 0) {
+			Enumeration  enu = scheduleMethods.objectEnumerator();
+			NSArray sched = null;
+			while (enu.hasMoreElements()) {
+				Method method = (Method) enu.nextElement();
+				try {
+					sched = (NSArray)method.invoke(null, currLesson.course(), currLesson.date());
+				} catch (Exception e) {}
+				if(sched != null && sched.count() > 0)
+					break;
+			}
+			if(sched != null && sched.count() > 0) {
+				if(existing == null || existing.count() == 0) {
+					Integer first = (Integer)sched.objectAtIndex(0);
+					currLesson.setNumber(first);
+					return first;
+				}
+				NSMutableArray numbers = sched.mutableClone();
+				enu = existing.objectEnumerator();
+				int max = 0;
+				while (enu.hasMoreElements()) {
+					EduLesson exl = (EduLesson) enu.nextElement();
+					Integer num = exl.number();
+					if(max < num.intValue())
+						max = num.intValue();
+					numbers.removeObject(num);
+				}
+				if(numbers.count() > 0) {
+					Integer num = (Integer)numbers.objectAtIndex(0);
+					currLesson.setNumber(num);
+					return num;
+				}
+				Integer num = new Integer(max + 1);
+				currLesson.setNumber(num);
+				return num;
+			}
+		}
+		if(existing == null || existing.count() == 0) {
 			Integer num = new Integer(1);
 			currLesson.setNumber(num);
 			return num;
 		}
-		int idx = allLessons.count() + 1;
-		boolean inProgress = true;
-		for (int i = idx-2; i >= 0; i--) {
-			EduLesson lesson = (EduLesson)allLessons.objectAtIndex(i);
-			if(inProgress && lesson.date().compare(currLesson.date()) <= 0) {
-				currLesson.setNumber(idx);
-				inProgress = false;
-				idx--;
-			}
-			if(lesson.number().intValue() != idx)
-				lesson.setNumber(idx);
-			idx--;
+		Enumeration enu = existing.objectEnumerator();
+		int max = 0;
+		while (enu.hasMoreElements()) {
+			EduLesson exl = (EduLesson) enu.nextElement();
+			Integer num = exl.number();
+			if(max < num.intValue())
+				max = num.intValue();
 		}
-		Integer num = new Integer(idx);
-		if(inProgress) 
-			currLesson.setNumber(num);
+		Integer num = new Integer(max + 1);
+		currLesson.setNumber(num);
 		return num;
 	}
 	

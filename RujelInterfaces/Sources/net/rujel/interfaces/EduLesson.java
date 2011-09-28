@@ -41,8 +41,8 @@ public interface EduLesson extends PerPersonLink,EOEnterpriseObject {
 			+ className.lastIndexOf('.'));
 
 	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
-		EOSortOrdering.sortOrderingWithKey("number", EOSortOrdering.CompareAscending),
-		EOSortOrdering.sortOrderingWithKey("date", EOSortOrdering.CompareAscending),
+			EOSortOrdering.sortOrderingWithKey("date", EOSortOrdering.CompareAscending),
+			EOSortOrdering.sortOrderingWithKey("number", EOSortOrdering.CompareAscending),
 	});
 
 	public EduCourse course();

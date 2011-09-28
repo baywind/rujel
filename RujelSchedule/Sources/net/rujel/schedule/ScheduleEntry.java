@@ -161,4 +161,35 @@ public class ScheduleEntry extends _ScheduleEntry {
 		quals[0] = since;
 		return new EOAndQualifier(new NSArray(quals));
 	}
+	
+	public static NSArray entriesForDay(EduCourse course, NSTimestamp date) {
+		EOEditingContext ec = course.editingContext();
+    	int week = SettingsBase.numericSettingForCourse("EduPeriod", course, ec,7);
+    	if(week%7 != 0)
+    		return null; // can't work with non-weekly schedule
+    	Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+    	if(week > 7) { // TODO : smarter support for non 7 days periods
+    		cal.setMinimalDaysInFirstWeek(1);
+    		week = (cal.get(Calendar.WEEK_OF_YEAR) -1) % (week/7);
+    		week = week*7 -1;
+    	} else {
+    		week = -1;
+    	}
+		week += cal.get(Calendar.DAY_OF_WEEK);
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = onDate(date);
+		quals[1] = new EOKeyValueQualifier(WEEKDAY_NUM_KEY, EOQualifier.QualifierOperatorEqual, 
+				new Integer(week));
+		quals[1] = new EOOrQualifier(new NSArray(quals));		
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[1],tableSorter);
+		return ec.objectsWithFetchSpecification(fs);
+	}
+	
+	public static NSArray scheduleForDay(EduCourse course, NSTimestamp date) {
+		NSArray entries = entriesForDay(course, date);
+		if(entries == null || entries.count() == 0)
+			return null;
+		return (NSArray)entries.valueForKey(NUM_KEY);
+	}
 }

@@ -129,9 +129,9 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public NoteDelegate _noteDelegate;
 
 	public String noteForStudent(Student student) {
-		if(_noteDelegate == null || _noteDelegate.notValid())
+		if(_noteDelegate == null || _noteDelegate.notValid(this))
 			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
-		String delegateNote = (_noteDelegate == null || _noteDelegate.notValid())?null :
+		String delegateNote = (_noteDelegate == null || _noteDelegate.notValid(this))?null :
 			_noteDelegate.lessonNoteForStudent(this, student);
 		String note = noteForStudent(this, student);
 		if(delegateNote == null)
@@ -147,9 +147,9 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 				newNote = null;
 		}
 		int skip = isSkip(newNote);
-		if(_noteDelegate == null || _noteDelegate.notValid())
+		if(_noteDelegate == null || _noteDelegate.notValid(this))
 			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
-		if(_noteDelegate == null || _noteDelegate.notValid()) {
+		if(_noteDelegate == null || _noteDelegate.notValid(this)) {
 			setNoteForStudent(this, newNote, student);
 			return;
 		}
@@ -246,7 +246,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public static interface NoteDelegate {
 		public String lessonNoteForStudent(EduLesson lesson, Student student);
 		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student);
-		public boolean notValid();
+		public boolean notValid(EduLesson lesson);
 	}
 	
 	protected static TaskDelegate taskDelegate = new TaskDelegate();

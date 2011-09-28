@@ -29,6 +29,7 @@
 
 package net.rujel.schedule;
 
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
@@ -78,6 +79,8 @@ public class SchedModule {
 			return PlistReader.cloneDictionary(diaryTab, true);
 		} else if ("broadcastAdditions".equals(obj)) {
 			return broadcastAdditions(ctx);
+		} else if ("dateSchedule".equals(obj)) {
+			return dateSchedule(ctx);
 		}
 		return null;
 	}
@@ -168,5 +171,15 @@ public class SchedModule {
 			dict.setObjectForKey(text, ec.globalIDForObject(student));
 		}
 		return dict;
+	}
+	
+	public static Object dateSchedule(WOContext ctx) {
+		try {
+			Method method = ScheduleEntry.class.getMethod("scheduleForDay",
+					EduCourse.class, NSTimestamp.class);
+			return new NSDictionary(new Object[] {method,new Integer(30)},
+						new String[] {"method","sort"});
+		} catch(Exception e) {}
+		return null;
 	}
 }

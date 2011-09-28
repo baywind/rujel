@@ -353,12 +353,23 @@ public class LessonNoteEditor extends WOComponent {
 	}
 	
 	public void saveNoreset() {
+		NSArray objects = ec.insertedObjects();
+		if(objects != null && objects.count() > 0) {
+			Enumeration enu = objects.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+				if(obj instanceof EduLesson) {
+					currPerPersonLink = (EduLesson)obj;
+					break;
+				}
+			}
+		}
 		save(false);
 		//return this;
 	}
 	
 	public void save() {
-		save(student == null);
+		save(!ec.hasChanges());
 		//return this;
 	}
 	
@@ -387,15 +398,6 @@ public class LessonNoteEditor extends WOComponent {
 			NSArray objects = ec.insertedObjects();
 			if(objects != null && objects.count() > 0) {
 				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
-				Enumeration enu = objects.objectEnumerator();
-				while (enu.hasMoreElements()) {
-					EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
-					if(obj instanceof EduLesson) {
-						currPerPersonLink = (EduLesson)obj;
-						newLesson = true;
-						break;
-					}
-				}
 			} else {
 				newLesson = false;
 			}

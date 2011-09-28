@@ -42,6 +42,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import com.webobjects.appserver.WOApplication;
 import java.math.*;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -874,8 +875,23 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
     		return "font-family: sans-serif;";
     }
     
-    public boolean notValid() {
-    	return editingContext() == null;
+    public boolean notValid(EduLesson lesson) {
+    	if (editingContext() == null)
+    		return true;
+    	Integer specFlags = (Integer)WorkType.specTypes.valueForKey("onLesson");
+    	if(!specFlags.equals(workType().dfltFlags()))
+    		return true;
+    	long lMillis = lesson.date().getTime();
+    	long wMillis = date().getTime();
+    	if(lMillis == wMillis)
+    		return false;
+    	if(Math.abs(wMillis - lMillis) > NSLock.OneDay*2)
+    		return true;
+    	Calendar cal = Calendar.getInstance();
+    	cal.setTimeInMillis(wMillis);
+    	int wDay = cal.get(Calendar.DAY_OF_YEAR);
+    	cal.setTimeInMillis(lMillis);
+    	return (wDay != cal.get(Calendar.DAY_OF_YEAR));
     }
 
 	public String lessonNoteForStudent(EduLesson lesson, Student student) {
@@ -892,6 +908,9 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		if(note != null)
 			note = note.trim();
 		Integer num = null;
+		boolean arc = (SettingsReader.boolForKeyPath("markarchive.Mark", 
+				SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
+		int arcLevel = 0;
 		if(note != null && note.length() > 0 && Character.isDigit(note.charAt(0))) {
 			int idx = 1;
 			while (idx < note.length()) {
@@ -901,13 +920,13 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 			}
 			if(idx < note.length()) {
 				if(!Character.isLetter(note.charAt(idx)))
-					num = new Integer(note.substring(0,idx));
+					try {
+						num = new Integer(note.substring(0,idx));
+					} catch (Exception e) {}
 			} else {
 				try {
 					num = new Integer(note);
-				} catch (Exception e) {
-					;
-				}
+				} catch (Exception e) {}
 			}
 			Integer max = null;
 			NSArray criterMask = criterMask();
@@ -956,6 +975,9 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 					mark.setCriterion(new Integer(0));
 					mark.setStudent(student);
 					this.addObjectToBothSidesOfRelationshipWithKey(mark,MARKS_KEY);
+					arcLevel = 1;
+				} else if(!num.equals(mark.value())) {
+					arcLevel = 2;
 				}
 				mark.setValue(num);
 			}
@@ -966,9 +988,45 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 				removeObjectFromBothSidesOfRelationshipWithKey(mark, MARKS_KEY);
 				editingContext().deleteObject(mark);
 				nullify();
+				arcLevel = 3;
 			}
 		}
+		if(arc) {
+			if(note == null) {
+				if(arcLevel == 0 && noteForStudent(student) != null)
+					arcLevel = 3;
+			} else if(arcLevel < 2) {
+				String prev = noteForStudent(student);
+				if(prev == null)
+					arcLevel = 1;
+				else if(!prev.equals(note))
+					arcLevel = 2;
+			}
+			arc = (arcLevel > 0);
+		}
 		setNoteForStudent(note, student);
+		if(arc) {
+			NSMutableDictionary ident = new NSMutableDictionary(Mark.ENTITY_NAME,"entityName");
+			ident.takeValueForKey(this,"work");
+			ident.takeValueForKey(student, "student");
+			ident.takeValueForKey(course(), "eduCourse");
+			EOEnterpriseObject _archive = EOUtilities.createAndInsertInstance(
+					editingContext(),"MarkArchive");
+			_archive.takeValueForKey(new Integer(arcLevel), "actionType");
+			if(num != null || arcLevel > 2)
+				_archive.takeValueForKey(num, '@' + criterName(new Integer(0)));
+			if(note != null || arcLevel > 2)
+				_archive.takeValueForKey(note, "@text");
+			try {
+				String reason = ((SessionedEditingContext)editingContext()).session().context().
+					request().stringFormValueForKey("reasonText");
+				if(reason != null)
+					_archive.takeValueForKey(reason, "reason");
+			} catch (Exception e) {}
+			_archive.takeValueForKey(ident, "identifierDictionary");
+		}
+		if(!lesson.number().equals(number()))
+			setNumber(lesson.number());
 	}
 	
 	public NSDictionary archiveDict() {

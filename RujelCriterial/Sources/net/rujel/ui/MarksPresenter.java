@@ -254,6 +254,9 @@ public class MarksPresenter extends NotePresenter {
 		if(ident == null)
 			return null;
 		ident.takeValueForKey(lesson(),"work");
+		if(Various.boolForObject(ident.valueForKey("isEmpty")) && 
+				lesson().forPersonLink(student()) != null)
+			ident.removeObjectForKey("isEmpty");
 		//ident.removeObjectForKey("lesson");
 		return ident;
     }

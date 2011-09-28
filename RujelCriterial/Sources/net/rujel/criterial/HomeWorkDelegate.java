@@ -40,7 +40,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
 import net.rujel.base.BaseLesson;
-import net.rujel.base.MyUtility;
 import net.rujel.base.BaseLesson.NoteDelegate;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.EduLesson;
@@ -73,7 +72,8 @@ public class HomeWorkDelegate extends TaskDelegate {
 						 lesson.editingContext(), Work.ENTITY_NAME);
 				 work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
 				 work.takeValuesFromDictionary(newDictForLesson(lesson));
-				 MyUtility.setNumberToNewLesson(work);
+//				 MyUtility.setNumberToNewLesson(work);
+				 work.setNumber(new Integer(0));
 			 }
 			 work.setTheme(newTask);
 		 }
@@ -233,12 +233,48 @@ public class HomeWorkDelegate extends TaskDelegate {
 				EOQualifier.QualifierOperatorEqual, type);
 		quals[2] = new EOKeyValueQualifier(Work.DATE_KEY,
 				EOQualifier.QualifierOperatorEqual,lesson.date());
-		quals[2] = new EOAndQualifier(new NSArray(quals));
+		quals[1] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
-				quals[2],EduLesson.sorter);
+				quals[1],EduLesson.sorter);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found != null && found.count() > 0)
-			return (Work)found.objectAtIndex(0);
+		if(found != null && found.count() > 0) {
+			NSMutableDictionary byNum = new NSMutableDictionary();
+			for (int i = 0; i < found.count(); i++) {
+				Work work = (Work)found.objectAtIndex(i);
+				if(work.number().equals(lesson.number()))
+					return work;
+				byNum.setObjectForKey(work, work.number());
+			}
+			quals[1] = new EOKeyValueQualifier(Work.NUMBER_KEY,
+					EOQualifier.QualifierOperatorNotEqual,lesson.number());
+			quals[1] = new EOAndQualifier(new NSArray(quals));
+			fs = new EOFetchSpecification(lesson.entityName(),quals[1],EduLesson.sorter);
+			NSMutableArray works = found.mutableClone();
+			found = ec.objectsWithFetchSpecification(fs);
+			if(found == null || found.count() == 0)
+				return (Work)works.objectAtIndex(0);
+			NSMutableArray lessons = new NSMutableArray();
+			for (int i = 0; i < found.count(); i++) {
+				EduLesson ls = (EduLesson)found.objectAtIndex(i);
+				Integer num = ls.number();
+				Work work = (Work)byNum.removeObjectForKey(num);
+				if(work == null) {
+					lessons.addObject(ls);
+				} else if(byNum.count() == 0) {
+					return null;
+				} else {
+					works.removeObject(work);
+				}
+			}
+			for (int i = 0; i < works.count(); i++) {
+				Work work = (Work)works.objectAtIndex(i);
+				if(lessons.count() <= i)
+					return work;
+				EduLesson ls = (EduLesson)lessons.objectAtIndex(i);
+				if(ls.number().compareTo(lesson.number()) > 0)
+					return work;
+			}
+		}
 		return null;
 	}
 
@@ -268,13 +304,14 @@ public class HomeWorkDelegate extends TaskDelegate {
 				work.setWorkType(WorkType.getSpecType(lesson.editingContext(), "onLesson"));
 				work.setTheme((String)WOApplication.application().valueForKeyPath(
 				"strings.RujelCriterial_Strings.spesTypes.onLesson.typeName"));
-				MyUtility.setNumberToNewLesson(work);
+				work.setNumber(lesson.number());
+//				MyUtility.setNumberToNewLesson(work);
 			}
 			work.setLessonNoteForStudent(note, lesson, student);
 			lesson.takeValueForKey(work, "noteDelegate");
 		}
 
-		public boolean notValid() {
+		public boolean notValid(EduLesson lesson) {
 			return false;
 		}
 	}
