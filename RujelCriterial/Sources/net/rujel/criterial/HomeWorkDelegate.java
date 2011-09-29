@@ -73,8 +73,8 @@ public class HomeWorkDelegate extends TaskDelegate {
 				 work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
 				 work.takeValuesFromDictionary(newDictForLesson(lesson));
 //				 MyUtility.setNumberToNewLesson(work);
-				 work.setNumber(new Integer(0));
 			 }
+			 work.setNumber(new Integer(lesson.number().intValue() - 100));
 			 work.setTheme(newTask);
 		 }
 	}
@@ -128,21 +128,21 @@ public class HomeWorkDelegate extends TaskDelegate {
 				quals[2],EduLesson.sorter);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
-			Work work = (Work)found.objectAtIndex(0);
-			if(found.count() > 1) {
-				for (int i = 0; i < found.count(); i++) {
-					work = (Work)found.objectAtIndex(i);
-					if(work.workType().namedFlags().flagForKey("fixHometask"))
-						break;
-					work = null;
-				}
-				if(work == null)
-					work = (Work)found.objectAtIndex(0);
+			Work work = null;
+			int num = lesson.number().intValue() - 100;
+			for (int i = 0; i < found.count(); i++) {
+				Work w = (Work)found.objectAtIndex(i);
+				int wNum = w.number().intValue();
+				if(wNum == num)
+					return w;
+				if(wNum < 0)
+					continue;
+				if(work == null || w.workType().namedFlags().flagForKey("fixHometask"))
+					work = w;
 			}
 			return work;
 		}
-//		if(!create)
-			return null;
+		return null;
 	}
 	
 	public NSMutableDictionary newDictForLesson(EduLesson lesson) {

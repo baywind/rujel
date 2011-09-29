@@ -52,7 +52,7 @@ import com.webobjects.foundation.*;
 public class WorkInspector extends com.webobjects.appserver.WOComponent {
 
 	public static final NSArray keys = new NSArray(new String[] {
-			Work.NUMBER_KEY, Work.WORK_TYPE_KEY, Work.ANNOUNCE_KEY, Work.DATE_KEY, 
+			Work.WORK_TYPE_KEY, Work.ANNOUNCE_KEY, Work.DATE_KEY, 
 			Work.THEME_KEY, Work.TITLE_KEY, "trimmedWeight",  "homeTask"});
 
 	public WOComponent returnPage;
@@ -183,10 +183,15 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 				work.takeValueForKey(value, key);
 		}
 //    	work.takeValuesFromDictionary(dict);
-    	if(created) {
-    		MyUtility.setNumberToNewLesson(work);
-    		dict.takeValueForKey(work.number(), "number");
+    	if(work.isHometask() && work.announce() != work.date()) {
+    		int num = 0;
+    		if(lesson != null && lesson != work)
+    			num = (lesson.number().intValue() - 100);
+    		work.setNumber(new Integer(num));
+    	} else if(created || work.number() == null || work.number().intValue() < 100) {
+    		MyUtility.setNumberToNewLesson(work,100);
     	}
+    	dict.takeValueForKey(work.number(), "number");
     	int load = 0;
     	if(hours != null)
     		load = hours.intValue() * 60;
@@ -288,6 +293,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
        			work.nullify();
 			work.validateForSave();
 	    	returnPage.ensureAwakeInContext(context());
+       		if(lesson != null && lesson != work) {
+       			returnPage.takeValueForKey(work, "currLesson");
+       		}
 			WOActionResults result = (WOActionResults)returnPage.valueForKey("saveNoreset");
 			if(result instanceof WOComponent)
 				returnPage = (WOComponent)result;
@@ -302,18 +310,15 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING, "error saving", 
     				new Object[] {session(),work,e});
     	}
-//    	done = (!ec.hasChanges());
-//       	if(done) {
     	if (!ec.hasChanges()) {
        		if(lesson != null && lesson != work) {
        			returnPage.takeValueForKey(lesson, "currLesson");
        			returnPage.takeValueForKey(lesson, "selector");
        		}
-    		if(Work.ENTITY_NAME.equals(returnPage.valueForKeyPath("present.entityName"))) {
-    			if(!ec.hasChanges())
-    				returnPage.valueForKey("updateLessonList");
-    		} else {
+    		if(!Work.ENTITY_NAME.equals(returnPage.valueForKeyPath("present.entityName"))) {
     			returnPage.takeValueForKeyPath("MarksPresenter", "present.tmpPresenter");
+//        	} else {
+//				returnPage.valueForKey("updateLessonList");
     		}
     		return RedirectPopup.getRedirect(context(), returnPage, null);
        	}

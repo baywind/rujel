@@ -30,6 +30,8 @@
 package net.rujel.ui;
 
 import net.rujel.criterial.Work;
+import net.rujel.criterial.WorkType;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduLesson;
 
 import com.webobjects.appserver.*;
@@ -76,8 +78,15 @@ public class WorksOnDate extends com.webobjects.appserver.WOComponent {
 			result.append("background-color:").append(workItem.color()).append(';');
 		}
 	   	EduLesson lesson = (EduLesson)valueForBinding("lesson");
-	    if(lesson.date().equals(workItem.date()))
-	    	result.append("font-weight:bold;");
+	    if(EOPeriod.Utility.compareDates(lesson.date(), workItem.date()) == 0) {
+	    	try {
+	    		if(workItem == lesson.valueForKey("noteDelegate") ||
+	    	!workItem.workType().dfltFlags().equals(WorkType.specTypes.valueForKey("onLesson")))
+		    		result.append("font-weight:bold;");
+	    	} catch (Exception e) {
+	    		result.append("font-weight:bold;");
+			}
+	    }
 	    result.append(workItem.font());
 		return (result.length() == 0)?null:result.toString();
 	}

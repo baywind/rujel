@@ -60,6 +60,7 @@ public class LessonNoteEditor extends WOComponent {
 
 	/** @TypeInfo PerPersonLink */
 	public NSArray lessonsList;
+	protected NSMutableArray fullList;
 
 	public Tabs.GenericTab _currTab;
 
@@ -124,7 +125,7 @@ public class LessonNoteEditor extends WOComponent {
 			session().setObjectForKey(((EduLesson)lesson).date(), "recentDate");
 		if (ec.hasChanges()) {
 			ec.revert();
-			updateLessonList();
+			updateLessonList(true);
 		}
 		currPerPersonLink = lesson;
 		if(student != null)
@@ -268,6 +269,7 @@ public class LessonNoteEditor extends WOComponent {
 		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
 		if(entityName == null)
 			entityName = EduLesson.entityName;
+		fullList = lessonListForCourseAndPresent(course, present, null);
 		baseTabs = BaseTab.tabsForCourse(course, entityName);
 		if(_currTab instanceof CustomTab.Tab)
 			_currTab = (GenericTab) ((CustomTab.Tab) _currTab).params.valueForKey("parentTab");
@@ -275,11 +277,18 @@ public class LessonNoteEditor extends WOComponent {
 			if(_currTab != null && (baseTabs == null || !baseTabs.containsObject(_currTab)))
 				_currTab = null;
 			if(baseTabs != null && baseTabs.count() > 0) {
-				if(currPerPersonLink != null){
+				if(currPerPersonLink != null) {
+					int idx = fullList.indexOf(currPerPersonLink);
 					for (int i = baseTabs.count() -1; i >= 0; i--) {
 						BaseTab.Tab t = (BaseTab.Tab)baseTabs.objectAtIndex(i);
-						if(currLesson() != null && t.qualifier().
-								evaluateWithObject(currPerPersonLink)) {
+						if(t instanceof NSRange) {
+							if(((NSRange)t).containsLocation(idx)) {
+								_currTab = t;
+								break;
+							}
+						}
+						EOQualifier q = t.qualifier();
+						if(q != null && q.evaluateWithObject(currPerPersonLink)) {
 							_currTab = t;
 							break;
 						}
@@ -308,11 +317,11 @@ public class LessonNoteEditor extends WOComponent {
 		}
 		session().removeObjectForKey("courseForlessons");
 		session().takeValueForKey(Boolean.FALSE,"prolong");
-		updateLessonList();
+		updateLessonList(false);
 	}
 
 	//	public NSArray lessonsListForTable;
-	protected static NSArray lessonListForCourseAndPresent(EduCourse course,
+	protected static NSMutableArray lessonListForCourseAndPresent(EduCourse course,
 			NSKeyValueCoding present, EOQualifier qualifier) {
 		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
 		if(entityName == null)
@@ -332,19 +341,31 @@ public class LessonNoteEditor extends WOComponent {
 		NSArray prefetchPaths = (NSArray)present.valueForKey("prefetchPaths");
 		if(prefetchPaths != null)
 			fs.setPrefetchingRelationshipKeyPaths(prefetchPaths);
-		return course.editingContext().objectsWithFetchSpecification(fs);
+		NSArray found = course.editingContext().objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return new NSMutableArray();
+		return found.mutableClone();
 	}
 
-	public void updateLessonList() {
-		EOQualifier qualifier = null;
-		if(currTab() != null) {
-			qualifier = currTab().qualifier();
-		}
+	public void updateLessonList(boolean reload) {
 		if(valueForKeyPath("currLesson.editingContext") != null) {
 			ec.refaultObject(currLesson());
 		}
-		lessonsList = lessonListForCourseAndPresent(course, present, qualifier);
-		if(lessonsList != null && lessonsList.count() > 0) {
+		if(reload || fullList == null)
+			fullList = lessonListForCourseAndPresent(course, present, null);
+		if(fullList != null && fullList.count() > 0) {
+			if(currTab() != null) {
+				if(currTab() instanceof NSRange) {
+					NSRange range = (NSRange)currTab();
+					if(range.maxRange() > fullList.count())
+						range = new NSRange(range.location(), fullList.count() - range.location());
+					lessonsList = fullList.subarrayWithRange(range);
+				} else {
+					EOQualifier qual = currTab().qualifier();
+					if(qual != null)
+						lessonsList = EOQualifier.filteredArrayWithQualifier(fullList, qual);
+				}
+			}
 			EduLesson lesson = (EduLesson)lessonsList.lastObject();
 			session().setObjectForKey(lesson.date(), "recentDate");
 		} else {
@@ -392,7 +413,8 @@ public class LessonNoteEditor extends WOComponent {
 			student = null;
 			selector = currPerPersonLink;
 		}
-		boolean newLesson = (currPerPersonLink == null);
+		boolean newLesson = (currLesson() == null ||
+				ec.globalIDForObject(currLesson()).isTemporary());
 		if(ec.hasChanges()) {
 			NSMutableSet changes = new NSMutableSet();
 			NSArray objects = ec.insertedObjects();
@@ -417,7 +439,7 @@ public class LessonNoteEditor extends WOComponent {
 				if(Various.boolForObject(session().valueForKeyPath("readAccess.save.currLesson"))) {
 					NSMutableDictionary archiveDict = null;
 					if(currLesson() != null) {
-						if(newLesson)
+						if(newLesson && currLesson().number() == null)
 							MyUtility.setNumberToNewLesson(currLesson());
 						currLesson().validateForSave();
 						boolean shouldArchive = SettingsReader.boolForKeyPath(
@@ -474,9 +496,9 @@ public class LessonNoteEditor extends WOComponent {
 						archive.takeValueForKey(ue, "usedEntity");
 						identifier = identifier.mutableClone();
 						identifier.takeValueForKey(course, "course");
-						archive.takeValueForKey(identifier, "identifierDictionary");
-						archive.takeValueForKey(archiveDict, "archiveDict");
 						archive.takeValueForKey(new Integer((newLesson)?1:2), "actionType");
+						archive.takeValueForKey(archiveDict, "archiveDict");
+						archive.takeValueForKey(identifier, "identifierDictionary");
 						ec.saveChanges();
 					}
 					WOLogLevel level = WOLogLevel.EDITING;
@@ -502,10 +524,11 @@ public class LessonNoteEditor extends WOComponent {
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
 					}
+					updateLessonList(true);
 					if(reset) {
-						if(_currTab != null && currLesson() != null
-								&& !_currTab.qualifier().evaluateWithObject(currLesson()))
-							_currTab = null;
+//						if(_currTab != null && currLesson() != null
+//								&& !_currTab.qualifier().evaluateWithObject(currLesson()))
+//							_currTab = null;
 						refresh();
 					}
 				} else { // check access to edited data
@@ -550,30 +573,25 @@ public class LessonNoteEditor extends WOComponent {
 	public void delete() {
 		if(currPerPersonLink == selector)
 			selector = null;
-		EOQualifier qual = new EOKeyValueQualifier(
-				"course",EOQualifier.QualifierOperatorEqual,course);
-		EOFetchSpecification fs = new EOFetchSpecification(
-				currLesson().entityName(),qual,EduLesson.sorter);
-		NSArray allLessons = ec.objectsWithFetchSpecification(fs);
 		WOLogLevel level = WOLogLevel.EDITING;
 		if(currLesson().notes().count() > 0)
 			level = WOLogLevel.MASS_EDITING;
 		ec.lock();
 		try {
+			int idx = fullList.indexOf(currLesson());
 			if(ec.insertedObjects().contains(currLesson())) { //just inserted
 				level = WOLogLevel.EDITING;
 				logger.log(level,"Undo lesson creation: ",new Object[] {session(),currLesson()});
 				ec.revert();
-				NSMutableArray tmp = lessonsList.mutableClone();
-				tmp.removeObject(currLesson());
-				lessonsList = tmp.immutableClone();
+				if(idx >= 0)
+					fullList.removeObjectAtIndex(idx);
+				updateLessonList(false);
 				currPerPersonLink = null;
 			} else { //delete from middle
-				int idx = allLessons.indexOf(currLesson());
-				if(idx >= allLessons.count())
+				if(idx >= fullList.count())
 					throw new RuntimeException("Something wrong when deleting lesson");
 				currLesson().validateForDelete();
-				Number number = currLesson().number();
+/*				Number number = currLesson().number();
 				int num = (number == null)?0:number.intValue();
 				if(number == null) {
 					EduLesson lesson = (EduLesson)allLessons.objectAtIndex(0);
@@ -586,7 +604,7 @@ public class LessonNoteEditor extends WOComponent {
 					number = lesson.number();
 					if(number != null)
 						num = number.intValue() + idx - allLessons.count() + 1;
-				}
+				} */
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
 				if(currLesson() != null) {
 					NSDictionary identifier = EOUtilities.primaryKeyForObject(ec, currLesson());
@@ -616,22 +634,24 @@ public class LessonNoteEditor extends WOComponent {
 					dict.takeValueForKey(entityName, "entityName");
 				}
 				ec.deleteObject(currLesson());
-				if(idx < (allLessons.count() - 1)) { //lower numbers of following lessons
+/*				if(idx < (allLessons.count() - 1)) { //lower numbers of following lessons
 					idx++;
 					while(idx < allLessons.count()) {
 						((EduLesson)allLessons.objectAtIndex(idx)).setNumber(new Integer(num));
 						idx++;
 						num++;
 					}
-				} // end number lowering
+				} // end number lowering */
 				logger.log(level,"Deleting lesson ",new Object[] {session(),currLesson()});
 				ec.saveChanges();
+				if(idx >= 0)
+					fullList.removeObjectAtIndex(idx);
 				session().setObjectForKey(dict, "objectSaved");
 				session().valueForKeyPath("modules.objectSaved");
 				session().removeObjectForKey("objectSaved");
 
 				currPerPersonLink = null;
-				updateLessonList();
+				updateLessonList(false);
 			}
 		} catch (NSValidation.ValidationException vex) {
 			logger.log(level,"Deletion failed: ",new Object[] {session(),currLesson(),vex});
@@ -706,7 +726,7 @@ public class LessonNoteEditor extends WOComponent {
 		EduLesson ajacent = (EduLesson)found.objectAtIndex(0);
 		les.setDate(ajacent.date());
 	}
-
+	
 	public void up() {
 		int idx = lessonsList.indexOf(currLesson());
 		if(idx < 0) 
@@ -721,23 +741,23 @@ public class LessonNoteEditor extends WOComponent {
 				tmpEc = new EOEditingContext(ec.rootObjectStore());
 			}
 			int tabIdx = (baseTabs == null)?-1:baseTabs.indexOf(_currTab);
+			Integer number = new Integer(fullList.indexOf(currPerPersonLink) +1);
 			if(_currTab == null || tabIdx == 0) {
 				if(lessonsList.count() <= 1)
 					return;
 				EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(1);
 				if(ec != tmpEc)
 					lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-				tab = BaseTab.tabForLesson(lesson, true);
+				tab = BaseTab.tabForLesson(lesson, number, true);
 			} else {
 				EduLesson lesson = currLesson();
 				if(ec != tmpEc)
 					lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-				tab = BaseTab.tabForLesson(lesson, false);
+				tab = BaseTab.tabForLesson(lesson, number, false);
 				if(tab == null)
 					return;
 				if(lessonsList.count() > 1) {
-					Integer num = lesson.number();
-					num = new Integer(num.intValue() + 1);
+					Integer num = new Integer(number.intValue() + 1);
 					tab.setFirstLessonNumber(num);
 				} else {
 					tmpEc.deleteObject(tab);
@@ -747,19 +767,25 @@ public class LessonNoteEditor extends WOComponent {
 			_currTab = null;
 			refresh();
 			return;
-		}
+		} // move to previous tab
+		// raise lesson inside tab
 		if(idx == 0)
 			return;
-		NSMutableArray tmp = lessonsList.mutableClone();
-		EduLesson prev = (EduLesson)tmp.replaceObjectAtIndex(currLesson(),idx - 1);
+		EduLesson prev = (EduLesson)lessonsList.objectAtIndex(idx - 1);
+		if(EOPeriod.Utility.compareDates(prev.date(), currLesson().date()) != 0)
+			return;
 		Integer oldNum = currLesson().number();
 		currLesson().setNumber(prev.number());
 		prev.setNumber(oldNum);
-		if(tmp.replaceObjectAtIndex(prev,idx) != currLesson())
-			throw new RuntimeException("Something wrong when moving lesson up");
-		lessonsList = tmp.immutableClone();
-		if(currLesson().title()!=null)
-			makeDateFromNum(currLesson());
+		try {
+			if(currLesson().title()!=null)
+				makeDateFromNum(currLesson());
+			ec.saveChanges();
+			EOSortOrdering.sortArrayUsingKeyOrderArray(fullList, EduLesson.sorter);
+			updateLessonList(false);
+		} catch (Exception e) {
+			ec.revert();
+		}
 	}
 
 	public void down() {
@@ -777,13 +803,14 @@ public class LessonNoteEditor extends WOComponent {
 					return;
 			}
 			int tabIdx = (baseTabs==null)?-1:baseTabs.indexOf(_currTab);
+			Integer number = new Integer(fullList.indexOf(currPerPersonLink) +1);
 			if(_currTab == null || tabIdx == baseTabs.count() -1) { //creating new tab
 				if(lessonsList.count() <= 1)
 					return;
 				EduLesson lesson = currLesson();
 				if(ec != tmpEc)
 					lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-				tab = BaseTab.tabForLesson(lesson, true);
+				tab = BaseTab.tabForLesson(lesson, number, true);
 			} else { // move to next tab
 				EduCourse crs  = course;
 				if(ec != tmpEc)
@@ -792,31 +819,37 @@ public class LessonNoteEditor extends WOComponent {
 				Enumeration enu = tabs.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					tab = (BaseTab) enu.nextElement();
-					if(tab.firstLessonNumber().intValue() > currLesson().number().intValue())
+					if(tab.firstLessonNumber().intValue() > number.intValue())
 						break;
 				}
 				if(idx == 0)
 					tmpEc.deleteObject(tab);
 				else
-					tab.setFirstLessonNumber(currLesson().number());
+					tab.setFirstLessonNumber(number);
 			}
 			tmpEc.saveChanges();
 			_currTab = null;
 			refresh();
 			return;
-		} //just lower lesson inside current tab
+		} // move to next tab
+		//just lower lesson inside current tab
 		if(idx == lessonsList.count() - 1)
 			return;
-		NSMutableArray tmp = lessonsList.mutableClone();
-		EduLesson next = (EduLesson)tmp.replaceObjectAtIndex(currLesson(),idx + 1);
+		EduLesson prev = (EduLesson)lessonsList.objectAtIndex(idx + 1);
+		if(EOPeriod.Utility.compareDates(prev.date(), currLesson().date()) != 0)
+			return;
 		Integer oldNum = currLesson().number();
-		currLesson().setNumber(next.number());
-		next.setNumber(oldNum);
-		if(tmp.replaceObjectAtIndex(next,idx) != currLesson())
-			throw new RuntimeException("Something wrong when moving lesson down");
-		lessonsList = tmp.immutableClone();
-		if(currLesson().title()!=null)
-			makeDateFromNum(currLesson());
+		currLesson().setNumber(prev.number());
+		prev.setNumber(oldNum);
+		try {
+			if(currLesson().title()!=null)
+				makeDateFromNum(currLesson());
+			ec.saveChanges();
+			EOSortOrdering.sortArrayUsingKeyOrderArray(fullList, EduLesson.sorter);
+			updateLessonList(false);
+		} catch (Exception e) {
+			ec.revert();
+		}
 	}
 	
 	public Boolean cantAddTab() {
@@ -877,6 +910,7 @@ public class LessonNoteEditor extends WOComponent {
 			return;
 		}
 		int idx = lessonsList.indexOf(currPerPersonLink);
+		Integer number = new Integer(fullList.indexOf(currPerPersonLink) +1);
 		BaseTab tab = null;
 		EOEditingContext tmpEc = ec;
 		EduLesson lesson = currLesson();
@@ -889,12 +923,12 @@ public class LessonNoteEditor extends WOComponent {
 		if(idx == 0)  {
 			if(baseTabs == null || _currTab == baseTabs.objectAtIndex(0))
 				return;
-			tab = BaseTab.tabForLesson(lesson, false);
+			tab = BaseTab.tabForLesson(lesson, number, false);
 			if(tab == null)
 				return;
 			tmpEc.deleteObject(tab);
 		} else {
-			tab = BaseTab.tabForLesson(lesson, true);
+			tab = BaseTab.tabForLesson(lesson, number, true);
 		}
 		try {
 			tmpEc.saveChanges();
@@ -920,7 +954,7 @@ public class LessonNoteEditor extends WOComponent {
 			ec.revert();
 			refresh();
 		} else {
-			updateLessonList();
+			updateLessonList(true);
 		}
 		currPerPersonLink = null;
 		//lessonsList = _currTab.lessonsInTab();

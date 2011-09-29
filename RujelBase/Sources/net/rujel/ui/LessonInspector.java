@@ -132,7 +132,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	    	done = (lesson.editingContext() != null && !lesson.editingContext().hasChanges());
 	       	if(done) {
 //				returnPage.takeValueForKey(lesson, "currPerPersonLink");
-				returnPage.valueForKey("updateLessonList");
+//				returnPage.valueForKey("updateLessonList");
 				return RedirectPopup.getRedirect(context(), returnPage, null);
 			}
 	       	if(newTitle == null)

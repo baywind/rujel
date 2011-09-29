@@ -29,6 +29,7 @@
 
 package net.rujel.base;
 
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
@@ -293,9 +294,11 @@ public class MyUtility {
 		}
 		return value;
 	}
-
-	protected static NSArray scheduleMethods;
 	public static Integer setNumberToNewLesson(EduLesson currLesson) {
+		return setNumberToNewLesson(currLesson, 0);
+	}
+	protected static NSArray scheduleMethods;
+	public static Integer setNumberToNewLesson(EduLesson currLesson, int startFrom) {
 		EOEditingContext ec = currLesson.editingContext();
 		if(scheduleMethods == null) {
 			if (ec instanceof SessionedEditingContext) {
@@ -305,10 +308,21 @@ public class MyUtility {
 					scheduleMethods = (NSArray)scheduleMethods.valueForKey("method");
 			}
 		}
-		EOQualifier qual = new EOKeyValueQualifier("date",
+		EOQualifier[] qual = new EOQualifier[3];
+		qual[0] = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual, currLesson.course());
+		qual[1] = new EOKeyValueQualifier("date",
 				EOQualifier.QualifierOperatorEqual, currLesson.date());
+		if(startFrom > 0) {
+			qual[1] = new EOKeyValueQualifier("number",
+					EOQualifier.QualifierOperatorGreaterThan, new Integer(startFrom));
+		} else if(startFrom < 0) {
+			qual[1] = new EOKeyValueQualifier("number",
+					EOQualifier.QualifierOperatorLessThan, new Integer(0));
+		}
+		qual[1] = new EOAndQualifier(new NSArray(qual));
 		EOFetchSpecification fs = new EOFetchSpecification(currLesson.entityName(),
-				qual,EduLesson.sorter);
+				qual[1],EduLesson.sorter);
 		NSArray existing = ec.objectsWithFetchSpecification(fs);
 		if(existing.contains(currLesson))
 			return currLesson.number();
@@ -332,7 +346,7 @@ public class MyUtility {
 				}
 				NSMutableArray numbers = sched.mutableClone();
 				enu = existing.objectEnumerator();
-				int max = 0;
+				int max = startFrom;
 				while (enu.hasMoreElements()) {
 					EduLesson exl = (EduLesson) enu.nextElement();
 					Integer num = exl.number();
@@ -350,20 +364,11 @@ public class MyUtility {
 				return num;
 			}
 		}
-		if(existing == null || existing.count() == 0) {
-			Integer num = new Integer(1);
-			currLesson.setNumber(num);
-			return num;
+		if(existing != null && existing.count() > 0) {
+			EduLesson last = (EduLesson) existing.lastObject();
+			startFrom = last.number().intValue();
 		}
-		Enumeration enu = existing.objectEnumerator();
-		int max = 0;
-		while (enu.hasMoreElements()) {
-			EduLesson exl = (EduLesson) enu.nextElement();
-			Integer num = exl.number();
-			if(max < num.intValue())
-				max = num.intValue();
-		}
-		Integer num = new Integer(max + 1);
+		Integer num = new Integer(startFrom + 1);
 		currLesson.setNumber(num);
 		return num;
 	}

@@ -95,14 +95,14 @@ public class BaseTab extends _BaseTab {
 		return result;
 	}
 	
-	public static BaseTab tabForLesson(EduLesson lesson, boolean create) {
+	public static BaseTab tabForLesson(EduLesson lesson, Integer number, boolean create) {
 		EntityIndex ent = EntityIndex.indexForObject(lesson);
 		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(
 				FOR_ENTITY_KEY,EOQualifier.QualifierOperatorEqual,ent));
 		quals.addObject(new EOKeyValueQualifier(
 				COURSE_KEY,EOQualifier.QualifierOperatorEqual,lesson.course()));
 		quals.addObject(new EOKeyValueQualifier(
-				FIRST_LESSON_NUMBER_KEY,EOQualifier.QualifierOperatorEqual,lesson.number()));
+				FIRST_LESSON_NUMBER_KEY,EOQualifier.QualifierOperatorEqual, number));
 		EOQualifier qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,sorter);
 		EOEditingContext ec = lesson.editingContext();
@@ -111,7 +111,7 @@ public class BaseTab extends _BaseTab {
 			return (BaseTab)found.objectAtIndex(0);
 		if(!create) {
 			qual = new EOKeyValueQualifier(FIRST_LESSON_NUMBER_KEY,
-					EOQualifier.QualifierOperatorLessThanOrEqualTo,lesson.number());
+					EOQualifier.QualifierOperatorLessThanOrEqualTo, number);
 			quals.replaceObjectAtIndex(qual, 2);
 			qual = new EOAndQualifier(quals);
 			fs.setQualifier(qual);
@@ -127,7 +127,7 @@ public class BaseTab extends _BaseTab {
 		BaseTab result = (BaseTab)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
 		result.addObjectToBothSidesOfRelationshipWithKey(ent, FOR_ENTITY_KEY);
 		result.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), COURSE_KEY);
-		result.setFirstLessonNumber(lesson.number());
+		result.setFirstLessonNumber(number);
 		return result;
 	}
 	
@@ -147,39 +147,57 @@ public class BaseTab extends _BaseTab {
 	}*/
 
 	
-	public static class Tab implements Tabs.GenericTab {
+	public static class Tab extends NSRange implements Tabs.GenericTab {
 		private Integer fn;
 		private Integer ln;
-		private EOQualifier qual;
+//		private EOQualifier qual;
 		private String hover;
 		protected int code = 0;
 
 
-		public Tab (Integer first, Integer last) {
+		public Tab (Integer first, Integer next) {
 			if(first != null)
 				code += 1000*first.intValue();
 			fn = first;
-			if(last != null) {
-				ln = new Integer(last.intValue() -1);
-				code += last.intValue();
+			if(next != null) {
+				ln = new Integer(next.intValue() -1);
+				code += next.intValue();
 			}
 			if(first != null) {
-				qual = new EOKeyValueQualifier(
-						"number",EOQualifier.QualifierOperatorGreaterThanOrEqualTo,first);
+//				qual = new EOKeyValueQualifier(
+//						"number",EOQualifier.QualifierOperatorGreaterThanOrEqualTo,first);
 				StringBuffer toHover = new StringBuffer(first.toString());
 				toHover.append(" ... ");
 				if(ln != null) {
-					NSMutableArray qs = new NSMutableArray(qual);
+/*					NSMutableArray qs = new NSMutableArray(qual);
 					qs.addObject(new EOKeyValueQualifier(
 							"number",EOQualifier.QualifierOperatorLessThan,last));
 					qual = new EOAndQualifier(qs);
-					toHover.append(ln);
+*/					toHover.append(ln);
 				}
 				hover = toHover.toString();
 			} else {
-				qual = new EOKeyValueQualifier("number",EOQualifier.QualifierOperatorLessThan,last);
+//				qual = new EOKeyValueQualifier("number",EOQualifier.QualifierOperatorLessThan,last);
 				hover = "1 ... " + ln;
 			}
+		}
+		
+		public int location() {
+			if(fn == null)
+				return 0;
+			return fn.intValue() -1;
+		}
+		
+		public int length() {
+			if(ln == null)
+				return Integer.MAX_VALUE - location();
+			return ln.intValue() - location();
+		}
+		
+		public int maxRange() {
+			if(ln == null)
+				return Integer.MAX_VALUE;
+			return ln.intValue();
 		}
 		
 		public boolean equals(Object aTab) {
@@ -198,14 +216,13 @@ public class BaseTab extends _BaseTab {
 		public boolean defaultCurrent() {
 			return (ln == null);
 		}
-
 		
 		public String hover() {
 			return hover;
 		}
 
 		public EOQualifier qualifier() {
-			return qual;
+			return null;//qual;
 		}
 
 		public String title() {

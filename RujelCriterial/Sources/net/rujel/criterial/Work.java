@@ -1039,6 +1039,7 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 				NSMutableArray keys = snapshot.allKeys().mutableClone();
 				keys.removeObject(MARKS_KEY);
 				keys.removeObject(NOTES_KEY);
+				keys.removeObject(NUMBER_KEY);
 				shouldArchive = (keys.count() > 0);
 			}
 		}

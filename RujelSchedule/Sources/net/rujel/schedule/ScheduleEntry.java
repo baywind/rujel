@@ -177,10 +177,11 @@ public class ScheduleEntry extends _ScheduleEntry {
     		week = -1;
     	}
 		week += cal.get(Calendar.DAY_OF_WEEK);
-		EOQualifier[] quals = new EOQualifier[2];
+		EOQualifier[] quals = new EOQualifier[3];
 		quals[0] = onDate(date);
 		quals[1] = new EOKeyValueQualifier(WEEKDAY_NUM_KEY, EOQualifier.QualifierOperatorEqual, 
 				new Integer(week));
+		quals[3] = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual,course);
 		quals[1] = new EOOrQualifier(new NSArray(quals));		
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[1],tableSorter);
 		return ec.objectsWithFetchSpecification(fs);

@@ -140,9 +140,9 @@ public class ModuleInit {
 		qual = new EOKeyValueQualifier("announce",EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
 		quals.addObject(qual);
 		qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,null);
+		EOFetchSpecification fs = new EOFetchSpecification("Work",qual,EduLesson.sorter);
 		NSArray related = ec.objectsWithFetchSpecification(fs);
-		if(related != null && related.count() > 1) {
+	/*	if(related != null && related.count() > 1) {
 			EOSortOrdering so = new EOSortOrdering("workType.sort",EOSortOrdering.CompareAscending);
 			NSMutableArray sorter = new NSMutableArray(so);
 			so = new EOSortOrdering("announce",EOSortOrdering.CompareDescending);
@@ -150,7 +150,7 @@ public class ModuleInit {
 			so = new EOSortOrdering("date",EOSortOrdering.CompareAscending);
 			sorter.addObject(so);
 			related = EOSortOrdering.sortedArrayUsingKeyOrderArray(related, sorter);
-		}
+		}*/
 		NSMutableDictionary result = new NSMutableDictionary("05", "sort");
 		result.takeValueForKey(related,"works");
 		result.takeValueForKey("WorksOnDate", "component");
