@@ -265,12 +265,76 @@ public class LessonNoteEditor extends WOComponent {
 		refresh();
 	}
 
+	public void updateBaseTabs(boolean force) {
+		if(!force) {
+			if(baseTabs == null || baseTabs.count() == 0) {
+				force = true;
+			} else {
+				NSRange tab = (NSRange)baseTabs.lastObject();
+				if(tab.maxRange() < fullList.count())
+					force = true;
+			}
+		}
+		if(force) {
+			String entityName = (present == null)?null:(String)present.valueForKey("entityName");
+			if(entityName == null)
+				entityName = EduLesson.entityName;
+			baseTabs = BaseTab.tabsForCourse(course, entityName);
+		}
+		if(baseTabs != null && baseTabs.count() > 0) {
+			NSRange tab = (NSRange)baseTabs.lastObject();
+			while(tab.location() >= fullList.count() && tab != null) {
+				((NSMutableArray)baseTabs).removeLastObject();
+				boolean move = (_currTab == tab);
+				tab = (NSRange)baseTabs.lastObject();
+				if(move)
+					_currTab = (GenericTab) tab;
+			}
+		}
+	}
+	
+	protected GenericTab getCurrBaseTab(EduLesson lesson) {
+		if(lesson == null || baseTabs == null || baseTabs.count() == 0)
+			return _currTab;
+		int idx = fullList.indexOfIdenticalObject(lesson);
+		if(idx < 0)
+			return null;
+		for (int i = baseTabs.count() -1; i >= 0; i--) {
+			NSRange t = (NSRange)baseTabs.objectAtIndex(i);
+			if(t.containsLocation(idx)) {
+				return (GenericTab)t;
+			}
+		}
+		updateBaseTabs(true);
+		return getCurrBaseTab(lesson);
+	}
+	
 	public void refresh() {
-		String entityName = (present == null)?null:(String)present.valueForKey("entityName");
-		if(entityName == null)
-			entityName = EduLesson.entityName;
 		fullList = lessonListForCourseAndPresent(course, present, null);
-		baseTabs = BaseTab.tabsForCourse(course, entityName);
+		updateBaseTabs(true);
+		session().setObjectForKey(course, "courseForlessons");
+		allTabs = (NSArray)session().valueForKeyPath("modules.lessonTabs");
+		session().removeObjectForKey("courseForlessons");
+		autoSelectTab();
+		updateLessonList(false);
+		session().takeValueForKey(Boolean.FALSE,"prolong");
+	}
+	
+	public void autoSelectTab() {
+		if(_currTab != null) {
+			if(currLesson() == null)
+				return;
+			EOQualifier qual = _currTab.qualifier();
+			boolean ok = true;
+			if(_currTab instanceof NSRange) {
+				int idx = fullList.indexOfIdenticalObject(currPerPersonLink);
+				ok = (((NSRange)_currTab).containsLocation(idx));
+				if(ok && qual == null)
+					return;
+			}
+			if(ok && qual != null && qual.evaluateWithObject(currPerPersonLink))
+				return;
+		}
 		if(_currTab instanceof CustomTab.Tab)
 			_currTab = (GenericTab) ((CustomTab.Tab) _currTab).params.valueForKey("parentTab");
 		if(_currTab == null || _currTab instanceof BaseTab.Tab) {
@@ -278,28 +342,12 @@ public class LessonNoteEditor extends WOComponent {
 				_currTab = null;
 			if(baseTabs != null && baseTabs.count() > 0) {
 				if(currPerPersonLink != null) {
-					int idx = fullList.indexOf(currPerPersonLink);
-					for (int i = baseTabs.count() -1; i >= 0; i--) {
-						BaseTab.Tab t = (BaseTab.Tab)baseTabs.objectAtIndex(i);
-						if(t instanceof NSRange) {
-							if(((NSRange)t).containsLocation(idx)) {
-								_currTab = t;
-								break;
-							}
-						}
-						EOQualifier q = t.qualifier();
-						if(q != null && q.evaluateWithObject(currPerPersonLink)) {
-							_currTab = t;
-							break;
-						}
-					}
+					_currTab = getCurrBaseTab(currLesson());
 				}
 				if(_currTab == null)
 					_currTab = (BaseTab.Tab)baseTabs.lastObject();
 			}
 		}
-		session().setObjectForKey(course, "courseForlessons");
-		allTabs = (NSArray)session().valueForKeyPath("modules.lessonTabs");
 		if(_currTab == null && allTabs != null && allTabs.count() > 0) {
 			NSArray tablist = (NSArray)allTabs.objectAtIndex(0);
 			Enumeration enu = tablist.objectEnumerator();
@@ -315,9 +363,6 @@ public class LessonNoteEditor extends WOComponent {
 				}
 			}
 		}
-		session().removeObjectForKey("courseForlessons");
-		session().takeValueForKey(Boolean.FALSE,"prolong");
-		updateLessonList(false);
 	}
 
 	//	public NSArray lessonsListForTable;
@@ -355,19 +400,22 @@ public class LessonNoteEditor extends WOComponent {
 			fullList = lessonListForCourseAndPresent(course, present, null);
 		if(fullList != null && fullList.count() > 0) {
 			if(currTab() != null) {
+				autoSelectTab();
 				if(currTab() instanceof NSRange) {
 					NSRange range = (NSRange)currTab();
 					if(range.maxRange() > fullList.count())
 						range = new NSRange(range.location(), fullList.count() - range.location());
 					lessonsList = fullList.subarrayWithRange(range);
 				} else {
-					EOQualifier qual = currTab().qualifier();
-					if(qual != null)
-						lessonsList = EOQualifier.filteredArrayWithQualifier(fullList, qual);
+					lessonsList = fullList;
 				}
+				EOQualifier qual = currTab().qualifier();
+				if(qual != null)
+					lessonsList = EOQualifier.filteredArrayWithQualifier(lessonsList, qual);
 			}
 			EduLesson lesson = (EduLesson)lessonsList.lastObject();
-			session().setObjectForKey(lesson.date(), "recentDate");
+			if(lesson != null)
+				session().setObjectForKey(lesson.date(), "recentDate");
 		} else {
 			session().setObjectForKey(session().valueForKey("today"), "recentDate");
 		}
@@ -524,12 +572,13 @@ public class LessonNoteEditor extends WOComponent {
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
 					}
-					updateLessonList(true);
 					if(reset) {
 //						if(_currTab != null && currLesson() != null
 //								&& !_currTab.qualifier().evaluateWithObject(currLesson()))
 //							_currTab = null;
 						refresh();
+					} else {
+						updateLessonList(true);
 					}
 				} else { // check access to edited data
 					String message = (String)session().valueForKeyPath("readAccess.message");
@@ -646,11 +695,14 @@ public class LessonNoteEditor extends WOComponent {
 				ec.saveChanges();
 				if(idx >= 0)
 					fullList.removeObjectAtIndex(idx);
+				
 				session().setObjectForKey(dict, "objectSaved");
 				session().valueForKeyPath("modules.objectSaved");
 				session().removeObjectForKey("objectSaved");
 
 				currPerPersonLink = null;
+				
+				updateBaseTabs(false);
 				updateLessonList(false);
 			}
 		} catch (NSValidation.ValidationException vex) {
@@ -748,12 +800,12 @@ public class LessonNoteEditor extends WOComponent {
 				EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(1);
 				if(ec != tmpEc)
 					lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-				tab = BaseTab.tabForLesson(lesson, number, true);
+				tab = BaseTab.tabForLesson(lesson, number, true, fullList.count());
 			} else {
 				EduLesson lesson = currLesson();
 				if(ec != tmpEc)
 					lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-				tab = BaseTab.tabForLesson(lesson, number, false);
+				tab = BaseTab.tabForLesson(lesson, number, false, 0);
 				if(tab == null)
 					return;
 				if(lessonsList.count() > 1) {
@@ -810,7 +862,7 @@ public class LessonNoteEditor extends WOComponent {
 				EduLesson lesson = currLesson();
 				if(ec != tmpEc)
 					lesson = (EduLesson)EOUtilities.localInstanceOfObject(tmpEc, lesson);
-				tab = BaseTab.tabForLesson(lesson, number, true);
+				tab = BaseTab.tabForLesson(lesson, number, true, fullList.count());
 			} else { // move to next tab
 				EduCourse crs  = course;
 				if(ec != tmpEc)
@@ -865,7 +917,7 @@ public class LessonNoteEditor extends WOComponent {
 	}
 	
 	protected Boolean splitCreate() {
-		if(lessonsList == null || currLesson() == null || currLesson().number().intValue() <= 1)
+		if(lessonsList == null || currLesson() == null)
 			return null;
 		int idx = lessonsList.indexOf(currPerPersonLink);
 		if(_currTab instanceof BaseTab.Tab) {
@@ -923,12 +975,12 @@ public class LessonNoteEditor extends WOComponent {
 		if(idx == 0)  {
 			if(baseTabs == null || _currTab == baseTabs.objectAtIndex(0))
 				return;
-			tab = BaseTab.tabForLesson(lesson, number, false);
+			tab = BaseTab.tabForLesson(lesson, number, false, 0);
 			if(tab == null)
 				return;
 			tmpEc.deleteObject(tab);
 		} else {
-			tab = BaseTab.tabForLesson(lesson, number, true);
+			tab = BaseTab.tabForLesson(lesson, number, true, fullList.count());
 		}
 		try {
 			tmpEc.saveChanges();
@@ -939,7 +991,9 @@ public class LessonNoteEditor extends WOComponent {
 			tmpEc.revert();
 		}
 		_currTab = null;
-		refresh();
+		updateBaseTabs(true);
+		autoSelectTab();
+		updateLessonList(false);
 	}
 
 	public Tabs.GenericTab currTab() {
@@ -1011,6 +1065,8 @@ public class LessonNoteEditor extends WOComponent {
 			student = null;
 		if(ec.hasChanges())
 			ec.revert();
+		if(_currTab instanceof BaseTab.Tab)
+			_currTab = null;
 		refresh();
 
 //		student = null;

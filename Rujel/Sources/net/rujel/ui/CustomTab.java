@@ -46,6 +46,7 @@ import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSRange;
 import com.webobjects.foundation.NSSelector;
 
 public class CustomTab extends WOComponent {
@@ -56,7 +57,7 @@ public class CustomTab extends WOComponent {
     public String resultPath = "currTab";
     public NSMutableDictionary params;
 
-	public static class Tab implements Tabs.GenericTab {
+	public static class Tab extends NSRange implements Tabs.GenericTab {
 
 		public EOQualifier qual;
 		public NSMutableDictionary params;
@@ -79,6 +80,25 @@ public class CustomTab extends WOComponent {
 			return false;
 		}
 		
+		protected NSRange parentRange;
+		
+		public int location() {
+			if(parentRange == null)
+				return 0;
+			return parentRange.location();
+		}
+		
+		public int length() {
+			if(parentRange == null)
+				return Integer.MAX_VALUE;
+			return parentRange.length();
+		}
+
+		public int maxRange() {
+			if(parentRange == null)
+				return Integer.MAX_VALUE;
+			return parentRange.maxRange();
+		}	
 	}
 	
     public CustomTab(WOContext context) {
@@ -91,9 +111,14 @@ public class CustomTab extends WOComponent {
     	tab.params = params;
     	NSMutableArray quals = new NSMutableArray();
     	if(Various.boolForObject(params.valueForKey("useSuper"))) {
-    		tab.qual = (EOQualifier)params.valueForKeyPath("parentTab.qualifier");
-    		if(tab.qual != null)
-    			quals.addObject(tab.qual);
+    		Tabs.GenericTab parentTab = (Tabs.GenericTab)params.valueForKeyPath("parentTab");
+    		if(parentTab != null) {
+    			tab.qual = parentTab.qualifier();
+    			if(tab.qual != null)
+    				quals.addObject(tab.qual);
+    			if(parentTab instanceof NSRange)
+    				tab.parentRange = (NSRange)parentTab;
+    		}
     	}
     	/*
     	Object value = params.objectForKey("since");

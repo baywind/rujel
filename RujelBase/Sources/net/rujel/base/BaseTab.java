@@ -95,38 +95,39 @@ public class BaseTab extends _BaseTab {
 		return result;
 	}
 	
-	public static BaseTab tabForLesson(EduLesson lesson, Integer number, boolean create) {
+	public static BaseTab tabForLesson(EduLesson lesson, Integer number, boolean create, int max) {
 		EntityIndex ent = EntityIndex.indexForObject(lesson);
 		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(
 				FOR_ENTITY_KEY,EOQualifier.QualifierOperatorEqual,ent));
 		quals.addObject(new EOKeyValueQualifier(
 				COURSE_KEY,EOQualifier.QualifierOperatorEqual,lesson.course()));
-		quals.addObject(new EOKeyValueQualifier(
-				FIRST_LESSON_NUMBER_KEY,EOQualifier.QualifierOperatorEqual, number));
+		quals.addObject(new EOKeyValueQualifier(FIRST_LESSON_NUMBER_KEY,
+				EOQualifier.QualifierOperatorLessThanOrEqualTo, number));
 		EOQualifier qual = new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,sorter);
+		NSArray sort = new NSArray(EOSortOrdering.sortOrderingWithKey(
+				FIRST_LESSON_NUMBER_KEY, EOSortOrdering.CompareDescending));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,sort);
+		fs.setFetchLimit(1);
 		EOEditingContext ec = lesson.editingContext();
 		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found != null && found.count() > 0)
-			return (BaseTab)found.objectAtIndex(0);
-		if(!create) {
-			qual = new EOKeyValueQualifier(FIRST_LESSON_NUMBER_KEY,
-					EOQualifier.QualifierOperatorLessThanOrEqualTo, number);
-			quals.replaceObjectAtIndex(qual, 2);
-			qual = new EOAndQualifier(quals);
-			fs.setQualifier(qual);
-			NSArray sort = new NSArray(EOSortOrdering.sortOrderingWithKey(
-					FIRST_LESSON_NUMBER_KEY, EOSortOrdering.CompareDescending));
-			fs.setSortOrderings(sort);
-			fs.setFetchLimit(1);
-			found = ec.objectsWithFetchSpecification(fs);
-			if(found != null && found.count() > 0)
-				return (BaseTab)found.objectAtIndex(0);
-			return null;
+		BaseTab result = (found == null || found.count() == 0)? null :
+				(BaseTab)found.objectAtIndex(0);
+		if(!create)
+			return result;
+		if(result != null && number.equals(result.firstLessonNumber()))
+			return result;
+		qual = new EOKeyValueQualifier(FIRST_LESSON_NUMBER_KEY,
+				EOQualifier.QualifierOperatorGreaterThan, new Integer(max));
+		quals.replaceObjectAtIndex(qual, 2);
+		qual = new EOAndQualifier(quals);
+		fs.setQualifier(qual);
+		found = ec.objectsWithFetchSpecification(fs);
+		result = (found == null || found.count() == 0)? null : (BaseTab)found.objectAtIndex(0);
+		if(result == null) {
+			result = (BaseTab)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+			result.addObjectToBothSidesOfRelationshipWithKey(ent, FOR_ENTITY_KEY);
+			result.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), COURSE_KEY);
 		}
-		BaseTab result = (BaseTab)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
-		result.addObjectToBothSidesOfRelationshipWithKey(ent, FOR_ENTITY_KEY);
-		result.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), COURSE_KEY);
 		result.setFirstLessonNumber(number);
 		return result;
 	}
