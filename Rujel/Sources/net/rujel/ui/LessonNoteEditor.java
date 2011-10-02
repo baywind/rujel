@@ -417,6 +417,7 @@ public class LessonNoteEditor extends WOComponent {
 			if(lesson != null)
 				session().setObjectForKey(lesson.date(), "recentDate");
 		} else {
+			lessonsList = null;
 			session().setObjectForKey(session().valueForKey("today"), "recentDate");
 		}
 	}
