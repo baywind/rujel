@@ -39,6 +39,8 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -69,8 +71,10 @@ public class Main extends WOComponent {
 	public String grName;
 
 	public NSKeyValueCoding item;
+	public NSKeyValueCoding item2;
+	public NSKeyValueCoding item3;
 	
-	public NSArray courses; 
+	public NSArray courses;
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		WORequest req = context().request();
@@ -89,7 +93,10 @@ public class Main extends WOComponent {
 			ec = (EOEditingContext)application().valueForKeyPath(
 					"ecForYear." + year.toString());
 		}
+//		NSNotificationCenter nc = NSNotificationCenter.defaultCenter();
+//		nc.postNotification("EOSharedEditingContextInitializedObjectsNotification",ec,null);
 		groupList = groupListForDate(date);
+//		nc.postNotification("groupList prepared", groupList);
 		/*	
 		sinceString = req.stringFormValueForKey("since");
 		since = (NSTimestamp)MyUtility.dateFormat().parseObject(
@@ -106,19 +113,17 @@ public class Main extends WOComponent {
 				new NSNumberFormatter("#"));
 		studentID = context().request().numericFormValueForKey("studentID",
 				new NSNumberFormatter("#"));
-		
+		EduGroup eduGroup = null;
 		if(currGr != null) {
-			Enumeration enu = groupList.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				NSDictionary gr = (NSDictionary) enu.nextElement();
-				Number id = (Number)gr.valueForKey("grID");
-				if(currGr.intValue() == id.intValue())
-					grName = (String)gr.valueForKey("name");
+			try {
+				 eduGroup = (EduGroup) EOUtilities.objectWithPrimaryKeyValue(
+							ec, EduGroup.entityName,currGr);
+				 grName = eduGroup.name();
+			} catch (Exception e) {
+				logger.log(Level.INFO,"Failed to get eduGroup: " + currGr,e);
 			}
-			if(grName == null) {
+			if(eduGroup == null)
 				currGr = null;
-				studentID = null;
-			}
 		}
 		
 		// display tabs
@@ -139,7 +144,7 @@ public class Main extends WOComponent {
 		}
 
 		//courses
-		if(currGr != null) {
+		if(eduGroup != null) {
 			String tmp = req.stringFormValueForKey("courses");
 			if(tmp != null) {
 				String[] cids = tmp.split(";");
@@ -159,8 +164,6 @@ public class Main extends WOComponent {
 			}
 			if(courses == null) {
 				try {
-					EduGroup eduGroup = (EduGroup) EOUtilities.objectWithPrimaryKeyValue(
-						ec, EduGroup.entityName,currGr);
 					NSDictionary dict = new NSDictionary(new Object[] {year,eduGroup},
 							new String[] {"eduYear","eduGroup"});
 					courses = EOUtilities.objectsMatchingValues(ec,EduCourse.entityName, dict);
@@ -194,6 +197,10 @@ public class Main extends WOComponent {
 		return groupList;
 	}
 	
+	public boolean showTitles() {
+		return (groupList().count() > 1);
+	}
+	
 	protected NSArray groupListForDate(NSTimestamp aDate) {
 		Integer year = (aDate == null)?(Integer)application().valueForKey("year"):
 			MyUtility.eduYearForDate(aDate);
@@ -208,17 +215,74 @@ public class Main extends WOComponent {
 			result = groupListForDate((NSTimestamp)application().valueForKey("today"));
 		} else {
 			NSArray groups = EduGroup.Lister.listGroups(aDate,ec);
+			int maxIndex = 0;
+			{
+				NSArray list = (NSArray) WOApplication.application().valueForKeyPath(
+						"strings.sections.list");
+				if(list != null && list.count() > 1) {
+					Number max = (Number)list.valueForKeyPath("@max.idx");
+					maxIndex = max.intValue();
+				}
+			}
 			if(groups == null || groups.count() == 0) {
-				result = NSArray.EmptyArray;
+				return NSArray.EmptyArray;
 			} else {
+				NSMutableArray[] rows = new NSMutableArray[maxIndex + 1];
+				NSMutableArray[] grps = new NSMutableArray[maxIndex + 1];
 				result = new NSMutableArray();
-				Enumeration<EduGroup> enu = groups.objectEnumerator();
+				Enumeration enu = groups.objectEnumerator();
+				int maxCnt = 0;
 				while (enu.hasMoreElements()) {
-					EduGroup gr = (EduGroup) enu
-							.nextElement();
+					EduGroup gr = (EduGroup) enu.nextElement();
 					NSMutableDictionary grDict = new NSMutableDictionary();
 					Integer grYear = gr.eduYear();
 					Integer grade = gr.grade();
+					int s = 0;
+					if(maxIndex > 0) {
+						try {
+							Integer sect = (Integer)gr.valueForKey("section");
+							s = sect.intValue();
+							if(s > maxIndex)
+								s = 0;
+						} catch(Exception e) {}
+					}
+					if(rows[s] == null)
+						rows[s] = new NSMutableArray();
+					if(grps[s] == null)
+						grps[s] = new NSMutableArray();
+					grps[s].addObject(grDict);
+					
+					NSMutableDictionary row = (NSMutableDictionary)rows[s].lastObject();
+					boolean gerade = true;
+					if(row != null) {
+						Integer currGrade = (Integer)row.valueForKey("grade");
+						gerade = Various.boolForObject(row.valueForKey("gerade"));
+						if(grade == null) {
+							if(currGrade != null) {
+								row = null;
+								currGrade = null;
+							}
+						} else if(!grade.equals(currGrade)) {
+							row = null;
+						}
+					}
+					if(row == null) {
+						gerade = !gerade;
+						row = new NSMutableDictionary(Boolean.valueOf(gerade),"gerade");
+						rows[s].addObject(row);
+						row.takeValueForKey(grade, "grade");
+					}
+					
+					NSMutableArray gradeGroups = (NSMutableArray)row.valueForKey("groups");
+					if(gradeGroups == null) {
+						gradeGroups = new NSMutableArray(grDict);
+						row.takeValueForKey(gradeGroups, "groups");
+					} else {
+						gradeGroups.addObject(grDict);
+					}
+					if(gradeGroups.count() > maxCnt)
+						maxCnt = gradeGroups.count();
+					
 					if(grYear == null || grade == null || grYear.equals(year)) {
 						grDict.takeValueForKey(gr.name(),"name");
 					} else {
@@ -235,21 +299,64 @@ public class Main extends WOComponent {
 					StringBuffer onclick = new StringBuffer("takeValueForKey(");
 					onclick.append(gid.keyValues()[0]).append(",'grID',true);");
 					grDict.takeValueForKey(onclick.toString(), "onclick");
-					((NSMutableArray)result).addObject(grDict);
+					grDict.takeValueForKey(Boolean.valueOf(gerade),"gerade");
+//					((NSMutableArray)result).addObject(grDict);
+				} // groups enumeration
+				if(maxIndex > 0) {
+					NSArray sections = (NSArray) WOApplication.application().valueForKeyPath(
+						"strings.sections.list");
+					enu = sections.objectEnumerator();
+					result = new NSMutableArray();
+					while (enu.hasMoreElements()) {
+						NSKeyValueCoding sect = (NSKeyValueCoding) enu.nextElement();
+						Number idx = (Number)sect.valueForKey("idx");
+						NSMutableDictionary dict = new NSMutableDictionary(idx,"section");
+						dict.takeValueForKey(sect.valueForKey("value"), "title");
+						int i = idx.intValue();
+						if(grps[i].count() > rows[i].count() && (maxCnt > 3 || grps[i].count() > 
+								SettingsReader.intForKeyPath("ui.maxListLength", 22))) {
+							dict.takeValueForKey(rows[i], "rows");
+						} else {
+							dict.takeValueForKey(grps[i], "rows");
+						}
+						((NSMutableArray)result).addObject(dict);
+					} // sections
+				} else {
+					NSDictionary dict = null;
+					if(grps[0].count() > rows[0].count() && (maxCnt > 3 || grps[0].count() > 
+							SettingsReader.intForKeyPath("ui.maxListLength", 22))) {
+						dict = new NSDictionary(rows[0], "rows");
+					} else {
+						dict = new NSDictionary(grps[0], "rows");
+					}
+					result = new NSArray(dict);
 				}
-			}
+			} // has groups
 		}
 		groupsForYear.setObjectForKey(result, year);
 		return result;
 	}
 	
-	public boolean isSelected() {
-		if(currGr == null) {
-			//currGr = new Integer(0);
+	
+	
+	public boolean isCurrent() {
+		if(item2 == null || currGr == null)
 			return false;
-		}
-		Number curr = (Number)valueForKeyPath("item.grID");
-		return (curr != null && curr.intValue() == currGr.intValue());
+		Number id = (Number)((item3 == null)?item2.valueForKey("grID"):item3.valueForKey("grID"));
+		return (id != null && currGr.intValue() == id.intValue());
+	}
+	
+	public String grClass() {
+		if(item2 == null)
+			return null;
+		if(isCurrent())
+			return "selection";
+		if(item3 != null)
+			return "ungerade";
+		if(item2.valueForKey("onclick") == null ||
+				Various.boolForObject(item2.valueForKey("gerade")))
+			return "gerade";
+		return "ungerade";
 	}
 
 }

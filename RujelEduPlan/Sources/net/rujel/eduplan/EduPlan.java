@@ -164,6 +164,7 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 			// TODO: handle exception
 		} finally {
 			ec.unlock();
+			ec.dispose();
 		}
 		return null;
 	}
