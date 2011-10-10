@@ -430,8 +430,9 @@ public class CurriculumModule {
 	public static Object objectSaved(WOContext ctx) {
 		boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
-		if(disable)
+		if(disable) {
 			return null;
+		}
 		Object saved = ctx.session().objectForKey("objectSaved");
 		EduCourse course = null;
 		NSTimestamp date = null;
@@ -449,6 +450,10 @@ public class CurriculumModule {
 			if(!lesson.entityName().equals(EduLesson.entityName))
 				return null;
 			course = lesson.course();
+			String widget = SettingsBase.stringSettingForCourse(
+						"PlanFactWidget", course, course.editingContext());
+			if("hide".equals(widget))
+				return null;
 			date = lesson.date();
 			NSArray related = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
 					Variation.ENTITY_NAME, "relatedLesson", lesson);

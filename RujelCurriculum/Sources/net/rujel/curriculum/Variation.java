@@ -177,9 +177,11 @@ public class Variation extends _Variation implements Reason.Event {
     }*/
     
     public Variation getPaired() {
-    	if(relatedLesson() == null || course() == null)
+    	EduCourse course = course();
+    	EduLesson lesson = relatedLesson();
+    	if(course == null || lesson == null || lesson.editingContext() == null)
     		return null;
-    	NSArray args = new NSArray(new Object[] {relatedLesson(),course()});
+    	NSArray args = new NSArray(new Object[] {lesson,course});
     	NSArray found = EOUtilities.objectsWithQualifierFormat(editingContext(), ENTITY_NAME, 
     			"relatedLesson = %@ and course != %@", args);
     	//getAllPaired(true);

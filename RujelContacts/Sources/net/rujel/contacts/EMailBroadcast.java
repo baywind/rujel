@@ -462,10 +462,11 @@ gr:		while (eduGroups.hasMoreElements()) {
 			textBuf.append("\n    ---------------\n\n");
 			allowRequest = !SettingsReader.boolForKeyPath("mail.denyRequesting", false);
 		}
-		if(params.valueForKey("messageText") == null)
-			textBuf.append(mailer.defaultMessageText());
-		else
-			textBuf.append(params.valueForKey("messageText"));
+		String messageText = (String)params.valueForKey("messageText");
+		if(messageText == null)
+			messageText = mailer.defaultMessageText();
+		if(messageText != null)
+			textBuf.append(messageText.replaceAll("%", "%%"));
 
 		WOApplication app = WOApplication.application();
 		if(Various.boolForObject(params.valueForKey("diaryLink"))) {

@@ -348,6 +348,8 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		}
 		substitute.setDate(lesson.date());
 		substitute.addObjectToBothSidesOfRelationshipWithKey(teacher,"teacher");
+		if(idx > 0 && fromLesson == null)
+			idx = 0;
 		BigDecimal subFactor = BigDecimal.ONE;
 		BigDecimal joinFactor = Substitute.joinFactor();
 		if(idx > 0)
@@ -395,6 +397,13 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 		substitute.addObjectToBothSidesOfRelationshipWithKey(reason, "reason");
 		done(action);
 		return RedirectPopup.getRedirect(context(), returnPage, null);
+	}
+	
+	public String onChange() {
+		if(fromLesson == null)
+			return "if(checked){showObj('joinBind');form.save.disabled=true;}else{hideObj('joinBind');}fitWindow();";
+		else
+			return "if(checked)showObj('joinBind');else hideObj('joinBind');fitWindow();";
 	}
 	
 	public WOActionResults delete() {
