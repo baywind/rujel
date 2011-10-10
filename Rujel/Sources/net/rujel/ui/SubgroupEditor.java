@@ -54,6 +54,7 @@ public class SubgroupEditor extends WOComponent {
 	public NSArray groups;
 	public NSKeyValueCoding groupItem;
 	public NSMutableDictionary byGroup;
+	private NSArray grlist;
 	
     public SubgroupEditor(WOContext context) {
         super(context);
@@ -67,6 +68,8 @@ public class SubgroupEditor extends WOComponent {
 		course = aCourse;
 		subgroup = new NSMutableSet(course.groupList());
 		currGroup = course.eduGroup();
+		if(currGroup != null)
+			grlist = currGroup.list();
 		if(course.namedFlags().flagForKey("mixedGroup") || currGroup == null
 				 || currGroup.list() == null || currGroup.list().count() == 0) {
 			if(subgroup.count() > 0)
@@ -96,9 +99,9 @@ public class SubgroupEditor extends WOComponent {
 		while (enu.hasMoreElements()) {
 			EduGroup gr = (EduGroup) enu.nextElement();
 			NSMutableArray list = new NSMutableArray();
-			Enumeration grlist = gr.list().objectEnumerator();
-			while (grlist.hasMoreElements()) {
-				Student stu = (Student) grlist.nextElement();
+			Enumeration grenu = gr.list().objectEnumerator();
+			while (grenu.hasMoreElements()) {
+				Student stu = (Student) grenu.nextElement();
 				if(left.removeObject(stu))
 					list.addObject(stu);
 			}
@@ -121,9 +124,9 @@ public class SubgroupEditor extends WOComponent {
 				break;
 			}
 			NSMutableArray list = new NSMutableArray();
-			Enumeration grlist = gr.list().objectEnumerator();
-			while (grlist.hasMoreElements()) {
-				Student stu = (Student) grlist.nextElement();
+			Enumeration grlenu = gr.list().objectEnumerator();
+			while (grlenu.hasMoreElements()) {
+				Student stu = (Student) grlenu.nextElement();
 				if(left.removeObject(stu))
 					list.addObject(stu);
 			}
@@ -183,14 +186,15 @@ public class SubgroupEditor extends WOComponent {
 			if(flags.flagForKey("mixedGroup"))
 				return false;
 		}
-		NSArray list = (NSArray)course.valueForKeyPath("eduGroup.list");
-		if(list != null && list.count() > 0) {
+		if(grlist != null && grlist.count() != 0) {
 			Enumeration enu = subgroup.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Student student = (Student) enu.nextElement();
-				if(!list.containsObject(student))
+				if(!grlist.containsObject(student))
 					return false;
 			}
+			if(subgroup.count() == grlist.count())
+				course.setAudience(NSArray.EmptyArray);
 		} else {
 			return false;
 		}
@@ -209,7 +213,7 @@ public class SubgroupEditor extends WOComponent {
 		WOActionResults nextPage = null;
 		EOEditingContext ec = course.editingContext();
 //		if(ec.hasChanges()) {
-			course.namedFlags().setFlagForKey(groups == null,"mixedGroup");
+			course.namedFlags().setFlagForKey(groups != null,"mixedGroup");
 			course.setSubgroup(subgroup.allObjects());
 			WOLogLevel level = WOLogLevel.EDITING;
 			try {
@@ -220,15 +224,26 @@ public class SubgroupEditor extends WOComponent {
 						new Object[] {session(),course});
 				session().takeValueForKey(Boolean.FALSE,"prolong");
 				if(groups == null) {
+					Enumeration grlenu = grlist.objectEnumerator();
+					boolean all = true;
+					while (grlenu.hasMoreElements()) {
+						Student stu = (Student) grlenu.nextElement();
+						if(!subgroup.containsObject(stu)) {
+							all = false;
+							break;
+						}
+					}
+					if(all) {
+						course.setAudience(NSArray.EmptyArray);
+						ec.saveChanges();
+					}
 					nextPage = (WOComponent)session().valueForKey("pullComponent");
-				} else if(autoUnmix()) {
-					ec.saveChanges();
 				} else if(currGroup != null && currGroup.list() != null){ 
 					// work with mixed group
 					NSMutableArray list = new NSMutableArray();
-					Enumeration grlist = currGroup.list().objectEnumerator();
-					while (grlist.hasMoreElements()) {
-						Student stu = (Student) grlist.nextElement();
+					Enumeration grlenu = currGroup.list().objectEnumerator();
+					while (grlenu.hasMoreElements()) {
+						Student stu = (Student) grlenu.nextElement();
 						if(subgroup.containsObject(stu))
 							list.addObject(stu);
 					}
@@ -238,6 +253,11 @@ public class SubgroupEditor extends WOComponent {
 					if(byGroup.count() > groups.count())
 						groups = EOSortOrdering.sortedArrayUsingKeyOrderArray(
 								byGroup.allKeys(), EduGroup.Lister.sorter());
+				} else if(autoUnmix()) {
+					ec.saveChanges();
+					nextPage = (WOComponent)session().valueForKey("pullComponent");
+				} else {
+					nextPage = (WOComponent)session().valueForKey("pullComponent");
 				}
 			} catch (Exception ex) {
 				logger.logp(level,"SubgroupEditor","save","Failed to save changes in subgroup",
