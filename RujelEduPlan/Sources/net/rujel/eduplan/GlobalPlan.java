@@ -399,13 +399,17 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		PlanCycle[] planCycles = (PlanCycle[])subjectItem.valueForKey("planCycles");
 		EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
 			subjectItem.valueForKey("planHours");
+		Integer hours = null;
 		if(aHours != null) {
-			Integer hours;
 			try {
 				hours = Integer.decode(aHours);
+				if(hours.intValue() == 0)
+					hours = null;
 			} catch (NumberFormatException e) {
 				return;
 			}
+		}
+		if(hours != null) {
 			EduGroup grp = (gradeItem instanceof EduGroup)?(EduGroup)gradeItem:null;
 			if(planCycles[index] == null) { // create cycle
 				PlanCycle cycle = (PlanCycle)EOUtilities.createAndInsertInstance(

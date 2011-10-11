@@ -54,8 +54,8 @@ public class Subject extends _Subject implements EOSortOrdering.Comparison {
 		Integer zero = new Integer(0);
 		setNormalGroup(zero);
 		setNum(zero);
-		setSubgroups(zero);
 		setFlags(zero);
+		setSubgroups(new Integer(1));
 	}
 	
 	public static NSArray subjectsForArea(EOEnterpriseObject area) {
