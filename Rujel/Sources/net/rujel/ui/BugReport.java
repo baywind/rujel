@@ -1,5 +1,6 @@
 package net.rujel.ui;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -30,7 +31,6 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.foundation.NSData;
-import com.webobjects.foundation.NSMutableData;
 import com.webobjects.foundation.NSPathUtilities;
 
 public class BugReport extends WOComponent {
@@ -109,16 +109,7 @@ public class BugReport extends WOComponent {
 	}
 	
     public NSData environment() {
-    	final NSMutableData result = new NSMutableData();
-    	OutputStream out = new OutputStream() {
-			public void write(int arg0) throws IOException {
-				result.appendByte((byte)arg0);
-			}
-			
-			public void write(byte[] b) throws IOException {
-				result.appendBytes(b);
-			}
-		};
+    	ByteArrayOutputStream out = new ByteArrayOutputStream();
 		Calendar cal = Calendar.getInstance();
 		StringBuilder buf = new StringBuilder(40);
 		buf.append(cal.get(Calendar.YEAR));
@@ -208,7 +199,7 @@ public class BugReport extends WOComponent {
 			}
 			zipStream.closeEntry();
 			zipStream.close();
-	    	return result;
+	    	return new NSData(out.toByteArray());
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error constructing environment",
 					new Object[] {session(),e});

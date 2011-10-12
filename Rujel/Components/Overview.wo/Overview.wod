@@ -153,6 +153,11 @@ ShowMarks: WOSubmitButton {
 	value = application.strings.Strings.Overview.showMarks;
 }
 
+ShowXML: WOSubmitButton {
+	action = genarateXML;
+	value = "XML";
+}
+
 ShowMarks2: WOSubmitButton {
 	action = overviewAction;
 	value = reporterItem.name;

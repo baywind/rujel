@@ -44,6 +44,7 @@ import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.base.MyUtility;
+import net.rujel.base.XMLGenerator;
 
 public class Overview extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -305,6 +306,43 @@ public class Overview extends WOComponent {
 		WOActionResults result = printSelectedStudents();
 		selectedStudents = tmp;
 		return result;*/
+	}
+	
+	public WOActionResults genarateXML() {
+		NSMutableDictionary reportSettings = new NSMutableDictionary();
+		reportSettings.takeValueForKey(reporter,"reporter");
+		reportSettings.takeValueForKey(existingCourses,"courses");
+		NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
+		reportSettings.takeValueForKey(studentsToReport,"students");
+		reportSettings.takeValueForKey(since,"since");
+		reportSettings.takeValueForKey(to,"to");
+		reportSettings.takeValueForKey(period,"period");
+		reportSettings.takeValueForKey(currClass, "eduGroup");
+
+		/*
+		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(
+				ReporterSetup.SETTINGS);
+		if(settings == null) {
+			settings = ReporterSetup.getDefaultSettings(session());
+			settings.takeValueForKey(session().valueForKeyPath(
+			"strings.Strings.PrintReport.defaultSettings"), "title");
+			session().setObjectForKey(settings,ReporterSetup.SETTINGS);
+		}
+		reportSettings.takeValueForKey(settings, "settings");
+		session().setObjectForKey(reportSettings,"xmlGenerators");
+		NSArray reports = (NSArray)session().valueForKeyPath("modules.xmlGenerators");
+		session().removeObjectForKey("xmlGenerators");
+		*/
+		byte[] result = null;
+		try {
+			result = XMLGenerator.generate(session(), reportSettings);
+		} catch (Exception e) {
+			result = WOLogFormatter.formatTrowableHTML(e).getBytes();
+		}
+		WOResponse response = application().createResponseInContext(context());
+		response.setContent(result);
+		response.setHeader("application/xml","Content-Type");
+		return response;
 	}
 	
 	public WOActionResults printSelectedStudents() {
