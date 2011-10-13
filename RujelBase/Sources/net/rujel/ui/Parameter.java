@@ -123,7 +123,7 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     		attribute = "min_" + attribute;
     		value = paramsDict().valueForKey(attribute);
     		if(value != null)
-    			return value;
+        		return (value == NullValue)?null:value;
     	}
     	value = valueOf.valueForKeyPath("paramsDict.itemDict.default" + 
     			((secondSelector)?"Min":"Value"));
