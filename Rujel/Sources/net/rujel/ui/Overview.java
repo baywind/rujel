@@ -329,9 +329,6 @@ public class Overview extends WOComponent {
 			session().setObjectForKey(settings,ReporterSetup.SETTINGS);
 		}
 		reportSettings.takeValueForKey(settings, "settings");
-		session().setObjectForKey(reportSettings,"xmlGenerators");
-		NSArray reports = (NSArray)session().valueForKeyPath("modules.xmlGenerators");
-		session().removeObjectForKey("xmlGenerators");
 		*/
 		byte[] result = null;
 		try {

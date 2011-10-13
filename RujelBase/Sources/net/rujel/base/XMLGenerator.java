@@ -46,6 +46,7 @@ import org.xml.sax.SAXException;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOGlobalID;
@@ -58,13 +59,17 @@ import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
+import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.DataBaseConnector;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.xml.AbstractObjectReader;
+import net.rujel.reusables.xml.GeneratorModule;
 
 public class XMLGenerator extends AbstractObjectReader {
 
@@ -124,31 +129,52 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareAttribute("title", tmp);
 			handler.element("school", null);
 		}
-		prepareGroups(in);
+		NSArray groups = prepareGroups(in);
+		NSArray courses = (NSArray)in.options.valueForKey("courses");
+		if(courses != null)
+			groups = null;
 		
+		in.ses.setObjectForKey(in.options,"xmlGeneration");
+		NSArray generators = (NSArray)in.ses.valueForKeyPath("modules.xmlGeneration");
+		in.ses.removeObjectForKey("xmlGeneration");
+		if(courses == null) {
+			Enumeration enu = groups.objectEnumerator();
+			NSMutableArray grades = new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				EduGroup gr = (EduGroup) enu.nextElement();
+				courses = EOUtilities.objectsMatchingKeyAndValue(gr.editingContext(),
+						EduCourse.entityName, "eduGroup", gr);
+				processCourses(courses, generators, in);
+				if(!grades.containsObject(gr.grade())) {
+					grades.addObject(gr.grade());
+				}
+			}
+		} else {
+			processCourses(courses, generators, in);
+		}
 		handler.endElement("ejdata");
 		handler.endDocument();
 	}
 	
-	private void prepareGroups(RujelInputSource in) throws SAXException {
-		NSArray eduGroups = (NSArray)in.options.valueForKey("eduGroups");
-		if(eduGroups == null) {
+	private NSArray prepareGroups(RujelInputSource in) throws SAXException {
+		NSArray groups = (NSArray)in.options.valueForKey("eduGroups");
+		if(groups == null) {
 			EduGroup gr = (EduGroup)in.options.valueForKey("eduGroup");
 			if(gr != null)
-				eduGroups = new NSArray(gr);
+				groups = new NSArray(gr);
 		}
 		NSArray students = (NSArray)in.options.valueForKey("students");
 		if(students == null) {
 			Student stu = (Student)in.options.valueForKey("student");
 			if(stu != null) {
 				students = new NSArray(stu);
-				if(eduGroups == null) {
+				if(groups == null) {
 					EduGroup gr = stu.recentMainEduGroup();
 					if(gr != null)
-						eduGroups = new NSArray(gr);
+						groups = new NSArray(gr);
 				}
 			}
-		} else if(eduGroups == null) {
+		} else if(groups == null) {
 			Enumeration enu = students.objectEnumerator();
 			NSMutableArray tmp = new NSMutableArray();
 			while (enu.hasMoreElements()) {
@@ -160,19 +186,19 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(tmp.count() > 1)
 				EOSortOrdering.sortArrayUsingKeyOrderArray(tmp, EduGroup.sorter);
 			if(tmp.count() > 0)
-				eduGroups = tmp;
+				groups = tmp;
 		}
-		if(eduGroups == null) {
+		if(groups == null) {
 			NSTimestamp date = (NSTimestamp)in.ses.valueForKey("today");
 			Integer eduYear = (Integer)in.ses.valueForKey("eduYear");
 			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
 			if(os == null)
 				os = EOObjectStoreCoordinator.defaultCoordinator();
 			EOEditingContext ec = new SessionedEditingContext(os, in.ses);
-			eduGroups = EduGroup.Lister.listGroups(date, ec);
+			groups = EduGroup.Lister.listGroups(date, ec);
 		}
 		handler.startElement("eduGroups");
-		Enumeration enu = eduGroups.objectEnumerator();
+		Enumeration enu = groups.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduGroup gr = (EduGroup) enu.nextElement();
 			handler.prepareAttribute("id", getID(gr));
@@ -192,8 +218,8 @@ public class XMLGenerator extends AbstractObjectReader {
 					Enumeration stenu = list.objectEnumerator();
 					while (stenu.hasMoreElements()) {
 						Student stu = (Student) stenu.nextElement();
-						handler.prepareAttribute("id", getID(stu));
-						handler.element("student", Person.Utility.fullName(stu, true, 2, 1, 0));
+						handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
+						handler.element("student",null);
 					}
 				}
 			} else { // selected students
@@ -211,7 +237,8 @@ public class XMLGenerator extends AbstractObjectReader {
 						continue;
 					}
 					handler.prepareAttribute("id", getID(stu));
-					handler.element("student", Person.Utility.fullName(stu, true, 2, 1, 0));
+					handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
+					handler.element("student",null);
 				} // students enumeration
 				if(skip) {
 					handler.dropAttributes();
@@ -219,8 +246,84 @@ public class XMLGenerator extends AbstractObjectReader {
 				}
 			} // selected students
 			handler.endElement("eduGroup");
-		} // groupe enumeration
+		} // group enumeration
 		handler.endElement("eduGroups");
+		return groups;
+	}
+	
+	private void processCourses(NSArray courses, NSArray generators, RujelInputSource in)
+			throws SAXException {
+		if(courses == null || courses.count() == 0)
+			return;
+		// TODO: filter courses for students
+		Enumeration enu = courses.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduCourse crs = (EduCourse) enu.nextElement();
+			writeCourse(crs, generators,in);
+		}
+	}
+	
+	private void writeCourse(EduCourse course,NSArray generators, RujelInputSource in)
+			throws SAXException {
+		handler.prepareAttribute("id", getID(course));
+		handler.startElement("course");
+		handler.prepareAttribute("id", getID(course.cycle()));
+		handler.prepareAttribute("title", course.cycle().subject());
+		handler.startElement("subject");
+		try {
+			String fullName = (String)course.valueForKeyPath("cycle.subjectEO.fullName");
+			if(fullName != null)
+				handler.element("content", fullName);
+		} catch (Exception e) {}
+		handler.endElement("subject");
+		Teacher teacher = course.teacher();
+		if(teacher != null) {
+			handler.prepareAttribute("id", getID(teacher));
+			handler.prepareAttribute("name", Person.Utility.fullName(teacher, true, 2, 1, 1));
+			handler.element("teacher", null);
+		}
+		EduGroup gr = course.eduGroup();
+		handler.prepareAttribute("id", (gr==null)?"0":getID(gr));
+		handler.prepareAttribute("name", (gr==null)?"":gr.name());
+		try {
+			if(Various.boolForObject(course.valueForKeyPath("namedFlags.mixedGroup"))) {
+				handler.prepareAttribute("type", "NMTOKEN", "mixed");
+				gr = null;
+			} else if(Various.boolForObject(course.valueForKeyPath("audience.count"))) {
+				handler.prepareAttribute("type", "NMTOKEN", "sub");
+				gr = null;
+			} else {
+				handler.prepareAttribute("type", "NMTOKEN", "full");
+			}
+		} catch (Exception e) {
+			handler.prepareAttribute("type", "NMTOKEN", "full");
+		}
+		handler.startElement("eduGroup");
+		if(gr == null) {
+			NSArray list = course.groupList();
+			NSArray students = (NSArray)in.options.valueForKey("students");
+			if(list != null && list.count() > 0) {
+				Enumeration enu = list.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Student stu = (Student) enu.nextElement();
+					if(students != null && !students.containsObject(stu))
+						continue;
+					handler.prepareAttribute("id", getID(stu));
+					handler.element("student",null);
+				}
+			}
+		}
+		handler.endElement("eduGroup");
+		if(course.comment() != null)
+			handler.element("comment", course.comment());
+		if(generators != null && generators.count() > 0) {
+			Enumeration enu = generators.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				GeneratorModule gen = (GeneratorModule) enu.nextElement();
+				gen.generateFor(course, handler);
+			}
+		}
+		handler.endElement("course");
 	}
 	
 	public static String getID (EOEnterpriseObject eo) {
