@@ -211,9 +211,9 @@ public class Main extends WOComponent {
 			return result;
 		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(
 				"ecForYear." + year.toString());
-		if(aDate == null || ec == null) {
-			result = groupListForDate((NSTimestamp)application().valueForKey("today"));
-		} else {
+		if(aDate == null || ec == null) // {
+			return groupListForDate((NSTimestamp)application().valueForKey("today"));
+//		} else {
 			NSArray groups = EduGroup.Lister.listGroups(aDate,ec);
 			int maxIndex = 0;
 			{
@@ -349,7 +349,7 @@ public class Main extends WOComponent {
 					result = new NSArray(dict);
 				}
 			} // has groups
-		}
+//		}
 		groupsForYear.setObjectForKey(result, year);
 		return result;
 	}
