@@ -31,6 +31,8 @@ package net.rujel.base;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 
 import javax.xml.transform.Transformer;
@@ -149,6 +151,7 @@ public class XMLGenerator extends AbstractObjectReader {
 					grades.addObject(gr.grade());
 				}
 			}
+			//TODO: add groupless grade courses
 		} else {
 			processCourses(courses, generators, in);
 		}
@@ -211,7 +214,7 @@ public class XMLGenerator extends AbstractObjectReader {
 					handler.prepareAttribute("absGrade", abs.toString());
 			} catch (Exception e) {}
 			if(students == null) { // all students
-				handler.prepareAttribute("type", "NMTOKEN", "full");
+				handler.prepareEnumAttribute("type", "full");
 				handler.startElement("eduGroup");
 				NSArray list = gr.list();
 				if(list != null && list.count() > 0) {
@@ -223,7 +226,7 @@ public class XMLGenerator extends AbstractObjectReader {
 					}
 				}
 			} else { // selected students
-				handler.prepareAttribute("type", "NMTOKEN", "sub");
+				handler.prepareEnumAttribute("type", "sub");
 				boolean skip = true;
 				Enumeration stenu = students.objectEnumerator();
 				while (stenu.hasMoreElements()) {
@@ -255,10 +258,14 @@ public class XMLGenerator extends AbstractObjectReader {
 			throws SAXException {
 		if(courses == null || courses.count() == 0)
 			return;
-		// TODO: filter courses for students
+		Student stu = (Student)in.options.valueForKey("student");
 		Enumeration enu = courses.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduCourse crs = (EduCourse) enu.nextElement();
+			if(crs instanceof BaseCourse) {
+				if(stu != null && !((BaseCourse)crs).isInSubgroup(stu))
+					continue;
+			}
 			writeCourse(crs, generators,in);
 		}
 	}
@@ -287,16 +294,16 @@ public class XMLGenerator extends AbstractObjectReader {
 		handler.prepareAttribute("name", (gr==null)?"":gr.name());
 		try {
 			if(Various.boolForObject(course.valueForKeyPath("namedFlags.mixedGroup"))) {
-				handler.prepareAttribute("type", "NMTOKEN", "mixed");
+				handler.prepareEnumAttribute("type", "mixed");
 				gr = null;
 			} else if(Various.boolForObject(course.valueForKeyPath("audience.count"))) {
-				handler.prepareAttribute("type", "NMTOKEN", "sub");
+				handler.prepareEnumAttribute("type", "sub");
 				gr = null;
 			} else {
-				handler.prepareAttribute("type", "NMTOKEN", "full");
+				handler.prepareEnumAttribute("type", "full");
 			}
 		} catch (Exception e) {
-			handler.prepareAttribute("type", "NMTOKEN", "full");
+			handler.prepareEnumAttribute("type", "full");
 		}
 		handler.startElement("eduGroup");
 		if(gr == null) {
@@ -340,5 +347,12 @@ public class XMLGenerator extends AbstractObjectReader {
 //			return pKey.toString();
 		}
 		return kGid.keyValues()[0].toString();
+	}
+	
+	public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	public static String formatDate(Date date) {
+		if(date == null)
+			return null;
+		return dateFormat.format(date);
 	}
 }
