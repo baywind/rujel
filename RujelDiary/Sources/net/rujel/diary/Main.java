@@ -313,14 +313,31 @@ public class Main extends WOComponent {
 						NSMutableDictionary dict = new NSMutableDictionary(idx,"section");
 						dict.takeValueForKey(sect.valueForKey("value"), "title");
 						int i = idx.intValue();
+						if(grps[i] == null)
+							continue;
 						if(grps[i].count() > rows[i].count() && (maxCnt > 3 || grps[i].count() > 
 								SettingsReader.intForKeyPath("ui.maxListLength", 22))) {
 							dict.takeValueForKey(rows[i], "rows");
 						} else {
 							dict.takeValueForKey(grps[i], "rows");
 						}
+						grps[i] = null;
 						((NSMutableArray)result).addObject(dict);
 					} // sections
+					for (int i = 0; i < grps.length; i++) {
+						if(grps[i] == null)
+							continue;
+						NSMutableDictionary dict = new NSMutableDictionary(
+								new Integer(i),"section");
+						dict.takeValueForKey("-=? " + i + " ?=-", "title");
+						if(grps[i].count() > rows[i].count() && (maxCnt > 3 || grps[i].count() > 
+						SettingsReader.intForKeyPath("ui.maxListLength", 22))) {
+							dict.takeValueForKey(rows[i], "rows");
+						} else {
+							dict.takeValueForKey(grps[i], "rows");
+						}
+						((NSMutableArray)result).addObject(dict);
+					}
 				} else {
 					NSDictionary dict = null;
 					if(grps[0].count() > rows[0].count() && (maxCnt > 3 || grps[0].count() > 

@@ -1060,10 +1060,13 @@ public class LessonNoteEditor extends WOComponent {
 		}
 	 */
 	public void setPresent(NSKeyValueCoding pres) {
-		if(pres != null)
+		if(pres != null) {
 			present = pres;
-		else
+			if(_currTab instanceof CustomTab.Tab)
+				_currTab = (GenericTab) ((CustomTab.Tab) _currTab).params.valueForKey("parentTab");
+		} else {
 			student = null;
+		}
 		if(ec.hasChanges())
 			ec.revert();
 		if(_currTab instanceof BaseTab.Tab)
