@@ -71,7 +71,7 @@ public class LessonsXML extends GeneratorModule {
 		if(to != null)
 			quals.addObject(new EOKeyValueQualifier(BaseLesson.DATE_KEY,
 					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
-		EOFetchSpecification fs = new EOFetchSpecification("BaseLesson",
+		EOFetchSpecification fs = new EOFetchSpecification(BaseLesson.ENTITY_NAME,
 				new EOAndQualifier(quals),EduLesson.sorter);
 		fs.setRefreshesRefetchedObjects(true);
 		NSArray lessons = course.editingContext().objectsWithFetchSpecification(fs);

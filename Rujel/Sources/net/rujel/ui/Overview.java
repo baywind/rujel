@@ -334,7 +334,7 @@ public class Overview extends WOComponent {
 		try {
 			result = XMLGenerator.generate(session(), reportSettings);
 		} catch (Exception e) {
-			result = WOLogFormatter.formatTrowableHTML(e).getBytes();
+			result = WOLogFormatter.formatTrowable(e).getBytes();
 		}
 		WOResponse response = application().createResponseInContext(context());
 		response.setContent(result);
