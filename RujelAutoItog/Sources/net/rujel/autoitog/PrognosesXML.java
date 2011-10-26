@@ -109,16 +109,22 @@ public class PrognosesXML extends GeneratorModule {
 				handler.prepareAttribute("title", itog.title());
 				handler.startElement("container");
 				handler.element("content",itog.name());
-				handler.prepareAttribute("key", "flags");
-				handler.element("param", ai.flags().toString());
+				Number flags = ai.flags();
+				if(flags.intValue() != 0) {
+					handler.prepareAttribute("key", "flags");
+					handler.element("param", flags.toString());
+				}
 				handler.prepareAttribute("key", "time");
 				handler.element("param", timeFormat.format(ai.fireTime()));
 				Timeout timeout = CourseTimeout.getTimeoutForCourseAndPeriod(course, itog);
 				if(timeout != null) {
 					handler.prepareAttribute("key", "timeout");
 					handler.element("param", XMLGenerator.formatDate(timeout.fireDate()));
-					handler.prepareAttribute("key", "timeoutFlags");
-					handler.element("param", timeout.flags().toString());
+					flags = timeout.flags();
+					if(flags.intValue() != 0) {
+						handler.prepareAttribute("key", "timeoutFlags");
+						handler.element("param", flags.toString());
+					}
 					handler.prepareAttribute("key", "timeoutReason");
 					handler.element("param", timeout.reason());
 				} // timeout
@@ -131,15 +137,21 @@ public class PrognosesXML extends GeneratorModule {
 			handler.element("present", progn.value().toString());
 			handler.prepareAttribute("key", "complete");
 			handler.element("param", progn.complete().toString());
-			handler.prepareAttribute("key", "flags");
-			handler.element("param", progn.flags().toString());
+			Number flags = progn.flags();
+			if(flags.intValue() != 0) {
+				handler.prepareAttribute("key", "flags");
+				handler.element("param", flags.toString());
+			}
 			Timeout timeout = StudentTimeout.timeoutForStudentAndCourse(
 					progn.student(), course, progn.itogContainer());
 			if(timeout != null) {
 				handler.prepareAttribute("key", "timeout");
 				handler.element("param", XMLGenerator.formatDate(timeout.fireDate()));
-				handler.prepareAttribute("key", "timeoutFlags");
-				handler.element("param", timeout.flags().toString());
+				flags = timeout.flags();
+				if(flags.intValue() != 0) {
+					handler.prepareAttribute("key", "timeoutFlags");
+					handler.element("param", flags.toString());
+				}
 				handler.prepareAttribute("key", "timeoutReason");
 				handler.element("param", timeout.reason());
 			}

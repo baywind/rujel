@@ -100,7 +100,9 @@ public class LessonsXML extends GeneratorModule {
 //		handler.prepareAttribute("title", lesson.title());
 		handler.startElement("container");
 		handler.element("content", lesson.theme());
-		handler.element("task", lesson.homeTask());
+		tmp = lesson.homeTask();
+		if(tmp != null)
+			handler.element("task", (String)tmp);
 		NSArray notes = lesson.notes();
 		if(notes != null && notes.count() > 0) {
 			handler.startElement("marks");

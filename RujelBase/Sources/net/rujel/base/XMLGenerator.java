@@ -64,6 +64,7 @@ import com.webobjects.foundation.NSTimestamp;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
+import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.DataBaseConnector;
@@ -354,5 +355,102 @@ public class XMLGenerator extends AbstractObjectReader {
 		if(date == null)
 			return null;
 		return dateFormat.format(date);
+	}
+	
+	public static class Persdata extends AbstractObjectReader {
+
+		public void parse(InputSource input) throws IOException, SAXException {
+	        if (input instanceof RujelInputSource) {
+	            parse((RujelInputSource)input);
+	        } else {
+	            throw new SAXException("Unsupported InputSource specified. "
+	                    + "Must be a ProjectTeamInputSource");
+	        }
+		}
+		protected String base = WOApplication.application().host() +
+								WOApplication.application().valueForKey("urlPrefix");
+
+		public void parse(RujelInputSource in)  throws IOException, SAXException {
+	        if (handler == null) {
+	            throw new IllegalStateException("ContentHandler not set");
+	        }
+			handler.startDocument();
+			handler.prepareAttribute("product", "Rujel");
+			String tmp = System.getProperty("RujelVersion");
+			if(tmp != null)
+				handler.prepareAttribute("version", tmp);
+			handler.prepareAttribute("base", base);
+			tmp = in.ses.valueForKey("eduYear").toString();
+			handler.prepareAttribute("eduYear", tmp);
+			handler.startElement("persdata");
+			Object stu = in.options.valueForKey("student");
+			if(stu != null) {
+				generateForPersonLink((Student)stu, "student");
+			} else {
+				stu = (NSArray)in.options.valueForKey("students");
+				if(stu != null && ((NSArray)stu).count() > 0) {
+					Enumeration enu = ((NSArray)stu).objectEnumerator();
+					while (enu.hasMoreElements()) {
+						generateForPersonLink((Student)enu.nextElement(),"student");
+					}
+				} else {
+					stu = null;
+				}
+			}
+			if(stu == null) {
+				stu = in.options.valueForKey("eduGroup");
+				if(stu instanceof EduGroup) {
+					NSArray list = ((EduGroup)stu).list();
+					if(list != null && list.count() > 0) {
+						Enumeration enu = list.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							generateForPersonLink((Student)enu.nextElement(),"student");
+						}
+					}
+				}
+			}
+			NSArray courses = (NSArray)in.options.valueForKey("courses");
+			if(courses != null && courses.count() > 0) {
+				Enumeration enu = courses.objectEnumerator();
+				NSMutableArray done = new NSMutableArray();
+				while (enu.hasMoreElements()) {
+					EduCourse crs = (EduCourse) enu.nextElement();
+					Teacher teacher = crs.teacher();
+					if(teacher == null || done.containsObject(teacher))
+						continue;
+					generateForPersonLink(teacher, "teacher");
+					done.addObject(teacher);
+				}
+			}
+			handler.endElement("persdata");
+			handler.endDocument();
+		}
+		
+		protected void generateForPersonLink(PersonLink plink, String type)  throws SAXException {
+			handler.prepareEnumAttribute("type", type);
+			handler.prepareAttribute("id", getID((EOEnterpriseObject)plink));
+			Person pers = plink.person();
+			handler.prepareEnumAttribute("sex", (pers.sex())?"male":"female");
+			handler.startElement("person");
+			if(pers != plink && pers instanceof EOEnterpriseObject) {
+				handler.startElement("syncdata");
+				handler.prepareAttribute("product", "Rujel");
+				handler.prepareAttribute("base", base);
+				handler.prepareAttribute("entity", ((EOEnterpriseObject)pers).entityName());
+				handler.element("extid", getID((EOEnterpriseObject)pers));
+				handler.endElement("syncdata");
+			}
+			handler.prepareEnumAttribute("type", "last");
+			handler.element("name", pers.lastName());
+			handler.prepareEnumAttribute("type", "first");
+			handler.element("name", pers.firstName());
+			handler.prepareEnumAttribute("type", "second");
+			handler.element("name", pers.secondName());
+			if(pers.birthDate() != null) {
+				handler.prepareAttribute("birth", formatDate(pers.birthDate()));
+				handler.element("date", null);
+			}
+			handler.endElement("person");
+		}
 	}
 }

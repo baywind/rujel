@@ -226,54 +226,64 @@ public class CriterialXML extends GeneratorModule {
 							continue;
 					} else if(students != null && !students.containsObject(st))
 						continue;
+					Mark[] mrk = work.forPersonLink(st);
+					String note = work.noteForStudent(st);
+					if(mrk == null && note == null)
+						continue;
 					handler.prepareAttribute("student", XMLGenerator.getID(st));
-					if(mask == null) {
-						Mark[] mrk = work.forPersonLink(st);
+					if(mask == null) { // non criterial mark
 						if(mrk != null && mrk[0] != null) {
 							handler.prepareAttribute("value", mrk[0].present());
 						}
 						handler.startElement("mark");
-					} else {
+					} else { // criterial mark
 						tmp = work.integralForStudent(st);
-						if(work.hasWeight()) {
-							if(forCourse.integralPresenter != null)
-								handler.prepareAttribute("value", 
-										forCourse.integralPresenter.presentFraction((BigDecimal)tmp));
-							handler.startElement("mark");
-							handler.prepareEnumAttribute("type", "color");
-							handler.element("present", 
-									forCourse.integralColor.presentFraction((BigDecimal)tmp));
-						} else {
-							if(forCourse.weightlessPresenter != null)
-								handler.prepareAttribute("value", 
-										forCourse.weightlessPresenter.presentFraction((BigDecimal)tmp));
-							handler.startElement("mark");
-							handler.prepareEnumAttribute("type", "color");
-							handler.element("present", 
-									forCourse.weightlessColor.presentFraction((BigDecimal)tmp));
-						}
-						handler.prepareEnumAttribute("type", "inner");
-						handler.element("present", tmp.toString());
-						Mark[] mrk = work.forPersonLink(st);
-						if(mrk != null) {
-							for (int i = 0; i < mrk.length; i++) {
-								handler.prepareAttribute("criter", mrk[i].criterion().toString());
-								handler.prepareAttribute("value", mrk[i].present());
-								handler.startElement("crmark");
-								if(mrk[i].indexer() != null) {
-									handler.prepareEnumAttribute("type", "inner");
-									handler.element("present", mrk[i].value().toString());
-								}
-								handler.endElement("crmark");
+						if(tmp != null) {
+							if(work.hasWeight()) {
+								if(forCourse.integralPresenter != null)
+									handler.prepareAttribute("value", 
+											forCourse.integralPresenter.presentFraction(
+													(BigDecimal)tmp));
+								handler.startElement("mark");
+								handler.prepareEnumAttribute("type", "color");
+								handler.element("present", 
+										forCourse.integralColor.presentFraction((BigDecimal)tmp));
+							} else {
+								if(forCourse.weightlessPresenter != null)
+									handler.prepareAttribute("value", 
+											forCourse.weightlessPresenter.presentFraction(
+													(BigDecimal)tmp));
+								handler.startElement("mark");
+								handler.prepareEnumAttribute("type", "color");
+								handler.element("present", 
+										forCourse.weightlessColor.presentFraction((BigDecimal)tmp));
 							}
+							handler.prepareEnumAttribute("type", "inner");
+							handler.element("present", tmp.toString());
+							if(mrk != null) {
+								for (int i = 0; i < mrk.length; i++) {
+									if(mrk[i] == null)
+										continue;
+									handler.prepareAttribute("criter", 
+											mrk[i].criterion().toString());
+									handler.prepareAttribute("value", mrk[i].present());
+									handler.startElement("crmark");
+									if(mrk[i].indexer() != null) {
+										handler.prepareEnumAttribute("type", "inner");
+										handler.element("present", mrk[i].value().toString());
+									}
+									handler.endElement("crmark");
+								}
+							}
+						} else {
+							handler.startElement("mark");
 						}
-					}
-					tmp = work.noteForStudent(st);
-					if(tmp != null) {
-						if(((String)tmp).startsWith("http"))
-							handler.element("weblink", tmp.toString());
+					} // criterial marks
+					if(note != null) {
+						if(((String)note).startsWith("http"))
+							handler.element("weblink", note.toString());
 						else
-							handler.element("comment", tmp.toString());
+							handler.element("comment", note.toString());
 					}
 					handler.endElement("mark");
 				}
