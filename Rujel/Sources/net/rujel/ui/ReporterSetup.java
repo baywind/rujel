@@ -60,12 +60,11 @@ import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSPropertyListSerialization;
 
 public class ReporterSetup extends WOComponent {
-	public static final String SETTINGS = "reportSettingsForStudent";
-	
-	protected static NSDictionary defaultSettings;
+//	public static final String SETTINGS = "reportSettingsForStudent";
 	
     public WOComponent returnPage;
-    public NSMutableArray reports;
+    public NSDictionary reporter;
+    public NSArray reports;
 	public NSKeyValueCoding item;
 	public NSKeyValueCoding subItem;
 	public NSKeyValueCoding optItem;
@@ -92,7 +91,7 @@ public class ReporterSetup extends WOComponent {
 								NSMutableDictionary preset = PlistReader.cloneDictionary(
 										(NSDictionary)plist, true);
 								synchronizeReportSettings(preset, rps, false, false);
-								defaultSettings = preset.immutableClone();
+//								defaultSettings = preset.immutableClone();
 							} else {
 								NSMutableDictionary preset = (
 										(NSDictionary)plist).mutableClone();
@@ -111,8 +110,6 @@ public class ReporterSetup extends WOComponent {
 				}
         	}
         }
-        if(defaultSettings == null)
-        	getDefaultSettings(context.session());
         if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
         	presetName = (String)context.session().valueForKeyPath(
         				"strings.Strings.PrintReport.defaultSettings");
@@ -126,23 +123,27 @@ public class ReporterSetup extends WOComponent {
 		return "display:none;";
 	}
 	
-	public void setSettingName(String settingsName) {
-		NSArray defaults = (NSArray)session().valueForKeyPath("modules." + settingsName);
-		reports = PlistReader.cloneArray(defaults, true);
-		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(settingsName);
-		if(settings == null)
-			settings = PlistReader.cloneDictionary(defaultSettings, true);
-		else if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
-        	presetName = (String)settings.valueForKey("title");
-		settings = synchronizeReportSettings(settings, reports, false, true);
+	public void setReporter(NSDictionary dict) {
+//		NSArray defaults = (NSArray)session().valueForKeyPath("modules." + settingsName);
+//		reports = PlistReader.cloneArray(defaults, true);
+		reporter = dict;
+		reports = (NSArray)dict.valueForKey("options");
+		NSMutableDictionary settings = (NSMutableDictionary)dict.valueForKey("settings");
+//		if(settings == null)
+//			settings = PlistReader.cloneDictionary(defaultSettings, true);
+//		else if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
+//        	presetName = (String)settings.valueForKey("title");
+		if(settings != null)
+			settings = synchronizeReportSettings(settings, reports, false, true);
 	}
 	
 	public WOComponent submit() {
 //		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
-		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(SETTINGS);
+		NSMutableDictionary settings = (NSMutableDictionary)reporter.objectForKey("settings");
 		settings = synchronizeReportSettings(settings, reports,true,false);
-		settings.takeValueForKey(presetName, "title");
-		session().setObjectForKey(settings, SETTINGS);
+		reporter.takeValueForKey(settings, "settings");
+//		settings.takeValueForKey(presetName, "title");
+//		session().setObjectForKey(settings, SETTINGS);
 		returnPage.ensureAwakeInContext(context());
 		showPresets = false;
 		return returnPage;
@@ -158,11 +159,11 @@ public class ReporterSetup extends WOComponent {
 														"readAccess.edit.ReporterSetup"));
 		if(presetName == null || presetName.equals(defaultName)) {
 	        if(cantEdit) {
-	        	synchronizeReportSettings(getDefaultSettings(session()), reports, false, true);
+	        	synchronizeReportSettings(getDefaultSettings(reporter), reports, false, true);
 	        	presetName = null;
 	        	return null;
 	        }
-			defaultSettings = settings.immutableClone();
+//			defaultSettings = settings.immutableClone();
 			presetName = defaultName;
 			String path = SettingsReader.stringForKeyPath("reportsDir","CONFIGDIR/RujelReports");
 			path = path + "/StudentReport/defaultSettings.plist";
@@ -270,7 +271,7 @@ public class ReporterSetup extends WOComponent {
 	}
 	
 	public WOActionResults usePreset() {
-		NSMutableDictionary settings = (item == null)?getDefaultSettings(session()):
+		NSMutableDictionary settings = (item == null)?getDefaultSettings(reporter):
 				PlistReader.cloneDictionary((NSDictionary)item, true);
 		boolean canEdit = Various.boolForObject(session().valueForKeyPath(
 				"readAccess.edit.ReporterSetup"));
@@ -300,8 +301,8 @@ public class ReporterSetup extends WOComponent {
 			NSMutableDictionary rp = (NSMutableDictionary) enu.nextElement();
 			Object key = rp.valueForKey("id");
 			NSMutableDictionary subs = (NSMutableDictionary)settings.objectForKey(key);
-			NSDictionary defaults = (defaultSettings==null)?null:
-				(NSDictionary)defaultSettings.objectForKey(key);
+//			NSDictionary defaults = (defaultSettings==null)?null:
+//				(NSDictionary)defaultSettings.objectForKey(key);
 			NSMutableArray skeys = null;
 			if(subs == null) {
 				subs = new NSMutableDictionary();
@@ -329,8 +330,7 @@ public class ReporterSetup extends WOComponent {
 				NSMutableDictionary opt = (NSMutableDictionary) options.nextElement();
 				key = opt.valueForKey("id");
 				if(subs.objectForKey(key) == null) {
-					subs.takeValueForKey(((defaults==null)?opt:defaults)
-							.objectForKey(key),(String)key);
+					subs.takeValueForKey(opt.objectForKey(key),(String)key);
 				}
 				if(updSettings) {
 					Object value = opt.valueForKey("active");
@@ -364,39 +364,35 @@ public class ReporterSetup extends WOComponent {
 		return settings;
 	}
 	
-	public static NSMutableDictionary getDefaultSettings(WOSession ses) {
+	public static NSMutableDictionary getDefaultSettings(NSDictionary reporter) {
 		NSMutableDictionary result = null;
-		if(defaultSettings == null || defaultSettings.count() == 0) {
-			String path = SettingsReader.stringForKeyPath("reportsDir",
-					"CONFIGDIR/RujelReports");
-			path = path + "/StudentReport/defaultSettings.plist";
-			Object plist = PlistReader.readPlist(path, null);
-			NSArray reports = (NSArray)ses.valueForKeyPath(
-					"modules.reportSettingsForStudent");
-			if(plist instanceof NSDictionary) {
-				defaultSettings = (NSDictionary)plist;
-				result = PlistReader.cloneDictionary(defaultSettings, true);
-				result = synchronizeReportSettings(result, reports, false, false);
-			} else {
-				result = synchronizeReportSettings(null, reports, true, false);
-			}
-			defaultSettings = result.immutableClone();
+		String path = SettingsReader.stringForKeyPath("reportsDir","CONFIGDIR/RujelReports");
+		path = path + "/StudentReport/" + reporter.valueForKey("id") + "_defaults.plist";
+		Object plist = PlistReader.readPlist(path, null);
+		NSArray reports = (NSArray)reporter.valueForKey("options");
+		if(plist instanceof NSDictionary) {
+			result = PlistReader.cloneDictionary((NSDictionary)plist, true);
+			result = synchronizeReportSettings(result, reports, false, false);
 		} else {
-			result = PlistReader.cloneDictionary(defaultSettings, true);
+			result = (NSMutableDictionary)reporter.valueForKey("settings");
+			if(result != null)
+				result = PlistReader.cloneDictionary(result, true);
+			result = synchronizeReportSettings(result, reports, true, false);
 		}
 		return result;
 	}
-	
+
 	public static NSArray prepareReports(
 			WOSession ses, NSMutableDictionary reportSettings) {
-		NSMutableDictionary settings = (NSMutableDictionary)ses.objectForKey(SETTINGS);
+		NSMutableDictionary settings = (NSMutableDictionary)reportSettings.valueForKeyPath(
+				"reporter.settings");
 		if(settings == null) {
-			settings = getDefaultSettings(ses);
+			NSMutableDictionary reporter = (NSMutableDictionary)reportSettings.valueForKey("reporter");
+			settings = getDefaultSettings(reporter);
 			settings.takeValueForKey(ses.valueForKeyPath(
-			"strings.Strings.PrintReport.defaultSettings"), "title");
-			ses.setObjectForKey(settings,SETTINGS);
+				"strings.Strings.PrintReport.defaultSettings"), "title");
+			reporter.takeValueForKey(settings, "settings");
 		}
-		reportSettings.takeValueForKey(settings, "settings");
 		ses.setObjectForKey(reportSettings,"reportForStudent");
 		NSArray reports = (NSArray)ses.valueForKeyPath("modules.reportForStudent");
 		ses.removeObjectForKey("reportForStudent");

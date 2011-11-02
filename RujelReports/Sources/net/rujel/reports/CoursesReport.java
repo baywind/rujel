@@ -87,8 +87,10 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
     		NSArray availableReports = (NSArray)session().valueForKeyPath(
     				"modules.coursesReport");
     		reports = PlistReader.cloneArray(availableReports, true);
-    		reports.addObjectsFromArray(ReportsModule.reportsFromDir(
-    				"CoursesReport",context()));
+    		NSArray dirReports = ReportsModule.reportsFromDir(
+    				"CoursesReport",aContext.session());
+    		if(dirReports != null && dirReports.count() > 0)
+    			reports.addObjectsFromArray(dirReports);
     	}
     	super.appendToResponse(aResponse, aContext);
     }

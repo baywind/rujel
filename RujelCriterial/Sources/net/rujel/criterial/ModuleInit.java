@@ -246,6 +246,11 @@ public class ModuleInit {
 	
 	public static Object xmlGeneration(WOContext ctx) {
 		NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
+		{
+			NSDictionary settings = (NSDictionary)options.valueForKeyPath("reporter.settings");
+		if(settings != null && !Various.boolForObject(settings.valueForKeyPath("marks.active")))
+			return null;
+		}
 		return new CriterialXML(options);
 	}
 }

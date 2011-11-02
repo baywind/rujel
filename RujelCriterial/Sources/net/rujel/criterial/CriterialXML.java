@@ -3,6 +3,7 @@ package net.rujel.criterial;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import org.xml.sax.SAXException;
 
@@ -12,6 +13,7 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
@@ -26,6 +28,8 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Period;
+import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 import net.rujel.reusables.xml.EasyGenerationContentHandlerProxy;
 import net.rujel.reusables.xml.GeneratorModule;
 
@@ -33,13 +37,135 @@ public class CriterialXML extends GeneratorModule {
 
 	public CriterialXML(NSDictionary options) {
 		super(options);
+		Student student = (Student)settings.valueForKey("student");
+		NSArray students = (NSArray)settings.valueForKey("students");
+		if(student != null || (students != null && students.count() > 0)) {
+			if(student == null)
+				student = (Student)students.objectAtIndex(0);
+			EOEditingContext ec = student.editingContext();
+			if(students == null || students.count() == 0) {
+				students = new NSArray(student);
+			} else if(!students.containsObject(student)) {
+				students = students.arrayByAddingObject(student);
+			}
+			student = null;
+			Date since = (NSTimestamp)settings.valueForKey("since");
+			Date to = (NSTimestamp)settings.valueForKey("to");		
+			if(since == null || to == null) {
+				Period period = (Period)settings.valueForKey("period");
+				if(period != null) {
+					if(since == null) {
+						since = period.begin();
+						if(!(since instanceof NSTimestamp))
+							since = new NSTimestamp(since);
+					}
+					if(to == null) {
+						to = period.begin();
+						if(!(to instanceof NSTimestamp))
+							to = new NSTimestamp(to);
+					}
+				}
+			}
+			Object workType = settings.valueForKeyPath("reporter.settings.marks.workType");
+			if(workType instanceof String) {
+				try {
+					workType = Various.parseEO((String)workType, ec);
+				} catch (Exception e) {
+					Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+							"Error parsing workType in reportSettings",e);
+					workType = null;
+				}
+			}
+			boolean dateSet = Various.boolForObject(options.valueForKeyPath(
+					"reporter.settings.marks.dateSet"));
+			NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("student", students));
+			if(workType != null)
+				quals.addObject(new EOKeyValueQualifier("work.workType",
+					EOQualifier.QualifierOperatorEqual,workType));
+			if(since != null) {
+				EOQualifier[] or = new EOQualifier[2];
+				if(dateSet) {
+					or[0] = new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+					or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since);
+					quals.addObject(new EOOrQualifier(new NSArray(or)));
+				} else {
+					quals.addObject(new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
+				}
+			}
+			if(to != null) {
+				EOQualifier[] or = new EOQualifier[2];
+				if(dateSet) {
+					or[0] = new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+					or[1] = new EOKeyValueQualifier(Mark.DATE_SET_KEY,
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to);
+					quals.addObject(new EOOrQualifier(new NSArray(or)));
+				} else {
+					quals.addObject(new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+				}
+			}
+			EOFetchSpecification fs = new EOFetchSpecification(Mark.ENTITY_NAME,
+					new EOAndQualifier(quals),null);
+			fs.setRefreshesRefetchedObjects(true);
+			NSArray allMarks = ec.objectsWithFetchSpecification(fs);
+			extractWorks(allMarks);
+			fs.setEntityName("WorkNote");
+			if(dateSet) {
+				int idx = (workType == null)?1:2;
+				if(since != null) {
+					quals.replaceObjectAtIndex(new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since), idx);
+					idx++;
+				}
+				if(to != null)
+					quals.replaceObjectAtIndex(new EOKeyValueQualifier("work.date",
+							EOQualifier.QualifierOperatorLessThanOrEqualTo,to),idx);
+				fs.setQualifier(new EOAndQualifier(quals));
+			}
+			allMarks = ec.objectsWithFetchSpecification(fs);
+			extractWorks(allMarks);
+		}
 	}
+	
+	protected void extractWorks(NSArray list) {
+		if(list == null || list.count() == 0)
+			return;
+		if(preloadWorks == null)
+			preloadWorks = new NSMutableArray();
+		Enumeration enu = list.objectEnumerator();
+		NSArray courses = (NSArray)settings.valueForKey("courses");
+		NSMutableArray extraCourses = (NSMutableArray)settings.valueForKey("extraCourses");
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject m = (EOEnterpriseObject) enu.nextElement();
+			Work work = (Work)m.valueForKey(Mark.WORK_KEY);
+			if(work == null || preloadWorks.containsObject(work))
+				continue;
+			preloadWorks.addObject(work);
+			if(courses == null)
+				continue;
+			EduCourse course = work.course();
+			if(!courses.containsObject(course)) {
+				if(extraCourses == null) {
+					extraCourses = new NSMutableArray(course);
+					settings.takeValueForKey(extraCourses, "extraCourses");
+				} else if(!extraCourses.contains(course)) {
+					extraCourses.addObject(course);
+				}
+			}
+		}
+	}
+	
 	
 	public Integer sort() {
 		return new Integer(20);
 	}
 	
 	protected ForCourse forCourse;
+	protected NSMutableArray preloadWorks;
 	
 	protected static class ForCourse {
 		protected EduCourse course;
@@ -105,17 +231,30 @@ public class CriterialXML extends GeneratorModule {
 			throw new SAXException("Should generate within course");
 		Date since = (NSTimestamp)settings.valueForKey("since");
 		Date to = (NSTimestamp)settings.valueForKey("to");		
-		Period period = (Period)settings.valueForKey("period");
-		if(period != null) {
-			if(since == null) {
-				since = period.begin();
-				if(!(since instanceof NSTimestamp))
-					since = new NSTimestamp(since);
+		if(since == null || to == null) {
+			Period period = (Period)settings.valueForKey("period");
+			if(period != null) {
+				if(since == null) {
+					since = period.begin();
+					if(!(since instanceof NSTimestamp))
+						since = new NSTimestamp(since);
+				}
+				if(to == null) {
+					to = period.begin();
+					if(!(to instanceof NSTimestamp))
+						to = new NSTimestamp(to);
+				}
 			}
-			if(to == null) {
-				to = period.begin();
-				if(!(to instanceof NSTimestamp))
-					to = new NSTimestamp(to);
+		}
+		EOEditingContext ec = course.editingContext();
+		Object workType = settings.valueForKeyPath("reporter.settings.marks.workType");
+		if(workType instanceof String) {
+			try {
+				workType = Various.parseEO((String)workType, ec);
+			} catch (Exception e) {
+				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,
+						"Error parsing workType in reportSettings",e);
+				workType = null;
 			}
 		}
 		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(
@@ -126,10 +265,13 @@ public class CriterialXML extends GeneratorModule {
 		if(to != null)
 			quals.addObject(new EOKeyValueQualifier(Work.DATE_KEY,
 					EOQualifier.QualifierOperatorLessThanOrEqualTo,to));
+		if(workType != null)
+			quals.addObject(new EOKeyValueQualifier(Work.WORK_TYPE_KEY,
+					EOQualifier.QualifierOperatorEqual,workType));
 		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
 				new EOAndQualifier(quals),EduLesson.sorter);
 		fs.setRefreshesRefetchedObjects(true);
-		NSArray works = course.editingContext().objectsWithFetchSpecification(fs);
+		NSArray works = ec.objectsWithFetchSpecification(fs);
 		if(works != null && works.count() > 0) {
 			handler.prepareEnumAttribute("type","work");
 			handler.startElement("containers");
@@ -146,6 +288,40 @@ public class CriterialXML extends GeneratorModule {
 			EasyGenerationContentHandlerProxy handler) throws SAXException {
 		if(!handler.recentElement().equals("containers"))
 			throw new SAXException("Should generate within 'containers'");
+		Number lvl = (Number)settings.valueForKeyPath("reporter.settings.marks.level");
+		if(lvl != null && lvl.intValue() > 2)
+			lvl = null;
+		NSArray mask = work.criterMask();
+		if(lvl != null) {
+			if(mask == null || mask.count() == 0)
+				return;
+			else if(lvl.intValue() == 2)
+				lvl = null;
+			else if(work.isOptional()) {
+				if(lvl.intValue() == 0)
+					return;
+			} else {
+				lvl = null;
+			}
+		}
+		Student student = (Student)settings.valueForKey("student");
+		NSArray students = (NSArray)settings.valueForKey("students");
+		if(student == null && students == null)
+			lvl = null;
+		if(lvl != null && student != null) {
+			if((work.forPersonLink(student)) != null || work.noteForStudent(student) != null)
+				lvl = null;
+		}
+		if(lvl != null && students != null) {
+			Enumeration enu = students.objectEnumerator();
+			while (lvl != null && enu.hasMoreElements()) {
+				Student st = (Student) enu.nextElement();
+				if((work.forPersonLink(st)) != null || work.noteForStudent(st) != null)
+					lvl = null;
+			}
+		}
+		if(lvl != null)
+			return;
 		if(forCourse == null || forCourse.course != work.course())
 			forCourse = new ForCourse(work.course());
 		if(work._critSet == null)
@@ -164,7 +340,6 @@ public class CriterialXML extends GeneratorModule {
 		tmp = work.homeTask();
 		if(tmp != null)
 			handler.element("task", tmp.toString());
-		NSArray mask = work.criterMask();
 		if(mask != null && mask.count() > 0) {
 			if(mask.count() > 1) {
 				mask = EOSortOrdering.sortedArrayUsingKeyOrderArray(mask, CriteriaSet.sorter);
@@ -214,8 +389,6 @@ public class CriterialXML extends GeneratorModule {
 			}
 			NSArray marks = work.marks();
 			NSArray notes = work.notes();
-			Student student = (Student)settings.valueForKey("student");
-			NSArray students = (NSArray)settings.valueForKey("students");
 			if(marks != null && marks.count() > 0) {
 				handler.startElement("marks");
 				Enumeration enu = work.students().objectEnumerator();
@@ -309,7 +482,7 @@ public class CriterialXML extends GeneratorModule {
 				}
 				handler.endElement("marks");
 			}
-		}
+		} // has mask
 		if(work.isHometask() != work.workType().namedFlags().flagForKey("hometask")) {
 			handler.prepareAttribute("key", "hometask");
 			handler.element("param", Boolean.toString(work.isHometask()));

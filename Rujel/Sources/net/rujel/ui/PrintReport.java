@@ -134,34 +134,22 @@ public class PrintReport extends WOComponent {
 		WOComponent result = pageWithName((String)reporter.valueForKey("component"));
 		try {
 			result.takeValueForKey(studentItem, "student");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(courses, "courses");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(since, "since");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(to, "to");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(period, "period");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(reporter, "reporter");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		return result;
 	}
 }

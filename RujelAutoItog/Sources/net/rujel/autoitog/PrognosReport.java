@@ -57,7 +57,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
     
 	public static NSDictionary reportForStudent(WOSession session) {
 		NSDictionary settings = (NSDictionary)session.objectForKey("reportForStudent");
-		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.autoitog");	
+		NSDictionary options = (NSDictionary)settings.valueForKeyPath("reporter.settings.autoitog");	
 		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
 		NSTimestamp date = (NSTimestamp)session.valueForKey("today");

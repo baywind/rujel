@@ -30,6 +30,7 @@
 package net.rujel.base;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -40,8 +41,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.Source;
 import javax.xml.transform.Result;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -59,6 +62,7 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.interfaces.EduCourse;
@@ -73,6 +77,8 @@ import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.xml.AbstractObjectReader;
 import net.rujel.reusables.xml.GeneratorModule;
+import net.rujel.reusables.xml.Resolver;
+import net.rujel.reusables.xml.TransormationErrorListener;
 
 public class XMLGenerator extends AbstractObjectReader {
 
@@ -89,15 +95,56 @@ public class XMLGenerator extends AbstractObjectReader {
 	public static byte[] generate(WOSession session, NSDictionary options)
 									throws IOException, TransformerException {
 		TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer = factory.newTransformer();
-        
-        Source src = new SAXSource(new XMLGenerator(),
-                new RujelInputSource(session,options));
+		factory.setErrorListener(new TransormationErrorListener(session));
+		
+		String string = SettingsReader.stringForKeyPath(
+				"reportsDir", "CONFIGDIR/RujelReports");
+		string = Various.convertFilePath(string);
+		File sourceDir = new File(string,"StudentReport");
+		
+		Transformer transformer = null;
+		string = (String)options.valueForKeyPath("reporter.transform");
+		if(string != null) {
+			File file = new File(sourceDir,string);
+			if(file.exists())
+				transformer = factory.newTransformer(new StreamSource(file));
+		}
+		if(transformer == null)
+			transformer = factory.newTransformer();
+		
+		NSArray list = (NSArray)options.valueForKeyPath("reporter.sources");
+		InputSource input =  new RujelInputSource(session,options);
+		if(list != null && list.count() > 0) {
+			Enumeration enu = list.objectEnumerator();
+			NSMutableDictionary sources = new NSMutableDictionary();
+			while (enu.hasMoreElements()) {
+				String srcName = (String) enu.nextElement();
+				if("Persdata".equals(srcName)) {
+			        Source src = new SAXSource(new Persdata(),input);
+					sources.takeValueForKey(src,"persdata.xml");
+				} else if("Options".equals(srcName)) {
+			        Source src = new SAXSource(new Options(),input);
+					sources.takeValueForKey(src,"options.xml");
+				} else {
+					File file = new File(sourceDir,srcName);
+					if(file.exists())
+						sources.takeValueForKey(new StreamSource(file),srcName);
+				}
+			}
+			if(sources.count() > 0) {
+				URIResolver resolver = new Resolver(sources);
+				transformer.setURIResolver(resolver);
+			}
+		}
+		
+        Source src = new SAXSource(new XMLGenerator(),input);
 
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
     	Result res = new StreamResult(out);
-    	transformer.setOutputProperty("indent", "yes");
-    	transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
+    	if(string == null) {
+    		transformer.setOutputProperty("indent", "yes");
+    		transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
+    	}
       	transformer.transform(src, res);
     	return out.toByteArray();
 	}
@@ -154,6 +201,11 @@ public class XMLGenerator extends AbstractObjectReader {
 			}
 			//TODO: add groupless grade courses
 		} else {
+			processCourses(courses, generators, in);
+		}
+		courses = (NSArray)in.options.valueForKey("extraCourses");
+		if(courses instanceof NSMutableArray) {
+			EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)courses, EduCourse.sorter);
 			processCourses(courses, generators, in);
 		}
 		handler.endElement("ejdata");
@@ -222,7 +274,8 @@ public class XMLGenerator extends AbstractObjectReader {
 					Enumeration stenu = list.objectEnumerator();
 					while (stenu.hasMoreElements()) {
 						Student stu = (Student) stenu.nextElement();
-						handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
+						handler.prepareAttribute("id", getID(stu));
+//						handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
 						handler.element("student",null);
 					}
 				}
@@ -241,7 +294,7 @@ public class XMLGenerator extends AbstractObjectReader {
 						continue;
 					}
 					handler.prepareAttribute("id", getID(stu));
-					handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
+//					handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
 					handler.element("student",null);
 				} // students enumeration
 				if(skip) {
@@ -259,6 +312,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			throws SAXException {
 		if(courses == null || courses.count() == 0)
 			return;
+		handler.startElement("courses");
 		Student stu = (Student)in.options.valueForKey("student");
 		Enumeration enu = courses.objectEnumerator();
 		while (enu.hasMoreElements()) {
@@ -269,6 +323,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			}
 			writeCourse(crs, generators,in);
 		}
+		handler.endElement("courses");
 	}
 	
 	private void writeCourse(EduCourse course,NSArray generators, RujelInputSource in)
@@ -451,6 +506,55 @@ public class XMLGenerator extends AbstractObjectReader {
 				handler.element("date", null);
 			}
 			handler.endElement("person");
+		}
+	}
+	
+	public static class Options extends AbstractObjectReader {
+
+		public void parse(InputSource input) throws IOException, SAXException {
+	        if (input instanceof RujelInputSource) {
+	            parse((RujelInputSource)input);
+	        } else {
+	            throw new SAXException("Unsupported InputSource specified. "
+	                    + "Must be a ProjectTeamInputSource");
+	        }
+		}
+		
+		public void parse(RujelInputSource in)  throws IOException, SAXException {
+	        if (handler == null) {
+	            throw new IllegalStateException("ContentHandler not set");
+	        }
+	        NSDictionary settings = (NSDictionary)in.options.valueForKeyPath("reporter.settings");
+	        if(settings == null || settings.count() == 0)
+	        	return;
+			handler.startDocument();
+			handler.startElement("options");
+			writeDict(settings);
+			settings = (NSDictionary)in.options.valueForKey("info");
+			if(settings != null) {
+				handler.startElement("info");
+				writeDict(settings);
+				handler.endElement("info");
+			}
+			handler.endElement("options");
+			handler.endDocument();
+		}
+		
+		public void writeDict(NSDictionary dict) throws SAXException {
+	        if(dict == null || dict.count() == 0)
+	        	return;
+			Enumeration enu = dict.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				Object value = dict.valueForKey(key);
+				if(value instanceof NSDictionary) {
+					handler.startElement(key);
+					writeDict((NSDictionary)value);
+					handler.endElement(key);
+				} else {
+					handler.element(key, value.toString());
+				}
+			}
 		}
 	}
 }

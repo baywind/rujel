@@ -76,7 +76,7 @@ public class StudentMarks extends WOComponent {
 	}
 	
 	public static NSDictionary reportForStudent(NSDictionary settings) {
-		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.marks");	
+		NSDictionary options = (NSDictionary)settings.valueForKeyPath("reporter.settings.marks");	
 		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
 		
@@ -468,7 +468,8 @@ public class StudentMarks extends WOComponent {
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		WOSession ses = aContext.session();
-		NSDictionary settings = (NSDictionary)ses.objectForKey("reportSettingsForStudent");
+		NSDictionary settings = (NSDictionary)valueForBinding("settings");
+		//ses.objectForKey("reportSettingsForStudent");
 		if(!Various.boolForObject(settings.valueForKeyPath("marks.short"))) {
 			super.appendToResponse(aResponse, aContext);
 			return;

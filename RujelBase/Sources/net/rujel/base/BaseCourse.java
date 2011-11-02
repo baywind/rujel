@@ -431,12 +431,21 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		super.setFlags(value);
 	}
 	
-	public static NSArray coursesForStudent(NSArray initialCourses, Student student) {
+	public static NSArray coursesForStudent(NSArray initialCourses, Object student) {
 		NSMutableArray result = new NSMutableArray();
 		Integer eduYear = null;
-		if(initialCourses == null) {
-			EduGroup gr = student.recentMainEduGroup();
-			EOEditingContext ec = student.editingContext();
+		EOEditingContext ec = null;
+		EOQualifier qual = null;
+		if(student instanceof Student) {
+			ec = ((Student)student).editingContext();
+			qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
+		} else if(student instanceof NSArray) {
+			qual = Various.getEOInQualifier("student", (NSArray)student);
+			Student st = (Student)((NSArray)student).objectAtIndex(0);
+			ec = st.editingContext();
+		}
+		if(initialCourses == null && student instanceof Student) {
+			EduGroup gr = ((Student)student).recentMainEduGroup();
 			if(ec instanceof SessionedEditingContext) {
 				eduYear = (Integer)((SessionedEditingContext)ec).session().valueForKey("eduYear");
 				initialCourses = EOUtilities.objectsWithQualifierFormat(ec,
@@ -456,10 +465,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 			if(aud == null || aud.count() == 0)
 				result.addObject(crs);
 		}
-		EOQualifier qual = new EOKeyValueQualifier("student",
-				EOQualifier.QualifierOperatorEqual,student);
 		EOFetchSpecification fs = new EOFetchSpecification("CourseAudience",qual,null);
-		NSArray found = student.editingContext().objectsWithFetchSpecification(fs);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) {
 			enu = found.objectEnumerator();
 			while (enu.hasMoreElements()) {

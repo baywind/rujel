@@ -42,6 +42,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOModelGroup;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSData;
@@ -112,13 +113,18 @@ public class ReportsModule {
 		return result;
 	}
 
-*/    public static NSMutableArray reportsFromDir(String dir,WOContext context) {
-    	NSMutableArray reports = new NSMutableArray();
+*/    
+	public static NSMutableArray reportsFromDir(String dir,WOSession session) {
+		return reportsFromDir(dir, session, null);
+	}
+	
+	public static NSMutableArray reportsFromDir(String dir,WOSession session, EOQualifier test) {
     	File reportsDir = new File(reportsFolder, dir);
-    	if (reportsDir.isDirectory()) {
-    		File[] files = reportsDir.listFiles(PlistReader.Filter);
-    		WOSession session = context.session();
-  		NSKeyValueCodingAdditions readAccess = 
+    	if (!reportsDir.isDirectory())
+    		return null;
+    	NSMutableArray reports = new NSMutableArray();
+    	File[] files = reportsDir.listFiles(PlistReader.Filter);
+  		NSKeyValueCodingAdditions readAccess = (session == null)?null: 
   					(NSKeyValueCodingAdditions)session.valueForKey("readAccess");
    		for (int i = 0; i < files.length; i++) {
     			try {
@@ -130,13 +136,17 @@ public class ReportsModule {
     				Object plist = NSPropertyListSerialization
     				.propertyListFromData(data, encoding);
     				if(plist instanceof NSDictionary) {
-    					if(checkInDict((NSDictionary)plist,readAccess))
+    					if(test != null && !test.evaluateWithObject(plist))
+    						continue;
+    					if(readAccess == null || checkInDict((NSDictionary)plist,readAccess))
     						reports.addObject(plist);
     				} else if (plist instanceof NSArray) {
     					Enumeration enu = ((NSArray)plist).objectEnumerator();
     					while (enu.hasMoreElements()) {
     						NSDictionary dict = (NSDictionary) enu.nextElement();
-    						if(checkInDict(dict,readAccess))
+        					if(test != null && !test.evaluateWithObject(dict))
+        						continue;
+    						if(readAccess == null || checkInDict(dict,readAccess))
     							reports.addObject(dict);
     					}
     				}
@@ -147,7 +157,6 @@ public class ReportsModule {
     			}
     		}
     		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
-    	}
     	return reports;
     }
 
