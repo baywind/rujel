@@ -318,10 +318,9 @@ public class Overview extends WOComponent {
 	
 	public WOActionResults genarateXML() {
 		NSMutableDictionary reportSettings = new NSMutableDictionary();
-		reportSettings.takeValueForKey(reporter,"reporter");
 		reportSettings.takeValueForKey(existingCourses,"courses");
-		NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
-		reportSettings.takeValueForKey(studentsToReport,"students");
+//		NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
+//		reportSettings.takeValueForKey(studentsToReport,"students");
 		reportSettings.takeValueForKey(since,"since");
 		reportSettings.takeValueForKey(to,"to");
 		reportSettings.takeValueForKey(period,"period");

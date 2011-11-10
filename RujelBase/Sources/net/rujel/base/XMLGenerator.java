@@ -187,6 +187,8 @@ public class XMLGenerator extends AbstractObjectReader {
 		in.ses.setObjectForKey(in.options,"xmlGeneration");
 		NSArray generators = (NSArray)in.ses.valueForKeyPath("modules.xmlGeneration");
 		in.ses.removeObjectForKey("xmlGeneration");
+		useGenerators(generators, null);
+		handler.startElement("courses");
 		if(courses == null) {
 			Enumeration enu = groups.objectEnumerator();
 			NSMutableArray grades = new NSMutableArray();
@@ -208,6 +210,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)courses, EduCourse.sorter);
 			processCourses(courses, generators, in);
 		}
+		handler.endElement("courses");
 		handler.endElement("ejdata");
 		handler.endDocument();
 	}
@@ -261,11 +264,14 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareAttribute("name", gr.name());
 			handler.prepareAttribute("grade", gr.grade().toString());
 			handler.prepareAttribute("title", gr.title());
-			try {
-				Integer abs = (Integer)gr.valueForKey("absGrade");
-				if(abs != null)
-					handler.prepareAttribute("absGrade", abs.toString());
-			} catch (Exception e) {}
+			if(Various.boolForObject(WOApplication.application().valueForKeyPath(
+						"strings.sections.hasSections"))) {
+				try {
+					Integer sect = (Integer)gr.valueForKey("section");
+					if(sect != null)
+						handler.prepareAttribute("section", sect.toString());
+				} catch (Exception e) {}
+			}
 			if(students == null) { // all students
 				handler.prepareEnumAttribute("type", "full");
 				handler.startElement("eduGroup");
@@ -312,7 +318,6 @@ public class XMLGenerator extends AbstractObjectReader {
 			throws SAXException {
 		if(courses == null || courses.count() == 0)
 			return;
-		handler.startElement("courses");
 		Student stu = (Student)in.options.valueForKey("student");
 		Enumeration enu = courses.objectEnumerator();
 		while (enu.hasMoreElements()) {
@@ -323,22 +328,14 @@ public class XMLGenerator extends AbstractObjectReader {
 			}
 			writeCourse(crs, generators,in);
 		}
-		handler.endElement("courses");
 	}
 	
 	private void writeCourse(EduCourse course,NSArray generators, RujelInputSource in)
 			throws SAXException {
 		handler.prepareAttribute("id", getID(course));
+		handler.prepareAttribute("cycle", getID(course.cycle()));
+		handler.prepareAttribute("subject", course.cycle().subject());
 		handler.startElement("course");
-		handler.prepareAttribute("id", getID(course.cycle()));
-		handler.prepareAttribute("title", course.cycle().subject());
-		handler.startElement("subject");
-		try {
-			String fullName = (String)course.valueForKeyPath("cycle.subjectEO.fullName");
-			if(fullName != null)
-				handler.element("content", fullName);
-		} catch (Exception e) {}
-		handler.endElement("subject");
 		Teacher teacher = course.teacher();
 		if(teacher != null) {
 			handler.prepareAttribute("id", getID(teacher));
@@ -379,14 +376,18 @@ public class XMLGenerator extends AbstractObjectReader {
 		handler.endElement("eduGroup");
 		if(course.comment() != null)
 			handler.element("comment", course.comment());
+		useGenerators(generators, course);
+		handler.endElement("course");
+	}
+	
+	protected void useGenerators(NSArray generators, Object object) throws SAXException {
 		if(generators != null && generators.count() > 0) {
 			Enumeration enu = generators.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				GeneratorModule gen = (GeneratorModule) enu.nextElement();
-				gen.generateFor(course, handler);
+				gen.generateFor(object, handler);
 			}
 		}
-		handler.endElement("course");
 	}
 	
 	public static String getID (EOEnterpriseObject eo) {
@@ -486,6 +487,19 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareAttribute("id", getID((EOEnterpriseObject)plink));
 			Person pers = plink.person();
 			handler.prepareEnumAttribute("sex", (pers.sex())?"male":"female");
+			if(plink instanceof Student) {
+				Integer absGrade = null;
+				try {
+					absGrade = (Integer)((Student)plink).valueForKey("absGrade");
+				} catch (Exception e) {}
+				if(absGrade == null) {
+					try {
+						absGrade = ((Student)plink).recentMainEduGroup().grade();
+					} catch (Exception e) {}
+				}
+				if(absGrade != null)
+					handler.prepareAttribute("absGrade", absGrade.toString());
+			}
 			handler.startElement("person");
 			if(pers != plink && pers instanceof EOEnterpriseObject) {
 				handler.startElement("syncdata");
@@ -502,8 +516,8 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareEnumAttribute("type", "second");
 			handler.element("name", pers.secondName());
 			if(pers.birthDate() != null) {
-				handler.prepareAttribute("birth", formatDate(pers.birthDate()));
-				handler.element("date", null);
+				handler.prepareAttribute("type","birth");
+				handler.element("date", formatDate(pers.birthDate()));
 			}
 			handler.endElement("person");
 		}

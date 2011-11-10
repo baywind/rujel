@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-	xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="html" indent="yes"/>
 
 <xsl:variable name="persdata" select="document('persdata.xml')/persdata"/>
@@ -74,7 +73,7 @@
 	</xsl:if>
 	<table style="margin-top: 1em; width: 100%;" border="0">
 		<xsl:for-each 
-	select="/ejdata/courses/course[eduGroup[@type='full' and @id=$curr-group] or eduGroup/student[@id=$curr-student]]">
+select="/ejdata/courses/course[eduGroup[@type='full' and @id=$curr-group] or eduGroup/student[@id=$curr-student]]">
 			<xsl:call-template name="print_course">
 				<xsl:with-param name="stid" select="$curr-student"/>
 			</xsl:call-template>
@@ -96,10 +95,12 @@
 	<xsl:variable name="teacher" 
 			select="$persdata/person[@type='teacher' and @id=current()/teacher/@id]"/>
 	<tr><td class = "subject">
-	<xsl:if test="subject/content">
-		<xsl:attribute name="title"><xsl:value-of select="subject/content"/></xsl:attribute>
+	<xsl:if test="/eduPlan/subject[cycle[@id=current()/@cycle]]/content">
+		<xsl:attribute name="title">
+			<xsl:value-of select="/eduPlan/subject[cycle[@id=current()/@cycle]]/content"/>
+		</xsl:attribute>
 	</xsl:if>
-		<xsl:value-of select="subject/@title"/></td>
+		<xsl:value-of select="@subject"/></td>
 		<td align = "left" style="font-style: italic;">
 			<xsl:value-of select="comment"/>
 		</td>
@@ -108,6 +109,13 @@
 		<xsl:value-of select="$teacher/name[@type='first']"/><xsl:text> </xsl:text>
 		<xsl:value-of select="$teacher/name[@type='second']"/></td>
 	</tr>
+		<xsl:if test="$options/autoitog/active = 'true'">
+			<xsl:for-each select="containers[@type = 'prognosis']">
+				<xsl:call-template name="prognosis">
+					<xsl:with-param name="stid" select="$stid"/>
+				</xsl:call-template>
+			</xsl:for-each>
+		</xsl:if>
 		<xsl:for-each select="containers">
 			<xsl:if test="@type = 'work' and $options/marks/active = 'true'">
 				<xsl:call-template name="works">
@@ -146,7 +154,7 @@ select="container[$lvl > 2 or calc/@compulsory = 'true' or ($lvl = 2 and criteri
 	<span style="font-family: serif;" class="withWeight">
 		<xsl:attribute name="title">
 			<xsl:value-of select="content"/><xsl:if test="calc/@weight and calc/@weight != 1">
-				&lt;вес : <xsl:value-of select="calc/@weight"/>&gt;</xsl:if> (<xsl:value-of select="@type"/>)</xsl:attribute>
+&lt;вес : <xsl:value-of select="calc/@weight"/>&gt;</xsl:if> (<xsl:value-of select="@type"/>)</xsl:attribute>
 		<xsl:attribute name="style">
 			font-family:<xsl:if test="calc/@compulsory = 'true'">sans-</xsl:if>serif;
 			<xsl:choose>
@@ -180,7 +188,7 @@ select="container[$lvl > 2 or calc/@compulsory = 'true' or ($lvl = 2 and criteri
 				</a></xsl:if>]
 		</xsl:when>
 		<xsl:when test="$mark/@value and ($mark/comment or $mark/weblink)">
-			[<xsl:value-of select="$mark/@value"/>,
+			[<xsl:value-of select="$mark/@value"/>
 			<xsl:text disable-output-escaping="yes">,&amp;nbsp;</xsl:text>
 			<xsl:value-of select="$mark/comment"/>
 				<xsl:if test="$mark/weblink"><a target = "_blank">
@@ -208,7 +216,8 @@ select="container[$lvl > 2 or calc/@compulsory = 'true' or ($lvl = 2 and criteri
 	<tr><td colspan="3">
  		<strong style="font-size:110%;">Уроки: </strong>
  		<xsl:for-each select="$lessons">
- 			<xsl:if test="substring(@date,6,2) != substring(preceding-sibling::container[last()]/@date,6,2)">
+ 			<xsl:variable name="pos" select="position()"/>
+ 			<xsl:if test="$pos = 1 or substring(@date,6,2) != substring($lessons[$pos -1]/@date,6,2)">
  			<xsl:call-template name="month">
  				<xsl:with-param name="num" select="substring(@date,6,2)"/>
  			</xsl:call-template>
@@ -220,6 +229,38 @@ select="container[$lvl > 2 or calc/@compulsory = 'true' or ($lvl = 2 and criteri
   			<xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
  		</xsl:for-each> 
  	</td></tr>
+	</xsl:if>
+</xsl:template>
+
+<xsl:template match="containers[@type='prognosis']" name = "prognosis">
+	<xsl:param name="stid"/>
+	<xsl:variable name="list" select="container[marks/mark[@student=$stid]]"/>
+	<xsl:if test="$list">
+	<tr><td colspan="3">
+ 	<xsl:for-each select="$list">
+ 		<xsl:if test="position() > 1"><br/></xsl:if>
+ 		<strong style="font-size:110%;">Прогноз: </strong>
+ 		<xsl:value-of select="@title"/> : 
+ 		<xsl:call-template name="progn">
+ 			<xsl:with-param name="mark" select="marks/mark[@student=$stid]"/>
+ 		</xsl:call-template>
+ 	</xsl:for-each>
+ 	</td></tr>
+ 	</xsl:if>
+</xsl:template>
+
+<xsl:template name="progn">
+	<xsl:param name="mark"/>
+	<strong style="font-size:120%;"><xsl:value-of select="$mark/@value"/></strong>
+	<xsl:if test="$mark/param[@key='timeout']">
+		<em> Отсрочка до
+		<xsl:call-template name="formatDate">
+			<xsl:with-param name="date" select="$mark/param[@key='timeout']"/>
+		</xsl:call-template><xsl:text> </xsl:text>
+		<xsl:if test="$mark/param[@key='timeoutReason']">
+			<span style="color:#666666;"> 
+			(<xsl:value-of select="$mark/param[@key='timeoutReason']"/>)</span>
+		</xsl:if></em>
 	</xsl:if>
 </xsl:template>
 
@@ -241,6 +282,13 @@ select="container[$lvl > 2 or calc/@compulsory = 'true' or ($lvl = 2 and criteri
 		<xsl:when test="$num = '12'">Декабрь</xsl:when>
 	</xsl:choose>
  	<xsl:text>: </xsl:text></strong>
+</xsl:template>
+
+<xsl:template name="formatDate">
+	<xsl:param name="date"/>
+	<xsl:value-of select="substring($date, 9)"/>.<xsl:value-of 
+			select="substring($date, 6, 2)"/>.<xsl:value-of 
+			select="substring($date, 0, 5)"/>
 </xsl:template>
 
 </xsl:stylesheet>

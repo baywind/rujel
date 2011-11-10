@@ -116,6 +116,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 		} else if("settingEditors".equals(obj)) {
 			return ctx.session().valueForKeyPath(
 				"strings.RujelEduPlan_EduPlan.settingEditors");
+		} else if("xmlGeneration".equals(obj)) {
+			return xmlGeneration(ctx);
 		}
 		return null;
 	}
@@ -199,4 +201,15 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 			return null;
 		return dict.allValues();
 	}
+	
+	public static Object xmlGeneration(WOContext ctx) {
+		NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
+		{
+			NSDictionary settings = (NSDictionary)options.valueForKeyPath("reporter.settings");
+		if(settings != null && !Various.boolForObject(settings.valueForKeyPath("marks.active")))
+			return null;
+		}
+		return new EduPlanXML(options);
+	}
+
 }
