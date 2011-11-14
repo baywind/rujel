@@ -83,7 +83,7 @@ public class PrognosesXML extends GeneratorModule {
 		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
 		if(listName == null)
 			return;
-		NSTimestamp date = (NSTimestamp)settings.valueForKey("to");		
+		NSTimestamp date = (NSTimestamp)settings.valueForKey("since");		
 		Period period = (Period)settings.valueForKey("period");
 		if(period != null && !period.contains(date)) {
 			long millis = period.end().getTime()/2 + period.begin().getTime()/2;
@@ -101,6 +101,8 @@ public class PrognosesXML extends GeneratorModule {
 			if(students != null)
 				quals.addObject(Various.getEOInQualifier("student", students));
 		}
+		quals.addObject(new EOKeyValueQualifier(Prognosis.FLAGS_KEY,
+				EOQualifier.QualifierOperatorLessThan, new Integer(64)));
 		EOFetchSpecification fs = new EOFetchSpecification(Prognosis.ENTITY_NAME,
 				new EOAndQualifier(new NSArray(quals)),null);
 		NSArray prognoses = ec.objectsWithFetchSpecification(fs);

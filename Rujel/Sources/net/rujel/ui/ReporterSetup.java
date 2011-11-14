@@ -37,6 +37,7 @@ import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.PlistReader;
@@ -49,15 +50,8 @@ import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOSession;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOSortOrdering;
-import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSKeyValueCoding;
-import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSPropertyListSerialization;
+import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
 
 public class ReporterSetup extends WOComponent {
 //	public static final String SETTINGS = "reportSettingsForStudent";
@@ -70,46 +64,10 @@ public class ReporterSetup extends WOComponent {
 	public NSKeyValueCoding optItem;
 	public NSMutableArray presets;
 	public String presetName;
-	protected boolean showPresets = false;
+//	protected boolean showPresets = false;
 
     public ReporterSetup(WOContext context) {
         super(context);
-        String path = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
-        path = path + "/StudentReport";
-        File folder = new File(Various.convertFilePath(path));
-        if(folder.exists()) {
-        	File[] files = folder.listFiles(PlistReader.Filter);
-        	if(files != null && files.length > 0) {
-        		for (int i = 0; i < files.length; i++) {
-					try {
-						FileInputStream in = new FileInputStream(files[i]);
-						Object plist = PlistReader.readPlist(in, null);
-						if(plist instanceof NSDictionary) {
-							if(files[i].getName().equals("defaultSettings.plist")) {
-								NSArray rps = (NSMutableArray)context.session().valueForKeyPath(
-											"modules.reportSettingsForStudent");
-								NSMutableDictionary preset = PlistReader.cloneDictionary(
-										(NSDictionary)plist, true);
-								synchronizeReportSettings(preset, rps, false, false);
-//								defaultSettings = preset.immutableClone();
-							} else {
-								NSMutableDictionary preset = (
-										(NSDictionary)plist).mutableClone();
-								preset.takeValueForKey(files[i], "file");
-								if(presets == null)
-									presets = new NSMutableArray(preset);
-								else
-									presets.addObject(preset);
-							}
-						}
-					} catch (Exception e) {
-						Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
-								"Error reading StudentReport preset",
-								new Object[] {context.session(), files[i], e});
-					}
-				}
-        	}
-        }
         if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
         	presetName = (String)context.session().valueForKeyPath(
         				"strings.Strings.PrintReport.defaultSettings");
@@ -127,7 +85,54 @@ public class ReporterSetup extends WOComponent {
 //		NSArray defaults = (NSArray)session().valueForKeyPath("modules." + settingsName);
 //		reports = PlistReader.cloneArray(defaults, true);
 		reporter = dict;
-		reports = (NSArray)dict.valueForKey("options");
+        EOQualifier[] quals = new EOQualifier[2];
+        quals[0] = new EOKeyValueQualifier("reporterID", EOQualifier.QualifierOperatorEqual, 
+        		reporter.valueForKey("id"));
+        if("default".equals(reporter.valueForKey("id"))) {
+        	quals[1] = new EOKeyValueQualifier("reporterID",
+        			EOQualifier.QualifierOperatorEqual, null);
+        	quals[0] = new EOOrQualifier(new NSArray(quals));
+        }
+        quals[1] = new EOKeyValueQualifier("id", EOQualifier.QualifierOperatorEqual, null);
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+//		presets = ReportsModule.reportsFromDir("StudentReport", session(), quals[0]);
+    	File reportsDir = new File(ReportsModule.reportsFolder(), "StudentReport");
+    	File[] files = reportsDir.listFiles(PlistReader.Filter);
+    	presets = new NSMutableArray();
+    	for (int i = 0; i < files.length; i++) {
+    		try {
+    			FileInputStream fis = new FileInputStream(files[i]);
+    			NSData data = new NSData(fis, fis.available());
+    			fis.close();
+    			String encoding = System.getProperty("PlistReader.encoding", "utf8");
+    			Object plist = NSPropertyListSerialization.propertyListFromData(data, encoding);
+    			if(!(plist instanceof NSDictionary))
+    				continue;
+    			NSDictionary preset = (NSDictionary)plist;
+    			if(preset.valueForKey("id") != null)
+    				continue;
+    			String id = (String)reporter.valueForKey("id");
+    			if(id == null) id = "default";
+    			if(!id.equals(preset.valueForKey("reporterID")) && 
+    					(preset.valueForKey("reporterID") != null || !id.equals("default")))
+    				continue;
+    			if(!(preset instanceof NSMutableDictionary))
+    				preset = preset.mutableClone();
+    			preset.takeValueForKey(files[i], "file");
+    			if(files[i].getName().equals("defaultSettings.plist")) {
+    				preset.takeValueForKey("gerade", "style");
+    				presets.insertObjectAtIndex(preset, 0);
+    			} else {
+    				preset.takeValueForKey("ungerade", "style");
+    				presets.addObject(preset);
+    			}
+    		} catch (Exception e) {
+    			Object [] args = new Object[] {session(),e,files[i]};
+    			Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
+    					"Error reading CoursesReport plist",args);
+    		}
+    	}
+    	reports = (NSArray)dict.valueForKey("options");
 		NSMutableDictionary settings = (NSMutableDictionary)dict.valueForKey("settings");
 //		if(settings == null)
 //			settings = PlistReader.cloneDictionary(defaultSettings, true);
@@ -145,12 +150,12 @@ public class ReporterSetup extends WOComponent {
 //		settings.takeValueForKey(presetName, "title");
 //		session().setObjectForKey(settings, SETTINGS);
 		returnPage.ensureAwakeInContext(context());
-		showPresets = false;
+//		showPresets = false;
 		return returnPage;
 	}
 	
 	public WOComponent savePreset() {
-		showPresets = true;
+//		showPresets = true;
 		NSMutableDictionary settings = synchronizeReportSettings(null, reports,true,false);
 		String defaultName = (String)session().valueForKeyPath(
 				"strings.Strings.PrintReport.defaultSettings");
@@ -165,9 +170,18 @@ public class ReporterSetup extends WOComponent {
 	        }
 //			defaultSettings = settings.immutableClone();
 			presetName = defaultName;
-			String path = SettingsReader.stringForKeyPath("reportsDir","CONFIGDIR/RujelReports");
-			path = path + "/StudentReport/defaultSettings.plist";
-			file = new File(Various.convertFilePath(path));
+			file = new File(ReportsModule.reportsFolder(),"/StudentReport/defaultSettings.plist");
+			
+			if(presets == null || presets.count() == 0) {
+				presets = new NSMutableArray(settings);
+			} else {
+				NSDictionary first = (NSDictionary)presets.objectAtIndex(0);
+				if(file.equals(first.valueForKey("file"))) {
+					presets.replaceObjectAtIndex(settings, 0);
+				} else {
+					presets.insertObjectAtIndex(settings, 0);
+				}
+			}
 		} else if(presets != null) {
 			for(int i = 0; i < presets.count(); i++) {
 				NSDictionary pre = (NSDictionary) presets.objectAtIndex(i);
@@ -221,6 +235,7 @@ public class ReporterSetup extends WOComponent {
 			if(!file.exists())
 				file.getParentFile().mkdirs();
 	        settings.takeValueForKey(presetName, "title");
+	        settings.takeValueForKey(reporter.valueForKey("id"), "reporterID");
 			Integer index = (Integer)settings.removeObjectForKey("index");
 			String xml = NSPropertyListSerialization.xmlStringFromPropertyList(settings);
 			FileOutputStream out = new FileOutputStream(file);
@@ -228,9 +243,10 @@ public class ReporterSetup extends WOComponent {
 			writer.write(xml);
 			writer.close();
 			out.close();
+			settings.takeValueForKey(file, "file");
+			settings.takeValueForKey((presetName == defaultName)?"gerade":"ungerade","style");
 			if(presetName == defaultName)
 				return null;
-			settings.takeValueForKey(file, "file");
 			if(index == null && cantEdit) 
 				settings.takeValueForKey(Boolean.TRUE, "isNew");
 			if(index != null)
@@ -253,7 +269,7 @@ public class ReporterSetup extends WOComponent {
 			if(file != null && file.exists())
 				file.delete();
 		}
-		showPresets = true;
+//		showPresets = true;
 		return this;
 	}
 	
@@ -283,12 +299,14 @@ public class ReporterSetup extends WOComponent {
         		(String)settings.valueForKey("title"):null;
         }
 		synchronizeReportSettings(settings, reports, false, true);
-		showPresets = true;
+//		showPresets = true;
 		return this;
 	}
 	
-	protected static NSMutableDictionary synchronizeReportSettings(NSMutableDictionary settings,
+	public static NSMutableDictionary synchronizeReportSettings(NSMutableDictionary settings,
 			 NSArray reports, boolean updSettings, boolean updReports) {
+		if(reports == null)
+			return null;
 		NSMutableArray keys = null;
 		if(settings == null) {
 			settings = new NSMutableDictionary();
@@ -325,7 +343,9 @@ public class ReporterSetup extends WOComponent {
 				subs.takeValueForKey(rp.valueForKey("sort"),"sort");
 			else if(updReports)
 				rp.takeValueForKey(subs.valueForKey("sort"), "sort");
-			Enumeration options = ((NSArray)rp.valueForKey("options")).objectEnumerator();
+			NSArray list = (NSArray)rp.valueForKey("options");
+			if(list != null) {
+			Enumeration options = list.objectEnumerator();
 			while (options.hasMoreElements()) {
 				NSMutableDictionary opt = (NSMutableDictionary) options.nextElement();
 				key = opt.valueForKey("id");
@@ -342,15 +362,16 @@ public class ReporterSetup extends WOComponent {
 				}
 				if(skeys != null)
 					skeys.removeObject(key);
+			} // options enumeration
 			}
 			if(skeys != null && skeys.count() > 0) {
-				options = skeys.objectEnumerator();
-				while (options.hasMoreElements()) {
-					key = options.nextElement();
+				Enumeration senu = skeys.objectEnumerator();
+				while (senu.hasMoreElements()) {
+					key = senu.nextElement();
 					subs.removeObjectForKey(key);
 				}
 			}
-		}
+		} // reports enumeration
 		if(keys != null && keys.count() > 0) {
 			enu = keys.objectEnumerator();
 			while (enu.hasMoreElements()) {
@@ -399,11 +420,11 @@ public class ReporterSetup extends WOComponent {
 		return reports;
 	}
 	
-	public String presetsStyle() {
+/*	public String presetsStyle() {
 		if(showPresets)
 			return "border-left:1px #666666 solid;";
 		return "display:none;border-left:1px #666666 solid;";
-	}
+	}*/
 	
 	public String savePresetOnClick() {
 		String result = "enumerate(form,'sorting',1);ajaxPost(this);";

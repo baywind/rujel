@@ -38,6 +38,9 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.text.FieldPosition;
 import java.text.Format;
 import java.util.Enumeration;
@@ -175,7 +178,7 @@ public class Overview extends WOComponent {
 		selectedStudents.removeAllObjects();
 		courses = null;
 		currStudent = null;
-		reporters = null;
+//		reporters = null;
 		if(currSubject == null) return;
 		Number count = (Number)currSubject.objectForKey("count");
 		if(count != null && count.intValue() > 0)
@@ -413,6 +416,11 @@ public class Overview extends WOComponent {
  				buf.toString(), new Object[] {session(),currClass});
  		if(xml) {
  			reportPage.takeValueForKey(info, "info");
+ 			info = (NSMutableDictionary)reporter.valueForKey("settings");
+ 			if(info == null) {
+ 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				reporter.takeValueForKey(info, "settings");
+ 			}
  			byte[] result = null;
  			try {
  				result = XMLGenerator.generate(session(), (NSDictionary)reportPage);
@@ -442,7 +450,7 @@ public class Overview extends WOComponent {
 		if(reporters == null) {
 			Object title = null;
 			if(reporter != null) {
-				title = reporter.valueForKey("title");
+				title = reporter.valueForKey("id");
 			}
 //			reporter = (NSDictionary)session().valueForKeyPath(
 //					"strings.Strings.Overview.defaultReporter");
@@ -458,17 +466,42 @@ public class Overview extends WOComponent {
 			if(reporters.count() > 1) {
 	    		EOSortOrdering.sortArrayUsingKeyOrderArray(reporters, ModulesInitialiser.sorter);
 			}
-			if(title != null) {
-				if(!title.equals(reporter.valueForKey("title"))) {
-					Enumeration enu = reporters.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						reporter = (NSKeyValueCoding)enu.nextElement();
-						if(title.equals(reporter.valueForKey("title")))
-							return reporters;
+			NSDictionary settings = null;
+			if(title == null) {
+				File file = new File(ReportsModule.reportsFolder(),
+						"StudentReport/defaultSettings.plist");
+				if(file.exists()) {
+    				try {
+						FileInputStream fis = new FileInputStream(file);
+						NSData data = new NSData(fis, fis.available());
+						fis.close();
+						settings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(
+								data, "utf8");
+						title = settings.valueForKey("reporterID");
+					} catch (IOException e) {
+						logger.log(WOLogLevel.WARNING,
+								"Error reading defaultSettings for StudentReport",
+								new Object[] {session(),file,e});
 					}
-					reporter = (NSKeyValueCoding)reporters.objectAtIndex(0);
+
 				}
 			}
+			if(title == null)
+				title = "default";
+			Enumeration enu = reporters.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				reporter = (NSKeyValueCoding)enu.nextElement();
+				if(title.equals(reporter.valueForKey("id"))) {
+					if(settings != null) {
+//						settings = PlistReader.cloneDictionary(settings, true);
+//						ReporterSetup.synchronizeReportSettings((NSMutableDictionary)settings,
+//								(NSArray)reporter.valueForKey("options"), true, true);
+						reporter.takeValueForKey(settings, "settings");
+					}
+					return reporters;
+				}
+			}
+			reporter = (NSKeyValueCoding)reporters.objectAtIndex(0);
 		}
 		return reporters;
 	}

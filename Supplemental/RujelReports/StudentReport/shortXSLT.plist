@@ -5,13 +5,13 @@
 	<key>hover</key>
 	<string>Вывод в XML с преобразованием</string>
 	<key>sort</key>
-	<string>80</string>
+	<string>20</string>
 	<key>title</key>
-	<string>XSLT</string>
+	<string>Кратко</string>
 	<key>id</key>
-	<string>testXSLT</string>
+	<string>shortXSLT</string>
 	<key>transform</key>
-	<string>test.xsl</string>
+	<string>short.xsl</string>
 	<key>sources</key>
 	<array>
 		<string>Persdata</string>
@@ -37,39 +37,12 @@
 					<true/>
 				</dict>
 			</array>
-			<key>sort</key>
-			<string>05</string>
 		</dict>
 		<dict>
 			<key>active</key>
 			<true/>
 			<key>id</key>
 			<string>lessons</string>
-			<key>options</key>
-			<array>
-				<dict>
-					<key>active</key>
-					<false/>
-					<key>hover</key>
-					<string>показать все уроки за период (даже без отметок)</string>
-					<key>id</key>
-					<string>all</string>
-					<key>title</key>
-					<string>все</string>
-				</dict>
-				<dict>
-					<key>active</key>
-					<false/>
-					<key>hover</key>
-					<string>показывать в строчку, без темы урока</string>
-					<key>id</key>
-					<string>short</string>
-					<key>title</key>
-					<string>кратко</string>
-				</dict>
-			</array>
-			<key>sort</key>
-			<string>12</string>
 			<key>title</key>
 			<string>Уроки</string>
 		</dict>
@@ -176,16 +149,6 @@
 				</dict>
 				<dict>
 					<key>id</key>
-					<string>short</string>
-					<key>title</key>
-					<string>кратко</string>
-					<key>hover</key>
-					<string>показывать оценки в строчку, а не в таблице</string>
-					<key>active</key>
-					<false/>
-				</dict>
-				<dict>
-					<key>id</key>
 					<string>hideMax</string>
 					<key>title</key>
 					<string>скрыть максимумы</string>
@@ -195,8 +158,6 @@
 					<false/>
 				</dict>
 			</array>
-			<key>sort</key>
-			<string>20</string>
 		</dict>
 	</array>
 </dict>

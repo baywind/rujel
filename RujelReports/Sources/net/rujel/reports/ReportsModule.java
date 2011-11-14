@@ -55,6 +55,10 @@ import com.webobjects.foundation.NSPropertyListSerialization;
 public class ReportsModule {
 	
 	protected static File reportsFolder;
+	
+	public static File reportsFolder() {
+		return reportsFolder;
+	}
 
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
@@ -131,10 +135,8 @@ public class ReportsModule {
     				FileInputStream fis = new FileInputStream(files[i]);
     				NSData data = new NSData(fis, fis.available());
     				fis.close();
-    				String encoding = System.getProperty(
-    						"PlistReader.encoding", "utf8");
-    				Object plist = NSPropertyListSerialization
-    				.propertyListFromData(data, encoding);
+    				String encoding = System.getProperty("PlistReader.encoding", "utf8");
+    				Object plist = NSPropertyListSerialization.propertyListFromData(data, encoding);
     				if(plist instanceof NSDictionary) {
     					if(test != null && !test.evaluateWithObject(plist))
     						continue;

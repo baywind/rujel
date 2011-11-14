@@ -539,13 +539,14 @@ public class XMLGenerator extends AbstractObjectReader {
 	            throw new IllegalStateException("ContentHandler not set");
 	        }
 	        NSDictionary settings = (NSDictionary)in.options.valueForKeyPath("reporter.settings");
-	        if(settings == null || settings.count() == 0)
+	        NSDictionary info = (NSDictionary)in.options.valueForKey("info");
+	        if((settings == null || settings.count() == 0) && info == null)
 	        	return;
 			handler.startDocument();
 			handler.startElement("options");
-			writeDict(settings);
-			settings = (NSDictionary)in.options.valueForKey("info");
-			if(settings != null) {
+			if(settings != null)
+				writeDict(settings);
+			if(info != null) {
 				handler.startElement("info");
 				writeDict(settings);
 				handler.endElement("info");
