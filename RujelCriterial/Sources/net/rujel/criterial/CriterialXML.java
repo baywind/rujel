@@ -289,8 +289,9 @@ public class CriterialXML extends GeneratorModule {
 				workType = null;
 			}
 		}
-		NSMutableArray quals = new NSMutableArray(new EOKeyValueQualifier(
-				"course",EOQualifier.QualifierOperatorEqual,course));
+		EOQualifier qual = new EOKeyValueQualifier("course",
+				EOQualifier.QualifierOperatorEqual,course);
+		NSMutableArray quals = new NSMutableArray(qual);
 		if(since != null)
 			quals.addObject(new EOKeyValueQualifier(Work.DATE_KEY,
 					EOQualifier.QualifierOperatorGreaterThanOrEqualTo,since));
@@ -300,10 +301,29 @@ public class CriterialXML extends GeneratorModule {
 		if(workType != null)
 			quals.addObject(new EOKeyValueQualifier(Work.WORK_TYPE_KEY,
 					EOQualifier.QualifierOperatorEqual,workType));
-		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
-				new EOAndQualifier(quals),EduLesson.sorter);
+		NSArray preloaded = (preloadWorks== null)?null:
+			EOQualifier.filteredArrayWithQualifier(preloadWorks, qual);
+		qual = new EOAndQualifier(quals);
+		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,qual,EduLesson.sorter);
 		fs.setRefreshesRefetchedObjects(true);
 		NSArray works = ec.objectsWithFetchSpecification(fs);
+		if(preloaded != null && preloaded.count() > 0) {
+			Enumeration enu = preloaded.objectEnumerator();
+			NSMutableArray toAdd = null;
+			while (enu.hasMoreElements()) {
+				Work work = (Work) enu.nextElement();
+				if(works.containsObject(work))
+					continue;
+				if(toAdd == null)
+					toAdd = new NSMutableArray(work);
+				else
+					toAdd.addObject(work);
+			}
+			if(toAdd != null) {
+				toAdd.addObjectsFromArray(works);
+				works = EOSortOrdering.sortedArrayUsingKeyOrderArray(toAdd, EduLesson.sorter);
+			}
+		}
 		if(works != null && works.count() > 0) {
 			handler.prepareEnumAttribute("type","work");
 			handler.startElement("containers");
@@ -325,9 +345,9 @@ public class CriterialXML extends GeneratorModule {
 			lvl = null;
 		NSArray mask = work.criterMask();
 		if(lvl != null) {
-			if(mask == null || mask.count() == 0)
-				return;
-			else if(lvl.intValue() == 2)
+//			if(mask == null || mask.count() == 0)
+//				return;
+			if(lvl.intValue() == 2 && (mask != null && mask.count() > 0))
 				lvl = null;
 			else if(work.isOptional()) {
 				if(lvl.intValue() == 0)
@@ -419,6 +439,7 @@ public class CriterialXML extends GeneratorModule {
 				handler.prepareEnumAttribute("compulsory", Boolean.toString(work.isCompulsory()));
 				handler.element("calc", null);
 			}
+		}
 			NSArray marks = work.marks();
 			NSArray notes = work.notes();
 			if(marks != null && marks.count() > 0) {
@@ -436,7 +457,7 @@ public class CriterialXML extends GeneratorModule {
 					if(mrk == null && note == null)
 						continue;
 					handler.prepareAttribute("student", XMLGenerator.getID(st));
-					if(mask == null) { // non criterial mark
+					if(mask == null) { // non criterial mark (that is strange)
 						if(mrk != null && mrk[0] != null) {
 							handler.prepareAttribute("value", mrk[0].present());
 						}
@@ -491,7 +512,7 @@ public class CriterialXML extends GeneratorModule {
 							handler.element("comment", note.toString());
 					}
 					handler.endElement("mark");
-				}
+				} // work.students enumeration
 				handler.endElement("marks");
 			} else if(notes != null && notes.count() > 0) {
 				handler.startElement("marks");
@@ -514,7 +535,7 @@ public class CriterialXML extends GeneratorModule {
 				}
 				handler.endElement("marks");
 			}
-		} // has mask
+//		} // has mask
 		if(work.isHometask() != work.workType().namedFlags().flagForKey("hometask")) {
 			handler.prepareAttribute("key", "hometask");
 			handler.element("param", Boolean.toString(work.isHometask()));

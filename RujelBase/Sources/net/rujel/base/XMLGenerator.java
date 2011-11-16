@@ -548,7 +548,7 @@ public class XMLGenerator extends AbstractObjectReader {
 				writeDict(settings);
 			if(info != null) {
 				handler.startElement("info");
-				writeDict(settings);
+				writeDict(info);
 				handler.endElement("info");
 			}
 			handler.endElement("options");
