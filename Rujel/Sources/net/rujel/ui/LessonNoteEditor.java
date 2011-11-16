@@ -412,6 +412,8 @@ public class LessonNoteEditor extends WOComponent {
 				EOQualifier qual = currTab().qualifier();
 				if(qual != null)
 					lessonsList = EOQualifier.filteredArrayWithQualifier(lessonsList, qual);
+			} else {
+				lessonsList = fullList;
 			}
 			EduLesson lesson = (EduLesson)lessonsList.lastObject();
 			if(lesson != null)
