@@ -85,7 +85,7 @@ public class PrognosesXML extends GeneratorModule {
 			return;
 		NSTimestamp date = (NSTimestamp)settings.valueForKey("since");		
 		Period period = (Period)settings.valueForKey("period");
-		if(period != null && !period.contains(date)) {
+		if(period != null && (date == null || !period.contains(date))) {
 			long millis = period.end().getTime()/2 + period.begin().getTime()/2;
 			date = new NSTimestamp(millis);
 		}
@@ -161,6 +161,7 @@ public class PrognosesXML extends GeneratorModule {
 			} // describe container
 			handler.prepareAttribute("student", XMLGenerator.getID(progn.student()));
 			handler.prepareAttribute("value", progn.mark());
+			raiseCounterForObject(progn.student());
 			handler.startElement("mark");
 			handler.prepareEnumAttribute("type", "inner");
 			handler.element("present", progn.value().toString());

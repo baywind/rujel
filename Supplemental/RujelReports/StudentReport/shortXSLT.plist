@@ -17,6 +17,8 @@
 		<string>Persdata</string>
 		<string>Options</string>
 	</array>
+	<key>studentInOptions</key>
+	<true/>
 	<key>options</key>
 	<array>
 		<dict>

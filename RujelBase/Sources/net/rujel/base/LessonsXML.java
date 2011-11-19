@@ -90,7 +90,7 @@ public class LessonsXML extends GeneratorModule {
 					since = new NSTimestamp(since);
 			}
 			if(to == null) {
-				to = period.begin();
+				to = period.end();
 				if(!(to instanceof NSTimestamp))
 					to = new NSTimestamp(to);
 			}
@@ -153,6 +153,7 @@ public class LessonsXML extends GeneratorModule {
 				if(note == null)
 					continue;
 				handler.prepareAttribute("student", XMLGenerator.getID(st));
+				raiseCounterForObject(st);
 				if(note.length() <= 5) {
 					handler.prepareAttribute("value",note);
 					handler.element("mark", null);

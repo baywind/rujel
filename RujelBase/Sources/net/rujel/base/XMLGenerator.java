@@ -29,6 +29,7 @@
 
 package net.rujel.base;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,12 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
 
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.Source;
-import javax.xml.transform.Result;
-import javax.xml.transform.URIResolver;
+import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -92,28 +88,29 @@ public class XMLGenerator extends AbstractObjectReader {
 		}
 	}
 	
-	public static byte[] generate(WOSession session, NSDictionary options)
-									throws IOException, TransformerException {
+	public static Transformer getTransformer(WOSession session,NSDictionary reporter,
+			InputSource input) throws TransformerException {
+		
 		TransformerFactory factory = TransformerFactory.newInstance();
 		factory.setErrorListener(new TransormationErrorListener(session));
-		
-		String string = SettingsReader.stringForKeyPath(
-				"reportsDir", "CONFIGDIR/RujelReports");
-		string = Various.convertFilePath(string);
-		File sourceDir = new File(string,"StudentReport");
-		
 		Transformer transformer = null;
-		string = (String)options.valueForKeyPath("reporter.transform");
-		if(string != null) {
-			File file = new File(sourceDir,string);
+		String transName = (reporter == null)?null:(String)reporter.valueForKey("transform");
+		File sourceDir = null;
+		if(transName != null) {
+			String root = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
+			root = Various.convertFilePath(root);
+			sourceDir = new File(root,"StudentReport");
+			File file = new File(sourceDir,transName);
 			if(file.exists())
 				transformer = factory.newTransformer(new StreamSource(file));
 		}
-		if(transformer == null)
+		if(transformer == null) {
 			transformer = factory.newTransformer();
-		
-		NSArray list = (NSArray)options.valueForKeyPath("reporter.sources");
-		InputSource input =  new RujelInputSource(session,options);
+    		transformer.setOutputProperty("indent", "yes");
+    		transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
+    		return transformer;
+		}
+		NSArray list = (NSArray)reporter.valueForKey("sources");
 		if(list != null && list.count() > 0) {
 			Enumeration enu = list.objectEnumerator();
 			NSMutableDictionary sources = new NSMutableDictionary();
@@ -136,20 +133,37 @@ public class XMLGenerator extends AbstractObjectReader {
 				transformer.setURIResolver(resolver);
 			}
 		}
+		return transformer;
+	}
+	
+	public static byte[] generate(WOSession session, NSDictionary options)
+									throws TransformerException {
 		
+		InputSource input =  new RujelInputSource(session,options);
+		Transformer transformer = getTransformer(session, 
+				(NSDictionary)options.valueForKey("reporter"), input);
         Source src = new SAXSource(new XMLGenerator(),input);
-
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
     	Result res = new StreamResult(out);
-    	if(string == null) {
-    		transformer.setOutputProperty("indent", "yes");
-    		transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
-    	}
       	transformer.transform(src, res);
     	return out.toByteArray();
 	}
 	
-	@Override
+	public static byte[] transformData(WOSession session, NSDictionary options, byte[] data)
+										throws TransformerException {
+		if(options.valueForKeyPath("reporter.transform") == null)
+			return data;
+		InputSource input =  new RujelInputSource(session,options);
+		Transformer transformer = getTransformer(session, 
+				(NSDictionary)options.valueForKey("reporter"), input);
+        Source src = new StreamSource(new ByteArrayInputStream(data));
+    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+    	Result res = new StreamResult(out);
+      	transformer.transform(src, res);
+    	return out.toByteArray();
+		
+	}
+	
 	public void parse(InputSource input) throws IOException, SAXException {
         if (input instanceof RujelInputSource) {
             parse((RujelInputSource)input);
@@ -550,6 +564,11 @@ public class XMLGenerator extends AbstractObjectReader {
 				handler.startElement("info");
 				writeDict(info);
 				handler.endElement("info");
+			}
+			Student student = (Student)in.options.valueForKey("student");
+			if(student != null) {
+				String id = getID(student);
+				handler.element("studentID", id);
 			}
 			handler.endElement("options");
 			handler.endDocument();

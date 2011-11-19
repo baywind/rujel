@@ -322,8 +322,10 @@ public class Overview extends WOComponent {
 	public WOActionResults genarateXML() {
 		NSMutableDictionary reportSettings = new NSMutableDictionary();
 		reportSettings.takeValueForKey(existingCourses,"courses");
-//		NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
-//		reportSettings.takeValueForKey(studentsToReport,"students");
+		if(selectedStudents.count() > 0 && selectedStudents.count() < currClass.list().count()) {
+			NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
+			reportSettings.takeValueForKey(studentsToReport,"students");
+		}
 		reportSettings.takeValueForKey(since,"since");
 		reportSettings.takeValueForKey(to,"to");
 		reportSettings.takeValueForKey(period,"period");
@@ -593,6 +595,13 @@ public class Overview extends WOComponent {
 
 		WOComponent nextPage = pageWithName((String)reporterItem.valueForKey("component"));
 		NSMutableDictionary dict = new NSMutableDictionary();
+		if(reporter.valueForKey("component") == null) {
+			NSMutableDictionary settings = (NSMutableDictionary)reporter.valueForKey("settings");
+ 			if(settings == null) {
+ 				settings = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				reporter.takeValueForKey(settings, "settings");
+ 			}
+		}
 		dict.takeValueForKey(reporter,"reporter");
 		dict.takeValueForKey(existingCourses,"courses");
 		dict.takeValueForKey(studentsToReport,"students");

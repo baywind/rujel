@@ -43,12 +43,21 @@
 
 </head>
 <body>
-	<xsl:for-each select="ejdata/eduGroups/eduGroup/student">
-		<xsl:call-template name="print_student">
-			<xsl:with-param name="curr-student" select="@id"/>
-			<xsl:with-param name="curr-group" select="../@id"/>
-		</xsl:call-template>
-	</xsl:for-each>
+	<xsl:choose>
+		<xsl:when test="$options/studentID">
+			<xsl:call-template name="print_student">
+				<xsl:with-param name="curr-student" select="$options/studentID"/>
+				<xsl:with-param name="curr-group" select="ejdata/eduGroups/eduGroup/@id"/>
+			</xsl:call-template>
+		</xsl:when><xsl:otherwise>
+			<xsl:for-each select="ejdata/eduGroups/eduGroup/student">
+				<xsl:call-template name="print_student">
+					<xsl:with-param name="curr-student" select="@id"/>
+					<xsl:with-param name="curr-group" select="../@id"/>
+				</xsl:call-template>
+			</xsl:for-each>
+		</xsl:otherwise>
+	</xsl:choose>
 </body></html>
 </xsl:template>
 

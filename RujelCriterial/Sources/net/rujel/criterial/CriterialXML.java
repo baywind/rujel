@@ -89,7 +89,7 @@ public class CriterialXML extends GeneratorModule {
 							since = new NSTimestamp(since);
 					}
 					if(to == null) {
-						to = period.begin();
+						to = period.end();
 						if(!(to instanceof NSTimestamp))
 							to = new NSTimestamp(to);
 					}
@@ -272,7 +272,7 @@ public class CriterialXML extends GeneratorModule {
 						since = new NSTimestamp(since);
 				}
 				if(to == null) {
-					to = period.begin();
+					to = period.end();
 					if(!(to instanceof NSTimestamp))
 						to = new NSTimestamp(to);
 				}
@@ -361,8 +361,10 @@ public class CriterialXML extends GeneratorModule {
 		if(student == null && students == null)
 			lvl = null;
 		if(lvl != null && student != null) {
-			if((work.forPersonLink(student)) != null || work.noteForStudent(student) != null)
+			if((work.forPersonLink(student)) != null || work.noteForStudent(student) != null) {
 				lvl = null;
+				raiseCounterForObject(student);
+			}
 		}
 		if(lvl != null && students != null) {
 			Enumeration enu = students.objectEnumerator();
@@ -456,6 +458,7 @@ public class CriterialXML extends GeneratorModule {
 					String note = work.noteForStudent(st);
 					if(mrk == null && note == null)
 						continue;
+					raiseCounterForObject(st);
 					handler.prepareAttribute("student", XMLGenerator.getID(st));
 					if(mask == null) { // non criterial mark (that is strange)
 						if(mrk != null && mrk[0] != null) {
@@ -528,6 +531,7 @@ public class CriterialXML extends GeneratorModule {
 					tmp = nt.valueForKey("note");
 					if(tmp == null)
 						continue;
+					raiseCounterForObject(st);
 					handler.prepareAttribute("student", XMLGenerator.getID(st));
 					handler.startElement("mark");
 					handler.element("comment", tmp.toString());

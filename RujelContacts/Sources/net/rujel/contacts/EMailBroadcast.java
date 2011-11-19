@@ -33,6 +33,7 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.base.XMLGenerator;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
 import net.rujel.email.Mailer;
@@ -42,9 +43,16 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.*;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
+import java.text.FieldPosition;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.logging.Logger;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.TimerTask;
 
@@ -172,13 +180,67 @@ public class EMailBroadcast implements Runnable{
 		//cycle groups and send mails
 		
 		Enumeration eduGroups = EduGroup.Lister.listGroups(moment,ec).objectEnumerator();
-		WOApplication app = WOApplication.application();
+//		WOApplication app = WOApplication.application();
 		
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
-		if(reporter == null)
-				reporter = (NSDictionary)app.valueForKeyPath(
-						"strings.Strings.Overview.defaultReporter");
+		if(reporter == null) {
+			String root = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
+			root = Various.convertFilePath(root);
+			File dir = new File(root,"StudentReport");
+			File file = new File(dir,"defaultSettings.plist");
+			String reporterID = null;
+			NSDictionary settings = null;
+			if(file.exists()) {
+				try {
+					settings = (NSDictionary)PlistReader.readPlist(
+							new FileInputStream(file), null);
+					reporterID = (String)settings.valueForKey("reporterID");
+					if("default".equals(reporterID))
+						reporterID = null;
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Failed to read report defaultSettins",e);
+				}
+			}
+			if(reporterID != null) {
+				file = new File(dir,reporterID + "plist");
+				if(file.exists()) {
+					try {
+						reporter = (NSDictionary)PlistReader.readPlist(
+								new FileInputStream(file), null);
+						if(!reporterID.equals(reporter.valueForKey("id"))) {
+							reporter = null;
+						}
+					} catch (Exception e) {}
+				}
+				if(reporter == null) {
+					File[] files = dir.listFiles(PlistReader.Filter);
+					for (int i = 0; i < files.length; i++) {
+						try {
+							reporter = (NSDictionary)PlistReader.readPlist(
+									new FileInputStream(files[i]), null);
+							if(reporterID.equals(reporter.valueForKey("id"))) {
+								break;
+							} else {
+								reporter = null;
+							}
+						} catch (Exception e) {}
+					}
+				}
+			}
+			if(reporter == null) {
+				file = new File(dir,"DefaultReporter.plist");
+				try {
+					reporter = (NSDictionary)PlistReader.readPlist(
+							new FileInputStream(file), null);
+				} catch (Exception e) {
+					throw new IllegalStateException("Error reading DefaultReporter",e);
+				}
+			}
+			if(settings != null) {
+				reporter.takeValueForKey(settings, "settings");
+			}
+		} // get default reporter
 //		ec.unlock();
 		idx = -1;
 gr:		while (eduGroups.hasMoreElements()) {
@@ -469,15 +531,15 @@ gr:		while (eduGroups.hasMoreElements()) {
 			textBuf.append(messageText.replaceAll("%", "%%"));
 
 		WOApplication app = WOApplication.application();
+		EduGroup eduGroup = (EduGroup)params.valueForKey("eduGroup");
+		eduGroup = (EduGroup)EOUtilities.localInstanceOfObject(ec, eduGroup);
 		if(Various.boolForObject(params.valueForKey("diaryLink"))) {
 			textBuf.append("\n\n");
 			String text = (String)app.valueForKeyPath(
 				"strings.RujelContacts_Contacts.diaryLink");
 			textBuf.append(text);
 			textBuf.append(":\n").append(app.valueForKey("diaryUrl"));
-			EduGroup eduGroup = (EduGroup)params.valueForKey("eduGroup");
-			EOKeyGlobalID gid = (EOKeyGlobalID)
-				eduGroup.editingContext().globalIDForObject(eduGroup);
+			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(eduGroup);
 			textBuf.append("?grID=").append(gid.keyValues()[0]).append("&studentID=%1$d");
 		}
 		if(allowRequest) {
@@ -498,9 +560,58 @@ gr:		while (eduGroups.hasMoreElements()) {
 		ses.removeObjectForKey("broadcastAdditions");
 		logger.log(WOLogLevel.FINEST,"Found " + extensions.count() + 
 				" broadcastAdditions",ses);
-		
+		NSMutableDictionary settings = new NSMutableDictionary();
+		settings.takeValueForKey(eduGroup, "eduGroup");
+		settings.takeValueForKey(existingCourses,"courses");
+		settings.takeValueForKey(period,"period");
 		Object since = params.valueForKey("since");
-		Object upTo = params.valueForKey("to");
+		settings.takeValueForKey(since,"since");
+		Object to = params.valueForKey("to");
+		settings.takeValueForKey(to,"to");
+		boolean xml = (reporter.valueForKey("component") == null);
+		byte[] xmlData = null;
+		if(xml && Various.boolForObject(reporter.valueForKey("studentInOptions"))) {
+			settings.takeValueForKey(students,"students");
+			NSMutableDictionary counters = new NSMutableDictionary();
+			settings.takeValueForKey(counters, "counters");
+			try {
+				xmlData = XMLGenerator.generate(ses, settings);
+				if(counters.count() == 0)
+					return;
+				//testfile
+				String mailDir = SettingsReader.stringForKeyPath("mail.writeFileDir", null);
+				mailDir = Various.convertFilePath(mailDir);
+				File messageFile = new File(mailDir,"_data_" + eduGroup.name() + ".xml");
+				FileOutputStream fos = new FileOutputStream(messageFile);
+				fos.write(xmlData);
+				fos.close();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to generate group xmlData", 
+						new Object[] {ses,settings,e});
+			}
+			settings.takeValueForKey(null, "students");
+			NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
+					(Integer)ses.valueForKey("eduYear")), "eduYear");
+			if(period instanceof EOPeriod)
+				info.takeValueForKey(((EOPeriod)period).valueForKey("name"), "period");
+			if(since != null || to != null) {
+				Format dateFormat = MyUtility.dateFormat();
+				StringBuffer buf = new StringBuffer();
+				FieldPosition fp = new FieldPosition(0);
+				if(since != null)
+					dateFormat.format(since, buf, fp);
+				else
+					buf.append("...");
+				buf.append(" - "); 
+				if(to != null)
+					dateFormat.format(to, buf, fp);
+				else
+					buf.append("...");
+				info.takeValueForKey(buf.substring(idx), "dates");
+			}
+			settings.takeValueForKey(info, "info");
+		}
+		settings.takeValueForKey(reporter,"reporter");
 		NSSet adrSet = (NSSet)params.valueForKey("adrSet");
 		Enumeration stEnu = students.objectEnumerator();
 st:		while (stEnu.hasMoreElements()) {
@@ -530,8 +641,8 @@ st:		while (stEnu.hasMoreElements()) {
 					break;
 			}
 			cenu = stContacts.objectEnumerator();
-			InternetAddress[] to = EMailUtiliser.toAdressesFromContacts(cenu,adrSet != null);
-			if(to == null || to.length == 0) {
+			InternetAddress[] toAddr = EMailUtiliser.toAdressesFromContacts(cenu,adrSet != null);
+			if(toAddr == null || toAddr.length == 0) {
 				logger.log(WOLogLevel.FINER,
 						"Skipping mail to student as no active adresses found",
 						new Object[] {ses,student});
@@ -539,25 +650,57 @@ st:		while (stEnu.hasMoreElements()) {
 			}
 			synchronized (mailer) {
 				try {
-					WOActionResults attach = null;
+					NSData attach = null;
+					String attName = null;
 					if(reporter != null) {
 						ctx.setUserInfoForKey(params.valueForKey("needData"), "needData");
-						WOComponent reportPage = app.pageWithName("PrintReport",ctx);
-						reportPage.takeValueForKey(reporter,"reporter");
-						reportPage.takeValueForKey(existingCourses,"courses");
-						reportPage.takeValueForKey(new NSArray(student),"students");
-						reportPage.takeValueForKey(period,"period");
-						reportPage.takeValueForKey(since,"since");
-						reportPage.takeValueForKey(upTo,"to");
-						attach = reportPage.generateResponse();
-						if(ctx.userInfoForKey("needData") != null) {
-							attach = null;
-							if(!Various.boolForObject(params.valueForKey("sendEmpty"))) {
-								logger.log(WOLogLevel.FINER,
-										"Skipping mail to student as no data fond",
-										new Object[] {ses,student});
-								continue;
+						settings.takeValueForKey(student,"student");
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+						attName = sdf.format(new Date());
+						if(xml) {
+							try {
+								if(xmlData == null) {
+									NSMutableDictionary counters = new NSMutableDictionary();
+									settings.takeValueForKey(counters, "counters");
+									byte[] res = XMLGenerator.generate(ses, settings);
+									attach = new NSData(res);
+									Counter cnt = (Counter)counters.objectForKey(student);
+									if(cnt == null || cnt.intValue() == 0)
+										continue;
+								} else {
+									NSDictionary counters = (NSDictionary)
+												settings.valueForKey("counters");
+									Counter cnt = (Counter)counters.objectForKey(student);
+									if(cnt == null || cnt.intValue() == 0)
+										continue;
+									byte[] res = XMLGenerator.transformData(ses, settings, xmlData);
+									attach = new NSData(res);
+								}
+								String ext = (String)reporter.valueForKey("filext");
+								if(ext == null)
+									ext = ".html";
+								if(ext.charAt(0) == '.')
+									attName = attName + ext;
+								else
+									attName = attName + '.' + ext;
+							} catch (Exception e) {
+								logger.log(WOLogLevel.WARNING,"Failed to generate attachment", 
+										new Object[] {ses,settings,e});
 							}
+						} else {
+							WOComponent reportPage = app.pageWithName("PrintReport",ctx);
+							reportPage.takeValueForKey(settings, "settings");
+							attach = reportPage.generateResponse().content();
+							if(ctx.userInfoForKey("needData") != null) {
+								attach = null;
+								if(!Various.boolForObject(params.valueForKey("sendEmpty"))) {
+									logger.log(WOLogLevel.FINER,
+											"Skipping mail to student as no data fond",
+											new Object[] {ses,student});
+									continue;
+								}
+							}
+							attName = attName + ".html";
 						}
 					}
 					StringBuffer subject = new StringBuffer("RUJEL: ");
@@ -586,9 +729,18 @@ st:		while (stEnu.hasMoreElements()) {
 							Person.Utility.fullName(student, false, 2, 2, 0));
 
 					if(attach != null) {
-						mailer.sendPage(subject.toString(), message, attach, to, zip);
+						if(zip) {
+							try {
+								attach = Mailer.zip(attach,attName);
+							} catch (Exception e) {
+								logger.log(WOLogLevel.WARNING,"Error zipping message",
+										new Object[] {ses,subject,e});
+							}
+							attName = attName + ".zip";
+						}
+						mailer.sendMessage(subject.toString(), message, toAddr, attach, attName);
 					} else {
-						mailer.sendTextMessage(subject.toString(), message, to);
+						mailer.sendTextMessage(subject.toString(), message, toAddr);
 					}
 					logger.log(WOLogLevel.FINEST,"Mail sent \"" + subject + '"',ses);
 				} catch (Exception ex) {

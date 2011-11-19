@@ -79,6 +79,7 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 	
 	public static class Utility {
 		public static boolean contains(EOPeriod period, Date date) {
+			if(date == null) return false;
 			boolean begin = period.begin().compareTo(date) <= 0;
 			if(!begin && period.begin().getTime() - date.getTime() > NSLocking.OneDay)
 				return false;
