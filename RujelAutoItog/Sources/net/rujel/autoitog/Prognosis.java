@@ -206,8 +206,10 @@ public class Prognosis extends _Prognosis {
 		if(_relatedItog == null) {
 			_relatedItog = ItogMark.getItogMark(course().cycle(),itogContainer(),
 					student(),editingContext());
-			if(_relatedItog == null)
+			if(_relatedItog == null) {
 				_relatedItog = NullValue;
+				return null;
+			}
 		} else if(_relatedItog == NullValue) {
 			return null;
 		} else if(((ItogMark)_relatedItog).editingContext() == null) {
@@ -215,6 +217,20 @@ public class Prognosis extends _Prognosis {
 			return null;
 		}
 		return (ItogMark)_relatedItog;
+	}
+	
+	public boolean itogDiffers() {
+		ItogMark itog = relatedItog();
+		if(itog == null)
+			return false;
+		String mark = mark();
+		Bonus bonus = bonus();
+		if(bonus != null && bonus.value().compareTo(BigDecimal.ZERO) > 0) {
+			mark = bonus.mark();
+		}
+		if(mark == null)
+			return false;
+		return !mark.equals(itog.mark());
 	}
 	
 	protected transient Object _timeout;
