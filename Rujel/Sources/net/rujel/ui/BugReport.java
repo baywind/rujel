@@ -27,6 +27,7 @@ import javax.mail.internet.InternetAddress;
 
 import com.apress.practicalwo.practicalutilities.WORequestAdditions;
 import com.webobjects.appserver.WOActionResults;
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOResponse;
@@ -61,7 +62,7 @@ public class BugReport extends WOComponent {
     
 	public WOActionResults getEnironment() {
 		logger.log(WOLogLevel.INFO,"Preparing environment for bugReport",session());
-		NSData enironment = environment();
+		NSData enironment = environment(context());
 		if(enironment == null) {
 			session().takeValueForKey(session().valueForKeyPath(
 					"strings.Strings.AdminPage.bugReport.failedEnvi"), "message");
@@ -90,7 +91,7 @@ public class BugReport extends WOComponent {
 			logger.log(WOLogLevel.INFO,"Sending bugReport email",session());
 			if(attach != null && attach.booleanValue()) {
 				attachName = attachName + ".zip";
-				attachment = environment();
+				attachment = environment(context());
 				if(attachment == null) {
 					session().takeValueForKey(session().valueForKeyPath(
         				"strings.Strings.AdminPage.bugReport.failedEnvi"), "message");
@@ -108,7 +109,7 @@ public class BugReport extends WOComponent {
 		return null;
 	}
 	
-    public NSData environment() {
+    public static NSData environment(WOContext ctx) {
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
 		Calendar cal = Calendar.getInstance();
 		StringBuilder buf = new StringBuilder(40);
@@ -134,10 +135,10 @@ public class BugReport extends WOComponent {
 				writer.write("\rrevision: ");
 				writer.write(System.getProperty("RujelRevision","???"));
 				writer.write("\rhost: ");
-				writer.write(WORequestAdditions.hostName(context().request()));
+				writer.write(WORequestAdditions.hostName(ctx.request()));
 				writer.write("\rurl: ");
-				writer.write((String)application().valueForKey("serverUrl"));
-				writer.write((String)application().valueForKey("urlPrefix"));
+				writer.write((String)WOApplication.application().valueForKey("serverUrl"));
+				writer.write((String)WOApplication.application().valueForKey("urlPrefix"));
 				writer.flush();
 				String modPath = SettingsReader.stringForKeyPath("modules", "modules");
 				File modFolder = new File(Various.convertFilePath(modPath));
@@ -153,7 +154,7 @@ public class BugReport extends WOComponent {
 				}
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Failed to write general info to environment report",
-						new Object[] {session(),e});
+						new Object[] {(ctx.hasSession())?ctx.session():null,e});
 			} finally {
 				buf.delete(9, buf.length());
 			}
@@ -202,7 +203,7 @@ public class BugReport extends WOComponent {
 	    	return new NSData(out.toByteArray());
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error constructing environment",
-					new Object[] {session(),e});
+					new Object[] {(ctx.hasSession())?ctx.session():null,e});
 			return null;
 		}
     }

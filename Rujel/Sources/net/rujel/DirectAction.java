@@ -36,8 +36,10 @@ import net.rujel.auth.UserPresentation;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.BugReport;
 
 import com.webobjects.appserver.*;
+import com.webobjects.foundation.NSData;
 
 public class DirectAction extends WODirectAction {
 
@@ -46,6 +48,8 @@ public class DirectAction extends WODirectAction {
     }
     
     public WOActionResults performActionNamed(String anActionName) {
+    	if("env".equals(anActionName))
+    		return envAction();
 		WOResponse response = Application.errorResponse(context());
 		if(response != null)
 			return response;
@@ -142,5 +146,25 @@ public class DirectAction extends WODirectAction {
 		WOComponent last = (WOComponent)ses.valueForKey("pullComponent");
 		ses.takeValueForKey(Boolean.FALSE,"prolong");
 		return last;
+	}
+	
+	public WOActionResults envAction() {
+		Logger.getLogger("rujel").log(WOLogLevel.INFO,"Preparing environment for bugReport",
+				existingSession());
+		NSData enironment = BugReport.environment(context());
+		if(enironment == null) {
+			WOComponent result = pageWithName("MessagePage");
+			result.takeValueForKey(WOApplication.application().valueForKeyPath(
+					"strings.Strings.AdminPage.bugReport.failedEnvi"), "message");
+			return result;
+		}
+		WOResponse response = WOApplication.application().createResponseInContext(context());
+		response.setContent(enironment);
+		response.setHeader("application/octet-stream","Content-Type");
+		StringBuilder buf = new StringBuilder("attachment; filename=\"");
+		buf.append(SettingsReader.stringForKeyPath("supportCode", "unregistered"));
+		buf.append(".zip\"");
+		response.setHeader(buf.toString(),"Content-Disposition");
+		return response;
 	}
 }
