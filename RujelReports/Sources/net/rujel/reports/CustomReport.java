@@ -60,7 +60,7 @@ public class CustomReport extends com.webobjects.appserver.WOComponent {
 
 	public CustomReport(WOContext context) {
         super(context);
-        reports = ReportsModule.reportsFromDir("CustomReport", context);
+        reports = ReportsModule.reportsFromDir("CustomReport", context.session());
         params = new NSMutableDictionary();
         ec = new SessionedEditingContext(context.session());
     }

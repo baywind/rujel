@@ -53,8 +53,7 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 	public NSDictionary lessonItem;
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		NSDictionary settings = (NSDictionary)aContext.session().objectForKey(
-				"reportSettingsForStudent");
+		NSDictionary settings = (NSDictionary)valueForBinding("settings");
 		if(!Various.boolForObject(settings.valueForKeyPath("lessons.short"))) {
 			super.appendToResponse(aResponse, aContext);
 			return;
@@ -108,7 +107,7 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 	}
 
 	public static NSDictionary reportForStudent(NSDictionary settings) {
-		NSDictionary options = (NSDictionary)settings.valueForKeyPath("settings.lessons");	
+		NSDictionary options = (NSDictionary)settings.valueForKeyPath("reporter.settings.lessons");	
 		if(options == null || !Various.boolForObject(options.valueForKey("active")))
 			return null;
 		

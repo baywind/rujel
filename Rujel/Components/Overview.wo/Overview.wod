@@ -153,6 +153,11 @@ ShowMarks: WOSubmitButton {
 	value = application.strings.Strings.Overview.showMarks;
 }
 
+ShowXML: WOSubmitButton {
+	action = genarateXML;
+	value = "XML";
+}
+
 ShowMarks2: WOSubmitButton {
 	action = overviewAction;
 	value = reporterItem.name;
@@ -341,4 +346,14 @@ ReportPopup : WOHyperlink {
 GroupReportsTitle : WOString {
   value = session.strings.Strings.Overview.groupReporters;
   escapeHTML = false;
+}
+
+ReportFrame : WOGenericContainer {
+  elementName = "iframe";
+  name = "reportFrame";
+  src = context.componentActionURL;
+  invokeAction = printCurrStudent;
+  height = "100%";
+  width = "100%";
+  style = "background-color:#ffffff;";
 }

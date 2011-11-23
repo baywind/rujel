@@ -59,6 +59,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 	
 	public NSArray reports;
     public NSMutableDictionary presenterCache;
+    public NSDictionary reporter;
     
 	protected static NSTimestamp date2timestamp(java.util.Date date) {
 		if(date instanceof NSTimestamp)
@@ -84,6 +85,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		courses = null;
 		reports = null;
 		report = null;
+		reporter = null;
 		courseItem = null;
 		_reportItem = null;
 		if(presenterCache == null)
@@ -117,6 +119,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		if(parent() != null) {
 			student = (Student)valueForBinding("student");
 			since = (NSTimestamp)valueForBinding("since");
+			reporter = (NSDictionary)valueForBinding("reporter");
 			to = (NSTimestamp)valueForBinding("to");
 			period = (Period)valueForBinding("period");
 			if(period != null) {
@@ -139,6 +142,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 			reportSettings.takeValueForKey(period,"period");
 		reportSettings.takeValueForKey(courses.immutableClone(), "courses");
 		reportSettings.takeValueForKey(aContext.userInfoForKey("needData"), "needData");
+		reportSettings.takeValueForKey(reporter, "reporter");
 		reports = ReporterSetup.prepareReports(aContext.session(), reportSettings);
 		if(reportSettings.valueForKey("needData") != null) {
 			t.setPriority(priority);

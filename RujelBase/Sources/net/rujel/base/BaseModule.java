@@ -81,6 +81,9 @@ public class BaseModule {
 			return PlistReader.cloneDictionary(diaryTabs, true);
 		} else if("deleteStudents".equals(obj)) {
 			return deleteStudents(ctx);
+		} else if("xmlGeneration".equals(obj)) {
+			NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
+			return new LessonsXML(options);
 		}
 		return null;
 	}

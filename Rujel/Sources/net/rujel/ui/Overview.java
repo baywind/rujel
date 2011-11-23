@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.interfaces.*;
+import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
@@ -37,13 +38,18 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.text.FieldPosition;
 import java.text.Format;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
+import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
+import net.rujel.base.XMLGenerator;
 
 public class Overview extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -124,7 +130,11 @@ public class Overview extends WOComponent {
 		//EOUtilities.objectsMatchingKeyAndValue(ec,EduCycle.entityName,"grade",currClass.grade());
 		
 		NSArray args = new NSArray(new Object[] {session().valueForKey("eduYear") , currClass });
-		existingCourses = EOUtilities.objectsWithQualifierFormat(ec,EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+		existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
+				EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+		if(existingCourses != null && existingCourses.count() > 1)
+			existingCourses = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+					existingCourses, EduCourse.sorter);
 		subjects = new NSMutableArray();
 		
 		Enumeration enumerator = cycles.objectEnumerator();
@@ -168,7 +178,7 @@ public class Overview extends WOComponent {
 		selectedStudents.removeAllObjects();
 		courses = null;
 		currStudent = null;
-		reporters = null;
+//		reporters = null;
 		if(currSubject == null) return;
 		Number count = (Number)currSubject.objectForKey("count");
 		if(count != null && count.intValue() > 0)
@@ -251,7 +261,9 @@ public class Overview extends WOComponent {
 			courseItem.setObjectForKey(lessons,"lessonsList");
 			((NSMutableArray)courses).addObject(courseItem);
 		}
- 		logger.logp(WOLogLevel.READING,"Overview","selectSubject","Opening subject '" + currSubject.objectForKey("subject") + "' (" + currSubject.objectForKey("count") + ") courses",session());
+		EOSortOrdering.sortArrayUsingKeyOrderArray(((NSMutableArray)courses), EduCourse.sorter);
+ 		logger.log(WOLogLevel.READING,"Opening subject '" + currSubject.objectForKey("subject") +
+ 				"' (" + currSubject.objectForKey("count") + ") courses",session());
 	}
 	
 	public EduCourse course() {
@@ -307,24 +319,86 @@ public class Overview extends WOComponent {
 		return result;*/
 	}
 	
+	public WOActionResults genarateXML() {
+		NSMutableDictionary reportSettings = new NSMutableDictionary();
+		reportSettings.takeValueForKey(existingCourses,"courses");
+		if(selectedStudents.count() > 0 && selectedStudents.count() < currClass.list().count()) {
+			NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
+			reportSettings.takeValueForKey(studentsToReport,"students");
+		}
+		reportSettings.takeValueForKey(since,"since");
+		reportSettings.takeValueForKey(to,"to");
+		reportSettings.takeValueForKey(period,"period");
+		reportSettings.takeValueForKey(currClass, "eduGroup");
+
+		/*
+		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(
+				ReporterSetup.SETTINGS);
+		if(settings == null) {
+			settings = ReporterSetup.getDefaultSettings(session());
+			settings.takeValueForKey(session().valueForKeyPath(
+			"strings.Strings.PrintReport.defaultSettings"), "title");
+			session().setObjectForKey(settings,ReporterSetup.SETTINGS);
+		}
+		reportSettings.takeValueForKey(settings, "settings");
+		*/
+		byte[] result = null;
+		try {
+			result = XMLGenerator.generate(session(), reportSettings);
+		} catch (Exception e) {
+			result = WOLogFormatter.formatTrowable(e).getBytes();
+		}
+		WOResponse response = application().createResponseInContext(context());
+		response.setContent(result);
+		response.setHeader("application/xml","Content-Type");
+		return response;
+	}
+	
+	public WOActionResults printCurrStudent() {
+		return printSelectedStudents(new NSArray(currStudent));
+	}
+
 	public WOActionResults printSelectedStudents() {
 		NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
 		EOSortOrdering.sortArrayUsingKeyOrderArray(studentsToReport,Person.sorter);
-		WOComponent reportPage = pageWithName("PrintReport");
+		return printSelectedStudents(studentsToReport);
+	}
+	
+	public WOActionResults printSelectedStudents(NSArray studentsToReport) {
+		NSKeyValueCoding reportPage = null;
+		boolean xml = (reporter.valueForKey("component") == null);
+		if(xml)
+			reportPage = new NSMutableDictionary();
+		else
+			reportPage = pageWithName("PrintReport");
 		reportPage.takeValueForKey(reporter,"reporter");
-		reportPage.takeValueForKey(existingCourses,"courses");
+		reportPage.takeValueForKey(BaseCourse.coursesForStudent(existingCourses, studentsToReport)
+				,"courses");
 		reportPage.takeValueForKey(studentsToReport,"students");
 		reportPage.takeValueForKey(since,"since");
 		reportPage.takeValueForKey(to,"to");
 		reportPage.takeValueForKey(period,"period");
 		reportPage.takeValueForKey(currClass, "eduGroup");
-		StringBuffer buf = new StringBuffer("Printing marks for multiple (");
-		buf.append(studentsToReport.count()).append(") students (");
-		if(period instanceof EOPeriod)
-			buf.append(((EOPeriod)period).valueForKey("title"));
+		StringBuffer buf = new StringBuffer("Printing marks for ");
+		if(studentsToReport.count() > 1) {
+			buf.append("multiple (");
+			buf.append(studentsToReport.count()).append(") students (");
+		} else if(studentsToReport.count() == 1){
+			Student st = (Student)studentsToReport.objectAtIndex(0);
+			buf.append(WOLogFormatter.formatEO(st)).append(' ').append('(');
+		}
+		NSMutableDictionary info = (xml)?new NSMutableDictionary(MyUtility.presentEduYear(
+					(Integer)session().valueForKey("eduYear")), "eduYear"):null;
+		if(period instanceof EOPeriod) {
+			String pername = (String)((EOPeriod)period).valueForKey("title");
+			buf.append(pername);
+			if(xml)
+				info.takeValueForKey(((EOPeriod)period).valueForKey("name"), "period");
+		}
 		if(since != null || to != null) {
 			if(period != null)
 				buf.append(':').append(' ');
+			int idx = buf.length();
 			Format dateFormat = MyUtility.dateFormat();
 			FieldPosition fp = new FieldPosition(0);
 			if(since != null)
@@ -336,12 +410,37 @@ public class Overview extends WOComponent {
 				dateFormat.format(to, buf, fp);
 			else
 				buf.append("...");
+			if(xml)
+				info.takeValueForKey(buf.substring(idx), "dates");
 		}
 		buf.append(')');
- 		logger.logp(WOLogLevel.MASS_READING,"Overview","selectStudent",buf.toString(),
- 				new Object[] {session(),currClass});
-		return reportPage;
-		//return RedirectPopup.getRedirect(context(), reportPage, "_blank");
+ 		logger.log((studentsToReport.count() > 1)?WOLogLevel.MASS_READING:WOLogLevel.READING,
+ 				buf.toString(), new Object[] {session(),currClass});
+ 		if(xml) {
+ 			reportPage.takeValueForKey(info, "info");
+ 			info = (NSMutableDictionary)reporter.valueForKey("settings");
+ 			if(info == null) {
+ 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				reporter.takeValueForKey(info, "settings");
+ 			}
+ 			byte[] result = null;
+ 			try {
+ 				result = XMLGenerator.generate(session(), (NSDictionary)reportPage);
+ 			} catch (Exception e) {
+ 				result = WOLogFormatter.formatTrowable(e).getBytes();
+ 			}
+ 			WOResponse response = application().createResponseInContext(context());
+ 			response.setContent(result);
+ 			String contentType = (String)reporter.valueForKey("ContentType");
+ 			if(contentType != null)
+ 				response.setHeader(contentType,"Content-Type");
+ 			else if (reporter.valueForKey("transform") == null)
+ 				response.setHeader("application/xml","Content-Type");
+ 			return response;
+
+ 		} else {
+ 			return (WOComponent)reportPage;
+ 		}
 	}
 	
 	//public static final String reporter = SettingsReader.stringForKeyPath("ui.presenter.report","StudentMarks");
@@ -351,24 +450,60 @@ public class Overview extends WOComponent {
 	protected NSMutableArray reporters;
 	public NSArray reporterList() {
 		if(reporters == null) {
-			reporters = (NSMutableArray)session().valueForKeyPath("modules.studentReporter");
 			Object title = null;
-			if(reporter != null && reporters != null && reporters.count() > 0) {
-				title = reporter.valueForKey("title");
+			if(reporter != null) {
+				title = reporter.valueForKey("id");
 			}
-			reporter = (NSDictionary)application().valueForKeyPath("strings.Strings.Overview.defaultReporter");
-			reporters.insertObjectAtIndex(reporter,0);				
-			if(title != null) {
-				if(!title.equals(reporter.valueForKey("title"))) {
-					Enumeration enu = reporters.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						reporter = (NSKeyValueCoding)enu.nextElement();
-						if(title.equals(reporter.valueForKey("title")))
-							return reporters;
+//			reporter = (NSDictionary)session().valueForKeyPath(
+//					"strings.Strings.Overview.defaultReporter");
+			reporters = new NSMutableArray();
+			NSArray list = (NSArray)session().valueForKeyPath("modules.studentReporter");
+			if(list != null && list.count() > 0)
+				reporters.addObjectsFromArray(list);
+			EOQualifier qual = new EOKeyValueQualifier("id",
+					EOQualifier.QualifierOperatorNotEqual, null);
+			list = ReportsModule.reportsFromDir("StudentReport", session(), qual);
+			if(list != null && list.count() > 0)
+				reporters.addObjectsFromArray(list);
+			if(reporters.count() > 1) {
+	    		EOSortOrdering.sortArrayUsingKeyOrderArray(reporters, ModulesInitialiser.sorter);
+			}
+			NSDictionary settings = null;
+			if(title == null) {
+				File file = new File(ReportsModule.reportsFolder(),
+						"StudentReport/defaultSettings.plist");
+				if(file.exists()) {
+    				try {
+						FileInputStream fis = new FileInputStream(file);
+						NSData data = new NSData(fis, fis.available());
+						fis.close();
+						settings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(
+								data, "utf8");
+						title = settings.valueForKey("reporterID");
+					} catch (IOException e) {
+						logger.log(WOLogLevel.WARNING,
+								"Error reading defaultSettings for StudentReport",
+								new Object[] {session(),file,e});
 					}
-					reporter = (NSKeyValueCoding)reporters.objectAtIndex(0);
+
 				}
 			}
+			if(title == null)
+				title = "default";
+			Enumeration enu = reporters.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				reporter = (NSKeyValueCoding)enu.nextElement();
+				if(title.equals(reporter.valueForKey("id"))) {
+					if(settings != null) {
+//						settings = PlistReader.cloneDictionary(settings, true);
+//						ReporterSetup.synchronizeReportSettings((NSMutableDictionary)settings,
+//								(NSArray)reporter.valueForKey("options"), true, true);
+						reporter.takeValueForKey(settings, "settings");
+					}
+					return reporters;
+				}
+			}
+			reporter = (NSKeyValueCoding)reporters.objectAtIndex(0);
 		}
 		return reporters;
 	}
@@ -384,11 +519,11 @@ public class Overview extends WOComponent {
 	public WOComponent editReporter() {
 		WOComponent result = pageWithName("ReporterSetup");
 		result.takeValueForKey(this, "returnPage");
-		result.takeValueForKey(reporter.valueForKey("settingsName"), "settingName");
+		result.takeValueForKey(reporter, "reporter");
 		return result;
 	}
 	public Boolean hideReporterEdit() {
-		if(reporter != reporterItem || reporter.valueForKey("settingsName") == null)
+		if(reporter != reporterItem || reporter.valueForKey("options") == null)
 			return Boolean.TRUE;
 		return (Boolean)session().valueForKeyPath("readAccess._read.ReporterSetup");
 	}
@@ -460,6 +595,13 @@ public class Overview extends WOComponent {
 
 		WOComponent nextPage = pageWithName((String)reporterItem.valueForKey("component"));
 		NSMutableDictionary dict = new NSMutableDictionary();
+		if(reporter.valueForKey("component") == null) {
+			NSMutableDictionary settings = (NSMutableDictionary)reporter.valueForKey("settings");
+ 			if(settings == null) {
+ 				settings = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				reporter.takeValueForKey(settings, "settings");
+ 			}
+		}
 		dict.takeValueForKey(reporter,"reporter");
 		dict.takeValueForKey(existingCourses,"courses");
 		dict.takeValueForKey(studentsToReport,"students");

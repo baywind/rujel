@@ -106,6 +106,8 @@ public class AutoItogModule {
 					new String[] {"entity","coursePath","studentPath"});
 		} else if("deleteItogContainer".equals(obj)) {
 			return deleteItogContainer(ctx);
+		} else if("xmlGeneration".equals(obj)) {
+			return xmlGeneration(ctx);
 		}
 		return null;
 	}
@@ -972,5 +974,10 @@ cycleCourses:
 			EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
 			ec.deleteObject(obj);
 		}
+	}
+
+	public static Object xmlGeneration(WOContext ctx) {
+		NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
+		return new PrognosesXML(options);
 	}
 }

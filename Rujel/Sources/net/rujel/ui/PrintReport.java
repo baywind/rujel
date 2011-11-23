@@ -32,6 +32,7 @@ package net.rujel.ui;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
+
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -134,34 +135,37 @@ public class PrintReport extends WOComponent {
 		WOComponent result = pageWithName((String)reporter.valueForKey("component"));
 		try {
 			result.takeValueForKey(studentItem, "student");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(courses, "courses");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(since, "since");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(to, "to");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(period, "period");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		try {
 			result.takeValueForKey(reporter, "reporter");
-		} catch (Exception e) {
-			;
-		}
+		} catch (Exception e) {}
 		return result;
+	}
+	
+	public void setSettings(NSKeyValueCoding settings) {
+		reporter = (NSKeyValueCoding) settings.valueForKey("reporter");
+		courses = (NSArray)settings.valueForKey("courses");
+		eduGroup = (EduGroup)settings.valueForKey("eduGroup");
+		period = (Period)settings.valueForKey("period");
+		since = (NSTimestamp)settings.valueForKey("since");
+		to = (NSTimestamp)settings.valueForKey("to");
+		students = (NSArray)settings.valueForKey("students");
+		if(students == null) {
+			Student student = (Student)settings.valueForKey("student");
+			if(student != null)
+				students = new NSArray(student);
+		}
 	}
 }

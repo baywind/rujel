@@ -152,7 +152,7 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		return new NSArray(result);
 	}
 	
-	private transient Object _critSet;
+	public transient Object _critSet;
 	public CriteriaSet critSet() {
 		if(_critSet == null) {
 			_critSet = CriteriaSet.critSetForCourse(course());

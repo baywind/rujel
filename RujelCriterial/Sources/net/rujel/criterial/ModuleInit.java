@@ -104,6 +104,8 @@ public class ModuleInit {
 			return adminModules(ctx);
 		} else if("deleteStudents".equals(obj)) {
 			return deleteStudents(ctx);
+		} else if("xmlGeneration".equals(obj)) {
+			return xmlGeneration(ctx);
 		}
 		return null;
 	}
@@ -240,5 +242,15 @@ public class ModuleInit {
 					"strings.RujelCriterial_Strings.messages.relatedMarksFound");
 		}
 		return null;
+	}
+	
+	public static Object xmlGeneration(WOContext ctx) {
+		NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
+		{
+			NSDictionary settings = (NSDictionary)options.valueForKeyPath("reporter.settings");
+		if(settings != null && !Various.boolForObject(settings.valueForKeyPath("marks.active")))
+			return null;
+		}
+		return new CriterialXML(options);
 	}
 }
