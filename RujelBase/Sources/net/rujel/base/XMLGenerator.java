@@ -44,6 +44,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOSession;
@@ -142,7 +143,16 @@ public class XMLGenerator extends AbstractObjectReader {
 		InputSource input =  new RujelInputSource(session,options);
 		Transformer transformer = getTransformer(session, 
 				(NSDictionary)options.valueForKey("reporter"), input);
-        Source src = new SAXSource(new XMLGenerator(),input);
+		XMLReader reader = null;
+		String srcName = (String)options.valueForKeyPath("reporter.mainSource");
+		if("Persdata".equals(srcName)) {
+			reader = new Persdata();
+		} else if("Options".equals(srcName)) {
+			reader = new Options();
+		} else {
+			reader = new XMLGenerator();
+		}
+        Source src = new SAXSource(reader,input);
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
     	Result res = new StreamResult(out);
       	transformer.transform(src, res);

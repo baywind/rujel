@@ -440,10 +440,15 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 			ec = ((Student)student).editingContext();
 			qual = new EOKeyValueQualifier("student",EOQualifier.QualifierOperatorEqual,student);
 		} else if(student instanceof NSArray) {
-			qual = Various.getEOInQualifier("student", (NSArray)student);
-			Student st = (Student)((NSArray)student).objectAtIndex(0);
+			NSArray list = (NSArray)student;
+			if(list.count() > 0) {
+			qual = Various.getEOInQualifier("student", list);
+			Student st = (Student)list.objectAtIndex(0);
 			ec = st.editingContext();
+			}
 		}
+		if(ec == null)
+			return null;
 		if(initialCourses == null && student instanceof Student) {
 			EduGroup gr = ((Student)student).recentMainEduGroup();
 			if(ec instanceof SessionedEditingContext) {

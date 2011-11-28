@@ -331,17 +331,38 @@ public class Overview extends WOComponent {
 		reportSettings.takeValueForKey(period,"period");
 		reportSettings.takeValueForKey(currClass, "eduGroup");
 
-		/*
-		NSMutableDictionary settings = (NSMutableDictionary)session().objectForKey(
-				ReporterSetup.SETTINGS);
-		if(settings == null) {
-			settings = ReporterSetup.getDefaultSettings(session());
-			settings.takeValueForKey(session().valueForKeyPath(
-			"strings.Strings.PrintReport.defaultSettings"), "title");
-			session().setObjectForKey(settings,ReporterSetup.SETTINGS);
+		String source = context().request().stringFormValueForKey("xmlSource");
+		if(source != null) {
+			NSMutableDictionary rprtr = new NSMutableDictionary(source,"mainSource");
+			reportSettings.takeValueForKey(rprtr, "reporter");
+			if(source.equals("Options")) {
+				NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
+						(Integer)session().valueForKey("eduYear")), "eduYear");
+				if(period instanceof EOPeriod)
+					info.takeValueForKey(((EOPeriod)period).valueForKey("name"), "period");
+				if(since != null || to != null) {
+					StringBuffer buf = new StringBuffer();
+					Format dateFormat = MyUtility.dateFormat();
+					FieldPosition fp = new FieldPosition(0);
+					if(since != null)
+						dateFormat.format(since, buf, fp);
+					else
+						buf.append("...");
+					buf.append(" - "); 
+					if(to != null)
+						dateFormat.format(to, buf, fp);
+					else
+						buf.append("...");
+					info.takeValueForKey(buf.toString(), "dates");
+				}
+				reportSettings.takeValueForKey(info, "info");
+	 			info = (NSMutableDictionary)reporter.valueForKey("settings");
+	 			if(info == null)
+	 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				rprtr.takeValueForKey(info, "settings");
+			}
+			reportSettings.takeValueForKey(currStudent, "student");
 		}
-		reportSettings.takeValueForKey(settings, "settings");
-		*/
 		byte[] result = null;
 		try {
 			result = XMLGenerator.generate(session(), reportSettings);
@@ -365,6 +386,15 @@ public class Overview extends WOComponent {
 	}
 	
 	public WOActionResults printSelectedStudents(NSArray studentsToReport) {
+		if(studentsToReport == null || studentsToReport.count() == 0) {
+	    	WOResponse response = application().createResponseInContext(context());
+	    	String message = (String)session().valueForKeyPath(
+	    			"strings.Strings.Overview.noStudentsSelected");
+	    	if(message == null)
+	    		message = "No students selected";
+	    	response.setContent(message);
+	    	return response;
+		}
 		NSKeyValueCoding reportPage = null;
 		boolean xml = (reporter.valueForKey("component") == null);
 		if(xml)
