@@ -515,7 +515,6 @@ public class Overview extends WOComponent {
 								"Error reading defaultSettings for StudentReport",
 								new Object[] {session(),file,e});
 					}
-
 				}
 			}
 			if(title == null)
@@ -526,8 +525,8 @@ public class Overview extends WOComponent {
 				if(title.equals(reporter.valueForKey("id"))) {
 					if(settings != null) {
 //						settings = PlistReader.cloneDictionary(settings, true);
-//						ReporterSetup.synchronizeReportSettings((NSMutableDictionary)settings,
-//								(NSArray)reporter.valueForKey("options"), true, true);
+						settings = ReporterSetup.synchronizeReportSettings((NSMutableDictionary)settings,
+								reporter, false, true);
 						reporter.takeValueForKey(settings, "settings");
 					}
 					return reporters;

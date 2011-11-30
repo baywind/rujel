@@ -139,13 +139,13 @@ public class ReporterSetup extends WOComponent {
 //		else if(Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReporterSetup")))
 //        	presetName = (String)settings.valueForKey("title");
 		if(settings != null)
-			settings = synchronizeReportSettings(settings, reports, false, true);
+			settings = synchronizeReportSettings(settings, reporter, false, true);
 	}
 	
 	public WOComponent submit() {
 //		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
 		NSMutableDictionary settings = (NSMutableDictionary)reporter.objectForKey("settings");
-		settings = synchronizeReportSettings(settings, reports,true,false);
+		settings = synchronizeReportSettings(settings, reporter,true,false);
 		reporter.takeValueForKey(settings, "settings");
 //		settings.takeValueForKey(presetName, "title");
 //		session().setObjectForKey(settings, SETTINGS);
@@ -155,8 +155,8 @@ public class ReporterSetup extends WOComponent {
 	}
 	
 	public WOComponent savePreset() {
-//		showPresets = true;
-		NSMutableDictionary settings = synchronizeReportSettings(null, reports,true,false);
+		NSMutableDictionary settings = (NSMutableDictionary)reporter.objectForKey("settings");
+		settings = synchronizeReportSettings(settings, reporter,true,false);
 		String defaultName = (String)session().valueForKeyPath(
 				"strings.Strings.PrintReport.defaultSettings");
 		File file = null;
@@ -164,7 +164,7 @@ public class ReporterSetup extends WOComponent {
 														"readAccess.edit.ReporterSetup"));
 		if(presetName == null || presetName.equals(defaultName)) {
 	        if(cantEdit) {
-	        	synchronizeReportSettings(getDefaultSettings(reporter), reports, false, true);
+	        	synchronizeReportSettings(getDefaultSettings(reporter), reporter, false, true);
 	        	presetName = null;
 	        	return null;
 	        }
@@ -188,7 +188,7 @@ public class ReporterSetup extends WOComponent {
 				if(presetName.equals(pre.valueForKey("title"))) {
 					if(cantEdit && !Various.boolForObject(pre.valueForKey("isNew"))) {
 						settings = PlistReader.cloneDictionary(pre, true);
-						synchronizeReportSettings(settings, reports, false, true);
+						synchronizeReportSettings(settings, reporter, false, true);
 						presetName = null;
 			        	return null;
 					}
@@ -298,18 +298,21 @@ public class ReporterSetup extends WOComponent {
         	presetName = (canEdit || Various.boolForObject(item.valueForKey("isNew")))?
         		(String)settings.valueForKey("title"):null;
         }
-		synchronizeReportSettings(settings, reports, false, true);
+		synchronizeReportSettings(settings, reporter, false, true);
 //		showPresets = true;
 		return this;
 	}
 	
 	public static NSMutableDictionary synchronizeReportSettings(NSMutableDictionary settings,
-			 NSArray reports, boolean updSettings, boolean updReports) {
+			NSKeyValueCoding reporter, boolean updSettings, boolean updReports) {
+		NSArray reports = (NSArray)reporter.valueForKey("options");
 		if(reports == null)
 			return null;
 		NSMutableArray keys = null;
+		NSDictionary preSettings = (NSDictionary)reporter.valueForKey("settings");
 		if(settings == null) {
-			settings = new NSMutableDictionary();
+			settings = (preSettings == null)?new NSMutableDictionary():
+				PlistReader.cloneDictionary(preSettings, true);
 			updSettings = true;
 		} else {
 			keys = settings.allKeys().mutableClone();
@@ -319,11 +322,13 @@ public class ReporterSetup extends WOComponent {
 			NSMutableDictionary rp = (NSMutableDictionary) enu.nextElement();
 			Object key = rp.valueForKey("id");
 			NSMutableDictionary subs = (NSMutableDictionary)settings.objectForKey(key);
+			NSDictionary preSubs = (preSettings == null) ? null :
+				(NSDictionary)preSettings.objectForKey(key);
 //			NSDictionary defaults = (defaultSettings==null)?null:
 //				(NSDictionary)defaultSettings.objectForKey(key);
 			NSMutableArray skeys = null;
 			if(subs == null) {
-				subs = new NSMutableDictionary();
+				subs = (preSubs == null)? new NSMutableDictionary() : preSubs.mutableClone();
 				settings.setObjectForKey(subs, key);
 			} else if(keys !=null) {
 				keys.removeObject(key);
@@ -356,6 +361,8 @@ public class ReporterSetup extends WOComponent {
 					Object value = opt.valueForKey("active");
 					if(value instanceof EOEnterpriseObject)
 						value = WOLogFormatter.formatEO((EOEnterpriseObject)value);
+					if(value == null && preSubs != null)
+						value = preSubs.objectForKey(key);
 					subs.takeValueForKey(value,(String)key);
 				} else if(updReports) {
 					opt.takeValueForKey(subs.objectForKey(key),"active");
@@ -379,9 +386,19 @@ public class ReporterSetup extends WOComponent {
 				settings.removeObjectForKey(key);
 			}
 		}
-		if(updReports)
+		if(preSettings != null) {
+			enu = preSettings.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				if(settings.valueForKey(key) == null)
+					settings.takeValueForKey(preSettings.valueForKey(key), key);
+			}
+		}
+		if(updReports) {
 			EOSortOrdering.sortArrayUsingKeyOrderArray(
 					(NSMutableArray)reports, ModulesInitialiser.sorter);
+			reporter.takeValueForKey(settings, "settings");
+		}
 		return settings;
 	}
 	
@@ -390,15 +407,14 @@ public class ReporterSetup extends WOComponent {
 		String path = SettingsReader.stringForKeyPath("reportsDir","CONFIGDIR/RujelReports");
 		path = path + "/StudentReport/" + reporter.valueForKey("id") + "_defaults.plist";
 		Object plist = PlistReader.readPlist(path, null);
-		NSArray reports = (NSArray)reporter.valueForKey("options");
 		if(plist instanceof NSDictionary) {
 			result = PlistReader.cloneDictionary((NSDictionary)plist, true);
-			result = synchronizeReportSettings(result, reports, false, false);
+			result = synchronizeReportSettings(result, reporter, false, false);
 		} else {
-			result = (NSMutableDictionary)reporter.valueForKey("settings");
+	/*		result = (NSMutableDictionary)reporter.valueForKey("settings");
 			if(result != null)
-				result = PlistReader.cloneDictionary(result, true);
-			result = synchronizeReportSettings(result, reports, true, false);
+				result = PlistReader.cloneDictionary(result, true);*/
+			result = synchronizeReportSettings(result, reporter, true, false);
 		}
 		return result;
 	}

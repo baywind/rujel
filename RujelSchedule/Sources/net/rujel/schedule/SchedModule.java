@@ -81,6 +81,9 @@ public class SchedModule {
 			return broadcastAdditions(ctx);
 		} else if ("dateSchedule".equals(obj)) {
 			return dateSchedule(ctx);
+		} else if("xmlGeneration".equals(obj)) {
+			NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
+			return new ScheduleXML(options);
 		}
 		return null;
 	}

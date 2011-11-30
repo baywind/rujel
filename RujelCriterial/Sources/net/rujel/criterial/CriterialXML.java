@@ -258,7 +258,7 @@ public class CriterialXML extends GeneratorModule {
 			throw new SAXException("Should generate within course");
 		{
 			NSDictionary opt = (NSDictionary)settings.valueForKeyPath("reporter.settings");
-			if(opt != null && opt.valueForKey("marks") == null)
+			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("marks.active")))
 				return;
 		}
 		Date since = (NSTimestamp)settings.valueForKey("since");

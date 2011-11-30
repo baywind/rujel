@@ -57,7 +57,7 @@ public class EduPlanXML extends GeneratorModule {
 			return;
 		{
 			NSDictionary opt = (NSDictionary)settings.valueForKeyPath("reporter.settings");
-			if(opt != null && opt.valueForKey("eduPlan") == null)
+			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("eduPlan.active")))
 				return;
 		}
 		EduGroup gr = (EduGroup)settings.valueForKey("eduGroup");

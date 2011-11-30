@@ -48,6 +48,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.Period;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.xml.EasyGenerationContentHandlerProxy;
 import net.rujel.reusables.xml.GeneratorModule;
 
@@ -77,7 +78,7 @@ public class LessonsXML extends GeneratorModule {
 			throw new SAXException("Should generate within course");
 		{
 			NSDictionary opt = (NSDictionary)settings.valueForKeyPath("reporter.settings");
-			if(opt != null && opt.valueForKey("lessons") == null)
+			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("lessons.active")))
 				return;
 		}
 		Date since = (NSTimestamp)settings.valueForKey("since");
