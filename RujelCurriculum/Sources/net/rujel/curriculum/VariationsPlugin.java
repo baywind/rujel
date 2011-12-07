@@ -267,15 +267,16 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		
 		Calendar cal = Calendar.getInstance();
 		//TODO remove this plug
-		NSArray list = EduPeriod.periodsInList(listName, ec);
-		if(list != null && list.count() > 0) {
-			EduPeriod last = (EduPeriod)list.lastObject();
-			if(date == null || date.compare(last.end()) > 0)
+		NSArray periods = EduPeriod.periodsInList(listName, ec);
+		NSArray list = null;
+		if(periods != null && periods.count() > 0) {
+			EduPeriod last = (EduPeriod)periods.lastObject();
+			if(date == null || date.compare(last.end()) > 0) {
 				date = last.end();
-			else
-				list = null;
+				list = periods;
+			}
 		} else {
-			list = null;
+			periods = null;
 		}
 		//
 		if(date != null) {
@@ -405,7 +406,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			cal.add(Calendar.DATE, weekDays +1);
 			NSDictionary dict = Reprimand.prepareDict(new NSTimestamp(cal.getTimeInMillis()), 
 					listName, ec, weekDays, weekStart);
-			if(dict != null && dict.valueForKey("eduPeriod") != null) {
+			EduPeriod per = (EduPeriod)dict.valueForKey("eduPeriod");
+			if(dict != null && per != null) {
 				EOQualifier[] quals = (EOQualifier[])dict.valueForKey("prevQualifier");
 				if(quals != null) {
 					int[] currWeek = new int[weekDays];
@@ -430,6 +432,18 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						cal.add(Calendar.DATE, 1);
 						if(currWeek[i] == 0)
 							continue;
+						if(!per.contains(cal.getTime()) && periods != null) {
+							Enumeration penu = periods.objectEnumerator();
+							while (penu.hasMoreElements()) {
+								EduPeriod perd = (EduPeriod) penu.nextElement();
+								if(perd.contains(cal.getTime())) {
+									penu = null;
+									break;
+								}
+							}
+							if(penu != null)
+								continue weekPlan;
+						}
 						if(holidays != null) {
 							Enumeration henu = holidays.objectEnumerator();
 							while (henu.hasMoreElements()) {
@@ -437,7 +451,6 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 								if(hd.contains(cal.getTime()))
 									continue weekPlan;
 							}
-
 						}
 						plan -= currWeek[i];
 					}

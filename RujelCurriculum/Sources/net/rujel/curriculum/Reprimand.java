@@ -43,6 +43,7 @@ import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.DataBaseConnector;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
@@ -100,7 +101,11 @@ public class Reprimand extends _Reprimand {
 		NSTimestamp now = new NSTimestamp(cal.getTimeInMillis());
 		Integer eduYear = MyUtility.eduYearForDate(now);
 
-		EOEditingContext ec = new EOEditingContext();
+		EOObjectStore os = EOObjectStoreCoordinator.defaultCoordinator();
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			os = DataBaseConnector.objectStoreForTag(eduYear.toString());
+		}
+		EOEditingContext ec = new EOEditingContext(os);
 		ec.lock();
 		try {
 			SettingsBase weekStart = SettingsBase.baseForKey("weekStart", ec, false);
@@ -111,9 +116,21 @@ public class Reprimand extends _Reprimand {
 					testDay = num.intValue();
 				weekStart = null;
 			}
-			if(cal.get(Calendar.DAY_OF_WEEK) != testDay)
-				return;
-			
+			if(cal.get(Calendar.DAY_OF_WEEK) != testDay) {
+				if(weekStart == null)
+					return;
+				Integer day = new Integer(cal.get(Calendar.DAY_OF_WEEK));
+				Enumeration enu = weekStart.qualifiedSettings().objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEnterpriseObject qs = (EOEnterpriseObject) enu.nextElement();
+					if(day.equals(qs.valueForKey(SettingsBase.NUMERIC_VALUE_KEY))) {
+						day = null;
+						break;
+					}
+				}
+				if(day != null)
+					return;
+			}
 			NSMutableDictionary byListName = new NSMutableDictionary();
 			
 			NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec,
@@ -129,7 +146,7 @@ public class Reprimand extends _Reprimand {
 			SettingsBase widget = SettingsBase.baseForKey(
 					"PlanFactWidget", ec, false);
 			Enumeration enu = list.objectEnumerator();
-			while (enu.hasMoreElements()) {
+			while (enu.hasMoreElements()) { // all courses
 				EduCourse course = (EduCourse) enu.nextElement();
 				if(widget != null) {
 					EOEnterpriseObject setting = widget.forCourse(course);
@@ -243,6 +260,8 @@ public class Reprimand extends _Reprimand {
 						Integer num = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
 						if(num != null)
 							testDay = num.intValue();
+						else
+							testDay = weekStart.numericValue().intValue();
 					}
 					EOEnterpriseObject setting = listSettings.forCourse(course);
 					String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
@@ -373,8 +392,8 @@ public class Reprimand extends _Reprimand {
 						if(!hd.contains(date))
 							continue;
 						Reason reason = Reason.reasonForHoliday(hd, true);
-						Variation var = (Variation)EOUtilities.
-						createAndInsertInstance(ec, Variation.ENTITY_NAME);
+						Variation var = (Variation)EOUtilities.createAndInsertInstance(
+								ec, Variation.ENTITY_NAME);
 						var.addObjectToBothSidesOfRelationshipWithKey(
 								course, "course");
 						var.addObjectToBothSidesOfRelationshipWithKey(
@@ -410,8 +429,8 @@ public class Reprimand extends _Reprimand {
 								periodEndReason = (Reason)found.objectAtIndex(0);
 							}
 						} // init periodEndReason
-						Variation var = (Variation)EOUtilities.
-						createAndInsertInstance(ec, Variation.ENTITY_NAME);
+						Variation var = (Variation)EOUtilities.createAndInsertInstance(
+								ec, Variation.ENTITY_NAME);
 						var.addObjectToBothSidesOfRelationshipWithKey(
 								course, "course");
 						var.addObjectToBothSidesOfRelationshipWithKey(
