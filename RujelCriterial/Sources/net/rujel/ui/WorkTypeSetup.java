@@ -184,7 +184,7 @@ public class WorkTypeSetup extends WOComponent {
 	}
 	
 	public boolean isStateless() {
-		return true;
+		return false;
 	}
 	
 	public void reset() {
