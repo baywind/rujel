@@ -39,6 +39,7 @@ import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Timer;
@@ -109,10 +110,10 @@ public class Application extends UTF8Application {
 			year = MyUtility.eduYearForDate(today);
 			if(!DataBaseConnector.makeConnections(
 					EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
-				year = new Integer(year.intValue() -1);
-				logger.log(WOLogLevel.INFO,"Trying to connect to previous year database: " + year);
-				if(!DataBaseConnector.makeConnections(
-						EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
+				logger.log(WOLogLevel.INFO,"Trying to connect to previous year database: " + 
+						(year.intValue() -1));
+				if(!DataBaseConnector.makeConnections(EOObjectStoreCoordinator.defaultCoordinator(), 
+							Integer.toString(year.intValue() -1))) {
 					logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
 					System.err.println("Could not connect to database!");
 					_errorMessage = handler.toString();
@@ -120,6 +121,30 @@ public class Application extends UTF8Application {
 					handler.close();
 //					terminate();
 					return;
+				} else {
+					if(SettingsReader.boolForKeyPath("dbConnection.disableSchemaUpdate", false)) {
+						year = new Integer(year.intValue() -1);
+					} else {
+						InputStream next = resourceManager().inputStreamForResourceNamed(
+								"nextYear.sql", null, null);
+						logger.log(WOLogLevel.INFO,"Trying to create database for year 2011");
+						NSMutableDictionary params = new NSMutableDictionary();
+						params.takeValueForKey(new NSDictionary(
+								new String[] {"RujelYear%s",Integer.toString(year.intValue() -1)},
+								new String[] {"dbName","args"}
+						), "RujelYearOld");
+						params.takeValueForKey(new NSDictionary(
+								new String[] {"RujelYear%s",year.toString()},
+								new String[] {"dbName","args"}
+						), "RujelYearNew");
+						if(DataBaseUtility.executeScript(next,params)) {
+							if(!DataBaseConnector.makeConnections(
+									EOObjectStoreCoordinator.defaultCoordinator(),year.toString()))
+								year = new Integer(year.intValue() -1);
+						} else {
+							year = new Integer(year.intValue() -1);
+						}
+					}
 				}
 			}
 		} else {
