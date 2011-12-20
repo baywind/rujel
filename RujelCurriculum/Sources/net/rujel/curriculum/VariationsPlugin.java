@@ -406,8 +406,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			cal.add(Calendar.DATE, weekDays +1);
 			NSDictionary dict = Reprimand.prepareDict(new NSTimestamp(cal.getTimeInMillis()), 
 					listName, ec, weekDays, weekStart);
-			EduPeriod per = (EduPeriod)dict.valueForKey("eduPeriod");
-			if(dict != null && per != null) {
+			EduPeriod per = (dict==null)?null:(EduPeriod)dict.valueForKey("eduPeriod");
+			if(per != null) {
 				EOQualifier[] quals = (EOQualifier[])dict.valueForKey("prevQualifier");
 				if(quals != null) {
 					int[] currWeek = new int[weekDays];

@@ -662,6 +662,6 @@
                 }; 
             };
         };
-        framework = "RujelContacts"; 
+        framework = "RujelContacts";
     }; 
 }

@@ -568,7 +568,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 		settings.takeValueForKey(since,"since");
 		Object to = params.valueForKey("to");
 		settings.takeValueForKey(to,"to");
-		boolean xml = (reporter.valueForKey("component") == null);
+		boolean xml = (reporter != null && reporter.valueForKey("component") == null);
 		byte[] xmlData = null;
 		if(xml && Various.boolForObject(reporter.valueForKey("studentInOptions"))) {
 			settings.takeValueForKey(students,"students");
