@@ -307,7 +307,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				if(date == null || date.compare(per.end()) > 0) {
 // TODO 			if(hours.intValue() < 0) { // calculate plan and update hours
 //					days += per.daysInPeriod(null,listName);
-					plan += Math.abs(hours.intValue());
+					minPlan += Math.abs(hours.intValue());
 				} else if(date.compare(per.begin()) >= 0) {
 					hours = (Integer)pd.valueForKey("weekly");
 					cal.setTime(per.begin());
@@ -320,8 +320,9 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 					int perDays = EOPeriod.Utility.countDays(beginDate, date);
 					int perWeeks = perDays/weekDays;
 					
-					plan += perWeeks*maxDev;
+					minPlan += perWeeks*maxDev;
 				}
+				plan = minPlan;
 				/*if(maxDev == 0)
 					active = 2;*/
 			}

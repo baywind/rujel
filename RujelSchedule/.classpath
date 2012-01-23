@@ -7,9 +7,14 @@
 	<classpathentry kind="con" path="WOFramework/JavaJDBCAdaptor"/>
 	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
 	<classpathentry kind="con" path="WOFramework/JavaXML"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelBase"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelEduPlan"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
+	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

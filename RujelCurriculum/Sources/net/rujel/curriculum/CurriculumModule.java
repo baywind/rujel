@@ -227,27 +227,19 @@ public class CurriculumModule {
 	
 	private static final Integer sort = new Integer(30);
 	public static NSDictionary assumeNextLesson(WOContext ctx) {
-		EduCourse course = (EduCourse)ctx.session().objectForKey("assumeNextLesson");
-		if(course == null)
+		Object obj = ctx.session().objectForKey("assumeNextLesson");
+		if(obj instanceof EduCourse)
 			return null;
+		EduCourse course = ((EduLesson)obj).course();
+		EOEditingContext ec = course.editingContext();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(((EduLesson)obj).date());
 		NSArray sorter = new NSArray(new EOSortOrdering(
 				"date",EOSortOrdering.CompareDescending));
 		EOQualifier qual = new EOKeyValueQualifier ("course",
 				EOQualifier.QualifierOperatorEqual,course);
-		EOFetchSpecification fs = new EOFetchSpecification(
-				EduLesson.entityName,qual,sorter);
-		fs.setFetchLimit(1);
-		EOEditingContext ec = course.editingContext();
+		EOFetchSpecification fs = new EOFetchSpecification(Variation.ENTITY_NAME,qual,sorter);
 		NSArray list = ec.objectsWithFetchSpecification(fs);
-		Calendar cal = Calendar.getInstance();
-		if(list == null || list.count() == 0) {
-			return null;
-		} else {
-			EduLesson lesson = (EduLesson)list.objectAtIndex(0); // last lesson
-			cal.setTime(lesson.date());
-		}
-		fs.setEntityName(Variation.ENTITY_NAME);
-		list = ec.objectsWithFetchSpecification(fs);
 		if(list != null && list.count() > 0) {
 				Variation var = (Variation)list.objectAtIndex(0);
 				if(var.date().getTime() > cal.getTimeInMillis() &&

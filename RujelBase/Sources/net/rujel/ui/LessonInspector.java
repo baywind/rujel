@@ -50,6 +50,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 	public String newTitle;
 	public String newTheme;
 	public NSTimestamp newDate;
+	public Integer newNumber;
 	
 	public WOComponent returnPage;
 	public EduLesson lesson;
@@ -99,7 +100,10 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 			}
 			lesson.setDate(newDate);
 			lesson.setTitle(newTitle);
-			MyUtility.setNumberToNewLesson(lesson);
+			if(newNumber == null)
+				MyUtility.setNumberToNewLesson(lesson);
+			else
+				lesson.setNumber(newNumber);
 			EOQualifier limits = (EOQualifier)returnPage.valueForKeyPath("currTab.qualifier");
 			boolean done = false;
 			if(limits != null && !limits.evaluateWithObject(lesson)) {

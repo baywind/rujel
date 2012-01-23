@@ -227,7 +227,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 					lesson.addObjectToBothSidesOfRelationshipWithKey(taskText, TASK_TEXT_KEY);
 				}
 				taskText.takeValueForKey(newTask, "storedText");
-			}		
+			}
 		}
 		
 		public boolean hasPopup() {
@@ -240,6 +240,9 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		
 		public NoteDelegate getNoteDelegateForLesson(EduLesson lesson) {
 			return null;
+		}
+		
+		public void updateNumber(EduLesson lesson, Integer newNumber) {
 		}
 	}
 
@@ -324,5 +327,11 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	
 	public NSDictionary archiveIdentifier() {
 		return lessonArchiveIdentifier(this);
+	}
+	
+	public void setNumber(Integer num) {
+		if(number() != null && !number().equals(num))
+			taskDelegate.updateNumber(this, num);
+		super.setNumber(num);
 	}
 }

@@ -298,7 +298,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			if(planDetails == null || planDetails.count() == 0)
 				return 0;
 			EOEnterpriseObject result = (EOEnterpriseObject)planDetails.objectAtIndex(0);
-			Number hours = (Number)result.valueForKey("hours");
+			Number hours = (Number)result.valueForKey("weekly");
 			return hours.intValue();
 		}
 		if (course.cycle() instanceof PlanCycle) {

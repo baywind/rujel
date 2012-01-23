@@ -334,11 +334,18 @@ public class LessonList extends WOComponent {
 		}
 		popup.takeValueForKey(context().page(), "returnPage");
 		popup.takeValueForKey(valueForBinding("course"), "course");
-		session().setObjectForKey(valueForBinding("course"), "assumeNextLesson");
+		EduCourse course = (EduCourse)valueForBinding("course");
+		Object obj = course.sortedLessons();
+		if(obj != null)
+			obj = ((NSArray)obj).lastObject();
+		if(obj == null)
+			obj = course;
+		session().setObjectForKey(obj, "assumeNextLesson");
 		NSArray ls = (NSArray)session().valueForKeyPath("modules.assumeNextLesson");
 		session().removeObjectForKey("assumeNextLesson");
 		NSTimestamp date = null;
 		String title = null;
+		Integer number = null;
 		if(ls != null && ls.count() > 0) {
 			Enumeration en = ls.objectEnumerator();
 			String theme = null;
@@ -351,9 +358,16 @@ public class LessonList extends WOComponent {
 					theme = (String)la.valueForKey("theme");
 				if(title == null)
 					title = (String)la.valueForKey("title");
+				if(number == null && EOPeriod.Utility.compareDates(
+						date, (NSTimestamp)la.valueForKey("date")) == 0)
+					number = (Integer)la.valueForKey("number");
 			}
 			if(theme != null)
 				popup.takeValueForKey(theme, "newTheme");
+			if(number != null)
+				popup.takeValueForKey(number, "newNumber");
+			else
+				popup.takeValueForKey(new Integer(1), "newNumber");
 		}
 		if(date == null)
 			date = (NSTimestamp)session().valueForKey("today");
@@ -411,6 +425,26 @@ public class LessonList extends WOComponent {
 		popup.takeValueForKey(Boolean.TRUE, "noEdit");
 		popup.takeValueForKey(Boolean.TRUE, "ifArchive");
 		return popup;
+	}
+	
+	public String lessonNumber() {
+		Number num = (Number)lessonItem.number();
+		if(num == null)
+			return null;
+		return num.toString();
+	}
+	public void setLessonNumber(String lessonNumber) {
+		if(lessonNumber == null)
+			return;
+		try {
+			Integer num = new Integer(lessonNumber);
+			Integer recent = lessonItem.number();
+			if(num.equals(recent))
+				return;
+			lessonItem.setNumber(num);
+		} catch (Exception e) {
+			// illegal value
+		}
 	}
 	
 }

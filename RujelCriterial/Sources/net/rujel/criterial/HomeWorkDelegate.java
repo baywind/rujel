@@ -99,6 +99,16 @@ public class HomeWorkDelegate extends TaskDelegate {
 		return true;
 	}
 	
+	public void updateNumber(EduLesson lesson, Integer newNumber) {
+		Work work = homeWorkForLesson(lesson);
+		if(work == null)
+			return;
+		if(newNumber == null)
+			work.setNumber(new Integer(1));
+		else
+			work.setNumber(newNumber.intValue() -100);
+	}
+	
 	protected Work homeWorkForLesson(EduLesson lesson) {
 		EOEditingContext ec = lesson.editingContext();
 		if(ec == null) {
@@ -166,7 +176,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 			date = ((EduLesson)found.objectAtIndex(0)).date();
 		} else  if (ec instanceof SessionedEditingContext) {
 			WOSession ses = ((SessionedEditingContext)ec).session();
-			ses.setObjectForKey(lesson.course(), "assumeNextLesson");
+			ses.setObjectForKey(lesson, "assumeNextLesson");
 			found = (NSArray)ses.valueForKeyPath("modules.assumeNextLesson");
 			ses.removeObjectForKey("assumeNextLesson");
 			if(found != null && found.count() > 0) {

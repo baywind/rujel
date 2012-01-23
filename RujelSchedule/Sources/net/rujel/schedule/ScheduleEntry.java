@@ -49,6 +49,10 @@ public class ScheduleEntry extends _ScheduleEntry {
 			new EOSortOrdering(NUM_KEY, EOSortOrdering.CompareAscending),
 			new EOSortOrdering(WEEKDAY_NUM_KEY, EOSortOrdering.CompareAscending)
 	});
+	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
+			new EOSortOrdering(WEEKDAY_NUM_KEY, EOSortOrdering.CompareAscending),
+			new EOSortOrdering(NUM_KEY, EOSortOrdering.CompareAscending)
+	});
 
 	public static void init() {
 		EOInitialiser.initialiseRelationship("ScheduleEntry","otherTeacher",false,"teacherID","Teacher");
@@ -162,6 +166,27 @@ public class ScheduleEntry extends _ScheduleEntry {
 		return new EOAndQualifier(new NSArray(quals));
 	}
 	
+	public static NSArray entriesForPeriod(EduCourse course, NSTimestamp since, NSTimestamp to) {
+		EOQualifier[] quals = new EOQualifier[3];
+		if(to != null) {
+			quals[0] = new EOKeyValueQualifier(VALID_SINCE_KEY,
+					EOQualifier.QualifierOperatorEqual,null);
+			quals[1] = new EOKeyValueQualifier(VALID_SINCE_KEY,
+					EOQualifier.QualifierOperatorLessThanOrEqualTo, to);
+		}
+		EOQualifier from = (to == null) ? null : new EOOrQualifier(new NSArray(quals));
+		quals[0] = new EOKeyValueQualifier(VALID_TO_KEY,
+				EOQualifier.QualifierOperatorEqual,null);
+		quals[1] = new EOKeyValueQualifier(VALID_TO_KEY,
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, since);
+		quals[1] = new EOOrQualifier(new NSArray(quals));
+		quals[2] = from;
+		quals[0] = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual,course);
+		quals[1] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[1],sorter);
+		return course.editingContext().objectsWithFetchSpecification(fs);
+	}
+	
 	public static NSArray entriesForDay(EduCourse course, NSTimestamp date) {
 		EOEditingContext ec = course.editingContext();
     	int week = SettingsBase.numericSettingForCourse("EduPeriod", course, ec,7);
@@ -169,22 +194,28 @@ public class ScheduleEntry extends _ScheduleEntry {
     		return null; // can't work with non-weekly schedule
     	Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
-    	if(week > 7) { // TODO : smarter support for non 7 days periods
-    		cal.setMinimalDaysInFirstWeek(1);
-    		week = (cal.get(Calendar.WEEK_OF_YEAR) -1) % (week/7);
-    		week = week*7 -1;
-    	} else {
-    		week = -1;
-    	}
-		week += cal.get(Calendar.DAY_OF_WEEK);
+		week = weekday(cal, week);
 		EOQualifier[] quals = new EOQualifier[3];
 		quals[0] = onDate(date);
 		quals[1] = new EOKeyValueQualifier(WEEKDAY_NUM_KEY, EOQualifier.QualifierOperatorEqual, 
 				new Integer(week));
-		quals[3] = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual,course);
-		quals[1] = new EOOrQualifier(new NSArray(quals));		
+		quals[2] = new EOKeyValueQualifier("course", EOQualifier.QualifierOperatorEqual,course);
+		quals[1] = new EOAndQualifier(new NSArray(quals));		
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[1],tableSorter);
 		return ec.objectsWithFetchSpecification(fs);
+	}
+	
+	public static int weekday(Calendar cal, int week) {
+		if(week%7 != 0)
+    		return -1;
+    	if(week > 7) { // TODO : smarter support for non 7 days periods
+    		cal.setMinimalDaysInFirstWeek(1);
+    		week = (cal.get(Calendar.WEEK_OF_YEAR) -1) % (week/7);
+    		week = week*7;
+    	} else {
+    		week = 0;
+    	}
+		return week + cal.get(Calendar.DAY_OF_WEEK);
 	}
 	
 	public static NSArray scheduleForDay(EduCourse course, NSTimestamp date) {
