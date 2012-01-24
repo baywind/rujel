@@ -251,6 +251,32 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		days -= Holiday.freeDaysInDates(begin, end, editingContext(), listName);
 		return days;
 	}
+	
+	public static int activeDaysInDates(NSTimestamp begin, NSTimestamp end, String listName, EOEditingContext ec) {
+		NSArray periods = periodsInList(listName, ec);
+		NSArray holidays = Holiday.holidaysInDates(begin, end, ec, listName);
+		if(periods == null || periods.count() == 0)
+			periods = defaultPeriods(ec); 
+		if(periods == null || periods.count() == 0)
+			return 0;
+		Enumeration enu = periods.objectEnumerator();
+		int sumDays = 0;
+		while (enu.hasMoreElements()) {
+			EduPeriod per = (EduPeriod) enu.nextElement();
+			NSTimestamp from = per.begin();
+			NSTimestamp to = per.end();
+			if((begin != null && begin.after(to)) || 
+					(end != null && end.before(from)))
+				continue;
+			if(begin != null && begin.after(from))
+				from = begin;
+			if(end != null && end.before(to))
+				to = end;
+			sumDays += EOPeriod.Utility.countDays(from, to);
+			sumDays -= Holiday.freeDaysInDates(from, to, holidays);
+		}
+		return sumDays;
+	}
 		
 	public static int verifyList(NSArray list) {
 		if(list == null || list.count() < 2)

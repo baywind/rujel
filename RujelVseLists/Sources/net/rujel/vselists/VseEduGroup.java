@@ -98,6 +98,8 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 	
 	public boolean isActual(int eduYear) {
+		if(lastYear() == null || firstYear() == null)
+			return false;
 		return(eduYear <= lastYear().intValue() &&
 				eduYear >= firstYear().intValue());
 	}

@@ -49,7 +49,9 @@ import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -107,7 +109,8 @@ public class Timetable extends LessonList {
     	date = newDate;
     	if(canSetValueForBinding("date"))
     		setValueForBinding(date, "date");
-    	lately = date.timestampByAddingGregorianUnits(0, 0, -cols, 0, 0, 0);
+    	lately = (date == null) ? null :
+    		date.timestampByAddingGregorianUnits(0, 0, -cols, 0, 0, 0);
     }
 
     protected NSArray sequence() {
@@ -272,6 +275,8 @@ public class Timetable extends LessonList {
     				NSTimestamp since = sdl.validSince();
     				NSTimestamp to = sdl.validTo();
     				buf.append("<span");
+    				if(sdl.course() == course)
+    					buf.append(" class = \"currCrs\"");
     				if(since != null || to != null) {
     					buf.append(" style = \"white-space:nowrap;");
     					if(to != null && to.before(date)) {
@@ -293,7 +298,7 @@ public class Timetable extends LessonList {
     					buf.append(format.format(since));
     					if(to != null)
     						buf.append(' ').append('-');
-    				} else {
+    				} else if(to != null) {
     					buf.append(strings().valueForKeyPath("RujelBase_Base.before"));
     				}
     				if(to != null) {
@@ -312,11 +317,15 @@ public class Timetable extends LessonList {
 					if(prev != null)
 						buf.append(" / ");
 					if(showSubject) {  // show subjects
+	    				buf.append("<span");
 						if(recent)
-							buf.append("<strong>");
+							buf.append("style = \"font-weight:bold;\"");
+						if(crs == course)
+	    					buf.append(" class = \"currCrs\"");
+						buf.append('>');
 						buf.append(WOMessage.stringByEscapingHTMLString(crs.cycle().subject()));
 						if(recent)
-							buf.append("</strong>");
+							buf.append("</span>");
 					} // show subjects
 					prev = null;
 					count = 0;
@@ -336,11 +345,15 @@ public class Timetable extends LessonList {
 	    					else
 	    						buf.append(" / ");
 	    				}
+	    				buf.append("<span");
 	    				if(recent)
-	    					buf.append("<strong>");
+							buf.append(" style = \"font-weight:bold;\"");
+						if(crs == course)
+	    					buf.append(" class = \"currCrs\"");
+						buf.append('>');
 		    			buf.append(WOMessage.stringByEscapingHTMLString(crs.eduGroup().name()));
 	    				if(recent)
-	    					buf.append("</strong>");
+	    					buf.append("</span>");
 		    			count = 1;
 					} else {
 						count++;
@@ -473,28 +486,60 @@ public class Timetable extends LessonList {
 				}
 			}
     	}
-		int weekStart = SettingsBase.numericSettingForCourse(
-				"weekStart", course, course.editingContext(), Calendar.MONDAY);
     	EOEditingContext ec = course.editingContext();
-    	NSMutableArray pool = null;
-    	{
-    		EOQualifier quals[] = new EOQualifier[2];
-    		quals[0] = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,course);
-    		quals[1] = new EOKeyValueQualifier(ScheduleEntry.FLAGS_KEY,
-    				EOQualifier.QualifierOperatorEqual,new Integer(0)); // NOT temporary
-    		quals[0] = new EOAndQualifier(new NSArray(quals));
-    		EOFetchSpecification fs = new EOFetchSpecification(ScheduleEntry.ENTITY_NAME,
-    				quals[0],ScheduleEntry.tableSorter);
-    		NSArray found = ec.objectsWithFetchSpecification(fs);
+    	int week = SettingsBase.numericSettingForCourse("EduPeriod", course, ec ,7);
+		int weekStart = SettingsBase.numericSettingForCourse(
+				"weekStart", course, ec, Calendar.MONDAY);
+		String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, course, ec);
+		NSMutableArray pool = null;
+		EOQualifier quals[] = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,course);
+		quals[1] = new EOKeyValueQualifier(ScheduleEntry.FLAGS_KEY,
+				EOQualifier.QualifierOperatorEqual,new Integer(0)); // NOT temporary
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(ScheduleEntry.ENTITY_NAME,
+				quals[0],ScheduleEntry.tableSorter);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		NSArray lessons = course.lessons();
+		if(found != null && found.count() > 0) {
     		Enumeration enu = found.objectEnumerator();
-    		NSTimestamp yesterday = date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
     		while (enu.hasMoreElements()) {
 				ScheduleEntry sdl = (ScheduleEntry) enu.nextElement();
 				Integer index = new Integer((sdl.weekdayNum().intValue() - weekStart +1)*100 
 						+ sdl.num().intValue());
 				if(!toAdd.containsObject(index) && sdl.isActual(date)) {
-					if(sdl.isTemporary() ||
-							(sdl.validSince() != null && sdl.validSince().after(yesterday))) {
+					boolean nolessons = false;
+					NSTimestamp since = sdl.validSince();
+					if(lessons != null && lessons.count() > 0) {
+						Enumeration lenu = lessons.objectEnumerator();
+						int totalLessons = 0;
+						int sdlLessons = 0;
+						Calendar cal = Calendar.getInstance();
+						while (lenu.hasMoreElements()) {
+							EduLesson lesson = (EduLesson) lenu.nextElement();
+							NSTimestamp lDate = lesson.date();
+							if(lDate.compare(date) >= 0)
+								continue;
+							if(since != null && lDate.before(since))
+								continue;
+							totalLessons++;
+							cal.setTime(lDate);
+							int sDay = sdl.weekdayNum().intValue();
+							if(sDay > week)
+								sDay -= week;
+							if(sDay == ScheduleEntry.weekday(cal, week))
+								sdlLessons++;
+						} // course.lessons enumeration
+						if(totalLessons == 0)
+							lessons = null;
+						else
+							nolessons = (sdlLessons == 0);
+					} 
+					if (lessons == null || lessons.count() == 0){
+						nolessons = EduPeriod.activeDaysInDates(since, date, listName, ec) < week;
+					}
+		    		NSTimestamp yesterday = date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
+					if(sdl.isTemporary() || nolessons) {
 						if(pool == null)
 							pool = new NSMutableArray(sdl);
 						else
@@ -510,7 +555,7 @@ public class Timetable extends LessonList {
 					} else {
 						valid = sdl.validTo();
 						if(valid != null && valid.before(date)) {
-							if(valid.after(lately))
+							if(EduPeriod.activeDaysInDates(valid, date, listName, ec) < week)
 								sdl.setValidTo(null);
 							else
 								toAdd.addObject(index);
@@ -518,9 +563,17 @@ public class Timetable extends LessonList {
 					}
 				}
 			}
-    	} // delete
+    	}
     	if(toAdd.count() > 0) { // add
     		Enumeration enu = toAdd.objectEnumerator();
+    		boolean hasdate = (found != null && found.count() > 0
+    				&& lessons != null && lessons.count() > 0);
+    		if(hasdate) {
+    			quals[0] = new EOKeyValueQualifier("date",
+    					EOQualifier.QualifierOperatorLessThan, date);
+    			lessons = EOQualifier.filteredArrayWithQualifier(lessons, quals[0]);
+    			hasdate = (lessons != null && lessons.count() > 0);
+    		}
     		while (enu.hasMoreElements()) {
 				Integer index = (Integer) enu.nextElement();
 				ScheduleEntry sdl = null;
@@ -539,7 +592,8 @@ public class Timetable extends LessonList {
 				sdl.setWeekdayNum(new Integer(num));
 				num = index.intValue()%100;
 				sdl.setNum(new Integer(num));
-				sdl.setValidSince(date);
+				if(hasdate)
+					sdl.setValidSince(date);
 			}
     	}
     	if(pool != null) { // delete from pool
