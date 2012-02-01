@@ -30,7 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.interfaces.*;
-import net.rujel.reports.ReportsModule;
+import net.rujel.reports.StudentReports;
 import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
@@ -38,9 +38,6 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.text.FieldPosition;
 import java.text.Format;
 import java.util.Enumeration;
@@ -477,64 +474,18 @@ public class Overview extends WOComponent {
 	public NSKeyValueCoding reporter;
 	public NSKeyValueCoding reporterItem;
 	
-	protected NSMutableArray reporters;
+	protected StudentReports reporters;
 	public NSArray reporterList() {
 		if(reporters == null) {
-			Object title = null;
-			if(reporter != null) {
-				title = reporter.valueForKey("id");
+			reporters = new StudentReports(session());
+			if(reporter == null) {
+				reporters.reporterList();
+				reporter = reporters.defaultReporter();
+//			} else {
+//				reporter = reporters.getReporter((String)reporter.valueForKey("id"));
 			}
-//			reporter = (NSDictionary)session().valueForKeyPath(
-//					"strings.Strings.Overview.defaultReporter");
-			reporters = new NSMutableArray();
-			NSArray list = (NSArray)session().valueForKeyPath("modules.studentReporter");
-			if(list != null && list.count() > 0)
-				reporters.addObjectsFromArray(list);
-			EOQualifier qual = new EOKeyValueQualifier("id",
-					EOQualifier.QualifierOperatorNotEqual, null);
-			list = ReportsModule.reportsFromDir("StudentReport", session(), qual);
-			if(list != null && list.count() > 0)
-				reporters.addObjectsFromArray(list);
-			if(reporters.count() > 1) {
-	    		EOSortOrdering.sortArrayUsingKeyOrderArray(reporters, ModulesInitialiser.sorter);
-			}
-			NSDictionary settings = null;
-			if(title == null) {
-				File file = new File(ReportsModule.reportsFolder(),
-						"StudentReport/defaultSettings.plist");
-				if(file.exists()) {
-    				try {
-						FileInputStream fis = new FileInputStream(file);
-						NSData data = new NSData(fis, fis.available());
-						fis.close();
-						settings = (NSDictionary)NSPropertyListSerialization.propertyListFromData(
-								data, "utf8");
-						title = settings.valueForKey("reporterID");
-					} catch (IOException e) {
-						logger.log(WOLogLevel.WARNING,
-								"Error reading defaultSettings for StudentReport",
-								new Object[] {session(),file,e});
-					}
-				}
-			}
-			if(title == null)
-				title = "default";
-			Enumeration enu = reporters.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				reporter = (NSKeyValueCoding)enu.nextElement();
-				if(title.equals(reporter.valueForKey("id"))) {
-					if(settings != null) {
-//						settings = PlistReader.cloneDictionary(settings, true);
-						settings = ReporterSetup.synchronizeReportSettings((NSMutableDictionary)settings,
-								reporter, false, true);
-						reporter.takeValueForKey(settings, "settings");
-					}
-					return reporters;
-				}
-			}
-			reporter = (NSKeyValueCoding)reporters.objectAtIndex(0);
 		}
-		return reporters;
+		return reporters.reporterList();
 	}
 	
 	public boolean reporterIsCurr() {

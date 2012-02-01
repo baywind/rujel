@@ -29,6 +29,7 @@
 
 package net.rujel.contacts;
 
+import net.rujel.reports.StudentReports;
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
@@ -44,7 +45,6 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.*;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
 import java.text.FieldPosition;
@@ -185,6 +185,12 @@ public class EMailBroadcast implements Runnable{
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
 		if(reporter == null) {
+			WOSession ses = null;
+			if(ec instanceof SessionedEditingContext) 
+				ses = ((SessionedEditingContext)ec).session();
+			StudentReports reports = new StudentReports(ses);
+			reporter = (NSDictionary)reports.defaultReporter();
+			/*
 			String root = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
 			root = Various.convertFilePath(root);
 			File dir = new File(root,"StudentReport");
@@ -203,7 +209,7 @@ public class EMailBroadcast implements Runnable{
 				}
 			}
 			if(reporterID != null) {
-				file = new File(dir,reporterID + "plist");
+				file = new File(dir,reporterID + ".plist");
 				if(file.exists()) {
 					try {
 						reporter = (NSDictionary)PlistReader.readPlist(
@@ -240,6 +246,7 @@ public class EMailBroadcast implements Runnable{
 			if(settings != null) {
 				reporter.takeValueForKey(settings, "settings");
 			}
+			*/
 		} // get default reporter
 //		ec.unlock();
 		idx = -1;
@@ -491,6 +498,10 @@ gr:		while (eduGroups.hasMoreElements()) {
 		}
 		
 		NSDictionary reporter = (NSDictionary)params.valueForKey("reporter");
+		if(reporter == null) {
+			StudentReports reports = new StudentReports(ses);
+			reporter = (NSDictionary)reports.defaultReporter();
+		}
 		String groupName = (String)params.valueForKey("groupName");
 		
 		long timeout = 0;
@@ -581,7 +592,13 @@ gr:		while (eduGroups.hasMoreElements()) {
 				//testfile
 				String mailDir = SettingsReader.stringForKeyPath("mail.writeFileDir", null);
 				mailDir = Various.convertFilePath(mailDir);
-				File messageFile = new File(mailDir,"_data_" + eduGroup.name() + ".xml");
+				StringBuilder fileName = new StringBuilder("_data_");
+				if(eduGroup == null)
+					fileName.append("noGroup");
+				else
+					fileName.append(eduGroup.name());
+				fileName.append(".xml");
+				File messageFile = new File(mailDir,fileName.toString());
 				FileOutputStream fos = new FileOutputStream(messageFile);
 				fos.write(xmlData);
 				fos.close();

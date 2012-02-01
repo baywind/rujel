@@ -60,8 +60,8 @@ public class RequestMail extends WODirectAction {
 		NSMutableDictionary params = new NSMutableDictionary();
 		NSTimestamp date = new NSTimestamp();
 		params.takeValueForKey(date, "date");
-		params.takeValueForKey(WOApplication.application().valueForKeyPath(
-						"strings.Strings.Overview.defaultReporter"), "reporter");
+//		params.takeValueForKey(WOApplication.application().valueForKeyPath(
+//						"strings.Strings.Overview.defaultReporter"), "reporter");
 		
 		EOEditingContext ec = new EOEditingContext();
 		ec.lock();
@@ -69,6 +69,7 @@ public class RequestMail extends WODirectAction {
 			Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec, 
 					Student.entityName, studentID);
 			params.takeValueForKey(ec, "editingContext");
+			params.takeValueForKey(student.recentMainEduGroup(), "eduGroup");
 			params.takeValueForKey(new NSArray(student), "students");
 			EduGroup gr = student.recentMainEduGroup();
 			{

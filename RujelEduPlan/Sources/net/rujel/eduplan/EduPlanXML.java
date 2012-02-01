@@ -66,8 +66,10 @@ public class EduPlanXML extends GeneratorModule {
 			
 		} else {
 			NSArray cycles = PlanCycle.cyclesForEduGroup(gr);
-			if(cycles == null || cycles.count() == 0)
+			if(cycles == null || cycles.count() == 0) {
+				handler.endElement("eduPlan");
 				return;
+			}
 			Enumeration enu = cycles.objectEnumerator();
 			Subject subj = null;
 			while (enu.hasMoreElements()) {
