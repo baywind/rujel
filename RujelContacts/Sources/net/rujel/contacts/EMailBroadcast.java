@@ -44,8 +44,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
 import java.text.FieldPosition;
 import java.text.Format;
@@ -589,6 +587,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 				xmlData = XMLGenerator.generate(ses, settings);
 				if(counters.count() == 0)
 					return;
+				/*
 				//testfile
 				String mailDir = SettingsReader.stringForKeyPath("mail.writeFileDir", null);
 				mailDir = Various.convertFilePath(mailDir);
@@ -601,7 +600,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 				File messageFile = new File(mailDir,fileName.toString());
 				FileOutputStream fos = new FileOutputStream(messageFile);
 				fos.write(xmlData);
-				fos.close();
+				fos.close(); */
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Failed to generate group xmlData", 
 						new Object[] {ses,settings,e});
