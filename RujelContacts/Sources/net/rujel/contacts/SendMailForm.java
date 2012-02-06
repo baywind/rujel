@@ -172,14 +172,17 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		if(attach) {
 			param.takeValueForKey(dict.valueForKey("reporter"), "reporter");
 			param.takeValueForKey(dict.valueForKey("courses"), "courses");
+			
 			param.takeValueForKey(dict.valueForKey("period"), "period");
 			param.takeValueForKey(dict.valueForKey("since"), "since");
 			param.takeValueForKey(dict.valueForKey("to"), "to");
 			logParam.takeValueForKey(dict.valueForKeyPath("reporter.title"),"type");
 		}
 		EduGroup eduGroup = (EduGroup)dict.valueForKey("eduGroup");
-		if(eduGroup != null)
+		if(eduGroup != null) {
+			param.takeValueForKey(eduGroup, "eduGroup");
 			param.takeValueForKey(eduGroup.name(), "groupName");
+		}
 		param.takeValueForKey(session().valueForKey("today"), "date");
 		param.takeValueForKey(text, "messageText");
 		param.takeValueForKey(subject, "subject");

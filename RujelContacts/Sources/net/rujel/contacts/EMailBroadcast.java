@@ -498,7 +498,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 		}
 		
 		NSDictionary reporter = (NSDictionary)params.valueForKey("reporter");
-		if(reporter == null) {
+		if(reporter != null && reporter.count() == 0) {
 			StudentReports reports = new StudentReports(ses);
 			reporter = (NSDictionary)reports.defaultReporter();
 		}

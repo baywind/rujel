@@ -60,8 +60,7 @@ public class RequestMail extends WODirectAction {
 		NSMutableDictionary params = new NSMutableDictionary();
 		NSTimestamp date = new NSTimestamp();
 		params.takeValueForKey(date, "date");
-//		params.takeValueForKey(WOApplication.application().valueForKeyPath(
-//						"strings.Strings.Overview.defaultReporter"), "reporter");
+		params.takeValueForKey(NSDictionary.EmptyDictionary, "reporter");
 		
 		EOEditingContext ec = new EOEditingContext();
 		ec.lock();
