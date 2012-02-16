@@ -2,7 +2,12 @@ package net.rujel.autoitog;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 
 import net.rujel.base.SettingsBase;
@@ -61,8 +66,17 @@ public class ItogLock implements Modifier {
 		}
 		if(listName == null)
 			return null;
-		AutoItog ai = AutoItog.forListName(listName, container);
-		if(ai != null)
+		EOQualifier quals[] = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
+				EOQualifier.QualifierOperatorEqual, listName);
+		quals[1] = new EOKeyValueQualifier(AutoItog.ITOG_CONTAINER_KEY,
+				EOQualifier.QualifierOperatorEqual, container);
+		quals[2] = new EOKeyValueQualifier(AutoItog.FLAGS_KEY,
+				EOQualifier.QualifierOperatorLessThan, new Integer(32));
+		quals[0] = new EOAndQualifier(new NSArray (quals));
+		EOFetchSpecification fs = new EOFetchSpecification(AutoItog.ENTITY_NAME,quals[0],null);
+		NSArray found = container.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0)
 			return ItogMark.ENTITY_NAME.concat("@prognosed");
 		return null;
 	}
