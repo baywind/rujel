@@ -268,8 +268,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 				EOEnterpriseObject pd = (EOEnterpriseObject) enu.nextElement();
 				EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
 				if(per.contains(date)) {
-					Number hours = (Number)pd.valueForKey("hours");
-					return hours.intValue();
+					Number hours = (Number)pd.valueForKey("weekly");
+					return Math.abs(hours.intValue());
 				}
 			}
 			return 0;
