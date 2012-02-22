@@ -87,6 +87,15 @@ public class SchedulePopup extends WOComponent {
     public WOActionResults noAction() {
 		return RedirectPopup.getRedirect(context(), returnPage);
     }
+
+    public WOActionResults withAction() {
+    	try {
+    		returnPage.valueForKeyPath("weekFootprint.reset");
+    	} catch (Exception e) {
+		}
+		return null;
+    }
+
     
 	public String groupClass() {
 		if(forClass != null)

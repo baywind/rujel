@@ -6,6 +6,7 @@
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
 	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
 	<classpathentry kind="con" path="WOFramework/RujelReports"/>
+	<classpathentry kind="con" path="WOFramework/RujelSchedule"/>
 	<classpathentry kind="con" path="WOFramework/JavaWOExtensions"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>

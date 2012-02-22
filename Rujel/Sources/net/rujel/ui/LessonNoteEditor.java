@@ -32,6 +32,7 @@ package net.rujel.ui;
 import net.rujel.interfaces.*;
 import net.rujel.base.BaseTab;
 import net.rujel.base.MyUtility;
+import net.rujel.curriculum.WeekFootprint;
 
 import net.rujel.reusables.*;
 import net.rujel.reusables.Tabs.GenericTab;
@@ -49,6 +50,7 @@ import com.webobjects.foundation.NSMutableArray;
 public class LessonNoteEditor extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
 	public EduCourse course;
+	public WeekFootprint weekFootprint;
 	private PerPersonLink currPerPersonLink;
 
 	public EduLesson currLesson() {
@@ -202,6 +204,7 @@ public class LessonNoteEditor extends WOComponent {
 	public void setCourse(EduCourse aCourse) {
 		if (aCourse == null) {
 			course = null;
+			weekFootprint = null;
 			return;
 		}
 		if(ec == aCourse.editingContext())
@@ -226,6 +229,7 @@ public class LessonNoteEditor extends WOComponent {
 				}
 			}
 		}
+		weekFootprint = new WeekFootprint(course);
 		
 		if(accessInterface().flagForKey("rightSide") && !accessInterface().flagForKey("leftSide"))
 			regime = LONGLIST;
@@ -575,6 +579,8 @@ public class LessonNoteEditor extends WOComponent {
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
 					}
+					if(weekFootprint != null)
+						weekFootprint.addObject(currLesson());
 					if(reset) {
 //						if(_currTab != null && currLesson() != null
 //								&& !_currTab.qualifier().evaluateWithObject(currLesson()))
@@ -698,7 +704,8 @@ public class LessonNoteEditor extends WOComponent {
 				ec.saveChanges();
 				if(idx >= 0)
 					fullList.removeObjectAtIndex(idx);
-				
+				if(weekFootprint != null)
+					weekFootprint.reset();
 				session().setObjectForKey(dict, "objectSaved");
 				session().valueForKeyPath("modules.objectSaved");
 				session().removeObjectForKey("objectSaved");

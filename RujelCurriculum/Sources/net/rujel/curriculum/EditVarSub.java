@@ -156,6 +156,15 @@ public class EditVarSub extends WOComponent {
     	}
        	return RedirectPopup.getRedirect(context(), returnPage);
     }
+    
+    public WeekFootprint weekFootprint() {
+		WeekFootprint footprint = null;
+		try {
+			footprint = (WeekFootprint)returnPage.valueForKey("weekFootprint");
+		} catch (Exception e) {
+		}
+		return footprint;
+    }
 
     public WOActionResults save() {
 		if(reason == null) {
@@ -172,10 +181,12 @@ public class EditVarSub extends WOComponent {
 		variation.setValue(new Integer(1));
 		boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+		WeekFootprint weekFootprint = weekFootprint();
 		boolean changed = ec.hasChanges();
 		if(changed) {
 		try {
 			ec.saveChanges();
+			if(weekFootprint != null) weekFootprint.reset();
 	       	Curriculum.logger.log(WOLogLevel.EDITING,"Positive Variation saved",
 	       			new Object[] {session(),variation});
 			if(!noRelieve) {
@@ -183,7 +194,7 @@ public class EditVarSub extends WOComponent {
 				if(usr == null)
 					usr = "??" + Person.Utility.fullName(
 							toCourse.teacher(), true, 2, 1, 1);
-				Reprimand.autoRelieve(toCourse, date, usr);
+				Reprimand.autoRelieve(toCourse, date, usr, weekFootprint);
 			}
 		} catch (Exception e) {
 			ec.revert();
@@ -263,12 +274,13 @@ public class EditVarSub extends WOComponent {
     			ec.saveChanges();
     	       	Curriculum.logger.log(WOLogLevel.EDITING,"VarSub reverse Variation created",
     	       			new Object[] {session(),back});
+    	       	if(weekFootprint != null) weekFootprint.reset();
     			if(!noRelieve) {
     				String usr = (String)session().valueForKeyPath("user.present");
     				if(usr == null)
     					usr = "??" + Person.Utility.fullName(
     							toCourse.teacher(), true, 2, 1, 1);
-    				Reprimand.autoRelieve(fromCourse, date, usr);
+    				Reprimand.autoRelieve(fromCourse, date, usr, null);
     			}
     		} catch (Exception e) {
     			ec.revert();
@@ -373,6 +385,8 @@ public class EditVarSub extends WOComponent {
 			ec.saveChanges();
 	       	Curriculum.logger.log(WOLogLevel.EDITING,"Positive Variation deleted",
 	       			new Object[] {session(),lesson});
+			WeekFootprint weekFootprint = weekFootprint();
+			if(weekFootprint != null) weekFootprint.reset();
 			boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
 				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!noRelieve) {
@@ -380,7 +394,7 @@ public class EditVarSub extends WOComponent {
 				if(usr == null)
 					usr = "??" + Person.Utility.fullName(
 							toCourse.teacher(), true, 2, 1, 1);
-				Reprimand.autoRelieve(toCourse, date, usr);
+				Reprimand.autoRelieve(toCourse, date, usr, weekFootprint);
 			}
 		} catch (Exception e) {
 			ec.revert();

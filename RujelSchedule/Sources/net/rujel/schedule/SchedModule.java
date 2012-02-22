@@ -196,6 +196,8 @@ public class SchedModule {
 	}
 
 	public static NSDictionary assumeNextLesson(WOContext ctx) {
+		if(ctx.session().valueForKeyPath("modules.@CurriculumModule") != null)
+			return null;
 		EOEnterpriseObject obj = (EOEnterpriseObject)ctx.session().objectForKey("assumeNextLesson");
 		EduCourse course = null;
 		EOEditingContext ec = obj.editingContext();

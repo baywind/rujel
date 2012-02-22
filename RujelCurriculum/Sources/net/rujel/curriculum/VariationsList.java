@@ -45,6 +45,7 @@ public class VariationsList extends WOComponent {
 	
 	public WOComponent returnPage;
 	public EduCourse course;
+	public WeekFootprint weekFootprint;
 	public NSKeyValueCoding item;
 	public String date;
 	public Integer value;
@@ -99,7 +100,8 @@ public class VariationsList extends WOComponent {
     	date = MyUtility.dateFormat().format(recentDate);
 
     	if(planFact == null)
-    		planFact = VariationsPlugin.planFact(course, today);
+    		planFact = VariationsPlugin.planFact(course, today, weekFootprint);
+    	planFact.takeValueForKey(weekFootprint.suggestVars(), "suggest");
     	super.appendToResponse(aResponse, aContext);
 //    	session().takeValueForKey(null, "message");
     }

@@ -157,6 +157,15 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
        	return RedirectPopup.getRedirect(context(), returnPage);
     }
     
+    public WeekFootprint weekFootprint() {
+		WeekFootprint footprint = null;
+		try {
+			footprint = (WeekFootprint)returnPage.valueForKey("weekFootprint");
+		} catch (Exception e) {
+		}
+		return footprint;
+    }
+    
     public WOActionResults save() {
     	if(date == null || !MyUtility.dateFormat().format(date).equals(oldDate))
     		return updateDate();
@@ -187,6 +196,8 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 			ec.saveChanges();
 			Curriculum.logger.log(WOLogLevel.EDITING,"Negative variation saved",
 					new Object[] {session(),variation});
+			WeekFootprint weekFootprint = weekFootprint();
+			if(weekFootprint != null) weekFootprint.reset();
 			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
 			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!disable) {
@@ -194,7 +205,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 				if(usr == null)
 					usr = "??" + Person.Utility.fullName(
 							course.teacher(), true, 2, 1, 1);
-				Reprimand.autoRelieve(course, date, usr);
+				Reprimand.autoRelieve(course, date, usr, weekFootprint);
 			}
 		} catch (Exception e) {
 			ec.revert();
@@ -221,6 +232,8 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 			Curriculum.logger.log(WOLogLevel.EDITING,"Negative variation deleted (" + 
 					MyUtility.dateFormat().format(date) + ')',
 					new Object[] {session(),course});
+			WeekFootprint weekFootprint = weekFootprint();
+			if(weekFootprint != null) weekFootprint.reset();
 			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
 			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!disable) {
@@ -228,7 +241,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 				if(usr == null)
 					usr = "??" + Person.Utility.fullName(
 							course.teacher(), true, 2, 1, 1);
-				Reprimand.autoRelieve(course, date, usr);
+				Reprimand.autoRelieve(course, date, usr, weekFootprint);
 			}
  		} catch (Exception e) {
 			ec.revert();

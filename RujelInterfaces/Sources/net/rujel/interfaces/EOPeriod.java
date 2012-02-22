@@ -141,6 +141,13 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 		public static int compareDates(Date first, Date second) {
 			long firstLong = (first == null)?System.currentTimeMillis():first.getTime();
 			long secondLong = (second == null)?System.currentTimeMillis():second.getTime();
+			return compareDates(firstLong, first == null, secondLong, second == null);
+		}
+		public static int compareDates(long firstLong, long secondLong) {
+			return compareDates(firstLong, false, secondLong, false);
+		}
+		public static int compareDates(long firstLong, boolean firstNull,
+				long secondLong, boolean secondNull) {
 			long a = firstLong - secondLong;
 			if(a==0)
 				return 0;
@@ -150,11 +157,11 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			Calendar cal = Calendar.getInstance();
 			cal.setTimeInMillis(firstLong);
 			int day = cal.get(Calendar.DAY_OF_YEAR);
-			if(first == null && cal.get(Calendar.HOUR_OF_DAY) < 
+			if(firstNull && cal.get(Calendar.HOUR_OF_DAY) < 
 					SettingsReader.intForKeyPath("edu.midnightHour", 5))
 				day--;
 			cal.setTimeInMillis(secondLong);
-			if(second == null && cal.get(Calendar.HOUR_OF_DAY) < 
+			if(secondNull && cal.get(Calendar.HOUR_OF_DAY) < 
 					SettingsReader.intForKeyPath("edu.midnightHour", 5))
 				day++;
 			if(day == cal.get(Calendar.DAY_OF_YEAR))

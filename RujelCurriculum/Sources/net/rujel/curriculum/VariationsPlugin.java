@@ -32,21 +32,17 @@ package net.rujel.curriculum;
 import java.util.Calendar;
 import java.util.Enumeration;
 
-import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.*;
 import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
-import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.Period;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
@@ -71,8 +67,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	NSTimestamp today = (NSTimestamp)session().valueForKey("today");
     	EduCourse course = (EduCourse)valueForBinding("course");
-    	
-    	planFact = planFact(course, today);
+    	WeekFootprint weekFootprint = (WeekFootprint)valueForBinding("weekFootprint");
+    	planFact = planFact(course, today, weekFootprint);
     	super.appendToResponse(aResponse, aContext);
     }
 
@@ -91,6 +87,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		WOComponent popup = pageWithName("VariationsList");
 		popup.takeValueForKey(valueForBinding("course"), "course");
 		popup.takeValueForKey(context().page(), "returnPage");
+		popup.takeValueForKey(valueForBinding("weekFootprint"),"weekFootprint");
 //		popup.takeValueForKey(valueForBinding("currLesson"), "currLesson");
 //		popup.takeValueForKey(valueForBinding("currTab"), "currTab");
 		//popup.takeValueForKey(planFact, "planFact");
@@ -242,6 +239,10 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public static NSDictionary planFact(EduCourse course, NSTimestamp date) {
+		return planFact(course, date, null);
+	}
+	public static NSDictionary planFact(EduCourse course, NSTimestamp date,
+			WeekFootprint weekFootprint) {
 		int minPlan = 0;
 		int plan = 0;
 		int maxDev = 0;
@@ -403,91 +404,10 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		result.takeValueForKey(new Integer(minPlan), "minPlan");
 
 //		NSTimestamp refDate = new NSTimestamp(cal.getTimeInMillis());
-		if(date != null && extraDays > 0) {  // calculate last week 
-			cal.add(Calendar.DATE, weekDays +1);
-			NSDictionary dict = Reprimand.prepareDict(new NSTimestamp(cal.getTimeInMillis()), 
-					listName, ec, weekDays, weekStart);
-			EduPeriod per = (dict==null)?null:(EduPeriod)dict.valueForKey("eduPeriod");
-			if(per != null) {
-				EOQualifier[] quals = (EOQualifier[])dict.valueForKey("prevQualifier");
-				if(quals != null) {
-					int[] currWeek = new int[weekDays];
-					int ref = ((Integer)dict.valueForKey("prevRef")).intValue();
-
-					quals[2] = new EOKeyValueQualifier("course",
-							EOQualifier.QualifierOperatorEqual,course);
-					quals[2] = new EOAndQualifier(new NSArray(quals));
-					EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName,
-							quals[2],MyUtility.dateSorter);
-					list = ec.objectsWithFetchSpecification(fs);
-					Reprimand.putLessons(list, ref, currWeek, -1);
-					fs.setEntityName(Variation.ENTITY_NAME);
-					list = ec.objectsWithFetchSpecification(fs);
-					Reprimand.putVariations(list, ref, currWeek,verifiedOnly > 0, -1);
-					NSArray holidays = (NSArray)dict.valueForKey("holidays");
-					cal.setTimeInMillis(startDate);
-					weekPlan:
-					for (int i = 0; i < currWeek.length; i++) {
-						if(cal.getTimeInMillis() > date.getTime())
-							break;
-						cal.add(Calendar.DATE, 1);
-						if(currWeek[i] == 0)
-							continue;
-						if(!per.contains(cal.getTime()) && periods != null) {
-							Enumeration penu = periods.objectEnumerator();
-							while (penu.hasMoreElements()) {
-								EduPeriod perd = (EduPeriod) penu.nextElement();
-								if(perd.contains(cal.getTime())) {
-									penu = null;
-									break;
-								}
-							}
-							if(penu != null)
-								continue weekPlan;
-						}
-						if(holidays != null) {
-							Enumeration henu = holidays.objectEnumerator();
-							while (henu.hasMoreElements()) {
-								Holiday hd = (Holiday) henu.nextElement();
-								if(hd.contains(cal.getTime()))
-									continue weekPlan;
-							}
-						}
-						plan -= currWeek[i];
-					}
-					
-					ref = ((Integer)dict.valueForKey("refDay")).intValue();
-					quals = (EOQualifier[])dict.valueForKey("weekQualifier");
-					quals[2] = new EOKeyValueQualifier("course",
-							EOQualifier.QualifierOperatorEqual,course);
-					quals[2] = new EOAndQualifier(new NSArray(quals));
-					fs = new EOFetchSpecification(EduLesson.entityName,
-							quals[2],MyUtility.dateSorter);
-					list = ec.objectsWithFetchSpecification(fs);
-					Reprimand.putLessons(list, ref, currWeek, 1);
-					fs.setEntityName(Variation.ENTITY_NAME);
-					list = ec.objectsWithFetchSpecification(fs);
-					Reprimand.putVariations(list, ref, currWeek,verifiedOnly > 0, 1);
-					NSMutableArray suggest = new NSMutableArray();
-					cal.setTimeInMillis(startDate);
-					for (int i = 0; i < currWeek.length; i++) {
-						if(cal.getTimeInMillis() > date.getTime())
-							break;
-						cal.add(Calendar.DATE, 1);
-						if(currWeek[i] != 0) {
-							NSMutableDictionary sg = new NSMutableDictionary();
-							sg.takeValueForKey(
-									new NSTimestamp(cal.getTimeInMillis()), "date");
-							sg.takeValueForKey(new Integer(currWeek[i]),"value");
-							if(currWeek[i] > 0)
-								sg.takeValueForKey(Boolean.TRUE, "positive");
-							suggest.addObject(sg);
-						}
-					}
-					if(suggest.count() > 0)
-						result.takeValueForKey(suggest, "suggest");
-				}
-			}
+		if(date != null && extraDays > 0) {  // calculate last week
+			if(weekFootprint == null)
+				weekFootprint = new WeekFootprint(course);
+			plan += weekFootprint.assumedTillDate(date);
 		}  // calculate last week 
 		result.takeValueForKey(new Integer(plan), "plan");
 		fact = fact - (plus - minus);
