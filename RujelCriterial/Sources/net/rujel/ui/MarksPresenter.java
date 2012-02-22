@@ -447,10 +447,16 @@ public class MarksPresenter extends NotePresenter {
 		Mark mark = lesson().markForStudentAndCriterion(student(),activeCriterion);
 		if(mark != null)
 			return mark.present();
-		if(lesson().usedCriteria().contains(activeCriterion))
+		if(activeCriterion.intValue() == 0) {
+			String result = lesson().integralForStudent(student(),lesson().integralPresenter());
+			if(result == null && lesson().isCompulsory() && lesson().hasWeight())
+				result = ".";
+			return result;
+		}
+		if(lesson().usedCriteria().contains(activeCriterion) && 
+				(lesson().forPersonLink(student()) != null ||
+				(lesson().isCompulsory() && lesson().hasWeight())))
 			return ".";
-		if(activeCriterion.intValue() == 0)
-			return lesson().integralForStudent(student(),lesson().integralPresenter());
 		return null;
     }
 
