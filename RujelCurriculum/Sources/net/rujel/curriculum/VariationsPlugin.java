@@ -399,14 +399,17 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey(new Integer(plus - minus), "netChange");
 			plan = minPlan;
 		} // accont for variations
-		if(extraDays == 0)
+		if(weekFootprint == null)
+			weekFootprint = new WeekFootprint(course);
+		if(extraDays == 0) {
 			minPlan -= maxDev;
+			weekFootprint.setDate(date);
+			weekFootprint.checkWeek(null);
+		}
 		result.takeValueForKey(new Integer(minPlan), "minPlan");
 
 //		NSTimestamp refDate = new NSTimestamp(cal.getTimeInMillis());
 		if(date != null && extraDays > 0) {  // calculate last week
-			if(weekFootprint == null)
-				weekFootprint = new WeekFootprint(course);
 			plan += weekFootprint.assumedTillDate(date);
 		}  // calculate last week 
 		result.takeValueForKey(new Integer(plan), "plan");

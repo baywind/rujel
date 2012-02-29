@@ -98,6 +98,9 @@ public class VariationsList extends WOComponent {
     	if(recentDate == null)
     		recentDate = today;
     	date = MyUtility.dateFormat().format(recentDate);
+    	if(weekFootprint == null)
+    		weekFootprint = new WeekFootprint(course);
+    	weekFootprint.setDate(today);
 
     	if(planFact == null)
     		planFact = VariationsPlugin.planFact(course, today, weekFootprint);

@@ -105,11 +105,12 @@ public class Reprimand extends _Reprimand {
 		try {
 			SettingsBase weekStart = SettingsBase.baseForKey("weekStart", ec, false);
 			int testDay = Calendar.MONDAY;
-			if(weekStart != null && weekStart.isSingle()) {
+			if(weekStart != null) {
 				Integer num = weekStart.numericValue();
 				if(num != null)
 					testDay = num.intValue();
-				weekStart = null;
+				if(weekStart.isSingle())
+					weekStart = null;
 			}
 			if(cal.get(Calendar.DAY_OF_WEEK) != testDay) {
 				if(weekStart == null)
@@ -143,10 +144,8 @@ public class Reprimand extends _Reprimand {
 			}
 			cal.add(Calendar.DATE, -2);
 			NSTimestamp day = new NSTimestamp(cal.getTimeInMillis());
-			SettingsBase devForRpr = SettingsBase.baseForKey(
-					"deviationForReprimand", ec, false);
-			SettingsBase widget = SettingsBase.baseForKey(
-					"PlanFactWidget", ec, false);
+			SettingsBase devForRpr = SettingsBase.baseForKey("deviationForReprimand", ec, false);
+			SettingsBase widget = SettingsBase.baseForKey("PlanFactWidget", ec, false);
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) { // all courses
 				EduCourse course = (EduCourse) enu.nextElement();
@@ -200,8 +199,7 @@ public class Reprimand extends _Reprimand {
 				if(list != null && list.count() > 0) {
 					rpr = (Reprimand)list.objectAtIndex(0);
 				} else {
-					rpr = (Reprimand) EOUtilities
-						.createAndInsertInstance(ec, ENTITY_NAME);
+					rpr = (Reprimand) EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
 					rpr.setCourse(course);
 					rpr.setAuthor(author);
 				}

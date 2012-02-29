@@ -33,6 +33,7 @@ import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
@@ -44,9 +45,12 @@ import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.WOLogFormatter;
+import net.rujel.reusables.WOLogLevel;
 import net.rujel.schedule.ScheduleEntry;
 
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
@@ -245,6 +249,7 @@ public class WeekFootprint {
 		NSArray periods = EduPeriod.periodsInList(listName, ec); 
 		if(periods == null || periods.count() == 0)
 			periods = EduPeriod.defaultPeriods(ec);
+		boolean createdReason = false;
 		if(periods != null && periods.count() > 0) {
 			NSArray holidays = Holiday.holidaysInDates(begin, end, ec, listName);
 			Enumeration penu = periods.objectEnumerator();
@@ -254,6 +259,7 @@ public class WeekFootprint {
 			active = new boolean[week];
 			EduPeriod per = (EduPeriod)penu.nextElement();
 			Holiday hd = (henu == null)?null:(Holiday)henu.nextElement();
+			Reason reason = null;
 			for (int i = 0; i < week; i++) {
 				while (penu != null && EOPeriod.Utility.compareDates(
 						per.end().getTime(), cal.getTimeInMillis()) < 0) {
@@ -264,15 +270,9 @@ public class WeekFootprint {
 					}
 				}
 				active[i] = true;
-				if(penu == null) {
-					active[i] = false;
-					if(real[i] == null)
-						real[i] = new NSMutableArray(per);
-					else
-						real[i].addObject(per);
-					cal.add(Calendar.DATE, 1);
-					continue;
-				}
+				if(reason != null && EOPeriod.Utility.compareDates(
+						reason.end().getTime(), cal.getTimeInMillis()) < 0)
+					reason = null;
 				if(hd != null) {
 					while(EOPeriod.Utility.compareDates(
 							hd.end().getTime(),cal.getTimeInMillis()) < 0) {
@@ -287,15 +287,80 @@ public class WeekFootprint {
 					if(hd != null && EOPeriod.Utility.compareDates(
 							hd.begin().getTime(),cal.getTimeInMillis()) <= 0) {
 						active[i] = false;
-						if(real[i] == null)
-							real[i] = new NSMutableArray(hd);
-						else
-							real[i].addObject(hd);
+						reason = Reason.reasonForHoliday(hd, true);
 					}
+				}
+				if(active[i]) {
+					if(penu == null) {
+						active[i] = false;
+						if(reason == null)
+							reason = perReason(per,true);
+					} else if (EOPeriod.Utility.compareDates(
+							per.begin().getTime(), cal.getTimeInMillis()) > 0) {
+						active[i] = false;
+						if(reason == null)
+							reason = perReason(per,false);
+					}
+				}
+				if(!active[i] && reason != null) {
+					if(ec.globalIDForObject(reason).isTemporary())
+						createdReason = true;
+					if(real[i] == null)
+						real[i] = new NSMutableArray(reason);
+					else
+						real[i].addObject(reason);
 				}
 				cal.add(Calendar.DATE, 1);
 			}
 		}
+		
+		if(createdReason) {
+			Logger logger = Logger.getLogger("rujel.curriculum");
+			try {
+				NSArray added = ec.insertedObjects();
+				ec.saveChanges();
+				logger.log(WOLogLevel.INFO,"Autocreated Reason", added);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to save autocreated Reason",
+						new Object[] {course,e});
+			}
+		}
+	}
+	
+	private Reason perReason(EduPeriod per, boolean ifEnd) {
+		NSDictionary values = new NSDictionary(
+				new Object[] {WOLogFormatter.formatEO(per), new Integer(1)},
+				new String[] {Reason.VERIFICATION_KEY,Reason.FLAGS_KEY});
+		NSArray found = EOUtilities.objectsMatchingValues(ec,
+				Reason.ENTITY_NAME, values);
+		Reason reason = null;
+		if(found != null && found.count() > 0) {
+			for (int j = 0; j < found.count(); j++) {
+				Reason test = (Reason)found.objectAtIndex(j);
+				if((ifEnd)?EOPeriod.Utility.compareDates(per.end(), test.begin()) <= 0:
+					EOPeriod.Utility.compareDates(per.begin(), test.end()) >= 0) {
+					reason = test;
+					break;
+				}
+			}
+		}
+		if(reason == null) {
+			reason = (Reason)EOUtilities.createAndInsertInstance(ec, Reason.ENTITY_NAME);
+			reason.takeValuesFromDictionary(values);
+			if(ifEnd) {
+				reason.setBegin(per.end().timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0));
+				reason.setEnd(end);
+			} else {
+				reason.setEnd(per.begin().timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0));
+				reason.setBegin(begin);
+			}
+			reason.setReason((String)WOApplication.application().
+					valueForKeyPath((ifEnd)?
+					"strings.RujelCurriculum_Curriculum.titles.periodEnd":
+						"strings.RujelCurriculum_Curriculum.titles.periodstart") +
+					' ' + per.name());
+		}
+		return reason;
 	}
 	
 	public NSDictionary assumeNextLesson(EduLesson lesson) {
@@ -402,7 +467,7 @@ public class WeekFootprint {
 		NSMutableArray result = new NSMutableArray();
 		for (int i = 0; i < active.length; i++) {
 			int count = countReal(real[i]);
-			if (active[i] && assumed[i] != null)
+			if (assumed[i] != null)
 				count -= assumed[i].count();
 			if(count != 0) {
 				NSMutableDictionary sg = new NSMutableDictionary();
@@ -439,27 +504,50 @@ public class WeekFootprint {
 		NSArray weekdays = (buf == null)?null:(NSArray)WOApplication.application().valueForKeyPath(
 				"strings.Reusables_Strings.presets.weekdayShort");
 		FieldPosition fp = (buf == null)?null: new FieldPosition(SimpleDateFormat.DATE_FIELD);
-		Calendar cal = (buf == null)?null: Calendar.getInstance();
-		if(cal != null) cal.setTime(begin);
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(begin);
 		boolean hasDev = false;
 		for (int i = 0; i < active.length; i++) {
 			int count = countReal(real[i]);
 			sum += count;
-			if(buf == null)
-				continue;
-			if (active[i] && assumed[i] != null)
+			if (assumed[i] != null)
 				count -= assumed[i].count();
-			if(count != 0) {
+			if(count == 0) {
+				cal.add(Calendar.DATE, 1);
+				continue;
+			}
+			if (!active[i] && count < 0) {
+				Reason reason = null;
+				for (int j = 0; j < real[i].count(); j++) {
+					Object obj = real[i].objectAtIndex(j);
+					if(obj instanceof Reason) {
+						reason = (Reason)obj;
+						break;
+					}
+				}
+				if(reason != null) {
+					Variation var = (Variation)EOUtilities.createAndInsertInstance(ec,
+							Variation.ENTITY_NAME);
+					var.setCourse(course);
+					var.setReason(reason);
+					var.setDate(new NSTimestamp(cal.getTimeInMillis()));
+					var.setValue(new Integer(count));
+				}
+				sum -= count;
+				count = 0;
+			} else {
 				hasDev = true;
-				if(buf.length() > 0)
-					buf.append("\n");
-				if(count > 0)
-					buf.append('+');
-				buf.append(count);
-				buf.append(" : ");
-				buf.append(weekdays.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1));
-				buf.append(',').append(' ');
-				MyUtility.dateFormat().format(new NSTimestamp(cal.getTimeInMillis()), buf, fp);
+				if(buf != null) {
+					if(buf.length() > 0)
+						buf.append("\n");
+					if(count > 0)
+						buf.append('+');
+					buf.append(count);
+					buf.append(" : ");
+					buf.append(weekdays.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1));
+					buf.append(',').append(' ');
+					MyUtility.dateFormat().format(new NSTimestamp(cal.getTimeInMillis()), buf, fp);
+				}
 			}
 			known += count;
 			cal.add(Calendar.DATE, 1);
@@ -477,6 +565,17 @@ public class WeekFootprint {
 			buf.append(" - ");
 			fmt.format(end, buf, fp);
 			buf.append(']');
+		}
+		if(ec.hasChanges()) {
+			Logger logger = Logger.getLogger("rujel.curriculum");
+			try {
+				NSArray added = ec.insertedObjects();
+				ec.saveChanges();
+				logger.log(WOLogLevel.FINER,"Autocreated Variation", added);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to save autocreated Variarion",
+						new Object[] {course,e});
+			}
 		}
 		if(sum != plan)
 			return new Integer(sum - plan);
