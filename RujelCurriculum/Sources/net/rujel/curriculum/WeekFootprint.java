@@ -392,6 +392,7 @@ public class WeekFootprint {
 			setDate(lesson.date());
 		}
 		int day = ScheduleEntry.weekday(cal, assumed.length) - weekStart;
+		if(day < 0) day += assumed.length;
 		if(lesson != null) {
 			if(assumed[day] != null &&
 					assumed[day].count() > real[day].count()) {
