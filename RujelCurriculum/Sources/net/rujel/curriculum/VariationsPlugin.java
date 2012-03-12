@@ -404,7 +404,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		if(extraDays == 0) {
 			minPlan -= maxDev;
 			weekFootprint.setDate(date);
-			weekFootprint.checkWeek(null);
+			if(EOPeriod.Utility.compareDates(date, null) <= 0)
+				weekFootprint.checkWeek(null);
 		}
 		result.takeValueForKey(new Integer(minPlan), "minPlan");
 

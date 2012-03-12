@@ -507,6 +507,7 @@ public class WeekFootprint {
 		FieldPosition fp = (buf == null)?null: new FieldPosition(SimpleDateFormat.DATE_FIELD);
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(begin);
+		NSMutableArray toAdd = null;
 		boolean hasDev = false;
 		for (int i = 0; i < active.length; i++) {
 			int count = countReal(real[i]);
@@ -527,16 +528,19 @@ public class WeekFootprint {
 					}
 				}
 				if(reason != null) {
-					Variation var = (Variation)EOUtilities.createAndInsertInstance(ec,
-							Variation.ENTITY_NAME);
-					var.setCourse(course);
-					var.setReason(reason);
-					var.setDate(new NSTimestamp(cal.getTimeInMillis()));
-					var.setValue(new Integer(count));
+					NSMutableDictionary dict = new NSMutableDictionary(4);
+					dict.takeValueForKey(course, "course");
+					dict.takeValueForKey(reason, Variation.REASON_KEY);
+					dict.takeValueForKey(new NSTimestamp(cal.getTimeInMillis()),Variation.DATE_KEY);
+					dict.takeValueForKey(new Integer(count),Variation.VALUE_KEY);
+					if(toAdd == null)
+						toAdd = new NSMutableArray(dict);
+					else
+						toAdd.addObject(dict);
 				}
-				sum -= count;
+//				sum -= count;
 				count = 0;
-			} else {
+			} else { // known deviation
 				hasDev = true;
 				if(buf != null) {
 					if(buf.length() > 0)
@@ -549,9 +553,31 @@ public class WeekFootprint {
 					buf.append(',').append(' ');
 					MyUtility.dateFormat().format(new NSTimestamp(cal.getTimeInMillis()), buf, fp);
 				}
+				known += count;
 			}
-			known += count;
 			cal.add(Calendar.DATE, 1);
+		}
+		if(toAdd != null && sum < plan && toAdd.count() > 0) {
+			Enumeration enu = toAdd.objectEnumerator();
+			NSMutableArray added = new NSMutableArray();
+			while (enu.hasMoreElements() && sum < plan) {
+				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+				Integer value = (Integer)dict.valueForKey(Variation.VALUE_KEY);
+				sum -= value;
+				Variation var = (Variation)EOUtilities.createAndInsertInstance(ec,
+						Variation.ENTITY_NAME);
+				var.takeValuesFromDictionary(dict);
+				added.addObject(var);
+			}
+			Logger logger = Logger.getLogger("rujel.curriculum");
+			try {
+				ec.saveChanges();
+				logger.log(WOLogLevel.FINER,"Autocreated Variation", added);
+				addFromList(added, null);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to save autocreated Variarion",
+						new Object[] {course,e});
+			}
 		}
 		if(buf != null && known != sum - plan) {
 			if(buf.length() > 0)
@@ -566,17 +592,6 @@ public class WeekFootprint {
 			buf.append(" - ");
 			fmt.format(end, buf, fp);
 			buf.append(']');
-		}
-		if(ec.hasChanges()) {
-			Logger logger = Logger.getLogger("rujel.curriculum");
-			try {
-				NSArray added = ec.insertedObjects();
-				ec.saveChanges();
-				logger.log(WOLogLevel.FINER,"Autocreated Variation", added);
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Failed to save autocreated Variarion",
-						new Object[] {course,e});
-			}
 		}
 		if(sum != plan)
 			return new Integer(sum - plan);
