@@ -250,13 +250,13 @@ public class WeekFootprint {
 		if(periods == null || periods.count() == 0)
 			periods = EduPeriod.defaultPeriods(ec);
 		boolean createdReason = false;
+		active = new boolean[week];
 		if(periods != null && periods.count() > 0) {
 			NSArray holidays = Holiday.holidaysInDates(begin, end, ec, listName);
 			Enumeration penu = periods.objectEnumerator();
 			Enumeration henu = (holidays == null || holidays.count() == 0)? null :
 				holidays.objectEnumerator();
 			cal.setTime(begin);
-			active = new boolean[week];
 			EduPeriod per = (EduPeriod)penu.nextElement();
 			Holiday hd = (henu == null)?null:(Holiday)henu.nextElement();
 			Reason reason = null;
@@ -509,7 +509,9 @@ public class WeekFootprint {
 		cal.setTime(begin);
 		NSMutableArray toAdd = null;
 		boolean hasDev = false;
+		boolean actWeek = false;
 		for (int i = 0; i < active.length; i++) {
+			actWeek |= active[i];
 			int count = countReal(real[i]);
 			sum += count;
 			if (assumed[i] != null)
@@ -556,7 +558,9 @@ public class WeekFootprint {
 				known += count;
 			}
 			cal.add(Calendar.DATE, 1);
-		}
+		} // cycle week
+		if(!actWeek)
+			return null;
 		if(toAdd != null && sum < plan && toAdd.count() > 0) {
 			Enumeration enu = toAdd.objectEnumerator();
 			NSMutableArray added = new NSMutableArray();
