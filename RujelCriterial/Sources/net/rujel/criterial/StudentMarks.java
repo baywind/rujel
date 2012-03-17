@@ -93,7 +93,9 @@ public class StudentMarks extends WOComponent {
 			period = null;
 		Object workType = options.valueForKey("workType");
 		if(workType instanceof String) {
-			try {
+			if(workType.equals("<Null>"))
+				workType = null;
+			else try {
 				workType = Various.parseEO((String)workType, ec);
 			} catch (Exception e) {
 				Logger.getLogger("rujel.criterial").log(WOLogLevel.WARNING,

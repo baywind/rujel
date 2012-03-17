@@ -37,21 +37,13 @@ import java.util.logging.Logger;
 
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.PlistReader;
-import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOSession;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
-import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSData;
-import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSKeyValueCoding;
-import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSPropertyListSerialization;
+import com.webobjects.foundation.*;
 
 public class StudentReports {
 	
@@ -174,13 +166,13 @@ public class StudentReports {
 			result = (NSKeyValueCoding)reporterList().objectAtIndex(0);
 		
 		if(settings != null) {
-			settings = synchronizeReportSettings(
+			settings = ReporterSetup.synchronizeReportSettings(
 					(NSMutableDictionary)settings, result, false, true);
 			result.takeValueForKey(settings, "settings");
 		}
 		return result;
 	}
-	
+/*	
 	public static NSMutableDictionary synchronizeReportSettings(NSMutableDictionary settings,
 			NSKeyValueCoding reporter, boolean updSettings, boolean updReports) {
 		NSArray reports = (NSArray)reporter.valueForKey("options");
@@ -216,6 +208,8 @@ public class StudentReports {
 			}
 			if(updSettings || subs.valueForKey("active") == null) {
 				Object value = rp.valueForKey("active");
+				if(NULL.equals(value))
+					value = null;
 //				if(value instanceof EOEnterpriseObject)
 //					value = WOLogFormatter.formatEO((EOEnterpriseObject)value);
 				subs.takeValueForKey(value,"active");
@@ -279,4 +273,5 @@ public class StudentReports {
 		}
 		return settings;
 	}
+*/
 }

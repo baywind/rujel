@@ -37,6 +37,7 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
+import net.rujel.reports.ReporterSetup;
 import net.rujel.reusables.Period;
 
 import com.webobjects.appserver.*;

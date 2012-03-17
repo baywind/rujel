@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.interfaces.*;
+import net.rujel.reports.ReporterSetup;
 import net.rujel.reports.StudentReports;
 import net.rujel.reusables.*;
 
@@ -53,7 +54,8 @@ public class Overview extends WOComponent {
  	
 	public Number currentMode;
 	
-	public static final NSArray accessKeys = new NSArray(new Object[] {"open","subjects","students"});
+	public static final NSArray accessKeys = new NSArray(
+			new Object[] {"open","subjects","students"});
 	
 	protected NamedFlags _access;
 	public NamedFlags access() {
@@ -76,28 +78,7 @@ public class Overview extends WOComponent {
 	public Period period;
     public NSTimestamp since;
     public NSTimestamp to;
-    /*	
-	public NSArray periods = (NSArray)session().valueForKeyPath("modules.periods");;
-    public Period perItem;
 
-	public void setPeriod(Period newPeriod) {
-		period = newPeriod;
-		if(newPeriod == null)
-			return;
-		java.util.Date date = newPeriod.begin();
-		if(date instanceof NSTimestamp) {
-			since = (NSTimestamp)date;
-		} else {
-			since = new NSTimestamp(date);
-		}
-		date = newPeriod.end();
-		if(date instanceof NSTimestamp) {
-			to = (NSTimestamp)date;
-		} else {
-			to = new NSTimestamp(date);
-		}
-	}
-*/	
     /** @TypeInfo com.webobjects.foundation.NSMutableDictionary */
     public NSArray courses;
     public NSMutableDictionary courseItem;
@@ -114,7 +95,7 @@ public class Overview extends WOComponent {
 		to = new NSTimestamp(cal.getTime());
 		session().setObjectForKey(to, "recentDate");
 		cal.add(GregorianCalendar.DATE, -7);
-		since = new NSTimestamp(cal.getTime());//to.timestampByAddingGregorianUnits(0, 0, -7, 0, 0, 0);
+		since = new NSTimestamp(cal.getTime());
 		int mode = (access().flagForKey("students") && !access().flagForKey("subjects"))?1:0;
 		currentMode = new Integer(mode);
 //		session().savePageInPermanentCache(this);
@@ -124,7 +105,6 @@ public class Overview extends WOComponent {
 		unselect();
 		existingCourses = null;
 		NSArray cycles = EduCycle.Lister.cyclesForEduGroup(currClass);
-		//EOUtilities.objectsMatchingKeyAndValue(ec,EduCycle.entityName,"grade",currClass.grade());
 		
 		NSArray args = new NSArray(new Object[] {session().valueForKey("eduYear") , currClass });
 		existingCourses = EOUtilities.objectsWithQualifierFormat(ec,
@@ -137,7 +117,8 @@ public class Overview extends WOComponent {
 		Enumeration enumerator = cycles.objectEnumerator();
 		while (enumerator.hasMoreElements()) { //prepare subjects listing
 			EduCycle currCycle = (EduCycle)enumerator.nextElement();
-			EOQualifier qual = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,currCycle);
+			EOQualifier qual = new EOKeyValueQualifier("cycle",
+					EOQualifier.QualifierOperatorEqual,currCycle);
 			NSArray matches = EOQualifier.filteredArrayWithQualifier(existingCourses,qual);
 			currSubject = new NSMutableDictionary(currCycle,"cycle");
 			currSubject.takeValueForKey(currCycle.subject(),"subject");
@@ -183,14 +164,6 @@ public class Overview extends WOComponent {
 		else
 			currSubject.setObjectForKey("grey","style");
 		currSubject = null;
-/*		if(activeNotesAddOns != null && activeNotesAddOns.count() > 0) {
-			Object obj = activeNotesAddOns.objectAtIndex(0);
-			if(obj instanceof NSKeyValueCoding)
-				activeNotesAddOns = (NSMutableArray)activeNotesAddOns.valueForKey("id");
-			else if(!(obj instanceof String))
-				activeNotesAddOns = null;
-		}
-		notesAddOns = null;*/
 	}
 	
 	protected EOQualifier periodQualifier(String field) {
@@ -228,10 +201,6 @@ public class Overview extends WOComponent {
 					course, present, qual);
 			courseItem.setObjectForKey(lessons,"lessonsList");
 		}
-		/*NSArray notesAddOns = (NSArray)session().objectForKey("notesAddOns");
-		if(notesAddOns != null)
-			notesAddOns.takeValueForKey((period instanceof EOEnterpriseObject)?
-					period:null, "eduPeriod");*/
 		setCurrTab(null);
 	}
 	
@@ -285,35 +254,12 @@ public class Overview extends WOComponent {
 	
 	public NSMutableSet selectedStudents = new NSMutableSet();
     public Student currStudent;
-	/*public Student studentItem;
 
-	public boolean studentSelected() {
-        return selectedStudents.containsObject(studentItem);
-    }
-	
-    public void setStudentSelected(boolean newStudentSelected) {
-		if(newStudentSelected)
-			selectedStudents.addObject(studentItem);
-		else
-			selectedStudents.removeObject(studentItem);
-    }
-	public String studentStyle() {
-		if(currStudent == studentItem) return "selection";
-		Boolean sex = studentItem.person().sex();
-		if(sex == null) return "grey";
-		return (sex.booleanValue())?"male":"female";
-	}
-	*/
 	public WOActionResults selectStudent() {
 		//currStudent = studentItem;
- 		logger.logp(WOLogLevel.READING,"Overview","selectStudent","Opening marks for student",new Object[] {session(),currStudent});
+ 		logger.log(WOLogLevel.READING,"Opening marks for student",
+ 				new Object[] {session(),currStudent});
 		return null;
-		/*NSMutableSet tmp = selectedStudents.mutableClone();
-		selectedStudents.removeAllObjects();
-		selectedStudents.addObject(studentItem);
-		WOActionResults result = printSelectedStudents();
-		selectedStudents = tmp;
-		return result;*/
 	}
 	
 	public WOActionResults genarateXML() {
@@ -470,7 +416,6 @@ public class Overview extends WOComponent {
  		}
 	}
 	
-	//public static final String reporter = SettingsReader.stringForKeyPath("ui.presenter.report","StudentMarks");
 	public NSKeyValueCoding reporter;
 	public NSKeyValueCoding reporterItem;
 	
@@ -520,12 +465,7 @@ public class Overview extends WOComponent {
 			return "cursor:pointer;color:blue;padding:2px 1.3ex;";
 		}
 	}
-	/*
-	 public static void testTask() {
-		 logger.info("Test task executed successfully");
-	 }*/
-	
-//	public NSKeyValueCoding present;
+
 	public NSArray presentTabs;
 	public NSArray presentTabs() {
 		if(presentTabs == null) {
@@ -541,16 +481,6 @@ public class Overview extends WOComponent {
 		updateLessonLists();
 	}
 	
-/*	public NSArray notesAddOns;
-	
-	public void setNotesAddOns(NSArray addons) {
-		notesAddOns = addons;
-		if(notesAddOns != null && period instanceof EOEnterpriseObject)
-			notesAddOns.takeValueForKey(period, "eduPeriod");
-	}
-	
-	public NSMutableArray activeNotesAddOns;
-*/ 
 	protected NSKeyValueCoding _present;
  
 	public NSKeyValueCoding present() {
@@ -563,11 +493,6 @@ public class Overview extends WOComponent {
 		}
 		return _present;
 	}
-	/*
-	public WOComponent sendMails() {
-		net.rujel.contacts.EMailBroadcast.broadastMarksForPeriod(period,null);
-		return this;
-	}*/
 	
 	public WOActionResults overviewAction() {
 		NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
