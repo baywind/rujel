@@ -29,6 +29,9 @@
 
 package net.rujel.eduplan;
 
+import java.util.Enumeration;
+
+import net.rujel.base.QualifiedSetting;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -108,8 +111,35 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		if(notGlobal())
     			hd.setListName(listName);
     	} else if(Various.boolForObject(dict.valueForKey("delete"))) {
-    		dict.takeValueForKey(hd.listName(), Holiday.LIST_NAME_KEY);
-    		ec.deleteObject(hd);
+    		String hdList = hd.listName();
+    		if(hdList != null || !notGlobal()) {
+    			ec.deleteObject(hd);
+    		} else {
+    			SettingsBase base = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+    			hd.setListName(base.textValue());
+    			NSArray byCourse = base.qualifiedSettings();
+    			if(byCourse != null && byCourse.count() > 0) {
+    				NSMutableArray lists = new NSMutableArray(base.textValue());
+    				if(listName != null || !listName.equals(base.textValue()))
+    					lists.addObject(listName);
+    				Enumeration enu = byCourse.objectEnumerator();
+    				dict.removeObjectForKey("delete");
+    				while (enu.hasMoreElements()) {
+    					QualifiedSetting bc = (QualifiedSetting) enu.nextElement();
+    					String ln = bc.textValue();
+						if(!lists.containsObject(ln)) {
+				    		hd = (Holiday)EOUtilities.createAndInsertInstance(ec,
+				    				Holiday.ENTITY_NAME);
+				    		hd.takeValuesFromDictionary(dict);
+				    		hd.setListName(ln);
+							lists.addObject(ln);
+						}
+					} // cycle list names
+    			}
+    		}
+    		dict.takeValueForKey(hdList, Holiday.LIST_NAME_KEY);
+    		if(notGlobal())
+    			dict.takeValueForKey(listName, "listName");
     		hd = null;
     	} else {
     		if(!hd.name().equals(dict.valueForKey(Holiday.NAME_KEY)))
