@@ -299,7 +299,13 @@ public class Reason extends _Reason {
 		result.takeValuesFromDictionary(values);
 		result.setBegin(holiday.begin());
 		result.setEnd(holiday.end());
-		result.setReason(holiday.name());
+		if(holiday.listName() == null) {
+			result.setReason(holiday.name());
+		} else {
+			StringBuilder buf = new StringBuilder(holiday.name());
+			buf.append(' ').append('(').append(holiday.listName()).append(')');
+			result.setReason(buf.toString());
+		}
 		return result;
 	}
 

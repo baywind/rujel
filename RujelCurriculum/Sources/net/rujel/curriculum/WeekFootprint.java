@@ -287,7 +287,8 @@ public class WeekFootprint {
 					if(hd != null && EOPeriod.Utility.compareDates(
 							hd.begin().getTime(),cal.getTimeInMillis()) <= 0) {
 						active[i] = false;
-						reason = Reason.reasonForHoliday(hd, true);
+						if(reason == null)
+							reason = Reason.reasonForHoliday(hd, true);
 					}
 				}
 				if(active[i]) {
@@ -321,6 +322,7 @@ public class WeekFootprint {
 				ec.saveChanges();
 				logger.log(WOLogLevel.INFO,"Autocreated Reason", added);
 			} catch (Exception e) {
+				ec.revert();
 				logger.log(WOLogLevel.WARNING,"Failed to save autocreated Reason",
 						new Object[] {course,e});
 			}
@@ -579,6 +581,7 @@ public class WeekFootprint {
 				logger.log(WOLogLevel.FINER,"Autocreated Variation", added);
 				addFromList(added, null);
 			} catch (Exception e) {
+				ec.revert();
 				logger.log(WOLogLevel.WARNING,"Failed to save autocreated Variarion",
 						new Object[] {course,e});
 			}
