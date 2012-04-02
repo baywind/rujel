@@ -9,7 +9,8 @@ Cross : WOImage {
 }
 
 Title : WOString {
-  value = session.strings.Strings.PrintReport.reportSettings;
+  value = reporter.title;
+  valueWhenEmpty = session.strings.Strings.PrintReport.reportSettings;
   escapeHTML = false;
 }
 

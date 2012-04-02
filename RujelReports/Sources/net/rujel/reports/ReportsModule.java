@@ -60,6 +60,11 @@ public class ReportsModule {
 		return reportsFolder;
 	}
 
+	public static File reportsFolder(String subdir) {
+		return new File(reportsFolder,subdir);
+	}
+
+	
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			try {

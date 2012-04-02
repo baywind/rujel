@@ -38,6 +38,7 @@ import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.reports.ReporterSetup;
+import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.Period;
 
 import com.webobjects.appserver.*;
@@ -144,7 +145,8 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 		reportSettings.takeValueForKey(courses.immutableClone(), "courses");
 		reportSettings.takeValueForKey(aContext.userInfoForKey("needData"), "needData");
 		reportSettings.takeValueForKey(reporter, "reporter");
-		reports = ReporterSetup.prepareReports(aContext.session(), reportSettings);
+		reports = ReporterSetup.prepareReports(aContext.session(), reportSettings,
+				ReportsModule.reportsFolder("StudentReports"));
 		if(reportSettings.valueForKey("needData") != null) {
 			t.setPriority(priority);
 			return;

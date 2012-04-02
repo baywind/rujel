@@ -31,6 +31,7 @@ package net.rujel.ui;
 
 import net.rujel.interfaces.*;
 import net.rujel.reports.ReporterSetup;
+import net.rujel.reports.ReportsModule;
 import net.rujel.reports.StudentReports;
 import net.rujel.reusables.*;
 
@@ -301,7 +302,8 @@ public class Overview extends WOComponent {
 				reportSettings.takeValueForKey(info, "info");
 	 			info = (NSMutableDictionary)reporter.valueForKey("settings");
 	 			if(info == null)
-	 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+	 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
+	 						ReportsModule.reportsFolder("StudentReports"));
  				rprtr.takeValueForKey(info, "settings");
 			}
 			reportSettings.takeValueForKey(currStudent, "student");
@@ -393,7 +395,8 @@ public class Overview extends WOComponent {
  			reportPage.takeValueForKey(info, "info");
  			info = (NSMutableDictionary)reporter.valueForKey("settings");
  			if(info == null) {
- 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				info = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
+ 						ReportsModule.reportsFolder("StudentReports"));
  				reporter.takeValueForKey(info, "settings");
  			}
  			byte[] result = null;
@@ -503,7 +506,8 @@ public class Overview extends WOComponent {
 		if(reporter.valueForKey("component") == null) {
 			NSMutableDictionary settings = (NSMutableDictionary)reporter.valueForKey("settings");
  			if(settings == null) {
- 				settings = ReporterSetup.getDefaultSettings((NSDictionary)reporter);
+ 				settings = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
+ 						ReportsModule.reportsFolder("StudentReports"));
  				reporter.takeValueForKey(settings, "settings");
  			}
 		}

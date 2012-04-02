@@ -204,14 +204,15 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.element("school", null);
 		}
 		NSArray groups = prepareGroups(in);
-		NSArray courses = (NSArray)in.options.valueForKey("courses");
-		if(courses != null)
-			groups = null;
-		
+
 		in.ses.setObjectForKey(in.options,"xmlGeneration");
 		NSArray generators = (NSArray)in.ses.valueForKeyPath("modules.xmlGeneration");
 		in.ses.removeObjectForKey("xmlGeneration");
 		useGenerators(generators, null);
+		
+		NSArray courses = (NSArray)in.options.valueForKey("courses");
+		if(courses != null)
+			groups = null;
 		handler.startElement("courses");
 		if(courses == null) {
 			Enumeration enu = groups.objectEnumerator();
@@ -309,6 +310,9 @@ public class XMLGenerator extends AbstractObjectReader {
 						handler.element("student",null);
 					}
 				}
+			} else if(students.count() == 0) { // just list groups
+				handler.prepareEnumAttribute("type", "mixed");
+				handler.element("eduGroup", null);
 			} else { // selected students
 				handler.prepareEnumAttribute("type", "sub");
 				boolean skip = true;

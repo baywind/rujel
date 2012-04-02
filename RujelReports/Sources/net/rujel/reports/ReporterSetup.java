@@ -40,7 +40,6 @@ import java.util.logging.Logger;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.PlistReader;
-import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
@@ -64,6 +63,8 @@ public class ReporterSetup extends WOComponent {
 	public NSKeyValueCoding optItem;
 	public NSMutableArray presets;
 	public String presetName;
+	public String submitPath;
+	protected File reportsDir = ReportsModule.reportsFolder("StudentReport");
 
     public ReporterSetup(WOContext context) {
         super(context);
@@ -72,6 +73,10 @@ public class ReporterSetup extends WOComponent {
         				"strings.Strings.PrintReport.defaultSettings");
         else
         	presetName = null;
+    }
+    
+    public void setDir(String dir) {
+    	reportsDir = ReportsModule.reportsFolder(dir);
     }
     
 	public String subStyle() {
@@ -93,7 +98,6 @@ public class ReporterSetup extends WOComponent {
         quals[1] = new EOKeyValueQualifier("id", EOQualifier.QualifierOperatorEqual, null);
     	quals[0] = new EOAndQualifier(new NSArray(quals));
 //		presets = ReportsModule.reportsFromDir("StudentReport", session(), quals[0]);
-    	File reportsDir = new File(ReportsModule.reportsFolder(), "StudentReport");
     	File[] files = reportsDir.listFiles(PlistReader.Filter);
     	presets = new NSMutableArray();
     	for (int i = 0; i < files.length; i++) {
@@ -140,6 +144,8 @@ public class ReporterSetup extends WOComponent {
 		settings = synchronizeReportSettings(settings, reporter,true,false);
 		reporter.takeValueForKey(settings, "settings");
 		returnPage.ensureAwakeInContext(context());
+		if(submitPath != null)
+			returnPage.takeValueForKey(reporter, submitPath);
 		return returnPage;
 	}
 	
@@ -153,12 +159,13 @@ public class ReporterSetup extends WOComponent {
 														"readAccess.edit.ReporterSetup"));
 		if(presetName == null || presetName.equals(defaultName)) {
 	        if(cantEdit) {
-	        	synchronizeReportSettings(getDefaultSettings(reporter), reporter, false, true);
+	        	synchronizeReportSettings(getDefaultSettings(reporter, reportsDir),
+	        			reporter, false, true);
 	        	presetName = null;
 	        	return null;
 	        }
 			presetName = defaultName;
-			file = new File(ReportsModule.reportsFolder(),"/StudentReport/defaultSettings.plist");
+			file = new File(reportsDir,"defaultSettings.plist");
 			
 			if(presets == null || presets.count() == 0) {
 				presets = new NSMutableArray(settings);
@@ -188,9 +195,9 @@ public class ReporterSetup extends WOComponent {
 			}
 		}
 		if(file == null) {
-	        String path = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
-	        path = path + "/StudentReport";
-	        File folder = new File(Various.convertFilePath(path));
+//	        String path = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
+//	        path = path + "/StudentReport";
+//	        File folder = new File(Various.convertFilePath(path));
 	        Calendar cal = Calendar.getInstance();
 	        StringBuilder buf = new StringBuilder(10);
 	        buf.append(cal.get(Calendar.YEAR));
@@ -204,12 +211,12 @@ public class ReporterSetup extends WOComponent {
 	        buf.append(len);
 	        len = buf.length();
         	buf.append(".plist");
-	        file = new File(folder,buf.toString());
+	        file = new File(reportsDir,buf.toString());
 	        if(file.exists()) {
 	        	char idx = 'a';
 	        	buf.insert(len, idx);
 	        	while (idx <= 'z') {
-					file = new File(folder,buf.toString());
+					file = new File(reportsDir,buf.toString());
 					if(!file.exists())
 						break;
 					idx++;
@@ -245,7 +252,7 @@ public class ReporterSetup extends WOComponent {
 				presets.addObject(settings);
 		} catch (Exception e) {
 			Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
-					"Error saving StudentReport preset " + presetName,
+					"Error saving Report preset " + presetName,
 					new Object[] {session(), file, e});
 		}
 		return null;
@@ -275,7 +282,7 @@ public class ReporterSetup extends WOComponent {
 	}
 	
 	public WOActionResults usePreset() {
-		NSMutableDictionary settings = (item == null)?getDefaultSettings(reporter):
+		NSMutableDictionary settings = (item == null)?getDefaultSettings(reporter, reportsDir):
 				PlistReader.cloneDictionary((NSDictionary)item, true);
 		boolean canEdit = Various.boolForObject(session().valueForKeyPath(
 				"readAccess.edit.ReporterSetup"));
@@ -291,27 +298,38 @@ public class ReporterSetup extends WOComponent {
 		return this;
 	}
 	
-	public static NSMutableDictionary getDefaultSettings(NSDictionary reporter) {
+	public static NSMutableDictionary getDefaultSettings(NSDictionary reporter, File dir) {
 		NSMutableDictionary result = null;
-		String path = SettingsReader.stringForKeyPath("reportsDir","CONFIGDIR/RujelReports");
-		path = path + "/StudentReport/" + reporter.valueForKey("id") + "_defaults.plist";
-		Object plist = PlistReader.readPlist(path, null);
-		if(plist instanceof NSDictionary) {
-			result = PlistReader.cloneDictionary((NSDictionary)plist, true);
-			result = synchronizeReportSettings(result, reporter, false, false);
-		} else {
-			result = synchronizeReportSettings(result, reporter, true, false);
+		File file = new File(dir, reporter.valueForKey("id") + "_defaults.plist");
+		if(file.exists()) {
+			Object plist = null;
+			try {
+				FileInputStream fis = new FileInputStream(file);
+				plist = PlistReader.readPlist(fis, null);
+			} catch (java.io.FileNotFoundException e) {
+				return null;
+			} catch (Exception ioex) {
+				Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
+						"Error reading default settings plist", new Object[] {file, ioex});
+				return null;
+			}
+			if(plist instanceof NSDictionary) {
+				result = PlistReader.cloneDictionary((NSDictionary)plist, true);
+				result = synchronizeReportSettings(result, reporter, false, false);
+			} else {
+				result = synchronizeReportSettings(result, reporter, true, false);
+			}
 		}
 		return result;
 	}
 
 	public static NSArray prepareReports(
-			WOSession ses, NSMutableDictionary reportSettings) {
+			WOSession ses, NSMutableDictionary reportSettings, File dir) {
 		NSMutableDictionary settings = (NSMutableDictionary)reportSettings.valueForKeyPath(
 				"reporter.settings");
 		if(settings == null) {
 			NSMutableDictionary reporter = (NSMutableDictionary)reportSettings.valueForKey("reporter");
-			settings = getDefaultSettings(reporter);
+			settings = getDefaultSettings(reporter, dir);
 			settings.takeValueForKey(ses.valueForKeyPath(
 				"strings.Strings.PrintReport.defaultSettings"), "title");
 			reporter.takeValueForKey(settings, "settings");

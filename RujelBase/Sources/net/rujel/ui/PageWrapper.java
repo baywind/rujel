@@ -156,4 +156,8 @@ public class PageWrapper extends WOComponent {
 	public WOActionResults refreshPage() {
 		return null;
 	}
+	
+	public boolean hasAction() {
+		return hasBinding("action");
+	}
 }
