@@ -137,11 +137,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		if(user == null) {
 			buf.append("Session created for user: ");
 			buf.append(aUser);
-			if(Various.boolForObject(WOApplication.application().valueForKeyPath(
-					"strings.sections.hasSections"))) {
-			Object defaultSection = aUser.propertyNamed("defaultSection");
-			NSArray sections = (NSArray)WOApplication.application().valueForKeyPath(
-					"strings.sections.list");
+			if(Various.boolForObject(valueForKeyPath("strings.sections.hasSections"))) {
+				Object defaultSection = aUser.propertyNamed("defaultSection");
+				NSArray sections = (NSArray)valueForKeyPath("strings.sections.list");
 				if(defaultSection != null && sections != null && sections.count() > 0) {
 					Enumeration enu = sections.objectEnumerator();
 					while (enu.hasMoreElements()) {
@@ -326,6 +324,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 				_eduYear = (Integer)WOApplication.application().valueForKey("year");
 				today = MyUtility.dayInEduYear(_eduYear.intValue());
 			}
+			modules().useModules("yearChanged");
 		}
 		return today;
 	}
@@ -354,6 +353,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 					persList.removeAllObjects();
 				}
 				pathStack.removeAllObjects();
+				modules().useModules("yearChanged");
 //				if(defaultEditingContext().rootObjectStore() != os) {
 //				defaultEditingContext().unlock();
 //				setDefaultEditingContext(new SessionedEditingContext(os,this));

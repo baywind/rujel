@@ -31,9 +31,7 @@ package net.rujel.diary;
 
 import java.util.logging.Logger;
 
-import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
-import net.rujel.eduplan.SectionsSetup;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.WOApplication;
@@ -172,10 +170,6 @@ public class Application extends UTF8Application {
 		if(what == null)
 			return;
 		if(what.equals("cache")) {
-			Indexer sidx = Indexer.getIndexer(EOSharedEditingContext.defaultSharedEditingContext(),
-					"eduSections",(String)null, false);
-			if(sidx != null)
-				SectionsSetup.updateApplication(sidx);
 			groupsForYear.removeAllObjects();
 			coursesForGroup.removeAllObjects();
 		} else if(what.equals("strings")) {

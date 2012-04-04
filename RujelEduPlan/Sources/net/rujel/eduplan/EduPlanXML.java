@@ -33,7 +33,6 @@ import java.util.Enumeration;
 
 import org.xml.sax.SAXException;
 
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -87,8 +86,8 @@ public class EduPlanXML extends GeneratorModule {
 				}
 				handler.prepareAttribute("id", XMLGenerator.getID(cycle));
 				handler.prepareAttribute("grade", cycle.grade().toString());
-				if(Various.boolForObject(WOApplication.application().valueForKeyPath(
-						"strings.sections.hasSections")))
+//				if(Various.boolForObject(WOApplication.application().valueForKeyPath(
+//						"strings.sections.hasSections")))
 					handler.prepareAttribute("section", cycle.section().toString());
 				handler.startElement("cycle");
 				EOEnterpriseObject hours = cycle.planHours(gr, false);

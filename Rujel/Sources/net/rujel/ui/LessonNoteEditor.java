@@ -218,7 +218,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(section != null && !section.equals(course.valueForKeyPath("cycle.section"))) {
 			section = (Integer)course.valueForKeyPath("cycle.section");
 			if(section != null) { // switch to correct eduSection
-				NSArray sects = (NSArray)application().valueForKeyPath("strings.sections.list");
+				NSArray sects = (NSArray)session().valueForKeyPath("strings.sections.list");
 				Enumeration enu = sects.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					NSDictionary sect = (NSDictionary) enu.nextElement();

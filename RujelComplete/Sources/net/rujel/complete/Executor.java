@@ -369,13 +369,13 @@ public class Executor implements Runnable {
 	}
 	
 	public static Integer getActiveSection(WOSession ses) {
-		if(!Various.boolForObject(WOApplication.application().valueForKeyPath(
-				"strings.sections.hasSections")))
+		if(!Various.boolForObject(ses.valueForKeyPath("strings.sections.hasSections")))
 			return null;
 		return (Integer)ses.valueForKeyPath("state.section.idx");
 	}
-	public static Integer getDefaultSection() {
-		NSDictionary sections = (NSDictionary)WOApplication.application().valueForKeyPath(
+	public Integer getDefaultSection() {
+		// TODO: repair 
+		NSDictionary sections = (NSDictionary)ctx.session().valueForKeyPath(
 			"strings.sections");
 		if(!Various.boolForObject(sections.valueForKey("hasSections")))
 			return null;

@@ -32,7 +32,6 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.base.Indexer;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
@@ -98,8 +97,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			return init();
-		} else if(obj instanceof WOSession) {
-			return sessionCreated((WOSession)obj,ctx);
+		} else if(obj.equals("yearChanged")) {
+			return yearChanged(ctx);
 		} else if(obj.equals("regimes")) {
 //			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.EduPlan")))
 //				return null;
@@ -155,29 +154,16 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 				new SubjectComparator.ComparisonSupport(), Subject.class);
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new PlanCycle.ComparisonSupport(), PlanCycle.class);
-		EOEditingContext ec = new EOEditingContext();
-		ec.lock();
-		try {
-			Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, false);
-			if(sidx == null)
-				return null;
-			SectionsSetup.updateApplication(sidx);
-		} catch (Exception e) {
-			// TODO: handle exception
-		} finally {
-			ec.unlock();
-			ec.dispose();
-		}
 		return null;
 	}
 	
-	public static Object sessionCreated(WOSession ses,WOContext ctx) {
+	public static Object yearChanged(WOContext ctx) {
+		WOSession ses = ctx.session();
 		boolean terminating = ses.isTerminating();
 		if(terminating || ctx == null)
 			return null;
 		NSMutableDictionary state =  (NSMutableDictionary)ses.valueForKey("state");
-		NSArray sections = (NSArray)WOApplication.application().valueForKeyPath(
-				"strings.sections.list");
+		NSArray sections = SectionsSetup.updateSession(ses);
 		if(state.valueForKey("section") == null) {
 			if(sections != null) {
 				NSDictionary dict = (NSDictionary)sections.objectAtIndex(0);

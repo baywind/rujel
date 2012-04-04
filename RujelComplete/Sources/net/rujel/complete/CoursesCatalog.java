@@ -51,7 +51,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
 	
     public CoursesCatalog(WOContext context) {
         super(context);
-    	sections = Various.boolForObject(WOApplication.application().valueForKeyPath(
+    	sections = Various.boolForObject(context.session().valueForKeyPath(
 			"strings.sections.hasSections")) && EduCycle.entityName.equals("PlanCycle");
     }
     
@@ -123,7 +123,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     		return "font-weight:bold;";
     	} else if (grHead.equals("teacher")) {
     		return null;
-    	} else if (Various.boolForObject(application().valueForKeyPath(
+    	} else if (Various.boolForObject(session().valueForKeyPath(
     				"strings.sections.hasSections"))) {
     		return "font-style:italic;";
     	}
@@ -131,7 +131,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public boolean showSections() {
-    	return (!grHead.equals("teacher") &&  Various.boolForObject(application().valueForKeyPath(
+    	return (!grHead.equals("teacher") &&  Various.boolForObject(session().valueForKeyPath(
     				"strings.sections.hasSections")));
     }
     
@@ -227,7 +227,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     
     public static void prepareCourses(FileWriterUtil exec,
     		NSKeyValueCoding catalog, boolean write) {
-		NSDictionary sect = (NSDictionary)WOApplication.application().valueForKeyPath(
+		NSDictionary sect = (NSDictionary)exec.ctx.session().valueForKeyPath(
 				"strings.sections");
 		NSArray list = null;
 		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
