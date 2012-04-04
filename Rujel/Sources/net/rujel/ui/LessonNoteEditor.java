@@ -1133,11 +1133,11 @@ public class LessonNoteEditor extends WOComponent {
 			return;
 		}
 		student = null;
-		selector = null;
 		if(regime == BIGTABLE) {
 			regime = NORMAL; 
 //			tablist = ((BaseCourse)course).sortedTabs();
 //			currTab();
+//			selector = currLesson();
 		} else if (regime == NORMAL) {
 			regime = LONGLIST;
 			/*if(tablist != null) {
@@ -1158,11 +1158,11 @@ public class LessonNoteEditor extends WOComponent {
 			return;
 		}
 		student = null;
-		selector = null;
 		if(regime == LONGLIST)  {
 			regime = NORMAL; 
 			//tablist = ((BaseCourse)course).sortedTabs();
 			//currTab();
+//			selector = currLesson();
 		} else if (regime == NORMAL)  {
 			regime = BIGTABLE;
 			/*if(tablist != null) {

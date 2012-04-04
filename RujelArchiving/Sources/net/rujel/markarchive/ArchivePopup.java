@@ -201,7 +201,8 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 						new Object[] {session(),archive,initData});
 			} catch (Exception e) {
 				session().takeValueForKey(e.getMessage(), "message");
-				session().setObjectForKey(reason, "MarkArchive.reason");
+				if(reason != null)
+					session().setObjectForKey(reason, "MarkArchive.reason");
 				logger.log(WOLogLevel.INFO,"Failed to save and archive changes",
 						new Object[] {session(),archive,initData,e});
 				ec.revert();
