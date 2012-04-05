@@ -403,7 +403,9 @@ public class XMLGenerator extends AbstractObjectReader {
 		handler.endElement("eduGroup");
 		if(course.comment() != null)
 			handler.element("comment", course.comment());
-		useGenerators(generators, course);
+		if(!Various.boolForObject(in.options.valueForKeyPath(
+				"reporter.generation.omitCourseContent")))
+			useGenerators(generators, course);
 		handler.endElement("course");
 	}
 	

@@ -91,6 +91,7 @@ public class ImportExport extends LessonList {
 		WOComponent result = pageWithName("ReporterSetup");
 		result.takeValueForKey(this, "returnPage");
 		result.takeValueForKey(item, "reporter");
+//		result.takeValueForKey("reporter","submitPath");
 		return result;
     }
     
@@ -103,7 +104,7 @@ public class ImportExport extends LessonList {
 		info = (NSMutableDictionary)reporter.valueForKey("settings");
 		if(info == null) {
 			info = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
-					ReportsModule.reportsFolder("StudentReports"));
+					ReportsModule.reportsFolder("ImportExport"));
 			reporter.takeValueForKey(info, "settings");
 		}
 		byte[] result = null;
@@ -133,8 +134,10 @@ public class ImportExport extends LessonList {
     }
     
     public String onLoad() {
+//    	if(reporter == null)
+    		reporter = (NSMutableDictionary)context().userInfoForKey("submittedReporter");
     	if(reporter != null)
-    		return "if(tryLoad())window.open('globalActionUrl')";
+    		return "window.location=globalActionUrl;";
     	return null;
     }
 }

@@ -208,3 +208,7 @@ PopUp : WOPopUpButton {
 CanSort : WOConditional {
   condition = item.sort;
 }
+
+HasOptions : WOConditional {
+  condition = reports.count;
+}

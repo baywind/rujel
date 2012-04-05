@@ -32,6 +32,8 @@
 		<string>6</string>
 		<key>broadcastTime</key>
 		<string>5:30</string>
+		<key>denyRequesting</key>
+		<string>false</string>
 	</dict>
 	<key>dbConnection.Contacts</key>
 	<dict>

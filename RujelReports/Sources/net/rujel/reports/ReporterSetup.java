@@ -144,6 +144,7 @@ public class ReporterSetup extends WOComponent {
 		settings = synchronizeReportSettings(settings, reporter,true,false);
 		reporter.takeValueForKey(settings, "settings");
 		returnPage.ensureAwakeInContext(context());
+		context().setUserInfoForKey(reporter, "submittedReporter");
 		if(submitPath != null)
 			returnPage.takeValueForKey(reporter, submitPath);
 		return returnPage;
