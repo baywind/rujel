@@ -136,8 +136,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     public static void prepareStudents(FileWriterUtil folder) {
     	WOSession ses = folder.ctx.session();
     	EOEditingContext ec = ses.defaultEditingContext();
-		NSDictionary sect = (NSDictionary)WOApplication.application().valueForKeyPath(
-				"strings.sections");
+		NSDictionary sect = (NSDictionary)ses.valueForKeyPath("strings.sections");
 		NSArray grReports = (NSArray)ses.valueForKeyPath("modules.groupComplete");
 		if(grReports != null && grReports.count() == 0)
 			grReports = null;

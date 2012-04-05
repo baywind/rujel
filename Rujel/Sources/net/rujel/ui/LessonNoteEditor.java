@@ -218,7 +218,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(section != null && !section.equals(course.valueForKeyPath("cycle.section"))) {
 			section = (Integer)course.valueForKeyPath("cycle.section");
 			if(section != null) { // switch to correct eduSection
-				NSArray sects = (NSArray)application().valueForKeyPath("strings.sections.list");
+				NSArray sects = (NSArray)session().valueForKeyPath("strings.sections.list");
 				Enumeration enu = sects.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					NSDictionary sect = (NSDictionary) enu.nextElement();
@@ -1133,11 +1133,11 @@ public class LessonNoteEditor extends WOComponent {
 			return;
 		}
 		student = null;
-		selector = null;
 		if(regime == BIGTABLE) {
 			regime = NORMAL; 
 //			tablist = ((BaseCourse)course).sortedTabs();
 //			currTab();
+//			selector = currLesson();
 		} else if (regime == NORMAL) {
 			regime = LONGLIST;
 			/*if(tablist != null) {
@@ -1158,11 +1158,11 @@ public class LessonNoteEditor extends WOComponent {
 			return;
 		}
 		student = null;
-		selector = null;
 		if(regime == LONGLIST)  {
 			regime = NORMAL; 
 			//tablist = ((BaseCourse)course).sortedTabs();
 			//currTab();
+//			selector = currLesson();
 		} else if (regime == NORMAL)  {
 			regime = BIGTABLE;
 			/*if(tablist != null) {

@@ -175,27 +175,23 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 			_noteDelegate.setLessonNoteForStudent(newNote.substring(idx), this, student);
 	}
 
-	private static String[] skipStrings;
+	private static String skipChars;
 	public static int isSkip(String note) {
 		if(note == null)
 			return 0;
 		note = note.trim();
 		if(note.length() == 0)
 			return 0;
-		if(skipStrings == null) {
-    		String sk = (String)WOApplication.application().valueForKeyPath(
-    				"strings.RujelBase_Base.skipStrings");
-    		if(sk == null) return 0;
-    		skipStrings = sk.split(" ");
-    	}
-    	for (int i = 0; i < skipStrings.length; i++) {
-    		if(note.startsWith(skipStrings[i])) {
-    			if(note.length() <= skipStrings[i].length())
-    				return -skipStrings[i].length();
-    			if(!Character.isLetterOrDigit(note.charAt(skipStrings[i].length())))
-    				return skipStrings[i].length();
-    		}
-    	}
+		if(skipChars == null) {
+			skipChars = SettingsReader.stringForKeyPath("ui.skipChars", null);
+			if(skipChars == null)
+				skipChars = (String)WOApplication.application().valueForKeyPath(
+				"strings.RujelBase_Base.skipChars");
+		}
+		if((note.length() == 1 || note.charAt(1) == ':') && 
+				skipChars.indexOf(note.charAt(0)) >= 0) {
+			return note.indexOf('|');
+		}
     	return 0;
     }
 	/*

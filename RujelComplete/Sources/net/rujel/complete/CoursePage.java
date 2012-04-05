@@ -187,8 +187,8 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			String key = gid.keyValues()[0].toString();
 			cDir = key + '/';
     	}
-    	boolean sections = Various.boolForObject(WOApplication.application().valueForKeyPath(
-    			"strings.sections.hasSections")) && EduCycle.entityName.equals("PlanCycle");
+    	boolean sections = EduCycle.entityName.equals("PlanCycle") && Various.boolForObject(
+    			exec.ctx.session().valueForKeyPath("strings.sections.hasSections"));
     	if(sections) {
     		Integer section = (Integer)course.valueForKeyPath("cycle.section");
     		StringBuilder buf = new StringBuilder(4);

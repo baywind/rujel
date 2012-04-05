@@ -289,8 +289,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareAttribute("name", gr.name());
 			handler.prepareAttribute("grade", gr.grade().toString());
 			handler.prepareAttribute("title", gr.title());
-			if(Various.boolForObject(WOApplication.application().valueForKeyPath(
-						"strings.sections.hasSections"))) {
+			if(Various.boolForObject(in.ses.valueForKeyPath("strings.sections.hasSections"))) {
 				try {
 					Integer sect = (Integer)gr.valueForKey("section");
 					if(sect != null)

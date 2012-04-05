@@ -42,7 +42,6 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import com.webobjects.appserver.WOApplication;
 import java.math.*;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -881,17 +880,7 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
     	Integer specFlags = (Integer)WorkType.specTypes.valueForKey("onLesson");
     	if(!specFlags.equals(workType().dfltFlags()))
     		return true;
-    	long lMillis = lesson.date().getTime();
-    	long wMillis = date().getTime();
-    	if(lMillis == wMillis)
-    		return false;
-    	if(Math.abs(wMillis - lMillis) > NSLock.OneDay*2)
-    		return true;
-    	Calendar cal = Calendar.getInstance();
-    	cal.setTimeInMillis(wMillis);
-    	int wDay = cal.get(Calendar.DAY_OF_YEAR);
-    	cal.setTimeInMillis(lMillis);
-    	return (wDay != cal.get(Calendar.DAY_OF_YEAR));
+    	return (EOPeriod.Utility.compareDates(date(), lesson.date()) != 0);
     }
 
 	public String lessonNoteForStudent(EduLesson lesson, Student student) {
@@ -911,6 +900,8 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		boolean arc = (SettingsReader.boolForKeyPath("markarchive.Mark", 
 				SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
 		int arcLevel = 0;
+		NSArray criterMask = criterMask();
+		Integer max = null;
 		if(note != null && note.length() > 0 && Character.isDigit(note.charAt(0))) {
 			int idx = 1;
 			while (idx < note.length()) {
@@ -928,8 +919,6 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 					num = new Integer(note);
 				} catch (Exception e) {}
 			}
-			Integer max = null;
-			NSArray criterMask = criterMask();
 			if(num != null) {
 				if(criterMask != null && criterMask.count() > 0) {
 					if(criterMask.count() == 1) {
@@ -960,11 +949,12 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 					note = null;
 				Mark mark = null;
 				if(criterMask == null || criterMask.count() == 0) {
-					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
+/*					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
 							editingContext(), "CriterMask");
 					mask.takeValueForKey(new Integer(0), "criterion");
 					this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
 					mask.takeValueForKey(max, "max");
+					criterMask = criterMask();*/
 				} else {
 					Mark[] marks = forPersonLink(student);
 					if(marks != null) 
@@ -980,8 +970,22 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 					arcLevel = 2;
 				}
 				mark.setValue(num);
+			} else {
+				num = null;
 			}
 		} // set criteress mark
+		if((criterMask == null || criterMask.count() == 0) && (num != null || hasWeight())) {
+			if(max == null)
+				max = SettingsBase.numericSettingForCourse("CriterlessMax",
+					course(), editingContext());
+			if(max == null)
+				max = new Integer(5);
+			EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
+					editingContext(), "CriterMask");
+			mask.takeValueForKey(new Integer(0), "criterion");
+			this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
+			mask.takeValueForKey(max, "max");
+		}
 		if(num == null) {
 			Mark mark = markForStudentAndCriterion(student, new Integer(0));
 			if(mark != null) {

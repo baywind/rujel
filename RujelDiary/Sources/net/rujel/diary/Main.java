@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.rujel.base.BaseCourse;
+import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
@@ -216,14 +217,14 @@ public class Main extends WOComponent {
 //		} else {
 			NSArray groups = EduGroup.Lister.listGroups(aDate,ec);
 			int maxIndex = 0;
-			{
-				NSArray list = (NSArray) WOApplication.application().valueForKeyPath(
-						"strings.sections.list");
-				if(list != null && list.count() > 1) {
-					Number max = (Number)list.valueForKeyPath("@max.idx");
-					maxIndex = max.intValue();
-				}
-			}
+	    	Indexer sIndex = Indexer.getIndexer(ec,"eduSections",(String)null, false);
+	    	NSArray sections = (sIndex == null)?null:sIndex.sortedIndex();
+	    	if(sections != null && sections.count() > 1) {
+	    		Number max = (Number)sections.valueForKeyPath("@max.idx");
+	    		maxIndex = max.intValue();
+	    	} else {
+	    		sections = null;
+	    	}
 			if(groups == null || groups.count() == 0) {
 				return NSArray.EmptyArray;
 			} else {
@@ -303,8 +304,6 @@ public class Main extends WOComponent {
 //					((NSMutableArray)result).addObject(grDict);
 				} // groups enumeration
 				if(maxIndex > 0) {
-					NSArray sections = (NSArray) WOApplication.application().valueForKeyPath(
-						"strings.sections.list");
 					enu = sections.objectEnumerator();
 					result = new NSMutableArray();
 					while (enu.hasMoreElements()) {

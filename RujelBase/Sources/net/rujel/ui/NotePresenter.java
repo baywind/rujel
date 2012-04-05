@@ -188,9 +188,12 @@ public class NotePresenter extends WOComponent {
 		String theNote = noteForStudent();
 		if (theNote == null)
 			return null;
-		if(!access().flagForKey("read")) return "#";
+		if(!access().flagForKey("read"))
+			return "&otimes;";
 		if(theNote.length() <= len())
 			return theNote;
+		if(theNote.charAt(1) == ':')
+			return theNote.substring(0,2);
 		String url = application().resourceManager().urlForResourceNamed("text.png","RujelBase",null,context().request());
 		return "<img src=\"" + url + "\" alt=\"txt\" height=\"16\" width=\"16\">";
 	}
@@ -201,7 +204,8 @@ public class NotePresenter extends WOComponent {
 		String theNote = noteForStudent();
 		if (theNote == null)
 			return null;
-		if(!access().flagForKey("read")) return (String)application().valueForKeyPath("strings.Strings.messages.noAccess");
+		if(!access().flagForKey("read")) 
+			return (String)application().valueForKeyPath("strings.Strings.messages.noAccess");
 		if(theNote.length() <= len())
 			return null;
 		return WOMessage.stringByEscapingHTMLAttributeValue(theNote);
@@ -261,7 +265,7 @@ public class NotePresenter extends WOComponent {
 	}
 
 	public WOActionResults selectAction() {
-		if(enableArchive && student() != null)
+		if(enableArchive && student() != null && (single() || hasValue()))
 			return archivePopup();
 		return (WOActionResults)valueForBinding("selectAction");
 	}
@@ -276,7 +280,7 @@ public class NotePresenter extends WOComponent {
 	
 	public String onClick() {
 		String key = "checkRun";
-		if(enableArchive && student() != null)
+		if(enableArchive && student() != null && (single() || hasValue()))
 			key = "ajaxPopup";
 		return (String)session().valueForKey(key);
     }

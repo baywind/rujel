@@ -74,6 +74,8 @@ public class MarksPresenter extends NotePresenter {
     public Object critItem;
 	
 	protected Integer critItem() {
+		if(critItem == null)
+			return null;
 		if(critItem instanceof Integer)
 			return (Integer)critItem;
 		return (Integer)NSKeyValueCoding.Utility.valueForKey(critItem, "criterion");
@@ -436,7 +438,7 @@ public class MarksPresenter extends NotePresenter {
 				return lesson().integralPresenter().title();
 			return lessonTitle();
 		}
-		if(!access().flagForKey("read")) return "#";
+		if(!access().flagForKey("read")) return "&otimes;";
 		if(single())
 			return lesson().integralForStudent(student(),lesson().integralPresenter());
 		Integer activeCriterion = activeCriterion();
@@ -449,8 +451,15 @@ public class MarksPresenter extends NotePresenter {
 			return mark.present();
 		if(activeCriterion.intValue() == 0) {
 			String result = lesson().integralForStudent(student(),lesson().integralPresenter());
-			if(result == null && lesson().isCompulsory() && lesson().hasWeight())
-				result = ".";
+			if(result == null) {
+				String note = shortNoteForStudent();
+				if(note != null) {
+					if(note.charAt(0) != '<')
+						note = "<em class = \"dimtext\">" + note + "</em>";
+					result = note;
+				} else if(lesson().isCompulsory() && lesson().hasWeight())
+					result = ".";
+			}
 			return result;
 		}
 		if(lesson().usedCriteria().contains(activeCriterion) && 
@@ -590,12 +599,13 @@ public class MarksPresenter extends NotePresenter {
 				if(mark != null) {
 					return mark.hover();
 				}
-				if(lesson().usedCriteria().contains(activeCriterion))
-					return null;
 				if(activeCriterion.intValue() == 0) {
-					BigDecimal integral = lesson().integralForStudent(student());
+					BigDecimal integral = (lesson().usedCriteria().contains(activeCriterion))?
+							null:lesson().integralForStudent(student());
 					if(integral != null)
 						return integral.toPlainString();
+					else if (!single())
+						title = fullNoteForStudent();
 				}
 			}
 /*		} else {

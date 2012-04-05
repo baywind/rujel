@@ -247,14 +247,16 @@ public class NotesPage extends WOComponent {
 					ec.revert();
 			}
 		}
-			setValueForBinding(_currLesson,"currLesson");
-		//selectStudent = studentItem;
+		setValueForBinding(_currLesson,"currLesson");
+		setValueForBinding(_currLesson,"selectStudent");
+		context().setUserInfoForKey(studentItem, "activeStudent");
+/*		//selectStudent = studentItem;
 		if(hasBinding("selectStudent")) {
 			if(studentItem == null)
 				setValueForBinding(_currLesson,"selectStudent");
 			else
 				setValueForBinding(studentItem,"selectStudent");
-		}
+		}*/
 		return context().page();
     }
 	
@@ -273,7 +275,8 @@ public class NotesPage extends WOComponent {
 	}
 	
 	public String cellID () {
-		Object selectStudent = valueForBinding("selectStudent");
+		Object selectStudent = context().userInfoForKey("activeStudent");
+		// valueForBinding("selectStudent");
 		if(selectStudent == null || studentItem == null || !selectStudent.equals(studentItem))
 			return null;
 		else
@@ -294,7 +297,6 @@ public class NotesPage extends WOComponent {
 			presenterCache = new NSMutableDictionary();
 		else
 			presenterCache.removeAllObjects();
-		
 	}
 	
 	public boolean isStateless() {
