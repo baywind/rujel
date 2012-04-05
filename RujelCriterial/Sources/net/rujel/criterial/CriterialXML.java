@@ -435,17 +435,19 @@ public class CriterialXML extends GeneratorModule {
 					handler.element("criterion", null);
 				}
 				handler.endElement("criteria");
-			}
+			} // has criteria
 			if(work.hasWeight()) {
 				handler.prepareAttribute("weight", work.trimmedWeight().toString());
 				handler.prepareEnumAttribute("compulsory", Boolean.toString(work.isCompulsory()));
 				handler.element("calc", null);
 			}
-		}
+//			handler.startElement("marks");
+		} // mask != null
 			NSArray marks = work.marks();
 			NSArray notes = work.notes();
 			if(marks != null && marks.count() > 0) {
-				handler.startElement("marks");
+//				if(!handler.recentElement().equals("marks"))
+					handler.startElement("marks");
 				Enumeration enu = work.students().objectEnumerator();
 				while (enu.hasMoreElements()) {
 					Student st = (Student) enu.nextElement();
@@ -516,9 +518,7 @@ public class CriterialXML extends GeneratorModule {
 					}
 					handler.endElement("mark");
 				} // work.students enumeration
-				handler.endElement("marks");
 			} else if(notes != null && notes.count() > 0) {
-				handler.startElement("marks");
 				Enumeration enu = notes.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					EOEnterpriseObject nt = (EOEnterpriseObject) enu.nextElement();
@@ -532,13 +532,16 @@ public class CriterialXML extends GeneratorModule {
 					if(tmp == null)
 						continue;
 					raiseCounterForObject(st);
+					if(!handler.recentElement().equals("marks"))
+						handler.startElement("marks");
 					handler.prepareAttribute("student", XMLGenerator.getID(st));
 					handler.startElement("mark");
 					handler.element("comment", tmp.toString());
 					handler.endElement("mark");
 				}
-				handler.endElement("marks");
 			}
+			if(handler.recentElement().equals("marks"))
+				handler.endElement("marks");
 //		} // has mask
 		if(work.isHometask() != work.workType().namedFlags().flagForKey("hometask")) {
 			handler.prepareAttribute("key", "hometask");

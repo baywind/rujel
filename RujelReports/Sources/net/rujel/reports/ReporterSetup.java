@@ -386,6 +386,7 @@ public class ReporterSetup extends WOComponent {
 //			NSDictionary defaults = (defaultSettings==null)?null:
 //				(NSDictionary)defaultSettings.objectForKey(key);
 			NSMutableArray skeys = null;
+			boolean updSubs = updSettings || subs == null;
 			if(subs == null) {
 				subs = (preSubs == null)? new NSMutableDictionary() : preSubs.mutableClone();
 				settings.setObjectForKey(subs, key);
@@ -395,7 +396,7 @@ public class ReporterSetup extends WOComponent {
 				skeys.removeObject("active");
 				skeys.removeObject("sort");
 			}
-			if(updSettings || subs.valueForKey("active") == null) {
+			if(updSubs) {
 				Object value = rp.valueForKey("active");
 				if(NULL.equals(value))
 					value = null;
@@ -405,7 +406,7 @@ public class ReporterSetup extends WOComponent {
 			} else if(updReports) {
 				rp.takeValueForKey(subs.valueForKey("active"), "active");
 			}
-			if(updSettings || subs.valueForKey("sort") == null)
+			if(updSubs)
 				subs.takeValueForKey(rp.valueForKey("sort"),"sort");
 			else if(updReports)
 				rp.takeValueForKey(subs.valueForKey("sort"), "sort");
@@ -418,7 +419,7 @@ public class ReporterSetup extends WOComponent {
 					if(subs.objectForKey(key) == null) {
 						subs.takeValueForKey(opt.objectForKey(key),(String)key);
 					}
-					if(updSettings) {
+					if(updSubs) {
 						Object value = opt.valueForKey("active");
 						if(value instanceof EOEnterpriseObject)
 							value = WOLogFormatter.formatEO((EOEnterpriseObject)value);
