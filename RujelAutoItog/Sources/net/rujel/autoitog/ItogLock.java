@@ -15,6 +15,7 @@ import net.rujel.base.ReadAccess.Modifier;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
 
 public class ItogLock implements Modifier {
 	public static final Integer SORT = new Integer(70);
@@ -55,9 +56,7 @@ public class ItogLock implements Modifier {
 					container.editingContext(),false);
 			if(obj instanceof ItogMark) {
 				Object val = ((ItogMark)obj).cycle(); // assumeCourse();
-				NSDictionary dict = new NSDictionary(
-						new Object[] {val,container.eduYear()},
-						new String[] {"cycle","eduYear"});
+				NSDictionary dict = SettingsBase.courseDict((EduCycle)val,container.eduYear());
 				EOEnterpriseObject bc = settings.forCourse(dict);
 				listName = (String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 			} else {

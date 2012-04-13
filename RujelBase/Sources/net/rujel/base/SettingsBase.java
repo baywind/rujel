@@ -33,6 +33,8 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.WOLogLevel;
 
@@ -207,6 +209,37 @@ public class SettingsBase extends _SettingsBase {
 			return null;
 		}
 	}
+	
+	public static NSDictionary courseDict(EduGroup eduGroup) {
+		Integer eduYear = MyUtility.eduYear(eduGroup.editingContext());
+		return courseDict(eduGroup,eduYear);
+	}
+	public static NSDictionary courseDict(EduGroup eduGroup,Integer eduYear) {
+		NSDictionary dict = new NSDictionary(eduGroup.grade(),"grade");
+		return new NSDictionary(new Object[] {dict,eduGroup,eduYear},
+				new Object[] {"cycle","eduGroup","eduYear"});
+	}
+	
+	public static NSDictionary courseDict(EduCycle cycle) {
+		Integer eduYear = MyUtility.eduYear(cycle.editingContext());
+		return courseDict(cycle,eduYear);
+	}
+	public static NSDictionary courseDict(EduCycle cycle,Integer eduYear) {
+		NSDictionary dict = new NSDictionary(cycle.grade(),"grade");
+		return new NSDictionary(new Object[] {cycle,dict,eduYear},
+				new Object[] {"cycle","eduGroup","eduYear"});
+	}
+	
+	public static NSDictionary courseDict(Integer grade,Integer eduYear) {
+		NSDictionary dict = new NSDictionary(grade,"grade");
+		if(eduYear == null)
+			return new NSDictionary(new Object[] {dict,dict},
+					new Object[] {"cycle","eduGroup"});
+		else
+			return new NSDictionary(new Object[] {dict,dict,eduYear},
+					new Object[] {"cycle","eduGroup","eduYear"});
+	}
+	
 	
 	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {
 		SettingsBase sb = null;

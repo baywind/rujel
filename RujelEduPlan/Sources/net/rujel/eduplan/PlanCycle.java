@@ -362,8 +362,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOEditingContext ec = editingContext();
 		int days = 0;
 		int weekDays = 7;
-		NSDictionary crs = (eduYear == null)? new NSDictionary(this,"cycle"):
-			new NSDictionary(new Object[] {this,eduYear},new String[] {"cycle","eduYear"});
+		NSDictionary crs = (eduYear == null)? SettingsBase.courseDict(this):
+			SettingsBase.courseDict(this,eduYear);
 		EOEnterpriseObject setting = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,crs, ec);
 		if(setting != null) {
 			String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);

@@ -263,8 +263,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		exec.writeFile("index.html", page);
 		Enumeration repEnu = reports.objectEnumerator();
 		if(list != null) {
-			NSDictionary dict = new NSDictionary(gr.grade(),"grade");
-			dict = new NSDictionary(new Object[] {dict,gr}, new Object[] {"cycle","eduGroup"});
+			NSDictionary dict = SettingsBase.courseDict(gr);
 			EOEditingContext ec = gr.editingContext(); 
 			EOEnterpriseObject active = SettingsBase.settingForCourse("CompletionActive",dict, ec);
 			if(Various.boolForObject(active.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {

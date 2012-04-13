@@ -148,9 +148,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			while (enu.hasMoreElements()) {
 				PlanCycle cycle = (PlanCycle) enu.nextElement();
 				values.takeValueForKey(cycle, "cycle");
-				NSMutableDictionary dict = observeValue(new NSDictionary(
-						new Object[] {cycle,eduYear},
-						new String[] {"cycle","eduYear"}));
+				NSMutableDictionary dict = observeValue(SettingsBase.courseDict(cycle, eduYear));
 				dict = new NSMutableDictionary(dict, "listName");
 				dict.takeValueForKey(cycle,"cycle");
 //				dict.takeValueForKey(new Integer(cycle.weekly()), "weekly");

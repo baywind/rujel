@@ -264,9 +264,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 			params.takeValueForKey(students,"students");
 			params.takeValueForKey(existingCourses,"courses");
 			if(periodsByList != null) {
-				EOEnterpriseObject bc = listBase.forCourse(new NSDictionary(
-						new Object[] {eduGroup, eduYear},
-						new String[] {"eduGroup", "eduYear"}));
+				EOEnterpriseObject bc = listBase.forCourse(
+						SettingsBase.courseDict(eduGroup, eduYear));
 				String listName = (bc == null)?null:
 					(String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
 				if(listName != null) {

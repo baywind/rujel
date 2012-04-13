@@ -81,9 +81,7 @@ public class CriterSelector extends WOComponent {
 				if(cycle != null) {
 					Integer eduYear = (Integer)session().valueForKey("eduYear");
 					EOEditingContext ec = cycle.editingContext();
-					NSDictionary crs = new NSDictionary(
-							new Object[] {cycle,eduYear},
-							new String[] {"cycle","eduYear"});
+					NSDictionary crs = SettingsBase.courseDict(cycle,eduYear);
 					EOEnterpriseObject setting = SettingsBase.settingForCourse(
 							CriteriaSet.ENTITY_NAME, crs, ec);
 					if(setting != null) {
@@ -130,11 +128,9 @@ public class CriterSelector extends WOComponent {
     			EOEditingContext ec = null;
     			if(c == null) {
     				EduCycle cycle = (EduCycle)valueForBinding("cycle");
-    				Object eduYear = session().valueForKey("eduYear");
+    				Integer eduYear = (Integer)session().valueForKey("eduYear");
     				ec = cycle.editingContext();
-       				c = new NSDictionary(
-    						new Object[] {cycle,eduYear},
-    						new String[] {"cycle","eduYear"});
+       				c = SettingsBase.courseDict(cycle,eduYear);
     			} else {
         			ec = ((EduCourse)c).editingContext();
     			}
