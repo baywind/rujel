@@ -1,0 +1,29 @@
+{
+    attributes = (
+        {
+            allowsNull = N; 
+            columnName = "BASE_IDENTIFIER"; 
+            name = baseID; 
+            prototypeName = string; 
+        }, 
+        {columnName = "PRODUCT_NAME"; name = productName; prototypeName = string; }, 
+        {allowsNull = N; columnName = "S_ID"; name = sID; prototypeName = short; }
+    ); 
+    attributesUsedForLocking = (baseID, productName); 
+    className = "net.rujel.io.ExtSystem"; 
+    classProperties = (baseID, extData, productName); 
+    externalName = "SYNC_EXT_SYSTEM"; 
+    fetchSpecificationDictionary = {}; 
+    name = ExtSystem; 
+    primaryKeyAttributes = (sID); 
+    relationships = (
+        {
+            deleteRule = EODeleteRuleCascade; 
+            destination = ExtData; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = sysID; sourceAttribute = sID; }); 
+            name = extData; 
+        }
+    ); 
+}

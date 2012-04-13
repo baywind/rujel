@@ -1,0 +1,30 @@
+{
+    attributes = (
+        {allowsNull = N; columnName = "D_ID"; name = dID; prototypeName = integer; }, 
+        {allowsNull = N; columnName = "DATA_KEY"; name = key; prototypeName = word; }, 
+        {
+            allowsNull = N; 
+            columnName = "SYSTEM_ID"; 
+            name = sysID; 
+            prototypeName = short; 
+        }, 
+        {columnName = "DATA_VALUE"; name = value; prototypeName = text; }
+    ); 
+    attributesUsedForLocking = (key, sysID, value); 
+    className = EOGenericRecord; 
+    classProperties = (extSystem, key, value); 
+    externalName = "SYNC_EXT_DATA"; 
+    fetchSpecificationDictionary = {}; 
+    name = ExtData; 
+    primaryKeyAttributes = (dID); 
+    relationships = (
+        {
+            destination = ExtSystem; 
+            isMandatory = Y; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = sID; sourceAttribute = sysID; }); 
+            name = extSystem; 
+        }
+    ); 
+}

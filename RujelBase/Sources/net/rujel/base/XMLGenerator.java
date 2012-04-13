@@ -567,7 +567,9 @@ public class XMLGenerator extends AbstractObjectReader {
 	        if (handler == null) {
 	            throw new IllegalStateException("ContentHandler not set");
 	        }
-	        NSDictionary settings = (NSDictionary)in.options.valueForKeyPath("reporter.settings");
+	        NSDictionary settings = null;
+	        if(!Various.boolForObject(in.options.valueForKeyPath("reporter.hideSettings")))
+	        	settings = (NSDictionary)in.options.valueForKeyPath("reporter.settings");
 	        NSDictionary info = (NSDictionary)in.options.valueForKey("info");
 	        if((settings == null || settings.count() == 0) && info == null)
 	        	return;

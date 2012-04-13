@@ -1,0 +1,15 @@
+{
+    attributes = (
+        {columnName = "EXT_VALUE"; name = extValue; prototypeName = string; }, 
+        {columnName = "INDEX_ID"; name = idxID; prototypeName = integer; }, 
+        {columnName = "LOCAL_VALUE"; name = localValue; prototypeName = string; }, 
+        {allowsNull = N; columnName = "M_ID"; name = mID; prototypeName = integer; }
+    ); 
+    attributesUsedForLocking = (extValue, idxID, localValue); 
+    className = EOGenericRecord; 
+    classProperties = (extValue, localValue); 
+    externalName = "SYNC_IDX_MATCH"; 
+    fetchSpecificationDictionary = {}; 
+    name = IndexMatch; 
+    primaryKeyAttributes = (mID); 
+}

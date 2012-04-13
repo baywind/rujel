@@ -1,0 +1,26 @@
+{
+    attributes = (
+        {
+            allowsNull = Y; 
+            columnName = "EDU_YEAR"; 
+            name = eduYear; 
+            prototypeName = short; 
+        }, 
+        {allowsNull = N; columnName = "I_ID"; name = iID; prototypeName = integer; }, 
+        {
+            allowsNull = N; 
+            columnName = "INDEX_NAME"; 
+            name = indexName; 
+            prototypeName = word; 
+        }, 
+        {columnName = "SYSTEM_ID"; name = sysID; prototypeName = short; }
+    ); 
+    attributesUsedForLocking = (eduYear, indexName, sysID); 
+    className = "net.rujel.io.SyncIndex"; 
+    classProperties = (eduYear, indexName); 
+    externalName = "SYNC_INDEX"; 
+    fetchSpecificationDictionary = {}; 
+    internalInfo = {"_javaClientClassName" = SyncIndex; }; 
+    name = SyncIndex; 
+    primaryKeyAttributes = (iID); 
+}
