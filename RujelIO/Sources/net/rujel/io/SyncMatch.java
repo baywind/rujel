@@ -29,7 +29,11 @@
 
 package net.rujel.io;
 
+import net.rujel.base.EntityIndex;
+import net.rujel.base.MyUtility;
+
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.NSArray;
 
 public class SyncMatch extends _SyncMatch {
 
@@ -42,5 +46,48 @@ public class SyncMatch extends _SyncMatch {
 
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
+	}
+	
+	public String entity() {
+		return entityIndex().entName();
+	}
+	
+	public void setEntity(String entity) {
+		EntityIndex ei = EntityIndex.indexForEntityName(editingContext(), entity, true);
+		setEntityIndex(ei);
+		if(ei.isYearly())
+			setEduYear(MyUtility.eduYear(editingContext()));
+	}
+	
+	public static SyncMatch matchForSystemAndObject(ExtSystem sys, EOKeyGlobalID gid) {
+		EOEditingContext ec = sys.editingContext();
+		EntityIndex ei = EntityIndex.indexForEntityName(ec, gid.entityName(), false);
+		Integer eduYear = MyUtility.eduYear(ec);
+		EOQualifier[] qual = new EOQualifier[4];
+		qual[0] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
+				EOQualifier.QualifierOperatorEqual, eduYear);
+		qual[1] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
+				EOQualifier.QualifierOperatorEqual, NullValue);
+		qual[3] = new EOOrQualifier(new NSArray(qual));
+		
+		qual[0] = new EOKeyValueQualifier(EXT_SYSTEM_KEY, 
+				EOQualifier.QualifierOperatorEqual, sys);
+		qual[1] = new EOKeyValueQualifier(ENTITY_INDEX_KEY, 
+				EOQualifier.QualifierOperatorEqual, ei);
+		qual[2] = new EOKeyValueQualifier(OBJ_ID_KEY, 
+				EOQualifier.QualifierOperatorEqual, gid.keyValues()[0]);
+		qual[3] = new EOAndQualifier(new NSArray(qual));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual[3],null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		if(found.count() > 1) {
+			for (int i = 0; i < qual.length; i++) {
+				SyncMatch m = (SyncMatch)found.objectAtIndex(i);
+				if(m.eduYear() != null)
+					return m;
+			}
+		}
+		return (SyncMatch)found.objectAtIndex(0);
 	}
 }

@@ -97,6 +97,20 @@ public class EntityIndex extends _EntityIndex {
 		return indexForObject(eo, true); 
 	}
 	
+	public boolean isYearly() {
+		String model;
+		try {
+			model = EOModelGroup.defaultGroup().entityNamed(entName()).model().name();
+		} catch (Exception e) {
+			return false;
+		}
+		SettingsReader settings = SettingsReader.settingsForPath("dbConnection." + model, false);
+		if(settings == null)
+			return false;
+		String dbName = settings.get("dbName", null);
+		return dbName.contains("%");
+	}
+	
 	public static EntityIndex indexForObject(EOEnterpriseObject eo, boolean create) {
 		EOEditingContext ec = eo.editingContext();
 		String entName = eo.entityName();

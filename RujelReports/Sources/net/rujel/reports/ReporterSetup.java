@@ -142,7 +142,8 @@ public class ReporterSetup extends WOComponent {
 	public WOComponent submit() {
 		NSMutableDictionary settings = (NSMutableDictionary)reporter.objectForKey("settings");
 		settings = synchronizeReportSettings(settings, reporter,true,false);
-		reporter.takeValueForKey(settings, "settings");
+		if(settings != null)
+			reporter.takeValueForKey(settings, "settings");
 		returnPage.ensureAwakeInContext(context());
 		context().setUserInfoForKey(reporter, "submittedReporter");
 		if(submitPath != null)
@@ -385,7 +386,7 @@ public class ReporterSetup extends WOComponent {
 			NSKeyValueCoding reporter, boolean updSettings, boolean updReports) {
 		NSArray reports = (NSArray)reporter.valueForKey("options");
 		if(reports == null)
-			return null;
+			return settings;
 		NSMutableArray keys = null;
 		NSDictionary preSettings = (NSDictionary)reporter.valueForKey("settings");
 		if(settings == null) {

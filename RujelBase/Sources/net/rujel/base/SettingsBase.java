@@ -50,6 +50,15 @@ public class SettingsBase extends _SettingsBase {
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 	}
+	
+	public EOEnterpriseObject forObject(Object obj) {
+		Integer eduYear;
+		if(obj instanceof EOEnterpriseObject)
+			eduYear = MyUtility.eduYear(((EOEnterpriseObject)obj).editingContext());
+		else
+			eduYear = MyUtility.eduYear(editingContext());
+		return forCourse(courseDict(obj,eduYear));
+	}
 
 	public EOEnterpriseObject forCourse(NSKeyValueCodingAdditions course) {
 		if(course == null)
@@ -240,6 +249,21 @@ public class SettingsBase extends _SettingsBase {
 					new Object[] {"cycle","eduGroup","eduYear"});
 	}
 	
+	public static NSKeyValueCodingAdditions courseDict(Object obj,Integer eduYear) {
+		if(obj instanceof EduCourse)
+			return (EduCourse)obj;
+		if(eduYear == null && obj instanceof EOEnterpriseObject) {
+			eduYear = MyUtility.eduYear(((EOEnterpriseObject)obj).editingContext());
+		}
+		if(obj instanceof EduCycle)
+			return courseDict((EduCycle)obj,eduYear);
+		if(obj instanceof EduGroup)
+			return courseDict((EduGroup)obj,eduYear);
+		if(obj instanceof Integer)
+			return courseDict((Integer)obj,eduYear);
+		throw new IllegalArgumentException(
+				"EduCourse, EduCycle, EduGroup or Integer are only accepted");
+	}
 	
 	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {
 		SettingsBase sb = null;

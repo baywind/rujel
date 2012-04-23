@@ -13,14 +13,29 @@
             name = indexName; 
             prototypeName = word; 
         }, 
-        {columnName = "SYSTEM_ID"; name = sysID; prototypeName = short; }
+        {
+            allowsNull = N; 
+            columnName = "SYSTEM_ID"; 
+            name = sysID; 
+            prototypeName = short; 
+        }
     ); 
     attributesUsedForLocking = (eduYear, indexName, sysID); 
     className = "net.rujel.io.SyncIndex"; 
-    classProperties = (eduYear, indexName); 
+    classProperties = (eduYear, extSystem, indexName); 
     externalName = "SYNC_INDEX"; 
     fetchSpecificationDictionary = {}; 
     internalInfo = {"_javaClientClassName" = SyncIndex; }; 
     name = SyncIndex; 
     primaryKeyAttributes = (iID); 
+    relationships = (
+        {
+            destination = ExtSystem; 
+            isMandatory = Y; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = sID; sourceAttribute = sysID; }); 
+            name = extSystem; 
+        }
+    ); 
 }

@@ -15,5 +15,6 @@
 	<classpathentry kind="con" path="WOFramework/RujelEmail"/>
 	<classpathentry kind="con" path="WOFramework/RujelReports"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="WOFramework/RujelIO"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

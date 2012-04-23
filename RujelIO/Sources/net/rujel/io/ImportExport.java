@@ -46,7 +46,6 @@ import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 import net.rujel.base.MyUtility;
-import net.rujel.base.XMLGenerator;
 import net.rujel.reports.ReporterSetup;
 import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.SessionedEditingContext;

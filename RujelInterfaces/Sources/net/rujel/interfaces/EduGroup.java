@@ -45,7 +45,8 @@ import com.webobjects.eocontrol.EOSortOrdering;
 
 public interface EduGroup extends PersonGroup {
 	
-	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath("interfaces.EduGroup",null);
+	public static final String className = net.rujel.reusables.SettingsReader.stringForKeyPath(
+			"interfaces.EduGroup",null);
 	public static final String entityName = className.substring(1 + className.lastIndexOf('.'));
 	public static final NSArray sorter = new NSArray(new EOSortOrdering[] {
 			new EOSortOrdering("grade",EOSortOrdering.CompareAscending),

@@ -45,8 +45,8 @@ import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
-import net.rujel.base.XMLGenerator;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;
@@ -79,6 +79,11 @@ public class PrognosesXML extends GeneratorModule {
 				EasyGenerationContentHandlerProxy handler) throws SAXException {
 		if(!handler.recentElement().equals("course"))
 			throw new SAXException("Should generate within course");
+		{
+			NSDictionary opt = (NSDictionary)settings.valueForKeyPath("reporter.settings");
+			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("autoitog.active")))
+				return;
+		}
 		EOEditingContext ec = course.editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
 		if(listName == null)
@@ -130,8 +135,8 @@ public class PrognosesXML extends GeneratorModule {
 				ai = AutoItog.forListName(listName, itog);
 				if(ai == null)
 					continue;
-				handler.prepareAttribute("id", XMLGenerator.getID(ai));
-				handler.prepareAttribute("date", XMLGenerator.formatDate(ai.fireDate()));
+				handler.prepareAttribute("id", MyUtility.getID(ai));
+				handler.prepareAttribute("date", MyUtility.formatXMLDate(ai.fireDate()));
 				if(itog.num() != null)
 					handler.prepareAttribute("num", itog.num().toString());
 				handler.prepareAttribute("type", itog.itogType().name());
@@ -148,7 +153,7 @@ public class PrognosesXML extends GeneratorModule {
 				Timeout timeout = CourseTimeout.getTimeoutForCourseAndPeriod(course, itog);
 				if(timeout != null) {
 					handler.prepareAttribute("key", "timeout");
-					handler.element("param", XMLGenerator.formatDate(timeout.fireDate()));
+					handler.element("param", MyUtility.formatXMLDate(timeout.fireDate()));
 					flags = timeout.flags();
 					if(flags.intValue() != 0) {
 						handler.prepareAttribute("key", "timeoutFlags");
@@ -159,7 +164,7 @@ public class PrognosesXML extends GeneratorModule {
 				} // timeout
 				handler.startElement("marks");
 			} // describe container
-			handler.prepareAttribute("student", XMLGenerator.getID(progn.student()));
+			handler.prepareAttribute("student", MyUtility.getID(progn.student()));
 			handler.prepareAttribute("value", progn.mark());
 			raiseCounterForObject(progn.student());
 			handler.startElement("mark");
@@ -176,7 +181,7 @@ public class PrognosesXML extends GeneratorModule {
 					progn.student(), course, progn.itogContainer());
 			if(timeout != null) {
 				handler.prepareAttribute("key", "timeout");
-				handler.element("param", XMLGenerator.formatDate(timeout.fireDate()));
+				handler.element("param", MyUtility.formatXMLDate(timeout.fireDate()));
 				flags = timeout.flags();
 				if(flags.intValue() != 0) {
 					handler.prepareAttribute("key", "timeoutFlags");

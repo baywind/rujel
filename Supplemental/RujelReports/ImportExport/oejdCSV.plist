@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>type</key>
+	<string>export</string>
+	<key>id</key>
+	<string>oejdCSV</string>
+	<key>title</key>
+	<string>Выгрузка для ОЭЖД</string>
+	<key>description</key>
+	<string>Выгрузка персональных данных для реестров "Общегородского электронного журнала и дневника"</string>
+	<key>sort</key>
+	<string>30</string>
+	<key>_mimeType</key>
+	<string>text/csv</string>
+	<key>filext</key>
+	<string>csv</string>
+	<key>_transform</key>
+	<string>oejdCSV.xsl</string>
+	<key>_sources</key>
+	<array>
+		<string>Persdata</string>
+		<string>Options</string>
+	</array>
+	<key>settings</key>
+	<dict>
+		<key>eduGroups</key>
+		<dict>
+			<key>active</key>
+			<true/>
+			<key>nolist</key>
+			<false/>
+		</dict>
+		<key>eduPlan</key>
+		<dict>
+			<key>active</key>
+			<false/>
+		</dict>
+		<key>courses</key>
+		<dict>
+			<key>active</key>
+			<false/>
+		</dict>
+	</dict>
+	<key>extData</key>
+	<array>
+		<dict>
+			<key>id</key>
+			<string>schoolGUID</string>
+			<key>title</key>
+			<string>GUID школы</string>
+			<key>hover</key>
+			<string>Идентификатор школы в ОЭЖД</string>
+			<key>type</key>
+			<string>string</string>
+			<key>required</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>schoolTitle</string>
+			<key>title</key>
+			<string>Название школы</string>
+			<key>type</key>
+			<string>string</string>
+			<key>required</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>schoolFullname</string>
+			<key>title</key>
+			<string>Полное наименование школы</string>
+			<key>type</key>
+			<string>text</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<string>district</string>
+			<key>title</key>
+			<string>Округ города</string>
+			<key>type</key>
+			<string>string</string>
+			<key>required</key>
+			<true/>
+		</dict>
+	</array>
+	<key>sync</key>
+	<dict>
+		<key>eduGroup</key>
+		<array>
+			<string>GUID</string>
+			<dict>
+				<key>paramKey</key>
+				<string>itogList</string>
+				<key>settingsBase</key>
+				<string>ItogMark</string>
+			</dict>
+		</array>
+		<key>person</key>
+		<string>GUID</string>
+	</dict>
+	<key>indexes</key>
+	<array>
+		<dict>
+			<key>name</key>
+			<string>periods</string>
+			<key>local</key>
+			<dict>
+			<!-- //TODO: action to choose itog listNames -->
+			</dict>
+			<key>external</key>
+			<array>
+				<string>Четверти</string>
+				<string>Триместры</string>
+				<string>Полугодия</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

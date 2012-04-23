@@ -51,8 +51,8 @@ import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.Indexer;
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
-import net.rujel.base.XMLGenerator;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Student;
@@ -105,7 +105,7 @@ public class CriterialXML extends GeneratorModule {
 					workType = null;
 				}
 			}
-			boolean dateSet = Various.boolForObject(options.valueForKeyPath(
+			boolean dateSet = Various.boolForObject(settings.valueForKeyPath(
 					"reporter.settings.marks.dateSet"));
 			NSMutableArray quals = new NSMutableArray(Various.getEOInQualifier("student", students));
 			if(workType != null)
@@ -382,11 +382,11 @@ public class CriterialXML extends GeneratorModule {
 			work._critSet = forCourse.critSet;
 		if(work._critSet == null)
 			work._critSet = NullValue;
-		handler.prepareAttribute("id", XMLGenerator.getID(work));
+		handler.prepareAttribute("id", MyUtility.getID(work));
 		Object tmp = work.number();
 		if(tmp != null)
 			handler.prepareAttribute("num", tmp.toString());
-		handler.prepareAttribute("date", XMLGenerator.formatDate(work.date()));
+		handler.prepareAttribute("date", MyUtility.formatXMLDate(work.date()));
 //		handler.prepareAttribute("title", work.title());
 		handler.prepareAttribute("type", work.workType().typeName());
 		handler.startElement("container");
@@ -443,8 +443,10 @@ public class CriterialXML extends GeneratorModule {
 			}
 //			handler.startElement("marks");
 		} // mask != null
-			NSArray marks = work.marks();
-			NSArray notes = work.notes();
+			boolean noMarks = Various.boolForObject(settings.valueForKeyPath(
+					"reporter.settings.marks.noMarks"));
+			NSArray marks = (noMarks)? null: work.marks();
+			NSArray notes = (noMarks)? null: work.notes();
 			if(marks != null && marks.count() > 0) {
 //				if(!handler.recentElement().equals("marks"))
 					handler.startElement("marks");
@@ -461,7 +463,7 @@ public class CriterialXML extends GeneratorModule {
 					if(mrk == null && note == null)
 						continue;
 					raiseCounterForObject(st);
-					handler.prepareAttribute("student", XMLGenerator.getID(st));
+					handler.prepareAttribute("student", MyUtility.getID(st));
 					if(mask == null) { // non criterial mark (that is strange)
 						if(mrk != null && mrk[0] != null) {
 							handler.prepareAttribute("value", mrk[0].present());
@@ -534,7 +536,7 @@ public class CriterialXML extends GeneratorModule {
 					raiseCounterForObject(st);
 					if(!handler.recentElement().equals("marks"))
 						handler.startElement("marks");
-					handler.prepareAttribute("student", XMLGenerator.getID(st));
+					handler.prepareAttribute("student", MyUtility.getID(st));
 					handler.startElement("mark");
 					handler.element("comment", tmp.toString());
 					handler.endElement("mark");
@@ -550,7 +552,7 @@ public class CriterialXML extends GeneratorModule {
 		tmp = work.announce();
 		if(tmp != null && !work.date().equals(tmp)) {
 			handler.prepareAttribute("key", "announce");
-			handler.element("param", XMLGenerator.formatDate((NSTimestamp)tmp));
+			handler.element("param", MyUtility.formatXMLDate((NSTimestamp)tmp));
 		}
 		tmp = work.load();
 		if(tmp != null && ((Integer)tmp).intValue() > 0) {

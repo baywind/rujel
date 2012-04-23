@@ -1,4 +1,4 @@
-// ScheduleXMLL.java
+// ScheduleXML.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -49,7 +49,6 @@ import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
-import net.rujel.base.XMLGenerator;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.Period;
 import net.rujel.reusables.Various;
@@ -79,7 +78,7 @@ public class ScheduleXML extends GeneratorModule {
 			throw new SAXException("Should generate within course");
 		{
 			NSDictionary opt = (NSDictionary)settings.valueForKeyPath("reporter.settings");
-			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("shedule.active")))
+			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("schedule.active")))
 				return;
 		}
 		Date since = (NSTimestamp)settings.valueForKey("since");
@@ -146,10 +145,10 @@ public class ScheduleXML extends GeneratorModule {
 			handler.prepareAttribute("number", entry.num().toString());
 			NSTimestamp date = entry.validSince();
 			if(date != null && (changes || (to != null && date.before(to) && date.after(since))))
-				handler.prepareAttribute("validSince", XMLGenerator.formatDate(date));
+				handler.prepareAttribute("validSince", MyUtility.formatXMLDate(date));
 			date = entry.validTo();
 			if(date != null && (changes || (since != null && date.after(since) && date.before(to))))
-				handler.prepareAttribute("validTo", XMLGenerator.formatDate(date));
+				handler.prepareAttribute("validTo", MyUtility.formatXMLDate(date));
 			if(entry.isTemporary())
 				handler.prepareAttribute("flags", "temporary");
 			handler.element("timeslot", null);

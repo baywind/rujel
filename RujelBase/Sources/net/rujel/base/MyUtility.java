@@ -31,7 +31,10 @@ package net.rujel.base;
 
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
@@ -45,6 +48,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.Format;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
@@ -457,6 +461,28 @@ public class MyUtility {
     	int eveningHour = SettingsReader.intForKeyPath("edu.eveningHour", 17);
     	return (cal.get(Calendar.HOUR_OF_DAY) >= eveningHour);
     }
+    
+	public static String getID (EOEnterpriseObject eo) {
+		EOEditingContext ec = eo.editingContext();
+		if(ec == null)
+			return null;
+		EOGlobalID gid = ec.globalIDForObject(eo);
+		if(gid.isTemporary())
+			return null;
+		EOKeyGlobalID kGid = (EOKeyGlobalID)gid;
+		if(kGid.keyCount() > 1) {
+			return kGid.keyValuesArray().toString();
+		}
+		return kGid.keyValues()[0].toString();
+	}
+	
+	public static final SimpleDateFormat xmlDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	public static String formatXMLDate(Date date) {
+		if(date == null)
+			return null;
+		return xmlDateFormat.format(date);
+	}
+
 
 /*	protected static final String[] CLIENT_IDENTITY_KEYS = new String[]
 	                 {"x-webobjects-remote-addr", "remote_addr","remote_host","user-agent"};

@@ -125,18 +125,19 @@ public class LessonsXML extends GeneratorModule {
 		if(!handler.recentElement().equals("containers"))
 			throw new SAXException("Should generate within 'containers'");
 	
-		handler.prepareAttribute("id", XMLGenerator.getID(lesson));
+		handler.prepareAttribute("id", MyUtility.getID(lesson));
 		Object tmp = lesson.number();
 		if(tmp != null)
 			handler.prepareAttribute("num", tmp.toString());
-		handler.prepareAttribute("date", XMLGenerator.formatDate(lesson.date()));
+		handler.prepareAttribute("date", MyUtility.formatXMLDate(lesson.date()));
 //		handler.prepareAttribute("title", lesson.title());
 		handler.startElement("container");
 		handler.element("content", lesson.theme());
 		tmp = lesson.homeTask();
 		if(tmp != null)
 			handler.element("task", (String)tmp);
-		NSArray notes = lesson.notes();
+		NSArray notes = (Various.boolForObject(settings.valueForKeyPath(
+			"reporter.settings.lessons.noMarks")))? null : lesson.notes();
 		if(notes != null && notes.count() > 0) {
 			handler.startElement("marks");
 			Enumeration enu = notes.objectEnumerator();
@@ -153,7 +154,7 @@ public class LessonsXML extends GeneratorModule {
 				String note = (String)nt.valueForKey("note");
 				if(note == null)
 					continue;
-				handler.prepareAttribute("student", XMLGenerator.getID(st));
+				handler.prepareAttribute("student", MyUtility.getID(st));
 				raiseCounterForObject(st);
 				if(note.length() <= 5) {
 					handler.prepareAttribute("value",note);

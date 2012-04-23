@@ -33,11 +33,14 @@ import java.util.Enumeration;
 
 import org.xml.sax.SAXException;
 
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 
-import net.rujel.base.XMLGenerator;
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.xml.EasyGenerationContentHandlerProxy;
@@ -54,25 +57,36 @@ public class EduPlanXML extends GeneratorModule {
 			EasyGenerationContentHandlerProxy handler) throws SAXException {
 		if(!handler.recentElement().equals("ejdata"))
 			return;
+		boolean noHours = false;
 		{
 			NSDictionary opt = (NSDictionary)settings.valueForKeyPath("reporter.settings");
 			if(opt != null && !Various.boolForObject(opt.valueForKeyPath("eduPlan.active")))
 				return;
+			if(opt != null)
+				noHours = Various.boolForObject(opt.valueForKeyPath("eduPlan.noHours"));
 		}
 		EduGroup gr = (EduGroup)settings.valueForKey("eduGroup");
 		handler.startElement("eduPlan");
+		NSArray cycles = null;
 		if(gr == null) {
-			
+			EOEditingContext ec = (EOEditingContext)settings.valueForKey("ec");
+			cycles = EOUtilities.objectsForEntityNamed(ec, PlanCycle.ENTITY_NAME);
 		} else {
-			NSArray cycles = PlanCycle.cyclesForEduGroup(gr);
-			if(cycles == null || cycles.count() == 0) {
-				handler.endElement("eduPlan");
-				return;
-			}
-			Enumeration enu = cycles.objectEnumerator();
-			Subject subj = null;
-			while (enu.hasMoreElements()) {
+			cycles = PlanCycle.cyclesForEduGroup(gr);
+		}
+		if(cycles == null || cycles.count() == 0) {
+			handler.endElement("eduPlan");
+			return;
+		}
+		cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, SubjectComparator.sorter);
+		Enumeration enu = cycles.objectEnumerator();
+		Subject subj = null;
+		while (enu.hasMoreElements()) {
 				PlanCycle cycle = (PlanCycle) enu.nextElement();
+				EOEnterpriseObject hours = cycle.planHours(gr, false);
+				if(hours == null && !noHours)
+					continue;
+				
 				if(subj != cycle.subjectEO()) {
 					if(subj != null)
 						handler.endElement("subject");
@@ -84,13 +98,13 @@ public class EduPlanXML extends GeneratorModule {
 					handler.prepareAttribute("key", "area");
 					handler.element("param", (String)subj.valueForKeyPath("area.areaName"));
 				}
-				handler.prepareAttribute("id", XMLGenerator.getID(cycle));
+				
+				handler.prepareAttribute("id", MyUtility.getID(cycle));
 				handler.prepareAttribute("grade", cycle.grade().toString());
 //				if(Various.boolForObject(WOApplication.application().valueForKeyPath(
 //						"strings.sections.hasSections")))
-					handler.prepareAttribute("section", cycle.section().toString());
+				handler.prepareAttribute("section", cycle.section().toString());
 				handler.startElement("cycle");
-				EOEnterpriseObject hours = cycle.planHours(gr, false);
 				if(hours != null) {
 					Integer hrs = (Integer)hours.valueForKey("weeklyHours");
 					if(hrs == null) {
@@ -105,10 +119,9 @@ public class EduPlanXML extends GeneratorModule {
 						handler.element("hours", hrs.toString());
 				}
 				handler.endElement("cycle");
-			} // cycles enumeration
-			if(subj != null)
-				handler.endElement("subject");
-		}
+		} // cycles enumeration
+		if(subj != null)
+			handler.endElement("subject");
 		handler.endElement("eduPlan");
 	}
 

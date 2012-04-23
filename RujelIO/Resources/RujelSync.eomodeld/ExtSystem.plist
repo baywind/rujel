@@ -6,12 +6,13 @@
             name = baseID; 
             prototypeName = string; 
         }, 
+        {columnName = "SYSTEM_DESCRIPTION"; name = description; prototypeName = text; }, 
         {columnName = "PRODUCT_NAME"; name = productName; prototypeName = string; }, 
         {allowsNull = N; columnName = "S_ID"; name = sID; prototypeName = short; }
     ); 
-    attributesUsedForLocking = (baseID, productName); 
+    attributesUsedForLocking = (baseID, description, productName); 
     className = "net.rujel.io.ExtSystem"; 
-    classProperties = (baseID, extData, productName); 
+    classProperties = (baseID, description, extData, productName, syncIndexes); 
     externalName = "SYNC_EXT_SYSTEM"; 
     fetchSpecificationDictionary = {}; 
     name = ExtSystem; 
@@ -24,6 +25,14 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = sysID; sourceAttribute = sID; }); 
             name = extData; 
+        }, 
+        {
+            deleteRule = EODeleteRuleDeny; 
+            destination = SyncIndex; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = sysID; sourceAttribute = sID; }); 
+            name = syncIndexes; 
         }
     ); 
 }

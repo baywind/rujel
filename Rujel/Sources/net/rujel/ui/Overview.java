@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.interfaces.*;
+import net.rujel.io.XMLGenerator;
 import net.rujel.reports.ReporterSetup;
 import net.rujel.reports.ReportsModule;
 import net.rujel.reports.StudentReports;
@@ -48,7 +49,6 @@ import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
-import net.rujel.base.XMLGenerator;
 
 public class Overview extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");

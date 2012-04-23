@@ -192,8 +192,9 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 		NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
 		{
 			NSDictionary settings = (NSDictionary)options.valueForKeyPath("reporter.settings");
-		if(settings != null && !Various.boolForObject(settings.valueForKeyPath("marks.active")))
-			return null;
+			if(settings != null && 
+					!Various.boolForObject(settings.valueForKeyPath("eduPlan.active")))
+				return null;
 		}
 		return new EduPlanXML(options);
 	}
