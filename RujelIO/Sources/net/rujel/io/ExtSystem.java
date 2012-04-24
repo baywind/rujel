@@ -161,6 +161,7 @@ public class ExtSystem extends _ExtSystem {
 				qual[1] = new EOKeyValueQualifier(SyncMatch.ENTITY_INDEX_KEY, 
 						EOQualifier.QualifierOperatorEqual, ei);
 				last += ids.count();
+				ids.removeAllObjects();
 			}
 			EOKeyGlobalID gid = (EOKeyGlobalID)obj.editingContext().globalIDForObject(obj);
 			ids.addObject(gid.keyValues()[0]);
@@ -175,12 +176,12 @@ public class ExtSystem extends _ExtSystem {
 			NSArray list, int last) {
 		qual[3] = Various.getEOInQualifier(SyncMatch.OBJ_ID_KEY, ids);
 		qual[3] = new EOAndQualifier(new NSArray(qual));
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual[3],null);
+		EOFetchSpecification fs = new EOFetchSpecification(SyncMatch.ENTITY_NAME,qual[3],null);
 		NSArray found = editingContext().objectsWithFetchSpecification(fs);
 		SyncMatch[] ml = null;
 		if(isLocalBase())
 			ml = new SyncMatch[ids.count()];
-		if(found == null || found.count() == 0)
+		else if(found == null || found.count() == 0)
 			return;
 		Enumeration enu = found.objectEnumerator();
 		NSMutableSet used = new NSMutableSet();
@@ -247,16 +248,16 @@ public class ExtSystem extends _ExtSystem {
 			return result;
 		}
 		ExtSystem result = (ExtSystem)rjls.objectAtIndex(0);
-		if(rjls.count() == 1)
-			return result;
-		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(result);
-		int min = (Integer)gid.keyValues()[0];
-		for (int i = 1; i < rjls.count(); i++) {
-			ExtSystem es = (ExtSystem) rjls.objectAtIndex(i);
-			gid = (EOKeyGlobalID)ec.globalIDForObject(es);
-			if(min > ((Integer)gid.keyValues()[0])) {
-				result = es;
-				min = (Integer)gid.keyValues()[0];
+		if(rjls.count() > 1) {
+			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(result);
+			int min = (Integer)gid.keyValues()[0];
+			for (int i = 1; i < rjls.count(); i++) {
+				ExtSystem es = (ExtSystem) rjls.objectAtIndex(i);
+				gid = (EOKeyGlobalID)ec.globalIDForObject(es);
+				if(min > ((Integer)gid.keyValues()[0])) {
+					result = es;
+					min = (Integer)gid.keyValues()[0];
+				}
 			}
 		}
 		if(localBase == null)

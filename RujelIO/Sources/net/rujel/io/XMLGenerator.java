@@ -185,27 +185,33 @@ public class XMLGenerator extends AbstractObjectReader {
         if (handler == null) {
             throw new IllegalStateException("ContentHandler not set");
         }
-		handler.startDocument();
-		handler.prepareAttribute("product", "Rujel");
-		String tmp = System.getProperty("RujelVersion");
-		if(tmp != null)
-			handler.prepareAttribute("version", tmp);
-		handler.prepareAttribute("base", ExtSystem.localBaseID());
-		tmp = in.ses.valueForKey("eduYear").toString();
-		handler.prepareAttribute("eduYear", tmp);
+        
+        handler.startDocument();
+        handler.prepareAttribute("product", "Rujel");
+        String tmp = System.getProperty("RujelVersion");
+        if(tmp != null)
+        	handler.prepareAttribute("version", tmp);
+        Integer eduYear = (Integer)in.ses.valueForKey("eduYear");
+        {
+        	EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
+        	if(os == null)
+        		os = EOObjectStoreCoordinator.defaultCoordinator();
+        	EOEditingContext ec = new SessionedEditingContext(os, in.ses);
+        	in.options.takeValueForKey(ec,"ec");
+        	if(in.options.valueForKeyPath("reporter.sync") != null) {
+        		in.options.takeValueForKey(new SyncGenerator(in.options), "sync");
+        	}
+        	if (ExtSystem.localBaseID() == null)
+        		ExtSystem.localSystem(ec);
+        	handler.prepareAttribute("base", ExtSystem.localBaseID());
+        	tmp = eduYear.toString();
+        }
+        handler.prepareAttribute("eduYear", tmp);
 		handler.startElement("ejdata");
 		tmp = SettingsReader.stringForKeyPath("schoolName", null);
 		if(tmp != null) {
 			handler.prepareAttribute("title", tmp);
 			handler.element("school", null);
-		}
-		Integer eduYear = (Integer)in.ses.valueForKey("eduYear");
-		EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
-		if(os == null)
-			os = EOObjectStoreCoordinator.defaultCoordinator();
-		in.options.takeValueForKey(new SessionedEditingContext(os, in.ses),"ec");
-		if(in.options.valueForKeyPath("reporter.sync") != null) {
-			in.options.takeValueForKey(new SyncGenerator(in.options), "sync");
 		}
 		
 		NSArray groups = prepareGroups(in);

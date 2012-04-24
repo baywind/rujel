@@ -250,6 +250,8 @@ public class SettingsBase extends _SettingsBase {
 	}
 	
 	public static NSKeyValueCodingAdditions courseDict(Object obj,Integer eduYear) {
+		if(obj == null)
+			return null;
 		if(obj instanceof EduCourse)
 			return (EduCourse)obj;
 		if(eduYear == null && obj instanceof EOEnterpriseObject) {
@@ -262,7 +264,8 @@ public class SettingsBase extends _SettingsBase {
 		if(obj instanceof Integer)
 			return courseDict((Integer)obj,eduYear);
 		throw new IllegalArgumentException(
-				"EduCourse, EduCycle, EduGroup or Integer are only accepted");
+				"EduCourse, EduCycle, EduGroup or Integer are only accepted. Receiver "
+				+ obj.getClass().getName());
 	}
 	
 	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {
