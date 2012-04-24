@@ -2,6 +2,12 @@
     attributes = (
         {
             allowsNull = Y; 
+            columnName = "BASE_ID"; 
+            name = baseID; 
+            prototypeName = short; 
+        }, 
+        {
+            allowsNull = Y; 
             columnName = "EDU_YEAR"; 
             name = eduYear; 
             prototypeName = short; 
@@ -24,7 +30,7 @@
     ); 
     attributesUsedForLocking = (eduYear, entityID, extID, objID, sysID); 
     className = "net.rujel.io.SyncMatch"; 
-    classProperties = (eduYear, entityIndex, extID, extSystem, objID); 
+    classProperties = (eduYear, entityIndex, extBase, extID, extSystem, objID); 
     externalName = "SYNC_MATCH"; 
     fetchSpecificationDictionary = {}; 
     name = SyncMatch; 
@@ -37,6 +43,13 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = eID; sourceAttribute = entityID; }); 
             name = entityIndex; 
+        }, 
+        {
+            destination = ExtBase; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = bID; sourceAttribute = baseID; }); 
+            name = extBase; 
         }, 
         {
             destination = ExtSystem; 

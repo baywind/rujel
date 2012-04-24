@@ -196,14 +196,17 @@ public class XMLGenerator extends AbstractObjectReader {
         	EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
         	if(os == null)
         		os = EOObjectStoreCoordinator.defaultCoordinator();
-        	EOEditingContext ec = new SessionedEditingContext(os, in.ses);
-        	in.options.takeValueForKey(ec,"ec");
+			EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
+			if(ec == null) {
+				ec = new SessionedEditingContext(os, in.ses);
+				in.options.takeValueForKey(ec,"ec");
+			}
         	if(in.options.valueForKeyPath("reporter.sync") != null) {
         		in.options.takeValueForKey(new SyncGenerator(in.options), "sync");
         	}
-        	if (ExtSystem.localBaseID() == null)
-        		ExtSystem.localSystem(ec);
-        	handler.prepareAttribute("base", ExtSystem.localBaseID());
+        	if (ExtBase.localBaseID() == null)
+        		ExtBase.localBase(ec);
+        	handler.prepareAttribute("base", ExtBase.localBaseID());
         	tmp = eduYear.toString();
         }
         handler.prepareAttribute("eduYear", tmp);
@@ -494,7 +497,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			String tmp = System.getProperty("RujelVersion");
 			if(tmp != null)
 				handler.prepareAttribute("version", tmp);
-			handler.prepareAttribute("base", ExtSystem.localBaseID());
+			handler.prepareAttribute("base", ExtBase.localBaseID());
 			tmp = in.ses.valueForKey("eduYear").toString();
 			handler.prepareAttribute("eduYear", tmp);
 			handler.startElement("persdata");
@@ -584,7 +587,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(pers != plink && pers instanceof EOEnterpriseObject) {
 				handler.startElement("syncdata");
 				handler.prepareAttribute("product", "Rujel");
-				handler.prepareAttribute("base", ExtSystem.localBaseID());
+				handler.prepareAttribute("base", ExtBase.localBaseID());
 				handler.prepareAttribute("entity", ((EOEnterpriseObject)pers).entityName());
 				handler.element("extid", MyUtility.getID((EOEnterpriseObject)pers));
 				if(sync != null)

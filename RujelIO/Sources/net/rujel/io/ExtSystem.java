@@ -34,10 +34,8 @@ import java.util.UUID;
 
 import net.rujel.base.EntityIndex;
 import net.rujel.base.MyUtility;
-import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
@@ -46,16 +44,6 @@ import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSMutableSet;
 
 public class ExtSystem extends _ExtSystem {
-	
-	protected static String localBase;
-	
-	public static String localBaseID() {
-		return localBase;
-	}
-	
-	public boolean isLocalBase() {
-		return baseID().equals(localBase);
-	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -65,14 +53,14 @@ public class ExtSystem extends _ExtSystem {
 		super.turnIntoFault(handler);
 	}
 	
-	public String extidForObject(EOEnterpriseObject eo) {
+	public String extidForObject(EOEnterpriseObject eo, ExtBase base) {
 		if(eo == null)
 			return null;
 		EOKeyGlobalID gid = (EOKeyGlobalID)eo.editingContext().globalIDForObject(eo);
-		SyncMatch match = SyncMatch.matchForSystemAndObject(this, gid);
+		SyncMatch match = SyncMatch.matchForSystemAndObject(this, base, gid);
 		if(match == null) {
-			if(isLocalBase()) {
-				match = addMatch(gid);
+			if(base != null && base.isLocalBase()) {
+				match = addMatch(gid,base);
 				String guid = UUID.randomUUID().toString();
 				match.setEntity(gid.entityName());
 				match.setExtID(guid);
@@ -84,67 +72,22 @@ public class ExtSystem extends _ExtSystem {
 		return match.extID();
 	}
 	
-	public SyncMatch addMatch(EOKeyGlobalID gid) {
+	public SyncMatch addMatch(EOKeyGlobalID gid, ExtBase base) {
 		SyncMatch match = (SyncMatch)EOUtilities.createAndInsertInstance(editingContext(),
 				SyncMatch.ENTITY_NAME);
 		match.setExtSystem(this);
+		if(base != null)
+		match.setExtBase(base);
 		match.setObjID((Integer)gid.keyValues()[0]);
 		return match;
 	}
 	
-	public NSMutableDictionary dictForEntity(String entityName) {
-		EOEditingContext ec = editingContext();
-		EntityIndex ei = EntityIndex.indexForEntityName(ec, entityName, false);
-		Integer eduYear = MyUtility.eduYear(ec);
-		EOQualifier[] qual = new EOQualifier[3];
-		qual[0] = new EOKeyValueQualifier(SyncMatch.EDU_YEAR_KEY, 
-				EOQualifier.QualifierOperatorEqual, eduYear);
-		qual[1] = new EOKeyValueQualifier(SyncMatch.EDU_YEAR_KEY, 
-				EOQualifier.QualifierOperatorEqual, NullValue);
-		qual[2] = new EOOrQualifier(new NSArray(qual));
-		
-		qual[0] = new EOKeyValueQualifier(SyncMatch.EXT_SYSTEM_KEY, 
-				EOQualifier.QualifierOperatorEqual, this);
-		qual[1] = new EOKeyValueQualifier(SyncMatch.ENTITY_INDEX_KEY, 
-				EOQualifier.QualifierOperatorEqual, ei);
-		qual[2] = new EOAndQualifier(new NSArray(qual));
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual[4],null);
-		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found == null || found.count() == 0)
-			return null;
-		Enumeration enu = found.objectEnumerator();
-		NSMutableDictionary dict = new NSMutableDictionary(found.count());
-		NSMutableSet used = new NSMutableSet();
-		while (enu.hasMoreElements()) {
-			SyncMatch match = (SyncMatch) enu.nextElement();
-			Integer id = match.objID();
-			if(used.containsObject(id))
-				continue;
-			String extID = match.extID();
-			if(extID == null) extID = "";
-			dict.setObjectForKey(extID, id);
-			if(match.eduYear() != null)
-				used.addObject(id);
-		}
-		return dict;
-	}
-	
-	public NSMutableDictionary dictForObjects(NSArray list) {
+	public NSMutableDictionary dictForObjects(NSArray list, ExtBase base) {
 		if(list == null || list.count() == 0)
 			return null;
 		EOEditingContext ec = editingContext();
 		NSMutableDictionary dict = new NSMutableDictionary();
 		String entityName = null;
-		Integer eduYear = MyUtility.eduYear(ec);
-		EOQualifier[] qual = new EOQualifier[4];
-		qual[0] = new EOKeyValueQualifier(SyncMatch.EDU_YEAR_KEY, 
-				EOQualifier.QualifierOperatorEqual, eduYear);
-		qual[1] = new EOKeyValueQualifier(SyncMatch.EDU_YEAR_KEY, 
-				EOQualifier.QualifierOperatorEqual, NullValue);
-		qual[2] = new EOOrQualifier(new NSArray(qual));
-		
-		qual[0] = new EOKeyValueQualifier(SyncMatch.EXT_SYSTEM_KEY, 
-				EOQualifier.QualifierOperatorEqual, this);
 		NSMutableArray ids = new NSMutableArray(list.count());
 		Enumeration enu = list.objectEnumerator();
 		int last = 0;
@@ -152,34 +95,32 @@ public class ExtSystem extends _ExtSystem {
 			EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
 			if(entityName == null) {
 				entityName = obj.entityName();
-				EntityIndex ei = EntityIndex.indexForEntityName(ec, entityName, false);
-				qual[1] = new EOKeyValueQualifier(SyncMatch.ENTITY_INDEX_KEY, 
-						EOQualifier.QualifierOperatorEqual, ei);
 			} else if(!entityName.equals(obj.entityName())) {
-				matchDict(qual, ids, dict, list, last);
-				EntityIndex ei = EntityIndex.indexForEntityName(ec, entityName, false);
-				qual[1] = new EOKeyValueQualifier(SyncMatch.ENTITY_INDEX_KEY, 
-						EOQualifier.QualifierOperatorEqual, ei);
+				matchDict(entityName, ids, dict, list, last, base);
+				
 				last += ids.count();
 				ids.removeAllObjects();
 			}
 			EOKeyGlobalID gid = (EOKeyGlobalID)obj.editingContext().globalIDForObject(obj);
 			ids.addObject(gid.keyValues()[0]);
 		}
-		matchDict(qual, ids, dict, list, last);
+		matchDict(entityName, ids, dict, list, last, base);
 		if(ec.hasChanges())
 			ec.saveChanges();
 		return dict;
 	}
 	
-	private void matchDict(EOQualifier[] qual, NSMutableArray ids, NSMutableDictionary dict,
-			NSArray list, int last) {
-		qual[3] = Various.getEOInQualifier(SyncMatch.OBJ_ID_KEY, ids);
-		qual[3] = new EOAndQualifier(new NSArray(qual));
-		EOFetchSpecification fs = new EOFetchSpecification(SyncMatch.ENTITY_NAME,qual[3],null);
+	private void matchDict(String entityName, NSMutableArray ids, NSMutableDictionary dict,
+			NSArray list, int last, ExtBase base) {
+		EntityIndex ei = EntityIndex.indexForEntityName(editingContext(), entityName, false);
+		EOQualifier[] qual = new EOQualifier[2];
+		qual[0] = SyncMatch.matchQualifier(this, base, ei, null, null);
+		qual[1] = Various.getEOInQualifier(SyncMatch.OBJ_ID_KEY, ids);
+		qual[1] = new EOAndQualifier(new NSArray(qual));
+		EOFetchSpecification fs = new EOFetchSpecification(SyncMatch.ENTITY_NAME,qual[1],null);
 		NSArray found = editingContext().objectsWithFetchSpecification(fs);
 		SyncMatch[] ml = null;
-		if(isLocalBase())
+		if(base.isLocalBase())
 			ml = new SyncMatch[ids.count()];
 		else if(found == null || found.count() == 0)
 			return;
@@ -205,23 +146,15 @@ public class ExtSystem extends _ExtSystem {
 				used.addObject(id);
 		}
 		if(ml != null) {
-			EntityIndex ei = null;
-			Integer eduYear = null;
+			Integer eduYear = (ei.isYearly())?eduYear = MyUtility.eduYear(editingContext()):null;
 			for (int i = 0; i < ml.length; i++) {
-				if(ml[i] != null) {
-					ei = ml[i].entityIndex();
-					eduYear = ml[i].eduYear();
+				if(ml[i] != null)
 					continue;
-				}
 				EOEnterpriseObject eo = (EOEnterpriseObject)list.objectAtIndex(last + i);
-				if(ei == null) {
-					ei = EntityIndex.indexForEntityName(editingContext(), eo.entityName(), true);
-					if(ei.isYearly())
-						eduYear = MyUtility.eduYear(eo.editingContext());
-				}
 				ml[i] = (SyncMatch)EOUtilities.createAndInsertInstance(editingContext(),
 						SyncMatch.ENTITY_NAME);
 				ml[i].setExtSystem(this);
+				ml[i].setExtBase(base);
 				ml[i].setObjID((Integer)ids.objectAtIndex(i));
 				ml[i].setEntityIndex(ei);
 				ml[i].setEduYear(eduYear);
@@ -238,30 +171,8 @@ public class ExtSystem extends _ExtSystem {
 		if(rjls == null || rjls.count() == 0) {
 			ExtSystem result = (ExtSystem)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
 			result.setProductName("Rujel");
-			localBase = SettingsReader.stringForKeyPath("baseName", null);
-			if(localBase == null) {
-				WOApplication app = WOApplication.application();
-				localBase = app.name() + '.' + app.host();
-			}
-			result.setBaseID(localBase);
-			ec.saveChanges();
 			return result;
 		}
-		ExtSystem result = (ExtSystem)rjls.objectAtIndex(0);
-		if(rjls.count() > 1) {
-			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(result);
-			int min = (Integer)gid.keyValues()[0];
-			for (int i = 1; i < rjls.count(); i++) {
-				ExtSystem es = (ExtSystem) rjls.objectAtIndex(i);
-				gid = (EOKeyGlobalID)ec.globalIDForObject(es);
-				if(min > ((Integer)gid.keyValues()[0])) {
-					result = es;
-					min = (Integer)gid.keyValues()[0];
-				}
-			}
-		}
-		if(localBase == null)
-			localBase = result.baseID();
-		return result;
+		return (ExtSystem)rjls.objectAtIndex(0);
 	}
 }

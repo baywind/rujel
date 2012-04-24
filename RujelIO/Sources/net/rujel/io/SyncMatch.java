@@ -29,11 +29,16 @@
 
 package net.rujel.io;
 
+import java.util.Enumeration;
+
 import net.rujel.base.EntityIndex;
 import net.rujel.base.MyUtility;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
 
 public class SyncMatch extends _SyncMatch {
 
@@ -59,30 +64,56 @@ public class SyncMatch extends _SyncMatch {
 			setEduYear(MyUtility.eduYear(editingContext()));
 	}
 	
-	public static SyncMatch matchForSystemAndObject(ExtSystem sys, EOKeyGlobalID gid) {
+	public static EOQualifier matchQualifier(ExtSystem sys, ExtBase base, 
+			EntityIndex ei, Integer objectID, Integer eduYear) {
+		NSMutableArray quals = new NSMutableArray();
+		EOEditingContext ec = null;
+		quals.addObject(new EOKeyValueQualifier(EXT_BASE_KEY, 
+				EOQualifier.QualifierOperatorEqual, base));
+		if(base != null) {
+			quals.addObject(new EOKeyValueQualifier(EXT_BASE_KEY, 
+				EOQualifier.QualifierOperatorEqual, NullValue));
+			EOQualifier qual = new EOOrQualifier(quals);
+			quals.removeAllObjects();
+			quals.addObject(qual);
+			quals.addObject(new EOKeyValueQualifier(EXT_SYSTEM_KEY, 
+					EOQualifier.QualifierOperatorEqual, base.extSystem()));
+			ec = base.editingContext();
+		} else if(sys != null) {
+			quals.addObject(new EOKeyValueQualifier(EXT_SYSTEM_KEY, 
+				EOQualifier.QualifierOperatorEqual, sys));
+			ec = sys.editingContext();
+		}
+		if(ei != null) {
+			quals.addObject(new EOKeyValueQualifier(ENTITY_INDEX_KEY, 
+					EOQualifier.QualifierOperatorEqual, ei));
+			if(ec == null)
+				ec = ei.editingContext();
+		}
+		if(eduYear == null)
+			eduYear = MyUtility.eduYear(ec);
+		{
+			EOQualifier[] qual = new EOQualifier[2];
+			qual[0] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
+					EOQualifier.QualifierOperatorEqual, eduYear);
+			qual[1] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
+					EOQualifier.QualifierOperatorEqual, NullValue);
+			quals.addObject(new EOOrQualifier(new NSArray(qual)));
+		}
+		return new EOAndQualifier(quals);
+	}
+	
+	public static SyncMatch matchForSystemAndObject(ExtSystem sys, ExtBase base, 
+			EOKeyGlobalID gid) {
 		EOEditingContext ec = sys.editingContext();
 		EntityIndex ei = EntityIndex.indexForEntityName(ec, gid.entityName(), false);
-		Integer eduYear = MyUtility.eduYear(ec);
-		EOQualifier[] qual = new EOQualifier[4];
-		qual[0] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
-				EOQualifier.QualifierOperatorEqual, eduYear);
-		qual[1] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
-				EOQualifier.QualifierOperatorEqual, NullValue);
-		qual[3] = new EOOrQualifier(new NSArray(qual));
-		
-		qual[0] = new EOKeyValueQualifier(EXT_SYSTEM_KEY, 
-				EOQualifier.QualifierOperatorEqual, sys);
-		qual[1] = new EOKeyValueQualifier(ENTITY_INDEX_KEY, 
-				EOQualifier.QualifierOperatorEqual, ei);
-		qual[2] = new EOKeyValueQualifier(OBJ_ID_KEY, 
-				EOQualifier.QualifierOperatorEqual, gid.keyValues()[0]);
-		qual[3] = new EOAndQualifier(new NSArray(qual));
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual[3],null);
+		EOQualifier qual = matchQualifier(sys, base, ei, (Integer)gid.keyValues()[0], null);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0)
 			return null;
 		if(found.count() > 1) {
-			for (int i = 0; i < qual.length; i++) {
+			for (int i = 0; i < found.count(); i++) {
 				SyncMatch m = (SyncMatch)found.objectAtIndex(i);
 				if(m.eduYear() != null)
 					return m;
@@ -90,4 +121,30 @@ public class SyncMatch extends _SyncMatch {
 		}
 		return (SyncMatch)found.objectAtIndex(0);
 	}
+	
+	public static NSMutableDictionary dictForEntity(String entityName, ExtSystem sys, ExtBase base) {
+		EOEditingContext ec = sys.editingContext();
+		EntityIndex ei = EntityIndex.indexForEntityName(ec, entityName, false);
+		EOQualifier qual = matchQualifier(sys, base, ei, null, null);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		Enumeration enu = found.objectEnumerator();
+		NSMutableDictionary dict = new NSMutableDictionary(found.count());
+		NSMutableSet used = new NSMutableSet();
+		while (enu.hasMoreElements()) {
+			SyncMatch match = (SyncMatch) enu.nextElement();
+			Integer id = match.objID();
+			if(used.containsObject(id))
+				continue;
+			String extID = match.extID();
+			if(extID == null) extID = "";
+			dict.setObjectForKey(extID, id);
+			if(match.eduYear() != null)
+				used.addObject(id);
+		}
+		return dict;
+	}
+
 }

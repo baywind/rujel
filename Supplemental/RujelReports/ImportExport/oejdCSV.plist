@@ -15,7 +15,7 @@
 	<key>_mimeType</key>
 	<string>text/csv</string>
 	<key>filext</key>
-	<string>csv</string>
+	<string>txt</string>
 	<key>_transform</key>
 	<string>oejdCSV.xsl</string>
 	<key>_sources</key>

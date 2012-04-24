@@ -2,6 +2,12 @@
     attributes = (
         {
             allowsNull = Y; 
+            columnName = "BASE_ID"; 
+            name = baseID; 
+            prototypeName = short; 
+        }, 
+        {
+            allowsNull = Y; 
             columnName = "EDU_YEAR"; 
             name = eduYear; 
             prototypeName = short; 
@@ -22,13 +28,20 @@
     ); 
     attributesUsedForLocking = (eduYear, indexName, sysID); 
     className = "net.rujel.io.SyncIndex"; 
-    classProperties = (eduYear, extSystem, indexName); 
+    classProperties = (eduYear, extBase, extSystem, indexName); 
     externalName = "SYNC_INDEX"; 
     fetchSpecificationDictionary = {}; 
     internalInfo = {"_javaClientClassName" = SyncIndex; }; 
     name = SyncIndex; 
     primaryKeyAttributes = (iID); 
     relationships = (
+        {
+            destination = ExtBase; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = bID; sourceAttribute = baseID; }); 
+            name = extBase; 
+        }, 
         {
             destination = ExtSystem; 
             isMandatory = Y; 

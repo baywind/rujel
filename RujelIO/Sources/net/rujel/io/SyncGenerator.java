@@ -85,14 +85,21 @@ public class SyncGenerator extends GeneratorModule {
 			handler.startElement("syncdata");
 		while (enu.hasMoreElements()) {
 			NSKeyValueCoding pre = (NSKeyValueCoding) enu.nextElement();
-			if(pre instanceof ExtSystem) {
-				ExtSystem sys = (ExtSystem)pre;
+			if(pre instanceof ExtBase) {
+				ExtBase sys = (ExtBase)pre;
 				if(sys.isLocalBase())
 					handler.prepareAttribute("product", "GUID");
 				else
-					handler.prepareAttribute("product", sys.productName());
+					handler.prepareAttribute("product", sys.extSystem().productName());
 				handler.prepareAttribute("base", sys.baseID());
-				String extID = ((ExtSystem)pre).extidForObject((EOEnterpriseObject)object);
+				String extID = ((ExtBase)pre).extidForObject((EOEnterpriseObject)object);
+				handler.element("extid", extID);
+			}
+			if(pre instanceof ExtSystem) {
+				ExtSystem sys = (ExtSystem)pre;
+				handler.prepareAttribute("product", sys.productName());
+				handler.prepareAttribute("base", sys.productName());
+				String extID = ((ExtSystem)pre).extidForObject((EOEnterpriseObject)object, null);
 				handler.element("extid", extID);
 			}
 			String param = (String)pre.valueForKey("baseID");
@@ -159,8 +166,8 @@ public class SyncGenerator extends GeneratorModule {
 		NSMutableArray loaded = new NSMutableArray();
 		while (enu.hasMoreElements()) {
 			NSKeyValueCoding pre = (NSKeyValueCoding) enu.nextElement();
-			if(pre instanceof ExtSystem) {
-				ExtSystem sys = (ExtSystem)pre;
+			if(pre instanceof ExtBase) {
+				ExtBase sys = (ExtBase)pre;
 				NSMutableDictionary dict = sys.dictForObjects(objects);
 				if(dict == null || dict.count() == 0)
 					continue;
@@ -168,7 +175,16 @@ public class SyncGenerator extends GeneratorModule {
 				if(sys.isLocalBase())
 					dict.takeValueForKey("GUID", "product");
 				else
-					dict.takeValueForKey(sys.productName(), "product");
+					dict.takeValueForKey(sys.extSystem().productName(), "product");
+				loaded.addObject(dict);
+				continue;
+			}
+			if(pre instanceof ExtSystem) {
+				ExtSystem sys = (ExtSystem)pre;
+				NSMutableDictionary dict = sys.dictForObjects(objects, null);
+				if(dict == null || dict.count() == 0)
+					continue;
+				dict.takeValueForKey(sys.productName(), "product");
 				loaded.addObject(dict);
 				continue;
 			}
@@ -185,7 +201,8 @@ public class SyncGenerator extends GeneratorModule {
 			Enumeration oen = objects.objectEnumerator();
 			while (oen.hasMoreElements()) {
 				Object object = oen.nextElement();
-				Object obj = DisplayAny.ValueReader.evaluateValue(ref, object, null);
+				Object obj = (ref==null) ? object :
+					DisplayAny.ValueReader.evaluateValue(ref, object, null);
 				EOEnterpriseObject setting = base.forObject(obj);
 				if(setting == null)
 					continue;
@@ -235,13 +252,13 @@ public class SyncGenerator extends GeneratorModule {
 		if(ec == null)
 			ec = new EOEditingContext();
 		if("GUID".equals(plistData)) {
-			prepared.addObject(ExtSystem.localSystem(ec));
+			prepared.addObject(ExtBase.localBase(ec));
 		} else if(plistData instanceof String) {
 			if(((String) plistData).charAt(0) == '@') {
 				interpretSync(settings.valueForKey(((String)plistData).substring(1)), prepared);
 			} else {
 				NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, 
-						ExtSystem.ENTITY_NAME, ExtSystem.BASE_ID_KEY, plistData);
+						"ExtBase", "baseID", plistData);
 				if(found != null && found.count() > 0)
 					prepared.addObject(found.objectAtIndex(0));
 			}

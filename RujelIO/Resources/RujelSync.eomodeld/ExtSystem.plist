@@ -1,23 +1,24 @@
 {
     attributes = (
-        {
-            allowsNull = N; 
-            columnName = "BASE_IDENTIFIER"; 
-            name = baseID; 
-            prototypeName = string; 
-        }, 
         {columnName = "SYSTEM_DESCRIPTION"; name = description; prototypeName = text; }, 
         {columnName = "PRODUCT_NAME"; name = productName; prototypeName = string; }, 
         {allowsNull = N; columnName = "S_ID"; name = sID; prototypeName = short; }
     ); 
-    attributesUsedForLocking = (baseID, description, productName); 
+    attributesUsedForLocking = (description, productName); 
     className = "net.rujel.io.ExtSystem"; 
-    classProperties = (baseID, description, extData, productName, syncIndexes); 
+    classProperties = (description, extBases, extData, productName, syncIndexes); 
     externalName = "SYNC_EXT_SYSTEM"; 
     fetchSpecificationDictionary = {}; 
     name = ExtSystem; 
     primaryKeyAttributes = (sID); 
     relationships = (
+        {
+            destination = ExtBase; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = sysID; sourceAttribute = sID; }); 
+            name = extBases; 
+        }, 
         {
             deleteRule = EODeleteRuleCascade; 
             destination = ExtData; 

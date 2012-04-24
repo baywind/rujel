@@ -9,7 +9,9 @@
 	<key>loggingProperties</key>
 	<string>CONFIGDIR/logging.properties</string>
 	<key>schoolName</key>
-	<string>Гимназия № 45</string>
+	<string>Версия разработчика без критериев</string>
+	<key>baseName</key>
+	<string>nocrit.devel.demobase</string>
 	<key>edu</key>
 	<dict>
 		<key>minGrade</key>

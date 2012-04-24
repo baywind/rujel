@@ -6,6 +6,7 @@
         username = rujel; 
     }; 
     entities = (
+        {className = "net.rujel.io.ExtBase"; name = ExtBase; }, 
         {className = EOGenericRecord; name = ExtData; }, 
         {className = "net.rujel.io.ExtSystem"; name = ExtSystem; }, 
         {className = EOGenericRecord; name = IndexMatch; }, 
