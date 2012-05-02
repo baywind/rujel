@@ -87,9 +87,16 @@ public class ImportExport extends LessonList {
 //    }
     
     public WOActionResults useItem() {
+    	if(item.valueForKey("extraData") != null || item.valueForKey("indexes") != null) {
+    		WOComponent result = pageWithName("ExportParams");
+    		result.takeValueForKey(this, "returnPage");
+    		result.takeValueForKey(item, "reporter");
+    		return result;
+    	}
 		WOComponent result = pageWithName("ReporterSetup");
 		result.takeValueForKey(this, "returnPage");
 		result.takeValueForKey(item, "reporter");
+		result.takeValueForKey("ImportExport", "dir");
 //		result.takeValueForKey("reporter","submitPath");
 		return result;
     }
@@ -108,7 +115,7 @@ public class ImportExport extends LessonList {
 		}
 		byte[] result = null;
 		try {
-			result = XMLGenerator.generate(session(), (NSDictionary)reportDict);
+			result = XMLGenerator.generate(session(), (NSMutableDictionary)reportDict);
 		} catch (Exception e) {
 			result = WOLogFormatter.formatTrowable(e).getBytes();
 		}

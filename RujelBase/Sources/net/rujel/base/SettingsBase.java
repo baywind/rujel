@@ -340,15 +340,11 @@ public class SettingsBase extends _SettingsBase {
 			return null;
 		NSMutableArray byCourse = new NSMutableArray();
 		Enumeration enu = baseByCourse.objectEnumerator();
-		if(eduYear == null) {
-			byCourse.addObjectsFromArray(baseByCourse);
-		} else {
-			while (enu.hasMoreElements()) {
-				EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
-				if(bc.valueForKey("eduYear") == null || 
-						eduYear.equals(bc.valueForKey("eduYear")))
-					byCourse.addObject(bc);
-			}
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
+			if(bc.valueForKey("eduYear") == null || 
+					(eduYear != null && eduYear.equals(bc.valueForKey("eduYear"))))
+				byCourse.addObject(bc);
 		}
 		if(byCourse.count() > 1) {
 			EOSortOrdering.sortArrayUsingKeyOrderArray(byCourse, ModulesInitialiser.sorter);
@@ -378,82 +374,25 @@ public class SettingsBase extends _SettingsBase {
 		}
 		return result;
 	}
-	/*
-	public static class Comparator extends NSComparator {
-		public int compare(Object arg0, Object arg1)
-			throws com.webobjects.foundation.NSComparator.ComparisonException {
-			if(arg0 == null && arg1 == null)
-				return OrderedSame;
-			try {
-				NSKeyValueCoding l = (NSKeyValueCoding)arg0;
-				NSKeyValueCoding r = (NSKeyValueCoding)arg1;
-				if(l == null)
-					return OrderedDescending;
-				else if(r == null)
-					return OrderedAscending;
-				if(l instanceof SettingsBase) {
-					if(r instanceof SettingsBase)
-						return OrderedSame;
-					return OrderedAscending;
-				} else if(r instanceof SettingsBase) {
-					return OrderedDescending;
-				}
-				int result = compareKeys(l, r, "course");
-				if(result != OrderedSame)
-					return result;
-				int lCount = 0;
-				int rCount = 0;
-				int order = 0;
-				for (int i = 0; i < keys.length; i++) {
-					if(l.valueForKey(keys[i]) != null)
-						lCount += 1<<i;
-					if(r.valueForKey(keys[i]) != null)
-						rCount += 1<<i;
-					if(lCount == rCount) {
-						order += compareKeys(l, r, keys[i])<<(keys.length -i);
-					}
-				}
-				if(lCount == 0)
-					lCount = 7;
-				if(rCount == 0)
-					rCount = 7;
-				if(lCount < rCount)
-					return OrderedAscending;
-				if(lCount > rCount)
-					return OrderedDescending;
-				if(order > 0)
-					return OrderedDescending;
-				if(order < 0)
-					return OrderedAscending;
-			} catch (RuntimeException e) {
-				throw new com.webobjects.foundation.NSComparator.ComparisonException(
-				"Illegal arguments to compare");
+	
+	public NSArray availableValues(Integer eduYear, String key) {
+		NSMutableArray result = new NSMutableArray();
+		Object value = valueForKey(key);
+		if(value != null)
+			result.addObject(value);
+		NSArray byCourse = byCourseSorted(eduYear);
+		if(byCourse != null && byCourse.count() > 0) {
+			Enumeration enu = byCourse.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
+				value = bc.valueForKey(key);
+				if(value != null && !result.containsObject(value))
+					result.addObject(value);
 			}
-			return OrderedSame;
 		}
-		
-		protected int compareKeys(NSKeyValueCoding l, NSKeyValueCoding r, String key) {
-			Object lo = l.valueForKey(key);
-			Object ro = r.valueForKey(key);
-			if(lo != null) {
-				if(ro == null) {
-					return OrderedDescending;
-				} else {
-					return EOSortOrdering.ComparisonSupport.compareValues
-										(lo, ro, EOSortOrdering.CompareAscending);
-//					EOSortOrdering.ComparisonSupport support = 
-//						EOSortOrdering.ComparisonSupport.supportForClass(lo.getClass());
-//					return support.compareAscending(lo, ro);
-				}
-			} else {
-				if(ro == null)
-					return OrderedSame;
-				else
-					return OrderedAscending;
-			}
-		}		
+		return result;
 	}
-	*/
+
 	public boolean isSingle() {
 		return (qualifiedSettings() == null || qualifiedSettings().count() == 0);
 	}

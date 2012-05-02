@@ -67,7 +67,7 @@ public class ExtBase extends _ExtBase {
 	public static ExtBase localBase(EOEditingContext ec) {
 		if(localBaseGID != null)
 			return (ExtBase)ec.faultForGlobalID(localBaseGID, ec);
-		ExtSystem localSystem = ExtSystem.localSystem(ec);
+		ExtSystem localSystem = ExtSystem.extSystemNamed("Rujel", ec, true);
 		NSArray rjls = localSystem.extBases();
 		if(rjls == null || rjls.count() == 0) {
 			localBase = SettingsReader.stringForKeyPath("baseName", null);

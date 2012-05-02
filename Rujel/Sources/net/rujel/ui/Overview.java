@@ -401,7 +401,7 @@ public class Overview extends WOComponent {
  			}
  			byte[] result = null;
  			try {
- 				result = XMLGenerator.generate(session(), (NSDictionary)reportPage);
+ 				result = XMLGenerator.generate(session(), (NSMutableDictionary)reportPage);
  			} catch (Exception e) {
  				result = WOLogFormatter.formatTrowable(e).getBytes();
  			}

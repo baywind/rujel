@@ -4,6 +4,7 @@ TextField : WOTextField {
   onkeypress = onkeypress;
   formatter = formatter;
   style = "text-align:center;";
+  class = valueOf.paramsDict.itemDict.styleClass;
 }
 
 SecondField : WOTextField {

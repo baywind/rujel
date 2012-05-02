@@ -52,15 +52,21 @@ import org.xml.sax.XMLReader;
 
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOObjectStore;
 import com.webobjects.eocontrol.EOObjectStoreCoordinator;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
 import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.BaseCourse;
@@ -89,7 +95,7 @@ public class XMLGenerator extends AbstractObjectReader {
 	}
 	
 	public static Transformer getTransformer(WOSession session,NSDictionary reporter,
-			InputSource input) throws TransformerException {
+			RujelInputSource input) throws TransformerException {
 		
 		TransformerFactory factory = TransformerFactory.newInstance();
 		factory.setErrorListener(new TransormationErrorListener(session));
@@ -117,6 +123,9 @@ public class XMLGenerator extends AbstractObjectReader {
 			while (enu.hasMoreElements()) {
 				String srcName = (String) enu.nextElement();
 				if("Persdata".equals(srcName)) {
+					NSMutableSet persons = (NSMutableSet)input.options.valueForKey("persons");
+					if(persons == null)
+						input.options.takeValueForKey(new NSMutableSet(), "persons");
 			        Source src = new SAXSource(new Persdata(),input);
 					sources.takeValueForKey(src,"persdata.xml");
 				} else if("Options".equals(srcName)) {
@@ -136,10 +145,15 @@ public class XMLGenerator extends AbstractObjectReader {
 		return transformer;
 	}
 	
-	public static byte[] generate(WOSession session, NSDictionary options)
+	public static byte[] generate(WOSession session, NSMutableDictionary options)
 									throws TransformerException {
 		
-		InputSource input =  new RujelInputSource(session,options);
+		RujelInputSource input =  new RujelInputSource(session,options);
+    	if(options.valueForKeyPath("reporter.sync") != null && 
+    			options.valueForKey("sync") == null) {
+    		options.takeValueForKey(new SyncGenerator(options), "sync");
+    	}
+
 		Transformer transformer = getTransformer(session, 
 				(NSDictionary)options.valueForKey("reporter"), input);
 		XMLReader reader = null;
@@ -162,7 +176,7 @@ public class XMLGenerator extends AbstractObjectReader {
 										throws TransformerException {
 		if(options.valueForKeyPath("reporter.transform") == null)
 			return data;
-		InputSource input =  new RujelInputSource(session,options);
+		RujelInputSource input =  new RujelInputSource(session,options);
 		Transformer transformer = getTransformer(session, 
 				(NSDictionary)options.valueForKey("reporter"), input);
         Source src = new StreamSource(new ByteArrayInputStream(data));
@@ -201,7 +215,8 @@ public class XMLGenerator extends AbstractObjectReader {
 				ec = new SessionedEditingContext(os, in.ses);
 				in.options.takeValueForKey(ec,"ec");
 			}
-        	if(in.options.valueForKeyPath("reporter.sync") != null) {
+        	if(in.options.valueForKeyPath("reporter.sync") != null &&
+        			in.options.valueForKey("sync") == null) {
         		in.options.takeValueForKey(new SyncGenerator(in.options), "sync");
         	}
         	if (ExtBase.localBaseID() == null)
@@ -273,6 +288,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(gr != null)
 				groups = new NSArray(gr);
 		}
+		NSMutableSet persons = (NSMutableSet)in.options.valueForKey("persons");
 		NSArray students = (NSArray)in.options.valueForKey("students");
 		if(students == null) {
 			Student stu = (Student)in.options.valueForKey("student");
@@ -298,6 +314,8 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(tmp.count() > 0)
 				groups = tmp;
 		}
+		if(students != null && persons != null)
+			persons.addObjectsFromArray(students);
 		if(groups == null) {
 			NSTimestamp date = (NSTimestamp)in.ses.valueForKey("today");
 			EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
@@ -344,6 +362,8 @@ public class XMLGenerator extends AbstractObjectReader {
 							handler.prepareAttribute("id", MyUtility.getID(teacher));
 							handler.element("teacher",
 									Person.Utility.fullName(teacher, true, 2, 1, 1));
+							if(persons != null)
+								persons.addObject(teacher);
 						}
 					}
 				}
@@ -352,12 +372,12 @@ public class XMLGenerator extends AbstractObjectReader {
 						"Failed to list tutors on group", new Object[]{gr,e});
 			}
 			if(nolist) {
-				handler.prepareEnumAttribute("type", "full");
+//				handler.prepareEnumAttribute("type", "full");
 				handler.endElement("eduGroup");
 				continue;
 			}
 			if(students == null) { // all students
-				handler.prepareEnumAttribute("type", "full");
+//				handler.prepareEnumAttribute("type", "full");
 				NSArray list = gr.list();
 				if(list != null && list.count() > 0) {
 					Enumeration stenu = list.objectEnumerator();
@@ -367,11 +387,14 @@ public class XMLGenerator extends AbstractObjectReader {
 //						handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
 						handler.element("student",null);
 					}
+					if(persons != null)
+						persons.addObjectsFromArray(list);
+
 				}
 			} else if(students.count() == 0) { // just list groups
-				handler.prepareEnumAttribute("type", "mixed");
+//				handler.prepareEnumAttribute("type", "mixed");
 			} else { // selected students
-				handler.prepareEnumAttribute("type", "sub");
+//				handler.prepareEnumAttribute("type", "sub");
 				Enumeration stenu = students.objectEnumerator();
 				while (stenu.hasMoreElements()) {
 					Student stu = (Student) stenu.nextElement();
@@ -425,6 +448,9 @@ public class XMLGenerator extends AbstractObjectReader {
 		if(teacher != null) {
 			handler.prepareAttribute("id", MyUtility.getID(teacher));
 			handler.element("teacher", Person.Utility.fullName(teacher, true, 2, 1, 1));
+			NSMutableSet persons = (NSMutableSet)in.options.valueForKey("persons");
+			if(persons != null)
+				persons.addObject(teacher);
 		}
 		EduGroup gr = course.eduGroup();
 		handler.prepareAttribute("id", (gr==null)?"0":MyUtility.getID(gr));
@@ -502,73 +528,117 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareAttribute("eduYear", tmp);
 			handler.startElement("persdata");
 			GeneratorModule sync = (GeneratorModule)in.options.valueForKey("sync");
-			Object stu = in.options.valueForKey("student");
-			if(stu != null) {
-				generateForPersonLink((Student)stu, "student", sync);
-			} else {
-				stu = (NSArray)in.options.valueForKey("students");
-				if(stu != null && ((NSArray)stu).count() > 0) {
-					Enumeration enu = ((NSArray)stu).objectEnumerator();
-					if(sync != null)
-						sync.preload("person", ((NSArray)stu));
-					while (enu.hasMoreElements()) {
-						generateForPersonLink((Student)enu.nextElement(),"student", sync);
-					}
-					if(sync != null)
-						sync.unload("person");
-				} else {
-					stu = null;
+			NSMutableSet persons = (NSMutableSet)in.options.valueForKey("persons");
+			if(persons != null) {
+				Enumeration enu = persons.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					PersonLink pers = (PersonLink) enu.nextElement();
+					String type = "Person";
+					if(pers instanceof Student)
+						type = "student";
+					else if (pers instanceof Teacher)
+						type = "teacher";
+					else if (pers instanceof EOEnterpriseObject)
+						type = ((EOEnterpriseObject)pers).entityName();
+					generateForPersonLink(pers, type, sync);
 				}
+				return;
 			}
-			if(stu == null) {
-				stu = in.options.valueForKey("eduGroup");
-				if(stu instanceof EduGroup) {
-					NSArray list = ((EduGroup)stu).list();
-					if(list != null && list.count() > 0) {
-						if(sync != null)
-							sync.preload("person", list);
-						Enumeration enu = list.objectEnumerator();
-						while (enu.hasMoreElements()) {
-							generateForPersonLink((Student)enu.nextElement(),"student", sync);
-						}
-						if(sync != null)
-							sync.unload("person");
-					}
-				}
-			}
+			NSArray students = (NSArray)in.options.valueForKey("students");
 			NSArray courses = (NSArray)in.options.valueForKey("courses");
+			if(students == null) {
+				Student stu = (Student)in.options.valueForKey("student");
+				if(stu != null) {
+					students = new NSArray(stu);
+					if(courses == null)
+						courses = BaseCourse.coursesForStudent(null, stu);
+				}
+			}
+			if(courses == null || students == null) {
+				EduGroup gr = (EduGroup)in.options.valueForKey("eduGroup");
+				if(gr != null) {
+					if(students == null)
+						students = gr.list();
+					if(courses == null) {
+						EOEditingContext ec = gr.editingContext();
+						courses = EOUtilities.objectsWithQualifierFormat(ec,
+								EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+								new NSArray(new Object[] {gr, MyUtility.eduYear(ec)}));
+						if(courses != null && courses.count() == 0)
+							courses = null;
+						courses = BaseCourse.coursesForStudent(courses, students);
+					}
+				} else {
+					NSArray groups = (NSArray)in.options.valueForKey("eduGroups");
+					if(groups != null && groups.count() > 0) {
+						if(students == null) {
+							NSMutableSet allStudents = new NSMutableSet();
+							Enumeration enu = groups.objectEnumerator();
+							while (enu.hasMoreElements()) {
+								gr = (EduGroup) enu.nextElement();
+								allStudents.addObjectsFromArray(gr.list());
+							}
+							students = allStudents.allObjects();
+						}
+						if(courses == null) {
+							gr = (EduGroup)groups.objectAtIndex(0);
+							EOEditingContext ec = gr.editingContext();
+							EOQualifier qual[] = new EOQualifier[2];
+							qual[0] = new EOKeyValueQualifier("eduYear",
+									EOQualifier.QualifierOperatorEqual, MyUtility.eduYear(ec));
+							qual[1] = Various.getEOInQualifier("eduGroup", 
+									groups.arrayByAddingObject(NSKeyValueCoding.NullValue));
+							qual[0] = new EOAndQualifier(new NSArray(qual));
+							EOFetchSpecification fs = new EOFetchSpecification(
+									EduCourse.entityName, qual[0], null);
+							courses = ec.objectsWithFetchSpecification(fs);
+						}
+					}
+				}
+			}
+			generateForList(students, "student", sync);
+			students = (NSArray)in.options.valueForKey("teachers");
+			NSMutableArray teachers = (students == null)?
+					new NSMutableArray() : students.mutableClone();
+			
 			if(courses != null && courses.count() > 0) {
 				Enumeration enu = courses.objectEnumerator();
-				NSMutableArray teachers = new NSMutableArray();
 				while (enu.hasMoreElements()) {
 					EduCourse crs = (EduCourse) enu.nextElement();
 					Teacher teacher = crs.teacher();
-					if(!teachers.containsObject(teacher))
+					if(teacher != null && !teachers.containsObject(teacher))
 						teachers.addObject(teacher);
 				}
-				if(teachers.count() > 0) {
-					EOSortOrdering.sortArrayUsingKeyOrderArray(teachers, Person.sorter);
-					
-					if(sync != null)
-						sync.preload("person", teachers);
-					enu = teachers.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						Teacher teacher = (Teacher) enu.nextElement();
-						generateForPersonLink(teacher, "teacher",sync);
-					}
-					if(sync != null)
-						sync.unload("person");
-				}
+			}
+			if(teachers.count() > 0) {
+				EOSortOrdering.sortArrayUsingKeyOrderArray(teachers, Person.sorter);
+				generateForList(teachers, "teacher",sync);
 			}
 			handler.endElement("persdata");
 			handler.endDocument();
 		}
 		
+		protected void generateForList(NSArray list, String type, GeneratorModule sync) 
+					throws SAXException	{
+			if(list == null || list.count() == 0)
+				return;
+			if(sync != null && list.count() > 2)
+				sync.preload("person", list);
+			Enumeration enu = list.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				generateForPersonLink((PersonLink)enu.nextElement(), type,sync);
+			}
+			if(sync != null)
+				sync.unload("person");
+		}
+		
 		protected void generateForPersonLink(PersonLink plink, String type, GeneratorModule sync)
 					throws SAXException {
+			Person pers = plink.person();
+			if(pers == null)
+				return;
 			handler.prepareEnumAttribute("type", type);
 			handler.prepareAttribute("id", MyUtility.getID((EOEnterpriseObject)plink));
-			Person pers = plink.person();
 			handler.prepareEnumAttribute("sex", (pers.sex())?"male":"female");
 			if(plink instanceof Student) {
 				Integer absGrade = null;

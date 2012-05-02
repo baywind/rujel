@@ -13,6 +13,7 @@ ParamContainer : OnClickContainer {
   title = item.hover;
   align = "right";
   onclick = "toggleParam(this);";
+  disabled = ^noToggle;
 }
 
 Parameter : Parameter {

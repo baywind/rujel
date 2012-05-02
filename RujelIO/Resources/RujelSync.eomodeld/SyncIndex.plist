@@ -28,7 +28,7 @@
     ); 
     attributesUsedForLocking = (eduYear, indexName, sysID); 
     className = "net.rujel.io.SyncIndex"; 
-    classProperties = (eduYear, extBase, extSystem, indexName); 
+    classProperties = (eduYear, extBase, extSystem, indexMatches, indexName); 
     externalName = "SYNC_INDEX"; 
     fetchSpecificationDictionary = {}; 
     internalInfo = {"_javaClientClassName" = SyncIndex; }; 
@@ -49,6 +49,13 @@
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = sID; sourceAttribute = sysID; }); 
             name = extSystem; 
+        }, 
+        {
+            destination = IndexMatch; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = idxID; sourceAttribute = iID; }); 
+            name = indexMatches; 
         }
     ); 
 }

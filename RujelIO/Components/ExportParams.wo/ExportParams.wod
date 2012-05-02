@@ -1,0 +1,80 @@
+Cross : WOImage {
+  framework = "RujelBase";
+  filename = "cross.png";
+  align = "right";
+  height = 10;
+  width = 10;
+  onclick = "closePopup();";
+  style = "cursor:pointer;position:absolute;right:2pt;top:2pt;";
+}
+
+Form: WOForm {
+  style = "border: 1px solid #999999;";
+  multipleSubmit = true;
+}
+
+Title : WOString {
+  value = plist.title;
+  escapeHTML = false;
+}
+
+Description : WOString {
+  value = plist.description;
+  escapeHTML = false;
+}
+
+
+ExtraData : QueryParams {
+  list = plist.extData;
+  params = extraData;
+  ec = ec;
+  useAjax = true;
+  noToggle = true;
+}
+
+Submit : WOSubmitButton {
+  value = "Export";
+  action = export;
+}
+
+Save : WOSubmitButton {
+  value = "Save";
+  action = save;
+}
+
+Indexes : WORepetition {
+  list = plist.indexes;
+  item = indexItem;
+}
+
+IndexTitle : WOString {
+  value = indexItem.title;
+  escapeHTML = false;
+}
+
+LocalTitle : WOString {
+  value = indexItem.localTitle;
+  escapeHTML = false;
+}
+
+ExternalTitle : WOString {
+  value = indexItem.externalTitle;
+  escapeHTML = false;
+}
+
+IndexRows : WORepetition {
+  list = localList;
+  item = item1;
+}
+
+LocalValue : WOString {
+  value = value1;
+  escapeHTML = false;
+}
+
+ExtValue : WOPopUpButton {
+  list = indexItem.external;
+  item = item2;
+  displayString = value2;
+  selection = selection;
+}

@@ -53,10 +53,25 @@ public class SyncGenerator extends GeneratorModule {
 
 	public SyncGenerator(NSDictionary options) {
 		super(options);
+		EOEditingContext ec = (EOEditingContext)settings.valueForKey("ec");
+		String name = (String)settings.valueForKeyPath("reporter.extSystem");
+		if(name != null) {
+			if(ec == null) {
+				ec = new EOEditingContext();
+				settings.takeValueForKey(ec, "ec");
+			}
+			extSys = ExtSystem.extSystemNamed(name, ec, false);
+			name = (String)settings.valueForKeyPath("reporter.extBase");
+			if(extSys != null && name != null)
+				extBase = extSys.getBase(name, false);
+		}
 	}
 	
 	private NSMutableDictionary preload = new NSMutableDictionary();
 	protected NSMutableDictionary sources = new NSMutableDictionary();
+	protected ExtSystem extSys = null;
+	protected ExtBase extBase = null;
+
 
 	@Override
 	public void generateFor(Object object,
@@ -66,8 +81,8 @@ public class SyncGenerator extends GeneratorModule {
 		if(inSync) {
 			String path = handler.recentPath();
 			int fin = path.length() - 9;
-			int idx = path.lastIndexOf('/',fin);
-			tag = path.substring(idx, fin);
+			int idx = path.lastIndexOf('/',fin -1);
+			tag = path.substring(idx +1, fin);
 		}
 		Enumeration enu;
 		NSMutableArray loaded = (NSMutableArray)preload.valueForKey(tag);
@@ -121,6 +136,26 @@ public class SyncGenerator extends GeneratorModule {
 				param  = (String)((NSDictionary)pre).objectForKey(object);
 			} else {
 				param = readDict((NSDictionary)pre, object);
+				Object reindex = pre.valueForKey("reindex");
+				if(reindex instanceof NSKeyValueCoding) {
+					reindex = ((NSKeyValueCoding) reindex).valueForKey(param);
+				} else if(reindex instanceof String && extSys != null) {
+					NSDictionary ri = (NSDictionary)settings.valueForKeyPath("indexes." + reindex);
+					if(ri == null) {
+						SyncIndex index = (extSys == null)? null :
+							extSys.getIndexNamed((String)reindex, extBase, false);
+						if(index != null)
+							reindex = index.extForLocal(param);
+						else
+							reindex = null;
+					} else {
+						reindex = ri.valueForKey(param);
+					}
+				} else {
+					reindex = null;
+				}
+				if(reindex != null)
+					param = (String)reindex;
 			}
 			if(param == null)
 				handler.dropAttributes();
@@ -189,8 +224,18 @@ public class SyncGenerator extends GeneratorModule {
 				continue;
 			}
 			String param = (String)pre.valueForKey("settingsBase");
+			String reindex = (String)pre.valueForKey("reindex");
+			NSDictionary index = null; 
 			if(param == null) {
 				loaded.addObject(pre);
+				if(reindex != null) {
+					index = (NSDictionary)settings.valueForKeyPath("indexes." + reindex);
+					if(index == null && extSys != null) {
+						SyncIndex si = extSys.getIndexNamed(reindex, extBase, false);
+						if(si != null)
+							pre.takeValueForKey(si.getDict(), "reindex");
+					}
+				}
 				continue;
 			}
 			NSMutableDictionary dict = new NSMutableDictionary();
@@ -198,6 +243,14 @@ public class SyncGenerator extends GeneratorModule {
 			EOEditingContext ec = (EOEditingContext)settings.valueForKey("ec");
 			SettingsBase base = SettingsBase.baseForKey(param, ec, false);
 			Object ref = pre.valueForKey("forObject");
+			if(reindex != null) {
+				index = (NSDictionary)settings.valueForKeyPath("indexes." + reindex);
+				if(index == null && extSys != null) {
+					SyncIndex si = extSys.getIndexNamed(reindex, extBase, false);
+					if(si != null)
+						index = si.getDict();
+				}
+			}
 			Enumeration oen = objects.objectEnumerator();
 			while (oen.hasMoreElements()) {
 				Object object = oen.nextElement();
@@ -206,14 +259,21 @@ public class SyncGenerator extends GeneratorModule {
 				EOEnterpriseObject setting = base.forObject(obj);
 				if(setting == null)
 					continue;
+				String res = null;
 				if(Various.boolForObject(dict.valueForKey("numeric"))) {
 					Integer num = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
 					if(num != null)
-						dict.setObjectForKey(num.toString(), object);
+						res = num.toString();
 				} else {
-					String res = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-					if(res != null)
-						dict.setObjectForKey(res, object);
+					res = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				}
+				if(res != null) {
+					if(index != null) {
+						String reres = (String)index.valueForKey(res);
+						if(reres != null)
+							res = reres;
+					}
+					dict.setObjectForKey(res, object);
 				}
 			}
 			dict.takeValueForKey(Boolean.TRUE, "PRELOADED");
@@ -258,7 +318,10 @@ public class SyncGenerator extends GeneratorModule {
 				interpretSync(settings.valueForKey(((String)plistData).substring(1)), prepared);
 			} else {
 				NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, 
-						"ExtBase", "baseID", plistData);
+						ExtBase.ENTITY_NAME, ExtBase.BASE_ID_KEY, plistData);
+				if(found == null || found.count() == 0)
+					found = EOUtilities.objectsMatchingKeyAndValue(ec, 
+							ExtSystem.ENTITY_NAME, ExtSystem.PRODUCT_NAME_KEY, plistData);
 				if(found != null && found.count() > 0)
 					prepared.addObject(found.objectAtIndex(0));
 			}

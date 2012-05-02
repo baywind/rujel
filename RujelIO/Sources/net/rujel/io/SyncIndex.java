@@ -29,7 +29,11 @@
 
 package net.rujel.io;
 
+import java.util.Enumeration;
+
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableDictionary;
 
 public class SyncIndex extends _SyncIndex {
 
@@ -42,5 +46,33 @@ public class SyncIndex extends _SyncIndex {
 
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
+	}
+	
+	public NSMutableDictionary getDict() {
+		NSArray matches = indexMatches();
+		if(matches == null || matches.count() == 0)
+			return null;
+		NSMutableDictionary dict = new NSMutableDictionary();
+		Enumeration enu = matches.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject match = (EOEnterpriseObject) enu.nextElement();
+			String local = (String)match.valueForKey("localValue");
+			String ext = (String)match.valueForKey("extValue");
+			dict.takeValueForKey(ext, local);
+		}
+		return dict;
+	}
+	
+	public String extForLocal(String local) {
+		NSArray matches = indexMatches();
+		if(matches == null || matches.count() == 0)
+			return null;
+		Enumeration enu = matches.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject match = (EOEnterpriseObject) enu.nextElement();
+			if(local.equals(match.valueForKey("localValue")))
+				return (String)match.valueForKey("extValue");
+		}
+		return null;
 	}
 }

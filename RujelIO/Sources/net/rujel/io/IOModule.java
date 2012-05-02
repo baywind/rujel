@@ -33,7 +33,6 @@ import net.rujel.reusables.PlistReader;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
-import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSKeyValueCoding;
 
 public class IOModule {
@@ -50,12 +49,6 @@ public class IOModule {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelIO_ImportExport.ioRegime");
 		}
-		return null;
-	}
-	
-	public static Object defineBase() {
-		EOEditingContext ec = new EOEditingContext();
-		ExtSystem.localSystem(ec);
 		return null;
 	}
 }
