@@ -33,14 +33,16 @@ import java.util.Enumeration;
 
 import org.xml.sax.SAXException;
 
-import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSMutableArray;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.xml.EasyGenerationContentHandlerProxy;
@@ -69,8 +71,25 @@ public class EduPlanXML extends GeneratorModule {
 		handler.startElement("eduPlan");
 		NSArray cycles = null;
 		if(gr == null) {
-			EOEditingContext ec = (EOEditingContext)settings.valueForKey("ec");
-			cycles = EOUtilities.objectsForEntityNamed(ec, PlanCycle.ENTITY_NAME);
+			NSArray courses = (NSArray)settings.valueForKey("courses");
+			if(courses == null) {
+				Integer section = (Integer)settings.valueForKeyPath("section.idx");
+				EOEditingContext ec = (EOEditingContext)settings.valueForKey("ec");
+				cycles = PlanCycle.allCyclesFor(null, null, section, null, ec);
+			} else {
+				NSArray extra = (NSArray)settings.valueForKey("extraCourses");
+				if(extra != null)
+					courses = courses.arrayByAddingObjectsFromArray(extra);
+				NSMutableArray res = new NSMutableArray();
+				Enumeration enu = courses.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EduCourse crs = (EduCourse) enu.nextElement();
+					EduCycle cycle = crs.cycle();
+					if(!res.containsObject(cycle))
+						res.addObject(cycle);
+				}
+				cycles = res;
+			}
 		} else {
 			cycles = PlanCycle.cyclesForEduGroup(gr);
 		}

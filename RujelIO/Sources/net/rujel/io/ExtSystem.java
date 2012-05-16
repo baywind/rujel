@@ -99,7 +99,7 @@ public class ExtSystem extends _ExtSystem {
 				entityName = obj.entityName();
 			} else if(!entityName.equals(obj.entityName())) {
 				matchDict(entityName, ids, dict, list, last, base);
-				
+				entityName = obj.entityName();
 				last += ids.count();
 				ids.removeAllObjects();
 			}

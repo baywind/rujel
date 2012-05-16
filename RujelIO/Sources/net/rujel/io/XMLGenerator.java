@@ -72,6 +72,7 @@ import com.webobjects.foundation.NSTimestamp;
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
+import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.DataBaseConnector;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
@@ -94,18 +95,24 @@ public class XMLGenerator extends AbstractObjectReader {
 		}
 	}
 	
-	public static Transformer getTransformer(WOSession session,NSDictionary reporter,
+	public static Transformer getTransformer(WOSession session,
 			RujelInputSource input) throws TransformerException {
 		
 		TransformerFactory factory = TransformerFactory.newInstance();
 		factory.setErrorListener(new TransormationErrorListener(session));
 		Transformer transformer = null;
-		String transName = (reporter == null)?null:(String)reporter.valueForKey("transform");
+		String transName = (String)input.options.valueForKeyPath("reporter.transform");
 		File sourceDir = null;
 		if(transName != null) {
-			String root = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
-			root = Various.convertFilePath(root);
-			sourceDir = new File(root,"StudentReport");
+			String reportDir = (String)input.options.valueForKey("reportDir");
+			if(reportDir == null) {
+				sourceDir = ReportsModule.reportsFolder("StudentReport");
+			} else if(reportDir.indexOf('/') >= 0) {
+				reportDir = Various.convertFilePath(reportDir);
+				sourceDir = new File(reportDir);
+			} else {
+				sourceDir = ReportsModule.reportsFolder(reportDir);
+			}
 			File file = new File(sourceDir,transName);
 			if(file.exists())
 				transformer = factory.newTransformer(new StreamSource(file));
@@ -116,7 +123,7 @@ public class XMLGenerator extends AbstractObjectReader {
     		transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
     		return transformer;
 		}
-		NSArray list = (NSArray)reporter.valueForKey("sources");
+		NSArray list = (NSArray)input.options.valueForKeyPath("reporter.sources");
 		if(list != null && list.count() > 0) {
 			Enumeration enu = list.objectEnumerator();
 			NSMutableDictionary sources = new NSMutableDictionary();
@@ -154,8 +161,7 @@ public class XMLGenerator extends AbstractObjectReader {
     		options.takeValueForKey(new SyncGenerator(options), "sync");
     	}
 
-		Transformer transformer = getTransformer(session, 
-				(NSDictionary)options.valueForKey("reporter"), input);
+		Transformer transformer = getTransformer(session, input);
 		XMLReader reader = null;
 		String srcName = (String)options.valueForKeyPath("reporter.mainSource");
 		if("Persdata".equals(srcName)) {
@@ -177,8 +183,7 @@ public class XMLGenerator extends AbstractObjectReader {
 		if(options.valueForKeyPath("reporter.transform") == null)
 			return data;
 		RujelInputSource input =  new RujelInputSource(session,options);
-		Transformer transformer = getTransformer(session, 
-				(NSDictionary)options.valueForKey("reporter"), input);
+		Transformer transformer = getTransformer(session, input);
         Source src = new StreamSource(new ByteArrayInputStream(data));
     	ByteArrayOutputStream out = new ByteArrayOutputStream();
     	Result res = new StreamResult(out);
@@ -319,7 +324,12 @@ public class XMLGenerator extends AbstractObjectReader {
 		if(groups == null) {
 			NSTimestamp date = (NSTimestamp)in.ses.valueForKey("today");
 			EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
+			Object section = in.ses.valueForKeyPath("state.section");
+			if(section != null)
+				in.ses.takeValueForKeyPath(in.options.valueForKey("section"),"state.section");
 			groups = EduGroup.Lister.listGroups(date, ec);
+			if(section != null)
+				in.ses.takeValueForKeyPath(section,"state.section");
 		}
 		{
 			NSDictionary opt = (NSDictionary)in.options.valueForKeyPath(
@@ -458,6 +468,7 @@ public class XMLGenerator extends AbstractObjectReader {
 		try {
 			if(Various.boolForObject(course.valueForKeyPath("namedFlags.mixedGroup"))) {
 				handler.prepareEnumAttribute("type", "mixed");
+				handler.prepareAttribute("grade", course.cycle().grade().toString());
 				gr = null;
 			} else if(Various.boolForObject(course.valueForKeyPath("audience.count"))) {
 				handler.prepareEnumAttribute("type", "sub");
@@ -470,7 +481,7 @@ public class XMLGenerator extends AbstractObjectReader {
 		}
 		handler.startElement("eduGroup");
 		if(gr == null && !Various.boolForObject(
-				in.options.valueForKeyPath("reporter.settings.eduGroups.nolist"))) {
+				in.options.valueForKeyPath("reporter.settings.courses.nolist"))) {
 			NSArray list = course.groupList();
 			NSArray students = (NSArray)in.options.valueForKey("students");
 			if(list != null && list.count() > 0) {
@@ -488,7 +499,7 @@ public class XMLGenerator extends AbstractObjectReader {
 		if(course.comment() != null)
 			handler.element("comment", course.comment());
 		if(!Various.boolForObject(in.options.valueForKeyPath(
-				"reporter.generation.omitCourseContent")))
+				"reporter.settings.courses.nodata")))
 			useGenerators(generators, course);
 		handler.endElement("course");
 	}
@@ -530,6 +541,8 @@ public class XMLGenerator extends AbstractObjectReader {
 			GeneratorModule sync = (GeneratorModule)in.options.valueForKey("sync");
 			NSMutableSet persons = (NSMutableSet)in.options.valueForKey("persons");
 			if(persons != null) {
+				if(sync != null)
+					sync.preload("person", persons.allObjects());
 				Enumeration enu = persons.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					PersonLink pers = (PersonLink) enu.nextElement();

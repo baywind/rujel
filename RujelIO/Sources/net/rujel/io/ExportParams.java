@@ -45,10 +45,8 @@ import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.MyUtility;
-import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
@@ -66,6 +64,8 @@ public class ExportParams extends WOComponent {
 	public NSDictionary indexItem;
 	public Object item1;
 	public Object item2;
+	public NSDictionary section;
+	public boolean showSections;
 	
     public ExportParams(WOContext context) {
         super(context);
@@ -93,6 +93,10 @@ public class ExportParams extends WOComponent {
         	if(indexes == null)
         		indexes = new NSMutableDictionary();
     	}
+    	showSections = Various.boolForObject(plist.valueForKey("section")) &&
+    			Various.boolForObject(session().valueForKeyPath("strings.sections.hasSections"));
+    	if(showSections)
+    		section = (NSDictionary)session().valueForKeyPath("state.section");
     }
     
     public WOActionResults save() {
@@ -122,8 +126,10 @@ public class ExportParams extends WOComponent {
  		}
 	   	NSMutableDictionary reportDict = new NSMutableDictionary();
 		reportDict.takeValueForKey(plist,"reporter");
+		reportDict.takeValueForKey(section, "section");
 		reportDict.takeValueForKey(ec,"ec");
 		reportDict.takeValueForKey(indexes, "indexes");
+		reportDict.takeValueForKey("ImportExport", "reportDir");
 
 		NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
 				(Integer)session().valueForKey("eduYear")), "eduYear");
@@ -145,8 +151,8 @@ public class ExportParams extends WOComponent {
 //			plist.takeValueForKey(info, "settings");
 //		}
 		//TODO: if()
-		reportDict.takeValueForKey(EduGroup.Lister.listGroups(
-				(NSTimestamp)session().valueForKey("today"), ec),"eduGroups");
+//		reportDict.takeValueForKey(EduGroup.Lister.listGroups(
+//				(NSTimestamp)session().valueForKey("today"), ec),"eduGroups");
 		
 		byte[] result = null;
 		try {

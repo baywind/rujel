@@ -109,6 +109,7 @@ public class SyncGenerator extends GeneratorModule {
 				handler.prepareAttribute("base", sys.baseID());
 				String extID = ((ExtBase)pre).extidForObject((EOEnterpriseObject)object);
 				handler.element("extid", extID);
+				continue;
 			}
 			if(pre instanceof ExtSystem) {
 				ExtSystem sys = (ExtSystem)pre;
@@ -116,6 +117,7 @@ public class SyncGenerator extends GeneratorModule {
 				handler.prepareAttribute("base", sys.productName());
 				String extID = ((ExtSystem)pre).extidForObject((EOEnterpriseObject)object, null);
 				handler.element("extid", extID);
+				continue;
 			}
 			String param = (String)pre.valueForKey("baseID");
 			if(param != null) {

@@ -1,303 +1,232 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:output method="html" indent="yes"/>
+<xsl:output method="xml" indent="yes" />
 
-<xsl:variable name="persdata" select="document('persdata.xml')/persdata"/>
 <xsl:variable name="options" select="document('options.xml')/options"/>
+<xsl:key name="grByGrade" match="eduGroups/eduGroup" use="@grade"/>
 
 <xsl:template match="/">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
-    <head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="generator" content="Rujel XSLT" />
-        <title>Текущая успеваемость
-        	<xsl:if test="$options/info/period"> : 
-        	 <xsl:value-of select="$options/info/period"/></xsl:if></title>
-	<style type="text/css">
-	.student {
-		font-size:large;
-		font-weight:bold;
-		padding-left:2em;
-	}
-	
-	.dates {
-		padding-left:3em;
-		font-style:italic;
-		white-space:nowrap;
-	}
+<fet version="5.13.0">
 
-	.sup {
-		vertical-align: baseline;
-		position: relative;
-		top: -1em;
-		font-size:60%;
-	}
-	
-	.subject {
-		font-size: 120%;
-		font-weight: bold;
-		text-decoration: underline;
-		text-align: left;
-	}
-	</style>
+<Institution_Name><xsl:value-of select="ejdata/school/@title"/></Institution_Name>
 
-</head>
-<body>
-	<xsl:choose>
-		<xsl:when test="$options/studentID">
-			<xsl:call-template name="print_student">
-				<xsl:with-param name="curr-student" select="$options/studentID"/>
-				<xsl:with-param name="curr-group" select="ejdata/eduGroups/eduGroup/@id"/>
-			</xsl:call-template>
-		</xsl:when><xsl:otherwise>
-			<xsl:for-each select="ejdata/eduGroups/eduGroup/student">
-				<xsl:call-template name="print_student">
-					<xsl:with-param name="curr-student" select="@id"/>
-					<xsl:with-param name="curr-group" select="../@id"/>
-				</xsl:call-template>
-			</xsl:for-each>
-		</xsl:otherwise>
-	</xsl:choose>
-</body></html>
+<Comments><xsl:value-of select="$options/info/eduYear"/></Comments>
+
+<Hours_List>
+	<Number>8</Number>
+	<Name>1</Name>
+	<Name>2</Name>
+	<Name>3</Name>
+	<Name>4</Name>
+	<Name>5</Name>
+	<Name>6</Name>
+	<Name>7</Name>
+	<Name>8</Name>
+</Hours_List>
+
+<Days_List>
+	<Number>6</Number>
+	<Name>Пн</Name>
+	<Name>Вт</Name>
+	<Name>Ср</Name>
+	<Name>Чт</Name>
+	<Name>Пт</Name>
+	<Name>Сб</Name>
+</Days_List>
+
+<xsl:apply-templates/>
+
+<Space_Constraints_List>
+<ConstraintBasicCompulsorySpace>
+	<Weight_Percentage>100</Weight_Percentage>
+</ConstraintBasicCompulsorySpace>
+</Space_Constraints_List>
+
+</fet>
 </xsl:template>
 
-<xsl:template name="print_student">
-	<xsl:param name="curr-student"/>
-	<xsl:param name="curr-group"/>
-	<div class="studentContainer">
-	<xsl:if test="$options/info/eduYear">
-	<div style="float:right;font-size:large;"><xsl:value-of select="$options/info/eduYear"/></div>
-	</xsl:if>
-	<h1>Текущая успеваемость
-        	<xsl:if test="$options/info/period"> : 
-        	 <xsl:value-of select="$options/info/period"/></xsl:if></h1>
-	<xsl:variable name="student" select="$persdata/person[@type='student' and @id=$curr-student]"/>
-	<div class="student">Ученик : 
-		<xsl:value-of select="$student/name[@type='last']"/><xsl:text> </xsl:text>
-		<xsl:value-of select="$student/name[@type='first']"/><!-- xsl:text> </xsl:text>
-		<xsl:value-of select="$student/name[@type='second']"/ --><xsl:text> , </xsl:text>
-		<xsl:value-of select="/ejdata/eduGroups/eduGroup[@id=$curr-group]/@name"/></div>
-	<xsl:if test="$options/info/dates">
-	<div class = "dates"><xsl:value-of select="$options/info/dates"/></div>
-	</xsl:if>
-	<table style="margin-top: 1em; width: 100%;" border="0">
-		<xsl:for-each 
-select="/ejdata/courses/course[eduGroup[@type='full' and @id=$curr-group] or eduGroup/student[@id=$curr-student]]">
-			<xsl:call-template name="print_course">
-				<xsl:with-param name="stid" select="$curr-student"/>
-			</xsl:call-template>
-			<tr height="5"></tr>
-		</xsl:for-each>
-	</table>
-	<br clear = "all" />
-	<table border="0" width="100%" style="margin:2ex 0;">
-	<tr><td align="left" width="50%">
-		Подпись классного руководителя:
-	</td><td align="left" width="50%">
-		Подпись родителя
-	</td></tr></table>
-	</div>
-</xsl:template>
+<xsl:template match="ejdata">
+<Students_List>
+	<xsl:apply-templates 
+		select="eduGroups/eduGroup[generate-id(.) = generate-id(key('grByGrade',@grade))]"/>
+</Students_List>
 
-<xsl:template match="course" name = "print_course">
-	<xsl:param name="stid"/>
-	<xsl:variable name="teacher" 
-			select="$persdata/person[@type='teacher' and @id=current()/teacher/@id]"/>
-	<tr><td class = "subject">
-	<xsl:if test="/eduPlan/subject[cycle[@id=current()/@cycle]]/content">
-		<xsl:attribute name="title">
-			<xsl:value-of select="/eduPlan/subject[cycle[@id=current()/@cycle]]/content"/>
-		</xsl:attribute>
-	</xsl:if>
-		<xsl:value-of select="@subject"/></td>
-		<td align = "left" style="font-style: italic;">
-			<xsl:value-of select="comment"/>
-		</td>
-		<td align= "right">
-		<xsl:value-of select="$teacher/name[@type='last']"/><xsl:text> </xsl:text>
-		<xsl:value-of select="$teacher/name[@type='first']"/><xsl:text> </xsl:text>
-		<xsl:value-of select="$teacher/name[@type='second']"/></td>
-	</tr>
-		<xsl:if test="$options/autoitog/active = 'true'">
-			<xsl:for-each select="containers[@type = 'prognosis']">
-				<xsl:call-template name="prognosis">
-					<xsl:with-param name="stid" select="$stid"/>
-				</xsl:call-template>
-			</xsl:for-each>
-		</xsl:if>
-		<xsl:for-each select="containers">
-			<xsl:if test="@type = 'work' and $options/marks/active = 'true'">
-				<xsl:call-template name="works">
-					<xsl:with-param name="stid" select="$stid"/>
-				</xsl:call-template>
-			</xsl:if>
-			<xsl:if test="@type = 'lesson' and $options/lessons/active = 'true'">
-				<xsl:call-template name="lessons">
-					<xsl:with-param name="stid" select="$stid"/>
-				</xsl:call-template>
-			</xsl:if>
-		</xsl:for-each>
-</xsl:template>
-
-<xsl:template match="containers[@type='work']" name = "works">
-	<xsl:param name="stid"/>
-	<xsl:variable name="lvl" select="$options/marks/level"/>
-	<xsl:variable name="list"
-select="container[$lvl > 2 or calc/@compulsory = 'true' or ($lvl = 2 and criteria) or ($lvl = 1 and marks/mark[@student = $stid])]"/>
-	<xsl:if test="$list">
-	<tr><td colspan="3">
- <strong style="font-size:110%;">Работы: </strong>
-	<xsl:for-each select="$list">
-		<xsl:call-template name="work">
-			<xsl:with-param name="stid" select="$stid"/>
-		</xsl:call-template>
-		<xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
+<Teachers_List>
+	<xsl:for-each
+		select="courses/course[not(preceding-sibling::course/teacher = teacher)]/teacher">
+		<xsl:sort/>
+		<xsl:call-template name="teacher"></xsl:call-template>
 	</xsl:for-each>
-	</td></tr></xsl:if>
+</Teachers_List>
+
+<Subjects_List>
+	<xsl:apply-templates select="eduPlan" mode="subjects"/>
+</Subjects_List>
+
+<Activity_Tags_List>
+</Activity_Tags_List>
+
+<Activities_List>
+	<xsl:apply-templates select="courses/course[1]" mode="printCrs"/>
+</Activities_List>
+
+<Buildings_List>
+</Buildings_List>
+
+<Rooms_List>
+</Rooms_List>
+
+<Time_Constraints_List>
+<ConstraintBasicCompulsoryTime>
+	<Weight_Percentage>100</Weight_Percentage>
+</ConstraintBasicCompulsoryTime>
+	<xsl:apply-templates select="courses/course[1]" mode="constraint"/>
+</Time_Constraints_List>
+
 </xsl:template>
 
-<xsl:template match="container" name = "work">
-	<xsl:param name="stid"/>
-	<xsl:variable name="criteria" select="criteria/criterion[@idx>0]"/>
-	<xsl:variable name="mark" select="marks/mark[@student=$stid]"/>
-	<span style="font-family: serif;" class="withWeight">
-		<xsl:attribute name="title">
-			<xsl:value-of select="content"/><xsl:if test="calc/@weight and calc/@weight != 1">
-&lt;вес : <xsl:value-of select="calc/@weight"/>&gt;</xsl:if> (<xsl:value-of select="@type"/>)</xsl:attribute>
-		<xsl:attribute name="style">
-			font-family:<xsl:if test="calc/@compulsory = 'true'">sans-</xsl:if>serif;
-			<xsl:choose>
-				<xsl:when test="task">cursor:pointer;color:blue;</xsl:when>
-				<xsl:when test="not(calc/@weight)">color:#666666;</xsl:when>
-			</xsl:choose>
-		</xsl:attribute>
-		<xsl:if test="task"><xsl:attribute name="onclick">
-			window.open('<xsl:value-of select="task"/>','_blank');
-		</xsl:attribute></xsl:if>
-	<xsl:choose>
-		<xsl:when test="$criteria">[<xsl:for-each select="$criteria">
-		<xsl:value-of select="@title"/>:<xsl:choose>
-					<xsl:when test="$mark/crmark[@criter=current()/@idx]">
-						<xsl:value-of select="$mark/crmark[@criter=current()/@idx]/@value"/>
-						<xsl:if test="$options/marks/hideMax != 'true'">
-						<sub style = "font-size:60%;color:#999999">
-						<xsl:value-of select="@max"/></sub></xsl:if>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:text disable-output-escaping="yes">&amp;oslash;</xsl:text>
-					</xsl:otherwise>
-				</xsl:choose>
-				<xsl:if test="position() != last() or $mark/comment or $mark/weblink">
-					<xsl:text disable-output-escaping="yes">,&amp;nbsp;</xsl:text></xsl:if>
-			</xsl:for-each>
-				<xsl:value-of select="$mark/comment"/>
-				<xsl:if test="$mark/weblink"><a target = "_blank">
-					<xsl:attribute name="href"><xsl:value-of select="$mark/weblink"/></xsl:attribute>
-					<xsl:text disable-output-escaping="yes">&amp;gt;&amp;gt;</xsl:text>
-				</a></xsl:if>]
-		</xsl:when>
-		<xsl:when test="$mark/@value and ($mark/comment or $mark/weblink)">
-			[<xsl:value-of select="$mark/@value"/>
-			<xsl:text disable-output-escaping="yes">,&amp;nbsp;</xsl:text>
-			<xsl:value-of select="$mark/comment"/>
-				<xsl:if test="$mark/weblink"><a target = "_blank">
-					<xsl:attribute name="href"><xsl:value-of select="$mark/weblink"/></xsl:attribute>
-					<xsl:text disable-output-escaping="yes">&amp;gt;&amp;gt;</xsl:text>
-				</a></xsl:if>]
-		</xsl:when>
-		<xsl:when test="$mark/@value">
-			<xsl:value-of select="$mark/@value"/>
-		</xsl:when>
-		<xsl:when test="$mark/comment">
-			<xsl:value-of select="$mark/comment"/>
-		</xsl:when>
+<xsl:template match="eduGroup">
+<Year>
+<Name><xsl:value-of select="@grade"></xsl:value-of></Name>
+<Number_of_Students>0</Number_of_Students>
+<xsl:apply-templates mode="next" select="key('grByGrade',@grade)"/>
+<xsl:if test="//eduGroup[@grade = current()/@grade and @type='mixed']">
+	<Group>
+	<Name><xsl:value-of select="@grade"/> ???</Name>
+	<Number_of_Students>0</Number_of_Students>
+	</Group>
+</xsl:if>
+</Year>
+</xsl:template>
+
+<xsl:template match="eduGroup" mode="next">
+	<Group>
+	<Name><xsl:value-of select="@name"/></Name>
+	<Number_of_Students>0</Number_of_Students>
+	<xsl:if test="//eduGroup[@id = current()/@id and @type='sub']">
+			<Subgroup>
+		<Name><xsl:value-of select="@name"/> ??</Name>
+		<Number_of_Students>0</Number_of_Students>
+		</Subgroup>
+	</xsl:if>
+	</Group>
+</xsl:template>
+
+<xsl:template name="teacher">
+<Teacher>
+	<Name><xsl:value-of select="."></xsl:value-of></Name>
+</Teacher>
+</xsl:template>
+
+<xsl:template match="subject" mode="subjects">
+<Subject>
+	<Name><xsl:value-of select="@title"/></Name>
+</Subject>
+</xsl:template>
+
+<xsl:template match="course" mode="printCrs">
+	<xsl:param name="actGroup" select="1"/>
+	<xsl:variable name="hours" select="//cycle[@id = current()/@cycle]/hours"/>
+	<xsl:choose><xsl:when test="$hours">
+		<xsl:call-template name="activity">
+			<xsl:with-param name="actGroup" select="$actGroup"/>
+			<xsl:with-param name="hours" select="$hours"/>
+			<xsl:with-param name="num" select="0"/>
+		</xsl:call-template>
+		<xsl:apply-templates select="following-sibling::course[1]"  mode="printCrs">
+			<xsl:with-param name="actGroup" select="$actGroup + $hours"/>
+		</xsl:apply-templates>
+	</xsl:when>
 		<xsl:otherwise>
-			<xsl:text disable-output-escaping="yes">&amp;oslash;</xsl:text>
+			<xsl:apply-templates select="following-sibling::course[1]"  mode="printCrs">
+				<xsl:with-param name="actGroup" select="$actGroup"/>
+			</xsl:apply-templates>
 		</xsl:otherwise>
 	</xsl:choose>
-	</span>
 </xsl:template>
 
-<xsl:template match="containers[@type='lesson']" name = "lessons">
-	<xsl:param name="stid"/>	
-	<xsl:variable name="lessons" select="container[marks/mark[@student=$stid]]"/>
-	<xsl:if test="$lessons">
-	<tr><td colspan="3">
- 		<strong style="font-size:110%;">Уроки: </strong>
- 		<xsl:for-each select="$lessons">
- 			<xsl:variable name="pos" select="position()"/>
- 			<xsl:if test="$pos = 1 or substring(@date,6,2) != substring($lessons[$pos -1]/@date,6,2)">
- 			<xsl:call-template name="month">
- 				<xsl:with-param name="num" select="substring(@date,6,2)"/>
- 			</xsl:call-template>
- 			</xsl:if>
- 			<!-- <xsl:value-of select="@date"/> -->
- 			<span><xsl:attribute name="title"><xsl:value-of select="content"/></xsl:attribute>
- 			<span style="color:#666666;"><xsl:value-of select="substring(@date,9)"/>:</span>
-  			<xsl:value-of select="marks/mark[@student=$stid]/@value"/></span>
-  			<xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
- 		</xsl:for-each> 
- 	</td></tr>
-	</xsl:if>
-</xsl:template>
-
-<xsl:template match="containers[@type='prognosis']" name = "prognosis">
-	<xsl:param name="stid"/>
-	<xsl:variable name="list" select="container[marks/mark[@student=$stid]]"/>
-	<xsl:if test="$list">
-	<tr><td colspan="3">
- 	<xsl:for-each select="$list">
- 		<xsl:if test="position() > 1"><br/></xsl:if>
- 		<strong style="font-size:110%;">Прогноз: </strong>
- 		<xsl:value-of select="@title"/> : 
- 		<xsl:call-template name="progn">
- 			<xsl:with-param name="mark" select="marks/mark[@student=$stid]"/>
- 		</xsl:call-template>
- 	</xsl:for-each>
- 	</td></tr>
- 	</xsl:if>
-</xsl:template>
-
-<xsl:template name="progn">
-	<xsl:param name="mark"/>
-	<strong style="font-size:120%;"><xsl:value-of select="$mark/@value"/></strong>
-	<xsl:if test="$mark/param[@key='timeout']">
-		<em> Отсрочка до
-		<xsl:call-template name="formatDate">
-			<xsl:with-param name="date" select="$mark/param[@key='timeout']"/>
-		</xsl:call-template><xsl:text> </xsl:text>
-		<xsl:if test="$mark/param[@key='timeoutReason']">
-			<span style="color:#666666;"> 
-			(<xsl:value-of select="$mark/param[@key='timeoutReason']"/>)</span>
-		</xsl:if></em>
-	</xsl:if>
-</xsl:template>
-
-<xsl:template name="month">
+<xsl:template name="activity">
+	<xsl:param name="actGroup"/>
+	<xsl:param name="hours"/>
 	<xsl:param name="num"/>
-	<strong style="color:#666666;">
-	<xsl:choose>
-		<xsl:when test="$num = '01'">Январь</xsl:when>
-		<xsl:when test="$num = '02'">Февраль</xsl:when>
-		<xsl:when test="$num = '03'">Март</xsl:when>
-		<xsl:when test="$num = '04'">Апрель</xsl:when>
-		<xsl:when test="$num = '05'">Май</xsl:when>
-		<xsl:when test="$num = '06'">Июнь</xsl:when>
-		<xsl:when test="$num = '07'">Июль</xsl:when>
-		<xsl:when test="$num = '08'">Август</xsl:when>
-		<xsl:when test="$num = '09'">Сентябрь</xsl:when>
-		<xsl:when test="$num = '10'">Октябрь</xsl:when>
-		<xsl:when test="$num = '11'">Ноябрь</xsl:when>
-		<xsl:when test="$num = '12'">Декабрь</xsl:when>
-	</xsl:choose>
- 	<xsl:text>: </xsl:text></strong>
+<Activity>
+	<xsl:if test="teacher">
+	<Teacher><xsl:value-of select="teacher"/></Teacher>
+	</xsl:if>
+	<Subject><xsl:value-of select="@subject"/></Subject>
+	<Duration>1</Duration>
+	<Total_Duration><xsl:value-of select="$hours"/></Total_Duration>
+	<Id><xsl:value-of select="$actGroup + $num"/></Id>
+	<Activity_Group_Id><xsl:choose>
+		<xsl:when test="$hours &gt; 1"><xsl:value-of select="$actGroup"/></xsl:when>
+		<xsl:otherwise>0</xsl:otherwise>
+	</xsl:choose></Activity_Group_Id>
+	<Active>true</Active>
+	<xsl:apply-templates mode = "crsGrp"/>
+</Activity>
+	<xsl:if test="$num + 1 &lt; $hours">
+		<xsl:call-template name="activity">
+			<xsl:with-param name="actGroup" select="$actGroup"/>
+			<xsl:with-param name="hours" select="$hours"/>
+			<xsl:with-param name="num" select="$num + 1"/>
+		</xsl:call-template>
+	</xsl:if>
 </xsl:template>
 
-<xsl:template name="formatDate">
-	<xsl:param name="date"/>
-	<xsl:value-of select="substring($date, 9)"/>.<xsl:value-of 
-			select="substring($date, 6, 2)"/>.<xsl:value-of 
-			select="substring($date, 0, 5)"/>
+<xsl:template match="eduGroup" mode = "crsGrp">
+	<Students><xsl:choose>
+		<xsl:when test="@type = 'full'"><xsl:value-of select="@name"/></xsl:when>
+		<xsl:when test="@type = 'sub'"><xsl:value-of select="@name"/> ??</xsl:when>
+		<xsl:otherwise><xsl:value-of select="@grade"/> ???</xsl:otherwise>
+	</xsl:choose></Students>
 </xsl:template>
+
+<xsl:template match="text()" mode="crsGrp"/>
+
+<xsl:template match="course" mode="constraint">
+	<xsl:param name="actGroup" select="1"/>
+	<xsl:variable name="hours" select="//cycle[@id = current()/@cycle]/hours"/>
+	<xsl:choose><xsl:when test="$hours">
+	<xsl:if test="$hours &gt; 1">
+<ConstraintMinDaysBetweenActivities>
+	<Weight_Percentage>95</Weight_Percentage>
+	<Consecutive_If_Same_Day>true</Consecutive_If_Same_Day>
+	<Number_of_Activities><xsl:value-of select="$hours"/></Number_of_Activities>
+	<xsl:call-template name="constraint">
+		<xsl:with-param name="actGroup" select="$actGroup"/>
+		<xsl:with-param name="hours" select="$hours"/>
+		<xsl:with-param name="num" select="0"/>
+	</xsl:call-template>
+	<MinDays>1</MinDays>
+</ConstraintMinDaysBetweenActivities>	
+	</xsl:if>
+	<xsl:apply-templates select="following-sibling::course[1]"  mode="constraint">
+		<xsl:with-param name="actGroup" select="$actGroup + $hours"/>
+	</xsl:apply-templates>
+	</xsl:when>
+	<xsl:otherwise>
+		<xsl:apply-templates select="following-sibling::course[1]"  mode="constraint">
+			<xsl:with-param name="actGroup" select="$actGroup"/>
+		</xsl:apply-templates>
+	</xsl:otherwise>
+	</xsl:choose>
+</xsl:template>
+
+<xsl:template name="constraint">
+	<xsl:param name="actGroup"/>
+	<xsl:param name="hours"/>
+	<xsl:param name="num"/>
+	<Activity_Id><xsl:value-of select="$actGroup + $num"/></Activity_Id>
+	<xsl:if test="$num + 1 &lt; $hours">
+		<xsl:call-template name="constraint">
+			<xsl:with-param name="actGroup" select="$actGroup"/>
+			<xsl:with-param name="hours" select="$hours"/>
+			<xsl:with-param name="num" select="$num + 1"/>
+		</xsl:call-template>
+	</xsl:if>
+</xsl:template>
+
+<xsl:template match="text()" mode="constraint"/>
+
 
 </xsl:stylesheet>

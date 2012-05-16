@@ -15,12 +15,12 @@
 	<key>_mimeType</key>
 	<string>text/csv</string>
 	<key>filext</key>
-	<string>txt</string>
-	<key>_transform</key>
+	<string>csv</string>
+	<key>transform</key>
 	<string>oejdCSV.xsl</string>
-	<key>mainSource</key>
+	<key>_mainSource</key>
 	<string>Persdata</string>
-	<key>_sources</key>
+	<key>sources</key>
 	<array>
 		<string>Persdata</string>
 		<string>Options</string>
@@ -44,10 +44,16 @@
 		<key>courses</key>
 		<dict>
 			<key>active</key>
-			<false/>
+			<true/>
+			<key>nolist</key>
+			<true/>
+			<key>nodata</key>
+			<true/>
 		</dict>
 	</dict>
 	<key>hideSettings</key>
+	<true/>
+	<key>section</key>
 	<true/>
 	<key>extSystem</key>
 	<string>oejd.moscow</string>

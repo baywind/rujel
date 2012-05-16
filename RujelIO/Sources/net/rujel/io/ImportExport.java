@@ -107,6 +107,7 @@ public class ImportExport extends LessonList {
 		NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
 				(Integer)session().valueForKey("eduYear")), "eduYear");
 		reportDict.takeValueForKey(info, "info");
+		reportDict.takeValueForKey("ImportExport", "reportDir");
 		info = (NSMutableDictionary)reporter.valueForKey("settings");
 		if(info == null) {
 			info = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
@@ -126,11 +127,16 @@ public class ImportExport extends LessonList {
 			contentType = "application/octet-stream";
 		response.setHeader(contentType,"Content-Type");
 		StringBuilder buf = new StringBuilder("attachment; filename=\"");
-		buf.append("filename");
-		contentType = (String)reporter.valueForKey("filext");
-		if(contentType != null) {
-			if(contentType.charAt(0) != '.')
-				buf.append('.');
+		contentType = (String)reporter.valueForKey("filename");
+		if(contentType == null) {
+			buf.append("filename");
+			contentType = (String)reporter.valueForKey("filext");
+			if(contentType != null) {
+				if(contentType.charAt(0) != '.')
+					buf.append('.');
+				buf.append(contentType);
+			}
+		} else {
 			buf.append(contentType);
 		}
 		buf.append('"');

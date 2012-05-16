@@ -23,11 +23,6 @@
 		<string>Persdata</string>
 		<string>Options</string>
 	</array>
-	<key>generation</key>
-	<dict>
-		<key>omitCourseContent</key>
-		<true/>
-	</dict>
 	<key>settings</key>
 	<dict>
 		<key>eduGroups</key>
@@ -40,7 +35,7 @@
 		<key>eduPlan</key>
 		<dict>
 			<key>active</key>
-			<string>true</string>
+			<true/>
 		</dict>
 		<key>schedule</key>
 		<dict>
@@ -48,6 +43,15 @@
 			<string>false</string>
 			<key>changes</key>
 			<string>false</string>
+		</dict>
+		<key>courses</key>
+		<dict>
+			<key>active</key>
+			<true/>
+			<key>nolist</key>
+			<false/>
+			<key>nodata</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

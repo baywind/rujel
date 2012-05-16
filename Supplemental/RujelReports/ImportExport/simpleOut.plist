@@ -14,19 +14,11 @@
 	<string>90</string>
 	<key>mimeType</key>
 	<string>application/multipart</string>
+	<key>filename</key>
+	<string>ejdata.xml</string>
 	<key>filext</key>
 	<string>xml</string>
-	<key>settings</key>
-	<dict>
-		<key>eduGroups</key>
-		<dict>
-			<key>active</key>
-			<true/>
-			<key>nolist</key>
-			<true/>
-		</dict>
-	</dict>
-		<key>options</key>
+	<key>options</key>
 	<array>
 		<dict>
 			<key>id</key>
@@ -35,6 +27,14 @@
 			<string>Классы</string>
 			<key>options</key>
 			<array>
+				<dict>
+					<key>id</key>
+					<string>tutors</string>
+					<key>title</key>
+					<string>Классный руководитель</string>
+					<key>active</key>
+					<false/>
+				</dict>
 				<dict>
 					<key>id</key>
 					<string>nolist</string>
@@ -46,6 +46,8 @@
 					<true/>
 				</dict>
 			</array>
+			<key>active</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>id</key>
@@ -75,6 +77,29 @@
 			<string>Выводить информацию об учебных курсах</string>
 			<key>active</key>
 			<true/>
+			<key>options</key>
+			<array>
+				<dict>
+					<key>id</key>
+					<string>nolist</string>
+					<key>title</key>
+					<string>Без подгруппы</string>
+					<key>hover</key>
+					<string>не показывать состав подгруппы</string>
+					<key>active</key>
+					<false/>
+				</dict>
+				<dict>
+					<key>id</key>
+					<string>nodata</string>
+					<key>title</key>
+					<string>Без данных</string>
+					<key>hover</key>
+					<string>не выводить никаких дополнительных сведений о курсе</string>
+					<key>active</key>
+					<false/>
+				</dict>
+			</array>
 		</dict>
 		<dict>
 			<key>id</key>

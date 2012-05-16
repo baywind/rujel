@@ -90,6 +90,10 @@ public class SyncMatch extends _SyncMatch {
 			if(ec == null)
 				ec = ei.editingContext();
 		}
+		if(objectID != null) {
+			quals.addObject(new EOKeyValueQualifier(OBJ_ID_KEY, 
+					EOQualifier.QualifierOperatorEqual, objectID));
+		}
 		if(eduYear == null)
 			eduYear = MyUtility.eduYear(ec);
 		{
