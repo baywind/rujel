@@ -30,16 +30,20 @@ ExtraData : QueryParams {
   ec = ec;
   useAjax = true;
   noToggle = true;
+  disabled = access._edit;
 }
 
 Submit : WOSubmitButton {
-  value = "Export";
+  value = session.strings.RujelIO_ImportExport.Export;
   action = export;
+  disabled = access._create;
 }
 
 Save : WOSubmitButton {
-  value = "Save";
+  value = session.strings.RujelIO_ImportExport.exportParams.saveParams;
   action = save;
+  id = "saveParams";
+  style = dataStyle;
 }
 
 Indexes : WORepetition {
@@ -77,6 +81,8 @@ ExtValue : WOPopUpButton {
   item = item2;
   displayString = value2;
   selection = selection;
+  onchange = "showObj(saveParams);";
+  disabled = access._edit;
 }
 
 SectionPopup : WOPopUpButton {
@@ -89,4 +95,41 @@ SectionPopup : WOPopUpButton {
 
 ShowSections : WOConditional {
   condition = showSections;
+}
+
+ExtraContainer : WOGenericContainer {
+  elementName = "tbody";
+  style = dataStyle;
+  id = "extraData";
+}
+
+IndexContainer : WOGenericContainer {
+  elementName = "tbody";
+  style = indexStyle;
+  id = indexItem.name;
+}
+
+IndexToggle : OnClickContainer {
+  elementName = "tr";
+  onclick = toggleIndex;
+  class = "backfield2";
+}
+
+ExtraToggle : OnClickContainer {
+  elementName = "tr";
+  onclick = "setDisplay('saveParams',toggleObj('extraData').style.display);";
+  class = "backfield2";
+}
+
+ExtraTitle : WOString {
+  value = session.strings.RujelIO_ImportExport.exportParams.extraData;
+  escapeHTML = false;
+}
+
+SectionTitle : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.sections.eduSection;
+}
+
+ShowSave : WOConditional {
+  condition = access.edit;
 }

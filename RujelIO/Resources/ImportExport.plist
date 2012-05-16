@@ -12,6 +12,15 @@
 	<string>Загрузка данных в систему</string>
 	<key>ExportDescr</key>
 	<string>Выгрузка данных из системы</string>
+	<key>exportParams</key>
+	<dict>
+		<key>title</key>
+		<string>Параметры выгрузки</string>
+		<key>extraData</key>
+		<string>Дополнительные параметры</string>
+		<key>saveParams</key>
+		<string>Сохранить параметры</string>
+	</dict>
 	<key>messages</key>
 	<dict>
 		<key>noMatch</key>

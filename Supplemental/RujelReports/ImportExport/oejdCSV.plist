@@ -9,7 +9,7 @@
 	<key>title</key>
 	<string>Выгрузка для ОЭЖД</string>
 	<key>description</key>
-	<string>Выгрузка персональных данных для реестров "Общегородского электронного журнала и дневника"</string>
+	<string>Выгрузка персональных данных для реестров&lt;br/&gt;"Общегородского электронного журнала и дневника"</string>
 	<key>sort</key>
 	<string>30</string>
 	<key>_mimeType</key>
@@ -67,7 +67,7 @@
 			<key>hover</key>
 			<string>Идентификатор школы в ОЭЖД</string>
 			<key>fieldSize</key>
-			<integer>30</integer>
+			<integer>40</integer>
 			<key>qualifierSelector</key>
 			<string>like</string>
 			<key>styleClass</key>
@@ -83,7 +83,7 @@
 			<key>title</key>
 			<string>Название школы</string>
 			<key>fieldSize</key>
-			<integer>30</integer>
+			<integer>40</integer>
 			<key>qualifierSelector</key>
 			<string>like</string>
 			<key>styleClass</key>
@@ -101,7 +101,9 @@
 			<key>title</key>
 			<string>Полное наименование школы</string>
 			<key>fieldSize</key>
-			<integer>80</integer>
+			<integer>40</integer>
+			<key>rows</key>
+			<integer>2</integer>
 			<key>qualifierSelector</key>
 			<string>like</string>
 			<key>active</key>
@@ -113,7 +115,7 @@
 			<key>title</key>
 			<string>Округ города</string>
 			<key>fieldSize</key>
-			<integer>30</integer>
+			<integer>40</integer>
 			<key>qualifierSelector</key>
 			<string>like</string>
 			<key>styleClass</key>

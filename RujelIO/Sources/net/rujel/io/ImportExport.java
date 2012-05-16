@@ -152,4 +152,20 @@ public class ImportExport extends LessonList {
     		return "window.location=globalActionUrl;";
     	return null;
     }
+    
+    public Object disabled() {
+    	if(item == null)
+    		return Boolean.TRUE;
+    	String checkAccess = (String)item.valueForKey("checkAccess");
+    	if(checkAccess == null) {
+    		checkAccess = (String)item.valueForKey("type");
+    		if("export".equalsIgnoreCase(checkAccess))
+    			checkAccess = "Export";
+    		else if("import".equalsIgnoreCase(checkAccess))
+    			checkAccess = "Import";
+    		else
+    			return Boolean.TRUE;
+    	}
+    	return session().valueForKeyPath("readAccess._read." + checkAccess);
+    }
 }

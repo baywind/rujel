@@ -44,7 +44,7 @@ ItemTitle : WOString {
 
 SubmitButton : WOSubmitButton {
   action = submit;
-  value = application.strings.Reusables_Strings.uiElements.Submit;
+  value = submitTitle;
   style = "margin:1ex;";
 }
 

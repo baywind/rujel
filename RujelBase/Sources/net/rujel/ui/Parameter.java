@@ -166,6 +166,8 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 			return Boolean.FALSE;
 		if(_itemDict.valueForKey("popup") != null)
 			return Boolean.FALSE;
+		if(_itemDict.valueForKey("rows") != null)
+			return Boolean.FALSE;
 		return Boolean.TRUE;
 	}
 	

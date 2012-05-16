@@ -40,10 +40,12 @@ ImportList : WORepetition {
 
 ItemTitle : WOString {
   value = item.title;
+  escapeHTML = false;
 }
 
 ItemDescription : WOString {
   value = item.description;
+  escapeHTML = false;
 }
 
 ItemContainer : OnClickContainer {
@@ -51,6 +53,7 @@ ItemContainer : OnClickContainer {
   invokeAction = useItem;
   onclick = session.ajaxPopupNoPos;
   class = "ioblock";
+  disabled = disabled;
 }
 
 ImportContainer : OnClickContainer {

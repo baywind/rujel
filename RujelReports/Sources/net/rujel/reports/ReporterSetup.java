@@ -483,4 +483,13 @@ public class ReporterSetup extends WOComponent {
 		}
 		return settings;
 	}
+	
+	public String submitTitle() {
+		String title = (String)reporter.valueForKey("submitTitle");
+		if(title == null) {
+			NSKeyValueCodingAdditions source = (context().hasSession())? session() :application();
+			title = (String)source.valueForKeyPath("strings.Reusables_Strings.uiElements.Submit");
+		}
+		return title;
+	}
 }

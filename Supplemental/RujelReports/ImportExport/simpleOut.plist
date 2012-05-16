@@ -18,6 +18,8 @@
 	<string>ejdata.xml</string>
 	<key>filext</key>
 	<string>xml</string>
+	<key>submitTitle</key>
+	<string>Загрузить</string>
 	<key>options</key>
 	<array>
 		<dict>

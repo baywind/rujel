@@ -66,6 +66,9 @@ public class ExportParams extends WOComponent {
 	public Object item2;
 	public NSDictionary section;
 	public boolean showSections;
+	public NSKeyValueCoding access;
+	
+	public String dataStyle;
 	
     public ExportParams(WOContext context) {
         super(context);
@@ -84,8 +87,21 @@ public class ExportParams extends WOComponent {
     	NSArray list = (NSArray)plist.valueForKey("extData");
     	if(list != null && list.count() > 0) {
         	extraData = sys.getDataDict(base);
-        	if(extraData == null)
+        	if(extraData == null) {
         		extraData = new NSMutableDictionary();
+        	} else {
+        		dataStyle = "display:none;";
+        		for (int i = 0; i < list.count(); i++) {
+					NSDictionary param = (NSDictionary)list.objectAtIndex(i);
+					if(!Various.boolForObject(param.valueForKey("required")))
+						continue;
+					String att = (String)param.valueForKey("attribute");
+					if(extraData.valueForKey(att) == null) {
+						dataStyle = null;
+						break;
+					}
+				}
+        	}
     	}
     	list = (NSArray)plist.valueForKey("indexes");
     	if(list != null && list.count() > 0) {
@@ -97,6 +113,9 @@ public class ExportParams extends WOComponent {
     			Various.boolForObject(session().valueForKeyPath("strings.sections.hasSections"));
     	if(showSections)
     		section = (NSDictionary)session().valueForKeyPath("state.section");
+    	String checkAccess = (String) plist.valueForKey("checkAccess");
+    		access = (NSKeyValueCoding)session().valueForKeyPath(
+    			(checkAccess == null)?"readAccess.FLAGS.Export":"readAccess.FLAGS." + checkAccess);
     }
     
     public WOActionResults save() {
@@ -145,15 +164,7 @@ public class ExportParams extends WOComponent {
 			}
 		}
 		reportDict.takeValueForKey(info, "info");
-//		if((NSMutableDictionary)plist.valueForKey("settings") == null) {
-//			info = ReporterSetup.getDefaultSettings((NSDictionary)plist,
-//					ReportsModule.reportsFolder("ImportExport"));
-//			plist.takeValueForKey(info, "settings");
-//		}
-		//TODO: if()
-//		reportDict.takeValueForKey(EduGroup.Lister.listGroups(
-//				(NSTimestamp)session().valueForKey("today"), ec),"eduGroups");
-		
+
 		byte[] result = null;
 		try {
 			result = XMLGenerator.generate(session(), (NSMutableDictionary)reportDict);
@@ -300,6 +311,33 @@ public class ExportParams extends WOComponent {
     		indexes.takeValueForKey(dict, name);
     	}
     	return dict;
+    }
+    
+    public String indexStyle() {
+    	NSMutableDictionary dict = indexDict(false);
+    	if(dict == null || dict.count() == 0)
+    		return null;
+    	NSArray list = localList();
+    	if(list == null || list.count() == 0)
+    		return null;
+    	for (int i = 0; i < list.count(); i++) {
+			item1 = list.objectAtIndex(i);
+			String value = localValue();
+			if(value == null)
+				continue;
+			value = (String)dict.valueForKey(value);
+			if(value == null)
+				return null;
+		}
+    	return "display:none;";
+    }
+    
+    public String toggleIndex() {
+    	if(indexItem == null)
+    		return null;
+    	StringBuilder buf = new StringBuilder("toggleObj('");
+    	buf.append(indexItem.valueForKey("name")).append("');");
+    	return buf.toString();
     }
     
     public Object selection() {
