@@ -1,0 +1,34 @@
+{
+    attributes = (
+        {
+            allowsNull = N; 
+            columnName = "PERSOVET_ID"; 
+            name = pedsovetID; 
+            prototypeName = short; 
+        }, 
+        {columnName = "SPEC_DECISION"; name = specDecision; prototypeName = string; }, 
+        {
+            allowsNull = N; 
+            columnName = "STUDENT_ID"; 
+            name = studentID; 
+            prototypeName = integer; 
+        }
+    ); 
+    attributesUsedForLocking = (specDecision); 
+    className = EOGenericRecord; 
+    classProperties = (pedsovet, specDecision); 
+    externalName = "CPT_PED_DECISION"; 
+    fetchSpecificationDictionary = {}; 
+    name = PedDecision; 
+    primaryKeyAttributes = (pedsovetID, studentID); 
+    relationships = (
+        {
+            destination = Pedsovet; 
+            isMandatory = Y; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = pID; sourceAttribute = pedsovetID; }); 
+            name = pedsovet; 
+        }
+    ); 
+}

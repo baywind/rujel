@@ -7,7 +7,19 @@
             prototypeName = short; 
         }, 
         {allowsNull = N; columnName = "D_ID"; name = dID; prototypeName = integer; }, 
+        {
+            allowsNull = Y; 
+            columnName = "EDU_YEAR"; 
+            name = eduYear; 
+            prototypeName = short; 
+        }, 
         {allowsNull = N; columnName = "DATA_KEY"; name = key; prototypeName = word; }, 
+        {
+            allowsNull = Y; 
+            columnName = "FOR_SECTION"; 
+            name = section; 
+            prototypeName = short; 
+        }, 
         {
             allowsNull = N; 
             columnName = "SYSTEM_ID"; 
@@ -16,9 +28,9 @@
         }, 
         {columnName = "DATA_VALUE"; name = value; prototypeName = text; }
     ); 
-    attributesUsedForLocking = (baseID, key, sysID, value); 
+    attributesUsedForLocking = (baseID, eduYear, key, section, sysID, value); 
     className = EOGenericRecord; 
-    classProperties = (extBase, extSystem, key, value); 
+    classProperties = (eduYear, extBase, extSystem, key, section, value); 
     externalName = "SYNC_EXT_DATA"; 
     fetchSpecificationDictionary = {}; 
     name = ExtData; 
