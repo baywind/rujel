@@ -189,8 +189,6 @@ public class Importer extends WOComponent {
 							if((c0 == cX && (c0 == '"' || c0 == '\'')) ||
 									(Character.isMirrored(c0) && Character.isMirrored(cX)))
 								split[j] = split[j].substring(1,split[j].length() -1).trim();
-							} else if (c0 == '"' || c0 == '\'') {
-								split[j] = "";
 							}
 						}
 						lists[i].addObject(split);
@@ -205,10 +203,12 @@ public class Importer extends WOComponent {
 						if(split[j].length() == 0)
 							continue;
 						char c0 = split[j].charAt(0);
+						if(split[j].length() > 1) {
 						char cX = split[j].charAt(split[j].length() -1);
 						if((c0 == cX && (c0 == '"' || c0 == '\'')) ||
 								(Character.isMirrored(c0) && Character.isMirrored(cX)))
 							split[j] = split[j].substring(1,split[j].length() -1).trim();
+						}
 					}
 					result.addObject(split);
 		    		while (titles.count() < split.length) {
