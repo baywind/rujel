@@ -92,3 +92,55 @@ SubmitForced : WOSubmitButton {
   value = session.strings.Reusables_Strings.uiElements.Submit;
   disabled = session.readAccess._edit.CompleteSetup;
 }
+
+Pedsovet : WOForm {
+  style = "padding:1em;float:left;max-width:60%;border: 1px solid #666666;";
+}
+
+PedsovetTitle : SettingsByCourse {
+  item = item;
+  base = pedsovet;
+  ec = ^ec;
+  hideEmptyDetails = false;
+  access = session.readAccess.FLAGS.CompleteSetup;
+  title = "Заголовок";
+}
+
+TitleText : WOText {
+  value = pedsovet.textValue;
+  rows = 2;
+  cols = 40;
+}
+
+DecisionText : WOText {
+  value = decision.textValue;
+  rows = 2;
+  cols = 40;
+}
+
+ByCourseText : WOText {
+  value = item.textValue;
+  rows = 2;
+  cols = 40;
+}
+PedsovetDecision : SettingsByCourse {
+  item = item;
+  base = decision;
+  ec = ^ec;
+  hideEmptyDetails = false;
+  access = session.readAccess.FLAGS.CompleteSetup;
+  title = "Типовое решение";
+}
+
+SavePedsovet : WOSubmitButton {
+  action = ^ec.saveChanges;
+}
+
+ByCourse : WOConditional {
+  condition = item;
+}
+
+GlobalSetting : WOConditional {
+  condition = item;
+  negate = true;
+}

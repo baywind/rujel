@@ -309,7 +309,23 @@ public class Executor implements Runnable {
 			}
 			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
 //			File stDir = new File(groupDir,key);
-			if(Completion.studentIsReady(student, gr, task.year)) {
+			boolean ready = Completion.studentIsReady(student, gr, task.year); 
+			PedDecision.setForStudent(student, ready);
+			if(ec.hasChanges()) {
+				try {
+					ec.saveChanges();
+				} catch (Exception e) {
+					if(ready)
+						logger.log(WOLogLevel.WARNING,"Failed to set Decision for student",
+								new Object[] {student,e});
+					else
+						logger.log(WOLogLevel.WARNING,"Failed to remove Decision for student",
+								new Object[] {student,e});
+
+					ec.revert();
+				}
+			}
+			if(ready) {
 				StudentCatalog.completeStudent(gr, student, reports,courses, folder);
 				grDict.takeValueForKey(Boolean.TRUE, key);
 			} else {

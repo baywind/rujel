@@ -1,4 +1,4 @@
-//  Pedsovet.java
+//  PedDecision.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -29,18 +29,55 @@
 
 package net.rujel.complete;
 
+import net.rujel.interfaces.EOInitialiser;
+import net.rujel.interfaces.Student;
+
+import com.webobjects.eoaccess.EOObjectNotAvailableException;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-public class Pedsovet extends _Pedsovet {
+public class PedDecision extends _PedDecision {
 
 	public static void init() {
+		EOInitialiser.initialiseRelationship(ENTITY_NAME,"student",false,"studentID","Student")
+			.anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
+	
+	public Student student() {
+        return (Student)storedValueForKey("student");
+    }
+	
+    public void setStudent(EOEnterpriseObject aValue) {
+        takeStoredValueForKey(aValue, "student");
+    }
+	
+	public static String titleSetting = "pedsovetTitle";
+	public static String decisionSetting = "pedsovetDecision";
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+		setFlags(new Integer(0));
 	}
 
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
+	}
+	
+	public static PedDecision setForStudent(Student student, boolean on) {
+		EOEditingContext ec = student.editingContext();
+		try {
+			PedDecision dec = (PedDecision)EOUtilities.objectMatchingKeyAndValue(
+					ec, ENTITY_NAME, "student", student);
+			if(on)
+				return dec;
+			else if (dec.specDecision() == null && dec.flags().intValue() == 0)
+				ec.deleteObject(dec);
+		} catch (EOObjectNotAvailableException e) {
+			if(on) {
+				PedDecision dec = (PedDecision)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+				dec.setStudent(student);
+			}
+		}
+		return null;
 	}
 }

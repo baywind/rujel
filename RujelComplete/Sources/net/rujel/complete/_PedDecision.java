@@ -1,4 +1,4 @@
-// _Pedsovet.java
+// _PedDecision.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to Pedsovet.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PedDecision.java instead.
 
 package net.rujel.complete;
 
@@ -37,20 +37,29 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _Pedsovet extends EOGenericRecord {
-	public static final String ENTITY_NAME = "Pedsovet";
+public abstract class _PedDecision extends EOGenericRecord {
+	public static final String ENTITY_NAME = "PedDecision";
 
 	// Attributes
-	public static final String TITLE_KEY = "title";
+	public static final String FLAGS_KEY = "flags";
+	public static final String SPEC_DECISION_KEY = "specDecision";
 
 	// Relationships
 
-  public String title() {
-    return (String) storedValueForKey(TITLE_KEY);
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
   }
 
-  public void setTitle(String value) {
-    takeStoredValueForKey(value, TITLE_KEY);
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
+  }
+
+  public String specDecision() {
+    return (String) storedValueForKey(SPEC_DECISION_KEY);
+  }
+
+  public void setSpecDecision(String value) {
+    takeStoredValueForKey(value, SPEC_DECISION_KEY);
   }
 
 }

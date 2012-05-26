@@ -1,11 +1,7 @@
 {
     attributes = (
-        {
-            allowsNull = N; 
-            columnName = "PERSOVET_ID"; 
-            name = pedsovetID; 
-            prototypeName = short; 
-        }, 
+        {columnName = "DECISION_FLAGS"; name = flags; prototypeName = byte; }, 
+        {allowsNull = N; columnName = "P_ID"; name = pID; prototypeName = short; }, 
         {columnName = "SPEC_DECISION"; name = specDecision; prototypeName = string; }, 
         {
             allowsNull = N; 
@@ -14,21 +10,11 @@
             prototypeName = integer; 
         }
     ); 
-    attributesUsedForLocking = (specDecision); 
-    className = EOGenericRecord; 
-    classProperties = (pedsovet, specDecision); 
+    attributesUsedForLocking = (flags, specDecision); 
+    className = "net.rujel.complete.PedDecision"; 
+    classProperties = (flags, specDecision); 
     externalName = "CPT_PED_DECISION"; 
     fetchSpecificationDictionary = {}; 
     name = PedDecision; 
-    primaryKeyAttributes = (pedsovetID, studentID); 
-    relationships = (
-        {
-            destination = Pedsovet; 
-            isMandatory = Y; 
-            isToMany = N; 
-            joinSemantic = EOInnerJoin; 
-            joins = ({destinationAttribute = pID; sourceAttribute = pedsovetID; }); 
-            name = pedsovet; 
-        }
-    ); 
+    primaryKeyAttributes = (pID); 
 }

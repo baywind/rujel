@@ -55,6 +55,8 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 	
 //	public NSArray byCourse;
 	public SettingsBase base;
+	public SettingsBase pedsovet;
+	public SettingsBase decision;
 	public EOEnterpriseObject item;
 	public File studentsFolder;
 	public File coursesFolder;
@@ -64,9 +66,19 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
         EOEditingContext ec = (EOEditingContext)context.page().valueForKey("ec");
         ec.revert();
         base = SettingsBase.baseForKey(Completion.SETTINGS_BASE, ec, true);
+        pedsovet = SettingsBase.baseForKey(PedDecision.titleSetting, ec, true);
+        decision = SettingsBase.baseForKey(PedDecision.decisionSetting, ec, true);
         if(ec.hasChanges()) {
-        	base.setNumericValue(MyUtility.eduYearForDate(null));
-        	base.setTextValue(Boolean.toString(false));
+        	if(ec.globalIDForObject(base).isTemporary()) {
+        		base.setNumericValue(MyUtility.eduYearForDate(null));
+        		base.setTextValue(Boolean.toString(false));
+        	}
+        	if(ec.globalIDForObject(pedsovet).isTemporary())
+        		pedsovet.setTextValue((String)application().valueForKeyPath(
+        				"strings.RujelComplete_Complete.pedsovet"));
+        	if(ec.globalIDForObject(decision).isTemporary())
+        		decision.setTextValue((String)application().valueForKeyPath(
+        				"strings.RujelComplete_Complete.decision"));
         	try {
         		ec.saveChanges();
         	} catch (Exception e) {
