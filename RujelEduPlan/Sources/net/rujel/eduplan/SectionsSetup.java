@@ -120,6 +120,8 @@ public class SectionsSetup extends WOComponent {
     	public void notify(NSNotification ntf) {
     		NSArray list = (NSArray)ntf.userInfo().valueForKey("list");
     		NSKeyValueCoding strings = (NSKeyValueCoding)ses.valueForKey("strings");
+    		if(strings == null)
+    			return;
     		if(list == null || list.count() == 0) {
     			strings.takeValueForKey(new NSDictionary(this, "observer"), "sections");
     			return;

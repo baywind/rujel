@@ -306,7 +306,7 @@ public class ImportList extends WOComponent {
 				}
 				VseList vseList = (VseList)EOUtilities.createAndInsertInstance(
 						ec, VseList.ENTITY_NAME);
-				vseList.setStudent(student);
+				vseList.addObjectToBothSidesOfRelationshipWithKey(student, VseList.STUDENT_KEY);
 				targetGroup.addObjectToBothSidesOfRelationshipWithKey(
 						vseList, VseEduGroup.LISTS_KEY);
 				if(!initial)
@@ -490,7 +490,10 @@ public class ImportList extends WOComponent {
 					new Object[] {session(),targetGroup,e});
 			session().takeValueForKey(e.getMessage(), "message");
 		}
-		return (WOComponent)session().valueForKey("pullComponent");
+		WOComponent result = (WOComponent)session().valueForKey("pullComponent");
+		result.ensureAwakeInContext(context());
+		result.takeValueForKey(targetGroup, "selection");
+		return result;
 	}
 	
     public boolean isStateless() {
