@@ -338,6 +338,7 @@ public class SettingsByCourse extends WOComponent {
     	else
     		setItem(null);
 		super.appendToResponse(aResponse, aContext);
+		setItem(null);
 		if (selector instanceof EduCourse)
 			selector = null;
 	}

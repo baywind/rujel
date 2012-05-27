@@ -286,6 +286,10 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			page = WOApplication.application().pageWithName(name,exec.ctx);
 			if(list != null)
 				page.takeValueForKey(list,"complete");
+			try {
+				page.takeValueForKey(NSDictionary.EmptyDictionary, "pedsovet");
+				page.takeValueForKey(PedDecision.dictForGroup(gr), "pedsovet");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {}
 			page.takeValueForKey(gr,"eduGroup");
 			exec.writeFile(id + ".html", page);
 		}

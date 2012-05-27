@@ -4,7 +4,7 @@ Title : WOString {
 }
 
 Form : WOForm {
-  style = "margin:1em;float:left;max-width:60%;";
+  style = "margin:1ex; padding: 1ex; border: 1px solid #666666;";
 }
 
 WriteCourses : WOCheckBox {
@@ -94,7 +94,7 @@ SubmitForced : WOSubmitButton {
 }
 
 Pedsovet : WOForm {
-  style = "padding:1em;float:left;max-width:60%;border: 1px solid #666666;";
+  style = "margin:1ex; padding: 1ex; border: 1px solid #666666;";
 }
 
 PedsovetTitle : SettingsByCourse {
@@ -103,7 +103,7 @@ PedsovetTitle : SettingsByCourse {
   ec = ^ec;
   hideEmptyDetails = false;
   access = session.readAccess.FLAGS.CompleteSetup;
-  title = "Заголовок";
+  title = session.strings.RujelComplete_Complete.pedsovetTitle;
 }
 
 TitleText : WOText {
@@ -129,7 +129,7 @@ PedsovetDecision : SettingsByCourse {
   ec = ^ec;
   hideEmptyDetails = false;
   access = session.readAccess.FLAGS.CompleteSetup;
-  title = "Типовое решение";
+  title = session.strings.RujelComplete_Complete.decisionTitle;
 }
 
 SavePedsovet : WOSubmitButton {
@@ -143,4 +143,9 @@ ByCourse : WOConditional {
 GlobalSetting : WOConditional {
   condition = item;
   negate = true;
+}
+
+PedsovetSection : WOString {
+  value = session.strings.RujelComplete_Complete.pedsovetSection;
+  escapeHTML = false;
 }

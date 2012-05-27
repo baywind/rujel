@@ -38,6 +38,8 @@
 	<string>Всего групп</string>
 	<key>students</key>
 	<string>Учащихся</string>
+	<key>pedsovetSection</key>
+	<string>Настройка графы "Решение педсовета"</string>
 	<key>pedsovet</key>
 	<string>Решение педсовета</string>
 	<key>decision</key>

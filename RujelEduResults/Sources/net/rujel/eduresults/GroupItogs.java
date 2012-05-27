@@ -1,5 +1,6 @@
 package net.rujel.eduresults;
 
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
@@ -20,6 +21,8 @@ import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
@@ -34,6 +37,7 @@ public class GroupItogs extends WOComponent {
 	public NSArray[] byCycle;
 	public int index;
 	public NSArray complete;
+	public NSDictionary pedsovet;
 	
     public GroupItogs(WOContext context) {
         super(context);
@@ -72,6 +76,7 @@ public class GroupItogs extends WOComponent {
 		list = ec.objectsWithFetchSpecification(fs);
 		if(list != null && list.count() == 0)
 			list = null;
+		tryComplete();
 		if(complete != null) {
 			quals[0] = new EOKeyValueQualifier(ItogMark.STUDENT_KEY,
 					EOQualifier.QualifierOperatorEqual,null);
@@ -137,7 +142,7 @@ public class GroupItogs extends WOComponent {
 						md.setObjectForKey(itog.mark(),itog.container());
 					}
 				}
-			}
+			} // put ItogMark on place
 			if(complete == null)
 				continue;
 			filtered = EOQualifier.filteredArrayWithQualifier(complete, quals[1]);
@@ -155,7 +160,9 @@ public class GroupItogs extends WOComponent {
 					}
 				}
 			}
-		}
+			if(pedsovet != null)
+				dict.takeValueForKey(pedsovet.objectForKey(st), "pedsovet");
+		}  // course group members
 		quals[0] = new EOKeyValueQualifier("eduGroup", EOQualifier.QualifierOperatorEqual, group);
 		quals[1] = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,year);
 		quals[0] = new EOAndQualifier(new NSArray(quals));
@@ -303,5 +310,36 @@ public class GroupItogs extends WOComponent {
 		if(item == byCycle[index].objectAtIndex(0))
 			return (incomplete)?"incomplete leftCol":"leftCol";
 		return (incomplete)?"incomplete":null;
+	}
+	
+	protected void tryComplete() {
+		if(pedsovet == null) {
+			try {
+				Method m = Class.forName("net.rujel.complete.PedDecision").getMethod(
+						"dictForGroup", EduGroup.class);
+				pedsovet = (NSDictionary)m.invoke(null,eduGroup);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if(complete != null)
+			return;
+		NSDictionary dict = SettingsBase.courseDict(eduGroup);
+		EOEditingContext ec = eduGroup.editingContext(); 
+		if(!Various.boolForObject(SettingsBase.stringSettingForCourse("CompletionActive",dict,ec)))
+			return;
+		try {
+			Method m = Class.forName("net.rujel.complete.Completion").getMethod(
+					"findCompletions", Object.class, Object.class,
+					String.class, Boolean .class, EOEditingContext.class);
+			complete = (NSArray)m.invoke(null,null,eduGroup.list(),"student",Boolean.TRUE,ec);
+			NSArray more = (NSArray)m.invoke(null,null,
+					NSKeyValueCoding.NullValue, "student", Boolean.TRUE, ec);
+			if(complete == null || complete.count() == 0) {
+				complete = more;
+			} else if(more != null && more.count() > 0) {
+				complete = complete.arrayByAddingObjectsFromArray(more);
+			}
+		} catch (Exception e) {}
 	}
 }

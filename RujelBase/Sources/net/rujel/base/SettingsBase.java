@@ -290,7 +290,7 @@ public class SettingsBase extends _SettingsBase {
 		return sb;
 	}
 	
-	public static int numericSettingForCourse(String key, EduCourse course, 
+	public static int numericSettingForCourse(String key, NSKeyValueCodingAdditions course, 
 			EOEditingContext ec, int defaultValue) {
 		EOEnterpriseObject eo = settingForCourse(key, course, ec);
 		if (eo==null || eo.valueForKey(NUMERIC_VALUE_KEY) == null)
@@ -298,13 +298,13 @@ public class SettingsBase extends _SettingsBase {
 		return ((Integer)eo.valueForKey(NUMERIC_VALUE_KEY)).intValue();
 	}
 
-	public static Integer numericSettingForCourse(String key, EduCourse course, 
+	public static Integer numericSettingForCourse(String key, NSKeyValueCodingAdditions course, 
 			EOEditingContext ec) {
 		EOEnterpriseObject eo = settingForCourse(key, course, ec);
 		return (eo==null)?null:(Integer)eo.valueForKey(NUMERIC_VALUE_KEY);
 	}
 	
-	public static String stringSettingForCourse(String key, EduCourse course, 
+	public static String stringSettingForCourse(String key, NSKeyValueCodingAdditions course, 
 			EOEditingContext ec) {
 		EOEnterpriseObject eo = settingForCourse(key, course, ec);
 		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);

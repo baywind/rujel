@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.interfaces.*;
+import net.rujel.reusables.Various;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
@@ -143,7 +144,9 @@ public class PersonSelector extends WOComponent {
 		return (NSArray)allAddOns;
 		if(allAddOns instanceof PerPersonLink)
 			return (NSArray)((PerPersonLink)allAddOns).forPersonLink(item);
-		throw new IllegalArgumentException("Required NSArra or PerPersonLink as addOns list, but found " + addOnItem.getClass().getName());
+		throw new IllegalArgumentException(
+				"Required NSArra or PerPersonLink as addOns list, but found "
+				+ addOnItem.getClass().getName());
 	}
 	
     public String cellStyle() {
@@ -164,10 +167,20 @@ public class PersonSelector extends WOComponent {
 			return (NSKeyValueCoding)addOnItem;
 		if(addOnItem instanceof PerPersonLink)
 			return (NSKeyValueCoding)((PerPersonLink)addOnItem).forPersonLink(item);
-		throw new IllegalArgumentException("Required NSKeyValueCoding or PerPersonLink as addOn, but found " + addOnItem.getClass().getName());
+		throw new IllegalArgumentException(
+				"Required NSKeyValueCoding or PerPersonLink as addOn, but found "
+				+ addOnItem.getClass().getName());
 	}
 	
     public boolean ticks() {
+    	if(Various.boolForObject(valueForBinding("noTicks")))
+    		return false;
         return hasBinding("selection");
+    }
+    
+    public void setItem(PersonLink i) {
+    	item = i;
+    	if(hasBinding("item"))
+    		setValueForBinding(item, "item");
     }
 }

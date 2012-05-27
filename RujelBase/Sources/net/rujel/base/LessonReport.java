@@ -222,7 +222,9 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 	protected static NSMutableDictionary formatLesson(EduLesson lesson) {
 		NSMutableDictionary result = new NSMutableDictionary(lesson,"lesson");
 		result.takeValueForKey(lesson.number(), "number");
-		result.takeValueForKey(dateFormat.format(lesson.date()), "date");
+		NSTimestamp date = lesson.date();
+		result.takeValueForKey(date, "date");
+		result.takeValueForKey(MyUtility.dateFormat().format(date),"title");
 		result.takeValueForKey(lesson.theme(), "theme");
 		result.takeValueForKey(lesson.homeTask(), "homeTask");
 		return result;

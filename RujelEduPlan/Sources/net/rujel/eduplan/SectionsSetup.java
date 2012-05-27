@@ -60,12 +60,12 @@ public class SectionsSetup extends WOComponent {
     			"eduSections",(String)null, false);
 		NSKeyValueCoding strings = (NSKeyValueCoding)ses.valueForKey("strings");
     	if(sIndex == null) {
-			strings.takeValueForKey(null, "sections");
+			strings.takeValueForKey(NSDictionary.EmptyDictionary, "sections");
 			return null;
     	}
     	NSArray sections = sIndex.sortedIndex();
 		if(sections == null || sections.count() == 0) {
-			strings.takeValueForKey(null, "sections");
+			strings.takeValueForKey(NSDictionary.EmptyDictionary, "sections");
 			return null;
 		}
 		NSMutableArray list = new NSMutableArray(sections.count());
@@ -87,12 +87,13 @@ public class SectionsSetup extends WOComponent {
 			}
 			list.addObject(dict);
 		}
-		SesNotifier observer = (SesNotifier)ses.valueForKeyPath("strings.sections.observer");
+		NSDictionary dict = (NSDictionary)strings.valueForKey("sections");
+		SesNotifier observer = (dict == null)?null:(SesNotifier)dict.valueForKey("observer");
 		if(observer == null)
 			observer = new SesNotifier(ses);
 		else
 			NSNotificationCenter.defaultCenter().removeObserver(observer);
-		NSMutableDictionary dict = new NSMutableDictionary(3);
+		dict = new NSMutableDictionary(3);
 		dict.takeValueForKey(list, "list");
 		dict.takeValueForKey(Boolean.valueOf(list.count() > 1), "hasSections");
 		strings.takeValueForKey(dict, "sections");

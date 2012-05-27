@@ -62,6 +62,7 @@ public class CompleteModule {
 				// default access not supported
 			}
 			Completion.init();
+			PedDecision.init();
 		} else if("journalPlugins".equals(obj)) {
 			return journalPlugins(ctx);
 		} else if("notesAddOns".equals(obj)) {

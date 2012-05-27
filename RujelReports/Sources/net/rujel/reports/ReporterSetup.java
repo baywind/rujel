@@ -303,8 +303,8 @@ public class ReporterSetup extends WOComponent {
 	public static NSMutableDictionary getDefaultSettings(NSDictionary reporter, File dir) {
 		NSMutableDictionary result = null;
 		File file = new File(dir, reporter.valueForKey("id") + "_defaults.plist");
+		Object plist = null;
 		if(file.exists()) {
-			Object plist = null;
 			try {
 				FileInputStream fis = new FileInputStream(file);
 				plist = PlistReader.readPlist(fis, null);
@@ -315,13 +315,13 @@ public class ReporterSetup extends WOComponent {
 						"Error reading default settings plist", new Object[] {file, ioex});
 				return null;
 			}
+		}
 			if(plist instanceof NSDictionary) {
 				result = PlistReader.cloneDictionary((NSDictionary)plist, true);
 				result = synchronizeReportSettings(result, reporter, false, false);
 			} else {
 				result = synchronizeReportSettings(result, reporter, true, false);
 			}
-		}
 		return result;
 	}
 
@@ -332,6 +332,7 @@ public class ReporterSetup extends WOComponent {
 		if(settings == null) {
 			NSMutableDictionary reporter = (NSMutableDictionary)reportSettings.valueForKey("reporter");
 			settings = getDefaultSettings(reporter, dir);
+			if(settings != null)
 			settings.takeValueForKey(ses.valueForKeyPath(
 				"strings.Strings.PrintReport.defaultSettings"), "title");
 			reporter.takeValueForKey(settings, "settings");

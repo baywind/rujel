@@ -29,12 +29,18 @@
 
 package net.rujel.complete;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EOInitialiser;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
+import net.rujel.reusables.Various;
 
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSMutableDictionary;
 
 public class PedDecision extends _PedDecision {
 
@@ -79,5 +85,39 @@ public class PedDecision extends _PedDecision {
 			}
 		}
 		return null;
+	}
+	
+	public static NSArray getForStudents(NSArray list, EOEditingContext ec) {
+		EOQualifier qual = Various.getEOInQualifier("student", list);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		return found;
+	}
+	
+	public static NSMutableDictionary dictForGroup(EduGroup gr) {
+		EOEditingContext ec = gr.editingContext();
+		NSMutableDictionary dict = new NSMutableDictionary();
+		NSDictionary crs = SettingsBase.courseDict(gr);
+		dict.takeValueForKey(
+				SettingsBase.stringSettingForCourse("pedsovetTitle",crs, ec), "title");
+		EOQualifier qual = Various.getEOInQualifier("student", gr.list());
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		String dflt = SettingsBase.stringSettingForCourse("pedsovetDecision",crs, ec);
+		if(dflt != null && gr.grade() != null) {
+			int next = gr.grade().intValue();
+			next++;
+			dflt = String.format(dflt, new Integer(next));
+		}
+		for (int i = 0; i < found.count(); i++) {
+			PedDecision dec = (PedDecision)found.objectAtIndex(i);
+			String decision = dec.specDecision();
+			if(decision == null)
+				decision = dflt;
+			else if(decision.length() == 0)
+				continue;
+			dict.setObjectForKey(decision, dec.student());
+		}
+		return dict;
 	}
 }

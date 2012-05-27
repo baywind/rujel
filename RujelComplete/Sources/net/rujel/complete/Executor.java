@@ -41,6 +41,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
+import net.rujel.reports.StudentReports;
 import net.rujel.reusables.*;
 
 import com.webobjects.appserver.*;
@@ -271,9 +272,9 @@ public class Executor implements Runnable {
 		folder.ctx = ctx;
 		WOSession ses = ctx.session();
 		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ses);
+		StudentReports str = new StudentReports(ses);
 		NSMutableArray reports = (NSMutableArray)ses.valueForKeyPath("modules.studentReporter");
-		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
-				"strings.Strings.Overview.defaultReporter"),0);
+		reports.insertObjectAtIndex(str.defaultReporter(),0);
 //		File groupDir = new File(folder,grDir);
 		NSMutableDictionary grDict = null;
 		NSMutableArray updateGroups = new NSMutableArray();
@@ -361,12 +362,12 @@ public class Executor implements Runnable {
 			grReports = null;
 		}
 		if(updateList) {
-			File file = new File(folder.getBase(),"index.html");
+//			File file = new File(folder.getBase(),"index.html");
 			Integer section = getDefaultSection();
-			if(!file.exists()) {
+//			if(!file.exists()) {
 				prepareFolder(folder,(section == null)? "list.html" :
 						"list" + section  + ".html");
-			}
+//			}
 			NSArray groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
 			WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
 			page.takeValueForKey(ec, "ec");
@@ -407,13 +408,13 @@ public class Executor implements Runnable {
 		NSDictionary ready = CoursePage.readyModules(course, reports);
 		FileWriterUtil folder = Executor.completeFolder(task.year, COURSES,false,false,true);
 		folder.ctx = ctx;
-		File file = new File(folder.getBase(),"index.html");
-		if(!file.exists()) {
+//		File file = new File(folder.getBase(),"index.html");
+//		if(!file.exists()) {
 			Integer section = getDefaultSection();
 			String filename = (section == null)?"eduGroup.html":
 				"eduGroup" + section + ".html";
 			prepareFolder(folder, filename);
-		}
+//		}
 		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());
 		String crID = ((EOKeyGlobalID)task.courseID).keyValues()[0].toString();
 		catalog.takeValueForKey(ready, crID);
