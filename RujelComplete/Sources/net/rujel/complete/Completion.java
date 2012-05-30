@@ -41,6 +41,7 @@ import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOMessage;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -288,13 +289,13 @@ public class Completion extends _Completion {
 			}
 		}
 		if(closed == 0) {
-			result.takeValueForKey("x", "integral");
+			result.takeValueForKey("X", "integral");
 			result.takeValueForKey("grey", "integralClass");
 		} else if(closed < modules.count()) {
 			result.takeValueForKey("~", "integral");
 			result.takeValueForKey("ungerade", "integralClass");
 		} else if(students < totalStudents) {
-			result.takeValueForKey("s", "integral");
+			result.takeValueForKey("S", "integral");
 			result.takeValueForKey("gerade", "integralClass");
 		} else {
 			result.takeValueForKey("V", "integral");
@@ -361,5 +362,107 @@ public class Completion extends _Completion {
 		}
 		found = findCompletions(courses, NullValue, "student", Boolean.FALSE, ec);
 		return (found == null || found.count() == 0);
+	}
+	
+	public static NSMutableDictionary completionsForGroup(EduGroup gr,Integer year) {
+		if(gr == null)
+			return null;
+		EOEditingContext ec = gr.editingContext();
+		NSArray students = gr.list();
+		
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual, year);
+		quals[1] = new EOKeyValueQualifier("eduGroup", EOQualifier.QualifierOperatorEqual, gr);
+		quals[1] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,quals[1],null);
+		NSArray courses = ec.objectsWithFetchSpecification(fs);
+		
+		quals[0] = new EOKeyValueQualifier("course.eduYear",
+				EOQualifier.QualifierOperatorEqual, year);
+		quals[1] = new EOKeyValueQualifier("course.eduGroup"
+				, EOQualifier.QualifierOperatorNotEqual, gr);
+		quals[2] = Various.getEOInQualifier("student", students);
+		quals[1] = new EOAndQualifier(new NSArray(quals));
+		fs = new EOFetchSpecification("CourseAudience",quals[1],null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) {
+			if(courses == null)
+				courses = found;
+			else
+				courses = courses.arrayByAddingObjectsFromArray(
+						(NSArray)found.valueForKey("course"));
+		}
+		found = findCompletions(courses, NullValue, "student", Boolean.TRUE, ec);
+		NSMutableDictionary result = new NSMutableDictionary();
+		Enumeration enu = students.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Student student = (Student) enu.nextElement();
+			NSMutableDictionary dict = new NSMutableDictionary(4);
+			NSMutableArray closed = new NSMutableArray();
+			dict.takeValueForKey(closed, "closed");
+			result.setObjectForKey(dict, student);
+			if(found != null && found.count() > 0) {
+				Enumeration cEnu = found.objectEnumerator();
+				while (cEnu.hasMoreElements()) {
+					Completion cpt = (Completion) cEnu.nextElement();
+					EduCourse crs = cpt.course();
+					if(crs.groupList().containsObject(student))
+						closed.addObject(crs);
+				}
+			}
+			dict.takeValueForKey(new NSMutableArray(), "left");
+		}
+		found = findCompletions(null, students, "student", null, ec);
+		if(found != null && found.count() > 0) {
+			enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Completion cpt = (Completion) enu.nextElement();
+				NSMutableDictionary dict = (NSMutableDictionary)result.objectForKey(cpt.student());
+				NSMutableArray list = (NSMutableArray)dict.valueForKey(
+						(cpt.closeDate() == null)?"left":"closed");
+				list.addObject(cpt.course());
+			}
+		}
+		enu = result.keyEnumerator();
+		while (enu.hasMoreElements()) {
+			Student student = (Student)enu.nextElement();
+			NSMutableDictionary dict = (NSMutableDictionary)result.objectForKey(student);
+			NSMutableArray closed = (NSMutableArray)dict.valueForKey("closed");
+			dict.takeValueForKey(new Integer(closed.count()), "closedCount");
+			dict.takeValueForKey(coursesList(closed, gr), "closed");
+			NSMutableArray left = (NSMutableArray)dict.valueForKey("left");
+			Enumeration cEnu = courses.objectEnumerator();
+			while (cEnu.hasMoreElements()) {
+				EduCourse crs = (EduCourse)cEnu.nextElement();
+				if(!closed.containsObject(crs) && !left.containsObject(crs) &&
+						crs.groupList().containsObject(student))
+					left.addObject(crs);
+			}
+			dict.takeValueForKey(new Integer(left.count()), "leftCount");
+			dict.takeValueForKey(coursesList(left, gr), "left");
+		}		
+		return result;
+	}
+	
+	private static String coursesList(NSMutableArray list, EduGroup gr) {
+		if(list.count() == 0)
+			return null;
+		EOSortOrdering.sortArrayUsingKeyOrderArray(list, EduCourse.sorter);
+		StringBuilder buf = new StringBuilder();
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduCourse crs = (EduCourse) enu.nextElement();
+			if(gr != crs.eduGroup())
+				buf.append('[').append(crs.eduGroup().name()).append(']').append(' ');
+			buf.append(crs.cycle().subject());
+			if(crs.comment() != null && crs.comment().length() < 10) {
+				buf.append(' ').append('(');
+				buf.append(WOMessage.stringByEscapingHTMLAttributeValue(crs.comment()));
+				buf.append(')');
+			}
+			if(enu.hasMoreElements())
+				buf.append(',').append('\n');
+		}
+		return buf.toString();
 	}
 }

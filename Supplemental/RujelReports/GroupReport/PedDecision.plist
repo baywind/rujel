@@ -8,8 +8,6 @@
 	<string>Решение педсовета</string>
 	<key>entity</key>
 	<string>PedDecision</string>
-	<key>hover</key>
-	<string>Замененные уроки</string>
 	<key>id</key>
 	<string>decision</string>
 	<key>sort</key>

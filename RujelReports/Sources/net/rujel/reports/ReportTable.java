@@ -53,6 +53,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public String filenameFormatter;
 	public Integer index;
 	public NSMutableDictionary preload;
+	protected Object preValue;
 
 	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);
 	
@@ -223,10 +224,13 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public Object preloadedValue() {
+		if(preValue != null)
+			return preValue;
 		NSMutableDictionary cache = (NSMutableDictionary)preloaded();
 		if(cache == null)
 			return null;
-		return cache.objectForKey(itemRow);
+		preValue = cache.objectForKey(itemRow);
+		return preValue;
 	}
 	
 	public Object nextValue() {
@@ -256,6 +260,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     public void setItemDict(NSKeyValueCodingAdditions newDict) {
     	itemDict = newDict;
     	item = valueFromDict(itemDict,itemRow,this);
+    	preValue = null;
     	if(parent() != null) {
     		setValueForBinding(itemDict, "itemDict");
     		setValueForBinding(item, "item");
@@ -364,6 +369,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		subDict = null;
 		itemDict = null;
 		preload = null;
+		preValue = null;
 		super.reset();
 	}
 
