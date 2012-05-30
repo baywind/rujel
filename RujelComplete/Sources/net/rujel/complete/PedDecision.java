@@ -49,6 +49,8 @@ public class PedDecision extends _PedDecision {
 			.anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
 	
+	public static final int MANUAL_FLAG = 8;
+	
 	public Student student() {
         return (Student)storedValueForKey("student");
     }
@@ -95,6 +97,8 @@ public class PedDecision extends _PedDecision {
 	}
 	
 	public static NSMutableDictionary dictForGroup(EduGroup gr) {
+		if(gr == null)
+			return null;
 		EOEditingContext ec = gr.editingContext();
 		NSMutableDictionary dict = new NSMutableDictionary();
 		NSDictionary crs = SettingsBase.courseDict(gr);

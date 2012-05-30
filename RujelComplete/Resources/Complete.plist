@@ -48,6 +48,8 @@
 	<string>Заголовок решения</string>
 	<key>decisionTitle</key>
 	<string>Типовое решение</string>
+	<key>noDecision</key>
+	<string>Нет решения</string>
 	<key>messages</key>
 	<dict>
 		<key>closingTitle</key>

@@ -69,6 +69,8 @@ public class CompleteModule {
 			return notesAddOns(ctx);
 		} else if("coursesReport".equals(obj)) {
 			return coursesReport(ctx);
+//		} else if("groupReport".equals(obj)) {
+//			return groupReport(ctx);
 		} else if("adminModules".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.adminModule");
 		} else if("accessModifier".equals(obj)) {
@@ -152,6 +154,20 @@ public class CompleteModule {
 		return req;
     }
     
+	public static Object groupReport(WOContext ctx) {
+		NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)ctx.
+							session().valueForKey("readAccess");
+		if(Various.boolForObject(readAccess.valueForKeyPath("_read.PedDecision")))
+			return null;
+		NSMutableDictionary result = new NSMutableDictionary("decision","id");
+		result.takeValueForKey(ctx.session().valueForKeyPath(
+			"strings.RujelComplete_Complete.pedsovet"), "title");
+		result.takeValueForKey("80","sort");
+		result.takeValueForKey(PedDecision.ENTITY_NAME, "entity");
+		result.takeValueForKey("$preloaded", "value");
+		return result;
+	}
+	
 	public static Object coursesReport(WOContext ctx) {
 		NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)ctx.
 							session().valueForKey("readAccess");

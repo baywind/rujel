@@ -52,6 +52,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public Object extra;
 	public String filenameFormatter;
 	public Integer index;
+	public NSMutableDictionary preload;
 
 	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);
 	
@@ -66,7 +67,26 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			setValueForBinding(null, "index");
 		list = (NSArray)valueForBinding("list");
 		properties = (NSArray)valueForBinding("properties");
+		preloadProps();
 		return super.template();
+	}
+	
+	protected void preloadProps() {
+		if(properties == null || properties.count() == 0)
+			return;
+		Enumeration props = properties.objectEnumerator();
+		Object param = (parent() == null)? item : valueForBinding("commonParam");
+		while (props.hasMoreElements()) {
+			NSKeyValueCoding report = (NSKeyValueCoding)props.nextElement();
+			NSDictionary toPreload = (NSDictionary)report.valueForKey("preload");
+			if(toPreload != null) {
+				if(preload == null)
+					preload = new NSMutableDictionary();
+				String key = (String)report.valueForKey("id");
+				Object cache = DisplayAny.ValueReader.evaluateDict(toPreload, param, this);
+				preload.takeValueForKey(cache, key);
+			}
+		}
 	}
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
@@ -77,8 +97,6 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 //				setValueForBinding(null, "index");
 			super.appendToResponse(aResponse, aContext);
 		} else { // exporting
-			setItemRow(null);
-			setItemDict(null);
 			if(extra != null) {
 				if(extra instanceof NSArray) {
 					properties = (properties == null)?(NSArray)extra:
@@ -90,7 +108,9 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			}
 			if(properties == null || properties.count() == 0)
 				return;
-			
+			preloadProps();
+			setItemRow(null);
+			setItemDict(null);
 			Export export = new ExportCSV(aResponse,filenameFormatter);
 			appendRowToResponse(export,aContext);
 			if(list == null || list.count() == 0)
@@ -191,6 +211,22 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		} // properties.objectEnumerator()
 //		aResponse.appendContentCharacter('\r');
 		export.endRow();
+	}
+	
+	public Object preloaded() {
+		if(preload == null || itemRow == null || itemDict == null)
+			return null;
+		String key = (String)itemDict.valueForKey("id");
+		if(key == null)
+			return null;
+		return preload.valueForKey(key);
+	}
+	
+	public Object preloadedValue() {
+		NSMutableDictionary cache = (NSMutableDictionary)preloaded();
+		if(cache == null)
+			return null;
+		return cache.objectForKey(itemRow);
 	}
 	
 	public Object nextValue() {
@@ -327,6 +363,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		index = null;
 		subDict = null;
 		itemDict = null;
+		preload = null;
 		super.reset();
 	}
 
