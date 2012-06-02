@@ -14,6 +14,8 @@
 	<string>30</string>
 	<key>_mimeType</key>
 	<string>text/csv</string>
+	<key>filename</key>
+	<string>persdata.csv</string>
 	<key>filext</key>
 	<string>csv</string>
 	<key>transform</key>

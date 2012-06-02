@@ -14,6 +14,8 @@
 	<string>20</string>
 	<key>mimeType</key>
 	<string>application/multipart</string>
+	<key>filename</key>
+	<string>initData.fet</string>
 	<key>filext</key>
 	<string>fet</string>
 	<key>transform</key>

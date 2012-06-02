@@ -67,6 +67,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			os = (EOObjectStore)objectForKey("objectStore");
 			if(os == null) {
 				os = DataBaseConnector.objectStoreForTag(eduYear().toString());
+				if(os == null)
+					throw new IllegalStateException("Failed to initialise default EOObjectStore");
 				setObjectForKey(os,"objectStore");
 			}
 			if(_defaultEC == null || _defaultEC.rootObjectStore() != os) {
@@ -270,6 +272,8 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		}
 		setTimeOut(to);
 		to = (double)message.length();
+		if(_defaultEC == null)
+			defaultEditingContext();
 		super.appendToResponse(aResponse,aContext);
 		int diff = message.length() - (int)to;
 		if (diff > 0 && diff < 10 && message.charAt(message.length() -1) == '\n')
