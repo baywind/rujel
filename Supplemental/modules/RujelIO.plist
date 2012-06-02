@@ -6,10 +6,10 @@
 	<string>net.rujel.io.IOModule</string>
 	<key>sort</key>
 	<string>90</string>
-	<key>dbConnection.ImportExport</key>
+	<key>dbConnection.RujelSync</key>
 	<dict>
-		<key>dbName</key>
-		<string>RujelYear%s</string>
+		<key>skip</key>
+		<string>false</string>
 	</dict>
 </dict>
 </plist>
