@@ -107,21 +107,58 @@ public class PedDecision extends _PedDecision {
 		EOQualifier qual = Various.getEOInQualifier("student", gr.list());
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
-		String dflt = SettingsBase.stringSettingForCourse("pedsovetDecision",crs, ec);
-		if(dflt != null && gr.grade() != null) {
-			int next = gr.grade().intValue();
-			next++;
-			dflt = String.format(dflt, new Integer(next));
-		}
+		String dflt = defaultDecision(gr);
 		for (int i = 0; i < found.count(); i++) {
 			PedDecision dec = (PedDecision)found.objectAtIndex(i);
 			String decision = dec.specDecision();
 			if(decision == null)
-				decision = dflt;
+				decision = formatDefault(dflt, dec.student());
 			else if(decision.length() == 0)
 				continue;
 			dict.setObjectForKey(decision, dec.student());
 		}
 		return dict;
+	}
+	
+	public static String defaultDecision(EduGroup gr) {
+		NSDictionary crs = SettingsBase.courseDict(gr);
+		String dflt = SettingsBase.stringSettingForCourse(
+				"pedsovetDecision",crs, gr.editingContext());
+		if(dflt == null || gr.grade() == null)
+			return dflt;
+		int next = gr.grade().intValue();
+		next++;
+		return String.format(dflt, new Integer(next));
+	}
+	
+	public static String formatDefault(String result, Student stu) {
+		int idx1 = result.indexOf('[');
+		if(idx1 < 0)
+			return result;
+		int idx2 = result.indexOf(']', idx1);
+		if(idx2 < 0)
+			return result;
+		StringBuilder buf = new StringBuilder(result.length());
+		buf.append(result.substring(0, idx1));
+		while (idx1 >= 0) {
+			int idx3 = result.indexOf('|', idx1);
+			if(idx3 > idx1 && idx3 < idx2) {
+				if(stu.person().sex()) {
+					if(idx3 > idx1 +1)
+						buf.append(result.substring(idx1 +1, idx3));
+				} else {
+					if(idx2 > idx3 +1)
+						buf.append(result.substring(idx3 +1, idx2));
+				}
+			}
+			idx1 = result.indexOf('[',idx2);
+			idx3 = result.indexOf(']',idx3);
+			if(idx1 > idx2 && idx3 > 1) {
+				buf.append(result.substring(idx2 +1, idx1));
+				idx2 = idx3;
+			}
+		} // while (idx1 >= 0)
+		buf.append(result.substring(idx2 +1));
+		return buf.toString();
 	}
 }
