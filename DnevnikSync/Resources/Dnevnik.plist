@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>dnevnikRegime</key>
+	<dict>
+		<key>title</key>
+		<string>ОЭЖД</string>
+		<key>hover</key>
+		<string>Отправка данных в Общегородской электронный дневник</string>
+		<key>component</key>
+		<string>ServiceFrontend</string>
+		<key>group</key>
+		<string>other</string>
+		<key>sort</key>
+		<string>90</string>
+	</dict>
+</dict>
+</plist>

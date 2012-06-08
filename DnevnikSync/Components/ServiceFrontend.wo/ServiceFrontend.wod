@@ -1,0 +1,21 @@
+PageWrapper : PageWrapper {
+  title = "SOAP testing";
+}
+
+ServiceName : WOString {
+  value = pgr.name;
+}
+
+Services : WORepetition {
+  list = perGroups;
+  item = pgr;
+}
+
+Operations : WORepetition {
+  list = periods;
+  item = item;
+}
+
+Operation : WOString {
+  value = item.dateFinish.time;
+}

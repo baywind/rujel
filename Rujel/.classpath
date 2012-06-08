@@ -48,5 +48,6 @@
 	<classpathentry kind="con" path="WOFramework/RujelEmail"/>
 	<classpathentry kind="con" path="WOFramework/RujelSchedule"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelIO"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DnevnikSync"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
