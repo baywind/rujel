@@ -338,6 +338,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 			try{
 				EduCourse leftCourse = (EduCourse)left;
 				EduCourse rightCourse = (EduCourse)right;
+				if(leftCourse == rightCourse)
+					return NSComparator.OrderedSame;
 				int result = compareValues(leftCourse.eduGroup(), rightCourse.eduGroup(), 
 						EOSortOrdering.CompareAscending);
 				if(result != NSComparator.OrderedSame)
@@ -353,8 +355,14 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 				result = compareValues(leftCourse.valueForKeyPath("teacher.person"), 
 						rightCourse.valueForKeyPath("teacher.person")
 						, EOSortOrdering.CompareAscending);
+				if(result == NSComparator.OrderedSame) {
+					left = leftCourse.editingContext().globalIDForObject(leftCourse);
+					right = rightCourse.editingContext().globalIDForObject(rightCourse);
+					left = ((EOKeyGlobalID)left).keyValues()[0];
+					right = ((EOKeyGlobalID)right).keyValues()[0];
+					result = super.compareAscending(left, right);
+				}
 				return result;
-				
 			} catch (Exception e) {
 				return super.compareAscending(left, right);
 			}
@@ -365,6 +373,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 			try{
 				EduCourse leftCourse = (EduCourse)left;
 				EduCourse rightCourse = (EduCourse)right;
+				if(leftCourse == rightCourse)
+					return NSComparator.OrderedSame;
 				int result = compareValues(leftCourse.cycle(), rightCourse.cycle(), 
 						EOSortOrdering.CompareCaseInsensitiveAscending);
 				if(result != NSComparator.OrderedSame)
@@ -376,8 +386,14 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 				result = compareValues(leftCourse.valueForKeyPath("teacher.person"), 
 						rightCourse.valueForKeyPath("teacher.person")
 						, EOSortOrdering.CompareCaseInsensitiveAscending);
+				if(result == NSComparator.OrderedSame) {
+					left = leftCourse.editingContext().globalIDForObject(leftCourse);
+					right = rightCourse.editingContext().globalIDForObject(rightCourse);
+					left = ((EOKeyGlobalID)left).keyValues()[0];
+					right = ((EOKeyGlobalID)right).keyValues()[0];
+					result = super.compareCaseInsensitiveAscending(left, right);
+				}
 				return result;
-				
 			} catch (Exception e) {
 				return super.compareCaseInsensitiveAscending(left, right);
 			}

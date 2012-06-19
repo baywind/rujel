@@ -253,6 +253,22 @@ public class MarkArchive extends _MarkArchive
 			}
 		}
 	}
+	
+	public Integer getKeyValue(String key) {
+		EOEnterpriseObject ent = usedEntity();
+		if(usedEntity() == null)
+			throw new IllegalStateException("Not initialised yet");
+		for (int i = 0; i < keys.length; i++) {
+			String test = (String)ent.valueForKey(keys[i]);
+			if(test == null)
+				continue;
+			if(test.startsWith(key) && (test.length() == key.length() ||
+					(test.endsWith("ID") &&  test.length() - key.length() == 2)))
+				return (Integer)valueForKey(keys[i]);
+		}
+		return null;
+	}
+	
 	/*
 	protected NSMutableDictionary awaitedKeys;
 	

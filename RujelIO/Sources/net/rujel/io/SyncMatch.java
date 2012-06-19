@@ -58,7 +58,18 @@ public class SyncMatch extends _SyncMatch {
 	}
 	
 	public void setEntity(String entity) {
-		EntityIndex ei = EntityIndex.indexForEntityName(editingContext(), entity, true);
+		EntityIndex ei = null;
+		ExtSystem sys = extSystem();
+		if(sys.entIdxes != null) {
+			ei = (EntityIndex)sys.entIdxes.valueForKey(entity);
+			if(ei.editingContext() != editingContext())
+				ei = null;
+		}
+		if(ei == null) {
+			ei = EntityIndex.indexForEntityName(editingContext(),entity, false);
+			if(sys.entIdxes != null)
+				sys.entIdxes.takeValueForKey(ei, entity);
+		}
 		setEntityIndex(ei);
 		if(ei.isYearly())
 			setEduYear(MyUtility.eduYear(editingContext()));
@@ -109,11 +120,29 @@ public class SyncMatch extends _SyncMatch {
 	
 	public static SyncMatch matchForSystemAndObject(ExtSystem sys, ExtBase base, 
 			EOKeyGlobalID gid) {
+		return getMatch(sys, base, gid.entityName(), (Integer)gid.keyValues()[0]);
+	}
+	
+	public static SyncMatch getMatch(ExtSystem sys, ExtBase base, String entity, Integer objID) {
 		EOEditingContext ec = sys.editingContext();
-		EntityIndex ei = EntityIndex.indexForEntityName(ec, gid.entityName(), false);
-		EOQualifier qual = matchQualifier(sys, base, ei, (Integer)gid.keyValues()[0], null);
+		EntityIndex ei = null;
+		if(sys.entIdxes != null) {
+			ei = (EntityIndex)sys.entIdxes.valueForKey(entity);
+			if(ei.editingContext() != ec)
+				ei = null;
+		}
+		if(ei == null) {
+			ei = EntityIndex.indexForEntityName(ec, entity, false);
+			if(sys.entIdxes != null)
+				sys.entIdxes.takeValueForKey(ei, entity);
+		}
+		return getMatch(sys, base, ei, objID);
+	}
+	
+	public static SyncMatch getMatch(ExtSystem sys, ExtBase base, EntityIndex ei, Integer objID) {
+		EOQualifier qual = matchQualifier(sys, base, ei, objID, null);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
-		NSArray found = ec.objectsWithFetchSpecification(fs);
+		NSArray found = sys.editingContext().objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0)
 			return null;
 		if(found.count() > 1) {
@@ -128,7 +157,17 @@ public class SyncMatch extends _SyncMatch {
 	
 	public static NSMutableDictionary dictForEntity(String entityName, ExtSystem sys, ExtBase base) {
 		EOEditingContext ec = sys.editingContext();
-		EntityIndex ei = EntityIndex.indexForEntityName(ec, entityName, false);
+		EntityIndex ei = null;
+		if(sys.entIdxes != null) {
+			ei = (EntityIndex)sys.entIdxes.valueForKey(entityName);
+			if(ei.editingContext() != ec)
+				ei = null;
+		}
+		if(ei == null) {
+			ei = EntityIndex.indexForEntityName(ec, entityName, false);
+			if(sys.entIdxes != null)
+				sys.entIdxes.takeValueForKey(ei, entityName);
+		}
 		EOQualifier qual = matchQualifier(sys, base, ei, null, null);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		NSArray found = ec.objectsWithFetchSpecification(fs);

@@ -51,20 +51,37 @@ public class ExtSystem extends _ExtSystem {
 		super.awakeFromInsertion(ec);
 	}
 
+	protected NSMutableDictionary entIdxes;
+
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
+		entIdxes = null;
 	}
 	
+	public void setCachesIndexes(boolean cache) {
+		if(cache) {
+			if(entIdxes == null)
+				entIdxes = new NSMutableDictionary();
+		} else {
+			entIdxes = null;
+		}
+	}
+
+	public boolean cachesIndexes() {
+		return entIdxes != null;
+	}
 	public String extidForObject(EOEnterpriseObject eo, ExtBase base) {
 		if(eo == null)
 			return null;
 		EOKeyGlobalID gid = (EOKeyGlobalID)eo.editingContext().globalIDForObject(eo);
-		SyncMatch match = SyncMatch.matchForSystemAndObject(this, base, gid);
+		return extidForObject(eo.entityName(), (Integer)gid.keyValues()[0], base);
+	}
+	public String extidForObject(String entity, Integer objID, ExtBase base) {	
+		SyncMatch match = SyncMatch.getMatch(this, base, entity, objID);
 		if(match == null) {
 			if(base != null && base.isLocalBase()) {
-				match = addMatch(gid,base);
+				match = addMatch(entity,objID,base);
 				String guid = UUID.randomUUID().toString();
-				match.setEntity(gid.entityName());
 				match.setExtID(guid);
 //				editingContext().saveChanges();
 				return guid;
@@ -74,13 +91,23 @@ public class ExtSystem extends _ExtSystem {
 		return match.extID();
 	}
 	
+	public SyncMatch addMatch(EOEnterpriseObject eo, ExtBase base) {
+		EOKeyGlobalID gid = (EOKeyGlobalID)eo.editingContext().globalIDForObject(eo);
+		return addMatch(gid, base);
+	}
+	
 	public SyncMatch addMatch(EOKeyGlobalID gid, ExtBase base) {
+		return addMatch(gid.entityName(), (Integer)gid.keyValues()[0], base);
+	}
+	
+	public SyncMatch addMatch(String entity, Integer objID, ExtBase base) {
 		SyncMatch match = (SyncMatch)EOUtilities.createAndInsertInstance(editingContext(),
 				SyncMatch.ENTITY_NAME);
 		match.setExtSystem(this);
 		if(base != null)
-		match.setExtBase(base);
-		match.setObjID((Integer)gid.keyValues()[0]);
+			match.setExtBase(base);
+		match.setObjID(objID);
+		match.setEntity(entity);
 		return match;
 	}
 	

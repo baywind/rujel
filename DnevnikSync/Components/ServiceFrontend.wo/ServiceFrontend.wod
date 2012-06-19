@@ -17,5 +17,5 @@ Operations : WORepetition {
 }
 
 Operation : WOString {
-  value = item.dateFinish.time;
+  value = item.number;
 }

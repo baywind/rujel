@@ -340,12 +340,24 @@ public class ExportParams extends WOComponent {
     	return buf.toString();
     }
     
+    private String defaultValue() {
+    	if(item1 == null)
+    		return null;
+    	Object dflt = indexItem.valueForKey("defaultValue");
+    	if(dflt == null)
+    		return null;
+    	return (String)DisplayAny.ValueReader.evaluateValue(dflt, item1, this);
+    }
+    
     public Object selection() {
     	NSMutableDictionary dict = indexDict(false);
-    	if(dict == null)
-    		return null;
-    	String value = localValue();
-    	value = (value==null)?null:(String)dict.valueForKey(value);
+    	String value = null;
+    	if(dict == null) {
+    		value = defaultValue();
+    	} else {
+    		value = localValue();
+        	value = (value==null)?null:(String)dict.valueForKey(value);
+    	}
     	if(value == null)
     		return null;
     	NSArray external = (NSArray)indexItem.valueForKey("external");

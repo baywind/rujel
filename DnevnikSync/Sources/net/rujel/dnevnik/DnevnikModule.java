@@ -1,6 +1,5 @@
 package net.rujel.dnevnik;
 
-
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.foundation.NSKeyValueCoding;
@@ -21,5 +20,4 @@ public class DnevnikModule {
 		}
 		return null;
 	}
-
 }
