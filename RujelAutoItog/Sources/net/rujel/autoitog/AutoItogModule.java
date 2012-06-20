@@ -579,6 +579,10 @@ public class AutoItogModule {
 				archive.takeValueForKey(itogMark, "object");
 				archive.takeValueForKey("scheduled", "wosid");
 				archive.takeValueForKey("AutoItog", "user");
+				int actionType = 1;
+				if(overwrite && !ec.globalIDForObject(itogMark).isTemporary())
+					actionType = 2;
+				archive.takeValueForKey(new Integer(actionType), "actionType");
 			}
 		}
 		if(inCourse > 0) {

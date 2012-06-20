@@ -46,6 +46,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding.UnknownKeyException;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
@@ -207,7 +208,15 @@ public abstract class WorkCalculator extends Calculator {
 				return (pKey == null)?null:
 					(Integer)pKey.allValues().objectAtIndex(0);
 			} else {
-				return null;
+				try {
+					object = lesson.valueForKey("noteDelegate");
+					if(object instanceof Work)
+						work = (Work)object;
+					else
+						return null;
+				} catch (UnknownKeyException e) {
+					return null;
+				}
 			}
 		} else {
 			return null;
