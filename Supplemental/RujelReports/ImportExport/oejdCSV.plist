@@ -138,8 +138,6 @@
 				<string>itogList</string>
 				<key>settingsBase</key>
 				<string>ItogMark</string>
-				<key>reindex</key>
-				<string>periods</string>
 			</dict>
 		</array>
 		<key>person</key>
@@ -155,52 +153,89 @@
 			<key>title</key>
 			<string>Применяемые учебные периоды</string>
 			<key>localTitle</key>
-			<string>Режим занятий</string>
+			<string>в РУЖЭЛЬ</string>
 			<key>externalTitle</key>
-			<string>Основные периоды</string>
+			<string>в ОЭЖД</string>
 			<key>local</key>
 			<dict>
-				<key>object</key>
-				<dict>
-					<key>className</key>
-					<string>net.rujel.base.SettingsBase</string>
-					<key>methodName</key>
-					<string>baseForKey</string>
-					<key>paramClasses</key>
-					<array>
-						<string>java.lang.String</string>
-						<string>com.webobjects.eocontrol.EOEditingContext</string>
-						<string>boolean</string>
-					</array>
-					<key>paramValues</key>
-					<array>
-						<string>EduPeriod</string>
-						<string>$ec</string>
-						<false/>
-					</array>
-				</dict>
-				<key>className</key>
-				<string>net.rujel.base.SettingsBase</string>
-				<key>methodName</key>
-				<string>availableValues</string>
-				<key>paramClasses</key>
+				<key>entityName</key>
+				<string>ItogType</string>
+				<key>titlePath</key>
+				<string>name</string>
+				<key>sorter</key>
 				<array>
-					<string>java.lang.Integer</string>
-					<string>java.lang.String</string>
-				</array>
-				<key>paramValues</key>
-				<array>
-					<string>$session.eduYear</string>
-					<string>textValue</string>
+					<string>sort</string>
 				</array>
 			</dict>
 			<key>external</key>
 			<array>
-				<string>Четверть</string>
-				<string>Триместр</string>
-				<string>Полугодие</string>
-				<string>Семестр</string>
+				<dict>
+					<key>title</key>
+					<string>Модуль</string>
+					<key>value</key>
+					<string>Module</string>
+					<key>count</key>
+					<integer>8</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Четверть</string>
+					<key>value</key>
+					<string>Quarter</string>
+					<key>count</key>
+					<integer>4</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Триместр</string>
+					<key>value</key>
+					<string>Trimester</string>
+					<key>count</key>
+					<integer>3</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Семестр</string>
+					<key>value</key>
+					<string>Semester</string>
+					<key>count</key>
+					<integer>2</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Полугодие</string>
+					<key>value</key>
+					<string>HalfYear</string>
+					<key>count</key>
+					<integer>2</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Год</string>
+					<key>value</key>
+					<string>Year</string>
+					<key>count</key>
+					<integer>1</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Экзамен</string>
+					<key>value</key>
+					<string>Exam</string>
+					<key>count</key>
+					<integer>0</integer>
+				</dict>
+				<dict>
+					<key>title</key>
+					<string>Итоговая</string>
+					<key>value</key>
+					<string>Final</string>
+					<key>count</key>
+					<integer>0</integer>
+				</dict>
 			</array>
+			<key>defaultValue</key>
+			<string>ASSUME</string>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -226,6 +261,12 @@
 			</dict>
 			<key>external</key>
 			<array>
+				<dict>
+					<key>title</key>
+					<string>Прочее</string>
+					<key>value</key>
+					<string>Common</string>
+				</dict>
 				<dict>
 					<key>title</key>
 					<string>Филология</string>
@@ -268,13 +309,9 @@
 					<key>value</key>
 					<string>Technology</string>
 				</dict>
-				<dict>
-					<key>title</key>
-					<string>Прочее</string>
-					<key>value</key>
-					<string>Common</string>
-				</dict>
 			</array>
+			<key>defaultValue</key>
+			<string>ASSUME</string>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -625,6 +662,8 @@
 					<string>LessonComposition</string>
 				</dict>
 			</array>
+			<key>_defaultValue</key>
+			<string>ASSUME</string>
 			<key>defaultValue</key>
 			<dict>
 					<key>className</key>

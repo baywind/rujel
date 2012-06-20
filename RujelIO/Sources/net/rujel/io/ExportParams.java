@@ -222,11 +222,13 @@ public class ExportParams extends WOComponent {
 					Object sort = sorter.objectAtIndex(i);
 					if(sort instanceof String) {
 						s[i] = new EOSortOrdering((String)sort,EOSortOrdering.CompareAscending);
+					} else {
+						NSDictionary so = (NSDictionary)sort;
+						String key = (String)so.valueForKey("key");
+						String order = (String)so.valueForKey("order");
+						s[i] = new EOSortOrdering(
+								key,EOSortOrdering._operatorSelectorForString(order));
 					}
-					NSDictionary so = (NSDictionary)sort;
-					String key = (String)so.valueForKey("key");
-					String order = (String)so.valueForKey("order");
-					s[i] = new EOSortOrdering(key,EOSortOrdering._operatorSelectorForString(order));
 				}
 				sorter = new NSArray(s);
 			}
@@ -340,24 +342,54 @@ public class ExportParams extends WOComponent {
     	return buf.toString();
     }
     
+    private boolean inAppend = false;
+    public void appendToResponse(WOResponse aResponse,
+            WOContext aContext) {
+    	inAppend = true;
+    	super.appendToResponse(aResponse, aContext);
+    	inAppend = false;
+    }
+    
     private String defaultValue() {
-    	if(item1 == null)
+    	if(!inAppend || item1 == null)
     		return null;
     	Object dflt = indexItem.valueForKey("defaultValue");
     	if(dflt == null)
     		return null;
+    	if(dflt.equals("ASSUME")) {
+    		String str1 = value1();
+    		NSArray list = (NSArray)indexItem.valueForKey("external");
+    		int best = 0;
+    		String result = null;
+    		for (int i = 0; i < list.count(); i++) {
+				Object value2 = list.objectAtIndex(i);
+				String str2;
+				if(value2 instanceof NSKeyValueCoding) {
+					str2 = (String)((NSKeyValueCoding)value2).valueForKey("title");
+					value2 = (String)((NSKeyValueCoding)value2).valueForKey("value");
+				} else {
+					str2 = value2.toString();
+				}
+				int cor = Various.correlation(str1, str2);
+				if(cor > best && cor > Math.min(str1.length(), str2.length())/2) {
+					result = value2.toString();
+					best = cor;
+				}
+			}
+    		return result;
+    	}
     	return (String)DisplayAny.ValueReader.evaluateValue(dflt, item1, this);
     }
     
     public Object selection() {
     	NSMutableDictionary dict = indexDict(false);
     	String value = null;
-    	if(dict == null) {
-    		value = defaultValue();
-    	} else {
+    	if(dict != null) {
     		value = localValue();
         	value = (value==null)?null:(String)dict.valueForKey(value);
     	}
+    	if(value == null)
+    		value = defaultValue();
     	if(value == null)
     		return null;
     	NSArray external = (NSArray)indexItem.valueForKey("external");
