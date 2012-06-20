@@ -366,10 +366,6 @@ public class Prognosis extends _Prognosis {
 		}
 	}
 	
-	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite) {
-		return convertToItogMark(itogs, overwrite, null);
-	}
-
 	public ItogMark convertToItogMark(NSArray itogs, boolean overwrite, StringBuffer buf) {
 		//ItogMark itog = null;
 		ItogContainer container = itogContainer();
@@ -548,6 +544,10 @@ cycleStudents:
 							archive.takeValueForKey("???", "wosid");
 							archive.takeValueForKey("???","user");
 						}
+						int actionType = 1;
+						if(overwrite && itogs.containsObject(itogMark))
+							actionType = 2;
+						archive.takeValueForKey(new Integer(actionType), "actionType");
 					}
 				}
 				if(buf.charAt(buf.length() -1) == 0)

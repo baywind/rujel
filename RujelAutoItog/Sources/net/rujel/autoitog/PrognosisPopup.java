@@ -376,7 +376,7 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     }
     
     public WOActionResults perform() {
-    	ItogMark itog = prognosis.convertToItogMark(null, false);
+    	ItogMark itog = prognosis.convertToItogMark(null, false, null);
     	Logger logger = Logger.getLogger("rujel.autoitog");
     	EOEditingContext ec = prognosis.editingContext();
     	try {
@@ -384,6 +384,8 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     				SettingsReader.boolForKeyPath("markarchive.archiveAll", false))) {
 				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 				archive.takeValueForKey(itog, "object");
+				int actionType = (ec.globalIDForObject(itog).isTemporary())? 1 : 2;
+				archive.takeValueForKey(new Integer(actionType), "actionType");
     		}
 			ec.saveChanges();
 			logger.log(WOLogLevel.EDITING,"Forced prognosis execution",itog);
