@@ -31,11 +31,13 @@ package net.rujel.io;
 
 import java.util.Enumeration;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import net.rujel.base.EntityIndex;
 import net.rujel.base.MyUtility;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -257,7 +259,22 @@ public class ExtSystem extends _ExtSystem {
 				continue;
 			if(ind.eduYear() != null && !ind.eduYear().equals(eduYear))
 				continue;
-			dict.takeValueForKey(ind.getDict(), ind.indexName());
+			String name = ind.indexName();
+			if(dict.containsKey(name)) {
+				NSMutableDictionary indDict = (NSMutableDictionary)dict.valueForKey(name);
+				indDict.addEntriesFromDictionary(ind.getDict());
+				Logger logger = Logger.getLogger("rujel.io");
+				try {
+					editingContext().deleteObject(ind);
+					editingContext().saveChanges();
+					logger.log(WOLogLevel.INFO,"Found and deleted duplicate syncIndex '"
+							+ name + '\'',this);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING, "Failed to autodelete duplicate syncIndex '"
+							+ name + '\'', new Object[] {ind,e});
+				}
+			}
+			dict.takeValueForKey(ind.getDict(), name);
 		}
 		return dict;
 	}

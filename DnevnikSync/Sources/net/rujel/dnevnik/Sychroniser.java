@@ -52,6 +52,7 @@ public class Sychroniser {
 	public ExtBase localBase;
 	public String schoolGuid;
 	protected NSDictionary workTypes;
+	protected NSDictionary itogTypes;
 	
 	private EntityIndex lessonEI;
 	private EntityIndex workEI;
@@ -132,9 +133,12 @@ public class Sychroniser {
 	
 	private long subjectID (EduCourse course) throws RemoteException {
 		Subject subj = (Subject)course.valueForKeyPath("cycle.subjectEO");
+		return subjectID(subj);
+	}
+	private long subjectID (Subject subj) throws RemoteException {
 		String subjExtid = system.extidForObject(subj, null);
 		if(subjExtid == null) {
-			SyncIndex indexer = system.getIndexNamed("eduAreas", localBase, false);
+			SyncIndex indexer = system.getIndexNamed("eduAreas", null, false);
 			String areaName = indexer.extForLocal(MyUtility.getID(subj.area()));
 			KnowledgeArea area = (areaName == null) ? KnowledgeArea.Common :
 					KnowledgeArea.fromString(areaName);
@@ -572,7 +576,7 @@ public class Sychroniser {
 	
 	protected EduWorkType getWorkType(MarkArchive arch) {
 		if(workTypes == null) {
-			SyncIndex indexer = system.getIndexNamed("workType", localBase, false);
+			SyncIndex indexer = system.getIndexNamed("workType", null, false);
 			workTypes = indexer.getDict();
 			if(workTypes == null) {
 				workTypes = new NSMutableDictionary();
@@ -719,7 +723,45 @@ public class Sychroniser {
 		} // criteria
 	}
 	
-	private void syncItogMark(MarkArchive arch) {
+	private void syncItogMark(MarkArchive arch) throws RemoteException {
+		String mark = arch.getArchiveValueForKey("march");
+		if(mark == null)
+			return;
+		else
+			mark = mark.trim();
+		MarkBonusType bonus = MarkBonusType.NotSet;
+		{
+			char c = mark.charAt(mark.length() -1);
+			if(c == '+') {
+				bonus = MarkBonusType.Plus;
+				mark = mark.substring(0, mark.length() -1).trim();
+			} else if(c == '-') {
+				bonus = MarkBonusType.Minus;
+				mark = mark.substring(0, mark.length() -1).trim();
+			}
+		}
+		EduMarkType markType = EduMarkType.Mark5;
+		if(mark.matches("[НнH]\\W*[АаA]\\W?")) {
+			markType = EduMarkType.MarkNA;
+		} else if (mark.toLowerCase().contains("осв")) {
+			markType = EduMarkType.MarkDismiss;
+		}
+		if(mark.length() > 0) {
+			StringBuilder buf = new StringBuilder();
+			for (int i = 0; i < mark.length(); i++) {
+				char c = mark.charAt(i);
+				if(Character.isDigit(c))
+					buf.append(c);
+			}
+			mark = buf.toString();
+		}
+		BigDecimal value = null;
+		try {
+			value = new BigDecimal(mark);
+		} catch (Exception e) {
+			return;
+		}
+		
 		EduCycle cycle = (EduCycle)EOUtilities.objectWithPrimaryKeyValue(ec,
 				EduCycle.entityName, arch.getKeyValue("eduCycle"));
 		Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec,
@@ -745,10 +787,78 @@ public class Sychroniser {
 		}
 		if(group == null)
 			group = student.recentMainEduGroup();
+		String groupGuid = localBase.extidForObject(group);
+		Subject subj = (Subject)cycle.valueForKey("subjectEO");
+		long subjectID = subjectID(subj);
 		ItogContainer container = (ItogContainer)EOUtilities.objectWithPrimaryKeyValue(ec,
 				ItogContainer.ENTITY_NAME, arch.getKeyValue("container"));
-		//TODO choose type
-		container.itogType();
+		String studentGuid = SyncMatch.getMatch(localBase.extSystem(), localBase,
+				Student.entityName, arch.getKeyValue("student")).extID();
+		String type = MyUtility.getID(container.itogType());
+		if(itogTypes == null) {
+			SyncIndex indexer = system.getIndexNamed("periods", null, false);
+			workTypes = indexer.getDict();
+			if(itogTypes == null) {
+				itogTypes = new NSMutableDictionary();
+				int count = container.itogType().inYearCount().intValue();
+				switch (count) {
+				case 4:
+					workTypes.takeValueForKey("Quarter", type);
+					break;
+				case 3:
+					workTypes.takeValueForKey("Trimester", type);
+					break;
+				case 2:
+					workTypes.takeValueForKey("Semester", type);
+					break;
+				case 1:
+					workTypes.takeValueForKey("Year", type);
+					break;
+				case 0:
+					workTypes.takeValueForKey("Exam", type);
+					break;
+				default:
+					workTypes.takeValueForKey("Module", type);
+					break;
+				}
+			}
+		}
+		type = (String)workTypes.valueForKey(type);
+		int act = arch.actionType().intValue();
+		if("Exam".equals(type) || "Final".equals(type)) {
+			FinalMarkType ftype = FinalMarkType.fromString(type);
+			if(act == 1) {
+				try {
+					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
+							markType, ftype, value, bonus, null);
+				} catch (RemoteException e) {
+					soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
+							markType, ftype, value, bonus, null);
+				}
+			} else {
+				if(!soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
+							markType, ftype, value, bonus, null))
+					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
+							markType, ftype, value, bonus, null);
+			}
+		} else {
+			EduReportingPeriodType periodType = EduReportingPeriodType.fromString(type);
+			UnsignedByte periodNumber = new UnsignedByte(container.num().intValue() -1);
+			if(act == 1) {
+				try {
+					soap.insertPeriodMark(groupGuid, subjectID, studentGuid,
+							markType, periodType, periodNumber, value, bonus, null);
+				} catch (RemoteException e) {
+					soap.updatePeriodMark(groupGuid, subjectID, studentGuid,
+							markType, periodType, periodNumber, value, bonus, null);
+				}
+			} else {
+				if(!soap.updatePeriodMark(groupGuid, subjectID, studentGuid, 
+						markType, periodType, periodNumber, value, bonus, null))
+					soap.insertPeriodMark(groupGuid, subjectID, studentGuid, 
+							markType, periodType, periodNumber, value, bonus, null);
+			}
+		}
 	}
 	
 	public int getTimeslot(MarkArchive arch) {
