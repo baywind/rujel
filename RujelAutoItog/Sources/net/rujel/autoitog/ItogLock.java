@@ -3,7 +3,6 @@ package net.rujel.autoitog;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.EOAndQualifier;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
@@ -57,8 +56,7 @@ public class ItogLock implements Modifier {
 			if(obj instanceof ItogMark) {
 				Object val = ((ItogMark)obj).cycle(); // assumeCourse();
 				NSDictionary dict = SettingsBase.courseDict((EduCycle)val,container.eduYear());
-				EOEnterpriseObject bc = settings.forCourse(dict);
-				listName = (String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				listName = settings.forCourse(dict).textValue();
 			} else {
 				listName = settings.textValue();
 			}

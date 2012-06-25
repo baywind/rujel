@@ -43,15 +43,15 @@ import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-public class SettingsBase extends _SettingsBase {
-
+public class SettingsBase extends _SettingsBase implements Setting {
+	
 	protected static final String[] keys = new String[] {"grade","eduGroup","cycle","teacher"};
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
 	}
 	
-	public EOEnterpriseObject forObject(Object obj) {
+	public Setting forObject(Object obj) {
 		Integer eduYear;
 		if(obj instanceof EOEnterpriseObject)
 			eduYear = MyUtility.eduYear(((EOEnterpriseObject)obj).editingContext());
@@ -60,7 +60,7 @@ public class SettingsBase extends _SettingsBase {
 		return forCourse(courseDict(obj,eduYear));
 	}
 
-	public EOEnterpriseObject forCourse(NSKeyValueCodingAdditions course) {
+	public Setting forCourse(NSKeyValueCodingAdditions course) {
 		if(course == null)
 			return this;
 		NSArray byCourse = qualifiedSettings();
@@ -68,7 +68,7 @@ public class SettingsBase extends _SettingsBase {
 			return this;
 		if(course instanceof EduCourse)
 			course = EOUtilities.localInstanceOfObject(editingContext(), (EduCourse)course);
-		EOEnterpriseObject result = this;
+		Setting result = this;
 		Enumeration en = byCourse.objectEnumerator();
 		int match = 0;
 		while (en.hasMoreElements()) {
@@ -206,7 +206,7 @@ public class SettingsBase extends _SettingsBase {
 		}
 	}*/
 	
-	public static EOEnterpriseObject settingForCourse(String key, 
+	public static Setting settingForCourse(String key, 
 			NSKeyValueCodingAdditions course, EOEditingContext ec) {
 		if(ec == null && course instanceof EduCourse)
 			ec = ((EduCourse)course).editingContext();
@@ -292,22 +292,22 @@ public class SettingsBase extends _SettingsBase {
 	
 	public static int numericSettingForCourse(String key, NSKeyValueCodingAdditions course, 
 			EOEditingContext ec, int defaultValue) {
-		EOEnterpriseObject eo = settingForCourse(key, course, ec);
-		if (eo==null || eo.valueForKey(NUMERIC_VALUE_KEY) == null)
+		Setting eo = settingForCourse(key, course, ec);
+		if (eo==null || eo.numericValue() == null)
 			return defaultValue;
-		return ((Integer)eo.valueForKey(NUMERIC_VALUE_KEY)).intValue();
+		return ((Integer)eo.numericValue()).intValue();
 	}
 
 	public static Integer numericSettingForCourse(String key, NSKeyValueCodingAdditions course, 
 			EOEditingContext ec) {
-		EOEnterpriseObject eo = settingForCourse(key, course, ec);
-		return (eo==null)?null:(Integer)eo.valueForKey(NUMERIC_VALUE_KEY);
+		Setting eo = settingForCourse(key, course, ec);
+		return (eo==null)?null:(Integer)eo.numericValue();
 	}
 	
 	public static String stringSettingForCourse(String key, NSKeyValueCodingAdditions course, 
 			EOEditingContext ec) {
-		EOEnterpriseObject eo = settingForCourse(key, course, ec);
-		return (eo==null)?null:(String)eo.valueForKey(TEXT_VALUE_KEY);
+		Setting eo = settingForCourse(key, course, ec);
+		return (eo==null)?null:(String)eo.textValue();
 	}
 	
 	public NSArray settingUsage(String selector, Object value, Object eduYear) {
@@ -365,10 +365,10 @@ public class SettingsBase extends _SettingsBase {
 		Enumeration enu = allCourses.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
-			EOEnterpriseObject setting = forCourse(course);
-			if(numeric != null && !numeric.equals(setting.valueForKey(NUMERIC_VALUE_KEY)))
+			Setting setting = forCourse(course);
+			if(numeric != null && !numeric.equals(setting.numericValue()))
 				continue;
-			if(text != null && !text.equals(setting.valueForKey(TEXT_VALUE_KEY)))
+			if(text != null && !text.equals(setting.numericValue()))
 				continue;
 			result.addObject(course);
 		}

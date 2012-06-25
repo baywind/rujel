@@ -34,6 +34,7 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.io.XMLGenerator;
 import net.rujel.base.MyUtility;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
@@ -264,10 +265,9 @@ gr:		while (eduGroups.hasMoreElements()) {
 			params.takeValueForKey(students,"students");
 			params.takeValueForKey(existingCourses,"courses");
 			if(periodsByList != null) {
-				EOEnterpriseObject bc = listBase.forCourse(
+				Setting bc = listBase.forCourse(
 						SettingsBase.courseDict(eduGroup, eduYear));
-				String listName = (bc == null)?null:
-					(String)bc.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				String listName = (bc == null)?null:bc.textValue();
 				if(listName != null) {
 					Object per = periodsByList.objectForKey(listName);
 					if(per == null) {

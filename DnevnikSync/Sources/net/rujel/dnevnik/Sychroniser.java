@@ -318,8 +318,7 @@ public class Sychroniser {
 				critSetParams = new NSMutableDictionary();
 			}
 			if(criteriaSettings!=null)
-				csID = (Integer) criteriaSettings.forCourse(course).valueForKey(
-						SettingsBase.NUMERIC_VALUE_KEY);
+				csID = criteriaSettings.forCourse(course).numericValue();
 			if(csID == null || csID.intValue() == 0) {
 				NSDictionary arcDict = arch.getArchiveDictionary();
 				Enumeration enu = arcDict.keyEnumerator();

@@ -5,7 +5,6 @@ import java.util.Enumeration;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSTimestamp;
@@ -38,8 +37,7 @@ public class OldLessonLock implements ReadAccess.Modifier {
 		EduLesson lesson = lesson(obj, subPath, ctx);
 		if(lesson == null)
 			return null;
-		EOEnterpriseObject s = sb.forCourse(lesson.course());
-		Integer days = (Integer)s.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+		Integer days = sb.forCourse(lesson.course()).numericValue();
 		if(days == null)
 			return null;
 		boolean save = "save".equals(subPath);

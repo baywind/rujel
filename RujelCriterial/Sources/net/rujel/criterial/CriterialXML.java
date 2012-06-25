@@ -52,6 +52,7 @@ import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
@@ -208,7 +209,7 @@ public class CriterialXML extends GeneratorModule {
 			course = aCourse;
 			critSet = CriteriaSet.critSetForCourse(course);
 			EOEditingContext ec = course.editingContext();
-			EOEnterpriseObject setting = SettingsBase.settingForCourse("presenters.workIntegral", 
+			Setting setting = SettingsBase.settingForCourse("presenters.workIntegral", 
 					course, ec);
 			if(setting != null)
 				integralPresenter = presenterForSetting(setting, ec);
@@ -229,10 +230,10 @@ public class CriterialXML extends GeneratorModule {
 				weightlessColor = BorderSet.fractionPresenterForTitle(ec, "color");
 		}
 		
-		protected FractionPresenter presenterForSetting(EOEnterpriseObject setting,
+		protected FractionPresenter presenterForSetting(Setting setting,
 				EOEditingContext ec) {
-			Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-			String key = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+			Integer pKey = setting.numericValue();
+			String key = setting.textValue();
 			if (pKey != null) {
 				return (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
 						ec, BorderSet.ENTITY_NAME, pKey);

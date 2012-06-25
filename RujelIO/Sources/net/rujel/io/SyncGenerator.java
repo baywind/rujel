@@ -43,6 +43,7 @@ import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSMutableSet;
 
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.Various;
@@ -178,14 +179,14 @@ public class SyncGenerator extends GeneratorModule {
 				ref = obj;
 			else
 				ref = DisplayAny.ValueReader.evaluateValue(ref, obj, null);
-			EOEnterpriseObject setting = base.forObject(ref);
+			Setting setting = base.forObject(ref);
 			if(setting == null)
 				return null;
 			if(Various.boolForObject(dict.valueForKey("numeric"))) {
-				Integer num = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				Integer num = setting.numericValue();
 				return (num == null)? null : num.toString();
 			}
-			return (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+			return setting.textValue();
 		}
 		Object result = DisplayAny.ValueReader.evaluateDict(dict, obj, null);
 		if(result == null)
@@ -258,16 +259,16 @@ public class SyncGenerator extends GeneratorModule {
 				Object object = oen.nextElement();
 				Object obj = (ref==null) ? object :
 					DisplayAny.ValueReader.evaluateValue(ref, object, null);
-				EOEnterpriseObject setting = base.forObject(obj);
+				Setting setting = base.forObject(obj);
 				if(setting == null)
 					continue;
 				String res = null;
 				if(Various.boolForObject(dict.valueForKey("numeric"))) {
-					Integer num = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+					Integer num = setting.numericValue();
 					if(num != null)
 						res = num.toString();
 				} else {
-					res = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+					res = setting.textValue();
 				}
 				if(res != null) {
 					if(index != null) {

@@ -31,6 +31,7 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.SessionedEditingContext;
@@ -40,7 +41,6 @@ import net.rujel.reusables.FileWriterUtil;
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -265,8 +265,8 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		if(list != null) {
 			NSDictionary dict = SettingsBase.courseDict(gr);
 			EOEditingContext ec = gr.editingContext(); 
-			EOEnterpriseObject active = SettingsBase.settingForCourse("CompletionActive",dict, ec);
-			if(Various.boolForObject(active.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
+			Setting active = SettingsBase.settingForCourse("CompletionActive",dict, ec);
+			if(Various.boolForObject(active.textValue())) {
 				list = Completion.findCompletions(null, list, "student", Boolean.TRUE, ec);
 				NSArray more = Completion.findCompletions(null, 
 						NSKeyValueCoding.NullValue, "student", Boolean.TRUE, ec);

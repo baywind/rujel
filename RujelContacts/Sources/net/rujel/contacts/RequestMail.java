@@ -1,6 +1,7 @@
 package net.rujel.contacts;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduCourse;
@@ -15,7 +16,6 @@ import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -81,10 +81,9 @@ public class RequestMail extends WODirectAction {
 							EduCourse.entityName, dict), "courses");
 					dict.takeValueForKey(new NSDictionary(gr.grade(),"grade"),"cycle");
 				}
-				EOEnterpriseObject setting = SettingsBase.settingForCourse(
+				Setting setting = SettingsBase.settingForCourse(
 						EduPeriod.ENTITY_NAME, dict, ec);
-				String listName = (setting == null)?null:
-					(String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+				String listName = (setting == null)?null:setting.textValue();
 				Period period = EduPeriod.getCurrentPeriod(date, listName, ec);;
 				params.takeValueForKey(period, "period");
 			}

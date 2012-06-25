@@ -11,11 +11,21 @@ Services : WORepetition {
   item = pgr;
 }
 
-Operations : WORepetition {
-  list = periods;
-  item = item;
+Periods : WOString {
+  value = periods;
+  escapeHTML = false;
 }
 
-Operation : WOString {
-  value = item.number;
+SyncPeriods : OnClickContainer {
+  elementName = "span";
+  onclick = session.tryLoad;
+  invokeAction = syncPeriods;
+  class = "button";
+}
+
+SyncTimeTable : OnClickContainer {
+  elementName = "span";
+  onclick = session.tryLoad;
+  invokeAction = syncTimetable;
+  class = "button";
 }

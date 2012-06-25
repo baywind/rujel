@@ -33,6 +33,7 @@ import net.rujel.reusables.*;
 import net.rujel.base.BaseLesson;
 import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.*;
@@ -67,10 +68,10 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 			boolean weightless = !hasWeight();//(weight().compareTo(BigDecimal.ZERO) == 0);
 			String key = (weightless)?"presenters.weightless":"presenters.workIntegral";
 			EOEditingContext ec = editingContext();
-			EOEnterpriseObject setting = SettingsBase.settingForCourse(key, course(), ec);
+			Setting setting = SettingsBase.settingForCourse(key, course(), ec);
 			if(setting != null) {
-				Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-				key = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+				Integer pKey = setting.numericValue();
+				key = setting.textValue();
 				if (pKey != null) {
 					_integralPresenter = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
 							ec, BorderSet.ENTITY_NAME, pKey);

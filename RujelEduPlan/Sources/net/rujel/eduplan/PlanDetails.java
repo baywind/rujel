@@ -34,6 +34,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.CourseInspector;
 import net.rujel.base.ReadAccess;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Counter;
@@ -282,11 +283,11 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	protected NSMutableDictionary observeValue(NSKeyValueCodingAdditions course) {
-		NSKeyValueCoding sb = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,course, ec);
+		Setting sb = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,course, ec);
 		if(sb == null)
 			return null;
-		String listName = (String)sb.valueForKey(SettingsBase.TEXT_VALUE_KEY);
-		Integer week = (Integer)sb.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+		String listName = sb.textValue();
+		Integer week = sb.numericValue();
 		if(week == null)
 			week = new Integer(7);
 		NSMutableDictionary dict = (NSMutableDictionary)periodsForList.valueForKey(listName);

@@ -150,14 +150,12 @@ public class Reprimand extends _Reprimand {
 			while (enu.hasMoreElements()) { // all courses
 				EduCourse course = (EduCourse) enu.nextElement();
 				if(widget != null) {
-					EOEnterpriseObject setting = widget.forCourse(course);
-					if("hide".equals(setting.valueForKey(SettingsBase.TEXT_VALUE_KEY)))
+					if("hide".equals(widget.forCourse(course).textValue()))
 						continue;
 				}
 				cal.setTime(now);
 				if(weekStart != null) {
-					EOEnterpriseObject bc = weekStart.forCourse(course);
-					Integer num = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+					Integer num = weekStart.forCourse(course).numericValue();
 					if(num != null)
 						testDay = num.intValue();
 					if(cal.get(Calendar.DAY_OF_WEEK) != testDay)
@@ -170,8 +168,7 @@ public class Reprimand extends _Reprimand {
 				
 				int minDev = 1;
 				if(devForRpr != null) {
-					Integer num = (Integer)devForRpr.forCourse(course).
-									valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+					Integer num = (Integer)devForRpr.forCourse(course).numericValue();
 					if(num != null)
 						minDev = num.intValue();
 					if(minDev < 0)
@@ -237,8 +234,7 @@ public class Reprimand extends _Reprimand {
 					int weekNum = Integer.parseInt(weekName);
 					EduCourse course = rpr.course();
 					if(weekStart != null) {
-						EOEnterpriseObject bc = weekStart.forCourse(course);
-						Integer num = (Integer)bc.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+						Integer num = weekStart.forCourse(course).numericValue();
 						if(num != null)
 							testDay = num.intValue();
 						else
@@ -254,8 +250,7 @@ public class Reprimand extends _Reprimand {
 					weekFootprint.setDate(now);
 					int minDev = 1;
 					if(devForRpr != null) {
-						Integer num = (Integer)devForRpr.forCourse(course).
-										valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+						Integer num = devForRpr.forCourse(course).numericValue();
 						if(num != null)
 							minDev = num.intValue();
 						if(minDev < 0)

@@ -258,8 +258,7 @@ public class Completion extends _Completion {
 	
 	public static NSMutableDictionary courseCompletion(EduCourse course,
 			NSArray modules, SettingsBase settings) {
-		EOEnterpriseObject bc = settings.forCourse(course);
-		if(!Various.boolForObject(bc.valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
+		if(!Various.boolForObject(settings.forCourse(course).textValue())) {
 			return null;
 		}
 		NSArray list = EOUtilities.objectsMatchingKeyAndValue(course.editingContext(),

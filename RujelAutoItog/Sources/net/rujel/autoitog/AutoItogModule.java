@@ -539,8 +539,7 @@ public class AutoItogModule {
 					buf.append("-- ").append(inCourse).append(" --\n");
 				}
 				course = prognos.course();
-				if(!listName.equals(sb.forCourse(course).
-						valueForKey(SettingsBase.TEXT_VALUE_KEY))) {
+				if(!listName.equals(sb.forCourse(course).textValue())) {
 					inCourse = -1;
 					continue;
 				}
@@ -687,7 +686,7 @@ public class AutoItogModule {
 cycleCourses:
 		while (enu.hasMoreElements()) {
 			EduCourse cur = (EduCourse) enu.nextElement();
-			if(!listName.equals(sb.forCourse(cur).valueForKey(SettingsBase.TEXT_VALUE_KEY)))
+			if(!listName.equals(sb.forCourse(cur).textValue()))
 				continue cycleCourses;
 			if(cto != CourseTimeout.getTimeoutForCourseAndPeriod(cur, container)) {
 				continue cycleCourses;

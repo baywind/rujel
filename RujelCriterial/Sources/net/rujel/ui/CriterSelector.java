@@ -31,6 +31,7 @@ package net.rujel.ui;
 
 import java.util.logging.Logger;
 
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
@@ -82,11 +83,10 @@ public class CriterSelector extends WOComponent {
 					Integer eduYear = (Integer)session().valueForKey("eduYear");
 					EOEditingContext ec = cycle.editingContext();
 					NSDictionary crs = SettingsBase.courseDict(cycle,eduYear);
-					EOEnterpriseObject setting = SettingsBase.settingForCourse(
+					Setting setting = SettingsBase.settingForCourse(
 							CriteriaSet.ENTITY_NAME, crs, ec);
 					if(setting != null) {
-						Integer set = (Integer)setting.valueForKey(
-								SettingsBase.NUMERIC_VALUE_KEY);
+						Integer set = setting.numericValue();
 						if(set != null && set.intValue() > 0) {
 							CriteriaSet critSet = (CriteriaSet)EOUtilities.
 								objectWithPrimaryKeyValue(ec,CriteriaSet.ENTITY_NAME, set);
@@ -134,13 +134,13 @@ public class CriterSelector extends WOComponent {
     			} else {
         			ec = ((EduCourse)c).editingContext();
     			}
-    			EOEnterpriseObject setting = SettingsBase.settingForCourse(
+    			Setting setting = SettingsBase.settingForCourse(
     					"presenters.workIntegral", c, ec);
     			if(setting != null) {
-    				_integral = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+    				_integral = setting.textValue();
     				if(_integral != null)
     					return _integral;
-    				Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+    				Integer pKey = setting.numericValue();
     				if (pKey != null) {
     					BorderSet bSet = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
     							ec, BorderSet.ENTITY_NAME, pKey);

@@ -32,6 +32,7 @@ package net.rujel.criterial;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import net.rujel.base.MyUtility;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
@@ -297,12 +298,11 @@ public class StudentMarks extends WOComponent {
 		NSMutableDictionary result = new NSMutableDictionary();
 		EOEditingContext ec = course.editingContext();
 		{
-			EOEnterpriseObject integral = SettingsBase.settingForCourse(
-					"presenters.workIntegral", course, ec);
+			Setting integral = SettingsBase.settingForCourse("presenters.workIntegral", course, ec);
 			//SettingsReader.stringForKeyPath("edu.presenters.workIntegral","~");
 			String title = null;
 			if(integral != null) {
-				Integer pKey = (Integer)integral.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				Integer pKey = integral.numericValue();
 				if(pKey != null) {
 					try {
 						BorderSet bset = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
@@ -313,7 +313,7 @@ public class StudentMarks extends WOComponent {
 					}
 				}
 				if(title == null)
-					title = (String)integral.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+					title = integral.textValue();
 			}
 			if(title == null)
 				title = "%";

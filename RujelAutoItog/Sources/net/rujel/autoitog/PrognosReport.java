@@ -99,8 +99,7 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 				continue;
 			EduCourse course = progn.course();
 			ItogContainer eduper = progn.itogContainer();
-			String listName = (String)sb.forCourse(course).
-								valueForKey(SettingsBase.TEXT_VALUE_KEY);
+			String listName = sb.forCourse(course).textValue();
 			NSMutableDictionary byItog = (NSMutableDictionary)aiCache.valueForKey(listName);
 			if(byItog == null) {
 				byItog = new NSMutableDictionary();

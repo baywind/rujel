@@ -31,6 +31,7 @@ package net.rujel.eduplan;
 
 import java.util.Enumeration;
 
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
@@ -365,11 +366,11 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		int weekDays = 7;
 		NSDictionary crs = (eduYear == null)? SettingsBase.courseDict(this):
 			SettingsBase.courseDict(this,eduYear);
-		EOEnterpriseObject setting = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,crs, ec);
+		Setting setting = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,crs, ec);
 		if(setting != null) {
-			String listName = (String)setting.valueForKey(SettingsBase.TEXT_VALUE_KEY);
+			String listName = setting.textValue();
 			days = EduPeriod.daysForList(listName, null, ec);
-			Integer h = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+			Integer h = setting.numericValue();
 			if(h != null && h.intValue() > 0)
 				weekDays = h.intValue();
 		}
@@ -378,7 +379,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			if(setting == null) {
 				days = 34;
 			} else {
-				Integer h = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
+				Integer h = setting.numericValue();
 				days = (h==null)?34:h.intValue();
 			}
 			return new int[] {days,0,7};

@@ -34,6 +34,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
 import net.rujel.reusables.*;
 import net.rujel.base.Indexer;
+import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
@@ -377,11 +378,10 @@ public class MarksPresenter extends NotePresenter {
 		}
 		EOEditingContext ec = lesson().editingContext(); 
 		String key2 = "presenters." + key;
-		EOEnterpriseObject setting = SettingsBase.settingForCourse(key2,
-				lesson().course(), ec);
+		Setting setting = SettingsBase.settingForCourse(key2,lesson().course(), ec);
 		if(setting != null) {
-			Integer pKey = (Integer)setting.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-			key2 = (String)setting.valueForKeyPath(SettingsBase.TEXT_VALUE_KEY);
+			Integer pKey = setting.numericValue();
+			key2 = setting.textValue();
 			if (pKey != null) {
 				result = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
 						ec, BorderSet.ENTITY_NAME, pKey);

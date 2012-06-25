@@ -47,7 +47,7 @@ import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSPropertyListSerialization;
 
-public class QualifiedSetting extends _QualifiedSetting {
+public class QualifiedSetting extends _QualifiedSetting implements Setting {
 
 	protected EOQualifier qualifier;
 	protected NSArray courses;
