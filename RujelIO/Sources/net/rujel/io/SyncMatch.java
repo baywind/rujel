@@ -62,7 +62,7 @@ public class SyncMatch extends _SyncMatch {
 		ExtSystem sys = extSystem();
 		if(sys.entIdxes != null) {
 			ei = (EntityIndex)sys.entIdxes.valueForKey(entity);
-			if(ei.editingContext() != editingContext())
+			if(ei != null && ei.editingContext() != editingContext())
 				ei = null;
 		}
 		if(ei == null) {
@@ -128,7 +128,7 @@ public class SyncMatch extends _SyncMatch {
 		EntityIndex ei = null;
 		if(sys.entIdxes != null) {
 			ei = (EntityIndex)sys.entIdxes.valueForKey(entity);
-			if(ei.editingContext() != ec)
+			if(ei != null && ei.editingContext() != ec)
 				ei = null;
 		}
 		if(ei == null) {
@@ -160,7 +160,7 @@ public class SyncMatch extends _SyncMatch {
 		EntityIndex ei = null;
 		if(sys.entIdxes != null) {
 			ei = (EntityIndex)sys.entIdxes.valueForKey(entityName);
-			if(ei.editingContext() != ec)
+			if(ei != null && ei.editingContext() != ec)
 				ei = null;
 		}
 		if(ei == null) {

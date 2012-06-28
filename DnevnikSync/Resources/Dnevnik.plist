@@ -15,5 +15,217 @@
 		<key>sort</key>
 		<string>90</string>
 	</dict>
+	<key>subjectsDict</key>
+	<dict>
+		<key>Алгебра</key>
+		<integer>1</integer>
+		<key>Английский язык</key>
+		<integer>2</integer>
+		<key>Биология</key>
+		<integer>3</integer>
+		<key>География</key>
+		<integer>4</integer>
+		<key>Геометрия</key>
+		<integer>5</integer>
+		<key>ИЗО</key>
+		<integer>6</integer>
+		<key>Информатика</key>
+		<integer>7</integer>
+		<key>Информатика и ИКТ</key>
+		<integer>8</integer>
+		<key>Испанский язык</key>
+		<integer>9</integer>
+		<key>История</key>
+		<integer>10</integer>
+		<key>История России</key>
+		<integer>11</integer>
+		<key>Литература</key>
+		<integer>14</integer>
+		<key>Математика</key>
+		<integer>15</integer>
+		<key>Музыка</key>
+		<integer>16</integer>
+		<key>Немецкий язык</key>
+		<integer>17</integer>
+		<key>ОБЖ</key>
+		<integer>18</integer>
+		<key>Обществознание</key>
+		<integer>19</integer>
+		<key>Русский язык</key>
+		<integer>21</integer>
+		<key>Физика</key>
+		<integer>24</integer>
+		<key>Физкультура</key>
+		<integer>25</integer>
+		<key>Французский язык</key>
+		<integer>26</integer>
+		<key>Химия</key>
+		<integer>27</integer>
+	</dict>
+	<key>subjects</key>
+	<array>
+		<dict>
+			<key>id</key>
+			<integer>1</integer>
+			<key>name</key>
+			<string>Алгебра</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>2</integer>
+			<key>name</key>
+			<string>Английский язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>3</integer>
+			<key>name</key>
+			<string>Биология</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>4</integer>
+			<key>name</key>
+			<string>География</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>5</integer>
+			<key>name</key>
+			<string>Геометрия</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>6</integer>
+			<key>name</key>
+			<string>ИЗО</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>7</integer>
+			<key>name</key>
+			<string>Информатика</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>8</integer>
+			<key>name</key>
+			<string>Информатика и ИКТ</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>9</integer>
+			<key>name</key>
+			<string>Испанский язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>10</integer>
+			<key>name</key>
+			<string>История</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>11</integer>
+			<key>name</key>
+			<string>История России</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>12</integer>
+			<key>name</key>
+			<string>Итальянский язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>13</integer>
+			<key>name</key>
+			<string>Китайский язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>14</integer>
+			<key>name</key>
+			<string>Литература</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>15</integer>
+			<key>name</key>
+			<string>Математика</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>16</integer>
+			<key>name</key>
+			<string>Музыка</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>17</integer>
+			<key>name</key>
+			<string>Немецкий язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>18</integer>
+			<key>name</key>
+			<string>ОБЖ</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>19</integer>
+			<key>name</key>
+			<string>Обществознание</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>20</integer>
+			<key>name</key>
+			<string>ОИВТ</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>21</integer>
+			<key>name</key>
+			<string>Русский язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>22</integer>
+			<key>name</key>
+			<string>Технология</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>23</integer>
+			<key>name</key>
+			<string>Факультатив</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>24</integer>
+			<key>name</key>
+			<string>Физика</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>25</integer>
+			<key>name</key>
+			<string>Физкультура</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>26</integer>
+			<key>name</key>
+			<string>Французский язык</string>
+		</dict>
+		<dict>
+			<key>id</key>
+			<integer>27</integer>
+			<key>name</key>
+			<string>Химия</string>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -52,24 +52,26 @@ public class EntityIndex extends _EntityIndex {
 		if(found == null || found.count() == 0) {
 			StringBuilder tableName = new StringBuilder();
 			EOEntity entity = EOModelGroup.defaultGroup().entityNamed(entName);
-			NSDictionary cd = null;
-    		try {
-				EODatabaseContext dc = EODatabaseContext.
-								registeredDatabaseContextForModel(entity.model(), ec);
-				cd =  dc.adaptorContext().adaptor().connectionDictionary();
-			} catch (RuntimeException e) {
-				
+			if(entity != null) {
+				NSDictionary cd = null;
+				try {
+					EODatabaseContext dc = EODatabaseContext.
+					registeredDatabaseContextForModel(entity.model(), ec);
+					cd =  dc.adaptorContext().adaptor().connectionDictionary();
+				} catch (RuntimeException e) {
+
+				}
+				if(cd == null)
+					cd = entity.model().connectionDictionary();
+				if(cd != null) {
+					tableName.append(cd.valueForKey("URL"));
+					int idx = tableName.indexOf("?");
+					if(idx > 0)
+						tableName.delete(idx, tableName.length());
+					tableName.append('.');
+				}
+				tableName.append(entity.externalName());
 			}
-			if(cd == null)
-	    		cd = entity.model().connectionDictionary();
-			if(cd != null) {
-				tableName.append(cd.valueForKey("URL"));
-				int idx = tableName.indexOf("?");
-				if(idx > 0)
-					tableName.delete(idx, tableName.length());
-				tableName.append('.');
-			}
-			tableName.append(entity.externalName());
 			EOEditingContext tmpEc = ec;
 			if(ec.hasChanges())
 				tmpEc = new EOEditingContext(ec.rootObjectStore());

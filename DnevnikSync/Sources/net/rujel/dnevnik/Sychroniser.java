@@ -27,12 +27,15 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
 import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
+import net.rujel.io.SyncEvent;
 import net.rujel.io.SyncIndex;
 import net.rujel.io.SyncMatch;
 import net.rujel.markarchive.MarkArchive;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
@@ -63,7 +66,7 @@ public class Sychroniser {
 	
 	protected SettingsBase criteriaSettings;
 	protected NSMutableDictionary critSetParams;
-
+	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
 	
 	public Sychroniser(EOEditingContext ec, Integer eduYear) {
 		super();
@@ -71,7 +74,7 @@ public class Sychroniser {
 		this.eduYear = eduYear;
 	}
 
-	public void syncChanges(NSTimestamp since, NSTimestamp to) {
+	public void syncChanges(NSTimestamp since, NSTimestamp to, Integer limit) {
 		EOQualifier qual = null;
 		if(since != null) {
 			if(to == null)
@@ -88,6 +91,8 @@ public class Sychroniser {
 				new EOSortOrdering(MarkArchive.TIMESTAMP_KEY, EOSortOrdering.CompareAscending));
 		EOFetchSpecification fs = new EOFetchSpecification(MarkArchive.ENTITY_NAME,qual,list);
 		fs.setPrefetchingRelationshipKeyPaths(new NSArray(MarkArchive.USED_ENTITY_KEY));
+		if(limit != null)
+			fs.setFetchLimit(limit.intValue());
 		list = ec.objectsWithFetchSpecification(fs);
 		if(list == null || list.count() == 0)
 			return;
@@ -102,6 +107,8 @@ public class Sychroniser {
 		if(ec.hasChanges())
 			ec.saveChanges();
 		Enumeration enu = list.objectEnumerator();
+		NSTimestamp last = null;
+		SyncEvent event = null;
 		while (enu.hasMoreElements()) {
 			MarkArchive arch = (MarkArchive) enu.nextElement();
 			String entity = (String)arch.valueForKeyPath("usedEntity.usedEntity");
@@ -116,10 +123,22 @@ public class Sychroniser {
 					syncMark(arch);
 				else if("ItogMark".equals(entity))
 					syncItogMark(arch);
+				last = arch.timestamp();
+				if(event == null) {
+					event = (SyncEvent)EOUtilities.createAndInsertInstance(
+							ec, SyncEvent.ENTITY_NAME);
+					event.setExtSystem(system);
+					event.setSyncEntity("marks");
+				}
+				event.setExecTime(last);
+//				event.setResult(1);
+				ec.saveChanges();
 			} catch (Exception e) {
 				throw new NSForwardException(e);
 			}
 		}
+		if(ec.hasChanges())
+			ec.saveChanges();
 	}
 	
 	private SyncMatch getMatch(EntityIndex ei, Integer objID) {
@@ -138,94 +157,185 @@ public class Sychroniser {
 	private long subjectID (Subject subj) throws RemoteException {
 		String subjExtid = system.extidForObject(subj, null);
 		if(subjExtid == null) {
+			NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
+					"strings.DnevnikSync_Dnevnik.subjectsDict");
+			Enumeration enu = dict.keyEnumerator();
+			float best = 0;
+			Number preset = null;
+			String subject = subj.subject();
+			String full = subj.fullName();
+			while (enu.hasMoreElements()) {
+				String name = (String) enu.nextElement();
+				if(name.equalsIgnoreCase(subject) || name.equalsIgnoreCase(full)) {
+					preset = (Number)dict.valueForKey(name);
+					best = 1;
+					break;
+				}
+				int correlation = Various.correlation(name, subject);
+				float relative = ((float)correlation)/
+						(Math.max(name.length(), subject.length()) -1);
+				if(relative > best) {
+					preset = (Number)dict.valueForKey(name);
+					best = relative;
+				}
+				if(full != null) {
+					correlation = Various.correlation(name, full);
+					relative = ((float)correlation)/
+							(Math.max(name.length(), full.length()) -1);
+					if(relative > best) {
+						preset = (Number)dict.valueForKey(name);
+						best = relative;
+					}
+				}
+			} // test presets
+			if(best > 0.75) {
+				SyncMatch match = system.addMatch(subj, null);
+				match.setExtID(preset.toString());
+				ec.saveChanges();
+				return preset.longValue();
+			}
+			
 			SyncIndex indexer = system.getIndexNamed("eduAreas", null, false);
 			String areaName = indexer.extForLocal(MyUtility.getID(subj.area()));
 			KnowledgeArea area = (areaName == null) ? KnowledgeArea.Common :
 					KnowledgeArea.fromString(areaName);
-			long result = soap.insertSubject(schoolGuid, subj.subject(), subj.fullName(), area);
+			if(full == null) full = subject;
+			long result = soap.insertSubject(schoolGuid, subject, full, area);
 			SyncMatch match = system.addMatch(subj, null);
 			match.setExtID(Long.toString(result));
+			ec.saveChanges();
 			return result;
 		}
 		return Long.parseLong(subjExtid); 
 	}
 	
+	private InsertLessonResult insertLesson(String groupGuid, long subjectID, String teacherGuid,
+			Calendar cal, int num)  throws RemoteException {
+		try {
+			UnsignedByte number = new UnsignedByte(num);
+			return soap.insertLesson(groupGuid, subjectID, teacherGuid, cal, number);
+		} catch (RemoteException e) {
+			if(e.getMessage().contains("Entity already exists: Lesson"))
+				return insertLesson(groupGuid, subjectID, teacherGuid, cal, num +1);
+			throw e;
+		}
+	}
+	
 	private long syncLesson(MarkArchive arch) throws RemoteException {
 		if(lessonEI == null)
 			lessonEI = EntityIndex.indexForEntityName(ec, "BaseLesson", false);
+		if(timeslotEI == null)
+			timeslotEI = EntityIndex.indexForEntityName(ec, "Timeslot", true);
 		SyncMatch match = null;
 		match = getMatch(lessonEI, arch.getKeyValue("lesson"));
 		if(match == null && arch.actionType().intValue() == 3)
 			return 0;
 		if(arch.actionType().intValue() == 3) {
 			long lessonID = Long.parseLong(match.extID());
-			soap.deleteLesson(lessonID);
+			if(workEI == null)
+				workEI = EntityIndex.indexForEntityName(ec, "Work", false);
+			NSArray works = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
+					"entityIndex = %@ AND (extID like %s'|*' OR extID like %s' *')", 
+					new NSArray(new Object[] {workEI, match.extID(), match.extID()}));
+			if(works == null || works.count() == 0) {
+				try {
+					soap.deleteLesson(lessonID);
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: Lesson"))
+						throw e;
+				}
+				works = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
+						"entityIndex = %@ AND extID like %s' *'",
+						new NSArray(new Object[] {timeslotEI, match.extID()}));
+				if(works != null) {
+					for (int i = 0; i < works.count(); i++) {
+						ec.deleteObject((EOEnterpriseObject)works.objectAtIndex(i));
+					}
+				}
+			}
 			ec.deleteObject(match);
+			ec.saveChanges();
 			return 0;
 		}
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
 				EduCourse.entityName, arch.getKeyValue("course"));
 		String groupGuid = localBase.extidForObject(course.eduGroup());
+		groupGuid = groupGuid.toUpperCase();
 		NSTimestamp date = (NSTimestamp)arch.valueForKey("@date_date");
 		String teacherGuid = localBase.extidForObject(course.teacher(date));
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
-		UnsignedByte number = new UnsignedByte(arch.getArchiveValueForKey("number"));
-		Integer timeslot = new Integer(getTimeslot(course, cal, number.intValue()));
+		cal.set(Calendar.HOUR_OF_DAY, timeShift);
+		int number = Integer.parseInt(arch.getArchiveValueForKey("number"));
+		Integer timeslot = new Integer(getTimeslot(course, cal, number));
 		cal.setTime(date);
-		if(timeslotEI == null)
-			timeslotEI = EntityIndex.indexForEntityName(ec, "Timeslot", true);
+		cal.set(Calendar.HOUR_OF_DAY, timeShift);
 		SyncMatch tsMatch = getMatch(timeslotEI, timeslot);
 		long subjectID = subjectID(course);
 		long[] ids = (tsMatch == null) ? new long[2] : parceIDs(tsMatch.extID());
 		if(match == null) {
-			match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
-			match.setExtSystem(system);
-			match.setEntityIndex(lessonEI);
-			match.setEduYear(eduYear);
-			match.setObjID(arch.getKeyValue("lesson"));
 			if(tsMatch == null) {
-				InsertLessonResult result = soap.insertLesson(
-						groupGuid, subjectID, teacherGuid, cal, number);
+				InsertLessonResult result = insertLesson(groupGuid, subjectID, 
+						teacherGuid, cal, number);
 				ids[0] = result.getLessonID();
 				ids[1] = result.getWorkID();
-				tsMatch = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
-				tsMatch.setExtSystem(system);
-				tsMatch.setEntityIndex(timeslotEI);
+				tsMatch = system.addMatch("Timeslot", timeslot, null);
+//					(SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
+//				tsMatch.setExtSystem(system);
+//				tsMatch.setEntityIndex(timeslotEI);
 				tsMatch.setEduYear(eduYear);
-				tsMatch.setObjID(timeslot);
+//				tsMatch.setObjID(timeslot);
 				StringBuilder buf = new StringBuilder();
 				buf.append(ids[0]).append(' ').append(ids[1]);
 				tsMatch.setExtID(buf.toString());
 			} else {
-				soap.updateLesson(ids[0], subjectID, teacherGuid, cal, number);
+				//TODO
+				System.currentTimeMillis();
+//				soap.updateLesson(ids[0], subjectID, teacherGuid, cal, number);
 			}
-			
+			match = system.addMatch("BaseLesson", arch.getKeyValue("lesson"), null);
+//			(SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
+//			match.setExtSystem(system);
+//			match.setEntityIndex(lessonEI);
+//			match.setObjID(arch.getKeyValue("lesson"));
+			match.setEduYear(eduYear);
 			match.setExtID(Long.toString(ids[0]));
-			/*
-			Timeslot timeslot = new Timeslot(course, cal, number);
-			timeslot.lessonID = result.getLessonID();
-			if(readyWorks == null)
-				readyWorks = new NSMutableDictionary(new Long(result.getWorkID()),timeslot);
-			else
-				readyWorks.setObjectForKey(new Long(result.getWorkID()),timeslot);*/
+			ec.saveChanges();
 		} else {
 			if(tsMatch == null) { // update timeslot
 				NSArray found = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
-						"extID like '&s *'", new NSArray(match.extID()));
+						"entityIndex = %@ AND extID like %s' *'",
+						new NSArray(new Object[] {timeslotEI, match.extID()}));
 				if(found != null && found.count() > 0) {
 					tsMatch = (SyncMatch)found.objectAtIndex(0);
 					tsMatch.setObjID(timeslot);
+					ec.saveChanges();
 					ids = parceIDs(tsMatch.extID());
 				} else {
 					ids[0] = Long.parseLong(match.extID());
 				}
+//			} else {
+//				cal = null;
+//			}
+				//TODO
+//			soap.updateLesson(ids[0], subjectID, teacherGuid, cal, new UnsignedByte(number));
 			}
-			soap.updateLesson(ids[0], subjectID, teacherGuid, cal, number);
 		}
-		if(ids[1] != 0)
-			soap.updateWork(ids[1], EduWorkType.LessonBehavior, null, ONE, null,
-					arch.getArchiveValueForKey("theme"));
+		if(ids[1] != 0) {
+			try {
+				soap.updateWork(ids[1], null, null, ONE, null,
+						arch.getArchiveValueForKey("theme"));
+			} catch (RemoteException e) {
+				if(!e.getMessage().contains("Entity not found: Work"))
+					throw e;
+				ids[1] = soap.insertWork(ids[0], EduWorkType.LessonAnswer, EduMarkType.Mark5, 
+						ONE, "Работа на уроке", arch.getArchiveValueForKey("theme"));
+				StringBuilder buf = new StringBuilder();
+				buf.append(ids[0]).append(' ').append(ids[1]);
+				tsMatch.setExtID(buf.toString());
+				ec.saveChanges(); 
+			}
+		}
 		return ids[0];
 	}
 	
@@ -255,11 +365,9 @@ public class Sychroniser {
 		if(lessonEI == null)
 			lessonEI = EntityIndex.indexForEntityName(ec, "BaseLesson", false);
 		SyncMatch match = null;
-		if(arch.actionType().intValue() != 1) {
-			match = getMatch(lessonEI, arch.getKeyValue("lesson"));
-			if(match == null && arch.actionType().intValue() == 3)
-				return;
-		}
+		match = getMatch(lessonEI, arch.getKeyValue("lesson"));
+		if(match == null && arch.actionType().intValue() == 3)
+			return;
 		long lessonID;
 		if(match == null) {
 			MarkArchive la = getContainerMA(arch, "BaseLesson", "lesson");
@@ -269,9 +377,13 @@ public class Sychroniser {
 		} else {
 			lessonID = Long.parseLong(match.extID());
 		}
-		String personGuid = SyncMatch.getMatch(localBase.extSystem(), localBase,
-				Student.entityName, arch.getKeyValue("student")).extID();
-
+		
+		SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
+				Student.entityName, arch.getKeyValue("student"));
+		if(personMatch == null)
+			return;
+		String personGuid = personMatch.extID();
+		personGuid = personGuid.toUpperCase();
 		if(arch.actionType().intValue() >= 3) {
 			soap.updateLessonLogEntry(lessonID, personGuid, EduLessonLogEntryStatus.Attend);
 		} else {
@@ -298,12 +410,18 @@ public class Sychroniser {
 				int idx1 = idx2 -1;
 				if(Character.isDigit(extID.charAt(idx1))) {
 					idx1 = extID.lastIndexOf(' ',idx1);
-					long workID = Long.parseLong(extID.substring(idx1,idx2));
-					soap.deleteWork(workID);
+					long workID = Long.parseLong(extID.substring(idx1 +1,idx2));
+					try {
+						soap.deleteWork(workID);
+					} catch (RemoteException e) {
+						if(!e.getMessage().contains("Entity not found: Work"))
+							throw e;
+					}
 				}
 				idx2 = extID.lastIndexOf(';',idx1);
 			}
 			ec.deleteObject(match);
+			ec.saveChanges();
 			return null;
 		}
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
@@ -385,19 +503,25 @@ public class Sychroniser {
 		long lessonID;
 		if(match == null) {
 			String groupGuid = localBase.extidForObject(course.eduGroup());
+			groupGuid = groupGuid.toUpperCase();
 			NSTimestamp date = (NSTimestamp)arch.valueForKey("@date_date");
 			String teacherGuid = localBase.extidForObject(course.teacher(date));
+			if(teacherGuid == null)
+				return null;
+			teacherGuid = teacherGuid.toUpperCase();
 			Calendar cal = Calendar.getInstance();
 			cal.setTime(date);
-			UnsignedByte number = new UnsignedByte(arch.getArchiveValueForKey("number"));
-			Integer timeslot = new Integer(getTimeslot(course, cal, number.intValue()));
+			cal.set(Calendar.HOUR_OF_DAY, timeShift);
+			int number = Integer.parseInt(arch.getArchiveValueForKey("number"));
+			Integer timeslot = new Integer(getTimeslot(course, cal, number));
 			cal.setTime(date);
+			cal.set(Calendar.HOUR_OF_DAY, timeShift);
 			if(timeslotEI == null)
 				timeslotEI = EntityIndex.indexForEntityName(ec, "Timeslot", true);
 			SyncMatch tsMatch = getMatch(timeslotEI, timeslot);
 			long[] ids;
 			if(tsMatch == null) {
-				InsertLessonResult result = soap.insertLesson(
+				InsertLessonResult result = insertLesson(
 						groupGuid, subjectID(course), teacherGuid, cal, number);
 				ids = new long[2];
 				ids[0] = result.getLessonID();
@@ -414,11 +538,7 @@ public class Sychroniser {
 				ids = parceIDs(tsMatch.extID());
 			}
 			lessonID = ids[0];
-			match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
-			match.setExtSystem(system);
-			match.setEntityIndex(workEI);
-			match.setEduYear(eduYear);
-			match.setObjID(arch.getKeyValue("work"));
+			ec.saveChanges();
 			if(workType == EduWorkType.LessonBehavior) {
 				existing = new String[criteria.length];
 				for (int i = 0; i < criteria.length; i++) {
@@ -427,6 +547,8 @@ public class Sychroniser {
 						break;
 					}
 				}
+			} else {
+				existing = new String[0];
 			}
 		} else {
 			String extID = match.extID();
@@ -455,13 +577,27 @@ public class Sychroniser {
 						markType = EduMarkType.Mark100;
 				}
 				if(workID == null) {
-					soap.insertWork(lessonID, workType, markType, ONE, name, null);
+					workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
 				} else {
-					soap.updateWork(workID.longValue(), workType, markType, ONE, name, null);
+					try {
+						EduWorkType type = (workType == EduWorkType.LessonBehavior)? null : workType;
+						soap.updateWork(workID.longValue(), type, markType, ONE, name, null);
+					} catch (RemoteException e) {
+						if(!e.getMessage().contains("Entity not found: Work"))
+							throw e;
+						if(workType == EduWorkType.LessonBehavior)
+							workType = EduWorkType.LessonAnswer;
+						workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
+					}
 				}
 				criteria[i].takeValueForKey(workID, "workID");
 			} else if(workID != null) {
+				try {
 					soap.deleteWork(workID.longValue());
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: Work"))
+						throw e;
+				}
 			}
 		}
 		StringBuilder extid = new StringBuilder();
@@ -477,7 +613,15 @@ public class Sychroniser {
 			}
 			extid.append(';');
 		}
+		if(match == null) {
+			match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
+			match.setExtSystem(system);
+			match.setEntityIndex(workEI);
+			match.setEduYear(eduYear);
+			match.setObjID(arch.getKeyValue("work"));
+		}
 		match.setExtID(extid.toString());
+		ec.saveChanges();
 		return criteria;
 	}
 
@@ -594,7 +738,7 @@ public class Sychroniser {
 		String workType = arch.getArchiveValueForKey("workType");
 		workType = (workType==null)?null:(String)workTypes.valueForKey(workType.substring(9));
 		if(workType == null)
-			workType = "LessonBehavior";
+			return EduWorkType.LessonAnswer;
 		return EduWorkType.fromString(workType);
 	}
 	
@@ -645,7 +789,7 @@ public class Sychroniser {
 				if(exist == null || exist[i].length() == 0)
 					continue;
 				String[] vals = exist[i].split(" ",3);
-				if(preset[i] == null) {
+				if(preset == null || preset[i] == null) {
 					criteria[i] = new NSMutableDictionary(vals[0],"criterName");
 					criteria[i].takeValueForKey(new Integer(vals[1]), "criterMax");
 				} else {
@@ -656,8 +800,12 @@ public class Sychroniser {
 				criteria[i].takeValueForKey(new Long(vals[2]), "workID");
 			}
 		}
-		String personGuid = SyncMatch.getMatch(localBase.extSystem(), localBase,
-				Student.entityName, arch.getKeyValue("student")).extID();
+		SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
+				Student.entityName, arch.getKeyValue("student"));
+		if(personMatch == null)
+			return;
+		String personGuid = personMatch.extID();
+		personGuid = personGuid.toUpperCase();
 		int act = arch.actionType().intValue();
 		String text = arch.getArchiveValueForKey("text");
 		if(".".equals(text))
@@ -667,13 +815,23 @@ public class Sychroniser {
 				continue;
 			Long workID = (Long)criteria[i].valueForKey("workID");
 			if(act >= 3) {
-				soap.deleteMark(workID.longValue(), personGuid, ZERO);
+				try {
+					soap.deleteMark(workID.longValue(), personGuid, ZERO);
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: Mark"))
+						throw e;
+				}
 				continue;
 			}
 			String criterName = (String)criteria[i].valueForKey("criterName");
 			String value = arch.getArchiveValueForKey(criterName);
-			if(".".equals(value)) {
-				soap.deleteMark(workID.longValue(), personGuid, ZERO);
+			if(value == null || ".".equals(value)) {
+				try {
+					soap.deleteMark(workID.longValue(), personGuid, ZERO);
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: Mark"))
+						throw e;
+				}
 				continue;
 			}
 			EduMarkType markType = (EduMarkType)criteria[i].valueForKey("markType");
@@ -691,7 +849,7 @@ public class Sychroniser {
 				}
 			}
 			if(markType == EduMarkType.MarkAbcdf) {
-				mark = new BigDecimal("ABCDEF".indexOf(value.toUpperCase()));
+				mark = new BigDecimal(" FEDCBA".indexOf(value.toUpperCase()));
 			} else if(markType == null) {
 				Integer max = (Integer)criteria[i].valueForKey("criterMax");
 				markType = typeForMax(max);
@@ -787,12 +945,17 @@ public class Sychroniser {
 		if(group == null)
 			group = student.recentMainEduGroup();
 		String groupGuid = localBase.extidForObject(group);
+		groupGuid = groupGuid.toUpperCase();
 		Subject subj = (Subject)cycle.valueForKey("subjectEO");
 		long subjectID = subjectID(subj);
 		ItogContainer container = (ItogContainer)EOUtilities.objectWithPrimaryKeyValue(ec,
 				ItogContainer.ENTITY_NAME, arch.getKeyValue("container"));
-		String studentGuid = SyncMatch.getMatch(localBase.extSystem(), localBase,
-				Student.entityName, arch.getKeyValue("student")).extID();
+		SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
+				Student.entityName, arch.getKeyValue("student"));
+		if(personMatch == null)
+			return;
+		String studentGuid = personMatch.extID();
+		studentGuid = studentGuid.toUpperCase();
 		String type = MyUtility.getID(container.itogType());
 		if(itogTypes == null) {
 			SyncIndex indexer = system.getIndexNamed("periods", null, false);

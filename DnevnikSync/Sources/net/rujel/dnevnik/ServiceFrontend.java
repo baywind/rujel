@@ -16,11 +16,11 @@ import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
 import net.rujel.io.SyncEvent;
 import net.rujel.reusables.SettingsReader;
-import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
@@ -46,7 +46,11 @@ public class ServiceFrontend extends WOComponent {
 	public Object item;
 	
 	public NSArray events;
-	
+	public NSTimestamp since;
+	public NSTimestamp to;
+	public Integer limit;
+	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
+
     public ServiceFrontend(WOContext context) {
         super(context);
         ec = new net.rujel.reusables.SessionedEditingContext(context.session());
@@ -82,152 +86,203 @@ public class ServiceFrontend extends WOComponent {
     }
     
     private void writeCal (Calendar cal, StringBuilder buf) {
+    	if(cal == null) {
+    		buf.append("?.?,?");
+    		return;
+    	}
     	buf.append(cal.get(Calendar.DATE)).append('.');
     	buf.append(cal.get(Calendar.MONTH) +1).append('.');
     	buf.append(cal.get(Calendar.YEAR));
     }
     
-	public WOActionResults syncPeriods() {
+    private static final String[] PGnames = new String[] {
+    	"Модуль", "Год", "Полугодие", "Триместр", "Четверть"};
+    private static final EduReportingPeriodType[] PGtypes = new EduReportingPeriodType[] {
+    	EduReportingPeriodType.Module, EduReportingPeriodType.Year, EduReportingPeriodType.HalfYear,
+    	EduReportingPeriodType.Trimester, EduReportingPeriodType.Quarter};
+
+    public WOActionResults syncPeriods() {
     	SettingsBase pb =  SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
     	if(pb == null)
     		return null;
-    	NSMutableArray regimes = pb.availableValues(
-    			year, SettingsBase.TEXT_VALUE_KEY).mutableClone();
-        try {
-        	ReportingPeriodGroup[] rpgs = soap.getReportingPeriodGroupCollection(
-        			schoolGuid, year.intValue());
-        	if(rpgs == null)
-        		return null;
-        	NSMutableDictionary byName = new NSMutableDictionary();
-        	NSMutableArray toDelete = null;
-        	int timeShift = SettingsReader.intForKeyPath("ui.timeZone", 4);
-        	for (int i = 0; i < rpgs.length; i++) {
-        		String listName = rpgs[i].getName();
-        		if(!regimes.removeObject(listName)) {
-//        			soap.deleteReportingPeriodGroup(rpgs[i].getID());
-        			if(toDelete == null)
-        				toDelete = new NSMutableArray(new Long(rpgs[i].getID()));
-        			else
-        				toDelete.addObject(new Long(rpgs[i].getID()));
-        			continue;
-        		}
-        		NSArray periods = EduPeriod.periodsInList(listName, ec);
-/*        		int days = 0;
-        		int min = 0;
-        		int max = 0;
-        		NSMutableDictionary byPer = new NSMutableDictionary();
-        		Enumeration enu = periods.objectEnumerator();
-        		while (enu.hasMoreElements()) {
-					EduPeriod per = (EduPeriod) enu.nextElement();
-					int length = EOPeriod.Utility.countDays(per.begin(), per.end());
-					days += length;
-					if(length < min || min == 0)
-						min = length;
-					if(length > max)
-						max = length;
-					byPer.setObjectForKey(new Integer(length), per);
-				}*/
-				ReportingPeriod[] pers = rpgs[i].getReportingPeriods();
-        		if (pers.length != periods.count()) {
-        			regimes.addObject(listName);
-//        			soap.deleteReportingPeriodGroup(rpgs[i].getID());
-        			soap.updateReportingPeriodGroup(rpgs[i].getID(), listName.concat(" (устар.)"));
-        			if(toDelete == null)
-        				toDelete = new NSMutableArray(new Long(rpgs[i].getID()));
-        			else
-        				toDelete.addObject(new Long(rpgs[i].getID()));
-        			continue;
-        		}
-				Calendar dateStart = Calendar.getInstance();
-				Calendar dateFinish = Calendar.getInstance();
-				for (int j = 0; j < pers.length; j++) {
-					EduPeriod per = (EduPeriod)periods.objectAtIndex(j);
+    	NSArray regimes = pb.availableValues(year, SettingsBase.TEXT_VALUE_KEY);
+    	ReportingPeriodGroup[] rpgs = null;
+    	try {
+    		rpgs = soap.getReportingPeriodGroupCollection(
+    				schoolGuid, year.intValue());
+    		if(rpgs == null)
+    			return null;
+    	} catch (Exception e) {
+    		throw new NSForwardException(e);
+    	}
+    	Enumeration enu = regimes.objectEnumerator();
+    	NSMutableDictionary prepared = new NSMutableDictionary();
+    	while (enu.hasMoreElements()) {
+    		String listName = (String) enu.nextElement();
+    		NSArray periods = EduPeriod.periodsInList(listName, ec);
+    		if(periods == null || periods.count() == 0)
+    			continue;
+    		int count = periods.count();
+    		String periodName = (count < 5)?PGnames[count]:PGnames[0];
+    		ReportingPeriodGroup pg = (ReportingPeriodGroup)prepared.objectForKey(periodName);
+    		if(pg != null) {
+    			ReportingPeriod rp = pg.getReportingPeriods()[0];
+    			EduPeriod per = (EduPeriod)periods.objectAtIndex(0);
+    			Calendar cal = Calendar.getInstance();
+    			cal.setTime(per.begin());
+    			cal.add(Calendar.HOUR_OF_DAY, timeShift);
+    			if(cal.before(rp.getDateStart())) {
+    				rp.setDateStart(cal);
+    				cal = Calendar.getInstance();
+    			}
+    			rp = pg.getReportingPeriods()[pg.getReportingPeriods().length -1];
+    			per = (EduPeriod)periods.lastObject();
+    			cal.setTime(per.end());
+    			if(cal.after(rp.getDateFinish()))
+    				rp.setDateFinish(cal);
+    			continue;
+    		} // extend periods if required
+    		for (int i = 0; i < rpgs.length; i++) {
+    			if(periodName.equalsIgnoreCase(rpgs[i].getName())) {	
+    				pg = rpgs[i];
+    				break;
+    			}
+    		}
+    		ReportingPeriod[] pers;
+    		if(pg == null) {
+    			pers = new ReportingPeriod[(count > 4)?8:count];
+    		} else {
+    			pers = pg.getReportingPeriods();
+    		}
+			long fin = 0;
+			for (int i = 0; i < pers.length; i++) {
+				EduPeriod per = (i < count)?(EduPeriod)periods.objectAtIndex(i):null;
+				Calendar dateStart;
+				if(pers[i] != null)
+					dateStart = pers[i].getDateStart();
+				else
+					dateStart = Calendar.getInstance();
+				if(per == null) {
+					dateStart.setTimeInMillis(fin);
+					dateStart.add(Calendar.DATE, 1);
+					fin = dateStart.getTimeInMillis();
+				} else {
 					dateStart.setTime(per.begin());
 					dateStart.set(Calendar.HOUR_OF_DAY, timeShift);
+				}
+				Calendar dateFinish;
+				if(pers[i] != null)
+					dateFinish = pers[i].getDateFinish();
+				else
+					dateFinish = Calendar.getInstance();
+				if(per == null) {
+					dateFinish.setTimeInMillis(fin);
+					dateFinish.add(Calendar.DATE, 1);
+				} else {
+					if(i == 7 && count > 8)
+						per = (EduPeriod)periods.lastObject();
 					dateFinish.setTime(per.end());
 					dateFinish.set(Calendar.HOUR_OF_DAY, timeShift);
-					soap.updateReportingPeriod(pers[j].getID(), dateStart, dateFinish);
 				}
-				byName.takeValueForKey(new Long(rpgs[i].getID()), listName);
-			} // update or delete existing
-        	if(regimes.count() > 0) {
-				Calendar dateStart = Calendar.getInstance();
-				Calendar dateFinish = Calendar.getInstance();
-        		Enumeration enu = regimes.objectEnumerator();
-        		while (enu.hasMoreElements()) {
-					String listName = (String) enu.nextElement();
-	        		NSArray periods = EduPeriod.periodsInList(listName, ec);
-	        		EduReportingPeriodType type;
-	        		switch (periods.count()) {
-					case 4:
-						type = EduReportingPeriodType.Quarter;
-						break;
-					case 3:
-						type = EduReportingPeriodType.Trimester;
-						break;
-					case 2:
-						EduPeriod per = (EduPeriod)periods.objectAtIndex(0);
-						String name = per.name();
-						int sem = Various.correlation(name, "семестр");
-						int half = Various.correlation(name, "полугодие");
-						if(sem > half)
-							type = EduReportingPeriodType.Semester;
-						else
-							type = EduReportingPeriodType.HalfYear;
-						break;
-					case 1:
-						type = EduReportingPeriodType.Year;
-						break;
-					default:
-						type = EduReportingPeriodType.Module;
-						break;
+				fin = dateFinish.getTimeInMillis();
+				if(pers[i] == null) {
+					UnsignedByte number = new UnsignedByte(i);
+					pers[i] = new ReportingPeriod(0, number, dateStart, dateFinish);
+				}
+			}
+			if(pg == null) {
+				EduReportingPeriodType type = (count < 5)?PGtypes[count]:PGtypes[0];
+    			pg = new ReportingPeriodGroup(0, periodName, type, pers);
+			}
+    		prepared.setObjectForKey(pg, periodName);
+    	} // regimes.objectEnumerator()
+    	enu = prepared.objectEnumerator();
+    	while (enu.hasMoreElements()) {
+    		ReportingPeriodGroup pg = (ReportingPeriodGroup) enu.nextElement();
+    		try {
+				ReportingPeriod[] pers = pg.getReportingPeriods();
+    			if(pg.getID() == 0) {
+    				pg.setID(soap.insertReportingPeriodGroup(
+    						schoolGuid, pg.getName(), pg.getType(), year));
+    				for (int i = 0; i < pers.length; i++) {
+						pers[i].setID(soap.insertReportingPeriod(
+								pg.getID(), pg.getName(), pers[i].getNumber(),
+								pers[i].getDateStart(), pers[i].getDateFinish()));
 					}
-	        		long pgrp = soap.insertReportingPeriodGroup(
-	        				schoolGuid, listName, type, year);
-	        		for (int j = 0; j < periods.count(); j++) {
-						EduPeriod per = (EduPeriod) periods.objectAtIndex(j);
-						dateStart.setTime(per.begin());
-						dateStart.set(Calendar.HOUR, timeShift);
-						dateFinish.setTime(per.end());
-						dateFinish.set(Calendar.HOUR, timeShift);
-						soap.insertReportingPeriod(pgrp, per.name(), new UnsignedByte(j),
-								dateStart, dateFinish);
-					}
-					byName.takeValueForKey(new Long(pgrp), listName);
-				} // regimes.objectEnumerator()
-//        	}{
-        		//sync groups
-        		NSArray groups = EduGroup.Lister.listGroups(null, ec);
-        		ExtBase base = ExtBase.localBase(ec);
-        		NSDictionary dict = base.extSystem().dictForObjects(groups, base);
-        		enu = groups.objectEnumerator();
-        		String timetable = sync.extidForObject("ScheduleRing", new Integer(0), null);
-        		Long ttID = (timetable == null)? null: new Long(timetable);
-        		while (enu.hasMoreElements()) {
-					EduGroup gr = (EduGroup) enu.nextElement();
-					String groupGuid = (String)dict.objectForKey(gr);
-					if(groupGuid == null)
-						continue;
-					String listName = pb.forObject(gr).textValue();
-					Long pgrp = (Long)byName.objectForKey(listName);
-					soap.updateGroup(groupGuid, schoolGuid, gr.name(), 
-							new UnsignedByte(gr.grade()), year, pgrp, null, ttID);
-				}
-        	} // create regimes
-        	if(toDelete != null) {
-        		Enumeration enu = toDelete.objectEnumerator();
-        		while (enu.hasMoreElements()) {
-					Long id = (Long) enu.nextElement();
-					soap.deleteReportingPeriodGroup(id.longValue());
-				}
-        	}
-        	perGroups = new NSArray(
-        			soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
-        } catch (Exception e) {
-			throw new NSForwardException(e);
-		}
-        return null;
+    			} else {
+    				for (int i = 0; i < pers.length; i++) {
+    					soap.updateReportingPeriod(pers[i].getID(), 
+    							pers[i].getDateStart(), pers[i].getDateFinish());
+    				}    				
+    			}
+    		} catch (Exception e) {
+    			throw new NSForwardException(e);
+    		}
+    	}
+    	try {
+    		perGroups = new NSArray(
+    				soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
+    	} catch (Exception e) {
+    		throw new NSForwardException(e);
+    	}
+    	return null;
     }
+	
+	public WOActionResults syncGroups() {
+     	SettingsBase pb =  SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+    	if(pb == null)
+    		return null;
+    	ReportingPeriodGroup[] rpgs;
+        try {
+        	rpgs = soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue());
+        } catch (Exception e) {
+			return null;
+		}
+
+    	Object section = session().valueForKeyPath("state.section");
+    	if(section != null)
+    		session().takeValueForKeyPath(null,"state.section");
+    	NSArray groups = EduGroup.Lister.listGroups(null, ec);
+    	if(section != null)
+    		session().takeValueForKeyPath(section,"state.section");
+    	ExtBase base = ExtBase.localBase(ec);
+    	NSDictionary dict = base.extSystem().dictForObjects(groups, base);
+    	Enumeration enu = groups.objectEnumerator();
+    	String timetable = sync.extidForObject("ScheduleRing", new Integer(0), null);
+    	Long ttID = (timetable == null)? null: new Long(timetable);
+    	while (enu.hasMoreElements()) {
+    		EduGroup gr = (EduGroup) enu.nextElement();
+    		String groupGuid = (String)dict.objectForKey(gr);
+    		if(groupGuid == null)
+    			continue;
+    		long pgrp = 0;
+    		String listName = pb.forObject(gr).textValue();
+    		NSArray periods = EduPeriod.periodsInList(listName, ec);
+    		int count = (periods == null)?4:periods.count();
+    		String periodName = (count < 5)?PGnames[count]:PGnames[0];
+    		if(listName != null) {
+    			for (int i = 0; i < rpgs.length; i++) {
+					if(periodName.equalsIgnoreCase(rpgs[i].getName())) {
+						pgrp = rpgs[i].getID();
+						break;
+					}
+				}
+    		}
+    		try {
+    			soap.updateGroup(groupGuid, schoolGuid, gr.name(), 
+    					new UnsignedByte(gr.grade()), year, pgrp, null, ttID);
+    		} catch (RemoteException e) {
+    			throw new NSForwardException(gr.name() + ' ' + groupGuid, e);
+    		}
+    	}
+    	SyncEvent event = (SyncEvent)EOUtilities.createAndInsertInstance(
+    			ec, SyncEvent.ENTITY_NAME);
+    	event.setExtSystem(sync);
+    	event.setSyncEntity("groups");
+    	ec.saveChanges();
+    	events = events.arrayByAddingObject(event);
+    	return null;
+     }
     
 	public WOActionResults syncTimetable() {
 		NSArray list = new NSArray(new EOSortOrdering[] {
@@ -298,6 +353,31 @@ public class ServiceFrontend extends WOComponent {
 				throw new NSForwardException(e);
 			}
 		}
+		SyncEvent event = (SyncEvent)EOUtilities.createAndInsertInstance(
+				ec, SyncEvent.ENTITY_NAME);
+		event.setExtSystem(sync);
+		event.setSyncEntity("timetable");
+		ec.saveChanges();
+        events = SyncEvent.eventsForSystem(sync, null, 10);
+		return null;
+	}
+
+	public WOActionResults dateFromEvent() {
+		if(!(item instanceof SyncEvent))
+			return null;
+		SyncEvent event = (SyncEvent)item;
+		since = event.execTime();
+		return null;
+	}
+	
+	public WOActionResults syncMarks() {
+		ec.saveChanges();
+		Sychroniser sychroniser = new Sychroniser(ec, year);
+		sychroniser.system = sync;
+		sychroniser.schoolGuid = schoolGuid;
+		sychroniser.soap = soap;
+		sychroniser.syncChanges(since, to, limit);
+        events = SyncEvent.eventsForSystem(sync, null, 10);
 		return null;
 	}
 }

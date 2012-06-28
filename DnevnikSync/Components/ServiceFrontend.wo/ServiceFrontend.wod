@@ -29,3 +29,61 @@ SyncTimeTable : OnClickContainer {
   invokeAction = syncTimetable;
   class = "button";
 }
+
+Events : WORepetition {
+  list = events;
+  item = item;
+}
+
+EventDiv : OnClickContainer {
+  elementName = "div";
+  onclick = session.tryLoad;
+  invokeAction = dateFromEvent;
+}
+
+EventTime : WOString {
+  value = item.execTime;
+  dateformat = "%d.%m.%Y %H:%M:%S";
+}
+
+System : WOString {
+  value = item.extBase.baseID;
+  valueWhenEmpty = item.extSystem.productName;
+}
+
+Entity : WOString {
+  value = item.syncEntity;
+}
+
+SyncForm : WOForm {
+}
+
+Since : WOTextField {
+  value = since;
+  dateformat = "%d.%m.%Y %H:%M:%S";
+  size = "20";
+}
+
+To : WOTextField {
+  value = to;
+  dateformat = "%d.%m.%Y %H:%M:%S";
+  size = "20";
+}
+
+Limit : WOTextField {
+  value = limit;
+  numberformat = "0";
+  size = 3;
+}
+
+SyncMarks : WOSubmitButton {
+  action = syncMarks;
+  value = "Синхронизировать Отметки";
+}
+
+SyncGroups : OnClickContainer {
+  elementName = "span";
+  onclick = session.tryLoad;
+  invokeAction = syncGroups;
+  class = "button";
+}
