@@ -15,6 +15,7 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
 import net.rujel.io.SyncEvent;
+import net.rujel.reusables.MultiECLockManager;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.WOActionResults;
@@ -44,6 +45,7 @@ public class ServiceFrontend extends WOComponent {
 	public NSArray perGroups;
 	public ReportingPeriodGroup pgr;
 	public Object item;
+	public NSArray errors;
 	
 	public NSArray events;
 	public NSTimestamp since;
@@ -57,7 +59,7 @@ public class ServiceFrontend extends WOComponent {
         sync = (ExtSystem)ExtSystem.extSystemNamed("oejd.moscow", ec, false);
         schoolGuid = sync.extDataForKey("schoolGUID", null);
         year = (Integer)context.session().valueForKey("eduYear");
-        events = SyncEvent.eventsForSystem(sync, null, 10);
+        events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
         try {
         	String tmp = SettingsReader.stringForKeyPath("dnevnik.serviceURL", null);
         	URL serviceURL = new URL(tmp);
@@ -249,7 +251,8 @@ public class ServiceFrontend extends WOComponent {
     	NSDictionary dict = base.extSystem().dictForObjects(groups, base);
     	Enumeration enu = groups.objectEnumerator();
     	String timetable = sync.extidForObject("ScheduleRing", new Integer(0), null);
-    	Long ttID = (timetable == null)? null: new Long(timetable);
+    	//TODO:require timetable here
+    	long ttID = Long.parseLong(timetable);
     	while (enu.hasMoreElements()) {
     		EduGroup gr = (EduGroup) enu.nextElement();
     		String groupGuid = (String)dict.objectForKey(gr);
@@ -358,7 +361,7 @@ public class ServiceFrontend extends WOComponent {
 		event.setExtSystem(sync);
 		event.setSyncEntity("timetable");
 		ec.saveChanges();
-        events = SyncEvent.eventsForSystem(sync, null, 10);
+//        events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
 		return null;
 	}
 
@@ -376,8 +379,19 @@ public class ServiceFrontend extends WOComponent {
 		sychroniser.system = sync;
 		sychroniser.schoolGuid = schoolGuid;
 		sychroniser.soap = soap;
-		sychroniser.syncChanges(since, to, limit);
-        events = SyncEvent.eventsForSystem(sync, null, 10);
-		return null;
+//		sychroniser.syncChanges(since, to, limit);
+//        events = SyncEvent.eventsForSystem(sync, null, 10); 
+//		return null;
+		MultiECLockManager lm = (MultiECLockManager)session().valueForKey("ecLockManager");
+		if(lm != null)
+			lm.unregisterEditingContext(ec);
+		
+		WOComponent waiter = pageWithName("SyncWaiter");
+		waiter.takeValueForKey(sychroniser, "sychroniser");
+		waiter.takeValueForKey(since, "since");
+		waiter.takeValueForKey(to, "to");
+		waiter.takeValueForKey(limit, "limit");
+		waiter.takeValueForKey(this, "returnPage");
+		return waiter;
 	}
 }

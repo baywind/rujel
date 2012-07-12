@@ -16,7 +16,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
     static org.apache.axis.description.OperationDesc [] _operations;
 
     static {
-        _operations = new org.apache.axis.description.OperationDesc[35];
+        _operations = new org.apache.axis.description.OperationDesc[36];
         _initOperationDesc1();
         _initOperationDesc2();
         _initOperationDesc3();
@@ -698,6 +698,19 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[34] = oper;
 
+        oper = new org.apache.axis.description.OperationDesc();
+        oper.setName("GetSubjectCollection");
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "schoolGuid"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://microsoft.com/wsdl/types/", "guid"), java.lang.String.class, false, false);
+        oper.addParameter(param);
+        oper.setReturnType(new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "ArrayOfSubject"));
+        oper.setReturnClass(ru.mos.dnevnik.Subject[].class);
+        oper.setReturnQName(new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "GetSubjectCollectionResult"));
+        param = oper.getReturnParamDesc();
+        param.setItemQName(new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "Subject"));
+        oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
+        oper.setUse(org.apache.axis.constants.Use.LITERAL);
+        _operations[35] = oper;
+
     }
 
     public ImportServiceSoap12Stub() throws org.apache.axis.AxisFault {
@@ -762,6 +775,15 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
             cachedSerClasses.add(cls);
             qName = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "ReportingPeriodGroup");
             qName2 = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "ReportingPeriodGroup");
+            cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
+            cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
+
+            qName = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "ArrayOfSubject");
+            cachedSerQNames.add(qName);
+            cls = ru.mos.dnevnik.Subject[].class;
+            cachedSerClasses.add(cls);
+            qName = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "Subject");
+            qName2 = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "Subject");
             cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
             cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
 
@@ -845,6 +867,13 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
             qName = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "ReportingPeriodGroup");
             cachedSerQNames.add(qName);
             cls = ru.mos.dnevnik.ReportingPeriodGroup.class;
+            cachedSerClasses.add(cls);
+            cachedSerFactories.add(beansf);
+            cachedDeserFactories.add(beandf);
+
+            qName = new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "Subject");
+            cachedSerQNames.add(qName);
+            cls = ru.mos.dnevnik.Subject.class;
             cachedSerClasses.add(cls);
             cachedSerFactories.add(beansf);
             cachedDeserFactories.add(beandf);
@@ -1024,7 +1053,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 }
     }
 
-    public long insertGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, Long tableID) throws java.rmi.RemoteException {
+    public long insertGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, long tableID) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -1040,7 +1069,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, tableID});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, new java.lang.Long(tableID)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -1432,7 +1461,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 }
     }
 
-    public boolean updateGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, Long tableID) throws java.rmi.RemoteException {
+    public boolean updateGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, long tableID) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -1448,7 +1477,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, tableID});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, new java.lang.Long(tableID)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -2105,6 +2134,40 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
                 return (ru.mos.dnevnik.ReportingPeriodGroup[]) _resp;
             } catch (java.lang.Exception _exception) {
                 return (ru.mos.dnevnik.ReportingPeriodGroup[]) org.apache.axis.utils.JavaUtils.convert(_resp, ru.mos.dnevnik.ReportingPeriodGroup[].class);
+            }
+        }
+  } catch (org.apache.axis.AxisFault axisFaultException) {
+  throw axisFaultException;
+}
+    }
+
+    public ru.mos.dnevnik.Subject[] getSubjectCollection(java.lang.String schoolGuid) throws java.rmi.RemoteException {
+        if (super.cachedEndpoint == null) {
+            throw new org.apache.axis.NoEndPointException();
+        }
+        org.apache.axis.client.Call _call = createCall();
+        _call.setOperation(_operations[35]);
+        _call.setUseSOAPAction(true);
+        _call.setSOAPActionURI("http://dnevnik.mos.ru/GetSubjectCollection");
+        _call.setEncodingStyle(null);
+        _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
+        _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
+        _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP12_CONSTANTS);
+        _call.setOperationName(new javax.xml.namespace.QName("http://dnevnik.mos.ru/", "GetSubjectCollection"));
+
+        setRequestHeaders(_call);
+        setAttachments(_call);
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {schoolGuid});
+
+        if (_resp instanceof java.rmi.RemoteException) {
+            throw (java.rmi.RemoteException)_resp;
+        }
+        else {
+            extractAttachments(_call);
+            try {
+                return (ru.mos.dnevnik.Subject[]) _resp;
+            } catch (java.lang.Exception _exception) {
+                return (ru.mos.dnevnik.Subject[]) org.apache.axis.utils.JavaUtils.convert(_resp, ru.mos.dnevnik.Subject[].class);
             }
         }
   } catch (org.apache.axis.AxisFault axisFaultException) {

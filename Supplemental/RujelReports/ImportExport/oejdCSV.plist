@@ -556,7 +556,7 @@
 					<key>title</key>
 					<string>Ответ у доски</string>
 					<key>value</key>
-					<string>LessonAnsverbyDesk</string>
+					<string>LessonAnswer</string>
 				</dict>
 				<dict>
 					<key>title</key>

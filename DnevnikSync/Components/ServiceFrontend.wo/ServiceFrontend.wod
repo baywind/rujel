@@ -87,3 +87,20 @@ SyncGroups : OnClickContainer {
   invokeAction = syncGroups;
   class = "button";
 }
+
+Errors : WORepetition {
+  list = errors;
+  item = item;
+}
+
+ErrorID : WOString {
+  value = item.archID;
+}
+
+ErrMethod : WOString {
+  value = item.method;
+}
+
+Error : WOString {
+  value = item.exception.message;
+}

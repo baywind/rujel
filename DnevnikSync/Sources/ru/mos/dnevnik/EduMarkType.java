@@ -27,6 +27,7 @@ public class EduMarkType implements java.io.Serializable {
     public static final java.lang.String _MarkAbcdf = "MarkAbcdf";
     public static final java.lang.String _Mark12 = "Mark12";
     public static final java.lang.String _MarkOral6Band = "MarkOral6Band";
+    public static final java.lang.String _Mark6 = "Mark6";
     public static final java.lang.String _Mark10 = "Mark10";
     public static final EduMarkType NotSet = new EduMarkType(_NotSet);
     public static final EduMarkType Test = new EduMarkType(_Test);
@@ -38,6 +39,7 @@ public class EduMarkType implements java.io.Serializable {
     public static final EduMarkType MarkAbcdf = new EduMarkType(_MarkAbcdf);
     public static final EduMarkType Mark12 = new EduMarkType(_Mark12);
     public static final EduMarkType MarkOral6Band = new EduMarkType(_MarkOral6Band);
+    public static final EduMarkType Mark6 = new EduMarkType(_Mark6);
     public static final EduMarkType Mark10 = new EduMarkType(_Mark10);
     public java.lang.String getValue() { return _value_;}
     public static EduMarkType fromValue(java.lang.String value)

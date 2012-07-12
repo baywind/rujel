@@ -51,10 +51,17 @@ public class SyncEvent extends _SyncEvent {
 		super.turnIntoFault(handler);
 	}
 	
-	public static NSArray eventsForSystem(ExtSystem sys, ExtBase base, int limit) {
+	public static NSArray eventsForSystem(ExtSystem sys, ExtBase base, int limit, String syncEnt) {
 		EOEditingContext ec = sys.editingContext();
 		EOQualifier qual = new EOKeyValueQualifier(EXT_SYSTEM_KEY, 
-				EOQualifier.QualifierOperatorEqual, sys); 
+				EOQualifier.QualifierOperatorEqual, sys);
+		if(syncEnt != null) {
+			NSArray quals = new NSArray(new Object[] {
+					qual, new EOKeyValueQualifier(SYNC_ENTITY_KEY, 
+							EOQualifier.QualifierOperatorEqual,syncEnt)
+			});
+			qual = new EOAndQualifier(quals);
+		}
 //			SyncMatch.matchQualifier(sys, base, null, null, null);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,sorter);
 		if(limit > 0)
@@ -63,7 +70,7 @@ public class SyncEvent extends _SyncEvent {
 	}
 	
 	public static SyncEvent lastEventForSystem(ExtSystem sys, ExtBase base) {
-		NSArray found = eventsForSystem(sys, base, 1);
+		NSArray found = eventsForSystem(sys, base, 1, null);
 		if(found == null || found.count() == 0)
 			return null;
 		return (SyncEvent)found.objectAtIndex(0);

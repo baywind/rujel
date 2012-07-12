@@ -35,14 +35,15 @@ import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 
-import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSForwardException;
+import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
+import com.webobjects.woextensions.WOLongResponsePage;
 
 public class Sychroniser {
 	
@@ -54,6 +55,8 @@ public class Sychroniser {
 	public ExtSystem system;
 	public ExtBase localBase;
 	public String schoolGuid;
+	public WOLongResponsePage waiter;
+	
 	protected NSDictionary workTypes;
 	protected NSDictionary itogTypes;
 	
@@ -62,7 +65,6 @@ public class Sychroniser {
 	private EntityIndex timeslotEI;
 	
 	protected ImportServiceSoap soap;
-	public NSMutableDictionary readyWorks;
 	
 	protected SettingsBase criteriaSettings;
 	protected NSMutableDictionary critSetParams;
@@ -74,7 +76,7 @@ public class Sychroniser {
 		this.eduYear = eduYear;
 	}
 
-	public void syncChanges(NSTimestamp since, NSTimestamp to, Integer limit) {
+	public NSArray syncChanges(NSTimestamp since, NSTimestamp to, Integer limit) {
 		EOQualifier qual = null;
 		if(since != null) {
 			if(to == null)
@@ -95,7 +97,14 @@ public class Sychroniser {
 			fs.setFetchLimit(limit.intValue());
 		list = ec.objectsWithFetchSpecification(fs);
 		if(list == null || list.count() == 0)
-			return;
+			return null;
+		NSMutableDictionary status = null;
+		NSMutableArray errors = new NSMutableArray();
+		if(waiter != null) {
+			status = new NSMutableDictionary();
+			status.takeValueForKey(new Integer(list.count()), "total");
+			status.takeValueForKey(errors, "errors");
+		}
 		if(system == null)
 			system = (ExtSystem)ExtSystem.extSystemNamed("oejd.moscow", ec, true);
 		system.setCachesIndexes(true);
@@ -106,11 +115,15 @@ public class Sychroniser {
 		localBase.extSystem().setCachesIndexes(true);
 		if(ec.hasChanges())
 			ec.saveChanges();
-		Enumeration enu = list.objectEnumerator();
 		NSTimestamp last = null;
 		SyncEvent event = null;
-		while (enu.hasMoreElements()) {
-			MarkArchive arch = (MarkArchive) enu.nextElement();
+		for (int idx = 0; idx < list.count(); idx++) {
+			MarkArchive arch = (MarkArchive) list.objectAtIndex(idx);
+			if(status != null) {
+				status.takeValueForKey(new Integer(idx), "current");
+				status.takeValueForKey(arch.timestamp(), "moment");
+				waiter.setStatus(status);
+			}
 			String entity = (String)arch.valueForKeyPath("usedEntity.usedEntity");
 			try {
 				if("BaseLesson".equals(entity))
@@ -133,12 +146,27 @@ public class Sychroniser {
 				event.setExecTime(last);
 //				event.setResult(1);
 				ec.saveChanges();
+			} catch (RemoteException e) {
+				NSMutableDictionary dict = new NSMutableDictionary();
+				dict.takeValueForKey(MyUtility.getID(arch), "archID");
+				dict.takeValueForKey(e, "exception");
+				StackTraceElement trace[] = e.getStackTrace();
+				for (int i = 0; i < trace.length; i++) {
+					if(trace[i].getClassName().contains("ImportServiceSoap")) {
+						dict.takeValueForKey(trace[i].getMethodName(), "method");
+						break;
+					}
+				}
+				errors.addObject(dict);
 			} catch (Exception e) {
 				throw new NSForwardException(e);
 			}
 		}
 		if(ec.hasChanges())
 			ec.saveChanges();
+		if(errors.count() == 0)
+			return null;
+		return errors;
 	}
 	
 	private SyncMatch getMatch(EntityIndex ei, Integer objID) {
@@ -157,17 +185,19 @@ public class Sychroniser {
 	private long subjectID (Subject subj) throws RemoteException {
 		String subjExtid = system.extidForObject(subj, null);
 		if(subjExtid == null) {
-			NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
-					"strings.DnevnikSync_Dnevnik.subjectsDict");
-			Enumeration enu = dict.keyEnumerator();
+			ru.mos.dnevnik.Subject[] subjs = soap.getSubjectCollection(schoolGuid);
+
+//			NSDictionary dict = (NSDictionary)WOApplication.application().valueForKeyPath(
+//					"strings.DnevnikSync_Dnevnik.subjectsDict");
+//			Enumeration enu = dict.keyEnumerator();
 			float best = 0;
-			Number preset = null;
+			long preset = 0;
 			String subject = subj.subject();
 			String full = subj.fullName();
-			while (enu.hasMoreElements()) {
-				String name = (String) enu.nextElement();
+			for (int i = 0; i < subjs.length; i++) {
+				String name = subjs[i].getName();
 				if(name.equalsIgnoreCase(subject) || name.equalsIgnoreCase(full)) {
-					preset = (Number)dict.valueForKey(name);
+					preset = subjs[i].getID();
 					best = 1;
 					break;
 				}
@@ -175,7 +205,7 @@ public class Sychroniser {
 				float relative = ((float)correlation)/
 						(Math.max(name.length(), subject.length()) -1);
 				if(relative > best) {
-					preset = (Number)dict.valueForKey(name);
+					preset = subjs[i].getID();
 					best = relative;
 				}
 				if(full != null) {
@@ -183,16 +213,16 @@ public class Sychroniser {
 					relative = ((float)correlation)/
 							(Math.max(name.length(), full.length()) -1);
 					if(relative > best) {
-						preset = (Number)dict.valueForKey(name);
+						preset = subjs[i].getID();
 						best = relative;
 					}
 				}
 			} // test presets
 			if(best > 0.75) {
 				SyncMatch match = system.addMatch(subj, null);
-				match.setExtID(preset.toString());
+				match.setExtID(Long.toString(preset));
 				ec.saveChanges();
-				return preset.longValue();
+				return preset;
 			}
 			
 			SyncIndex indexer = system.getIndexNamed("eduAreas", null, false);
@@ -200,7 +230,24 @@ public class Sychroniser {
 			KnowledgeArea area = (areaName == null) ? KnowledgeArea.Common :
 					KnowledgeArea.fromString(areaName);
 			if(full == null) full = subject;
-			long result = soap.insertSubject(schoolGuid, subject, full, area);
+			long result = 0;
+			try {
+				result = soap.insertSubject(schoolGuid, subject, full, area);
+			} catch (RemoteException e) {
+				if(!e.getMessage().contains("Entity already exists: subject"))
+					throw e;
+				NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec,
+						Subject.ENTITY_NAME, Subject.SUBJECT_KEY, subject);
+				for (int i = 0; i < found.count(); i++) {
+					Subject other =  (Subject)found.objectAtIndex(i);
+					if(other != subj) {
+						result = subjectID(other);
+						break;
+					}
+				}
+				if(result == 0)
+					throw e;
+			}
 			SyncMatch match = system.addMatch(subj, null);
 			match.setExtID(Long.toString(result));
 			ec.saveChanges();
@@ -211,6 +258,8 @@ public class Sychroniser {
 	
 	private InsertLessonResult insertLesson(String groupGuid, long subjectID, String teacherGuid,
 			Calendar cal, int num)  throws RemoteException {
+		if(num < 0)
+			num = 0;
 		try {
 			UnsignedByte number = new UnsignedByte(num);
 			return soap.insertLesson(groupGuid, subjectID, teacherGuid, cal, number);
@@ -288,10 +337,8 @@ public class Sychroniser {
 				StringBuilder buf = new StringBuilder();
 				buf.append(ids[0]).append(' ').append(ids[1]);
 				tsMatch.setExtID(buf.toString());
-			} else {
-				//TODO
-				System.currentTimeMillis();
-//				soap.updateLesson(ids[0], subjectID, teacherGuid, cal, number);
+//			} else {
+//				soap.updateLesson(ids[0], subjectID, teacherGuid, cal, null);
 			}
 			match = system.addMatch("BaseLesson", arch.getKeyValue("lesson"), null);
 //			(SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
@@ -314,11 +361,7 @@ public class Sychroniser {
 				} else {
 					ids[0] = Long.parseLong(match.extID());
 				}
-//			} else {
-//				cal = null;
-//			}
-				//TODO
-//			soap.updateLesson(ids[0], subjectID, teacherGuid, cal, new UnsignedByte(number));
+				soap.updateLesson(ids[0], subjectID, teacherGuid, cal, new UnsignedByte(number));
 			}
 		}
 		if(ids[1] != 0) {
@@ -346,7 +389,7 @@ public class Sychroniser {
 		quals[1] = new EOKeyValueQualifier(MarkArchive.KEY1_KEY, 
 				EOQualifier.QualifierOperatorEqual, arch.getKeyValue(key));
 		quals[2] = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
-				EOQualifier.QualifierOperatorLessThan, arch.timestamp());
+				EOQualifier.QualifierOperatorLessThanOrEqualTo, arch.timestamp());
 		quals[3] = new EOKeyValueQualifier(MarkArchive.ACTION_TYPE_KEY, 
 				EOQualifier.QualifierOperatorLessThan, new Integer(3));
 		quals[0] = new EOAndQualifier(new NSArray(quals));
@@ -747,7 +790,7 @@ public class Sychroniser {
 		case 5:
 			return EduMarkType.Mark5;
 		case 6:
-			return EduMarkType.MarkOral6Band;
+			return EduMarkType.Mark6;
 		case 7:
 			return EduMarkType.Mark7;
 		case 10:
@@ -773,6 +816,8 @@ public class Sychroniser {
 		NSDictionary[] criteria;
 		if(match == null) {
 			MarkArchive wa = getContainerMA(arch, "Work", "work");
+			if(wa == null)
+				return;
 			criteria = syncWork(wa);
 		} else {
 			String extID = match.extID();
@@ -870,18 +915,27 @@ public class Sychroniser {
 				try {
 					soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
 				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity already exists: Mark"))
+						throw e;
 					soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
 				}
 			} else {
-				if(!soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text))
+				try {
+					soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: Mark"))
+						throw e;
 					soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
+				}
 			}
 //			text = null;
 		} // criteria
 	}
 	
+	private static final String[] defaultTypes = new String[] {
+		"Exam","Year","Semester","Trimester","Quarter"};
 	private void syncItogMark(MarkArchive arch) throws RemoteException {
-		String mark = arch.getArchiveValueForKey("march");
+		String mark = arch.getArchiveValueForKey("mark");
 		if(mark == null)
 			return;
 		else
@@ -945,6 +999,9 @@ public class Sychroniser {
 		if(group == null)
 			group = student.recentMainEduGroup();
 		String groupGuid = localBase.extidForObject(group);
+		if(groupGuid == null) {
+			return;
+		}
 		groupGuid = groupGuid.toUpperCase();
 		Subject subj = (Subject)cycle.valueForKey("subjectEO");
 		long subjectID = subjectID(subj);
@@ -956,69 +1013,70 @@ public class Sychroniser {
 			return;
 		String studentGuid = personMatch.extID();
 		studentGuid = studentGuid.toUpperCase();
-		String type = MyUtility.getID(container.itogType());
 		if(itogTypes == null) {
 			SyncIndex indexer = system.getIndexNamed("periods", null, false);
-			workTypes = indexer.getDict();
-			if(itogTypes == null) {
-				itogTypes = new NSMutableDictionary();
-				int count = container.itogType().inYearCount().intValue();
-				switch (count) {
-				case 4:
-					workTypes.takeValueForKey("Quarter", type);
-					break;
-				case 3:
-					workTypes.takeValueForKey("Trimester", type);
-					break;
-				case 2:
-					workTypes.takeValueForKey("Semester", type);
-					break;
-				case 1:
-					workTypes.takeValueForKey("Year", type);
-					break;
-				case 0:
-					workTypes.takeValueForKey("Exam", type);
-					break;
-				default:
-					workTypes.takeValueForKey("Module", type);
-					break;
-				}
-			}
+			itogTypes = indexer.getDict();
+			if(itogTypes == null)
+				itogTypes = NSDictionary.EmptyDictionary;
 		}
-		type = (String)workTypes.valueForKey(type);
+		String type = (itogTypes.count() == 0)?null:MyUtility.getID(container.itogType());
+		if(type != null) {
+			type = (String)itogTypes.valueForKey(type);
+		}
+		if(type == null) {
+			int count = container.itogType().inYearCount().intValue();
+			if(count < 5)
+				type = defaultTypes[count];
+			else
+				type = "Module";
+		}
 		int act = arch.actionType().intValue();
 		if("Exam".equals(type) || "Final".equals(type)) {
 			FinalMarkType ftype = FinalMarkType.fromString(type);
-			if(act == 1) {
+			if(act <= 1) {
 				try {
 					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
 							markType, ftype, value, bonus, null);
 				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity already exists: FinalMark"))
+						throw e;
 					soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
 							markType, ftype, value, bonus, null);
 				}
 			} else {
-				if(!soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
-							markType, ftype, value, bonus, null))
+				try {
+					soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
+							markType, ftype, value, bonus, null);
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: FinalMark"))
+						throw e;
 					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
 							markType, ftype, value, bonus, null);
+				}
 			}
 		} else {
 			EduReportingPeriodType periodType = EduReportingPeriodType.fromString(type);
 			UnsignedByte periodNumber = new UnsignedByte(container.num().intValue() -1);
-			if(act == 1) {
+			if(act <= 1) {
 				try {
 					soap.insertPeriodMark(groupGuid, subjectID, studentGuid,
 							markType, periodType, periodNumber, value, bonus, null);
 				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity already exists: Mark"))
+						throw e;
 					soap.updatePeriodMark(groupGuid, subjectID, studentGuid,
 							markType, periodType, periodNumber, value, bonus, null);
 				}
 			} else {
-				if(!soap.updatePeriodMark(groupGuid, subjectID, studentGuid, 
-						markType, periodType, periodNumber, value, bonus, null))
+				try {
+					soap.updatePeriodMark(groupGuid, subjectID, studentGuid, 
+						markType, periodType, periodNumber, value, bonus, null);
+				} catch (RemoteException e) {
+					if(!e.getMessage().contains("Entity not found: Mark"))
+						throw e;
 					soap.insertPeriodMark(groupGuid, subjectID, studentGuid, 
 							markType, periodType, periodNumber, value, bonus, null);
+				}
 			}
 		}
 	}

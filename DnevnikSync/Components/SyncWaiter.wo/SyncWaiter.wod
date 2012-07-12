@@ -1,0 +1,39 @@
+Progress : WOCompletionBar {
+  valueMin = 0;
+  valueMax = status.total;
+  value = status.current;
+}
+
+CurrentMoment : WOString {
+  value = status.moment;
+  dateformat = "%d.%m.%Y %H:%M:%S";
+}
+
+Total : WOString {
+  value = status.total;
+}
+
+Current : WOString {
+  value = status.current;
+}
+
+Errors : WORepetition {
+  list = status.errors;
+  item = status.item;
+}
+
+ErrorID : WOString {
+  value = status.item.archID;
+}
+
+Error : WOString {
+  value = status.item.exception.message;
+}
+
+Cancel : WOHyperlink {
+  action = cancel;
+}
+
+ErrMethod : WOString {
+  value = status.item.method;
+}
