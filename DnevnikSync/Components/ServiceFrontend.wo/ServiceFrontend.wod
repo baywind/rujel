@@ -70,15 +70,10 @@ To : WOTextField {
   size = "20";
 }
 
-Limit : WOTextField {
-  value = limit;
-  numberformat = "0";
-  size = 3;
-}
-
 SyncMarks : WOSubmitButton {
   action = syncMarks;
   value = "Синхронизировать Отметки";
+  onclick = "return ajaxPost(this);";
 }
 
 SyncGroups : OnClickContainer {

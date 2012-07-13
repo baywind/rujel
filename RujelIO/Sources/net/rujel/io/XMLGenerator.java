@@ -82,17 +82,68 @@ import net.rujel.reusables.xml.AbstractObjectReader;
 import net.rujel.reusables.xml.GeneratorModule;
 import net.rujel.reusables.xml.Resolver;
 import net.rujel.reusables.xml.TransormationErrorListener;
+import net.rujel.ui.Progress;
 
 public class XMLGenerator extends AbstractObjectReader {
 
-	public static class RujelInputSource extends InputSource {
+	public static class RujelInputSource extends InputSource implements Runnable {
 		private WOSession ses;
 		private NSDictionary options;
+		private Progress.State state;
+		
 		public RujelInputSource(WOSession session, NSDictionary options) {
 			super();
 			ses = session;
 			this.options = options;
 		}
+		
+		public Progress.State initState() {
+			state = new Progress.State();
+			NSDictionary settings = (NSDictionary)options.valueForKeyPath("reporter.settings");
+			NSDictionary opt = (NSDictionary)settings.valueForKey("eduGroups");
+			if(opt == null || Various.boolForObject(opt.valueForKey("active")))
+				state.total++;
+			opt = (NSDictionary)settings.valueForKey("courses");
+			if(opt == null || Various.boolForObject(opt.valueForKey("active")))
+				state.total++;
+			return state;
+		}
+		
+		public void run() {
+			ses = MyUtility.dummyContext(null).session();
+			try {
+				Object tmp = options.valueForKey("today");
+				if(tmp != null) {
+					ses.takeValueForKey(tmp, "today");
+				} else {
+					tmp = options.valueForKey("eduYear");
+					if(tmp != null)
+						ses.takeValueForKey(tmp, "eduYear");
+				}
+				Object result = generate(this);
+				synchronized (state) {
+					state.result = result;
+					state.current = state.total;
+				}
+				ses.terminate();
+			} catch (Exception e) {
+				synchronized (state) {
+					state.total = -state.total;
+					state.result = e;
+				}
+				Logger.getLogger("rujel.xml").log(WOLogLevel.WARNING, 
+						"Background XML generation failed", new Object[]{ses,e});
+			}
+		}
+	}
+	
+	public static Progress.State backgroundGenerate(NSMutableDictionary options) {
+		RujelInputSource input =  new RujelInputSource(null,options);
+		Progress.State state = input.initState();
+		Thread thread = new Thread(input,"XMLGenerator");
+		thread.setPriority(Thread.MIN_PRIORITY + 1);
+		thread.start();
+		return state;
 	}
 	
 	public static Transformer getTransformer(WOSession session,
@@ -123,6 +174,7 @@ public class XMLGenerator extends AbstractObjectReader {
     		transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "4");
     		return transformer;
 		}
+		int steps = 1;
 		NSArray list = (NSArray)input.options.valueForKeyPath("reporter.sources");
 		if(list != null && list.count() > 0) {
 			Enumeration enu = list.objectEnumerator();
@@ -135,6 +187,7 @@ public class XMLGenerator extends AbstractObjectReader {
 						input.options.takeValueForKey(new NSMutableSet(), "persons");
 			        Source src = new SAXSource(new Persdata(),input);
 					sources.takeValueForKey(src,"persdata.xml");
+					steps++;
 				} else if("Options".equals(srcName)) {
 			        Source src = new SAXSource(new Options(),input);
 					sources.takeValueForKey(src,"options.xml");
@@ -149,21 +202,28 @@ public class XMLGenerator extends AbstractObjectReader {
 				transformer.setURIResolver(resolver);
 			}
 		}
+		if(input.state != null) {
+			synchronized (input.state) {
+				input.state.total += steps;
+			}
+		}
 		return transformer;
 	}
-	
+		
 	public static byte[] generate(WOSession session, NSMutableDictionary options)
 									throws TransformerException {
-		
 		RujelInputSource input =  new RujelInputSource(session,options);
-    	if(options.valueForKeyPath("reporter.sync") != null && 
-    			options.valueForKey("sync") == null) {
-    		options.takeValueForKey(new SyncGenerator(options), "sync");
+		return generate(input);
+	}
+	
+	public static byte[] generate(RujelInputSource input) throws TransformerException {
+    	if(input.options.valueForKeyPath("reporter.sync") != null && 
+    			input.options.valueForKey("sync") == null) {
+    		input.options.takeValueForKey(new SyncGenerator(input.options), "sync");
     	}
-
-		Transformer transformer = getTransformer(session, input);
+		Transformer transformer = getTransformer(input.ses, input);
 		XMLReader reader = null;
-		String srcName = (String)options.valueForKeyPath("reporter.mainSource");
+		String srcName = (String)input.options.valueForKeyPath("reporter.mainSource");
 		if("Persdata".equals(srcName)) {
 			reader = new Persdata();
 		} else if("Options".equals(srcName)) {
@@ -237,13 +297,17 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.element("school", null);
 		}
 		
-		NSArray groups = prepareGroups(in);
-
 		in.ses.setObjectForKey(in.options,"xmlGeneration");
 		NSArray generators = (NSArray)in.ses.valueForKeyPath("modules.xmlGeneration");
 		in.ses.removeObjectForKey("xmlGeneration");
+		if(in.state != null && generators != null && generators.count() > 0) {
+			synchronized (in.state) {
+				in.state.total++;
+			}
+		}
 		
-		useGenerators(generators, null);
+		NSArray groups = prepareGroups(in);
+		useGenerators(generators, null, in.state);
 		{
 			NSDictionary opt = (NSDictionary)in.options.valueForKeyPath(
 					"reporter.settings.courses");
@@ -259,24 +323,31 @@ public class XMLGenerator extends AbstractObjectReader {
 		handler.startElement("courses");
 		if(courses == null) {
 			Enumeration enu = groups.objectEnumerator();
+			Progress.State state = null;
+			if(in.state != null) {
+				synchronized (in.state) {
+					state = in.state.createSub();
+					state.total = groups.count();
+				}
+			}
 			NSMutableArray grades = new NSMutableArray();
 			while (enu.hasMoreElements()) {
 				EduGroup gr = (EduGroup) enu.nextElement();
 				courses = EOUtilities.objectsMatchingKeyAndValue(gr.editingContext(),
 						EduCourse.entityName, "eduGroup", gr);
-				processCourses(courses, generators, in);
+				processCourses(courses, generators, in, state);
 				if(!grades.containsObject(gr.grade())) {
 					grades.addObject(gr.grade());
 				}
 			}
 			//TODO: add groupless grade courses
 		} else {
-			processCourses(courses, generators, in);
+			processCourses(courses, generators, in, in.state);
 		}
 		courses = (NSArray)in.options.valueForKey("extraCourses");
 		if(courses instanceof NSMutableArray) {
 			EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)courses, EduCourse.sorter);
-			processCourses(courses, generators, in);
+			processCourses(courses, generators, in, null);
 		}
 		handler.endElement("courses");
 		handler.endElement("ejdata");
@@ -337,6 +408,13 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(opt != null && !Various.boolForObject(opt.valueForKey("active")))
 				return groups;
 		}
+		Progress.State state = null;
+		if(in.state != null) {
+			synchronized (in.state) {
+				state = in.state.createSub();
+				state.total = groups.count();
+			}
+		}
 		GeneratorModule sync = (GeneratorModule)in.options.valueForKey("sync");
 		if(sync != null)
 			sync.preload("eduGroup", groups);
@@ -394,7 +472,8 @@ public class XMLGenerator extends AbstractObjectReader {
 					while (stenu.hasMoreElements()) {
 						Student stu = (Student) stenu.nextElement();
 						handler.prepareAttribute("id", MyUtility.getID(stu));
-//						handler.prepareAttribute("name", Person.Utility.fullName(stu, true, 2, 2, 0));
+//						handler.prepareAttribute("name",
+//								Person.Utility.fullName(stu, true, 2, 2, 0));
 						handler.element("student",null);
 					}
 					if(persons != null)
@@ -417,15 +496,36 @@ public class XMLGenerator extends AbstractObjectReader {
 				} // students enumeration
 			} // selected students
 			handler.endElement("eduGroup");
+			if(state != null) {
+				synchronized (in.state) {
+					state.current++;
+				}
+			}
 		} // group enumeration
 		handler.endElement("eduGroups");
 		if(sync != null)
 			sync.unload("eduGroup");
+		if(state != null) {
+			synchronized (in.state) {
+				state.end();
+			}
+		}
 		return groups;
 	}
 	
-	private void processCourses(NSArray courses, NSArray generators, RujelInputSource in)
+	private void processCourses(NSArray courses, NSArray generators, RujelInputSource in,
+			Progress.State state)
 			throws SAXException {
+		if(state != null) {
+			synchronized (in.state) {
+				if(courses == null || courses.count() == 0) {
+					state.current++;
+					return;
+				}
+				state = state.createSub();
+				state.total = courses.count();
+			}
+		}
 		if(courses == null || courses.count() == 0)
 			return;
 		Student stu = (Student)in.options.valueForKey("student");
@@ -440,9 +540,19 @@ public class XMLGenerator extends AbstractObjectReader {
 					continue;
 			}
 			writeCourse(crs, generators,in);
+			if(state != null) {
+				synchronized (in.state) {
+					state.current++;
+				}
+			}
 		}
 		if(sync != null)
 			sync.unload("course");
+		if(state != null) {
+			synchronized (in.state) {
+				state.end();
+			}
+		}
 	}
 	
 	private void writeCourse(EduCourse course,NSArray generators, RujelInputSource in)
@@ -500,16 +610,37 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.element("comment", course.comment());
 		if(!Various.boolForObject(in.options.valueForKeyPath(
 				"reporter.settings.courses.nodata")))
-			useGenerators(generators, course);
+			useGenerators(generators, course, in.state);
 		handler.endElement("course");
 	}
 	
-	protected void useGenerators(NSArray generators, Object object) throws SAXException {
+	protected void useGenerators(NSArray generators, Object object, Progress.State instate)
+						throws SAXException {
 		if(generators != null && generators.count() > 0) {
+			Progress.State state = instate;
+			if(state != null) {
+				synchronized (instate) {
+					while(state.sub != null) {
+						state = state.sub;
+					}
+					state = state.createSub();
+					state.total = generators.count();
+				}
+			}
 			Enumeration enu = generators.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				GeneratorModule gen = (GeneratorModule) enu.nextElement();
 				gen.generateFor(object, handler);
+				if(state != null) {
+					synchronized (instate) {
+						state.current++;
+					}
+				}
+			}
+			if(state != null) {
+				synchronized (instate) {
+					state.end();
+				}
 			}
 		}
 	}
@@ -555,6 +686,13 @@ public class XMLGenerator extends AbstractObjectReader {
 						type = ((EOEnterpriseObject)pers).entityName();
 					generateForPersonLink(pers, type, sync);
 				}
+				if(in.state != null) {
+					synchronized (in.state) {
+						in.state.current++;
+					}
+				}
+				handler.endElement("persdata");
+				handler.endDocument();
 				return;
 			}
 			NSArray students = (NSArray)in.options.valueForKey("students");
@@ -626,6 +764,11 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(teachers.count() > 0) {
 				EOSortOrdering.sortArrayUsingKeyOrderArray(teachers, Person.sorter);
 				generateForList(teachers, "teacher",sync);
+			}
+			if(in.state != null) {
+				synchronized (in.state) {
+					in.state.current++;
+				}
 			}
 			handler.endElement("persdata");
 			handler.endDocument();

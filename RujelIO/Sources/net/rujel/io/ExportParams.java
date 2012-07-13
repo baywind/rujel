@@ -50,7 +50,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
-import net.rujel.reusables.WOLogFormatter;
+import net.rujel.ui.Progress;
 
 public class ExportParams extends WOComponent {
 	
@@ -164,7 +164,15 @@ public class ExportParams extends WOComponent {
 			}
 		}
 		reportDict.takeValueForKey(info, "info");
-
+		
+		returnPage.takeValueForKey(plist, "reporter");
+		Progress progress = (Progress)pageWithName("Progress");
+		progress.returnPage = returnPage;
+		progress.resultPath = "result";
+		progress.title = (String)plist.valueForKey("title");
+		progress.state = XMLGenerator.backgroundGenerate(reportDict);
+		return progress.refresh();
+/*
 		byte[] result = null;
 		try {
 			result = XMLGenerator.generate(session(), (NSMutableDictionary)reportDict);
@@ -187,7 +195,7 @@ public class ExportParams extends WOComponent {
 		}
 		buf.append('"');
 		response.setHeader(buf.toString(),"Content-Disposition");
-		return response;
+		return response; */
     }
     
     public NSArray localList() {

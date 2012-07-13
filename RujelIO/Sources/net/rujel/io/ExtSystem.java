@@ -329,14 +329,25 @@ public class ExtSystem extends _ExtSystem {
 				NSMutableDictionary dict = (NSMutableDictionary) indexes.valueForKey(indexName);
 				if(dict.count() == 0)
 					continue;
-				SyncIndex ind = (toChangeInd == null)? null :
-					(SyncIndex)toChangeInd.removeLastObject();
-				if(ind == null) {
-					ind = (SyncIndex)EOUtilities.createAndInsertInstance(ec, SyncIndex.ENTITY_NAME);
-					addObjectToBothSidesOfRelationshipWithKey(ind, SYNC_INDEXES_KEY);
+				SyncIndex ind =  null;
+				for (int i = 0; i < data.count(); i++) {
+					ind = (SyncIndex)data.objectAtIndex(i);
+					if(indexName.equals(ind.indexName()))
+						break;
+					else
+						ind = null;
 				}
-				ind.setIndexName(indexName);
-				ind.setExtBase(base);
+				if(ind == null) {
+					if (toChangeInd != null)
+						ind =(SyncIndex)toChangeInd.removeLastObject();
+					if(ind == null) {
+						ind = (SyncIndex)EOUtilities.createAndInsertInstance(ec,
+								SyncIndex.ENTITY_NAME);
+						addObjectToBothSidesOfRelationshipWithKey(ind, SYNC_INDEXES_KEY);
+					}
+					ind.setIndexName(indexName);
+					ind.setExtBase(base);
+				}
 				Enumeration medu = dict.keyEnumerator();
 				while (medu.hasMoreElements()) {
 					String local = (String) medu.nextElement();

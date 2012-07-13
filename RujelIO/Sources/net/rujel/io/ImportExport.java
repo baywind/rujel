@@ -50,8 +50,8 @@ import net.rujel.reports.ReporterSetup;
 import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
-import net.rujel.reusables.WOLogFormatter;
 import net.rujel.ui.LessonList;
+import net.rujel.ui.Progress;
 
 public class ImportExport extends LessonList {
 
@@ -60,6 +60,7 @@ public class ImportExport extends LessonList {
     public NSKeyValueCoding item;
     public NSMutableDictionary reporter;
     public EOEditingContext ec;
+    public byte[] result;
     
     public ImportExport(WOContext context) {
         super(context);
@@ -88,38 +89,40 @@ public class ImportExport extends LessonList {
     
     public WOActionResults useItem() {
     	if(item.valueForKey("extraData") != null || item.valueForKey("indexes") != null) {
-    		WOComponent result = pageWithName("ExportParams");
-    		result.takeValueForKey(this, "returnPage");
-    		result.takeValueForKey(item, "reporter");
-    		return result;
+    		WOComponent resultp = pageWithName("ExportParams");
+    		resultp.takeValueForKey(this, "returnPage");
+    		resultp.takeValueForKey(item, "reporter");
+    		return resultp;
     	}
-		WOComponent result = pageWithName("ReporterSetup");
-		result.takeValueForKey(this, "returnPage");
-		result.takeValueForKey(item, "reporter");
-		result.takeValueForKey("ImportExport", "dir");
+		WOComponent resultp = pageWithName("ReporterSetup");
+		resultp.takeValueForKey(this, "returnPage");
+		resultp.takeValueForKey(item, "reporter");
+		resultp.takeValueForKey("ImportExport", "dir");
 //		result.takeValueForKey("reporter","submitPath");
-		return result;
+		return resultp;
     }
     
     public WOActionResults export() {
-    	NSMutableDictionary reportDict = new NSMutableDictionary();
-		reportDict.takeValueForKey(reporter,"reporter");
-		NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
-				(Integer)session().valueForKey("eduYear")), "eduYear");
-		reportDict.takeValueForKey(info, "info");
-		reportDict.takeValueForKey("ImportExport", "reportDir");
-		info = (NSMutableDictionary)reporter.valueForKey("settings");
-		if(info == null) {
-			info = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
-					ReportsModule.reportsFolder("ImportExport"));
-			reporter.takeValueForKey(info, "settings");
-		}
-		byte[] result = null;
-		try {
-			result = XMLGenerator.generate(session(), (NSMutableDictionary)reportDict);
-		} catch (Exception e) {
-			result = WOLogFormatter.formatTrowable(e).getBytes();
-		}
+    	if(result == null) {
+    		NSMutableDictionary reportDict = new NSMutableDictionary();
+    		reportDict.takeValueForKey(reporter,"reporter");
+    		NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
+    				(Integer)session().valueForKey("eduYear")), "eduYear");
+    		reportDict.takeValueForKey(info, "info");
+    		reportDict.takeValueForKey("ImportExport", "reportDir");
+    		info = (NSMutableDictionary)reporter.valueForKey("settings");
+    		if(info == null) {
+    			info = ReporterSetup.getDefaultSettings((NSDictionary)reporter,
+    					ReportsModule.reportsFolder("ImportExport"));
+    			reporter.takeValueForKey(info, "settings");
+    		}
+    		Progress progress = (Progress)pageWithName("Progress");
+    		progress.returnPage = this;
+    		progress.resultPath = "result";
+    		progress.title = (String)reporter.valueForKey("title");
+    		progress.state = XMLGenerator.backgroundGenerate(reportDict);
+    		return progress.refresh();
+    	}
 		WOResponse response = application().createResponseInContext(context());
 		response.setContent(result);
 		String contentType = (String)reporter.valueForKey("ContentType");
@@ -142,14 +145,16 @@ public class ImportExport extends LessonList {
 		buf.append('"');
 		response.setHeader(buf.toString(),"Content-Disposition");
 		reporter = null;
+		result = null;
 		return response;
     }
     
     public String onLoad() {
-//    	if(reporter == null)
-    		reporter = (NSMutableDictionary)context().userInfoForKey("submittedReporter");
-    	if(reporter != null)
+    	if(result != null)
     		return "window.location=globalActionUrl;";
+    	reporter = (NSMutableDictionary)context().userInfoForKey("submittedReporter");
+    	if(reporter != null)
+    		return "ajaxPopupAction(globalActionUrl,null);";
     	return null;
     }
     

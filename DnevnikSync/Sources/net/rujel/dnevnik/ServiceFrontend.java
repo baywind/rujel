@@ -15,8 +15,8 @@ import net.rujel.interfaces.EduGroup;
 import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
 import net.rujel.io.SyncEvent;
-import net.rujel.reusables.MultiECLockManager;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.ui.Progress;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
@@ -379,19 +379,23 @@ public class ServiceFrontend extends WOComponent {
 		sychroniser.system = sync;
 		sychroniser.schoolGuid = schoolGuid;
 		sychroniser.soap = soap;
+		sychroniser.since = since;
+		sychroniser.to = to;
+		sychroniser.state = new Progress.State();
 //		sychroniser.syncChanges(since, to, limit);
 //        events = SyncEvent.eventsForSystem(sync, null, 10); 
 //		return null;
-		MultiECLockManager lm = (MultiECLockManager)session().valueForKey("ecLockManager");
-		if(lm != null)
-			lm.unregisterEditingContext(ec);
+		Thread thread = new Thread(sychroniser,"XMLGenerator");
+		thread.setPriority(Thread.MIN_PRIORITY + 1);
+		thread.start();
+
+		Progress progress = (Progress)pageWithName("Progress");
+		progress.returnPage = this;
+		progress.resultPath = "errors";
+		progress.title = "Загрузка данных в ОЭЖД";
+		progress.state = sychroniser.state;
 		
-		WOComponent waiter = pageWithName("SyncWaiter");
-		waiter.takeValueForKey(sychroniser, "sychroniser");
-		waiter.takeValueForKey(since, "since");
-		waiter.takeValueForKey(to, "to");
-		waiter.takeValueForKey(limit, "limit");
-		waiter.takeValueForKey(this, "returnPage");
-		return waiter;
+		return progress.refresh();
+
 	}
 }

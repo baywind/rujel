@@ -2,8 +2,10 @@ package net.rujel.dnevnik;
 
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import org.apache.axis.types.UnsignedByte;
 
@@ -34,7 +36,11 @@ import net.rujel.markarchive.MarkArchive;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
+import net.rujel.ui.Progress;
 
+import com.webobjects.appserver.WOMessage;
+import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
@@ -43,26 +49,24 @@ import com.webobjects.foundation.NSForwardException;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
-import com.webobjects.woextensions.WOLongResponsePage;
 
-public class Sychroniser {
+public class Sychroniser implements Runnable {
 	
 	public static final UnsignedByte ZERO = new UnsignedByte(0);
 	public static final UnsignedByte ONE = new UnsignedByte(1);
 	
 	private EOEditingContext ec;
 	public Integer eduYear;
+	public NSTimestamp since, to;
 	public ExtSystem system;
 	public ExtBase localBase;
 	public String schoolGuid;
-	public WOLongResponsePage waiter;
+	public Progress.State state;
 	
 	protected NSDictionary workTypes;
 	protected NSDictionary itogTypes;
 	
-	private EntityIndex lessonEI;
-	private EntityIndex workEI;
-	private EntityIndex timeslotEI;
+	private EntityIndex lessonEI, workEI, timeslotEI;
 	
 	protected ImportServiceSoap soap;
 	
@@ -75,8 +79,38 @@ public class Sychroniser {
 		this.ec = ec;
 		this.eduYear = eduYear;
 	}
+	
+	public void run() {
+		WOSession ses = MyUtility.dummyContext(null).session();
+		try {
+			ec = ses.defaultEditingContext();
+			system = (ExtSystem)EOUtilities.localInstanceOfObject(ec, system);
+			localBase = null;
+			lessonEI = null;
+			timeslotEI = null;
+			workEI = null;
+			critSetParams = null;
+			NSArray result = syncChanges();
+			if(state != null) {
+				synchronized (state) {
+					state.result = result;
+					state.current = state.total;
+				}
+			}
+			ses.terminate();
+		} catch (Exception e) {
+			if(state != null) {
+				synchronized (state) {
+					state.total = -state.total;
+					state.result = e;
+				}
+			}
+			Logger.getLogger("rujel.dnevnik").log(WOLogLevel.WARNING, 
+					"Dnevnik sync failed", new Object[]{ses,e});
+		}
+	}
 
-	public NSArray syncChanges(NSTimestamp since, NSTimestamp to, Integer limit) {
+	public NSArray syncChanges() {
 		EOQualifier qual = null;
 		if(since != null) {
 			if(to == null)
@@ -93,17 +127,15 @@ public class Sychroniser {
 				new EOSortOrdering(MarkArchive.TIMESTAMP_KEY, EOSortOrdering.CompareAscending));
 		EOFetchSpecification fs = new EOFetchSpecification(MarkArchive.ENTITY_NAME,qual,list);
 		fs.setPrefetchingRelationshipKeyPaths(new NSArray(MarkArchive.USED_ENTITY_KEY));
-		if(limit != null)
-			fs.setFetchLimit(limit.intValue());
+//		if(limit != null)
+//			fs.setFetchLimit(limit.intValue());
 		list = ec.objectsWithFetchSpecification(fs);
 		if(list == null || list.count() == 0)
 			return null;
-		NSMutableDictionary status = null;
-		NSMutableArray errors = new NSMutableArray();
-		if(waiter != null) {
-			status = new NSMutableDictionary();
-			status.takeValueForKey(new Integer(list.count()), "total");
-			status.takeValueForKey(errors, "errors");
+		if(state != null) {
+			synchronized (state) {
+				state.total = list.count();
+			}
 		}
 		if(system == null)
 			system = (ExtSystem)ExtSystem.extSystemNamed("oejd.moscow", ec, true);
@@ -117,12 +149,16 @@ public class Sychroniser {
 			ec.saveChanges();
 		NSTimestamp last = null;
 		SyncEvent event = null;
+		SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+		NSMutableArray errors = new NSMutableArray();
+
 		for (int idx = 0; idx < list.count(); idx++) {
 			MarkArchive arch = (MarkArchive) list.objectAtIndex(idx);
-			if(status != null) {
-				status.takeValueForKey(new Integer(idx), "current");
-				status.takeValueForKey(arch.timestamp(), "moment");
-				waiter.setStatus(status);
+			if(state != null) {
+				synchronized (state) {
+					state.current = idx;
+					state.name = df.format(arch.timestamp());
+				}
 			}
 			String entity = (String)arch.valueForKeyPath("usedEntity.usedEntity");
 			try {
@@ -151,10 +187,18 @@ public class Sychroniser {
 				dict.takeValueForKey(MyUtility.getID(arch), "archID");
 				dict.takeValueForKey(e, "exception");
 				StackTraceElement trace[] = e.getStackTrace();
+				String method = null;
 				for (int i = 0; i < trace.length; i++) {
 					if(trace[i].getClassName().contains("ImportServiceSoap")) {
-						dict.takeValueForKey(trace[i].getMethodName(), "method");
+						method = trace[i].getMethodName();
 						break;
+					}
+				}
+				dict.takeValueForKey(method, "method");
+				if(state != null) {
+					synchronized (state) {
+						state.addMessage(method + ": " + 
+								WOMessage.stringByEscapingHTMLString(e.getMessage()));
 					}
 				}
 				errors.addObject(dict);
