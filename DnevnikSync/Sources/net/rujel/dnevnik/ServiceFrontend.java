@@ -396,6 +396,10 @@ public class ServiceFrontend extends WOComponent {
 		progress.state = sychroniser.state;
 		
 		return progress.refresh();
+	}
 
+	public void setErrors(NSArray errors) {
+		this.errors = errors;
+        events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
 	}
 }

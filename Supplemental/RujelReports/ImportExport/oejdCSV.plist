@@ -308,12 +308,6 @@
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Работа на уроке</string>
-					<key>value</key>
-					<string>LessonBehavior</string>
-				</dict>
-				<dict>
-					<key>title</key>
 					<string>Домашнее задание</string>
 					<key>value</key>
 					<string>LessonHomework</string>

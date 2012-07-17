@@ -328,8 +328,8 @@ public class Sychroniser implements Runnable {
 			if(workEI == null)
 				workEI = EntityIndex.indexForEntityName(ec, "Work", false);
 			NSArray works = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
-					"entityIndex = %@ AND (extID like %s'|*' OR extID like %s' *')", 
-					new NSArray(new Object[] {workEI, match.extID(), match.extID()}));
+				"extSystem = %@ AND entityIndex = %@ AND (extID like %s'|*' OR extID like %s' *')", 
+					new NSArray(new Object[] {system,workEI, match.extID(), match.extID()}));
 			if(works == null || works.count() == 0) {
 				try {
 					soap.deleteLesson(lessonID);
@@ -338,8 +338,8 @@ public class Sychroniser implements Runnable {
 						throw e;
 				}
 				works = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
-						"entityIndex = %@ AND extID like %s' *'",
-						new NSArray(new Object[] {timeslotEI, match.extID()}));
+						"extSystem = %@ AND entityIndex = %@ AND extID like %s' *'",
+						new NSArray(new Object[] {system,timeslotEI, match.extID()}));
 				if(works != null) {
 					for (int i = 0; i < works.count(); i++) {
 						ec.deleteObject((EOEnterpriseObject)works.objectAtIndex(i));
@@ -395,8 +395,8 @@ public class Sychroniser implements Runnable {
 		} else {
 			if(tsMatch == null) { // update timeslot
 				NSArray found = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
-						"entityIndex = %@ AND extID like %s' *'",
-						new NSArray(new Object[] {timeslotEI, match.extID()}));
+						"extSystem = %@ AND entityIndex = %@ AND extID like %s' *'",
+						new NSArray(new Object[] {system,timeslotEI, match.extID()}));
 				if(found != null && found.count() > 0) {
 					tsMatch = (SyncMatch)found.objectAtIndex(0);
 					tsMatch.setObjID(timeslot);
@@ -484,6 +484,8 @@ public class Sychroniser implements Runnable {
 	private NSDictionary[] syncWork(MarkArchive arch) throws RemoteException {
 		if(workEI == null)
 			workEI = EntityIndex.indexForEntityName(ec, "Work", false);
+		if(timeslotEI == null)
+			timeslotEI = EntityIndex.indexForEntityName(ec, "Timeslot", true);
 		SyncMatch match = null;
 		if(arch.actionType().intValue() != 1) {
 			match = getMatch(workEI, arch.getKeyValue("work"));
@@ -493,19 +495,51 @@ public class Sychroniser implements Runnable {
 		if(arch.actionType().intValue() == 3) {
 			String extID = match.extID();
 			int idx2 = extID.lastIndexOf(';');
+			NSMutableArray toDelete = new NSMutableArray();
+			NSMutableArray quals = new NSMutableArray();
 			while (idx2 > 0) {
 				int idx1 = idx2 -1;
 				if(Character.isDigit(extID.charAt(idx1))) {
 					idx1 = extID.lastIndexOf(' ',idx1);
-					long workID = Long.parseLong(extID.substring(idx1 +1,idx2));
+					String txtID = extID.substring(idx1 +1,idx2);
+					toDelete.addObject(txtID);
+					quals.addObject(new EOKeyValueQualifier(SyncMatch.EXT_ID_KEY,
+							EOQualifier.QualifierOperatorLike,"* " + txtID));
+				}
+				idx2 = extID.lastIndexOf(';',idx1);
+			}
+			if(quals.count() > 1) {
+				EOQualifier qual = new EOOrQualifier(quals);
+				quals.removeAllObjects();
+				quals.addObject(qual);
+			}
+			quals.addObject(new EOKeyValueQualifier(SyncMatch.EXT_SYSTEM_KEY, 
+					EOQualifier.QualifierOperatorEqual, system));
+			quals.addObject(new EOKeyValueQualifier(SyncMatch.ENTITY_INDEX_KEY, 
+					EOQualifier.QualifierOperatorEqual, timeslotEI));
+			EOFetchSpecification fs = new EOFetchSpecification(SyncMatch.ENTITY_NAME,
+					new EOAndQualifier(quals),null);
+			NSArray found = ec.objectsWithFetchSpecification(fs);
+			if(found != null && found.count() > 0) {
+				for (int i = 0; i < found.count(); i++) {
+					SyncMatch sm = (SyncMatch)found.objectAtIndex(i);
+					String wID = sm.extID();
+					int idx = wID.indexOf(' ');
+					if(idx < 0) continue;
+					wID = wID.substring(idx +1);
+					toDelete.removeObject(wID);
+				}
+			}
+			if(toDelete.count() > 0) {
+				for (int i = 0; i < toDelete.count(); i++) {
+					String wID = (String)toDelete.objectAtIndex(0);
 					try {
-						soap.deleteWork(workID);
+						soap.deleteWork(Long.parseLong(wID));
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
 							throw e;
 					}
 				}
-				idx2 = extID.lastIndexOf(';',idx1);
 			}
 			ec.deleteObject(match);
 			ec.saveChanges();
@@ -531,7 +565,7 @@ public class Sychroniser implements Runnable {
 				NSMutableDictionary crByNum = new NSMutableDictionary();
 				while (enu.hasMoreElements()) {
 					String key = (String) enu.nextElement();
-					if(key.charAt(0) != 'm' && !Character.isDigit(key.charAt(1)))
+					if(key.charAt(0) != 'm' || !Character.isDigit(key.charAt(1)))
 						continue;
 					int crit = Integer.parseInt(key.substring(1));
 					if(crit > max)
@@ -548,7 +582,7 @@ public class Sychroniser implements Runnable {
 				Enumeration cenu = crByNum.keyEnumerator();
 				while (cenu.hasMoreElements()) {
 					Integer cr = (Integer) cenu.nextElement();
-					criteria[cr] = (NSMutableDictionary)crByNum.objectForKey(cr);
+					criteria[cr.intValue()] = (NSMutableDictionary)crByNum.objectForKey(cr);
 				}
 			} else {
 				NSDictionary[] preset = analyseCriteriaSet(csID);
@@ -603,8 +637,6 @@ public class Sychroniser implements Runnable {
 			Integer timeslot = new Integer(getTimeslot(course, cal, number));
 			cal.setTime(date);
 			cal.set(Calendar.HOUR_OF_DAY, timeShift);
-			if(timeslotEI == null)
-				timeslotEI = EntityIndex.indexForEntityName(ec, "Timeslot", true);
 			SyncMatch tsMatch = getMatch(timeslotEI, timeslot);
 			long[] ids;
 			if(tsMatch == null) {
@@ -626,14 +658,8 @@ public class Sychroniser implements Runnable {
 			}
 			lessonID = ids[0];
 			ec.saveChanges();
-			if(workType == EduWorkType.LessonBehavior) {
-				existing = new String[criteria.length];
-				for (int i = 0; i < criteria.length; i++) {
-					if(criteria[i] != null) {
-						existing[i] = "# 5 " + ids[1];
-						break;
-					}
-				}
+			if(workType == null && criteria.length == 1) {
+				existing = new String[] {"# 5 " + ids[1]};
 			} else {
 				existing = new String[0];
 			}
@@ -641,9 +667,19 @@ public class Sychroniser implements Runnable {
 			String extID = match.extID();
 			int idx = extID.indexOf('|');
 			int idx2 = Math.min(idx, extID.indexOf(' '));
-			lessonID = Long.parseLong(extID.substring(0,idx2));
+			String lID = extID.substring(0,idx2);
+			lessonID = Long.parseLong(lID);
 			extID = extID.substring(idx +1);
 			existing = extID.split(";",-1);
+			if(workType != null && existing[0] != null && existing[0].length() == 1) {
+				idx = existing[0].lastIndexOf(' ');
+				String tsID = lID + existing[0].substring(idx);
+				NSArray args = new NSArray(new Object[] {system, timeslotEI, tsID});
+				NSArray found = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME,
+						"extSystem = %@ AND entityIndex = %@ AND extID = %s", args);
+				if(found != null && found.count() > 0)
+					existing = new String[0];
+			}
 		}
 		for (int i = 0; i < existing.length || i < criteria.length; i++) {
 			Long workID = null;
@@ -664,15 +700,17 @@ public class Sychroniser implements Runnable {
 						markType = EduMarkType.Mark100;
 				}
 				if(workID == null) {
+					if(workType == null)
+						workType = EduWorkType.LessonAnswer;
 					workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
 				} else {
 					try {
-						EduWorkType type = (workType == EduWorkType.LessonBehavior)? null : workType;
-						soap.updateWork(workID.longValue(), type, markType, ONE, name, null);
+//						EduWorkType type = (workType == EduWorkType.LessonBehavior)? null : workType;
+						soap.updateWork(workID.longValue(), workType, markType, ONE, name, null);
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
 							throw e;
-						if(workType == EduWorkType.LessonBehavior)
+						if(workType == null)
 							workType = EduWorkType.LessonAnswer;
 						workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
 					}
@@ -804,26 +842,33 @@ public class Sychroniser implements Runnable {
 		return preset;
 	}
 	
+	private String onLesson;
 	protected EduWorkType getWorkType(MarkArchive arch) {
+		String workType = arch.getArchiveValueForKey("workType");
+		if(workType == null)
+			return null;
+		workType = workType.substring(9);
+		if(onLesson == null)
+			onLesson = MyUtility.getID(WorkType.getSpecType(ec, "onLesson"));
+		if(workType.equals(onLesson))
+			return null;
 		if(workTypes == null) {
 			SyncIndex indexer = system.getIndexNamed("workType", null, false);
 			workTypes = indexer.getDict();
 			if(workTypes == null) {
 				workTypes = new NSMutableDictionary();
 				NSArray types = EOUtilities.objectsForEntityNamed(ec, WorkType.ENTITY_NAME);
-				Integer onLesson = (Integer)WorkType.specTypes.valueForKey("onLesson");
 				Enumeration enu = types.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					WorkType type = (WorkType) enu.nextElement();
-					if(onLesson.equals(type.dfltFlags()))
-						workTypes.takeValueForKey("LessonBehavior", MyUtility.getID(type));
-					else if(type.namedFlags().flagForKey("hometask"))
+//					if(onLesson.equals(type.dfltFlags()))
+//						workTypes.takeValueForKey("LessonBehavior", MyUtility.getID(type));
+					if(type.namedFlags().flagForKey("hometask"))
 						workTypes.takeValueForKey("LessonHomework", MyUtility.getID(type));
 				}
 			} // generate defaultTypes
 		}
-		String workType = arch.getArchiveValueForKey("workType");
-		workType = (workType==null)?null:(String)workTypes.valueForKey(workType.substring(9));
+		workType = (String)workTypes.valueForKey(workType);
 		if(workType == null)
 			return EduWorkType.LessonAnswer;
 		return EduWorkType.fromString(workType);
