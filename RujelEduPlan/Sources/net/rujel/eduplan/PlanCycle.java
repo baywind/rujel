@@ -90,26 +90,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		return school;
 	}
-	
-	protected WOSession session() {
-		EOEditingContext ec = editingContext();
-		WOSession ses = null;
-		if(ec instanceof SessionedEditingContext) {
-			ses = (WOSession)((SessionedEditingContext)ec).session();
-		}
-		return ses;
-	}
-	
-	protected Object sesValueForKey(String key) {
-		WOSession ses = session();
-		if(ses == null)
-			return null;
-		return ses.valueForKey(key);
-	}
-	protected Object sesValueForKey(String key, Object dflt) {
-		Object result = sesValueForKey(key);
-		return (result == null)?dflt:result;
-	}
+
 /*
     // If you add instance variables to store property values you
     // should add empty implementions of the Serialization methods

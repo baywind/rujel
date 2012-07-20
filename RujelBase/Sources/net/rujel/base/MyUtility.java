@@ -140,16 +140,22 @@ public class MyUtility {
 	
 	public static Integer eduYear(EOEditingContext ec) {
 		Integer eduYear = null;
-		if (ec instanceof SessionedEditingContext) {
-			WOSession ses = ((SessionedEditingContext)ec).session();
-			eduYear = (Integer)ses.valueForKey("eduYear");
+		String tag = (String)ec.rootObjectStore().userInfoForKey("tag");
+		if(tag != null) {
+			try {
+				return new Integer(tag);
+			} catch (Exception e) {}
 		}
 		if(eduYear == null) {
+			if (ec instanceof SessionedEditingContext) {
+				WOSession ses = ((SessionedEditingContext)ec).session();
+				eduYear = (Integer)ses.valueForKey("eduYear");
+				if(eduYear != null)
+					return eduYear;
+			}
 			try {
 				eduYear = (Integer)WOApplication.application().valueForKey("year");
-			} catch (Exception e) {
-				;
-			}
+			} catch (Exception e) {}
 		}
 		if(eduYear == null) {
 			eduYear = eduYearForDate(null);
@@ -166,6 +172,12 @@ public class MyUtility {
 				Integer eduYear = (Integer)ses.valueForKey("eduYear");
 				if(eduYear != null)
 					date = MyUtility.dayInEduYear(eduYear.intValue());
+			}
+		} else if(ec != null) {
+			String tag = (String)ec.rootObjectStore().userInfoForKey("tag");
+			if(tag != null) {
+				int eduYear = Integer.parseInt(tag);
+				date = MyUtility.dayInEduYear(eduYear);
 			}
 		}
 		if(date == null)
