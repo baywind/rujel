@@ -49,5 +49,7 @@
 	<classpathentry kind="con" path="WOFramework/RujelSchedule"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelIO"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/DnevnikSync"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelREST"/>
+	<classpathentry kind="con" path="WOFramework/RujelREST"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
