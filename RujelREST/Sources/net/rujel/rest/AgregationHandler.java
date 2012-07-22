@@ -30,10 +30,13 @@
 package net.rujel.rest;
 
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
-import net.rujel.reusables.Counter;
+import net.rujel.rest.Agregator.ParseError;
 import net.rujel.reusables.DataBaseConnector;
+import net.rujel.reusables.WOLogFormatter;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
@@ -41,9 +44,6 @@ import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WORequestHandler;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSKeyValueCoding;
-import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class AgregationHandler extends WORequestHandler {
@@ -53,7 +53,17 @@ public class AgregationHandler extends WORequestHandler {
 	public WOResponse handleRequest(WORequest req) {
 		WOApplication app = WOApplication.application();
 		WOContext context = app.createContextForRequest(req);
-		String txt = req.stringFormValueForKey("eduYear");
+		String txt = req.requestHandlerPath();
+		if(txt == null || txt.length() == 0) {
+			WOResponse response = app.createResponseInContext(context); 
+			response.setHeader("text/html; charset=UTF-8","Content-Type");
+			response.setContent(app.resourceManager().bytesForResourceNamed(
+					"prepareRequest.html", "RujelREST", null));
+			return response;
+		}
+		ReportSource res = new ReportSource();
+		res.entity = txt;
+		txt = req.stringFormValueForKey("eduYear");
 		Integer eduYear = (txt == null)?(Integer)WOApplication.application().valueForKey("year"):
 			new Integer(txt);
 		if(eduYear == null)
@@ -61,117 +71,96 @@ public class AgregationHandler extends WORequestHandler {
 		context.setUserInfoForKey(eduYear, "eduYear");
 		if(txt == null)
 			txt = eduYear.toString();
-		ReportSource res = new ReportSource();
 		EOEditingContext ec = new EOEditingContext(DataBaseConnector.objectStoreForTag(txt));
-		res.entity = req.requestHandlerPath();
+		ec.lock();
+		byte[] result;
+		try {
 		AgrEntity entity = AgrEntity.forName(res.entity,ec);
 		context.setUserInfoForKey(entity, res.entity);
-		Enumeration enu = entity.rawRowsEnumeration(req);
-		res.attributes = (NSDictionary)context.userInfoForKey("params");
-		int lvl = 0;
-		NSMutableArray agrList = null;
-		while (true) {
-			txt = req.stringFormValueForKey("_grp" + (lvl +1));
+		NSMutableDictionary params = new NSMutableDictionary();
+		Enumeration enu = entity.attributes().objectEnumerator();
+		while (enu.hasMoreElements()) {
+			String key = (String) enu.nextElement();
+			params.takeValueForKey(req.stringFormValueForKey(key), key);
+		}
+		res.attributes = params;
+		try {
+			enu = entity.getObjectsEnumeration(params);
+		} catch (ParseError e) {
+			return parseError(e, context);
+		}
+		int lvl = 1;
+		while (enu != null) {
+			txt = req.stringFormValueForKey("_grp" + lvl);
 			if(txt == null)
 				break;
-			lvl++;
-			String[] grp = txt.split(",");
-			for (int i = 0; i < grp.length; i++) {
-				grp[i] = grp[i].trim();
+			res.groupings = txt.split(",");
+			for (int i = 0; i < res.groupings.length; i++) {
+				res.groupings[i] = res.groupings[i].trim();
 			}
 			txt = req.stringFormValueForKey("_agr" + lvl);
-			String[] agr = txt.split(",");
-			for (int i = 0; i < agr.length; i++) {
-				agr[i] = agr[i].trim();
-			}
-			agrList = new NSMutableArray();
-			NSMutableDictionary agrDict = new NSMutableDictionary();
-			while (enu.hasMoreElements()) {
-				NSKeyValueCoding row = (NSKeyValueCoding) enu.nextElement();
-				if(res.agregates != null) {
-					for (int i = 0; i < res.agregates.length; i++) {
-						Agregator agregator = (Agregator)row.valueForKey(res.agregates[i]);
-						if(agregator != null)
-							row.takeValueForKey(agregator.getResult(), res.agregates[i]);
-					}
-				}
-				NSMutableDictionary dict = agrDict;
-				for (int i = 0; i < grp.length; i++) {
-					Object key = row.valueForKey(grp[i]);
-					if(key == null)
-						key = NSKeyValueCoding.NullValue;
-					NSMutableDictionary found = (NSMutableDictionary)dict.objectForKey(key);
-					if(found == null) {
-						found = new NSMutableDictionary();
-						dict.setObjectForKey(found, key);
-					}
-					dict = found;
-				}
-				if(dict.count() == 0) {
-					for (int i = 0; i < grp.length; i++) {
-						dict.takeValueForKey(row.valueForKey(grp[i]), grp[i]);
-					}
-					agrList.addObject(dict);
-					dict.setObjectForKey(new Counter(1), "_count_");
-					if(agr == null) continue;
-					for (int i = 0; i < agr.length; i++) {
-						String source = req.stringFormValueForKey(agr[i]);
-						Agregator agregator = Agregator.parceAgregator(source);
-						dict.setObjectForKey(agregator, agr[i]);
-						agregator.scan(row);
-					}
-				} else {
-					dict.valueForKeyPath("_count_.raise");
-					if(agr == null) continue;
-					for (int i = 0; i < agr.length; i++) {
-						Agregator agregator = (Agregator)dict.valueForKey(agr[i]);
-						agregator.scan(row);
-					}
-				}
-			} // rows enumeration
-			res.agregates = agr;
-			res.groupings = grp;
-			enu = agrList.objectEnumerator();
-		} // argegation levels
-		res.level = lvl;
-		res.rows = agrList.immutableClone();
-		WOResponse response = app.createResponseInContext(context);
-		try {
-			response.setContent(ResponseXML.generate(res));
-			response.setHeader("text/xml","Content-Type");
-		} catch (Exception e) {
-			response.appendContentString("Oops!!");
-		}
-		/*
-		for (int i = 0; i < res.groupings.length; i++) {
-			response.appendContentHTMLString(res.groupings[i]);
-			response.appendContentCharacter(';');
-		}
-		for (int i = 0; i < res.agregates.length; i++) {
-			response.appendContentHTMLString(res.agregates[i]);
-			response.appendContentCharacter(';');
-		}
-		response.appendContentCharacter('\n');
-		while (enu.hasMoreElements()) {
-			NSMutableDictionary row = (NSMutableDictionary) enu.nextElement();
-			for (int i = 0; i < res.groupings.length; i++) {
-				String key = res.groupings[i];
-				Object value = row.valueForKey(key);
-				if(value != null)
-					response.appendContentHTMLString(value.toString());
-				response.appendContentCharacter(';');
-			}
+			String[] prevAgr = res.agregates;
+			res.agregates = txt.split(",");
+			Agregator[] agregators = new Agregator[res.agregates.length];
 			for (int i = 0; i < res.agregates.length; i++) {
-				String key = res.agregates[i];
-				Object value = row.valueForKey(key);
-				if(value != null)
-					response.appendContentHTMLString(value.toString());
-				response.appendContentCharacter(';');
+				String key = res.agregates[i].trim();
+				res.agregates[i] = key;
+				String source = req.stringFormValueForKey(key);
+				if(source == null)
+					continue;
+				try {
+					agregators[i] = Agregator.parceAgregator(source);
+					agregators[i].name = key;
+				} catch (ParseError e) {
+					return parseError(e, context);
+				}
 			}
-			response.appendContentCharacter('\n');
-		} */
+			res.agregate(agregators, enu, prevAgr);
+			res.level = new Integer(lvl);
+			enu = (res.rows == null || res.rows.count() == 0)? null : res.rows.objectEnumerator();
+			lvl++;
+		} // argegation levels
+			result = ResponseXML.generate(res);
+		} catch (Exception e) {
+			return error(e, context);
+		} finally {
+			ec.unlock();
+			ec.dispose();
+		}
+		WOResponse response = app.createResponseInContext(context);
+		response.setContent(result);
+		response.setHeader("text/xml; charset=UTF-8","Content-Type");
 		response.disableClientCaching();
 		return response;
 	}
+	
+	public WOResponse error(Throwable error, WOContext context) {
+		WOResponse response =  WOApplication.application().createResponseInContext(context);
+		response.setHeader("text/plain; charset=UTF-8","Content-Type");
+		if(error instanceof IllegalArgumentException && error.getMessage().contains("entity")) {
+			response.appendContentString(error.getMessage());
+			response.setStatus(WOResponse.HTTP_STATUS_NOT_FOUND);
+		} else {
+			Logger.getLogger("rujel.rest").log(Level.WARNING,"Error in service response",error);
+			response.setStatus(WOResponse.HTTP_STATUS_INTERNAL_ERROR);
+			response.appendContentString("Error occured when generating response.\n\n");
+			response.appendContentString(WOLogFormatter.formatTrowable(error));
+		}
+		return response;
+	}
 
+	public WOResponse parseError(ParseError error, WOContext context) {
+		WOResponse response = WOApplication.application().createResponseInContext(context);
+		response.setHeader("text/plain; charset=UTF-8","Content-Type");
+		response.appendContentString("An error occured when parsing request parameter:\n\n");
+		response.appendContentString(error.getParsingString());
+		response.appendContentCharacter('\n');
+		response.appendContentString(error.showPosition());
+		response.appendContentCharacter('\n');
+		response.appendContentString(error.getMessage());
+		response.appendContentCharacter('\n');
+		response.setStatus(WOResponse.HTTP_STATUS_INTERNAL_ERROR);
+		return response;
+	}
+	
 }

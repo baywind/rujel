@@ -33,7 +33,8 @@ import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
-import com.webobjects.appserver.WORequest;
+import net.rujel.rest.Agregator.ParseError;
+
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
@@ -65,16 +66,10 @@ public abstract class AgrEntity {
 
 	public abstract String entityName();
 	public abstract NSArray attributes();
-	public abstract Enumeration rawRowsEnumeration(WORequest req);
+	public abstract Enumeration getObjectsEnumeration(NSDictionary params) throws ParseError;
 	public abstract Object getValue(EOEnterpriseObject obj, String attribute);
-
 	
-	public EOQualifier qualifierFromRequest(WORequest req) {
-		
-		return null;
-	}
-	
-	public static Object[] selectorAndValue(String value) {
+	public static Object[] selectorAndValue(String value) throws ParseError {
 		if(value == null || value.equals("*"))
 			return null;
 		Object[] result = new Object[2];
@@ -111,7 +106,8 @@ public abstract class AgrEntity {
 						result[3] = value.substring(split +1, value.length() -1);
 					} else if("{".equals(op)) {
 						if(value.charAt(value.length() -1) != '}')
-							throw new IllegalArgumentException("Closing bracket not found");
+							throw new Agregator.ParseError("Closing bracket not found",
+									value.length() -1, value);
 						String[] values = value.substring(i, value.length() -1).split(",");
 						result = new Object[values.length +1];
 						result[0] = EOQualifier.QualifierOperatorEqual;
@@ -119,7 +115,7 @@ public abstract class AgrEntity {
 							result[j+1] = values[j];
 						}
 					} else 
-						throw new IllegalArgumentException("Unknown operator '" + op + '\'');
+						throw new Agregator.ParseError("Unknown operator '" + op + '\'',i,value);
 					break;
 				}
 			}
@@ -127,7 +123,8 @@ public abstract class AgrEntity {
 		return result;
 	}
 	
-	public static void addIntToQuals(NSMutableArray quals, String attrib, String value) {
+	public static void addIntToQuals(NSMutableArray quals, String attrib, String value)
+															throws ParseError {
 		Object[] snv = selectorAndValue(value);
 		if(snv != null) {
 			quals.addObject(new EOKeyValueQualifier(attrib, 
@@ -158,7 +155,8 @@ public abstract class AgrEntity {
 		return new BigDecimal(txt);
 	}
 	
-	public static void addDecToQuals(NSMutableArray quals, String attrib, String value) {
+	public static void addDecToQuals(NSMutableArray quals, String attrib, String value) 
+															throws ParseError {
 		Object[] snv = selectorAndValue(value);
 		if(snv != null) {
 			quals.addObject(new EOKeyValueQualifier(attrib, 
@@ -189,6 +187,7 @@ public abstract class AgrEntity {
 		public RowsEnum(AgrEntity entity, NSArray baseQuals, NSDictionary iterate) {
 			ent = entity;
 			quals = baseQuals.mutableClone();
+			base = quals.count();
 			if(iterate == null || iterate.count() == 0)
 				return;
 			itrAttr = new String[iterate.count()];
@@ -275,15 +274,23 @@ public abstract class AgrEntity {
 			return value;
 		}
 		
+		public int hashCode() {
+			return obj.hashCode();
+		}
 		public boolean equals(Object other) {
 			if(other instanceof Wrapper) {
-				return obj.equals(((Wrapper)other).obj);
+				EOEnterpriseObject obj2 = ((Wrapper)other).obj;
+				return obj.equals(obj2);
 			}
 			return false;
 		}
 		
 		public void takeValueForKey(Object arg0, String arg1) {
 			throw new UnsupportedOperationException();
+		}
+		
+		public String toString() {
+			return obj.entityName() + '#' + obj.hashCode();
 		}
 	}
 }

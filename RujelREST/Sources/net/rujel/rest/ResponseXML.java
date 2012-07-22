@@ -16,6 +16,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import com.webobjects.eocontrol.EOSortOrdering;
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 
 import net.rujel.reusables.xml.AbstractObjectReader;
@@ -63,6 +65,15 @@ public class ResponseXML extends AbstractObjectReader{
 				}
 	        }
 	        if(in.rows != null && in.rows.count() > 0) {
+	        	if(in.groupings != null) {
+	        		EOSortOrdering[] so = new EOSortOrdering[in.groupings.length];
+	        		for (int i = 0; i < so.length; i++) {
+						so[i] = new EOSortOrdering(in.groupings[i], 
+								EOSortOrdering.CompareAscending);
+					}
+	        		NSArray sorter = new NSArray(so);
+	        		in.rows = EOSortOrdering.sortedArrayUsingKeyOrderArray(in.rows, sorter);
+	        	}
 	        	Enumeration enu = in.rows.objectEnumerator();
 	        	while (enu.hasMoreElements()) {
 					NSDictionary row = (NSDictionary) enu.nextElement();
@@ -93,8 +104,8 @@ public class ResponseXML extends AbstractObjectReader{
 						}
 					}
 					handler.endElement("grouping");
-				}
-	        }
+				} // rows enumeration
+	        }// rows != null
 	        handler.endElement("response");
 	        handler.endDocument();
 	}

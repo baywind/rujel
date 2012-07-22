@@ -29,17 +29,77 @@
 
 package net.rujel.rest;
 
+import java.util.Enumeration;
+
+import net.rujel.reusables.Counter;
+
 import org.xml.sax.InputSource;
 
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 
 public class ReportSource extends InputSource {
 
 	public String entity;
 	public NSDictionary attributes;
-	public NSArray rows;
 	public String[] groupings;
 	public String[] agregates;
+	public NSArray rows;
 	public Integer level;
+
+	public void agregate(Agregator[] agregators, Enumeration enu, String[] prevAgr) {
+		NSMutableArray agrList = new NSMutableArray();
+		NSMutableDictionary agrDict = new NSMutableDictionary();
+		while (enu.hasMoreElements()) {
+			NSKeyValueCoding row = (NSKeyValueCoding) enu.nextElement();
+			if(prevAgr != null) {
+				for (int i = 0; i < prevAgr.length; i++) {
+					Agregator agregator = (Agregator)row.valueForKey(prevAgr[i]);
+					if(agregator != null)
+						row.takeValueForKey(agregator.getResult(), prevAgr[i]);
+				}
+			}
+			NSMutableDictionary dict = agrDict;
+			for (int i = 0; i < groupings.length; i++) {
+				Object key = row.valueForKey(groupings[i]);
+				if(key == null)
+					key = NSKeyValueCoding.NullValue;
+				NSMutableDictionary found = (NSMutableDictionary)dict.objectForKey(key);
+				if(found == null) {
+					found = new NSMutableDictionary();
+					dict.setObjectForKey(found, key);
+				}
+				dict = found;
+			}
+			if(dict.count() == 0) {
+				for (int i = 0; i < groupings.length; i++) {
+					dict.takeValueForKey(row.valueForKey(groupings[i]), groupings[i]);
+				}
+				agrList.addObject(dict);
+				dict.setObjectForKey(new Counter(1), "_count_");
+				if(agregators == null) continue;
+				for (int i = 0; i < agregators.length; i++) {
+					Agregator agr = agregators[i];
+					if(agr == null)
+						continue;
+					else
+						agr = agr.emptyClone();
+					dict.setObjectForKey(agr, agregators[i].name);
+					agr.scan(row);
+				}
+			} else {
+				dict.valueForKeyPath("_count_.raise");
+				if(agregates == null) continue;
+				for (int i = 0; i < agregates.length; i++) {
+					Agregator agregator = (Agregator)dict.valueForKey(agregates[i]);
+					if(agregator != null)
+						agregator.scan(row);
+				}
+			}
+		} // rows enumeration
+		rows = agrList.immutableClone();
+	}
 }

@@ -41,7 +41,7 @@ import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSSelector;
 
-public class Agregator {
+public class Agregator implements Cloneable {
 
 	public static final int COUNT = 0;
 	public static final int SUM = 1;
@@ -55,12 +55,27 @@ public class Agregator {
 	private int sum = 0;
 	private BigDecimal dsum;
 	
+	public String name;
+	
 	public Agregator(int action, String attribute,EOQualifier qualifier) {
 		if(action < 0 || action > 2)
 			throw new IllegalArgumentException("Unknown action code");
 		act = action;
 		qual = qualifier;
 		attrib = attribute;
+	}
+	
+	public Agregator clone() {
+		Agregator clone = new Agregator(act, attrib, qual);
+		clone.count = count;
+		clone.sum = sum;
+		clone.dsum = dsum;
+		clone.name = name;
+		return clone;
+	}
+	
+	public Agregator emptyClone() {
+		return new Agregator(act, attrib, qual);
 	}
 	
 	private static char skipWhitespace(String source, Counter pos) {
@@ -75,19 +90,19 @@ public class Agregator {
 		return ' ';
 	}
 	
-	private static String readAttribute(String source, Counter pos) {
+	private static String readAttribute(String source, Counter pos) throws ParseError {
 		skipWhitespace(source, pos);
 		for (int i = pos.intValue(); i < source.length(); i++) {
 			char c = source.charAt(i);
 			if(!Character.isLetterOrDigit(c) && c != '_') {
 				if(i == pos.intValue())
-					throw new IllegalArgumentException("Attribute name expected");
+					throw new ParseError("Attribute name expected",i,source);
 				String result = source.substring(pos.intValue(), i);
 				pos.setValue(i);
 				return result;
 			}
 		}
-		throw new IllegalArgumentException("Unexpected end of line");
+		throw new ParseError("Unexpected end of line",pos.intValue(),source);
 	}
 	
 	public static int actForName(String act) {
@@ -100,7 +115,7 @@ public class Agregator {
 		throw new IllegalArgumentException("Unknown action name '" + act + '\'');
 	}
 	
-	private static NSSelector readSelector(String source, Counter pos) {
+	private static NSSelector readSelector(String source, Counter pos) throws ParseError {
 		char c = skipWhitespace(source, pos);
 		int start = pos.intValue();
 		if(c == ':') {
@@ -108,14 +123,18 @@ public class Agregator {
 			return null;
 		}
 		if(c != '=' && c != '>' && c != '<' && c != '!')
-			throw new IllegalArgumentException("Qualifier string expected");
-		if(source.charAt(pos.raise()) == '=')
-			pos.raise();
+			throw new ParseError("Qualifier string expected",pos.intValue(),source);
+		try {
+			if(source.charAt(pos.raise()) == '=')
+				pos.raise();
+		} catch (StringIndexOutOfBoundsException e) {
+			throw new ParseError("Unexpected end of line",pos.intValue(),source);
+		}
 		String sel = source.substring(start,pos.intValue());
 		return EOQualifier.operatorSelectorForString(sel);
 	}
 	
-	private static EOQualifier readBrackets(String source, String attribute, Counter pos) {
+	private static EOQualifier readBrackets(String source, String attribute, Counter pos) throws ParseError {
 		char c = skipWhitespace(source, pos);
 		NSSelector sel = null;
 		NSMutableArray values = null;
@@ -126,7 +145,7 @@ public class Agregator {
 		} else if(c == '{') {
 			values = new NSMutableArray();
 		} else {
-			throw new IllegalArgumentException("Opening bracket expected after ':'");
+			throw new ParseError("Opening bracket expected after ':'",pos.intValue(),source);
 		}
 		pos.raise();
 		NSMutableArray quals = new NSMutableArray(2);
@@ -134,7 +153,7 @@ public class Agregator {
 			Object value = readValue(source, pos);
 			quals.addObject(new EOKeyValueQualifier(attribute,sel,value));
 			if(skipWhitespace(source, pos) != ',')
-				throw new IllegalArgumentException("Comma expected in brackets");
+				throw new ParseError("Comma expected in brackets",pos.intValue(),source);
 			pos.raise();
 			value = readValue(source, pos);
 			c = skipWhitespace(source, pos);
@@ -143,7 +162,7 @@ public class Agregator {
 			else if(c == ']')
 				sel = EOQualifier.QualifierOperatorLessThanOrEqualTo;
 			else
-				throw new IllegalArgumentException("Closing bracket expected");
+				throw new ParseError("Closing bracket expected",pos.intValue(),source);
 			pos.raise();
 			quals.addObject(new EOKeyValueQualifier(attribute,sel,value));
 			return new EOAndQualifier(quals);
@@ -159,7 +178,7 @@ public class Agregator {
 					pos.raise();
 					break;
 				} else {
-					throw new IllegalArgumentException("Closing bracket or comma expected.");
+					throw new ParseError("Closing bracket or comma expected.",pos.intValue(),source);
 				}
 			}
 			return new EOOrQualifier(quals);
@@ -167,7 +186,7 @@ public class Agregator {
 	}
 
 	
-	private static Object readValue(String source, Counter pos) {
+	private static Object readValue(String source, Counter pos) throws ParseError {
 		if(skipWhitespace(source, pos) == '\'')
 			return readQuote(source, pos);
 		if(source.regionMatches(true, pos.intValue(), "null", 0, 4)) {
@@ -185,7 +204,7 @@ public class Agregator {
 			if(!Character.isDigit(c)) {
 				if(c == '.') {
 					if(decimal)
-						throw new IllegalArgumentException("Wrong decimal format");
+						throw new ParseError("Wrong decimal format",i,source);
 					else
 						decimal = true;
 				} else {
@@ -198,7 +217,7 @@ public class Agregator {
 		if(result == null)
 			result = source.substring(pos.intValue());
 		if(result.length() == 0) {
-			throw new IllegalArgumentException("Unquoted nondigit value");
+			throw new ParseError("Unquoted nondigit value",pos.intValue(),source);
 		}
 		if(decimal)
 			return new BigDecimal(result);
@@ -206,7 +225,7 @@ public class Agregator {
 			return new Integer(result);
 	}
 
-	private static String readQuote(String source, Counter pos) {
+	private static String readQuote(String source, Counter pos) throws ParseError {
 		if(source.charAt(pos.intValue()) == '\'')
 			pos.raise();
 		for (int i = pos.intValue(); i < source.length(); i++) {
@@ -217,10 +236,10 @@ public class Agregator {
 				return result;
 			}
 		}
-		throw new IllegalArgumentException("Unclosed quotation");
+		throw new ParseError("Unclosed quotation",pos.intValue(),source);
 	}
 	
-	public static EOQualifier parceQualifier(String source, Counter pos) {
+	public static EOQualifier parceQualifier(String source, Counter pos) throws ParseError {
 		NSMutableArray quals = new NSMutableArray();
 		boolean and = true;
 		read:
@@ -255,14 +274,14 @@ public class Agregator {
 				break read;
 			} else if(c == '|') {
 				if(and && quals.count() > 1)
-					throw new IllegalArgumentException("Unexpected '&' and '|' mix.");
+					throw new ParseError("Unexpected '&' and '|' mix.",pos.intValue(),source);
 				else
 					and = false;
 			} else if(c == '&') {
 				if(!and)
-					throw new IllegalArgumentException("Unexpected '&' and '|' mix.");
+					throw new ParseError("Unexpected '&' and '|' mix.",pos.intValue(),source);
 			} else {
-				throw new IllegalArgumentException("Expected '&' or '|'");
+				throw new ParseError("Expected '&' or '|'",pos.intValue(),source);
 			}
 			pos.raise();
 		}
@@ -303,14 +322,14 @@ public class Agregator {
 		return true;
 	}
 	
-	public static Agregator parceAgregator(String source) {
+	public static Agregator parceAgregator(String source) throws ParseError {
 		if(source.equalsIgnoreCase("count"))
 			return new Agregator(COUNT, null, null);
 		Counter pos = new Counter();
 		String txt = readAttribute(source, pos);
 		int action = actForName(txt);
 		if(skipWhitespace(source, pos) != '(')
-			throw new IllegalArgumentException("Opening bracket expected");
+			throw new ParseError("Opening bracket expected",pos.intValue(),source);
 		int idx = pos.raise();
 		String attribute = null;
 		try {
@@ -338,7 +357,7 @@ public class Agregator {
 		}
 		if(act == SUM) {
 			if(dsum == null)
-				return new Integer(SUM);
+				return new Integer(sum);
 			else
 				return dsum;
 		}
@@ -395,6 +414,38 @@ public class Agregator {
 			return "avg";
 		default:
 			return "unknown";
+		}
+	}
+	
+	public static class ParseError extends Exception {
+		private int position;
+		private String source;
+		
+		public ParseError(String message, int parcePosition, String parsingString) {
+			super(message);
+			position = parcePosition;
+			source = parsingString;
+		}
+		
+		public int getPosition() {
+			return position;
+		}
+		public String getParsingString() {
+			return source;
+		}
+		
+		public String showPosition() {
+			if(source == null)
+				return null;
+			int len = Math.max(source.length(), position +1);
+			StringBuilder buf = new StringBuilder(source.length());
+			for (int i = 0; i < len; i++) {
+				if(i == position)
+					buf.append('^');
+				else
+					buf.append('-');
+			}
+			return buf.toString();
 		}
 	}
 }

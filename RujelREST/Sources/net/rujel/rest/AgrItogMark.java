@@ -1,27 +1,29 @@
 package net.rujel.rest;
 
+import java.math.BigDecimal;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
+import net.rujel.rest.Agregator.ParseError;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.WOApplication;
-import com.webobjects.appserver.WORequest;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class AgrItogMark extends AgrEntity {
 	
 	private static final String[] attributes = new String[] {
-		"student","grade"};
+		"eduYear","perCount","perNum","grade","subject","course","student","mark","value"};
 	
 	public String entityName() {
 		return ItogMark.ENTITY_NAME;
@@ -31,26 +33,21 @@ public class AgrItogMark extends AgrEntity {
 		return new NSArray(attributes);
 	}
 
-	public Enumeration rawRowsEnumeration(WORequest req) {
-		NSMutableDictionary params = new NSMutableDictionary();
+	public Enumeration getObjectsEnumeration(NSDictionary params) throws ParseError {
 		NSMutableArray quals = new NSMutableArray();
-		String txt = req.stringFormValueForKey("eduYear");
+		String txt = (String)params.valueForKey("eduYear");
 		if(txt == null) {
 			Integer year = (Integer)WOApplication.application().valueForKey("year");
 			if(year == null)
 				year = MyUtility.eduYearForDate(null);
 			quals.addObject(new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY, 
 					EOQualifier.QualifierOperatorEqual, year));
-			params.takeValueForKey(year, "eduYear");
 		} else {
 			addIntToQuals(quals, ItogContainer.EDU_YEAR_KEY, txt);
-			params.takeValueForKey(txt, "eduYear");
 		}
-		txt = req.stringFormValueForKey("perCount");
-		params.takeValueForKey(txt, "perCount");
+		txt = (String)params.valueForKey("perCount");
 		addIntToQuals(quals, "itogType.inYearCount", txt);
-		txt = req.stringFormValueForKey("perNum");
-		params.takeValueForKey(txt, "perNum");
+		txt = (String)params.valueForKey("perNum");
 		addIntToQuals(quals, ItogContainer.NUM_KEY, txt);
 		EOQualifier qual = new EOAndQualifier(quals);
 		quals.removeAllObjects();
@@ -65,7 +62,7 @@ public class AgrItogMark extends AgrEntity {
 			quals.addObject(new EOKeyValueQualifier(ItogMark.CONTAINER_KEY, 
 					EOQualifier.QualifierOperatorEqual, found.objectAtIndex(0)));
 		}
-		txt = req.stringFormValueForKey("grade");
+		txt = (String)params.valueForKey("grade");
 		if(txt == null) {
 			int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
 			int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
@@ -75,7 +72,6 @@ public class AgrItogMark extends AgrEntity {
 			}
 			iterate.takeValueForKey(new NSArray(list), "cycle.grade");
 		} else {
-			params.takeValueForKey(txt, "grade");
 			Object[] snv = selectorAndValue(txt);
 			if(snv[0] == EOQualifier.QualifierOperatorEqual) {
 				if(snv.length == 2) {
@@ -112,24 +108,23 @@ public class AgrItogMark extends AgrEntity {
 				iterate.takeValueForKey(new NSArray(list), "cycle.grade");
 			}
 		} // iterator for grade
-		txt = req.stringFormValueForKey("mark");
+		txt = (String)params.valueForKey("mark");
 		if(txt != null) {
-			params.takeValueForKey(txt, "mark");
 			quals.addObject(new EOKeyValueQualifier(ItogMark.MARK_KEY, 
 					EOQualifier.QualifierOperatorEqual, txt));
 		}
-		txt = req.stringFormValueForKey("value");
-		params.takeValueForKey(txt, "value");
+		txt = (String)params.valueForKey("value");
 		addDecToQuals(quals, ItogMark.VALUE_KEY, txt);
-		
-		req.context().setUserInfoForKey(params, "params");
-		
+				
 		//TODO: qualifiers for subject, student and course
 		
 		return new RowsEnum(this, quals, iterate);
 	}
 	
 	public Object getValue(EOEnterpriseObject obj, String attribute) {
+		if(!(obj instanceof ItogMark)) {
+			return "???";
+		}
 		ItogMark mark = (ItogMark)obj;
 		if(attribute.equals("subject"))
 			return mark.cycle().subject();
@@ -138,17 +133,39 @@ public class AgrItogMark extends AgrEntity {
 		if(attribute.equals("eduYear"))
 			return mark.container().eduYear();
 		if(attribute.equals("course")) //wrap
-			return mark.assumeCourse();
+			return new Wrapper(mark.assumeCourse());
 		if(attribute.equals("student")) //wrap
-			return mark.student();
+//			return mark.student();
+//			return WOLogFormatter.formatEO(mark.student());
+			return new Wrapper(mark.student());
 		if(attribute.equals("perNum"))
 			return mark.container().num();
 		if(attribute.equals("perCount"))
 			return mark.container().itogType().inYearCount();
 		if(attribute.equals("mark"))
 			return mark.mark();
-		if(attribute.equals("value"))
-			return mark.value();
+		if(attribute.equals("value")) {
+			BigDecimal val = mark.value();
+			if(val.compareTo(BigDecimal.ZERO) == 0) {
+				String m = mark.mark();
+				if(m == null)
+					return new Integer(0);
+				if(m.equals("5"))
+					return new Integer(1);
+				if(m.equals("4"))
+					return new BigDecimal("0.8");
+				if(m.equals("3"))
+					return new BigDecimal("0.6");
+				if(m.equals("2"))
+					return new BigDecimal("0.4");
+				if(m.startsWith("осв"))
+					return null;
+				return new Integer(0);
+			}
+			if(val.compareTo(BigDecimal.ONE) == 0)
+				return new Integer(1);
+			return val;
+		}
 		throw new IllegalArgumentException("Unknown attribute '" + attribute + '\'');
 	}
 }
