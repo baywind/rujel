@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.rest.Agregator.ParseError;
 import net.rujel.reusables.DataBaseConnector;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
 
 import com.webobjects.appserver.WOApplication;
@@ -49,6 +50,7 @@ import com.webobjects.foundation.NSMutableDictionary;
 public class AgregationHandler extends WORequestHandler {
 
 	public static final String handlerKey = "agr";
+	public static final Logger logger = Logger.getLogger("rujel.rest");
 	
 	public WOResponse handleRequest(WORequest req) {
 		WOApplication app = WOApplication.application();
@@ -61,6 +63,8 @@ public class AgregationHandler extends WORequestHandler {
 					"prepareRequest.html", "RujelREST", null));
 			return response;
 		}
+		logger.log(Level.FINER, "Agregation request for entity '" + txt + '\'',
+				new Object[] {Various.clientIdentity(req), req.formValues()});
 		ReportSource res = new ReportSource();
 		res.entity = txt;
 		txt = req.stringFormValueForKey("eduYear");
@@ -141,7 +145,7 @@ public class AgregationHandler extends WORequestHandler {
 			response.appendContentString(error.getMessage());
 			response.setStatus(WOResponse.HTTP_STATUS_NOT_FOUND);
 		} else {
-			Logger.getLogger("rujel.rest").log(Level.WARNING,"Error in service response",error);
+			logger.log(Level.WARNING,"Error in service response",error);
 			response.setStatus(WOResponse.HTTP_STATUS_INTERNAL_ERROR);
 			response.appendContentString("Error occured when generating response.\n\n");
 			response.appendContentString(WOLogFormatter.formatTrowable(error));

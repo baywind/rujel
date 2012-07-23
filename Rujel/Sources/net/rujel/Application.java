@@ -127,7 +127,7 @@ public class Application extends UTF8Application {
 					} else {
 						InputStream next = resourceManager().inputStreamForResourceNamed(
 								"nextYear.sql", null, null);
-						logger.log(WOLogLevel.INFO,"Trying to create database for year 2011");
+						logger.log(WOLogLevel.INFO,"Trying to create database for year " + year);
 						NSMutableDictionary params = new NSMutableDictionary();
 						params.takeValueForKey(new NSDictionary(
 								new String[] {"RujelYear%s",Integer.toString(year.intValue() -1)},
