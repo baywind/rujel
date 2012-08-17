@@ -224,7 +224,14 @@ public class SettingsBase extends _SettingsBase implements Setting {
 		return courseDict(eduGroup,eduYear);
 	}
 	public static NSDictionary courseDict(EduGroup eduGroup,Integer eduYear) {
-		NSDictionary dict = new NSDictionary(eduGroup.grade(),"grade");
+		NSDictionary dict;
+		try {
+			Integer section = (Integer)eduGroup.valueForKey("section");
+			dict = new NSDictionary(new Integer[] {eduGroup.grade(), section},
+					new String[] {"grade","section"});
+		} catch (Exception e) {
+			dict = new NSDictionary(eduGroup.grade(),"grade");
+		}
 		return new NSDictionary(new Object[] {dict,eduGroup,eduYear},
 				new Object[] {"cycle","eduGroup","eduYear"});
 	}

@@ -2,168 +2,113 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>type</key>
-	<string>export</string>
-	<key>id</key>
-	<string>simpleOut</string>
-	<key>title</key>
-	<string>Просто XML</string>
-	<key>description</key>
-	<string>Вывод непреобразованного файла XML в формате ejdata</string>
+	<key>component</key>
+	<string>StudentReporter</string>
+	<key>hover</key>
+	<string>Текущие оценки за указанный период</string>
 	<key>sort</key>
-	<string>90</string>
-	<key>mimeType</key>
-	<string>application/multipart</string>
-	<key>filename</key>
-	<string>ejdata.xml</string>
-	<key>filext</key>
-	<string>xml</string>
-	<key>submitTitle</key>
-	<string>Загрузить</string>
+	<string>1</string>
+	<key>title</key>
+	<string>Текущие</string>
+	<key>winTitle</key>
+	<string>Текущая успеваемость</string>
+	<key>id</key>
+	<string>default</string>
+	<key>allowAjax</key>
+	<true/>
+	<key>settings</key>
+	<dict>
+		<key>autoitog</key>
+		<dict>
+			<key>timeout</key>
+			<true/>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<integer>1</integer>
+		</dict>
+		<key>lessons</key>
+		<dict>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<integer>2</integer>
+		</dict>
+		<key>marks</key>
+		<dict>
+			<key>level</key>
+			<integer>1</integer>
+			<key>active</key>
+			<true/>
+			<key>sort</key>
+			<integer>3</integer>
+		</dict>
+	</dict>
 	<key>options</key>
 	<array>
-		<dict>
-			<key>id</key>
-			<string>eduGroups</string>
-			<key>title</key>
-			<string>Классы</string>
-			<key>options</key>
-			<array>
-				<dict>
-					<key>id</key>
-					<string>tutors</string>
-					<key>title</key>
-					<string>Классный руководитель</string>
-					<key>active</key>
-					<false/>
-				</dict>
-				<dict>
-					<key>id</key>
-					<string>nolist</string>
-					<key>title</key>
-					<string>Без состава</string>
-					<key>hover</key>
-					<string>Не выводить списки, только описания</string>
-					<key>active</key>
-					<true/>
-				</dict>
-			</array>
-			<key>active</key>
-			<true/>
-		</dict>
-		<dict>
-			<key>id</key>
-			<string>eduPlan</string>
-			<key>title</key>
-			<string>Учебный план</string>
-			<key>options</key>
-			<array>
-				<dict>
-					<key>id</key>
-					<string>noHours</string>
-					<key>title</key>
-					<string>Архивные</string>
-					<key>hover</key>
-					<string>показывать циклы, даже если по ним нет часов</string>
-					<key>active</key>
-					<false/>
-				</dict>
-			</array>
-		</dict>
-		<dict>
-			<key>id</key>
-			<string>courses</string>
-			<key>title</key>
-			<string>Курсы</string>
-			<key>hover</key>
-			<string>Выводить информацию об учебных курсах</string>
-			<key>active</key>
-			<true/>
-			<key>options</key>
-			<array>
-				<dict>
-					<key>id</key>
-					<string>nolist</string>
-					<key>title</key>
-					<string>Без подгруппы</string>
-					<key>hover</key>
-					<string>не показывать состав подгруппы</string>
-					<key>active</key>
-					<false/>
-				</dict>
-				<dict>
-					<key>id</key>
-					<string>nodata</string>
-					<key>title</key>
-					<string>Без данных</string>
-					<key>hover</key>
-					<string>не выводить никаких дополнительных сведений о курсе</string>
-					<key>active</key>
-					<false/>
-				</dict>
-				<dict>
-					<key>id</key>
-					<string>hidden</string>
-					<key>title</key>
-					<string>Показывать скрытые</string>
-					<key>hover</key>
-					<string>включить информацию о курсах, которые настроены, как неотображаемые</string>
-					<key>active</key>
-					<false/>
-				</dict>
-			</array>
-		</dict>
 		<dict>
 			<key>id</key>
 			<string>autoitog</string>
 			<key>title</key>
 			<string>Прогноз</string>
-		</dict>
-		<dict>
-			<key>id</key>
-			<string>schedule</string>
-			<key>title</key>
-			<string>Расписание</string>
+			<key>active</key>
+			<true/>
 			<key>options</key>
 			<array>
 				<dict>
 					<key>id</key>
-					<string>changes</string>
+					<string>timeout</string>
 					<key>title</key>
-					<string>История изменений</string>
-					<key>hover</key>
-					<string>показывать всю историю изменений расписания</string>
+					<string>отсрочки</string>
 					<key>active</key>
 					<true/>
 				</dict>
 			</array>
+			<key>sort</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
+			<key>active</key>
+			<true/>
 			<key>id</key>
 			<string>lessons</string>
-			<key>title</key>
-			<string>Уроки</string>
 			<key>options</key>
 			<array>
 				<dict>
-					<key>id</key>
-					<string>noMarks</string>
-					<key>title</key>
-					<string>скрыть отметки</string>
-					<key>hover</key>
-					<string>вывести только описания уроков</string>
 					<key>active</key>
-					<true/>
+					<false/>
+					<key>hover</key>
+					<string>показать все уроки за период (даже без отметок)</string>
+					<key>id</key>
+					<string>all</string>
+					<key>title</key>
+					<string>все</string>
+				</dict>
+				<dict>
+					<key>active</key>
+					<false/>
+					<key>hover</key>
+					<string>показывать в строчку, без темы урока</string>
+					<key>id</key>
+					<string>short</string>
+					<key>title</key>
+					<string>кратко</string>
 				</dict>
 			</array>
+			<key>title</key>
+			<string>Уроки</string>
+			<key>sort</key>
+			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>id</key>
 			<string>marks</string>
 			<key>title</key>
 			<string>Работы</string>
+			<key>sort</key>
+			<integer>3</integer>
 			<key>active</key>
-			<false/>
+			<true/>
 			<key>options</key>
 			<array>
 				<dict>
@@ -256,17 +201,27 @@
 					<key>hover</key>
 					<string>включать работы, оценки за которые были выставлены в искомый период</string>
 					<key>active</key>
+					<true/>
+				</dict>
+				<dict>
+					<key>id</key>
+					<string>short</string>
+					<key>title</key>
+					<string>кратко</string>
+					<key>hover</key>
+					<string>показывать оценки в строчку, а не в таблице</string>
+					<key>active</key>
 					<false/>
 				</dict>
 				<dict>
 					<key>id</key>
-					<string>noMarks</string>
+					<string>hideMax</string>
 					<key>title</key>
-					<string>скрыть оценки</string>
+					<string>скрыть максимумы</string>
 					<key>hover</key>
-					<string>вывести только описания работ</string>
+					<string>не показывать в индексе максимумы</string>
 					<key>active</key>
-					<true/>
+					<false/>
 				</dict>
 			</array>
 		</dict>

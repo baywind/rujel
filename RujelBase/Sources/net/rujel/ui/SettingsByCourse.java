@@ -83,7 +83,8 @@ public class SettingsByCourse extends WOComponent {
     		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
     		if(ec == null)
     			ec = (EOEditingContext)parent().valueForKey("ec");
-    		base = SettingsBase.baseForKey(key, ec, false);
+    		base = SettingsBase.baseForKey(key, ec,
+    				Various.boolForObject(valueForBinding("create")));
     	}
     	return base;
     }
@@ -203,7 +204,7 @@ public class SettingsByCourse extends WOComponent {
 			return Boolean.TRUE;
 		return (Boolean)session().valueForKeyPath("readAccess._edit.SettingsBase");
 	}
-
+	
 	public WOActionResults makeBase() {
 //		String sel = (String)valueForBinding("selector");
 //		base().takeValueForKey(valueForBinding(sel), sel);
@@ -305,11 +306,15 @@ public class SettingsByCourse extends WOComponent {
     
     public Boolean showBase() {
     	String sel = (String)valueForBinding("selector");
-    	if(sel == null)
-    		return Boolean.TRUE;
+    	if(sel == null) {
+			setItem(base());
+			return Boolean.TRUE;
+		}
+		return Boolean.FALSE;
+		/*
     	Object val = valueForBinding(sel);
     	Object bVal = base().valueForKey(sel);
-    	return Boolean.valueOf((val==null)?bVal==null:val.equals(bVal));
+    	return Boolean.valueOf((val==null)?bVal==null:val.equals(bVal));*/
     }
     
     public WOActionResults testCourse() {

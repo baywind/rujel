@@ -26,7 +26,7 @@
 	<tr><th align="right">grade:</th>
 		<td><input name = "grade" type="text" size = "20"/></td></tr>
 	</table>
-	<br clear = "all"/>
+	<br clear = "left"/>
 	<table align = "left">
 	<tbody>
 	<tr><th align="right">_grp1:</th>
@@ -84,5 +84,42 @@
 	<br clear = "all"/>
 	<input type = "submit" value = "Send request"/>
 </form>
+<hr/>
+<table align = "center" border = "1">
+	<thead>
+	<tr><th colspan = "2">ItogMark</th><td>Итоговая оценка</td></tr>
+	</thead><tbody>
+	<tr><td style = "font-weight:bold">subject</td>
+		<td style = "font-style:italic;">string</td>
+		<td>Наименование предмета, за который выставлена оценка</td></tr>
+	<tr><td style = "font-weight:bold">grade</td>
+		<td style = "font-style:italic;">int</td>
+		<td>Поток (цифра класса)</td></tr>
+	<tr><td style = "font-weight:bold">eduYear</td>
+		<td style = "font-style:italic;">int</td>
+		<td>Учебный год. Если не указано, по умолчанию текущий</td></tr>
+	<tr><td style = "font-weight:bold">perNum</td>
+		<td style = "font-style:italic;">int</td>
+		<td>Номер учебного периода, за который выставлена оценка. (Для финального итога — 0)</td></tr>
+	<tr><td style = "font-weight:bold">perCount</td>
+		<td style = "font-style:italic;">int</td>
+		<td>Количество периодов данного типа в году <br/>(4-четверти, 1-уч.год, для экзамена и финального итога — 0)</td></tr>
+	<tr><td style = "font-weight:bold">mark</td>
+		<td style = "font-style:italic;">string</td>
+		<td>Оценка в том виде, как выставлена. Это текстовое поле: допустимы 'н/а', 'осв'</td></tr>
+	<tr><td style = "font-weight:bold">value</td>
+		<td style = "font-style:italic;">decimal</td>
+		<td>Численное выражение оценки в долях от 1. (4 из 5 = 0.8)</td></tr>
+	<tr><td style = "font-weight:bold">student</td>
+		<td style = "font-style:italic;">Student</td>
+		<td>Учащийся, получивший оценку.</td></tr>
+	<tr><td style = "font-weight:bold">course</td>
+		<td style = "font-style:italic;">Course</td>
+		<td>Курс, за который получена оценка. (доступно только для оценок текущего уч. года)</td></tr>
+	<tr><td colspan = "3">Атрибуты student и course содержат сложные объекты, соответствующего типа.<br/>
+		Через объекты можно обратиться к их характеристикам. (Для курса — класс, предмет, учитель)<br/>
+		В прототипе пока не реализовано. По объектным атрибутам можно только осуществлять группировку.</td></tr>
+	</tbody>
+</table>
 </body>
 </html>

@@ -49,6 +49,7 @@ import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 
 public class Overview extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
@@ -399,21 +400,25 @@ public class Overview extends WOComponent {
  						ReportsModule.reportsFolder("StudentReports"));
  				reporter.takeValueForKey(info, "settings");
  			}
+ 			if(info != null && !Various.boolForObject(info.valueForKeyPath("courses.hidden"))) {
+ 				SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
+ 				reportPage.takeValueForKey(reportCourses, "reportCourses");
+ 			}
  			byte[] result = null;
+ 			String contentType = (String)reporter.valueForKey("ContentType");
  			try {
  				result = XMLGenerator.generate(session(), (NSMutableDictionary)reportPage);
  			} catch (Exception e) {
  				result = WOLogFormatter.formatTrowable(e).getBytes();
+ 				contentType = "text/plain";
  			}
  			WOResponse response = application().createResponseInContext(context());
  			response.setContent(result);
- 			String contentType = (String)reporter.valueForKey("ContentType");
  			if(contentType != null)
  				response.setHeader(contentType,"Content-Type");
  			else if (reporter.valueForKey("transform") == null)
  				response.setHeader("application/xml","Content-Type");
  			return response;
-
  		} else {
  			return (WOComponent)reportPage;
  		}

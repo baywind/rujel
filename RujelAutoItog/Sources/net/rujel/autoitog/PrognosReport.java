@@ -93,11 +93,18 @@ public class PrognosReport extends com.webobjects.appserver.WOComponent {
 		if(sb == null)
 			return null;
 		int count = 0;
+		SettingsBase reportCourses = (SettingsBase)settings.valueForKey("reportCourses");
+
 		while (enu.hasMoreElements()) {
 			Prognosis progn = (Prognosis) enu.nextElement();
 			if(progn.namedFlags().flagForKey("disabled"))
 				continue;
 			EduCourse course = progn.course();
+			if(reportCourses != null) {
+				Integer num = reportCourses.forCourse(course).numericValue();
+				if(!Various.boolForObject(num))
+					continue;
+			}
 			ItogContainer eduper = progn.itogContainer();
 			String listName = sb.forCourse(course).textValue();
 			NSMutableDictionary byItog = (NSMutableDictionary)aiCache.valueForKey(listName);

@@ -109,7 +109,8 @@ public class StudentMarks extends WOComponent {
 		if(courses == null)
 			return null;
 		NSMutableArray[] allWorks = new NSMutableArray[courses.count()];
-		
+		SettingsBase reportCourses = (SettingsBase)settings.valueForKey("reportCourses");
+
 		//Enumeration enu = courses.objectEnumerator();
 		NSMutableArray args = new NSMutableArray();
 		if(since != null)
@@ -124,6 +125,11 @@ public class StudentMarks extends WOComponent {
 //		boolean marked = Various.boolForObject(options.valueForKey("marked"));
 		for(int i = 0; i < courses.count(); i++) { //get works for courses;
 			EduCourse c = (EduCourse)courses.objectAtIndex(i);
+			if(reportCourses != null) {
+				Integer num = reportCourses.forCourse(c).numericValue();
+				if(!Various.boolForObject(num))
+					continue;
+			}
 			NSMutableArray quals = args.mutableClone();//new NSMutableArray(qual);
 			quals.add(new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,c));
 			if(level < 2) {
@@ -238,6 +244,11 @@ public class StudentMarks extends WOComponent {
 					Logger.getLogger("rujel.criterial").log(WOLogLevel.INFO,
 							"Dangling mark found",m);
 					continue;
+				}
+				if(reportCourses != null) {
+					Integer num = reportCourses.forCourse(course).numericValue();
+					if(!Various.boolForObject(num))
+						continue;
 				}
 				Work w = (Work)m.valueForKey("work");
 				int idx = courses.indexOfIdenticalObject(course);

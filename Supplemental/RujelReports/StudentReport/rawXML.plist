@@ -10,7 +10,9 @@
 	<string>XML</string>
 	<key>id</key>
 	<string>rawXML</string>
-	<key>entity</key>
-	<string>Maintenance</string>
+	<key>checkAccess</key>
+	<array>
+		<string>Maintenance</string>
+	</array>
 </dict>
 </plist>

@@ -70,8 +70,6 @@
 			<string>Идентификатор школы в ОЭЖД</string>
 			<key>fieldSize</key>
 			<integer>40</integer>
-			<key>qualifierSelector</key>
-			<string>like</string>
 			<key>styleClass</key>
 			<string>required</string>
 			<key>required</key>
@@ -86,8 +84,6 @@
 			<string>Название школы</string>
 			<key>fieldSize</key>
 			<integer>40</integer>
-			<key>qualifierSelector</key>
-			<string>like</string>
 			<key>styleClass</key>
 			<string>required</string>
 			<key>required</key>
@@ -106,8 +102,6 @@
 			<integer>40</integer>
 			<key>rows</key>
 			<integer>2</integer>
-			<key>qualifierSelector</key>
-			<string>like</string>
 			<key>active</key>
 			<true/>
 		</dict>
@@ -118,8 +112,6 @@
 			<string>Округ города</string>
 			<key>fieldSize</key>
 			<integer>40</integer>
-			<key>qualifierSelector</key>
-			<string>like</string>
 			<key>styleClass</key>
 			<string>required</string>
 			<key>required</key>

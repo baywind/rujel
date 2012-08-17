@@ -71,6 +71,7 @@ import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reports.ReportsModule;
 import net.rujel.reusables.DataBaseConnector;
@@ -154,7 +155,11 @@ public class XMLGenerator extends AbstractObjectReader {
 		Transformer transformer = null;
 		String transName = (String)input.options.valueForKeyPath("reporter.transform");
 		File sourceDir = null;
+//		trans:
 		if(transName != null) {
+//			if(Various.boolForObject(input.options.valueForKeyPath("reporter.studentInOptions")) &&
+//					input.options.valueForKey("student") == null)
+//				break trans;
 			String reportDir = (String)input.options.valueForKey("reportDir");
 			if(reportDir == null) {
 				sourceDir = ReportsModule.reportsFolder("StudentReport");
@@ -528,6 +533,7 @@ public class XMLGenerator extends AbstractObjectReader {
 		}
 		if(courses == null || courses.count() == 0)
 			return;
+		SettingsBase reportCourses = (SettingsBase)in.options.valueForKey("reportCourses");
 		Student stu = (Student)in.options.valueForKey("student");
 		Enumeration enu = courses.objectEnumerator();
 		GeneratorModule sync = (GeneratorModule)in.options.valueForKey("sync");
@@ -535,6 +541,11 @@ public class XMLGenerator extends AbstractObjectReader {
 			sync.preload("course", courses);
 		while (enu.hasMoreElements()) {
 			EduCourse crs = (EduCourse) enu.nextElement();
+			if(reportCourses != null) {
+				Integer num = reportCourses.forCourse(crs).numericValue();
+				if(!Various.boolForObject(num))
+					continue;
+			}
 			if(crs instanceof BaseCourse) {
 				if(stu != null && !((BaseCourse)crs).isInSubgroup(stu))
 					continue;

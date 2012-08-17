@@ -134,6 +134,7 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 			}
 		}
 //		NSMutableArray args = new NSMutableArray(new Object[] { since,to,student });
+		SettingsBase reportCourses = (SettingsBase)settings.valueForKey("reportCourses");
 		if(!Various.boolForObject(options.valueForKey("all"))) { //get existing notes
 			NSMutableArray list = new NSMutableArray(new EOKeyValueQualifier("student",
 					EOQualifier.QualifierOperatorEqual,student));
@@ -157,6 +158,11 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 					Logger.getLogger("rujel.base").
 							log(WOLogLevel.INFO,"Dangling note found",note);
 					continue;
+				}
+				if(reportCourses != null) {
+					Integer num = reportCourses.forCourse(course).numericValue();
+					if(!Various.boolForObject(num))
+						continue;
 				}
 				EduLesson lesson = (EduLesson)note.valueForKey("lesson");
 				NSMutableDictionary dict = formatLesson(lesson);
@@ -192,6 +198,11 @@ public class LessonReport extends com.webobjects.appserver.WOComponent {
 //			EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@",args);
 			while(enu.hasMoreElements()) { //get lessons for courses;
 				EduCourse course = (EduCourse)enu.nextElement();
+				if(reportCourses != null) {
+					Integer num = reportCourses.forCourse(course).numericValue();
+					if(!Various.boolForObject(num))
+						continue;
+				}
 				NSMutableArray quals = preQuals.mutableClone();// new NSMutableArray(qual);
 				quals.add(new EOKeyValueQualifier("course",EOQualifier.QualifierOperatorEqual,course));
 				EOFetchSpecification fs = new EOFetchSpecification("BaseLesson",

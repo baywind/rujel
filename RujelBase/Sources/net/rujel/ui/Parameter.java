@@ -69,6 +69,8 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCodingAdditions itemDict() {
 		if(_itemDict == null)
 			_itemDict = (NSKeyValueCodingAdditions)valueForBinding("itemDict");
+		if(_itemDict == null)
+			_itemDict = NSDictionary.EmptyDictionary;
 		return _itemDict;
 	}
 	
@@ -104,6 +106,9 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     	if(value != null) {
     		if(Various.boolForObject(itemDict().valueForKey("or")) && item != null)
     			return item;
+    		String bool = (String)itemDict().valueForKey("boolean");
+    		if(bool != null)
+    			return Boolean.valueOf(Various.boolForObject(value));
     		return value;
     	} else if(Various.boolForObject(itemDict().valueForKey("range"))) {
     		StringBuilder buf = new StringBuilder();
@@ -139,6 +144,14 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     	String attribute = attribute();
     	if(secondSelector)
     		attribute = "min_" + attribute;
+		if(value instanceof Boolean) {
+			String bool = (String)itemDict().valueForKey("boolean");
+			if("string".equalsIgnoreCase(bool)) {
+				value = value.toString();
+			} else if("number".equalsIgnoreCase(bool)) {
+				value = new Integer(((Boolean)value).booleanValue()? 1 : 0);
+			}
+		}
     	paramsDict().takeValueForKey(value, attribute);
     }
     
@@ -168,16 +181,21 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 			return Boolean.FALSE;
 		if(_itemDict.valueForKey("rows") != null)
 			return Boolean.FALSE;
+		if(_itemDict.valueForKey("boolean") != null)
+			return Boolean.FALSE;
 		return Boolean.TRUE;
 	}
 	
 	public String onkeypress() {
 		String selector = (String)itemDict().valueForKey("qualifierSelector");
-		if(selector != null && 
+		if(selector == null || 
 				(selector.equals("like") || selector.equals("caseInsensitiveLike")))
 			return null;
-		if(itemDict().valueForKey("formatter") instanceof Boolean)
+		Object formatter = itemDict().valueForKey("formatter");
+		if(formatter instanceof Boolean)
 			return null;
+		if("0".equals(formatter))
+			return "return isNumberInput(event,false);";
 		return "return isNumberInput(event,true);";
 	}
 	
@@ -194,21 +212,24 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		return null;
 	}
 	
-	public String sign() {
+	public String signs() {
+		StringBuilder buf = new StringBuilder();
 		String selector = (String)itemDict().valueForKey("qualifierSelector");
 		if(selector == null || selector.equals(">="))
-			return "&le;";
+			buf.append("&le;");
 		else if (selector.equals(">"))
-			return "&lt;";
-		return WOMessage.stringByEscapingHTMLString(selector); 
-	}
-	public String sign2() {
-		String selector = (String)itemDict().valueForKey("secondSelector");
+			buf.append("&lt;");
+		else
+			buf.append(WOMessage.stringByEscapingHTMLString(selector)); 
+		buf.append(" X ");
+		
+		selector = (String)itemDict().valueForKey("secondSelector");
 		if(selector == null || selector.equals("<="))
-			return "&le;";
+			buf.append("&le;");
 		else if (selector.equals("<"))
-			return "&lt;";
-		return WOMessage.stringByEscapingHTMLString(selector); 
+			buf.append("&lt;");
+		buf.append(WOMessage.stringByEscapingHTMLString(selector));
+		return buf.toString();
 	}
 	
 	public WOActionResults selectorPopup() {
