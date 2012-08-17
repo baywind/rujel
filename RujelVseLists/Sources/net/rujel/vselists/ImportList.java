@@ -454,28 +454,32 @@ public class ImportList extends WOComponent {
 		VseList member = st.memberOf(onDate);
 		if(member == null)
 			return "???";
-		String grName = WOMessage.stringByEscapingHTMLAttributeValue(member.eduGroup().name());
+		VseEduGroup gr = member.eduGroup();
 		if(member.isActual()) {
 			String message = (String)session().valueForKeyPath(
 				"strings.RujelVseLists_VseStrings.import.isIn");
-			return String.format(message,grName);
+			return String.format(message,
+					WOMessage.stringByEscapingHTMLAttributeValue(gr.name()));
 		} else {
 			NSTimestamp date = member.leave();
-			Integer year = (date == null)?member.eduGroup().lastYear():null;
+			Integer year = (date == null)?member.eduGroup().lastYear():
+				MyUtility.eduYearForDate(date);
+			String message;
 			if((date==null)?year.intValue() < MyUtility.eduYearForDate(onDate).intValue() :
 				date.before(onDate)) {
-				String message = (String)session().valueForKeyPath(
+				message = (String)session().valueForKeyPath(
 						"strings.RujelVseLists_VseStrings.import.wasIn");
-				String border = (date==null)?MyUtility.presentEduYear(year.intValue()):
-					MyUtility.dateFormat().format(date);
-				return String.format(message, grName,border);
+			} else {
+				date = member.enter();
+				year = (date == null)?member.eduGroup().firstYear():MyUtility.eduYearForDate(date);
+				message = (String)session().valueForKeyPath(
+						"strings.RujelVseLists_VseStrings.import.willBe");
 			}
-			date = member.enter();
-			year = (date == null)?member.eduGroup().firstYear():null;
-			String message = (String)session().valueForKeyPath(
-					"strings.RujelVseLists_VseStrings.import.willBe");
 			String border = (date==null)?MyUtility.presentEduYear(year.intValue()):
 				MyUtility.dateFormat().format(date);
+			StringBuilder grName = new StringBuilder();
+			grName.append(year.intValue() - gr.absGrade().intValue()).append(' ');
+			grName.append(WOMessage.stringByEscapingHTMLAttributeValue(gr.title()));
 			return String.format(message, grName,border);
 		}
 	}
