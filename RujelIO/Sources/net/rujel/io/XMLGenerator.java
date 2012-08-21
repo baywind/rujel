@@ -121,6 +121,7 @@ public class XMLGenerator extends AbstractObjectReader {
 					if(tmp != null)
 						ses.takeValueForKey(tmp, "eduYear");
 				}
+				options.takeValueForKey(ses.defaultEditingContext(), "ec");
 				Object result = generate(this);
 				synchronized (state) {
 					state.result = result;

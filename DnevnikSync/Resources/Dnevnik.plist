@@ -227,5 +227,10 @@
 			<string>Химия</string>
 		</dict>
 	</array>
+	<key>messages</key>
+	<dict>
+		<key>noLink</key>
+		<string>Не удалось подключиться к сервису</string>
+	</dict>
 </dict>
 </plist>

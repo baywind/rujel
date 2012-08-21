@@ -149,6 +149,7 @@ public class ExportParams extends WOComponent {
 		reportDict.takeValueForKey(ec,"ec");
 		reportDict.takeValueForKey(indexes, "indexes");
 		reportDict.takeValueForKey("ImportExport", "reportDir");
+		reportDict.takeValueForKey(session().valueForKey("today"), "today");
 
 		NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
 				(Integer)session().valueForKey("eduYear")), "eduYear");

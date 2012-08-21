@@ -131,7 +131,7 @@
 				<key>settingsBase</key>
 				<string>ItogMark</string>
 				<key>reindex</key>
-				<string>periods</string>
+				<string>regimes</string>
 			</dict>
 		</array>
 		<key>person</key>
@@ -188,10 +188,10 @@
 			</dict>
 			<key>external</key>
 			<array>
-				<string>Четверть</string>
-				<string>Триместр</string>
-				<string>Полугодие</string>
-				<string>Модуль</string>
+				<string>Четверти</string>
+				<string>Триместры</string>
+				<string>Семестры</string>
+				<string>Модули</string>
 			</array>
 		</dict>
 		<dict>

@@ -2,11 +2,11 @@ PageWrapper : PageWrapper {
   title = "SOAP testing";
 }
 
-ServiceName : WOString {
+PGrName : WOString {
   value = pgr.name;
 }
 
-Services : WORepetition {
+PeriodGroups : WORepetition {
   list = perGroups;
   item = pgr;
 }
@@ -98,4 +98,17 @@ ErrMethod : WOString {
 
 Error : WOString {
   value = item.exception.message;
+}
+
+ServiceWorks : WOConditional {
+  condition = soap;
+}
+
+NoService : WOConditional {
+  condition = soap;
+  negate = true;
+}
+
+ErrorMessage : WOString {
+  value = item;
 }

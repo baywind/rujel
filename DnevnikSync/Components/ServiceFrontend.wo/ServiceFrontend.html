@@ -1,7 +1,10 @@
-<webobject name = "PageWrapper"><webobject name = "Services">
-<strong><webobject name = "ServiceName"/></strong>
+<webobject name = "PageWrapper"><webobject name = "ServiceWorks">
+<table border = "1" cellspacing = "5" cellpadding = "2"><tr valign = "top">
+<webobject name = "PeriodGroups"><td>
+<strong><webobject name = "PGrName"/></strong>
 <p><webobject name = "Periods"/></p>
-</webobject>
+</td>
+</webobject></tr></table>
 <p><strong>Синхронизировать:</strong>
 	<webobject name = "SyncPeriods">Периоды</webobject>
 	<webobject name = "SyncGroups">Группы</webobject>
@@ -22,4 +25,7 @@
 		<div><webobject name = "ErrorID"/> | <webobject name = "ErrMethod"/> |
 		<webobject name = "Error"/></div>
 	</webobject>
-</webobject>
+</webobject><webobject name = "NoService">
+	<h1>Не удалось подключиться к сервису</h1>
+	<div class = "message"><webobject name = "ErrorMessage"/></div>
+</webobject></webobject>

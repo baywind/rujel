@@ -57,7 +57,15 @@ public class ServiceFrontend extends WOComponent {
         super(context);
         ec = new net.rujel.reusables.SessionedEditingContext(context.session());
         sync = (ExtSystem)ExtSystem.extSystemNamed("oejd.moscow", ec, false);
+        if (sync == null) {
+        	item = "OEJD not initialized";
+        	return;
+        }
         schoolGuid = sync.extDataForKey("schoolGUID", null);
+        if (schoolGuid == null) {
+        	item = "School GUID not defined";
+        	return;
+        }
         year = (Integer)context.session().valueForKey("eduYear");
         events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
         try {
@@ -68,7 +76,9 @@ public class ServiceFrontend extends WOComponent {
         	perGroups = new NSArray(
         			soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
         } catch (Exception e) {
-			throw new NSForwardException(e);
+        	soap = null;
+        	item = e;
+//			throw new NSForwardException(e);
 		}
     }
     
