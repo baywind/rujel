@@ -46,13 +46,17 @@ import com.webobjects.eoaccess.EOUtilities;
 
 public class CriteriaSet extends _CriteriaSet
 {
-	public static final NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey("criterion",EOSortOrdering.CompareAscending));
+	public static final NSArray sorter = new NSArray(EOSortOrdering.sortOrderingWithKey(
+			"criterion",EOSortOrdering.CompareAscending));
     public CriteriaSet() {
         super();
     }
 	
     public static final NSArray flagNames = new NSArray(
     		new String[] {"fixMax","fixWeight","fixList","onlyCriter","allowNumbers"});
+    
+    public static EOQualifier HASNUM = new EOKeyValueQualifier("criterion", 
+    		EOQualifier.QualifierOperatorGreaterThan, new Integer(0));
     
 	/*
 	 // If you add instance variables to store property values you
@@ -71,7 +75,12 @@ public class CriteriaSet extends _CriteriaSet
     }
 	
 	public NSArray sortedCriteria() {
-		return EOSortOrdering.sortedArrayUsingKeyOrderArray(criteria(),sorter);
+		if(criteria() == null)
+			return NSArray.EmptyArray;
+		NSMutableArray result = criteria().mutableClone();
+		EOQualifier.filterArrayWithQualifier(result, HASNUM);
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result, sorter);
+		return result;
 	}
 	
 	public EOEnterpriseObject criterionNamed(String critName) {
@@ -137,13 +146,36 @@ public class CriteriaSet extends _CriteriaSet
 			num = new Integer(num.intValue() + 1);
 		}
 		criterion.takeValueForKey(num,"criterion");
-		addObjectToBothSidesOfRelationshipWithKey(criterion,"criteria");
+		addObjectToBothSidesOfRelationshipWithKey(criterion,CRITERIA_KEY);
 		return criterion;
 	}
 	
 	public boolean noCriteria() {
 		NSArray criteria = criteria();
+		if (criteria == null || criteria.count() == 0)
+			return true;
+		criteria = EOQualifier.filteredArrayWithQualifier(criteria, HASNUM);
 		return (criteria == null || criteria.count() == 0);
+	}
+	
+	public Integer criterlessMax() {
+		NSArray criteria = criteria();
+		if (criteria == null || criteria.count() == 0)
+			return null;
+		EOEnterpriseObject crit = null;
+		Integer zero = new Integer(0);
+		for (int i = 0; i < criteria.count(); i++) {
+			crit = (EOEnterpriseObject)criteria.objectAtIndex(i);
+			if(zero.equals(crit.valueForKey("criterion")))
+				break;
+			crit = null;
+		}
+		if(crit == null)
+			return null;
+		Integer max = (Integer)crit.valueForKey("dfltMax");
+		if(max == null)
+			max = zero;
+		return max;
 	}
 	
 	public static CriteriaSet critSetForCourse(EduCourse course) {

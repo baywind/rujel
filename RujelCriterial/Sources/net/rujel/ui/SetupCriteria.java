@@ -6,6 +6,7 @@ import net.rujel.base.Indexer;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.CriteriaSet;
 import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
@@ -70,6 +71,7 @@ public class SetupCriteria extends WOComponent {
     public SettingsBase base;
     public NSMutableArray sets;
     public NSKeyValueCoding currSet;
+    public NSKeyValueCoding noCriter;
     public Integer currID;
     public Object item;
     public Object item2;
@@ -97,13 +99,22 @@ public class SetupCriteria extends WOComponent {
     		currID = (Integer)gid.keyValues()[0];
     		critDict.removeAllObjects();
     		NSArray crits = ((CriteriaSet)set).criteria();
-    		if(crits == null || crits.count() == 0) {
-    			criteria = new NSMutableArray();
+			criteria = new NSMutableArray();
+			noCriter = new NSMutableDictionary();
+			if(crits != null && crits.count() > 0) {
+				Integer zero = new Integer(0);
+				for (int i = 0; i < crits.count(); i++) {
+					EOEnterpriseObject cr = (EOEnterpriseObject)crits.objectAtIndex(i);
+					if(zero.equals(cr.valueForKey("criterion")))
+						noCriter = cr;
+					else
+						Various.addToSortedList(cr, criteria, "criterion", null);
+				}
+			}
+    		if(criteria.count() == 0) {
     			critDict.takeValueForKey("A", "title");
     			return;
     		}
-    		criteria = crits.mutableClone();
-    		EOSortOrdering.sortArrayUsingKeyOrderArray(criteria, CriteriaSet.sorter);
     		criterion = (EOEnterpriseObject)criteria.lastObject();
     		String title = (String)criterion.valueForKey("title");
     		criterion = null;
@@ -127,17 +138,26 @@ public class SetupCriteria extends WOComponent {
     }
     
     public WOActionResults saveCriter() {
-    	boolean create = (criterion == null);
+    	boolean create = (criterion == null &&
+    			Various.boolForObject(critDict.removeObjectForKey("newCr")));
     	if(create) {
     		criterion = ((CriteriaSet)currSet).addCriterion();
     		criterion.takeValueForKey(new Integer(0), "flags");
     		criterion.takeValuesFromDictionary(critDict);
     	}
     	try {
-    		Indexer idx = (Indexer)criterion.valueForKey("indexer");
-			if(idx != null && idx.maxIndex() != null &&
-					!idx.maxIndex().equals(criterion.valueForKey("dfltMax")))
-				criterion.takeValueForKey(idx.maxIndex(), "dfltMax");
+    		if(criterion != null) {
+    			Indexer idx = (Indexer)criterion.valueForKey("indexer");
+    			if(idx != null && idx.maxIndex() != null &&
+    					!idx.maxIndex().equals(criterion.valueForKey("dfltMax")))
+    				criterion.takeValueForKey(idx.maxIndex(), "dfltMax");
+    		}
+    		if(noCriter instanceof EOEnterpriseObject) {
+    			Indexer idx = (Indexer)noCriter.valueForKey("indexer");
+    			if(idx != null && idx.maxIndex() != null &&
+    					!idx.maxIndex().equals(noCriter.valueForKey("dfltMax")))
+    				noCriter.takeValueForKey(idx.maxIndex(), "dfltMax");
+    		}
 			ec.saveChanges();
 			logger.log(WOLogLevel.COREDATA_EDITING,"Criterion saved",
 					new Object[] {session(),criterion});
@@ -325,15 +345,15 @@ public class SetupCriteria extends WOComponent {
 	}
 	
 	public WOActionResults save() {
-		String saving = (tab == 0)?"CriteriaSet ":"Indexer bindings in CriteriaSet ";
+//		String saving = (tab == 0)?"CriteriaSet ":"Indexer bindings in CriteriaSet ";
 		try {
 			ec.saveChanges();
-			logger.log(WOLogLevel.COREDATA_EDITING,"Saved " + saving
+			logger.log(WOLogLevel.COREDATA_EDITING,"Saved Indexer bindings in CriteriaSet " 
 					+ nameOfCritSet, new Object[] {session(),currSet});
 		} catch (Exception e) {
 			ec.revert();
 			logger.log(WOLogLevel.COREDATA_EDITING,
-					"Error saving " + saving + nameOfCritSet
+					"Error saving Indexer bindings in CriteriaSet " + nameOfCritSet
 					,new Object[] {session(),currSet,e});
 			session().takeValueForKey(e.getMessage(), "message");
 		}
@@ -385,6 +405,90 @@ public class SetupCriteria extends WOComponent {
 			ec.revert();
 		}
 		return null;
+	}
+
+	public boolean hasCriteria() {
+		return (criteria != null && criteria.count() > 0);
+	}
+	
+	public void setHasCriteria(boolean set) {
+		if(!set && criteria != null && criteria.count() > 0) {
+			for (int i = 0; i < criteria.count(); i++) {
+				EOEnterpriseObject cr = (EOEnterpriseObject)criteria.objectAtIndex(i);
+				((CriteriaSet)currSet).removeObjectFromBothSidesOfRelationshipWithKey(
+						(EOEnterpriseObject)cr, CriteriaSet.CRITERIA_KEY);
+				ec.deleteObject(cr);
+			}
+			criteria.removeAllObjects();
+		}
+	}
+	
+	public boolean hasCriterless() {
+		return (noCriter instanceof EOEnterpriseObject);
+	}
+	
+	public void setHasCriterless(boolean set) {
+		if(!(currSet instanceof CriteriaSet))
+			return;
+		if(set) {
+			if(noCriter instanceof NSMutableDictionary) {
+				EOEnterpriseObject crit = EOUtilities.createAndInsertInstance(ec,"Criterion");
+				crit.addObjectToBothSidesOfRelationshipWithKey((CriteriaSet) currSet,"criteriaSet");
+				crit.takeValuesFromDictionary((NSDictionary) noCriter);
+				Integer zero = new Integer(0);
+				crit.takeValueForKey(zero,"criterion");
+				crit.takeValueForKey(zero,"flags");
+				noCriter = crit;
+			}
+		} else if(noCriter instanceof EOEnterpriseObject) {
+			((CriteriaSet)currSet).removeObjectFromBothSidesOfRelationshipWithKey(
+					(EOEnterpriseObject)noCriter, CriteriaSet.CRITERIA_KEY);
+			ec.deleteObject((EOEnterpriseObject)noCriter);
+			noCriter = new NSMutableDictionary();
+		}
+	}
+	
+	public String presentTitle() {
+		if(indices == null || indices.count() == 0)
+			return "max";
+		return (String)session().valueForKeyPath("strings.RujelBase_Base.Indexer.indexer");
+	}
+	
+	public String presentMax() {
+		if(item == null)
+			return null;
+		String name = (String)valueForKeyPath("item.indexer.title");
+		if(name != null)
+			return name;
+		Integer max = (Integer)valueForKeyPath("item.dfltMax");
+		if(max == null)
+			return null;
+		if(indices == null || indices.count() == 0)
+			return max.toString();
+		return "<em>max:</em> " + max;
+	}
+	
+	public String maxFieldStyle() {
+		if(item instanceof EOEnterpriseObject) {
+			if(valueForKeyPath("item.indexer") != null)
+				return "width:3ex;text-align:center;visibility:hidden;";
+			return "width:3ex;text-align:center;";
+		}
+		if(valueForKeyPath("noCriter.indexer") != null)
+			return "width:3ex;text-align:center;visibility:hidden;";
+		return "width:3ex;text-align:center;";
+	}
+	
+	public String crListStyle() {
+		if(hasCriteria())
+			return null;
+		return "visibility:hidden;";
+	}
+
+	public String noCritStyle() {
+		if(hasCriterless())
+			return null;
+		return "visibility:hidden;";
 	}
 
     public boolean synchronizesVariablesWithBindings() {

@@ -110,6 +110,8 @@
 			<string>Внешнее представление</string>
 			<key>noIndex</key>
 			<string>как есть</string>
+			<key>noCriter</key>
+			<string>Бескритериальная оценка</string>
 			<key>flags</key>
 			<dict>
 				<key>fixMax</key>
