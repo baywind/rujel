@@ -53,7 +53,7 @@ public class CriteriaSet extends _CriteriaSet
     }
 	
     public static final NSArray flagNames = new NSArray(
-    		new String[] {"fixMax","fixWeight","fixList","onlyCriter","allowNumbers"});
+    		new String[] {"fixMax","fixWeight","fixList"});
     
     public static EOQualifier HASNUM = new EOKeyValueQualifier("criterion", 
     		EOQualifier.QualifierOperatorGreaterThan, new Integer(0));
@@ -158,18 +158,13 @@ public class CriteriaSet extends _CriteriaSet
 		return (criteria == null || criteria.count() == 0);
 	}
 	
+	public boolean onlyCriter() {
+		return (criterionForNum(new Integer(0)) == null);
+	}
+	
 	public Integer criterlessMax() {
-		NSArray criteria = criteria();
-		if (criteria == null || criteria.count() == 0)
-			return null;
-		EOEnterpriseObject crit = null;
 		Integer zero = new Integer(0);
-		for (int i = 0; i < criteria.count(); i++) {
-			crit = (EOEnterpriseObject)criteria.objectAtIndex(i);
-			if(zero.equals(crit.valueForKey("criterion")))
-				break;
-			crit = null;
-		}
+		EOEnterpriseObject crit = criterionForNum(zero);
 		if(crit == null)
 			return null;
 		Integer max = (Integer)crit.valueForKey("dfltMax");
@@ -302,8 +297,13 @@ public class CriteriaSet extends _CriteriaSet
     public void validateForSave() {
     	super.validateForSave();
     	NSArray criteria = criteria();
-    	if(namedFlags().flagForKey("fixList") || namedFlags().flagForKey("onlyCriter")) {
-    		if(criteria == null || criteria.count() == 0)
+		if(criteria == null || criteria.count() == 0)
+			throw new ValidationException((String)
+					WOApplication.application().valueForKeyPath(
+					"strings.RujelCriterial_Strings.messages.critersRequired"));
+    	if(namedFlags().flagForKey("fixList") && criteria.count() == 1) {
+    		EOEnterpriseObject cr = (EOEnterpriseObject)criteria.objectAtIndex(0);
+    		if((new Integer(0)).equals(cr.valueForKey("criterion")))
     			throw new ValidationException((String)
     					WOApplication.application().valueForKeyPath(
     					"strings.RujelCriterial_Strings.messages.criteriaRequired"));

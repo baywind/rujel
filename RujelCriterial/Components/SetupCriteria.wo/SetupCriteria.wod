@@ -106,12 +106,6 @@ CanCreateCrit : WOConditional {
   condition = canAddCriter;
 }
 
-SaveCritRow : WOGenericContainer {
-  elementName = "tr";
-  style = styleCritSave;
-  id = "critSave";
-}
-
 SaveCriter : WOSubmitButton {
   action = saveCriter;
   value = session.strings.Reusables_Strings.uiElements.Save;
@@ -176,9 +170,6 @@ AddCriterion : OnClickContainer {
   elementName = "tr";
   onclick = "addCriterion(this)";
   class = "orange";
-}
-
-CriteriaForm : WOForm {
 }
 
 CreatePrompt : WOString {
@@ -273,6 +264,7 @@ SetComment : WOText {
   rows = 2;
   style = "width:98%;";
   title = session.strings.Reusables_Strings.dataTypes.comment;
+  class = "titled";
 }
 
 FixMax : WOCheckBox {
@@ -299,15 +291,6 @@ FixList : WOCheckBox {
 
 FixListTitle : WOString {
   value = ^dict.flags.fixList;
-  escapeHTML = false;
-}
-
-OnlyCriter : WOCheckBox {
-  checked = currSet.namedFlags.onlyCriter;
-}
-
-OnlyCriterTitle : WOString {
-  value = ^dict.flags.onlyCriter;
   escapeHTML = false;
 }
 

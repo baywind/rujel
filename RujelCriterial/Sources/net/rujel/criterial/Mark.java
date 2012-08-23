@@ -203,7 +203,7 @@ public class Mark extends _Mark {
 		Indexer idx = indexer();
 		if(idx != null) {
 			value = idx.indexForValue(present, true);
-			if(value == null && !work().critSet().namedFlags().flagForKey("allowNumbers")) {
+			if(value == null) {
 				setValue(null);
 				return null;
 			}

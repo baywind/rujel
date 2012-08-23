@@ -159,8 +159,8 @@ public class SetupCriteria extends WOComponent {
     				noCriter.takeValueForKey(idx.maxIndex(), "dfltMax");
     		}
 			ec.saveChanges();
-			logger.log(WOLogLevel.COREDATA_EDITING,"Criterion saved",
-					new Object[] {session(),criterion});
+			logger.log(WOLogLevel.COREDATA_EDITING,"Saved changes to CriteriaSet",
+					new Object[] {session(),currSet});
 			if(create) {
 				criteria.addObject(criterion);
 	    		String title = (String)criterion.valueForKey("title");
@@ -173,8 +173,8 @@ public class SetupCriteria extends WOComponent {
 	    		}
 			}
 		} catch (Exception e) {
-			logger.log(WOLogLevel.WARNING,"Error saving criterion",
-					new Object[] {session(),criterion,e});
+			logger.log(WOLogLevel.COREDATA_EDITING,"Error saving changes to CriteriaSet",
+					new Object[] {session(),currSet,e});
 			session().takeValueForKey(e.getMessage(), "message");
 			ec.revert();
 		}

@@ -832,8 +832,41 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 				flags = new Integer(flags.intValue() & 24);
 			}
 			setFlags(flags);
-			setWeight((BigDecimal)workType.valueForKey("dfltWeight"));
-		}
+			BigDecimal weight = (BigDecimal)workType.valueForKey("dfltWeight");
+			setWeight(weight);
+			if(weightToMax != null && weight.compareTo(BigDecimal.ZERO) > 0) {
+				NSArray criteria = criterMask();
+				if(criteria == null || criteria.count() == 0) {
+					criteria = (NSArray)valueForKeyPath("critSet.criteria");
+					Integer minCrit = null;
+					Integer crMax = null;
+					if(criteria != null && criteria.count() > 0) {
+						Enumeration enu = criteria.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							EOEnterpriseObject cr = (EOEnterpriseObject) enu.nextElement();
+							Integer num = (Integer)cr.valueForKey("criterion");
+							if(minCrit == null || num.intValue() < minCrit.intValue()) {
+								minCrit = num;
+								crMax = (Integer)cr.valueForKey("dfltMax");
+							}
+						}
+					}
+//					Integer minCrit = (Integer)valueForKeyPath("critSet.criteria.@min.criterion");
+					if(minCrit == null)
+						minCrit = new Integer(0);
+					if(crMax == null)
+						crMax = SettingsBase.numericSettingForCourse("CriterlessMax",
+								course(), editingContext());
+					if(crMax == null)
+						crMax = new Integer(5);
+					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
+							editingContext(), "CriterMask");
+					mask.takeValueForKey(minCrit, "criterion");
+					this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
+					mask.takeValueForKey(crMax, "max");
+				} // if(criterMask == null
+			} // if(weight.compareTo(BigDecimal.ZERO) > 0
+		} // if(workType != null)
 	}
     
     public String presentLoad() {
@@ -930,10 +963,21 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 						else
 							max = null;
 					}
-				} else {
-					max = SettingsBase.numericSettingForCourse("CriterlessMax",
-							course(), editingContext());
-					if(max == null) max = new Integer(5);
+				} else
+set:
+				{
+					if(critSet() != null) {
+						max = critSet().criterlessMax();
+						if(max == null)
+							break set;
+						if(max.intValue() == 0)
+							max = null;
+					}
+					if (max == null) {
+						max = SettingsBase.numericSettingForCourse("CriterlessMax",
+								course(), editingContext());
+						if(max == null) max = new Integer(5);
+					}
 				}
 				if(max == null)
 					num = null;
@@ -950,12 +994,12 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 					note = null;
 				Mark mark = null;
 				if(criterMask == null || criterMask.count() == 0) {
-/*					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
+					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
 							editingContext(), "CriterMask");
 					mask.takeValueForKey(new Integer(0), "criterion");
 					this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
 					mask.takeValueForKey(max, "max");
-					criterMask = criterMask();*/
+					criterMask = criterMask();
 				} else {
 					Mark[] marks = forPersonLink(student);
 					if(marks != null) 
@@ -975,7 +1019,7 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 				num = null;
 			}
 		} // set criteress mark
-		if((criterMask == null || criterMask.count() == 0) && (num != null || hasWeight())) {
+/*		if((criterMask == null || criterMask.count() == 0) && (num != null || hasWeight())) {
 			if(max == null)
 				max = SettingsBase.numericSettingForCourse("CriterlessMax",
 					course(), editingContext());
@@ -986,7 +1030,7 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 			mask.takeValueForKey(new Integer(0), "criterion");
 			this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
 			mask.takeValueForKey(max, "max");
-		}
+		} */
 		if(num == null) {
 			Mark mark = markForStudentAndCriterion(student, new Integer(0));
 			if(mark != null) {

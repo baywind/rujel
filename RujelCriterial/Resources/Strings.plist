@@ -112,6 +112,8 @@
 			<string>как есть</string>
 			<key>noCriter</key>
 			<string>Бескритериальная оценка</string>
+			<key>freeCritDescription</key>
+			<string>Свободные критерии позволяют преподавателю произвольно задавать количество критериев и максимумы в каждой работе.</string>
 			<key>flags</key>
 			<dict>
 				<key>fixMax</key>
@@ -120,8 +122,6 @@
 				<string>запретить изменять веса критериев</string>
 				<key>fixList</key>
 				<string>всегда использовать все критерии</string>
-				<key>onlyCriter</key>
-				<string>запретить бескритериальные отметки</string>
 			</dict>
 			<key>tabs</key>
 			<array>
@@ -170,6 +170,8 @@
 		<string>нельзя зафиксировать максимумы, пока они не указаны во всех критериях</string>
 		<key>weightsRequired</key>
 		<string>нельзя зафиксировать веса, пока они не указаны во всех критериях</string>
+		<key>critersRequired</key>
+		<string>Набор критериев должен содержать хотя бы один критерий, либо допускать бескритериальные оценки.</string>
 		<key>indexIsUsed</key>
 		<string>Это представление используется в критериях %d раз</string>
 		<key>illegalMark</key>

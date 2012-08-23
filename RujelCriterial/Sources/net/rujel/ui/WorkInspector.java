@@ -353,18 +353,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     public int critIdx = -1;
 
     public Integer critCount() {
-    	Integer count = null;
-    	if(work == null) {
-     		if(critSet != null) {
-    			Integer max = (Integer)critSet.criteria().valueForKey("@max.criterion");
-    			if(max != null && max.intValue() > 0)
-    				return max;
-    		}
-     		return new Integer(1);
-    	}
-    		count = (Integer)work.valueForKeyPath("critSet.criteria.@max.criterion");
+    	Integer count = (Integer)work.valueForKeyPath("critSet.criteria.@max.criterion");
     	if (count != null && count.intValue() > 0)
     		return count;
+    	if(work == null) {
+     		return new Integer(1);
+    	}
     	NSArray mask = work.criterMask();
     	if(mask == null || mask.count() == 0)
     		return new Integer(1);
@@ -381,8 +375,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public EOEnterpriseObject critItem() {
-    	if(critIdx < 0)
-    		return null;
+//    	if(critIdx < 0)
+//    		return null;
     	if(critSet == null)
     		return null;
     	return critSet.criterionForNum(criterion());
@@ -421,13 +415,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     
     public String onClick() {
     	Object crit = criterMax();
-    	if(critIdx >= 0 && crit == null)
+    	if(crit == null)
     		crit = valueForKeyPath("critItem.dfltMax");
     	if(crit == null && critIdx < 0) {
     		int max = SettingsBase.numericSettingForCourse("CriterlessMax",
     				course, course.editingContext(),5);
     		crit = Integer.toString(max);
-    	} else if(crit != null && crit.equals(" ")) {
+    	} else if(" ".equals(crit)) {
     		crit = null;
     	}
     	if(crit == null)
@@ -457,19 +451,16 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     
     public String criterMaxTitle() {
     	if(critSet == null)
-    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.criterMax");
-
+    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Max");
     	if(critSet.namedFlags().flagForKey("fixMax"))
     		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Mark");
     	NSArray criteria = critSet.criteria();
-    	if(criteria.count() == 0)
-    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.criterMax");
-    	Enumeration enu = criteria.objectEnumerator();
-    	while (enu.hasMoreElements()) {
-    		EOEnterpriseObject cr = (EOEnterpriseObject) enu.nextElement();
+    	if(criteria.count() == 0) {
+    		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Max");
+    	} else {
+    		EOEnterpriseObject cr = (EOEnterpriseObject) criteria.objectAtIndex(0);
     		if(cr.valueForKey("indexer") == null)
-        		return (String)session().valueForKeyPath(
-        				"strings.RujelCriterial_Strings.criterMax");
+        		return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Max");
     	}
     	return (String)session().valueForKeyPath("strings.RujelCriterial_Strings.Mark");
     }
@@ -496,29 +487,14 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	EOEnterpriseObject _itemMask = itemMask();
     	if(_itemMask != null)
     		return (Integer)_itemMask.valueForKey("max");
-    	if(critIdx < 0 && work == null) {
-			Integer result = SettingsBase.numericSettingForCourse("CriterlessMax",
-					course, course.editingContext());
-			if(result == null)
-				result = new Integer(5);
-			return result;
-    	}
-        if(critSet != null)  {
-        	EOEnterpriseObject cr = critItem();
-        	if(cr == null) { 
-        		if(critSet.namedFlags().flagForKey("fixMax")) {
-        			Integer result = SettingsBase.numericSettingForCourse("CriterlessMax",
-        					course, course.editingContext());
-        			if(result == null)
-        				result = new Integer(5);
-        			return result;
-        		}
-        		return null;
-        	}
-        	if(critSet.namedFlags().flagForKey("fixMax") || cr.valueForKey("indexer") != null ||
-        			critSet.namedFlags().flagForKey("fixList"))
-        		return (Integer)cr.valueForKey("dfltMax");
-        }
+        if(critSet == null)
+        	return null;
+        EOEnterpriseObject cr = critItem();
+        if(cr == null) 
+        	return null;
+        if(critSet.namedFlags().flagForKey("fixMax") || cr.valueForKey("indexer") != null ||
+        		critSet.namedFlags().flagForKey("fixList"))
+        	return (Integer)cr.valueForKey("dfltMax");
     	return null;
     }
 
