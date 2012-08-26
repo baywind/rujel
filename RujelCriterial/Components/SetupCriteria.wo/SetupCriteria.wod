@@ -438,6 +438,10 @@ NoCriterTitle : WOString {
   value = ^dict.noCriter;
 }
 
+CriteriaTitle : WOString {
+  value = ^dict.criteria;
+}
+
 FreeCriteria : WOConditional {
   condition = currSet.editingContext;
   negate = true;

@@ -83,7 +83,7 @@
 		<key>CriteriaSet</key>
 		<dict>
 			<key>title</key>
-			<string>Критерии оценивания</string>
+			<string>Система оценивания</string>
 			<key>component</key>
 			<string>SetupCriteria</string>
 			<key>sort</key>
@@ -112,6 +112,8 @@
 			<string>как есть</string>
 			<key>noCriter</key>
 			<string>Бескритериальная оценка</string>
+			<key>criteria</key>
+			<string>Критерии оценивания</string>
 			<key>freeCritDescription</key>
 			<string>Свободные критерии позволяют преподавателю произвольно задавать количество критериев и максимумы в каждой работе.</string>
 			<key>flags</key>
