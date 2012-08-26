@@ -74,10 +74,12 @@ public class EOInitialiser {
 			String tEntityName = (String)tIf.getDeclaredField("entityName").get(null);
 			tEntity = mg.entityNamed(tEntityName);
 		} catch (Exception e) {
-			if (relationship == null)
-				throw new IllegalStateException("Target Entity was not properly described");
-			else
+			if (relationship == null) {
+				if(tEntity == null)
+					throw new IllegalStateException("Target Entity was not properly described");
+			} else {
 				return relationship;
+			}
 		}
 		/*
 		String tEntityName = intefacesPrefs.get(targetInterface,null);

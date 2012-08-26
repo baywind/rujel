@@ -32,9 +32,11 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.interfaces.EOInitialiser;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOEditingContext;
@@ -150,6 +152,13 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 		} catch (NSKeyValueCoding.UnknownKeyException e) {
 			// default access not supported
 		}
+		try {
+			EOInitialiser.initialiseRelationship("EduPeriod","relatedItog",false,
+					"itogID","ItogContainer");
+		} catch (Exception e) {
+			logger.log(WOLogLevel.INFO,"Failed to link EduPeriod to ItogContainer",e);
+		}
+
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new SubjectComparator.ComparisonSupport(), Subject.class);
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
