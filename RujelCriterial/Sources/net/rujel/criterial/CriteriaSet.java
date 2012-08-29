@@ -300,7 +300,7 @@ public class CriteriaSet extends _CriteriaSet
 		if(criteria == null || criteria.count() == 0)
 			throw new ValidationException((String)
 					WOApplication.application().valueForKeyPath(
-					"strings.RujelCriterial_Strings.messages.critersRequired"));
+					"strings.RujelCriterial_Strings.messages.critersDescRequired"));
     	if(namedFlags().flagForKey("fixList") && criteria.count() == 1) {
     		EOEnterpriseObject cr = (EOEnterpriseObject)criteria.objectAtIndex(0);
     		if((new Integer(0)).equals(cr.valueForKey("criterion")))

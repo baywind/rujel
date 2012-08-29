@@ -634,6 +634,10 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		ticks.removeAllObjects();
+		if(date != null && date.after((NSTimestamp)session().valueForKey("today"))) {
+			session().takeValueForKey(session().valueForKeyPath(
+					"strings.RujelVseLists_VseStrings.futureAction"), "message");
+		}
 		save();
 		Object sel = selection;
 		switchMode();

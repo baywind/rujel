@@ -496,6 +496,7 @@ public class ImportList extends WOComponent {
 		}
 		WOComponent result = (WOComponent)session().valueForKey("pullComponent");
 		result.ensureAwakeInContext(context());
+		result.valueForKey("switchMode");
 		result.takeValueForKey(targetGroup, "selection");
 		return result;
 	}

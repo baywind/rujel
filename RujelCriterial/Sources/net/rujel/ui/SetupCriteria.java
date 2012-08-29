@@ -16,6 +16,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOKeyGlobalID;
+import com.webobjects.eocontrol.EORelationshipManipulation;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -234,6 +235,12 @@ public class SetupCriteria extends WOComponent {
     	if(create) {
     		nameOfCritSet = nameOfCritSet.substring(5);
     		currSet = EOUtilities.createAndInsertInstance(ec, CriteriaSet.ENTITY_NAME);
+			EOEnterpriseObject crit = EOUtilities.createAndInsertInstance(ec,"Criterion");
+			crit.addObjectToBothSidesOfRelationshipWithKey(
+					(EOEnterpriseObject) currSet,"criteriaSet");
+			Integer zero = new Integer(0);
+			crit.takeValueForKey(zero,"criterion");
+			crit.takeValueForKey(zero,"flags");
     	}
     	boolean idx = nameOfCritSet.startsWith("$idx$");
     	if(idx) {
