@@ -353,12 +353,17 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     public int critIdx = -1;
 
     public Integer critCount() {
+    	if(work == null) {
+     		if(critSet != null) {
+    			Integer max = (Integer)critSet.criteria().valueForKey("@max.criterion");
+    			if(max != null && max.intValue() > 0)
+    				return max;
+    		}
+     		return new Integer(1);
+    	}
     	Integer count = (Integer)work.valueForKeyPath("critSet.criteria.@max.criterion");
     	if (count != null && count.intValue() > 0)
     		return count;
-    	if(work == null) {
-     		return new Integer(1);
-    	}
     	NSArray mask = work.criterMask();
     	if(mask == null || mask.count() == 0)
     		return new Integer(1);
