@@ -101,7 +101,7 @@ public class Sychroniser implements Runnable {
 		} catch (Exception e) {
 			if(state != null) {
 				synchronized (state) {
-					state.total = -state.total;
+//					state.total = -state.total;
 					state.result = e;
 				}
 			}
@@ -182,7 +182,7 @@ public class Sychroniser implements Runnable {
 				event.setExecTime(last);
 //				event.setResult(1);
 				ec.saveChanges();
-			} catch (RemoteException e) {
+			} catch (Exception e) {
 				NSMutableDictionary dict = new NSMutableDictionary();
 				dict.takeValueForKey(MyUtility.getID(arch), "archID");
 				dict.takeValueForKey(e, "exception");
@@ -202,8 +202,11 @@ public class Sychroniser implements Runnable {
 					}
 				}
 				errors.addObject(dict);
-			} catch (Exception e) {
-				throw new NSForwardException(e);
+				if(!(e instanceof RemoteException))
+					Logger.getLogger("rujel.dnevnik").log(WOLogLevel.WARNING, 
+							"Error during Dnevnik sync.", new Object[]{e});
+//			} catch (Exception e) {
+//				throw new NSForwardException(e);
 			}
 		}
 		if(ec.hasChanges())
@@ -599,7 +602,7 @@ public class Sychroniser implements Runnable {
 						criteria[i].takeValueForKey(new Integer(crMax), "criterMax");
 					} else {
 						criteria[i] = preset[i].mutableClone();
-						if(!criteria[i].containsKey("criterMax"))
+//						if(!criteria[i].containsKey("criterMax"))
 							criteria[i].takeValueForKey(new Integer(crMax), "criterMax");
 					}
 				}
@@ -775,7 +778,7 @@ public class Sychroniser implements Runnable {
 			if(title == null) title = CriteriaSet.critNameForNum(criter, null);
 			title = title.replace(' ', '_').replace(';', ':');
 			NSMutableDictionary dict = new NSMutableDictionary(title,"criterName");
-			dict.takeValueForKey(cr.valueForKey("dftlMax"), "criterMax");
+			dict.takeValueForKey(cr.valueForKey("dfltMax"), "criterMax");
 			byNum.setObjectForKey(dict, criter);
 			Indexer indexer = (Indexer)cr.valueForKey("indexer");
 			if(indexer == null)
@@ -832,7 +835,7 @@ public class Sychroniser implements Runnable {
 				dict.takeValueForKey(Boolean.TRUE, "plusMinus");
 		} // set ctiteria enumeration
 //		byNum.takeValueForKey(new Integer(max), "maxCriterion");
-		preset = new NSDictionary[max];
+		preset = new NSDictionary[max +1];
 		Enumeration cenu = byNum.keyEnumerator();
 		while (cenu.hasMoreElements()) {
 			Integer cr = (Integer) cenu.nextElement();
