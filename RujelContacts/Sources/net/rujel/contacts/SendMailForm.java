@@ -63,6 +63,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 	public boolean showList = false;
 	
 	public String message;
+//	public String sign;
 	public String subjStart;
 	public String subject;
 	public String text;
@@ -83,7 +84,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		}
 		if(ec == null)
 			ec = ((EOEnterpriseObject)students.objectAtIndex(0)).editingContext();
-		contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
+		contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec),Boolean.TRUE);
 		message = null;
 		if(contacts == null || contacts.count() == 0) {
 			message = (String)session().valueForKeyPath(
@@ -165,6 +166,9 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 					"strings.RujelContacts_Contacts.SendMailForm.noText");
 			return null;
 		}
+//		if(sign != null) {
+//			text = text + "\n\n---\n" + sign;
+//		}
 		NSMutableDictionary param = new NSMutableDictionary();
 		param.takeValueForKey(dict.valueForKey("students"), "students");
 		param.takeValueForKey(adrSet, "adrSet");
@@ -185,6 +189,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 		}
 		param.takeValueForKey(session().valueForKey("today"), "date");
 		param.takeValueForKey(text, "messageText");
+		param.takeValueForKey(dict.valueForKey("sign"), "sign");
 		param.takeValueForKey(subject, "subject");
 		logParam.takeValueForKey(eduGroup,WOLogFormatter.EO);
 		logParam.takeValueForKey(eduGroup.name(), "eduGroup");

@@ -484,7 +484,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 		if(period instanceof EOEnterpriseObject) {
 			period = (Period)EOUtilities.localInstanceOfObject(ec,(EOEnterpriseObject)period);
 		}
-		PerPersonLink contacts = Contact.getContactsForList(students,EMailUtiliser.conType(ec));
+		PerPersonLink contacts = Contact.getContactsForList(students,
+				EMailUtiliser.conType(ec),Boolean.TRUE);
 		if(contacts == null) {
 //			ec.unlock();
 //			ses.sleep();
@@ -537,7 +538,10 @@ gr:		while (eduGroups.hasMoreElements()) {
 			messageText = mailer.defaultMessageText();
 		if(messageText != null)
 			textBuf.append(messageText.replaceAll("%", "%%"));
-
+		messageText = (String)params.valueForKey("sign");
+		if(messageText != null) {
+			textBuf.append("\n\n---\n").append(messageText);
+		}
 		WOApplication app = WOApplication.application();
 		EduGroup eduGroup = (EduGroup)params.valueForKey("eduGroup");
 		eduGroup = (EduGroup)EOUtilities.localInstanceOfObject(ec, eduGroup);

@@ -30,6 +30,7 @@
 package net.rujel.contacts;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.Person;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
@@ -54,6 +55,14 @@ public class MailWidget extends WOComponent {
 		NSMutableDictionary dict = new NSMutableDictionary();
 		dict.takeValueForKey(course.groupList(), "students");
 		dict.takeValueForKey(course.eduGroup(), "eduGroup");
+		String sign = (String)session().valueForKeyPath(
+				"strings.RujelContacts_Contacts.SendMailForm.teacherSign");
+		if(sign != null) {
+			sign = String.format(sign, course.cycle().subject());
+			StringBuilder buf = new StringBuilder(sign);
+			buf.append('\n').append(Person.Utility.fullName(course.teacher(), false, 2, 2, 2));
+			dict.takeValueForKey(buf.toString(), "sign");
+		}
 		nextPage.takeValueForKey(dict,"dict");
 		nextPage.takeValueForKey(context().page(), "returnPage");
 		return nextPage;

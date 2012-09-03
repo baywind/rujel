@@ -83,7 +83,7 @@ public class Contacts extends WOComponent {
 
     public WOActionResults selectClass() {
 		currPerson = null;
-        allContacts = Contact.getContactsForList(currClass.list(),currConType);
+        allContacts = Contact.getContactsForList(currClass.list(),currConType,null);
 		contactsByType = null;
 		selectedContact = null;
 		revert();

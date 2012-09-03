@@ -73,22 +73,29 @@ public class Contact extends _Contact {
 		return getUtiliser().validateContact(aValue);
 	}
 	
-	private transient Person _pers;
+	private transient PersonLink _pers;
 	
-	public Person person() {
+	public PersonLink person() {
 		if(_pers == null) {
 			String entityName = personEntity().entName();
 			//(String)valueForKeyPath("personEntity.entName");
 			if(entityName == null || persID() == null) return null;
-			_pers = (Person)EOUtilities.objectWithPrimaryKeyValue(editingContext(),entityName,persID());
+			_pers = (PersonLink)EOUtilities.objectWithPrimaryKeyValue(
+					editingContext(),entityName,persID());
 		}
 		return _pers;
 	}
 
-	public void setPerson(Person person) {
+	public void setPerson(PersonLink person) {
 		_pers = null;
-		if(person.editingContext() != editingContext()) {
-			person = (Person)EOUtilities.localInstanceOfObject(editingContext(),person);
+		if(person == null) {
+			setPersonEntity(null);
+			setPersID(null);
+			return;
+		}
+		EOEnterpriseObject eo = (EOEnterpriseObject)person;
+		if(eo.editingContext() != editingContext()) {
+			person = (PersonLink)EOUtilities.localInstanceOfObject(editingContext(),eo);
 		}
 		
 		//String entityName = person.entityName();
@@ -100,7 +107,7 @@ public class Contact extends _Contact {
 			pEnt.takeValueForKey(entityName,"personEntityName");
 			logger.log(WOLogLevel.EDITING,"Adding new personEntity '" + entityName + "' to list",pEnt);
 		}*/
-		EOEnterpriseObject pEnt = EntityIndex.indexForObject(person,true);
+		EOEnterpriseObject pEnt = EntityIndex.indexForObject(eo,true);
 		/*if(pEnt == null) {
 			pEnt = EOUtilities.createAndInsertInstance(editingContext(),"PersonEntity");
 			pEnt.takeValueForKey(entityName,"personEntityName");
@@ -123,29 +130,27 @@ public class Contact extends _Contact {
 		return pEnt;
 	}*/
 	
-	protected static Integer idForPerson(Person person) {
-		NSDictionary pKey = EOUtilities.primaryKeyForObject(person.editingContext(),person);
+	protected static Integer idForPerson(PersonLink person) {
+		EOEditingContext ec = ((EOEnterpriseObject)person).editingContext();
+		NSDictionary pKey = EOUtilities.primaryKeyForObject(ec,(EOEnterpriseObject)person);
 		if(pKey == null || pKey.count() != 1)
 			throw new IllegalArgumentException("Person entity should not have compound primary key");
 		return (Integer)pKey.allValues().objectAtIndex(0);
 	}
 	
-	public static EOQualifier qualifierForPerson(Person person) {
-		NSMutableArray quals = new NSMutableArray();
-		EOEnterpriseObject ent = EntityIndex.indexForObject(person,false);
+	public static EOQualifier qualifierForPerson(PersonLink person) {
+		EOEnterpriseObject ent = EntityIndex.indexForObject((EOEnterpriseObject)person,false);
 		if(ent == null) return null;
-		EOQualifier qual = new EOKeyValueQualifier(
+		EOQualifier[] qual = new EOQualifier[2];
+		qual[0] = new EOKeyValueQualifier(
 				PERSON_ENTITY_KEY,EOQualifier.QualifierOperatorEqual,ent);
-		quals.addObject(qual);
-		qual = new EOKeyValueQualifier(
+		qual[1] = new EOKeyValueQualifier(
 				PERS_ID_KEY,EOQualifier.QualifierOperatorEqual,idForPerson(person));
-		quals.addObject(qual);
-		qual = new EOAndQualifier(quals);
-		return qual;
+		return new EOAndQualifier(new NSArray(qual));
 	}
 	
-	public static NSArray getContactsForPerson(Person person, EOEnterpriseObject type) {
-		EOEnterpriseObject ent = EntityIndex.indexForObject(person,false);
+	public static NSArray getContactsForPerson(PersonLink person, EOEnterpriseObject type) {
+		EOEnterpriseObject ent = EntityIndex.indexForObject((EOEnterpriseObject)person,false);
 		if(ent == null) return null;
 		NSMutableDictionary dict = new NSMutableDictionary();
 		dict.setObjectForKey(ent,PERSON_ENTITY_KEY);
@@ -153,7 +158,8 @@ public class Contact extends _Contact {
 		if(type != null) {
 			dict.setObjectForKey(type,TYPE_KEY);
 		}
-		return EOUtilities.objectsMatchingValues(person.editingContext(),ENTITY_NAME,dict);
+		return EOUtilities.objectsMatchingValues(
+				((EOEnterpriseObject)person).editingContext(),ENTITY_NAME,dict);
 		
 		/*
 		EOQualifier qual = qualifierForPerson(person);
@@ -162,7 +168,8 @@ public class Contact extends _Contact {
 		return person.editingContext().objectsWithFetchSpecification(fs);*/
 	}
 	
-	public static PerPersonLink getContactsForList(NSArray list, EOEnterpriseObject type) {
+	public static PerPersonLink getContactsForList(NSArray list,
+			EOEnterpriseObject type, Boolean descend) {
 		if(list == null || list.count() == 0)
 			return null;
 		NSMutableDictionary result = new NSMutableDictionary();
@@ -177,19 +184,39 @@ public class Contact extends _Contact {
 					EOQualifier.QualifierOperatorEqual, type);
 		}
 		while (enu.hasMoreElements()) {
-			Person person = ((PersonLink)enu.nextElement()).person();
+			PersonLink pl = (PersonLink)enu.nextElement();
+			EOEnterpriseObject person = (descend == null || descend.booleanValue())?pl.person()
+					:(EOEnterpriseObject)pl;
 			Object pEnt = ents.objectForKey(person.entityName());
 			if(pEnt == null) {
 				pEnt = EntityIndex.indexForObject(person,false);
-				if(pEnt == null) pEnt = NSKeyValueCoding.NullValue;
+				if(pEnt == null) pEnt = NullValue;
 				ents.setObjectForKey(pEnt,person.entityName());
 			}
-			if(pEnt == NSKeyValueCoding.NullValue)
+			Object plEnt = null;
+			if(descend == null) {
+				plEnt = ents.objectForKey(((EOEnterpriseObject)pl).entityName());
+				if(plEnt == null) {
+					plEnt = EntityIndex.indexForObject(((EOEnterpriseObject)pl),false);
+					if(plEnt == null)
+						plEnt = NullValue;
+					ents.setObjectForKey(pEnt,person.entityName());
+				}
+			}
+			if(pEnt == NullValue || plEnt == NullValue)
 				continue;
-			quals[2] = new EOKeyValueQualifier(PERSON_ENTITY_KEY, 
-					EOQualifier.QualifierOperatorEqual, pEnt); 
-			quals[3] = new EOKeyValueQualifier(PERS_ID_KEY, 
-					EOQualifier.QualifierOperatorEqual, idForPerson(person)); 
+			if(pl == person || plEnt == null) {
+				quals[2] = new EOKeyValueQualifier(PERSON_ENTITY_KEY, 
+						EOQualifier.QualifierOperatorEqual, pEnt); 
+				quals[3] = new EOKeyValueQualifier(PERS_ID_KEY, 
+						EOQualifier.QualifierOperatorEqual, idForPerson((PersonLink)person));
+			} else if(descend == null) {
+				NSArray args = new NSArray(new Object[] {
+						pEnt,idForPerson((PersonLink)person),plEnt,idForPerson(pl)});
+				quals[2] = EOQualifier.qualifierWithQualifierFormat(
+		"(personEntity = %@ AND persID = %@) OR (personEntity = %@ AND persID = %@)",args);
+				quals[3] = null;
+			}
 			quals[3] = new EOAndQualifier(new NSArray(quals));
 			EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[3],null);
 			NSArray contacts = person.editingContext().objectsWithFetchSpecification(fs);
