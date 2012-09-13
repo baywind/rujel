@@ -145,7 +145,7 @@ public class Contacts extends WOComponent {
 		if(currPerson != null || currClass == null || allContacts == null ||
 				contypes == null || contypes.count() == 0)
 			return null;
-		NSMutableDictionary template = new NSMutableDictionary("DynamicCell","presenter");
+		NSDictionary template = new NSDictionary("DynamicCell","presenter");
 		
 		Enumeration penu = currClass.list().objectEnumerator();
 		NSMutableDictionary result = new NSMutableDictionary();

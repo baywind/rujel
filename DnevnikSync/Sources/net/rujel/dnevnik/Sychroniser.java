@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.apache.axis.types.UnsignedByte;
@@ -18,14 +19,18 @@ import net.rujel.base.IndexRow;
 import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.contacts.Contact;
 import net.rujel.criterial.CriteriaSet;
 import net.rujel.criterial.Work;
 import net.rujel.criterial.WorkType;
 import net.rujel.eduplan.Subject;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.EduLesson;
+import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
 import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
@@ -45,7 +50,6 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSForwardException;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
@@ -66,18 +70,24 @@ public class Sychroniser implements Runnable {
 	protected NSDictionary workTypes;
 	protected NSDictionary itogTypes;
 	
-	private EntityIndex lessonEI, workEI, timeslotEI;
+	private EntityIndex lessonEI, workEI, timeslotEI, courseEI;
 	
 	protected ImportServiceSoap soap;
 	
 	protected SettingsBase criteriaSettings;
 	protected NSMutableDictionary critSetParams;
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
+	protected EOEnterpriseObject contype;
+	protected EntityIndex studentEI;
 	
 	public Sychroniser(EOEditingContext ec, Integer eduYear) {
 		super();
 		this.ec = ec;
 		this.eduYear = eduYear;
+		if(!SettingsReader.boolForKeyPath("dnevnik.sendAll", false)) {
+			contype = Contact.getType(ec, OEJDUtiliser.class.getCanonicalName(), false);
+			studentEI = EntityIndex.indexForEntityName(ec, Student.entityName,false);
+		}
 	}
 	
 	public void run() {
@@ -317,13 +327,135 @@ public class Sychroniser implements Runnable {
 		}
 	}
 	
+	private String groupGuidForCourse(Integer courseID) throws RemoteException {
+		if(courseEI == null)
+			courseEI = EntityIndex.indexForEntityName(ec, EduCourse.entityName, true);
+		SyncMatch match = getMatch(courseEI, courseID);
+		if(match != null) {
+			return match.extID().substring(0,36);
+		}
+		BaseCourse course = (BaseCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
+				BaseCourse.ENTITY_NAME, courseID);
+		NSArray audience = EOUtilities.rawRowsMatchingKeyAndValue(ec,
+				"CourseAudience", "courseID", courseID);
+		if(audience == null || audience.count() == 0)
+			return localBase.extidForObject(course.eduGroup());
+		String parentGuid;
+		if(course.namedFlags().flagForKey("mixedGroup")) {
+			Integer grade = course.cycle().grade();
+			SyncMatch pmatch = SyncMatch.getMatch(null, localBase, 
+					EduGroup.entityName, new Integer(-grade.intValue()));
+			if(pmatch == null) {
+				parentGuid = UUID.randomUUID().toString();
+				
+				String perlist = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, 
+						SettingsBase.courseDict(grade, eduYear), ec);
+				SyncIndex idx = system.getIndexNamed("regimes", null, false);
+				if(idx != null)
+					perlist = idx.extForLocal(perlist);
+				ReportingPeriodGroup[] rpgs = soap.getReportingPeriodGroupCollection(
+						schoolGuid, eduYear.intValue());
+	    		long pgrp = 0;
+    			for (int i = 0; i < rpgs.length; i++) {
+					if(perlist.equalsIgnoreCase(rpgs[i].getName())) {
+						pgrp = rpgs[i].getID();
+						break;
+					}
+				}
+    	    	String timetable = system.extidForObject("ScheduleRing", new Integer(0), null);
+    	    	long ttID = Long.parseLong(timetable);
+
+				soap.insertGroup(parentGuid, schoolGuid, grade.toString(), 
+						new UnsignedByte(grade), eduYear,pgrp, "поток", ttID);
+				pmatch = localBase.extSystem().addMatch(EduGroup.entityName, 
+						new Integer(-grade.intValue()),localBase);
+				pmatch.setExtID(parentGuid);
+			} else {
+				parentGuid = pmatch.extID();
+			}
+		} else {
+			parentGuid = localBase.extidForObject(course.eduGroup());
+		}
+		String extid = UUID.randomUUID().toString();
+		StringBuilder title = new StringBuilder(course.cycle().subject());
+		title.append(' ').append('(');
+		if(course.comment() != null)
+			title.append(course.comment());
+		else
+			title.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+		title.append(')');
+		soap.insertSubGroup(extid, title.toString(), parentGuid, null);
+		match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
+		match.setExtSystem(system);
+		match.setEntityIndex(courseEI);
+		match.setEduYear(eduYear);
+		match.setObjID(courseID);
+		match.setExtID(extid);
+		syncGroup(course.groupList(), match);
+		return extid;
+	}
+	
+	private boolean syncCourse(EduCourse course) throws RemoteException {
+		if(courseEI == null)
+			courseEI = EntityIndex.indexForEntityName(ec, EduCourse.entityName, true);
+		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(course);
+		Integer courseID = (Integer)gid.keyValues()[0];
+		SyncMatch match = SyncMatch.getMatch(system, null, courseEI, courseID);
+		if(match == null)
+			return false;
+		syncGroup(course.groupList(), match);
+		return true;
+	}
+	
+	private void syncGroup(NSArray list, SyncMatch match) throws RemoteException {
+		String ext = match.extID();
+		String guid = ext.substring(0,36);
+		StringBuilder buf = new StringBuilder(guid);
+		buf.append(' ');
+		ext = ext.substring(37);
+		NSMutableArray exist = (ext == null)?null:
+			NSMutableArray._mutableComponentsSeparatedByString(ext, ",");
+		Enumeration enu = list.objectEnumerator();
+		boolean update = false;
+		while (enu.hasMoreElements()) {
+			Student stu = (Student) enu.nextElement();
+			String id = MyUtility.getID(stu);
+			if(exist == null || !exist.removeObject(id)) {
+				update = true;
+				SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
+						Student.entityName, new Integer(id));
+				if(personMatch == null)
+					return;
+				String personGuid = personMatch.extID();
+				soap.insertGroupMembership(personGuid, guid);
+			}
+			buf.append(id);
+			if(enu.hasMoreElements())
+				buf.append(',');
+		}
+		if(exist != null && exist.count() > 0) {
+			update = true;
+			enu = exist.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				String stid = (String) enu.nextElement();
+				SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
+						Student.entityName, new Integer(stid));
+				if(personMatch == null)
+					continue;
+				String personGuid = personMatch.extID();
+				soap.deleteGroupMembership(personGuid, guid);
+			}
+		}
+		if(update)
+			match.setExtID(buf.toString());
+	}
+	
 	private long syncLesson(MarkArchive arch) throws RemoteException {
 		if(lessonEI == null)
 			lessonEI = EntityIndex.indexForEntityName(ec, "BaseLesson", false);
 		if(timeslotEI == null)
 			timeslotEI = EntityIndex.indexForEntityName(ec, "Timeslot", true);
-		SyncMatch match = null;
-		match = getMatch(lessonEI, arch.getKeyValue("lesson"));
+		SyncMatch match = getMatch(lessonEI, arch.getKeyValue("lesson"));
 		if(match == null && arch.actionType().intValue() == 3)
 			return 0;
 		if(arch.actionType().intValue() == 3) {
@@ -353,9 +485,10 @@ public class Sychroniser implements Runnable {
 			ec.saveChanges();
 			return 0;
 		}
+		Integer courseID = arch.getKeyValue("course");
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
-				EduCourse.entityName, arch.getKeyValue("course"));
-		String groupGuid = localBase.extidForObject(course.eduGroup());
+				EduCourse.entityName, courseID);
+		String groupGuid = groupGuidForCourse(courseID);
 		groupGuid = groupGuid.toUpperCase();
 		NSTimestamp date = (NSTimestamp)arch.valueForKey("@date_date");
 		String teacherGuid = localBase.extidForObject(course.teacher(date));
@@ -451,7 +584,20 @@ public class Sychroniser implements Runnable {
 		return (MarkArchive)list.objectAtIndex(0);
 	}
 	
+	private boolean skipStudent(Integer id) {
+		if(contype == null || studentEI == null)
+			return false;
+		NSDictionary query = new NSDictionary(new Object[] {contype,studentEI,id, new Integer(1)},
+				new String[] {
+				Contact.TYPE_KEY,Contact.PERSON_ENTITY_KEY, Contact.PERS_ID_KEY,Contact.FLAGS_KEY});
+		NSArray found = EOUtilities.objectsMatchingValues(ec, Contact.ENTITY_NAME, query);
+		return (found != null && found.count() > 0);
+	}
+	
 	private void syncNote(MarkArchive arch) throws RemoteException {
+		Integer studentID = arch.getKeyValue("student");
+		if(skipStudent(studentID))
+			return;
 		if(lessonEI == null)
 			lessonEI = EntityIndex.indexForEntityName(ec, "BaseLesson", false);
 		SyncMatch match = null;
@@ -469,7 +615,7 @@ public class Sychroniser implements Runnable {
 		}
 		
 		SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
-				Student.entityName, arch.getKeyValue("student"));
+				Student.entityName, studentID);
 		if(personMatch == null)
 			return;
 		String personGuid = personMatch.extID();
@@ -479,8 +625,20 @@ public class Sychroniser implements Runnable {
 		} else {
 			String note = arch.getArchiveValueForKey("text");
 			boolean att = (BaseLesson.isSkip(note) == 0);
-			soap.updateLessonLogEntry(lessonID, personGuid, 
-					(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
+			try {
+				soap.updateLessonLogEntry(lessonID, personGuid, 
+						(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
+			} catch (RemoteException e) {
+				if(e.getMessage().contains("Student not in group")) {
+					EduLesson lesson = (EduLesson)EOUtilities.objectWithPrimaryKeyValue(ec, 
+							EduLesson.entityName, arch.getKeyValue("lesson"));
+					if(lesson == null || lesson.course() == null)
+						return;
+					if(syncCourse(lesson.course()))
+						soap.updateLessonLogEntry(lessonID, personGuid, 
+							(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
+					}
+			}
 		}
 	}
 	
@@ -548,8 +706,9 @@ public class Sychroniser implements Runnable {
 			ec.saveChanges();
 			return null;
 		}
+		Integer courseID = arch.getKeyValue("course");
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
-				EduCourse.entityName, arch.getKeyValue("course"));
+				EduCourse.entityName, courseID);
 		String maxVal = arch.getArchiveValueForKey("m0");
 		NSMutableDictionary[] criteria = null;
 		Integer csID = null;
@@ -626,8 +785,7 @@ public class Sychroniser implements Runnable {
 		String[] existing = null;
 		long lessonID;
 		if(match == null) {
-			String groupGuid = localBase.extidForObject(course.eduGroup());
-			groupGuid = groupGuid.toUpperCase();
+			String groupGuid = groupGuidForCourse(courseID);
 			NSTimestamp date = (NSTimestamp)arch.valueForKey("@date_date");
 			String teacherGuid = localBase.extidForObject(course.teacher(date));
 			if(teacherGuid == null)
@@ -899,6 +1057,9 @@ public class Sychroniser implements Runnable {
 	}
 	
 	private void syncMark(MarkArchive arch) throws RemoteException {
+		Integer studentID = arch.getKeyValue("student");
+		if(skipStudent(studentID))
+			return;
 		if(workEI == null)
 			workEI = EntityIndex.indexForEntityName(ec, "Work", false);
 		SyncMatch match = null;
@@ -938,7 +1099,7 @@ public class Sychroniser implements Runnable {
 			}
 		}
 		SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
-				Student.entityName, arch.getKeyValue("student"));
+				Student.entityName, studentID);
 		if(personMatch == null)
 			return;
 		String personGuid = personMatch.extID();
@@ -1007,9 +1168,17 @@ public class Sychroniser implements Runnable {
 				try {
 					soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
 				} catch (RemoteException e) {
-					if(!e.getMessage().contains("Entity already exists: Mark"))
+					if(e.getMessage().contains("Entity already exists: Mark")) {
+						soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
+					} else if(e.getMessage().contains("Student not in group")) {
+						Work work = (Work)EOUtilities.objectWithPrimaryKeyValue(ec, 
+								Work.ENTITY_NAME, arch.getKeyValue("work"));
+						if(work == null || work.course() == null)
+							return;
+						if(syncCourse(work.course()))
+							soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
+					} else
 						throw e;
-					soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
 				}
 			} else {
 				try {
@@ -1027,6 +1196,9 @@ public class Sychroniser implements Runnable {
 	private static final String[] defaultTypes = new String[] {
 		"Exam","Year","Semester","Trimester","Quarter"};
 	private void syncItogMark(MarkArchive arch) throws RemoteException {
+		Integer studentID = arch.getKeyValue("student");
+		if(skipStudent(studentID))
+			return;
 		String mark = arch.getArchiveValueForKey("mark");
 		if(mark == null)
 			return;
@@ -1068,7 +1240,7 @@ public class Sychroniser implements Runnable {
 		EduCycle cycle = (EduCycle)EOUtilities.objectWithPrimaryKeyValue(ec,
 				EduCycle.entityName, arch.getKeyValue("eduCycle"));
 		Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec,
-				Student.entityName, arch.getKeyValue("student"));
+				Student.entityName, studentID);
 		EOQualifier[] quals = new EOQualifier[2];
 		quals[0] = new EOKeyValueQualifier("eduYear",
 				EOQualifier.QualifierOperatorEqual,eduYear);
@@ -1079,7 +1251,7 @@ public class Sychroniser implements Runnable {
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0)
 			return;
-		EduGroup group = null;
+/*		EduGroup group = null;
 		Enumeration enu = found.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
@@ -1088,8 +1260,8 @@ public class Sychroniser implements Runnable {
 				break;
 			}
 		}
-		if(group == null)
-			group = student.recentMainEduGroup();
+		if(group == null) */
+		EduGroup group = student.recentMainEduGroup();
 		String groupGuid = localBase.extidForObject(group);
 		if(groupGuid == null) {
 			return;
@@ -1100,7 +1272,7 @@ public class Sychroniser implements Runnable {
 		ItogContainer container = (ItogContainer)EOUtilities.objectWithPrimaryKeyValue(ec,
 				ItogContainer.ENTITY_NAME, arch.getKeyValue("container"));
 		SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
-				Student.entityName, arch.getKeyValue("student"));
+				Student.entityName, studentID);
 		if(personMatch == null)
 			return;
 		String studentGuid = personMatch.extID();

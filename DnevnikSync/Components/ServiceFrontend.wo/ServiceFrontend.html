@@ -1,10 +1,35 @@
-<webobject name = "PageWrapper"><webobject name = "ServiceWorks">
+<webobject name = "PageWrapper">
+<webobject name = "HasSections">
+<div style = "position:absolute;left:7px;border:1px solid #999999;" class = "gerade"
+	onmouseover = "hideObj('SectionTitle');showObj('SectionTabs')" 
+	onmouseout = "hideObj('SectionTabs');showObj('SectionTitle')">
+<div id = "SectionTitle" style = "padding:3px;" class = "green">
+	<webobject name = "CurrSection"/></div>
+<div id = "SectionTabs" style = "display:none;">
+<webobject name = "SectionTabs"/></div></div></webobject>
+<table align = "center" cellpadding = "0" style = "border-collapse:collapse;">
+<tr><th colspan = "2" style = "font-size:160%;padding:1ex;">Взаимодействие с ОЭЖД</th></tr>
+<tr>
+<td width = "20%" valign = "top" class = "selectionBorder" 
+	style = "border-style:solid solid none none;">
+<webobject name="ClassListing1"></webobject>
+<div style = "font-weight:bold; margin-top:1em;">Синхронизировать:</div>
+<webobject name = "Tabs"/>
+</td>
+<td valign = "top"><webobject name = "NoSelection">
+<div style = "font-size:150%;margin:3em;">Выберите класс, чтобы указать, оценки каких учащихся отправлять
+ в "Общегородской электронный журнал и дневник".<br/>
+ Либо выберите необходимый режим для ручной синхронизации.</div>
+</webobject>
+<webobject name = "ServiceWorks"><div style = "padding:3px;">
+<webobject name = "IsPeriods">
 <table border = "1" cellspacing = "5" cellpadding = "2"><tr valign = "top">
 <webobject name = "PeriodGroups"><td>
 <strong><webobject name = "PGrName"/></strong>
 <p><webobject name = "Periods"/></p>
 </td>
-</webobject></tr></table>
+</webobject></tr>
+</table>
 <p><strong>Синхронизировать:</strong>
 	<webobject name = "SyncPeriods">Периоды</webobject>
 	<webobject name = "SyncGroups">Группы</webobject>
@@ -15,17 +40,36 @@
 <webobject name = "EventDiv"><webobject name = "EventTime"/>
 	<webobject name = "System"/> <webobject name = "Entity"/></webobject>
 </webobject>
-
-<webobject name = "SyncForm">
-<webobject name = "Since"/> - <webobject name = "To"/>
-<webobject name = "SyncMarks"/>
+</webobject>
+<webobject name = "IfMarks">
+		<webobject name = "SyncForm">
+		<webobject name = "Since"/> - <webobject name = "To"/>
+		<webobject name = "SyncMarks"/>
+		</webobject>
+	<hr/>
+	<h3>Events:</h3><webobject name = "Events">
+	<webobject name = "EventDiv"><webobject name = "EventTime"/>
+		<webobject name = "System"/> <webobject name = "Entity"/></webobject>
+	</webobject></webobject></div></webobject>
+<webobject name = "IfGroup">
+<webobject name = "SetupForm"><webobject name = "Ticker"/>
+	<table><webobject name = "GroupList">
+		<td style = "padding-left:1ex;"><webobject name = "Contacts">
+			<div><webobject name = "ActiveFlag"/> <webobject name = "Contact"/></div>
+			</webobject></td>
+	</webobject>
+	<tr><td colspan = "2" style = "padding:1ex;" align = "center">
+	<webobject name = "Save"/></td></tr>
+</table>
 </webobject>
 	<hr/>
-	<webobject name = "Errors">
-		<div><webobject name = "ErrorID"/> | <webobject name = "ErrMethod"/> |
-		<webobject name = "Error"/></div>
-	</webobject>
 </webobject><webobject name = "NoService">
 	<h1>Не удалось подключиться к сервису</h1>
 	<div class = "message"><webobject name = "ErrorMessage"/></div>
-</webobject></webobject>
+</webobject>
+<webobject name = "Errors">
+		<div><webobject name = "ErrorID"/> | <webobject name = "ErrMethod"/> |
+		<webobject name = "Error"/></div>
+</webobject>
+</td></tr></table>
+</webobject>

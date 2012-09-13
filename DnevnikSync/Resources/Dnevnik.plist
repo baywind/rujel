@@ -232,5 +232,10 @@
 		<key>noLink</key>
 		<string>Не удалось подключиться к сервису</string>
 	</dict>
+	<key>tabs</key>
+	<array>
+		<string>Оценки</string>
+		<string>Периоды</string>
+	</array>
 </dict>
 </plist>

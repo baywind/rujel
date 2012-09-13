@@ -29,6 +29,7 @@
 
 package net.rujel.io;
 
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSTimestamp;
@@ -56,9 +57,13 @@ public class SyncEvent extends _SyncEvent {
 		EOQualifier qual = new EOKeyValueQualifier(EXT_SYSTEM_KEY, 
 				EOQualifier.QualifierOperatorEqual, sys);
 		if(syncEnt != null) {
+			boolean not = (syncEnt.charAt(0) == '!');
+			if(not)
+				syncEnt = syncEnt.substring(1);
 			NSArray quals = new NSArray(new Object[] {
 					qual, new EOKeyValueQualifier(SYNC_ENTITY_KEY, 
-							EOQualifier.QualifierOperatorEqual,syncEnt)
+							(not)?EOQualifier.QualifierOperatorNotEqual:
+								EOQualifier.QualifierOperatorEqual,syncEnt)
 			});
 			qual = new EOAndQualifier(quals);
 		}
@@ -74,5 +79,15 @@ public class SyncEvent extends _SyncEvent {
 		if(found == null || found.count() == 0)
 			return null;
 		return (SyncEvent)found.objectAtIndex(0);
+	}
+	
+	public static SyncEvent addEvent(ExtSystem sync, String entity) {
+		EOEditingContext ec = sync.editingContext();
+    	SyncEvent event = (SyncEvent)EOUtilities.createAndInsertInstance(
+    			ec, SyncEvent.ENTITY_NAME);
+    	event.setExtSystem(sync);
+    	event.setSyncEntity(entity);
+    	ec.saveChanges();
+    	return event;
 	}
 }

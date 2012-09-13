@@ -20,5 +20,7 @@
 	<classpathentry kind="con" path="WOFramework/RujelIO"/>
 	<classpathentry kind="con" path="WOFramework/RujelReports"/>
 	<classpathentry kind="con" path="WOFramework/JavaWOExtensions"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelContacts"/>
+	<classpathentry kind="con" path="WOFramework/RujelContacts"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

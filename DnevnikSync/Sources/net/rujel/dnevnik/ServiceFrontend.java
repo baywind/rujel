@@ -4,18 +4,23 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import org.apache.axis.types.UnsignedByte;
 
 import ru.mos.dnevnik.*;
 
 import net.rujel.base.SettingsBase;
+import net.rujel.contacts.Contact;
 import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.PerPersonLink;
+import net.rujel.interfaces.Student;
 import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
 import net.rujel.io.SyncEvent;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.Progress;
 
 import com.webobjects.appserver.WOActionResults;
@@ -45,6 +50,7 @@ public class ServiceFrontend extends WOComponent {
 	public NSArray perGroups;
 	public ReportingPeriodGroup pgr;
 	public Object item;
+	public Object item2;
 	public NSArray errors;
 	
 	public NSArray events;
@@ -52,6 +58,9 @@ public class ServiceFrontend extends WOComponent {
 	public NSTimestamp to;
 	public Integer limit;
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
+	protected PerPersonLink ppl;
+	
+	public Object active;
 
     public ServiceFrontend(WOContext context) {
         super(context);
@@ -67,7 +76,6 @@ public class ServiceFrontend extends WOComponent {
         	return;
         }
         year = (Integer)context.session().valueForKey("eduYear");
-        events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
         try {
         	String tmp = SettingsReader.stringForKeyPath("dnevnik.serviceURL", null);
         	URL serviceURL = new URL(tmp);
@@ -80,6 +88,49 @@ public class ServiceFrontend extends WOComponent {
         	item = e;
 //			throw new NSForwardException(e);
 		}
+    }
+    
+    public WOActionResults select() {
+    	if(ec.hasChanges())
+    		ec.revert();
+    	if(active == null) {
+    		errors = null;
+    		events = null;
+    	} else if(active.equals("Оценки")) {
+            events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
+    	} else if(active.equals("Периоды")) {
+            events = SyncEvent.eventsForSystem(sync, null, 20, "!marks");
+            if(soap != null) {
+            	try {
+            		perGroups = new NSArray(
+            				soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
+            	} catch (Exception e) {
+            		// TODO: handle exception
+            	}
+            }
+    	} else if (active instanceof EduGroup) {
+			events = ((EduGroup)active).list();
+			EOEnterpriseObject contype = Contact.getType(ec, 
+					OEJDUtiliser.class.getCanonicalName(), true);
+			if(ec.globalIDForObject(contype).isTemporary()) {
+				contype.takeValueForKey("ОЭЖД", "type");
+				ec.saveChanges();
+			}
+			ppl = Contact.getContactsForList(events ,contype, Boolean.FALSE);
+		}
+    	return null;
+    }
+    
+    public void clear() {
+    	if(active instanceof EduGroup) {
+    		active = null;
+    		errors = null;
+    		events = null;
+    	}
+    }
+    
+    public boolean isGroup() {
+    	return (active instanceof EduGroup);
     }
     
     public String periods() {
@@ -234,6 +285,7 @@ public class ServiceFrontend extends WOComponent {
     	try {
     		perGroups = new NSArray(
     				soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
+        	SyncEvent.addEvent(sync, "periods");
     	} catch (Exception e) {
     		throw new NSForwardException(e);
     	}
@@ -288,12 +340,7 @@ public class ServiceFrontend extends WOComponent {
     			throw new NSForwardException(gr.name() + ' ' + groupGuid, e);
     		}
     	}
-    	SyncEvent event = (SyncEvent)EOUtilities.createAndInsertInstance(
-    			ec, SyncEvent.ENTITY_NAME);
-    	event.setExtSystem(sync);
-    	event.setSyncEntity("groups");
-    	ec.saveChanges();
-    	events = events.arrayByAddingObject(event);
+    	events = events.arrayByAddingObject(SyncEvent.addEvent(sync, "groups"));
     	return null;
      }
     
@@ -366,10 +413,7 @@ public class ServiceFrontend extends WOComponent {
 				throw new NSForwardException(e);
 			}
 		}
-		SyncEvent event = (SyncEvent)EOUtilities.createAndInsertInstance(
-				ec, SyncEvent.ENTITY_NAME);
-		event.setExtSystem(sync);
-		event.setSyncEntity("timetable");
+		SyncEvent.addEvent(sync, "timetable");
 		ec.saveChanges();
 //        events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
 		return null;
@@ -411,5 +455,74 @@ public class ServiceFrontend extends WOComponent {
 	public void setErrors(NSArray errors) {
 		this.errors = errors;
         events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
+	}
+	
+	public NSArray contacts() {
+		if(item instanceof Student) {
+			NSArray contacts = (ppl==null)?null:(NSArray)ppl.forPersonLink((Student)item);
+			if(contacts == null || contacts.count() == 0)
+				contacts = new NSArray(new NSMutableDictionary());
+			return contacts;
+		}
+		return null;
+	}
+
+	public Boolean studentActive() {
+		if(item2 instanceof Contact) {
+			return Boolean.valueOf(((Contact)item2).flags() > 0);
+		} else if (item2 instanceof NSDictionary) {
+			return Boolean.FALSE;
+		}
+		return null;
+	}
+
+	public void setStudentActive(Boolean studentActive) {
+		if(item2 instanceof Contact) {
+			Contact cnt = (Contact)item2;
+			boolean was = cnt.flags() > 0;
+			if(studentActive != was) {
+				cnt.setFlags(new Integer((studentActive)?1:0));
+			}
+		} else if (item2 instanceof NSDictionary) {
+			NSMutableDictionary dict = (NSMutableDictionary)item2;
+			dict.takeValueForKey(item, "person");
+			dict.takeValueForKey(new Integer(1), "flags");
+			if(errors == null)
+				errors = new NSMutableArray(dict);
+			else
+				((NSMutableArray)errors).addObject(dict);
+		}
+	}
+	
+	public String fieldStyle() {
+		if(studentActive() == Boolean.TRUE)
+			return null;
+		return "visibility:hidden;";
+	}
+	
+	public WOActionResults saveContacts() {
+		EOEnterpriseObject contype = Contact.getType(ec, 
+				OEJDUtiliser.class.getCanonicalName(), true);
+		if(errors != null && errors.count() > 0) {
+			Enumeration enu = errors.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+				Contact cnt = (Contact)EOUtilities.createAndInsertInstance(ec, Contact.ENTITY_NAME);
+				cnt.setType(contype);
+				cnt.takeValuesFromDictionary(dict);
+			}
+		}
+		if(!ec.hasChanges())
+			return null;
+		try {
+			ec.saveChanges();
+			ppl = Contact.getContactsForList(events ,contype, Boolean.FALSE);
+		} catch (Exception e) {
+			Logger.getLogger("rujel.dnevnik").log(WOLogLevel.WARNING,
+					"Failed to save EOJD contacts",new Object[] {session(),active,e});
+			session().takeValueForKey(e.getMessage(), "message");
+			ec.revert();
+		}
+		return null;
 	}
 }

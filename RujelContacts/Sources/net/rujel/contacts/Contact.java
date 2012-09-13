@@ -224,12 +224,32 @@ public class Contact extends _Contact {
 				result.setObjectForKey(contacts,person);
 		}
 		if(result.count() == 0) return null;
-		return new PerPersonLink.Dictionary(result) {
-			public Object forPersonLink(PersonLink pers) {
-				return super.forPersonLink(pers.person());
-			}
-		};
+		if(descend == null || descend.booleanValue()) {
+			return new PerPersonLink.Dictionary(result) {
+				public Object forPersonLink(PersonLink pers) {
+					return super.forPersonLink(pers.person());
+				}
+			};
+		} else {
+			return new PerPersonLink.Dictionary(result) {
+				public Object forPersonLink(PersonLink pers) {
+					return super.forPersonLink(pers);
+				}
+			};
+		}
 		//PersDictionary(result);
+	}
+	
+	public static EOEnterpriseObject getType(EOEditingContext ec, String utiliser, boolean create) {
+		NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec, "ConType",
+				"utiliserClass", utiliser);
+		if(found != null && found.count() > 0)
+			return (EOEnterpriseObject)found.objectAtIndex(0);
+		if(!create)
+			return null;
+		EOEnterpriseObject contype = EOUtilities.createAndInsertInstance(ec, "ConType");
+		contype.takeValueForKey(utiliser,"utiliserClass");
+		return contype;
 	}
 	/*
 	protected static class PersDictionary extends PerPersonLink.Dictionary {

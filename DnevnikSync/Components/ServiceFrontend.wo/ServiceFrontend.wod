@@ -112,3 +112,91 @@ NoService : WOConditional {
 ErrorMessage : WOString {
   value = item;
 }
+
+ClassListing1: ClassListing {
+	selection = active;
+	width = "100%";
+	selectAction = select;
+	editingContext = ec;
+	onClick = session.checkRun;
+	showTitle = true;
+}
+
+Tabs : Tabs {
+  currTab = active;
+  tablist = session.strings.DnevnikSync_Dnevnik.tabs;
+  vertical = true;
+  selectAction = select;
+  onClick = session.checkRun;
+}
+
+IsPeriods : WOKeyValueConditional {
+  key = "active";
+  value = "Периоды";
+}
+
+IfMarks : WOKeyValueConditional {
+  key = "active";
+  value = "Оценки";
+}
+
+HasSections : WOConditional {
+  condition = session.strings.sections.hasSections;
+}
+
+CurrSection : WOString {
+  value = session.state.section.value;
+}
+
+SectionTabs : Tabs {
+  idAttribute = "idx";
+  currTab = session.state.section;
+  tablist = session.strings.sections.list;
+  titleAttribute = "value";
+  vertical = true;
+  onClick = session.tryLoad;
+  selectAction = clear;
+}
+
+IfGroup : WOConditional {
+  condition = isGroup;
+}
+
+GroupList : PersonSelector {
+  list = events;
+  item = item;
+  nameWidth = "16em";
+}
+
+ActiveFlag : WOCheckBox {
+  checked = studentActive;
+  onclick = "parentNode.getElementsByTagName('input')[1].style.visibility = (checked)?'':'hidden';checkChanges(this);";
+  name = "cb";
+}
+
+Contacts : WORepetition {
+  list = contacts;
+  item =  item2;
+}
+Contact : WOTextField {
+  value = item2.contact;
+  style = fieldStyle;
+  onchange = "checkChanges(this);";
+}
+
+SetupForm : WOForm {
+}
+
+Save : WOSubmitButton {
+  action = saveContacts;
+  value = session.strings.Reusables_Strings.uiElements.Save;
+}
+
+NoSelection : WOConditional {
+  condition = active;
+  negate = true;
+}
+
+Ticker : Ticker {
+  align = "right";
+}
