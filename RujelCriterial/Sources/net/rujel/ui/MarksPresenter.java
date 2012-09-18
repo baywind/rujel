@@ -127,6 +127,8 @@ public class MarksPresenter extends NotePresenter {
 			} else {
 				if(lesson() != null) {
 					_usedCriteria = lesson().usedCriteria();
+					if(_usedCriteria == NSArray.EmptyArray && preloadMark())
+						_usedCriteria = new NSArray(new Integer(0));
 				} else if(Various.boolForObject(valueForBinding("full"))) {
 					_usedCriteria = allCriteria();
 					return _usedCriteria;
@@ -219,11 +221,33 @@ public class MarksPresenter extends NotePresenter {
 					}
 				}
 				if(max == null) {
+					if(lesson().criterMask() == null || lesson().criterMask().count() == 0) {
+						if(lesson().critSet() != null) {
+							Integer cmax = lesson().critSet().criterlessMax();
+							if(cmax != null) {
+								if(cmax.intValue() == 0)
+									cmax = SettingsBase.numericSettingForCourse("CriterlessMax",
+						    				lesson().course(), lesson().editingContext());
+								if(cmax == null)
+									max = "5";
+								else
+									max = cmax.toString();
+							}
+						} else {
+							Integer cmax = SettingsBase.numericSettingForCourse("CriterlessMax",
+				    				lesson().course(), lesson().editingContext());
+							if(cmax == null)
+								max = "5";
+							else
+								max = cmax.toString();
+						}
+					} else {
 					EOEnterpriseObject mask = lesson().getCriterMask(critItem());
 					if(mask != null) {
 						Integer maxInt = (Integer)mask.valueForKey("max");
 						if(maxInt != null)
 						max = maxInt.toString();
+					}
 					}
 				}
 				if(max != null) {
@@ -289,7 +313,28 @@ public class MarksPresenter extends NotePresenter {
 	public void setMarkValue(Object newMarkValue) {
         if(mark() == null) {
 			if(newMarkValue == null) return;
-			_mark = (Mark)EOUtilities.createAndInsertInstance(lesson().editingContext(),"Mark");
+			EOEditingContext ec = lesson().editingContext();
+			if(critItem().intValue() == 0 && lesson().criterMask().count() == 0) {
+				Integer max = null;
+				CriteriaSet cs = lesson().critSet();
+				if(cs != null) {
+					max = cs.criterlessMax();
+					if(max != null && max.intValue() == 0) {
+						max = SettingsBase.numericSettingForCourse("CriterlessMax",
+			    				lesson().course(), lesson().editingContext());
+						if(max == null)
+							max = new Integer(5);
+					}
+				}
+				if(max != null) {
+					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(ec, "CriterMask");
+					mask.takeValueForKey(critItem(), "criterion");
+					mask.takeValueForKey(max, "max");
+					lesson().addObjectToBothSidesOfRelationshipWithKey(
+							mask, Work.CRITER_MASK_KEY);
+				}
+			}
+			_mark = (Mark)EOUtilities.createAndInsertInstance(ec,"Mark");
 			_mark.setStudent(student());
 			_mark.setCriterion(critItem());
 			lesson().addObjectToBothSidesOfRelationshipWithKey(_mark,"marks");
@@ -708,5 +753,17 @@ public class MarksPresenter extends NotePresenter {
 			return buf.toString();
 		}
 		return (String)session().valueForKey("ajaxPopup");
+	}
+	
+	public boolean preloadMark() {
+		if (Various.boolForObject(valueForBinding("readOnly")) || hasBinding("initData"))
+			return false;
+		if (!Various.boolForObject(valueForBinding("isSelected")))
+			return false;
+		if(usedCriteria().count() > 0)
+			return false;
+		if(lesson().critSet() != null && lesson().critSet().criterionForNum(new Integer(0)) == null)
+			return false;
+		return true;
 	}
 }

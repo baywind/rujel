@@ -918,8 +918,10 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
     }
 
 	public String lessonNoteForStudent(EduLesson lesson, Student student) {
-		Mark mark = markForStudentAndCriterion(student, new Integer(0));
 		String note = noteForStudent(student);
+		if(SettingsBase.numericSettingForCourse("noLessonMarks",course(),editingContext(),0) > 0)
+			return note; 
+		Mark mark = markForStudentAndCriterion(student, new Integer(0));
 		if(mark == null)
 			return note;
 		if(note == null)
@@ -934,6 +936,8 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		boolean arc = (SettingsReader.boolForKeyPath("markarchive.Mark", 
 				SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
 		int arcLevel = 0;
+		if(SettingsBase.numericSettingForCourse(
+				"noLessonMarks", course(), editingContext(), 0) == 0) {
 		NSArray criterMask = criterMask();
 		Integer max = null;
 		if(note != null && note.length() > 0 && Character.isDigit(note.charAt(0))) {
@@ -1040,6 +1044,7 @@ set:
 				arcLevel = 3;
 			}
 		}
+		} // !noLessonMark
 		if(arc) {
 			if(note == null) {
 				if(arcLevel == 0 && noteForStudent(student) != null)

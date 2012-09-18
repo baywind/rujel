@@ -29,6 +29,7 @@
 
 package net.rujel.base;
 
+import java.lang.ref.WeakReference;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -210,13 +211,10 @@ public class SettingsBase extends _SettingsBase implements Setting {
 			NSKeyValueCodingAdditions course, EOEditingContext ec) {
 		if(ec == null && course instanceof EduCourse)
 			ec = ((EduCourse)course).editingContext();
-		try {
-			SettingsBase sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec, 
-					ENTITY_NAME, KEY_KEY, key);
-			return sb.forCourse(course);
-		} catch (EOObjectNotAvailableException e) {
+		SettingsBase base = baseForKey(key, ec, false);
+		if(base == null)
 			return null;
-		}
+		return base.forCourse(course);
 	}
 	
 	public static NSDictionary courseDict(EduGroup eduGroup) {
@@ -274,19 +272,31 @@ public class SettingsBase extends _SettingsBase implements Setting {
 				"EduCourse, EduCycle, EduGroup or Integer are only accepted. Receiver "
 				+ obj.getClass().getName());
 	}
-	
+		
 	public static SettingsBase baseForKey(String key, EOEditingContext ec, boolean create) {
-		SettingsBase sb = null;
+		NSMutableDictionary sbdict = (NSMutableDictionary)ec.userInfoForKey(ENTITY_NAME);
+		if(sbdict == null) {
+			sbdict = new NSMutableDictionary();
+			ec.setUserInfoForKey(sbdict, ENTITY_NAME);
+		}
+		Object sb = sbdict.valueForKey(key);
+		if(sb instanceof WeakReference) {
+			sb = ((WeakReference)sb).get();
+		}
+		if(sb instanceof SettingsBase)
+			return (SettingsBase)sb;
+		else if(!create && sb == NullValue)
+			return null;
 		try {
-			sb = (SettingsBase)EOUtilities.objectMatchingKeyAndValue(ec,
-					ENTITY_NAME, KEY_KEY, key);
+			sb = EOUtilities.objectMatchingKeyAndValue(ec, ENTITY_NAME, KEY_KEY, key);
 		} catch (EOObjectNotAvailableException e) {
 			if(create) {
-				sb = (SettingsBase)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
-				sb.setKey(key);
+				sb = EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+				((SettingsBase)sb).setKey(key);
 			}
 		}
-		return sb;
+		sbdict.takeValueForKey((sb==null)?NullValue:new WeakReference(sb), key);
+		return (SettingsBase)sb;
 	}
 	
 	public static SettingsBase createBaseForKey(String key, EOEditingContext ec, 
@@ -406,5 +416,35 @@ public class SettingsBase extends _SettingsBase implements Setting {
 	
 	public Integer _sort() {
 		return new Integer(0);
+	}
+	
+	public void cleanSBDict() {
+		EOEditingContext ec = editingContext();
+		if(ec == null) return;
+		NSMutableDictionary sbdict = (NSMutableDictionary)ec.userInfoForKey(ENTITY_NAME);
+		if(sbdict == null)
+			return;
+		String key = key();
+		if(key != null)
+			sbdict.removeObjectForKey(key);
+		if(!ec.globalIDForObject(this).isTemporary())
+			key = (String)ec.committedSnapshotForObject(this).valueForKey(KEY_KEY);
+		if(key != null)
+			sbdict.removeObjectForKey(key);
+	}
+	
+	public void validateForSave() {
+		super.validateForSave();
+		cleanSBDict();
+	}
+	
+	public void validateForDelete() {
+		super.validateForDelete();
+		cleanSBDict();
+	}
+	
+	public void turnIntoFault(EOFaultHandler handler) {
+		super.turnIntoFault(handler);
+		cleanSBDict();
 	}
 }

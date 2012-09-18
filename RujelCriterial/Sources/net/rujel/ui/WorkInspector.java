@@ -41,6 +41,7 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -450,8 +451,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		return critSet.namedFlags().flagForKey("fixMax");
     	if(critItem.valueForKey("indexer") != null)
     		return true;
-    	return (critItem.valueForKey("dfltMax") != null 
-    			&& critSet.namedFlags().flagForKey("fixMax"));
+    	return (critSet.namedFlags().flagForKey("fixMax") &&
+    			(critItem.valueForKey("dfltMax") != null || critIdx < 0));
     }
     
     public String criterMaxTitle() {
@@ -477,7 +478,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public String checked() {
-    	if(isCheckBox() && ((work == null && critIdx < 0) || itemMask() != null))
+    	if(isCheckBox() && (itemMask() != null ||
+    			(work == null && critIdx < 0 && 
+    					Various.boolForObject(dict.valueForKey("trimmedWeight")))))
     		return "checked";
     	return null;
     }
@@ -578,7 +581,13 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     				EOEnterpriseObject criter = critSet.criterionForNum(new Integer(i));
     				if(criter == null)
     					continue;
-    				buf.append(criter.valueForKey("title"));
+    				String title = (String)criter.valueForKey("title");
+    				if(title != null)
+    					buf.append(title);
+    				else if(i == 0)
+    					buf.append('#');
+    				else
+    					buf.append('?');
     				if(!critSet.namedFlags().flagForKey("fixMax") &&
     						criter.valueForKey("indexer") == null)
     					buf.append(':').append(cvals[0]);
