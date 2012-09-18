@@ -249,8 +249,15 @@ public class EMailBroadcast implements Runnable{
 		} // get default reporter
 //		ec.unlock();
 		idx = -1;
+		SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
+			if(reportCourses != null) {
+				NSDictionary crs = SettingsBase.courseDict(eduGroup, eduYear);
+				Integer num = reportCourses.forCourse(crs).numericValue();
+				if(num != null && num.intValue() == 0)
+					continue gr;
+			}
 //			ec.lock();
 			NSArray students = eduGroup.list();
 			if(students == null || students.count() == 0)

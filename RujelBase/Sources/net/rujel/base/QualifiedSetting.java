@@ -305,6 +305,6 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 				return ed;
 			}
 		}
-		return null;
+		throw new AdvancedQualifierException(qual);
 	}
 }

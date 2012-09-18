@@ -591,6 +591,16 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		taskDelegate.setHomeTaskForLesson(newTask, this);
 	}
 	
+	public void setAnnounce(NSTimestamp value) {
+		NSDictionary snapshot = editingContext().committedSnapshotForObject(this);
+		if(snapshot != null && isHometask()) {
+			NSTimestamp prev = (NSTimestamp)snapshot.valueForKey(ANNOUNCE_KEY);
+			if(prev != null && EOPeriod.Utility.compareDates(value, prev) != 0)
+				setNumber(new Integer(0));
+		}
+		super.setAnnounce(value);
+	}
+	
 /*	public NSTimestamp validateDate(Object aDate) throws NSValidation.ValidationException {
 		return MyUtility.validateDateInEduYear(aDate,course().eduYear(),DATE_KEY);
 	}
