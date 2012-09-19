@@ -594,8 +594,9 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 	public void setAnnounce(NSTimestamp value) {
 		NSDictionary snapshot = editingContext().committedSnapshotForObject(this);
 		if(snapshot != null && isHometask()) {
-			NSTimestamp prev = (NSTimestamp)snapshot.valueForKey(ANNOUNCE_KEY);
-			if(prev != null && EOPeriod.Utility.compareDates(value, prev) != 0)
+			Object prev = snapshot.valueForKey(ANNOUNCE_KEY);
+			if(prev instanceof NSTimestamp &&
+					EOPeriod.Utility.compareDates(value, (NSTimestamp)prev) != 0)
 				setNumber(new Integer(0));
 		}
 		super.setAnnounce(value);
