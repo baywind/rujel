@@ -314,7 +314,7 @@ public class ServiceFrontend extends WOComponent {
     	Enumeration enu = groups.objectEnumerator();
     	String timetable = sync.extidForObject("ScheduleRing", new Integer(0), null);
     	//TODO:require timetable here
-    	long ttID = Long.parseLong(timetable);
+    	Long ttID = (timetable == null)?null:new Long(timetable);
     	while (enu.hasMoreElements()) {
     		EduGroup gr = (EduGroup) enu.nextElement();
     		String groupGuid = (String)dict.objectForKey(gr);
@@ -439,7 +439,7 @@ public class ServiceFrontend extends WOComponent {
 //		sychroniser.syncChanges(since, to, limit);
 //        events = SyncEvent.eventsForSystem(sync, null, 10); 
 //		return null;
-		Thread thread = new Thread(sychroniser,"XMLGenerator");
+		Thread thread = new Thread(sychroniser,"OEJD_Sync");
 		thread.setPriority(Thread.MIN_PRIORITY + 1);
 		thread.start();
 

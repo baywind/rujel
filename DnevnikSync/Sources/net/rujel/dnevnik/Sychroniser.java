@@ -25,7 +25,6 @@ import net.rujel.criterial.Work;
 import net.rujel.criterial.WorkType;
 import net.rujel.eduplan.Subject;
 import net.rujel.eduresults.ItogContainer;
-import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
@@ -340,8 +339,8 @@ public class Sychroniser implements Runnable {
 				"CourseAudience", "courseID", courseID);
 		if(audience == null || audience.count() == 0)
 			return localBase.extidForObject(course.eduGroup());
-		String parentGuid;
-		if(course.namedFlags().flagForKey("mixedGroup")) {
+		String parentGuid = localBase.extidForObject(course.eduGroup());
+	/*	if(course.namedFlags().flagForKey("mixedGroup")) {
 			Integer grade = course.cycle().grade();
 			SyncMatch pmatch = SyncMatch.getMatch(null, localBase, 
 					EduGroup.entityName, new Integer(-grade.intValue()));
@@ -363,19 +362,19 @@ public class Sychroniser implements Runnable {
 					}
 				}
     	    	String timetable = system.extidForObject("ScheduleRing", new Integer(0), null);
-    	    	long ttID = Long.parseLong(timetable);
-
+    	    	Long ttID = (timetable == null)?null:new Long(timetable);
 				soap.insertGroup(parentGuid, schoolGuid, grade.toString(), 
 						new UnsignedByte(grade), eduYear,pgrp, "поток", ttID);
 				pmatch = localBase.extSystem().addMatch(EduGroup.entityName, 
 						new Integer(-grade.intValue()),localBase);
 				pmatch.setExtID(parentGuid);
+				ec.saveChanges();
 			} else {
 				parentGuid = pmatch.extID();
 			}
-		} else {
+		} else { 
 			parentGuid = localBase.extidForObject(course.eduGroup());
-		}
+		} */
 		String extid = UUID.randomUUID().toString();
 		StringBuilder title = new StringBuilder(course.cycle().subject());
 		title.append(' ').append('(');
@@ -384,35 +383,49 @@ public class Sychroniser implements Runnable {
 		else
 			title.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
 		title.append(')');
-		soap.insertSubGroup(extid, title.toString(), parentGuid, null);
-		match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
+		 while (match == null) {
+			try {
+				soap.insertSubGroup(extid, title.toString(), parentGuid, null);
+				match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
+			} catch (RemoteException e) {
+				if(e.getMessage().contains("Entity already exists: Sub group"))
+					title.append('*');
+				else
+					throw e;
+			}
+		}
 		match.setExtSystem(system);
 		match.setEntityIndex(courseEI);
 		match.setEduYear(eduYear);
 		match.setObjID(courseID);
 		match.setExtID(extid);
-		syncGroup(course.groupList(), match);
+		ec.saveChanges();
+		syncGroup(course.groupList(), match, null);
 		return extid;
 	}
 	
-	private boolean syncCourse(EduCourse course) throws RemoteException {
+	private boolean syncCourse(EduCourse course, SyncMatch personMatch) throws RemoteException {
 		if(courseEI == null)
 			courseEI = EntityIndex.indexForEntityName(ec, EduCourse.entityName, true);
 		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(course);
 		Integer courseID = (Integer)gid.keyValues()[0];
 		SyncMatch match = SyncMatch.getMatch(system, null, courseEI, courseID);
 		if(match == null)
-			return false;
-		syncGroup(course.groupList(), match);
+			return false; // subgroup not uploaded for course
+		syncGroup(course.groupList(), match, personMatch);
 		return true;
 	}
 	
-	private void syncGroup(NSArray list, SyncMatch match) throws RemoteException {
+	private void syncGroup(NSArray list, SyncMatch match, SyncMatch force) throws RemoteException {
 		String ext = match.extID();
 		String guid = ext.substring(0,36);
 		StringBuilder buf = new StringBuilder(guid);
 		buf.append(' ');
-		ext = ext.substring(37);
+		if(ext.length() > 37)
+			ext = ext.substring(37);
+		else
+			ext = null;
+		String forcedID = (force == null)?null:force.objID().toString();
 		NSMutableArray exist = (ext == null)?null:
 			NSMutableArray._mutableComponentsSeparatedByString(ext, ",");
 		Enumeration enu = list.objectEnumerator();
@@ -420,6 +433,8 @@ public class Sychroniser implements Runnable {
 		while (enu.hasMoreElements()) {
 			Student stu = (Student) enu.nextElement();
 			String id = MyUtility.getID(stu);
+			if(forcedID != null && id.equals(forcedID))
+				forcedID = null;
 			if(exist == null || !exist.removeObject(id)) {
 				update = true;
 				SyncMatch personMatch = SyncMatch.getMatch(localBase.extSystem(), localBase,
@@ -427,11 +442,28 @@ public class Sychroniser implements Runnable {
 				if(personMatch == null)
 					return;
 				String personGuid = personMatch.extID();
-				soap.insertGroupMembership(personGuid, guid);
+				try {
+					soap.insertGroupMembership(personGuid, guid);
+				} catch (RemoteException e) {
+					state.addMessage("insertGroupMembership: " + 
+							WOMessage.stringByEscapingHTMLString(e.getMessage()));
+					continue;
+				}
 			}
 			buf.append(id);
 			if(enu.hasMoreElements())
 				buf.append(',');
+		}
+		if(forcedID != null) {
+			try {
+				soap.insertGroupMembership(force.extID(), guid);
+				buf.append(',').append(forcedID);
+				if(exist != null)
+					exist.removeObject(forcedID);
+			} catch (RemoteException e) {
+				state.addMessage("insertGroupMembership: " + 
+						WOMessage.stringByEscapingHTMLString(e.getMessage()));
+			}
 		}
 		if(exist != null && exist.count() > 0) {
 			update = true;
@@ -629,12 +661,12 @@ public class Sychroniser implements Runnable {
 				soap.updateLessonLogEntry(lessonID, personGuid, 
 						(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
 			} catch (RemoteException e) {
-				if(e.getMessage().contains("Student not in group")) {
+				if(e.getMessage().contains("student doesn't have membership in the group")) {
 					EduLesson lesson = (EduLesson)EOUtilities.objectWithPrimaryKeyValue(ec, 
 							EduLesson.entityName, arch.getKeyValue("lesson"));
 					if(lesson == null || lesson.course() == null)
 						return;
-					if(syncCourse(lesson.course()))
+					if(syncCourse(lesson.course(), personMatch))
 						soap.updateLessonLogEntry(lessonID, personGuid, 
 							(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
 					}
@@ -1170,13 +1202,14 @@ public class Sychroniser implements Runnable {
 				} catch (RemoteException e) {
 					if(e.getMessage().contains("Entity already exists: Mark")) {
 						soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
-					} else if(e.getMessage().contains("Student not in group")) {
+					} else if(e.getMessage().contains(
+							"student doesn't have membership in the group")) {
 						Work work = (Work)EOUtilities.objectWithPrimaryKeyValue(ec, 
 								Work.ENTITY_NAME, arch.getKeyValue("work"));
 						if(work == null || work.course() == null)
 							return;
-						if(syncCourse(work.course()))
-							soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
+						if(syncCourse(work.course(), personMatch))
+							soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
 					} else
 						throw e;
 				}

@@ -95,7 +95,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 				newDate = (date instanceof NSTimestamp)?
 						(NSTimestamp)date:new NSTimestamp(date);
 						newTitle = null;
-			} else {
+			} else if(newDate == null) {
 				newDate = (NSTimestamp)session().valueForKey("today");
 			}
 			lesson.setDate(newDate);

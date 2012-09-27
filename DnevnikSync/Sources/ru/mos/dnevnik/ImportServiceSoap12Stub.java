@@ -1053,7 +1053,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 }
     }
 
-    public long insertGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, long tableID) throws java.rmi.RemoteException {
+    public long insertGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, java.lang.Long tableID) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -1069,7 +1069,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, new java.lang.Long(tableID)});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, tableID});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -1461,7 +1461,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 }
     }
 
-    public boolean updateGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, long tableID) throws java.rmi.RemoteException {
+    public boolean updateGroup(java.lang.String guid, java.lang.String schoolGuid, java.lang.String name, org.apache.axis.types.UnsignedByte parallel, int studyYear, long periodGroupID, java.lang.String description, java.lang.Long tableID) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
@@ -1477,7 +1477,7 @@ public class ImportServiceSoap12Stub extends org.apache.axis.client.Stub impleme
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, new java.lang.Long(tableID)});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {guid, schoolGuid, name, parallel, new java.lang.Integer(studyYear), new java.lang.Long(periodGroupID), description, tableID});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;

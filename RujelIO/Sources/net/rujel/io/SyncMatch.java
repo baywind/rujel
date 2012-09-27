@@ -124,6 +124,8 @@ public class SyncMatch extends _SyncMatch {
 	}
 	
 	public static SyncMatch getMatch(ExtSystem sys, ExtBase base, String entity, Integer objID) {
+		if(sys == null)
+			sys = base.extSystem();
 		EOEditingContext ec = sys.editingContext();
 		EntityIndex ei = null;
 		if(sys.entIdxes != null) {
