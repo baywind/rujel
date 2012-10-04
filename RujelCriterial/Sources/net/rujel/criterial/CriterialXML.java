@@ -474,19 +474,21 @@ public class CriterialXML extends GeneratorModule {
 						tmp = work.integralForStudent(st);
 						if(tmp != null) {
 							if(work.hasWeight()) {
-								if(forCourse.integralPresenter != null)
+								if(forCourse.integralPresenter != null) {
 									handler.prepareAttribute("value", 
 											forCourse.integralPresenter.presentFraction(
 													(BigDecimal)tmp));
+								}
 								handler.startElement("mark");
 								handler.prepareEnumAttribute("type", "color");
 								handler.element("present", 
 										forCourse.integralColor.presentFraction((BigDecimal)tmp));
 							} else {
-								if(forCourse.weightlessPresenter != null)
+								if(forCourse.weightlessPresenter != null) {
 									handler.prepareAttribute("value", 
 											forCourse.weightlessPresenter.presentFraction(
 													(BigDecimal)tmp));
+								}
 								handler.startElement("mark");
 								handler.prepareEnumAttribute("type", "color");
 								handler.element("present", 
