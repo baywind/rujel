@@ -493,6 +493,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject aud = (EOEnterpriseObject) enu.nextElement();
 				EduCourse crs = (EduCourse)aud.valueForKey("course");
+				if(result.contains(crs))
+					continue;
 				if(initialCourses.contains(crs)) {
 					result.addObject(crs);
 					continue;

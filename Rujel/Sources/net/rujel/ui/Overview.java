@@ -266,10 +266,13 @@ public class Overview extends WOComponent {
 	
 	public WOActionResults genarateXML() {
 		NSMutableDictionary reportSettings = new NSMutableDictionary();
-		reportSettings.takeValueForKey(existingCourses,"courses");
-		if(selectedStudents.count() > 0 && selectedStudents.count() < currClass.list().count()) {
+		if(selectedStudents.count() > 0) {
 			NSMutableArray studentsToReport = selectedStudents.allObjects().mutableClone();
 			reportSettings.takeValueForKey(studentsToReport,"students");
+			reportSettings.takeValueForKey( 
+					BaseCourse.coursesForStudent(existingCourses, studentsToReport),"courses");
+		} else {
+			reportSettings.takeValueForKey(existingCourses,"courses");
 		}
 		reportSettings.takeValueForKey(since,"since");
 		reportSettings.takeValueForKey(to,"to");
