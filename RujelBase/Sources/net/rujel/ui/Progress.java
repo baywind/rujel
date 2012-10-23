@@ -39,7 +39,13 @@ public class Progress extends WOComponent {
 			}
     		stage = buf.toString();
     		if(state.messages != null) {
-    			messages = state.messages.componentsJoinedByString("<br/>");
+    			buf = new StringBuilder();
+    			buf.append("<div style = \"max-height:20em;overflow-y:auto;margin-top:1ex;border:1px solid #666666;\">\n");
+    			for (int i = 0; i < state.messages.count(); i++) {
+					buf.append("<div>").append(state.messages.objectAtIndex(i)).append("</div>\n");
+				}
+    			buf.append("</div>\n");
+    			messages = buf.toString();
     		}
 		}
     	super.appendToResponse(aResponse, aContext);
@@ -47,7 +53,9 @@ public class Progress extends WOComponent {
     
     public WOActionResults refresh() {
     	synchronized (state) {
-			if(state.result instanceof Exception) {
+    		if(state.shouldStop()) {
+    			error = "Stopped.";
+    		} else if(state.result instanceof Exception) {
 				error = WOLogFormatter.formatTrowableHTML((Exception)state.result);
 			} else if(state.current >= state.total) {
 				returnPage.ensureAwakeInContext(context());
@@ -59,6 +67,20 @@ public class Progress extends WOComponent {
     	return this;
     }
     
+    public WOActionResults stop() {
+    	synchronized (state) {
+    		state.stop();
+    		error = "Stopped.";
+		}
+    	return this;
+    }
+    public String stopOnClick() {
+    	StringBuilder buf = new StringBuilder("ajaxPopupAction('");
+    	buf.append(context().componentActionURL());
+    	buf.append("',document.getElementById('ajaxPopup'));");
+    	return buf.toString();
+    }
+    
     public static class State {
     	public int total = 1;
     	public int current = 0;
@@ -67,6 +89,7 @@ public class Progress extends WOComponent {
     	private State parent;
     	public Object result;
     	public NSMutableArray messages;
+    	private boolean stop = false;
     	
     	public State createSub() {
     		sub = new State();
@@ -94,6 +117,18 @@ public class Progress extends WOComponent {
     			messages = new NSMutableArray(message);
     		else
     			messages.addObject(message);
+    		if(parent != null)
+    			parent.addMessage(message);
+    	}
+    	
+    	public void stop() {
+    		stop = true;
+    		if(sub != null)
+    			sub.stop();
+    	}
+    	
+    	public boolean shouldStop() {
+    		return stop;
     	}
     }
 }
