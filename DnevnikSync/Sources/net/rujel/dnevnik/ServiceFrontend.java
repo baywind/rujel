@@ -59,7 +59,9 @@ public class ServiceFrontend extends WOComponent {
 	public Integer limit;
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
 	protected PerPersonLink ppl;
-	
+	public Boolean sendAll;
+	public String syncTime = SettingsReader.stringForKeyPath("dnevnik.syncTime", null);
+
 	public Object active;
 
     public ServiceFrontend(WOContext context) {
@@ -76,6 +78,7 @@ public class ServiceFrontend extends WOComponent {
         	return;
         }
         year = (Integer)context.session().valueForKey("eduYear");
+        sendAll = SettingsReader.boolForKeyPath("dnevnik.sendAll", false);
         try {
         	String tmp = SettingsReader.stringForKeyPath("dnevnik.serviceURL", null);
         	URL serviceURL = new URL(tmp);
@@ -88,6 +91,10 @@ public class ServiceFrontend extends WOComponent {
         	item = e;
 //			throw new NSForwardException(e);
 		}
+        if(sendAll) {
+        	active = "Оценки";
+        	select();
+        }
     }
     
     public WOActionResults select() {
@@ -97,9 +104,12 @@ public class ServiceFrontend extends WOComponent {
     		errors = null;
     		events = null;
     	} else if(active.equals("Оценки")) {
-            events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
+            events = SyncEvent.eventsForSystem(sync, null, 5, "marks");
+            SyncEvent last = (SyncEvent)events.objectAtIndex(0);
+            since = last.execTime();
+            to = since.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
     	} else if(active.equals("Периоды")) {
-            events = SyncEvent.eventsForSystem(sync, null, 20, "!marks");
+            events = SyncEvent.eventsForSystem(sync, null, 10, "!marks");
             if(soap != null) {
             	try {
             		perGroups = new NSArray(

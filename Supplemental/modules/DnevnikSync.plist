@@ -10,6 +10,10 @@
 	<dict>
 		<key>serviceURL</key>
 		<string>http://31.13.60.189/services.dnevnik.mos.ru/ImportService.asmx?WSDL</string>
+		<key>syncTime</key>
+		<string>23:45</string>
+		<key>sendAll</key>
+		<false/>
 	</dict>
 </dict>
 </plist>

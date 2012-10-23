@@ -1,12 +1,20 @@
 package net.rujel.dnevnik;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.UUID;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
+
+import javax.xml.rpc.ServiceException;
 
 import org.apache.axis.types.UnsignedByte;
 
@@ -37,30 +45,46 @@ import net.rujel.io.SyncEvent;
 import net.rujel.io.SyncIndex;
 import net.rujel.io.SyncMatch;
 import net.rujel.markarchive.MarkArchive;
+import net.rujel.reusables.DataBaseConnector;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.Progress;
 
+import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOMessage;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSLocking;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSPathUtilities;
 import com.webobjects.foundation.NSTimestamp;
 
 public class Sychroniser implements Runnable {
 	
+	public static class AttributedRemoteException extends RemoteException {
+		private Object[] att;
+		public AttributedRemoteException(RemoteException cause, Object[] attributes) {
+			super(cause.getMessage(),cause);
+			att = attributes;
+		}
+		public Object[] attributes() {
+			return att;
+		}
+	}
+	
 	public static final UnsignedByte ZERO = new UnsignedByte(0);
 	public static final UnsignedByte ONE = new UnsignedByte(1);
+	public static final Logger logger = Logger.getLogger("rujel.dnevnik");
 	
 	private EOEditingContext ec;
 	public Integer eduYear;
-	public NSTimestamp since, to;
+	public NSTimestamp since, to, batch1, batch2;
 	public ExtSystem system;
 	public ExtBase localBase;
 	public String schoolGuid;
@@ -68,6 +92,7 @@ public class Sychroniser implements Runnable {
 	
 	protected NSDictionary workTypes;
 	protected NSDictionary itogTypes;
+	protected BufferedWriter logWriter;
 	
 	private EntityIndex lessonEI, workEI, timeslotEI, courseEI;
 	
@@ -89,6 +114,40 @@ public class Sychroniser implements Runnable {
 		}
 	}
 	
+	public static void syncToMoment(NSTimestamp moment) throws IOException, ServiceException {
+		Integer eduYear = (Integer)WOApplication.application().valueForKey("year");
+		if(moment == null)
+			moment = new NSTimestamp();
+		EOEditingContext ec;
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
+			ec = new EOEditingContext(os);
+		} else {
+			ec = new EOEditingContext();
+		}
+		Sychroniser sychroniser = new Sychroniser(ec, eduYear);
+		sychroniser.system = (ExtSystem)ExtSystem.extSystemNamed("oejd.moscow", ec, false);
+        if (sychroniser.system == null)
+        	throw new IllegalStateException("OEJD not initialized");
+		sychroniser.schoolGuid = sychroniser.system.extDataForKey("schoolGUID", null);
+        if (sychroniser.schoolGuid == null)
+        	throw new IllegalStateException("School GUID not defined");
+    	String tmp = SettingsReader.stringForKeyPath("dnevnik.serviceURL", null);
+    	URL serviceURL = new URL(tmp);
+    	ImportServiceLocator locator = new  ImportServiceLocator();
+    	sychroniser.soap = locator.getImportServiceSoap12(serviceURL);
+		sychroniser.to = moment;
+        NSArray events = SyncEvent.eventsForSystem(sychroniser.system, null, 1, "marks");
+        if(events != null && events.count() > 0) {
+        	SyncEvent last = (SyncEvent)events.objectAtIndex(0);
+        	sychroniser.since = last.execTime();
+        }
+		Thread thread = new Thread(sychroniser,"OEJD_Sync");
+		thread.setPriority(Thread.MIN_PRIORITY + 1);
+		thread.start();
+	}
+	
+	protected static final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	public void run() {
 		WOSession ses = MyUtility.dummyContext(null).session();
 		try {
@@ -98,7 +157,26 @@ public class Sychroniser implements Runnable {
 			lessonEI = null;
 			timeslotEI = null;
 			workEI = null;
-			critSetParams = null;
+			critSetParams = new NSMutableDictionary();
+			String logPath = System.getProperty("WOOutputPath");
+			if(logPath == null)
+				logPath = LogManager.getLogManager().getProperty(
+						"java.util.logging.FileHandler.pattern");
+			logPath = NSPathUtilities.stringByDeletingLastPathComponent(logPath);
+			logPath = NSPathUtilities.stringByAppendingPathComponent(logPath, 
+					SettingsReader.stringForKeyPath("dnevnik.logFile", "OEJDsync.log"));
+			try {
+				logWriter = new BufferedWriter(new FileWriter(logPath, true),1024);
+				logWriter.newLine();
+				logWriter.write("Sync started: ");
+				logWriter.write(ses.sessionID());
+				logWriter.write(' ');
+				logWriter.write(df.format(new Date()));
+				logWriter.newLine();
+			} catch (Exception e) {
+				logger.log(WOLogLevel.INFO,"Failed to initialize OEJD sync log",
+						new Object[] {ses,e,logPath});
+			}
 			NSArray result = syncChanges();
 			if(state != null) {
 				synchronized (state) {
@@ -107,6 +185,12 @@ public class Sychroniser implements Runnable {
 				}
 			}
 			ses.terminate();
+			logWriter.write("Sync finished: ");
+			logWriter.write(ses.sessionID());
+			logWriter.write(' ');
+			logWriter.write(df.format(new Date()));
+			logWriter.newLine();
+			logWriter.flush();
 		} catch (Exception e) {
 			if(state != null) {
 				synchronized (state) {
@@ -114,38 +198,14 @@ public class Sychroniser implements Runnable {
 					state.result = e;
 				}
 			}
-			Logger.getLogger("rujel.dnevnik").log(WOLogLevel.WARNING, 
+			logger.log(WOLogLevel.WARNING, 
 					"Dnevnik sync failed", new Object[]{ses,e});
 		}
 	}
 
+	public static NSArray archSorter = new NSArray(
+			new EOSortOrdering(MarkArchive.TIMESTAMP_KEY, EOSortOrdering.CompareAscending));
 	public NSArray syncChanges() {
-		EOQualifier qual = null;
-		if(since != null) {
-			if(to == null)
-				qual = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
-						EOQualifier.QualifierOperatorGreaterThan, since);
-			else
-				qual = EOQualifier.qualifierWithQualifierFormat(
-						"timestamp > %@ AND timestamp <= %@", new NSArray(new Object[] {since,to}));
-		} else if (to != null) {
-			qual = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
-					EOQualifier.QualifierOperatorLessThanOrEqualTo, to);
-		}
-		NSArray list = new NSArray(
-				new EOSortOrdering(MarkArchive.TIMESTAMP_KEY, EOSortOrdering.CompareAscending));
-		EOFetchSpecification fs = new EOFetchSpecification(MarkArchive.ENTITY_NAME,qual,list);
-		fs.setPrefetchingRelationshipKeyPaths(new NSArray(MarkArchive.USED_ENTITY_KEY));
-//		if(limit != null)
-//			fs.setFetchLimit(limit.intValue());
-		list = ec.objectsWithFetchSpecification(fs);
-		if(list == null || list.count() == 0)
-			return null;
-		if(state != null) {
-			synchronized (state) {
-				state.total = list.count();
-			}
-		}
 		if(system == null)
 			system = (ExtSystem)ExtSystem.extSystemNamed("oejd.moscow", ec, true);
 		system.setCachesIndexes(true);
@@ -156,15 +216,86 @@ public class Sychroniser implements Runnable {
 		localBase.extSystem().setCachesIndexes(true);
 		if(ec.hasChanges())
 			ec.saveChanges();
+		EOQualifier qual = null;
+		NSMutableArray errors = new NSMutableArray();
+		if(since == null) {
+			if (to != null)
+				qual = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
+					EOQualifier.QualifierOperatorLessThanOrEqualTo, to);
+			syncForQual(qual, errors);
+		} else {
+			batch1 = since;
+			long fin = (to == null)?System.currentTimeMillis():to.getTime();
+			long per =  (fin - batch1.getTime());
+			int count = (int) (per/NSLocking.OneDay);
+			if(per%NSLocking.OneDay > NSLocking.OneHour)
+				count++;
+			while(batch1.getTime() < fin) {
+				if(count > 1 && state != null) {
+					synchronized (state) {
+						if(state.shouldStop()) {
+							state.name = "Stopped.";
+							return (errors.count() == 0)?null:errors;
+						}
+						state.total = count;
+						state = state.createSub();
+					}
+				}
+				if(fin - batch1.getTime() <= (NSLocking.OneDay + NSLocking.OneHour)) {
+					batch2 = to;
+				} else {
+					batch2 = batch1.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
+				}
+				if(batch2 == null)
+					qual = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
+							EOQualifier.QualifierOperatorGreaterThan, batch1);
+				else
+					qual = EOQualifier.qualifierWithQualifierFormat(
+							"timestamp > %@ AND timestamp <= %@",
+							new NSArray(new Object[] {batch1,batch2}));
+				syncForQual(qual, errors);
+				batch1 = batch2;
+				if(count > 1 && state != null) {
+					state = state.end();
+				}
+			}
+			if(to == null)
+				qual = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
+						EOQualifier.QualifierOperatorGreaterThan, since);
+		}
+//		if(limit != null)
+//			fs.setFetchLimit(limit.intValue());
+		if(errors.count() == 0)
+			return null;
+		return errors;
+	}
+	
+	private void syncForQual(EOQualifier qual, NSMutableArray errors) {
+		EOFetchSpecification fs = new EOFetchSpecification(MarkArchive.ENTITY_NAME,
+				qual,archSorter);
+		fs.setPrefetchingRelationshipKeyPaths(new NSArray(MarkArchive.USED_ENTITY_KEY));
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0)
+			return;
+		if(state != null) {
+			synchronized (state) {
+				if(state.shouldStop()) {
+					state.name = "Stopped.";
+					return;
+				}
+				state.total = list.count();
+			}
+		}
 		NSTimestamp last = null;
 		SyncEvent event = null;
-		SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-		NSMutableArray errors = new NSMutableArray();
-
 		for (int idx = 0; idx < list.count(); idx++) {
 			MarkArchive arch = (MarkArchive) list.objectAtIndex(idx);
 			if(state != null) {
 				synchronized (state) {
+					if(state.shouldStop()) {
+						state.name = "Stopped.";
+						return;
+					}
 					state.current = idx;
 					state.name = df.format(arch.timestamp());
 				}
@@ -192,8 +323,14 @@ public class Sychroniser implements Runnable {
 //				event.setResult(1);
 				ec.saveChanges();
 			} catch (Exception e) {
+				Object[] attributes = null;
+				if(e instanceof AttributedRemoteException) {
+					attributes = ((AttributedRemoteException)e).attributes();
+					e = (RemoteException)e.getCause();
+				}
 				NSMutableDictionary dict = new NSMutableDictionary();
-				dict.takeValueForKey(MyUtility.getID(arch), "archID");
+				String id = MyUtility.getID(arch);
+				dict.takeValueForKey(id, "archID");
 				dict.takeValueForKey(e, "exception");
 				StackTraceElement trace[] = e.getStackTrace();
 				String method = null;
@@ -203,26 +340,57 @@ public class Sychroniser implements Runnable {
 						break;
 					}
 				}
+				if(method == null)
+					method = trace[0].getMethodName();
 				dict.takeValueForKey(method, "method");
+				StringBuilder msg = new StringBuilder(method);
+				if(attributes != null) {
+					msg.append('(');
+					for (int i = 0; i < attributes.length; i++) {
+						if(i > 0)
+							msg.append(',').append(' ');
+						if(attributes[i] instanceof Calendar) {
+							Calendar cal = (Calendar)attributes[i];
+							NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
+							msg.append(MyUtility.dateFormat().format(date));
+						} else {
+							msg.append(attributes[i]);
+						}
+					}
+					msg.append(')');
+					method = msg.toString();
+					dict.takeValueForKey(method, "method");
+				}
+				msg.append(':').append(' ');
+				msg.append(WOMessage.stringByEscapingHTMLString(e.getMessage()));
 				if(state != null) {
 					synchronized (state) {
-						state.addMessage(method + ": " + 
-								WOMessage.stringByEscapingHTMLString(e.getMessage()));
+						state.addMessage(msg.toString());
 					}
 				}
 				errors.addObject(dict);
-				if(!(e instanceof RemoteException))
-					Logger.getLogger("rujel.dnevnik").log(WOLogLevel.WARNING, 
-							"Error during Dnevnik sync.", new Object[]{e});
+				if(e instanceof RemoteException) {
+					if(logWriter != null) {
+						try {
+							logWriter.write(id);
+							logWriter.write('|');
+							logWriter.write(method);
+							logWriter.write(' ');
+							logWriter.write(e.toString());
+							logWriter.newLine();
+							logWriter.flush();
+						} catch (Exception ioe) {
+						}
+					}
+				} else {
+					logger.log(WOLogLevel.WARNING, "Error during Dnevnik sync.", new Object[]{e});
+				}
 //			} catch (Exception e) {
 //				throw new NSForwardException(e);
 			}
 		}
 		if(ec.hasChanges())
 			ec.saveChanges();
-		if(errors.count() == 0)
-			return null;
-		return errors;
 	}
 	
 	private SyncMatch getMatch(EntityIndex ei, Integer objID) {
@@ -290,8 +458,10 @@ public class Sychroniser implements Runnable {
 			try {
 				result = soap.insertSubject(schoolGuid, subject, full, area);
 			} catch (RemoteException e) {
-				if(!e.getMessage().contains("Entity already exists: subject"))
-					throw e;
+				if(!e.getMessage().contains("Entity already exists: subject")) {
+					throw new AttributedRemoteException(e,
+							new Object[] {schoolGuid, subject, full, area});
+				}
 				NSArray found = EOUtilities.objectsMatchingKeyAndValue(ec,
 						Subject.ENTITY_NAME, Subject.SUBJECT_KEY, subject);
 				for (int i = 0; i < found.count(); i++) {
@@ -322,7 +492,8 @@ public class Sychroniser implements Runnable {
 		} catch (RemoteException e) {
 			if(e.getMessage().contains("Entity already exists: Lesson"))
 				return insertLesson(groupGuid, subjectID, teacherGuid, cal, num +1);
-			throw e;
+			throw new AttributedRemoteException(e,
+					new Object[] {groupGuid, subjectID,teacherGuid, cal,num});
 		}
 	}
 	
@@ -388,10 +559,12 @@ public class Sychroniser implements Runnable {
 				soap.insertSubGroup(extid, title.toString(), parentGuid, null);
 				match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
 			} catch (RemoteException e) {
-				if(e.getMessage().contains("Entity already exists: Sub group"))
+				if(e.getMessage().contains("Entity already exists: Sub group")) {
 					title.append('*');
-				else
-					throw e;
+				} else {
+					throw new AttributedRemoteException(e,
+							new Object[] {extid, title, parentGuid, null});
+				}
 			}
 		}
 		match.setExtSystem(system);
@@ -445,7 +618,7 @@ public class Sychroniser implements Runnable {
 				try {
 					soap.insertGroupMembership(personGuid, guid);
 				} catch (RemoteException e) {
-					state.addMessage("insertGroupMembership: " + 
+					state.addMessage("insertGroupMembership(" + personGuid + ',' + guid + "): " +
 							WOMessage.stringByEscapingHTMLString(e.getMessage()));
 					continue;
 				}
@@ -461,7 +634,7 @@ public class Sychroniser implements Runnable {
 				if(exist != null)
 					exist.removeObject(forcedID);
 			} catch (RemoteException e) {
-				state.addMessage("insertGroupMembership: " + 
+				state.addMessage("insertGroupMembership(" + force.extID() + ',' + guid + "): " +
 						WOMessage.stringByEscapingHTMLString(e.getMessage()));
 			}
 		}
@@ -501,8 +674,9 @@ public class Sychroniser implements Runnable {
 				try {
 					soap.deleteLesson(lessonID);
 				} catch (RemoteException e) {
-					if(!e.getMessage().contains("Entity not found: Lesson"))
-						throw e;
+					if(!e.getMessage().contains("Entity not found: Lesson")) {
+						throw new AttributedRemoteException(e, new Object[] {lessonID});
+					}
 				}
 				works = EOUtilities.objectsWithQualifierFormat(ec, SyncMatch.ENTITY_NAME, 
 						"extSystem = %@ AND entityIndex = %@ AND extID like %s' *'",
@@ -520,6 +694,8 @@ public class Sychroniser implements Runnable {
 		Integer courseID = arch.getKeyValue("course");
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
 				EduCourse.entityName, courseID);
+		if(!syncCourse(course))
+			return 0;
 		String groupGuid = groupGuidForCourse(courseID);
 		groupGuid = groupGuid.toUpperCase();
 		NSTimestamp date = (NSTimestamp)arch.valueForKey("@date_date");
@@ -573,7 +749,12 @@ public class Sychroniser implements Runnable {
 				} else {
 					ids[0] = Long.parseLong(match.extID());
 				}
-				soap.updateLesson(ids[0], subjectID, teacherGuid, cal, new UnsignedByte(number));
+				try {
+					soap.updateLesson(ids[0], subjectID, teacherGuid, cal, new UnsignedByte(number));
+				} catch (RemoteException e) {
+					throw new AttributedRemoteException(e,
+							new Object[] {ids[0], subjectID, teacherGuid, cal, number});
+				}
 			}
 		}
 		if(ids[1] != 0) {
@@ -581,8 +762,10 @@ public class Sychroniser implements Runnable {
 				soap.updateWork(ids[1], null, null, ONE, null,
 						arch.getArchiveValueForKey("theme"));
 			} catch (RemoteException e) {
-				if(!e.getMessage().contains("Entity not found: Work"))
-					throw e;
+				if(!e.getMessage().contains("Entity not found: Work")) {
+					throw new AttributedRemoteException(e,new Object[] {ids[1], "null", "null",
+							ONE, "null", arch.getArchiveValueForKey("theme")});
+				}
 				ids[1] = soap.insertWork(ids[0], EduWorkType.LessonAnswer, EduMarkType.Mark5, 
 						ONE, "Работа на уроке", arch.getArchiveValueForKey("theme"));
 				StringBuilder buf = new StringBuilder();
@@ -623,7 +806,49 @@ public class Sychroniser implements Runnable {
 				new String[] {
 				Contact.TYPE_KEY,Contact.PERSON_ENTITY_KEY, Contact.PERS_ID_KEY,Contact.FLAGS_KEY});
 		NSArray found = EOUtilities.objectsMatchingValues(ec, Contact.ENTITY_NAME, query);
+		return (found == null || found.count() == 0);
+	}
+	private boolean activeStudents(NSArray list) {
+		if(contype == null || studentEI == null)
+			return true;
+		NSMutableArray quals = new NSMutableArray();
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Student st = (Student) enu.nextElement();
+			EOKeyGlobalID gid = (EOKeyGlobalID) ec.globalIDForObject(st);
+			quals.addObject(new EOKeyValueQualifier(Contact.PERS_ID_KEY,
+					EOQualifier.QualifierOperatorEqual, gid.keyValues()[0]));
+		}
+		if(quals.count() > 0) {
+			EOQualifier qual = new EOOrQualifier(quals);
+			quals.removeAllObjects();
+			quals.addObject(qual);
+		}
+		quals.addObject(new EOKeyValueQualifier(Contact.TYPE_KEY,
+				EOQualifier.QualifierOperatorEqual, contype));
+		quals.addObject(new EOKeyValueQualifier(Contact.PERSON_ENTITY_KEY,
+				EOQualifier.QualifierOperatorEqual, studentEI));
+		quals.addObject(new EOKeyValueQualifier(Contact.FLAGS_KEY,
+				EOQualifier.QualifierOperatorEqual, new Integer(1)));
+		EOQualifier qual = new EOAndQualifier(quals);
+		EOFetchSpecification fs = new EOFetchSpecification(Contact.ENTITY_NAME,qual,null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
 		return (found != null && found.count() > 0);
+	}
+	
+	protected NSMutableDictionary syncGroups = new NSMutableDictionary();
+	private boolean syncCourse(EduCourse course) {
+		if(((BaseCourse)course).namedFlags().flagForKey("mixedGroup")) {
+			return activeStudents(course.groupList());
+		} else {
+			EduGroup grp = course.eduGroup();
+			Boolean b = (Boolean)syncGroups.objectForKey(course);
+			if(b == null) {
+				b = Boolean.valueOf(activeStudents(grp.list()));
+				syncGroups.setObjectForKey(b, grp);
+			}
+			return b.booleanValue();
+		}
 	}
 	
 	private void syncNote(MarkArchive arch) throws RemoteException {
@@ -730,8 +955,7 @@ public class Sychroniser implements Runnable {
 						soap.deleteWork(Long.parseLong(wID));
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
-							throw e;
-					}
+							throw new AttributedRemoteException(e,new Object[] {wID});					}
 				}
 			}
 			ec.deleteObject(match);
@@ -741,14 +965,18 @@ public class Sychroniser implements Runnable {
 		Integer courseID = arch.getKeyValue("course");
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
 				EduCourse.entityName, courseID);
+		if(!syncCourse(course))
+			return null;
 		String maxVal = arch.getArchiveValueForKey("m0");
 		NSMutableDictionary[] criteria = null;
 		Integer csID = null;
 		if(maxVal == null) {
 //			maxVal = "5";
-			if(critSetParams == null) {
+			if(critSetParams == null || critSetParams.count() == 0) {
 				criteriaSettings = SettingsBase.baseForKey(CriteriaSet.ENTITY_NAME, ec, false);
-				critSetParams = new NSMutableDictionary();
+				if(critSetParams == null)
+					critSetParams = new NSMutableDictionary();
+				critSetParams.setObjectForKey("0", "0");
 			}
 			if(criteriaSettings!=null)
 				csID = criteriaSettings.forCourse(course).numericValue();
@@ -895,14 +1123,20 @@ public class Sychroniser implements Runnable {
 				if(workID == null) {
 					if(workType == null)
 						workType = EduWorkType.LessonAnswer;
-					workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
+					try {
+						workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
+					} catch (RemoteException e) {
+						throw new AttributedRemoteException(e,
+								new Object[] {lessonID, workType, markType, ONE, name, ""});
+					}
 				} else {
 					try {
 //						EduWorkType type = (workType == EduWorkType.LessonBehavior)? null : workType;
 						soap.updateWork(workID.longValue(), workType, markType, ONE, name, null);
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
-							throw e;
+							throw new AttributedRemoteException(e,
+									new Object[] {workID, workType, markType, ONE, name, null, ""});
 						if(workType == null)
 							workType = EduWorkType.LessonAnswer;
 						workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
@@ -914,7 +1148,7 @@ public class Sychroniser implements Runnable {
 					soap.deleteWork(workID.longValue());
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Work"))
-						throw e;
+						throw new AttributedRemoteException(e,new Object[] {workID});
 				}
 			}
 		}
@@ -1071,8 +1305,8 @@ public class Sychroniser implements Runnable {
 		switch (max) {
 		case 5:
 			return EduMarkType.Mark5;
-		case 6:
-			return EduMarkType.Mark6;
+//		case 6:
+//			return EduMarkType.Mark6;
 		case 7:
 			return EduMarkType.Mark7;
 		case 10:
@@ -1149,7 +1383,8 @@ public class Sychroniser implements Runnable {
 					soap.deleteMark(workID.longValue(), personGuid, ZERO);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
-						throw e;
+						throw new AttributedRemoteException(e,
+								new Object[] {workID, personGuid, ZERO});
 				}
 				continue;
 			}
@@ -1160,7 +1395,8 @@ public class Sychroniser implements Runnable {
 					soap.deleteMark(workID.longValue(), personGuid, ZERO);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
-						throw e;
+						throw new AttributedRemoteException(e,
+								new Object[] {workID, personGuid, ZERO});
 				}
 				continue;
 			}
@@ -1179,7 +1415,8 @@ public class Sychroniser implements Runnable {
 				}
 			}
 			if(markType == EduMarkType.MarkAbcdf) {
-				mark = new BigDecimal(" FEDCBA".indexOf(value.toUpperCase()));
+				int idx = " FEDCBA".indexOf(value.toUpperCase());
+				mark = (idx >= 0)?new BigDecimal(idx):BigDecimal.ZERO;
 			} else if(markType == null) {
 				Integer max = (Integer)criteria[i].valueForKey("criterMax");
 				markType = typeForMax(max);
@@ -1194,7 +1431,11 @@ public class Sychroniser implements Runnable {
 					mark = new BigDecimal(value);
 				}
 			} else {
-				mark = new BigDecimal(value);
+				try {
+					mark = new BigDecimal(value);
+				} catch (Exception e) {
+					mark = BigDecimal.ZERO;
+				}
 			}
 			if(act == 1) {
 				try {
@@ -1210,15 +1451,18 @@ public class Sychroniser implements Runnable {
 							return;
 						if(syncCourse(work.course(), personMatch))
 							soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
-					} else
-						throw e;
+					} else {
+						throw new AttributedRemoteException(e, new Object[] {
+								workID, personGuid, mark, markType,ZERO, bonus, text});
+					}
 				}
 			} else {
 				try {
 					soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
-						throw e;
+						throw new AttributedRemoteException(e, new Object[] {
+								workID, personGuid, ZERO, mark, markType, bonus, text});
 					soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
 				}
 			}
@@ -1336,7 +1580,9 @@ public class Sychroniser implements Runnable {
 							markType, ftype, value, bonus, null);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity already exists: FinalMark"))
-						throw e;
+						throw new AttributedRemoteException(e,
+								new Object[] {groupGuid, subjectID, studentGuid,
+										markType, ftype, value, bonus, "null"});
 					soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
 							markType, ftype, value, bonus, null);
 				}
@@ -1346,7 +1592,9 @@ public class Sychroniser implements Runnable {
 							markType, ftype, value, bonus, null);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: FinalMark"))
-						throw e;
+						throw new AttributedRemoteException(e,
+								new Object[] {groupGuid, subjectID, studentGuid,
+										markType, ftype, value, bonus, "null"});
 					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
 							markType, ftype, value, bonus, null);
 				}
@@ -1360,7 +1608,9 @@ public class Sychroniser implements Runnable {
 							markType, periodType, periodNumber, value, bonus, null);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity already exists: Mark"))
-						throw e;
+						throw new AttributedRemoteException(e,
+								new Object[] {groupGuid, subjectID, studentGuid, markType,
+										periodType, periodNumber, value, bonus, "null"});
 					soap.updatePeriodMark(groupGuid, subjectID, studentGuid,
 							markType, periodType, periodNumber, value, bonus, null);
 				}
@@ -1370,7 +1620,9 @@ public class Sychroniser implements Runnable {
 						markType, periodType, periodNumber, value, bonus, null);
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
-						throw e;
+						throw new AttributedRemoteException(e,
+								new Object[] {groupGuid, subjectID, studentGuid, markType,
+										periodType, periodNumber, value, bonus, "null"});
 					soap.insertPeriodMark(groupGuid, subjectID, studentGuid, 
 							markType, periodType, periodNumber, value, bonus, null);
 				}
