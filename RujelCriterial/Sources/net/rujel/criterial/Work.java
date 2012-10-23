@@ -1118,10 +1118,10 @@ set:
 				buf.append('m').append(crit);
 				dict.takeValueForKey(cm.valueForKey("max"), buf.toString());
 				Object weight = cm.valueForKey("weight");
-				if(weight == null)
-					continue;
-				buf.deleteCharAt(0).insert(0, 'w');
-				dict.takeValueForKey(weight, buf.toString());
+				if(weight != null) {
+					buf.deleteCharAt(0).insert(0, 'w');
+					dict.takeValueForKey(weight, buf.toString());
+				}
 				if(!shouldArchive) {
 					NSDictionary cSnp = editingContext().committedSnapshotForObject(cm);
 					shouldArchive = (cm.changesFromSnapshot(cSnp).count() > 0);

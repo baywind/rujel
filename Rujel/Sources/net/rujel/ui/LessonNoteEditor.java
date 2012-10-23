@@ -468,8 +468,11 @@ public class LessonNoteEditor extends WOComponent {
 			student = null;
 			selector = currPerPersonLink;
 		}
-		boolean newLesson = (currLesson() == null ||
-				ec.globalIDForObject(currLesson()).isTemporary());
+		boolean newLesson = !(currPerPersonLink instanceof EduLesson);
+		if(!newLesson) {
+			EOGlobalID gid = ec.globalIDForObject((EduLesson)currPerPersonLink);
+			newLesson = (gid == null || gid.isTemporary());
+		}
 		if(ec.hasChanges()) {
 			NSMutableSet changes = new NSMutableSet();
 			NSArray objects = ec.insertedObjects();

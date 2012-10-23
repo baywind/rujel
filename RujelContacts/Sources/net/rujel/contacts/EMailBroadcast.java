@@ -579,6 +579,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 		ses.removeObjectForKey("broadcastAdditions");
 		logger.log(WOLogLevel.FINEST,"Found " + extensions.count() + 
 				" broadcastAdditions",ses);
+		if(extensions == null || extensions.count() == 0)
+			textBuf.append("\n.\n");
 		NSMutableDictionary settings = new NSMutableDictionary();
 		settings.takeValueForKey(eduGroup, "eduGroup");
 		settings.takeValueForKey(existingCourses,"courses");
@@ -754,6 +756,7 @@ st:		while (stEnu.hasMoreElements()) {
 								continue;
 							textBuf.append('\n').append('\n').append(text);
 						}
+						textBuf.append("\n.\n");
 					}
 					String message = String.format(textBuf.toString(), stID.keyValues()[0],
 							Person.Utility.fullName(student, false, 2, 2, 0));

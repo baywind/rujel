@@ -182,11 +182,29 @@ public class TableLoginHandler implements LoginHandler {
 						;
 					}
 					try {
-						AutUser au = (AutUser)EOUtilities.createAndInsertInstance(ec,
-								AutUser.ENTITY_NAME);
-						au.setUserName(user.toLowerCase());
-						au.setCredential(pUser.toString());
-						ajustGroups(au, pUser);
+						NSArray groups = EOUtilities.objectsWithQualifierFormat(ec,
+								"UserGroup", "externalEquivalent != nil", null);
+						if(groups == null || groups.count() == 0)
+							return pUser;
+						Enumeration enu = groups.objectEnumerator();
+						AutUser au = null;
+						while (enu.hasMoreElements()) {
+							EOEnterpriseObject gr = (EOEnterpriseObject) enu.nextElement();
+							String ext = (String)gr.valueForKey("externalEquivalent");
+							if(ext == null)
+								continue;
+							if(pUser.isInGroup(ext)) {
+								if(au == null) {
+									au = (AutUser)EOUtilities.createAndInsertInstance(ec,
+											AutUser.ENTITY_NAME);
+									au.setUserName(user.toLowerCase());
+									au.setCredential(pUser.toString());
+								}
+								au.addObjectToBothSidesOfRelationshipWithKey(gr,AutUser.GROUPS_KEY);
+							}
+						}
+						if(au == null)
+							return pUser;
 						if(found.count() == 1)
 							au.setPersonLink((Teacher)found.objectAtIndex(0));
 						ec.saveChanges();
@@ -195,6 +213,7 @@ public class TableLoginHandler implements LoginHandler {
 						return new TableUser(au, pUser);
 					} catch (Exception ex) {
 						logger.log(WOLogLevel.WARNING,"Error autocreating AutUser: " + user,ex);
+						ec.revert();
 //						throw new AuthenticationFailedException(ERROR,
 //								"Error autocreating AutUser: " + user, ex);
 						return pUser;

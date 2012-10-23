@@ -229,30 +229,33 @@ public class BugReport extends WOComponent {
 		public boolean accept(File dir, String name) {
 			int j = 0;
 			for (int i = 0; i < pattern.length; i++) {
+				if(name.length() <= j)
+					return false;
 				char test = name.charAt(j);
 				if(pattern[i] != '%') {
 					if(test != pattern[i])
 						return false;
 				} else {
 					i++;
+					if(pattern.length <= i)
+						return false;
 					if(pattern[i] == '%') {
 						if(test != '%')
 							return false;
 					} else if (pattern[i] == 'g' || pattern[i] == 'u') {
-						if(test < '0' || test > '9')
+						if(!Character.isDigit(test))
 							return false;
-						test = name.charAt(j +1);
-						while(test >= '0' && test <= '9') {
+						do {
 							j++;
-							test = name.charAt(j +1);
-						}
+							if(j >= name.length())
+								return (i >= (pattern.length -1));
+						} while (Character.isDigit(name.charAt(j)));
+						continue;
 					} else {
 						return false;
 					}
 				}
 				j++;
-				if(name.length() < j)
-					return false;
 			}
 			return name.length() == j;
 		}
