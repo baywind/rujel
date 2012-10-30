@@ -203,7 +203,8 @@ public class CurriculumModule {
 				Reprimand.planFactCheck();
 			}
 		};
-		MyUtility.scheduleTaskOnTime(task,checkTime);
+		if(MyUtility.scheduleTaskOnTime(task,checkTime))
+			Curriculum.logger.log(WOLogLevel.FINE,"PlanFactCheck scheduled on " + checkTime);
 		return null;
 	}
 

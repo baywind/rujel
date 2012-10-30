@@ -37,8 +37,8 @@ public class DnevnikModule {
 					}
 				}
 			};
-			MyUtility.scheduleTaskOnTime(task, time);
-			Sychroniser.logger.log(WOLogLevel.FINE,"Dnevnik synchronisation scheduled.");
+			if(MyUtility.scheduleTaskOnTime(task, time))
+				Sychroniser.logger.log(WOLogLevel.FINE,"Dnevnik sync scheduled on " + time);
 		}
 		return null;
 	}

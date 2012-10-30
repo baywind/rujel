@@ -84,7 +84,8 @@ public class EMailBroadcast implements Runnable{
 					broadcastMarksForPeriod(null, null);
 				}
 			};
-			MyUtility.scheduleTaskOnTime(task, time);
+			if(MyUtility.scheduleTaskOnTime(task, time))
+				logger.log(WOLogLevel.FINE,"EMailBroadcast scheduled on " + time);
 		} else if(obj.equals("overviewAction")) {
 			return overviewAction(ctx);
 		} else if(obj.equals("regimes")) {

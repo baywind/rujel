@@ -454,10 +454,10 @@ public class MyUtility {
 		cal.set(Calendar.SECOND, idx);
 	}
 		
-	public static void scheduleTaskOnTime(TimerTask task, String time) {
+	public static boolean scheduleTaskOnTime(TimerTask task, String time) {
 		Timer timer = (Timer)WOApplication.application().valueForKey("timer");
 		if(timer == null)
-			return;
+			return false;
 		if(time == null || task == null)
 			throw new NullPointerException("Both attributes are required");
 		Calendar cal = Calendar.getInstance();
@@ -465,6 +465,9 @@ public class MyUtility {
 //		NSTimestamp moment = new NSTimestamp(cal.getTimeInMillis());
 		if(System.currentTimeMillis() < cal.getTimeInMillis())
 			timer.schedule(task, cal.getTime());
+		else
+			return false;
+		return true;
 	}
 	
     public static boolean isEvening(Date time) {

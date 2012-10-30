@@ -133,6 +133,7 @@ public class Reprimand extends _Reprimand {
 //				ec.unlock();
 				return;
 			}
+			logger.log(WOLogLevel.FINE,"Starting PlanFactCheck");
 			String author; {
 				StringBuilder buf = new StringBuilder("AutoCheck");
 				int weekOfYear = cal.get(Calendar.WEEK_OF_YEAR);
