@@ -46,7 +46,6 @@ import net.rujel.io.SyncIndex;
 import net.rujel.io.SyncMatch;
 import net.rujel.markarchive.MarkArchive;
 import net.rujel.reusables.DataBaseConnector;
-import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -1702,12 +1701,12 @@ public class Sychroniser implements Runnable {
 		}
 	}
 	
-	public static String assumeWorkType(WorkType type) {
+/*	public static String assumeWorkType(WorkType type) {
 		if(type.dfltFlags().equals(WorkType.specTypes.valueForKey("onLesson")))
 			return "LessonBehavior";
 		NamedFlags flags = type.namedFlags();
 		if(flags.flagForKey("hometask"))
 			return "LessonHomework";
 		return null;
-	}
+	}*/
 }
