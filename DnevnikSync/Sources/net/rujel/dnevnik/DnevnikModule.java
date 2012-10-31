@@ -24,6 +24,8 @@ public class DnevnikModule {
 			return WOApplication.application().valueForKeyPath(
 					"strings.DnevnikSync_Dnevnik.dnevnikRegime");
 		} else if(obj.equals("scheduleTask")) {
+			if(Boolean.getBoolean("DnevnikSync.disableAuto"))
+				return null;
 			String time = SettingsReader.stringForKeyPath("dnevnik.syncTime", null);
 			if(time == null)
 				return null;

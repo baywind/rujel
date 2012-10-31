@@ -115,8 +115,6 @@ public class Sychroniser implements Runnable {
 	
 	public static void syncToMoment(NSTimestamp moment) throws IOException, ServiceException {
 		Integer eduYear = (Integer)WOApplication.application().valueForKey("year");
-		if(moment == null)
-			moment = new NSTimestamp();
 		EOEditingContext ec;
 		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
 			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
@@ -135,12 +133,16 @@ public class Sychroniser implements Runnable {
     	URL serviceURL = new URL(tmp);
     	ImportServiceLocator locator = new  ImportServiceLocator();
     	sychroniser.soap = locator.getImportServiceSoap12(serviceURL);
-		sychroniser.to = moment;
         NSArray events = SyncEvent.eventsForSystem(sychroniser.system, null, 1, "marks");
         if(events != null && events.count() > 0) {
         	SyncEvent last = (SyncEvent)events.objectAtIndex(0);
         	sychroniser.since = last.execTime();
+        } else if (moment == null) {
+        	logger.log(WOLogLevel.INFO,
+        			"Automatic DnevnikSync could not activate with undefined dates");
+        	return;
         }
+		sychroniser.to = (moment == null)?new NSTimestamp():moment;
 		Thread thread = new Thread(sychroniser,"OEJD_Sync");
 		thread.setPriority(Thread.MIN_PRIORITY + 1);
 		thread.start();
