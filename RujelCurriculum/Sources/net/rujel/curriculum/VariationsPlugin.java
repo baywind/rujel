@@ -135,6 +135,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		NSTimestamp startDate = null;
 		while (enu.hasMoreElements()) {
 			EduPeriod eduPer = (EduPeriod) enu.nextElement();
+			if(finDate != null && finDate.before(eduPer.begin()))
+				break;
 			if(startDate == null) {
 				cal.setTime(eduPer.begin());
 				if(cal.get(Calendar.DAY_OF_WEEK) != weekStart) {
@@ -144,47 +146,60 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				}
 				cal.set(Calendar.HOUR_OF_DAY, 0);
 				startDate = new NSTimestamp(cal.getTimeInMillis());
-//			} else if(eduPer.end().before(startDate)) {
-//				continue;
 			}
-			if(perFin != null && 
-					eduPer.begin().getTime() - perFin.getTime() > NSLocking.OneDay) {
-				cal.setTime(perFin);
-				cal.add(Calendar.DATE, 1);
-				cal.set(Calendar.HOUR_OF_DAY, 0);
-				perFin = new NSTimestamp(cal.getTimeInMillis());
+			if(perFin != null && EOPeriod.Utility.compareDates(perFin, eduPer.begin()) < 0) {
 				cal.setTime(eduPer.begin());
 				cal.add(Calendar.DATE, -1);
 				cal.set(Calendar.HOUR_OF_DAY, 20);
-				if(cal.getTimeInMillis() > perFin.getTime()) {
-					Period per = new Period.ByDates(perFin,
-							new NSTimestamp(cal.getTimeInMillis()));
-					holidays.addObject(per);
-				}
+				Period per = new Period.ByDates(perFin,new NSTimestamp(cal.getTimeInMillis()));
+				holidays.addObject(per);
 			}
-			perFin = eduPer.end();
-			if(finDate != null && perFin.after(finDate))
-				break;
+			cal.setTime(eduPer.end());
+			cal.add(Calendar.DATE, 1);
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			perFin = new NSTimestamp(cal.getTimeInMillis());
 		}
-		if(finDate != null) {
-			cal.setTime(finDate);
-		} else {
-			cal.setTime(perFin);
-//			cal.add(Calendar.DATE, 1);
+		if(startDate == null)
+			return 0;
+		int days;
+		if(finDate == null || EOPeriod.Utility.compareDates(finDate,perFin) >= 0) {
+			cal.add(Calendar.DATE, -1);
 			cal.set(Calendar.HOUR_OF_DAY, 1);
-			finDate = new NSTimestamp(cal.getTimeInMillis());
-		}
-		int days = EOPeriod.Utility.countDays(startDate, finDate);
-		int result = days / week;
-		int left = days % week;
-		if(left > 0) {
-			if(EOPeriod.Utility.compareDates(perFin, finDate) < 0) {
-				result ++;
-				cal.add(Calendar.DATE, week);
+			days = EOPeriod.Utility.countDays(startDate, cal.getTime());
+			int left = days % week;
+			if(left > 0) {
+				cal.add(Calendar.DATE, week - left);
 			}
-			cal.add(Calendar.DATE, -left);
-			finDate = new NSTimestamp(cal.getTimeInMillis());
+			if(finDate == null || 
+					EOPeriod.Utility.compareDates(finDate.getTime(),cal.getTimeInMillis()) > 0) {
+				long millis = cal.getTimeInMillis();
+				cal.setTime(finDate);
+				finDate = new NSTimestamp(millis);
+				days += week -left;
+			} else {
+				cal.add(Calendar.DATE, -week);
+			}
+			Period per = new Period.ByDates(perFin,finDate);
+			holidays.addObject(per);
+		} else {
+			cal.setTime(finDate);
+			days = EOPeriod.Utility.countDays(startDate, finDate);
+			int left = days % week;
+			if(left > 0)
+				cal.add(Calendar.DATE, -left);
 		}
+		int result = days / week;
+/*		int left = days % week;
+		if(left > 0) {
+			cal.add(Calendar.DATE, -left);
+			if(ended) {
+				result++;
+				cal.add(Calendar.DATE, week);
+				Period per = new Period.ByDates(perFin,new NSTimestamp(cal.getTimeInMillis()));
+				holidays.addObject(per);
+			}
+			finDate = new NSTimestamp(cal.getTimeInMillis());
+		}*/
 		NSArray realHolidays = Holiday.holidaysInDates(startDate,finDate, ec, listName);
 		if(holidays.count() == 0) {
 			holidays.setArray(realHolidays);
@@ -267,34 +282,22 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		}*/
 		
 		Calendar cal = Calendar.getInstance();
-		//TODO remove this plug
-		NSArray periods = EduPeriod.periodsInList(listName, ec);
-		NSArray list = null;
-		if(periods != null && periods.count() > 0) {
-			EduPeriod last = (EduPeriod)periods.lastObject();
-			if(date == null || date.compare(last.end()) > 0) {
-				date = last.end();
-				list = periods;
-			}
-		} else {
-			periods = null;
-		}
 		//
 		if(date != null) {
 			cal.setTime(date);
-			if(list == null && cal.get(Calendar.MILLISECOND) > 0 && cal.get(Calendar.HOUR_OF_DAY) 
+			if(cal.get(Calendar.MILLISECOND) > 0 && cal.get(Calendar.HOUR_OF_DAY) 
 					< SettingsReader.intForKeyPath("edu.midnightHour", 5)) {
 				cal.add(Calendar.DATE, -1);
 			}
 			cal.set(Calendar.HOUR_OF_DAY, 12);
 			date = new NSTimestamp(cal.getTimeInMillis());
 			weeks = weeks(listName, cal, ec, weekDays, weekStart);
-			if(date != null)
-				extraDays = EOPeriod.Utility.countDays(cal.getTime(), date) -1; 
+			if(cal.getTimeInMillis() != date.getTime())
+				extraDays = EOPeriod.Utility.countDays(cal.getTime(), date) -1;
 		} else {
 			weeks = weeks(listName, null, ec, weekDays, weekStart);
 		}
-		list = EOUtilities.objectsMatchingKeyAndValue(ec,
+		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec,
 				"PlanDetail","course", course);
 		if(list != null && list.count() > 0) {  // has details
 			Enumeration enu = list.objectEnumerator();
@@ -377,7 +380,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		long startDate = cal.getTimeInMillis();
 		int verifiedOnly = SettingsBase.numericSettingForCourse(
 				"ignoreUnverifiedReasons", course, ec, 0);
-		if(list != null && list.count() > 0) {  // accont for variations
+		if(list != null && list.count() > 0) {  // account for variations
 			Enumeration enu = list.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				Variation var = (Variation) enu.nextElement();

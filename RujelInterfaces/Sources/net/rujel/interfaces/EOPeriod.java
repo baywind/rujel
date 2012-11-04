@@ -114,14 +114,14 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			Calendar cal1 = Calendar.getInstance();
 			if(begin != null)
 				cal1.setTime(begin);
-			else if(cal1.get(Calendar.HOUR_OF_DAY) < 
+			else if(cal1.get(Calendar.MILLISECOND) > 0 && cal1.get(Calendar.HOUR_OF_DAY) < 
 					SettingsReader.intForKeyPath("edu.midnightHour", 5))
 				cal1.add(Calendar.DATE, -1);
 			
 			Calendar cal2 = Calendar.getInstance();
 			if(end != null)
 				cal2.setTime(end);
-			else if(cal2.get(Calendar.HOUR_OF_DAY) < 
+			else if(cal2.get(Calendar.MILLISECOND) > 0 && cal2.get(Calendar.HOUR_OF_DAY) < 
 					SettingsReader.intForKeyPath("edu.midnightHour", 5))
 				cal2.add(Calendar.DATE, -1);
 			
