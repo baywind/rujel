@@ -3,6 +3,7 @@ package net.rujel.dnevnik;
 import java.util.TimerTask;
 
 import net.rujel.base.MyUtility;
+import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
@@ -14,8 +15,8 @@ public class DnevnikModule {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			try {
-//				Object access = PlistReader.readPlist("access.plist", "DnevnikSync", null);
-//				WOApplication.application().takeValueForKey(access, "defaultAccess");
+				Object access = PlistReader.readPlist("access.plist", "DnevnikSync", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
 			} catch (NSKeyValueCoding.UnknownKeyException e) {
 				// default access not supported
 			}

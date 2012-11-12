@@ -129,16 +129,16 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	public NoteDelegate _noteDelegate;
 
 	public String noteForStudent(Student student) {
-		if(_noteDelegate == null || _noteDelegate.notValid(this))
+		if(_noteDelegate == null)
 			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
-		String delegateNote = (_noteDelegate == null || _noteDelegate.notValid(this))?null :
-			_noteDelegate.lessonNoteForStudent(this, student);
+		String delegateNote = (_noteDelegate == null)?null :
+			_noteDelegate.lessonNoteForStudent(student);
 		String note = noteForStudent(this, student);
 		if(delegateNote == null)
 			return note;
 		if(note == null)
 			return delegateNote;
-		return note + " : " + delegateNote;
+		return note + " | " + delegateNote;
 	}
 	public void setNoteForStudent(String newNote, Student student) {
 		if(newNote != null) {
@@ -147,32 +147,36 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 				newNote = null;
 		}
 		int skip = isSkip(newNote);
-		if(_noteDelegate == null || _noteDelegate.notValid(this))
+		if(_noteDelegate == null)
 			_noteDelegate = taskDelegate.getNoteDelegateForLesson(this);
-		if(_noteDelegate == null || _noteDelegate.notValid(this)) {
+		if(_noteDelegate == null) {
 			setNoteForStudent(this, newNote, student);
 			return;
 		}
 		if(skip == 0) {
 			if(newNote == null)
 				setNoteForStudent(this, null, student);
-			_noteDelegate.setLessonNoteForStudent(newNote, this, student);
+			if(!_noteDelegate.setLessonNoteForStudent(newNote, student))
+				setNoteForStudent(this, newNote, student);
 			return;
 		}
 		if(skip < 0) {
 			setNoteForStudent(this, newNote, student);
-			_noteDelegate.setLessonNoteForStudent(null, this, student);
+			_noteDelegate.setLessonNoteForStudent(null, student);
 			return;
 		}
 		setNoteForStudent(this, newNote.substring(0,skip), student);
 		int idx = skip;
 		while (idx < newNote.length()) {
-			if(Character.isLetterOrDigit(newNote.charAt(idx)))
+			char c = newNote.charAt(idx);
+			if(c != ' ' && c != ':' && c != '|')
 					break;
 			idx++;
 		}
-		if(idx < newNote.length())
-			_noteDelegate.setLessonNoteForStudent(newNote.substring(idx), this, student);
+		if(idx < newNote.length()) {
+			if(!_noteDelegate.setLessonNoteForStudent(newNote, student))
+				setNoteForStudent(this, newNote, student);
+		}
 	}
 
 	private static String skipChars;
@@ -243,9 +247,8 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 	}
 
 	public static interface NoteDelegate {
-		public String lessonNoteForStudent(EduLesson lesson, Student student);
-		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student);
-		public boolean notValid(EduLesson lesson);
+		public String lessonNoteForStudent(Student student);
+		public boolean setLessonNoteForStudent(String note, Student student);
 	}
 	
 	protected static TaskDelegate taskDelegate = new TaskDelegate();

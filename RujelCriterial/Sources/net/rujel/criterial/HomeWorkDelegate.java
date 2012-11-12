@@ -39,11 +39,9 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
-import net.rujel.base.BaseLesson;
 import net.rujel.base.BaseLesson.NoteDelegate;
 import net.rujel.base.BaseLesson.TaskDelegate;
 import net.rujel.interfaces.EduLesson;
-import net.rujel.interfaces.Student;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
@@ -227,102 +225,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 					"Lesson not in EditingContext");
 			return null;
 		}
-		NoteDelegate work = findWork(lesson);
-		if(work != null)
-			return work;
-		return new TmpNoteDelegate(this);
+		return new WorkNoteDelegate(lesson);
 	}
 	
-	private static Work findWork(EduLesson lesson) {
-		EOEditingContext ec = lesson.editingContext();
-		WorkType type = WorkType.getSpecType(ec, "onLesson");
-		EOQualifier[] quals = new EOQualifier[3];
-		quals[0] = new EOKeyValueQualifier("course",
-				EOQualifier.QualifierOperatorEqual,lesson.course());
-		quals[1] = new EOKeyValueQualifier(Work.WORK_TYPE_KEY,
-				EOQualifier.QualifierOperatorEqual, type);
-		quals[2] = new EOKeyValueQualifier(Work.DATE_KEY,
-				EOQualifier.QualifierOperatorEqual,lesson.date());
-		quals[1] = new EOAndQualifier(new NSArray(quals));
-		EOFetchSpecification fs = new EOFetchSpecification(Work.ENTITY_NAME,
-				quals[1],EduLesson.sorter);
-		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found != null && found.count() > 0) {
-			NSMutableDictionary byNum = new NSMutableDictionary();
-			for (int i = 0; i < found.count(); i++) {
-				Work work = (Work)found.objectAtIndex(i);
-				if(work.number().equals(lesson.number()))
-					return work;
-				byNum.setObjectForKey(work, work.number());
-			}
-			quals[1] = new EOKeyValueQualifier(Work.NUMBER_KEY,
-					EOQualifier.QualifierOperatorNotEqual,lesson.number());
-			quals[1] = new EOAndQualifier(new NSArray(quals));
-			fs = new EOFetchSpecification(lesson.entityName(),quals[1],EduLesson.sorter);
-			NSMutableArray works = found.mutableClone();
-			found = ec.objectsWithFetchSpecification(fs);
-			if(found == null || found.count() == 0)
-				return (Work)works.objectAtIndex(0);
-			NSMutableArray lessons = new NSMutableArray();
-			for (int i = 0; i < found.count(); i++) {
-				EduLesson ls = (EduLesson)found.objectAtIndex(i);
-				Integer num = ls.number();
-				Work work = (Work)byNum.removeObjectForKey(num);
-				if(work == null) {
-					lessons.addObject(ls);
-				} else if(byNum.count() == 0) {
-					return null;
-				} else {
-					works.removeObject(work);
-				}
-			}
-			for (int i = 0; i < works.count(); i++) {
-				Work work = (Work)works.objectAtIndex(i);
-				if(lessons.count() <= i)
-					return work;
-				EduLesson ls = (EduLesson)lessons.objectAtIndex(i);
-				if(ls.number().compareTo(lesson.number()) > 0)
-					return work;
-			}
-		}
-		return null;
-	}
-
-	public static class TmpNoteDelegate implements BaseLesson.NoteDelegate {
-		protected HomeWorkDelegate htd;
-		
-		public TmpNoteDelegate(HomeWorkDelegate delegate) {
-			super();
-			htd = delegate;
-		}
-		
-		public String lessonNoteForStudent(EduLesson lesson, Student student) {
-			return null;
-		}
-
-		public void setLessonNoteForStudent(String note, EduLesson lesson, Student student) {
-			if(note == null || note.length() == 0)
-				return;
-			Work work = findWork(lesson);
-			if(work == null) {
-				work = (Work)EOUtilities.createAndInsertInstance(
-						lesson.editingContext(), Work.ENTITY_NAME);
-				work.addObjectToBothSidesOfRelationshipWithKey(lesson.course(), "course");
-				NSTimestamp date = (NSTimestamp)lesson.valueForKey("date");
-				work.setDate(date);
-				work.setAnnounce(date);
-				work.setWorkType(WorkType.getSpecType(lesson.editingContext(), "onLesson"));
-				work.setTheme((String)WOApplication.application().valueForKeyPath(
-				"strings.RujelCriterial_Strings.spesTypes.onLesson.typeName"));
-				work.setNumber(lesson.number());
-//				MyUtility.setNumberToNewLesson(work);
-			}
-			work.setLessonNoteForStudent(note, lesson, student);
-			lesson.takeValueForKey(work, "noteDelegate");
-		}
-
-		public boolean notValid(EduLesson lesson) {
-			return false;
-		}
-	}
 }

@@ -178,6 +178,7 @@ public class Sychroniser implements Runnable {
 				logger.log(WOLogLevel.INFO,"Failed to initialize OEJD sync log",
 						new Object[] {ses,e,logPath});
 			}
+			logger.log(WOLogLevel.INFO,"Starting Dnevnik sync");
 			NSArray result = syncChanges();
 			if(state != null) {
 				synchronized (state) {

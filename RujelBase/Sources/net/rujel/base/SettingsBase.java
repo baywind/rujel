@@ -283,10 +283,16 @@ public class SettingsBase extends _SettingsBase implements Setting {
 		if(sb instanceof WeakReference) {
 			sb = ((WeakReference)sb).get();
 		}
-		if(sb instanceof SettingsBase)
-			return (SettingsBase)sb;
-		else if(!create && sb == NullValue)
+		if(sb instanceof SettingsBase) {
+			if (((SettingsBase)sb).editingContext() == ec) {
+				return (SettingsBase)sb;
+			} else {
+				sb = null;
+				sbdict.removeObjectForKey(key);
+			}
+		} else if(!create && sb == NullValue) {
 			return null;
+		}
 		try {
 			sb = EOUtilities.objectMatchingKeyAndValue(ec, ENTITY_NAME, KEY_KEY, key);
 		} catch (EOObjectNotAvailableException e) {

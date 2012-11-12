@@ -46,7 +46,7 @@ import java.math.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	// EOObserving
+public class Work extends _Work implements EduLesson {	// EOObserving
 	public transient FractionPresenter _integralPresenter;
 
 	public Work() {
@@ -944,8 +944,6 @@ public class Work extends _Work implements EduLesson, BaseLesson.NoteDelegate {	
 		if(note != null)
 			note = note.trim();
 		Integer num = null;
-		boolean arc = (SettingsReader.boolForKeyPath("markarchive.Mark", 
-				SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
 		int arcLevel = 0;
 		if(SettingsBase.numericSettingForCourse(
 				"noLessonMarks", course(), editingContext(), 0) == 0) {
@@ -1056,6 +1054,8 @@ set:
 			}
 		}
 		} // !noLessonMark
+		boolean arc = (SettingsReader.boolForKeyPath("markarchive.Mark", 
+				SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
 		if(arc) {
 			if(note == null) {
 				if(arcLevel == 0 && noteForStudent(student) != null)
