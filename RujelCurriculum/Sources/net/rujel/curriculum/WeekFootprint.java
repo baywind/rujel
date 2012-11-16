@@ -182,6 +182,8 @@ public class WeekFootprint {
 							dates[i] = ((BaseLesson)obj).date().getTime();
 					} else if(obj instanceof Variation) {
 						int value = ((Variation)obj).value().intValue();
+						if(value < -plan)
+							continue;
 						count -= (value + 1);
 						if(value > 0) {
 							EduLesson related = ((Variation)obj).relatedLesson();
@@ -212,7 +214,7 @@ public class WeekFootprint {
 						assumed[i].sortUsingComparator(NSComparator.AscendingNumberComparator);
 					} catch (Exception e) {}
 				}
-				if(nums.count() < count) {
+				if(assumed[i].count() < count) {
 					Integer last = (Integer)assumed[i].lastObject();
 					int next = (last == null)? 1 : last.intValue() +1;
 					while (assumed[i].count() < count) {
@@ -225,23 +227,26 @@ public class WeekFootprint {
 //			cal.add(Calendar.DATE, 1);
 		} // process assumptions
 		while (total > plan) {
-			long latest = System.currentTimeMillis();
+			long oldest = System.currentTimeMillis();
 			int idx = week;
 			for (int i = 0; i < week; i++) {
-				if(dates[i] > 0 && dates[i] < latest) {
-					latest = dates[i];
+				if(dates[i] > 0 && dates[i] <= oldest) {
+					oldest = dates[i];
 					idx = i;
 				}
 			}
-			if(idx < week) {
-				int count = assumed[idx].count();
-				if(plan <= (total - count)) {
-					assumed[idx] = null;
-					dates[idx] = 0;
-					total -= count;
-				} else {
-					break;
-				}
+			if(idx >= week) {
+				Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
+						"Inadequate weekFootprint",course);
+				break;
+			}
+			int count = assumed[idx].count();
+			if(plan <= (total - count)) {
+				assumed[idx] = null;
+				dates[idx] = 0;
+				total -= count;
+			} else {
+				break;
 			}
 		}
 		
