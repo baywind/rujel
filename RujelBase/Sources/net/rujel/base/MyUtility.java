@@ -90,11 +90,19 @@ public class MyUtility {
 	}
 	
 	protected static Format _format;
-	@SuppressWarnings("deprecation")
 	public static Format dateFormat() {
 		if(_format == null)
-			_format = new NSTimestampFormatter(SettingsReader.stringForKeyPath(
-					"ui.dateFormat","%Y-%m-%d"));
+			_format = new SimpleDateFormat(SettingsReader.stringForKeyPath(
+					"ui.dateFormat","yyyy-MM-dd")) {
+			public Object parseObject(String dateString, java.text.ParsePosition pos) {
+				Object result = super.parseObject(dateString, pos);
+				if(result instanceof NSTimestamp)
+					return result;
+				if(result instanceof Date)
+					return new NSTimestamp((Date)result);
+				return null;
+			}
+		};
 		return _format;
 	}
 	
@@ -258,8 +266,7 @@ public class MyUtility {
 			date = new NSTimestamp((Date)aDate);
 		} else if(aDate instanceof String) {
 			try {
-				date = (NSTimestamp)MyUtility.dateFormat().parseObject(
-						(String)aDate, new java.text.ParsePosition(0));
+				date = (NSTimestamp)MyUtility.parseDate((String)aDate);
 			} catch (Exception e) {
 				throw new NSValidation.ValidationException(
 						"Could not parse string to date",aDate,key);

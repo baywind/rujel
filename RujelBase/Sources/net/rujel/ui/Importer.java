@@ -35,6 +35,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -418,7 +420,6 @@ public class Importer extends WOComponent {
     	return list;
     }
     
-    @SuppressWarnings("deprecation")
 	private Object testFormatter(NSMutableDictionary dict, String value) {
     	NSArray formatters = (NSArray)dict.valueForKey("formatters");
     	if(formatters == null) {
@@ -431,7 +432,7 @@ public class Importer extends WOComponent {
     			while (enu.hasMoreElements()) {
 					String pattern = (String) enu.nextElement();
 					try {
-						prepare.addObject(new NSTimestampFormatter(pattern));
+						prepare.addObject(new SimpleDateFormat(pattern));
 					} catch (Exception e) {
 						logger.log(WOLogLevel.WARNING,"Error making dateFormatter from pattern: "
 								+ pattern, new Object[] {session(),e});
@@ -441,7 +442,7 @@ public class Importer extends WOComponent {
     				formatters = prepare.immutableClone();
     		} else if(inDict instanceof String) {
 				try {
-					formatters = new NSArray(new NSTimestampFormatter((String)inDict));
+					formatters = new NSArray(new SimpleDateFormat((String)inDict));
 				} catch (Exception e) {
 					logger.log(WOLogLevel.WARNING,"Error making dateFormatter from pattern: "
 							+ inDict, new Object[] {session(),e});
@@ -459,6 +460,8 @@ public class Importer extends WOComponent {
 			Format fmt = (Format) enu.nextElement();
 			try {
 				Object result = fmt.parseObject(value);
+				if(result instanceof Date)
+					result = new NSTimestamp((Date)result);
 				if(result != null)
 					return result;
 			} catch (Exception e) {
@@ -467,6 +470,8 @@ public class Importer extends WOComponent {
 			if(noapo != null) {
 				try {
 					Object result = fmt.parseObject(noapo);
+					if(result instanceof Date)
+						result = new NSTimestamp((Date)result);
 					if(result != null)
 						return result;
 				} catch (Exception e2) {

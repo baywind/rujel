@@ -29,6 +29,8 @@
 
 package net.rujel.schedule;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import com.webobjects.appserver.WOActionResults;
@@ -92,8 +94,7 @@ public class RingsSetup extends LessonList {
     	int idx = list.count() +1;
     	WORequest req = context().request();
     	final Integer zero = new Integer(0);
-		@SuppressWarnings("deprecation")
-		NSTimestampFormatter format = new NSTimestampFormatter("HH:mm");
+		SimpleDateFormat format = new SimpleDateFormat("HH:mm");
 		boolean fail = false;
 		NSMutableArray newList = list.mutableClone();
     	while(true) {
@@ -101,14 +102,14 @@ public class RingsSetup extends LessonList {
     			String newVal = req.stringFormValueForKey("start" + idx);
     			if(newVal == null)
     				break;
-    			NSTimestamp newStart = (NSTimestamp)format.parseObject(newVal);
+    			Date newStart = (Date)format.parseObject(newVal);
     			newVal = req.stringFormValueForKey("end" + idx);
     			if(newVal == null)
     				break;
     			NSTimestamp newEnd = (NSTimestamp)format.parseObject(newVal);
     			EOEnterpriseObject ring = EOUtilities.createAndInsertInstance(ec, "ScheduleRing");
     			ring.takeValueForKey(zero, "timeScheme");
-    			ring.takeValueForKey(newStart, "startTime");
+    			ring.takeValueForKey(new NSTimestamp(newStart), "startTime");
     			ring.takeValueForKey(newEnd, "endTime");
     			newList.addObject(ring);
     		} catch (Exception e) {

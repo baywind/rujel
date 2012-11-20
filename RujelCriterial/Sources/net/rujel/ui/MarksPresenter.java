@@ -179,6 +179,14 @@ public class MarksPresenter extends NotePresenter {
 			return true;//(anyMark() != null);
 		} else if(activeCriterion.intValue() < 0) {
 			return (noteForStudent() != null);
+		} else if(activeCriterion.intValue() == 0) {
+			Mark[] marks = lesson().forPersonLink(student());
+			if(marks == null)
+				return false;
+			for (int i = 0; i < marks.length; i++) {
+				if(marks[i] != null && marks[i].value() != null)
+					return true;
+			}
 		}
 		return (lesson().markForStudentAndCriterion(student(),activeCriterion) != null);
 	}

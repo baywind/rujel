@@ -34,6 +34,7 @@ import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
@@ -337,8 +338,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     			EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
     			archive.takeValueForKey(currReason, "objectIdentifier");
     			archive.takeValueForKey(currReason.reason(),"@reason");
-    			archive.takeValueForKey(currReason.begin(),"@begin");
-    			archive.takeValueForKey(currReason.end(),"@end");
+    			archive.takeValueForKey(MyUtility.dateFormat().format(currReason.begin()),"@begin");
+    			archive.takeValueForKey(MyUtility.dateFormat().format(currReason.end()),"@end");
     			if(currReason.verification() != null)
     				archive.takeValueForKey(currReason.verification(),"@verification");
     			if(currReason.namedFlags().flagForKey("forTeacher"))

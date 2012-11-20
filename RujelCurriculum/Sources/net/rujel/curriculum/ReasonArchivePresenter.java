@@ -29,6 +29,8 @@
 
 package net.rujel.curriculum;
 
+import java.text.SimpleDateFormat;
+
 import net.rujel.base.MyUtility;
 
 import com.webobjects.appserver.*;
@@ -49,16 +51,15 @@ public class ReasonArchivePresenter extends com.webobjects.appserver.WOComponent
 		return _dict;
 	}
 	
-	@SuppressWarnings("deprecation")
 	protected static String presentDate(Object date) {
 		if(date instanceof NSTimestamp) {
 			return MyUtility.dateFormat().format(date);
 		} else {
 			String dateString = date.toString();
-			if(dateString == null || dateString.length() == 0)
-				return null;
-			NSTimestampFormatter format = new NSTimestampFormatter();
+			if(dateString == null || dateString.length() <= 10)
+				return dateString;
 			try {
+				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'Etc/'z");
 				date = format.parseObject(dateString);
 				return MyUtility.dateFormat().format(date);
 			} catch (Exception e) {

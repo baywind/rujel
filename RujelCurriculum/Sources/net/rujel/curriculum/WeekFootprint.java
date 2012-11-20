@@ -455,8 +455,8 @@ public class WeekFootprint {
 	private NSDictionary assumption(Calendar cal, int add, Integer num) {
 		if(add > 0)
 			cal.add(Calendar.DATE, add);
-		return new NSDictionary(new Object[] {sort,
-				new NSTimestamp(cal.getTimeInMillis()),num},
+		NSTimestamp date = new NSTimestamp(cal.getTimeInMillis());
+		return new NSDictionary(new Object[] {sort,date,num},
 				new String[] {"sort","date","number"});
 	}
 	

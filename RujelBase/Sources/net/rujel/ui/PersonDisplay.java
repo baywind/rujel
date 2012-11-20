@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import java.text.Format;
+import java.text.SimpleDateFormat;
 
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.Person;
@@ -52,7 +53,6 @@ public class PersonDisplay extends ExtDynamicElement {
 		//checkRequired(associations, "person");
 	}
 
-	@SuppressWarnings("deprecation")
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object tmp = valueForBinding("person",aContext);
     	if(tmp == null || tmp == NSKeyValueCoding.NullValue) {
@@ -137,7 +137,7 @@ public class PersonDisplay extends ExtDynamicElement {
     		if(tmp instanceof Format) {
     			format = (Format)tmp;
     		} else if (tmp instanceof String) {
-    			format = new com.webobjects.foundation.NSTimestampFormatter((String)tmp);
+    			format = new SimpleDateFormat((String)tmp);
     		}
     		if(format == null)
     			format = MyUtility.dateFormat();

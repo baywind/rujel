@@ -29,6 +29,7 @@
 
 package net.rujel.markarchive;
 
+import net.rujel.base.MyUtility;
 import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
@@ -37,6 +38,8 @@ import com.webobjects.eoaccess.*;
 import com.webobjects.appserver.WOSession;
 
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
@@ -442,7 +445,6 @@ public class MarkArchive extends _MarkArchive
 		setData(NSPropertyListSerialization.stringFromPropertyList(dict,false));
 	}
 	
-	@SuppressWarnings("deprecation")
 	public Object valueForKey(String key) {
 		if(key.charAt(0) == '@') {
 			int idx = key.indexOf('_', 2);
@@ -457,11 +459,18 @@ public class MarkArchive extends _MarkArchive
 			if("date".equals(key)) {
 				if(value instanceof NSTimestamp)
 					return value;
+				if(value instanceof Date)
+						return new NSTimestamp((Date)value);
 				try {
-					NSTimestampFormatter format = new NSTimestampFormatter();
-					return format.parseObject(value.toString());
+					return MyUtility.dateFormat().parseObject(value.toString());
 				} catch (Exception e) {
-					return null;
+					try {
+						SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'Etc/'z");
+						Date date = (Date)format.parseObject(value.toString());
+						return new NSTimestamp(date);
+					} catch (Exception e2) {
+						return null;
+					}
 				}
 			}
 			if("int".equals(key)) {
