@@ -82,8 +82,7 @@ public class Main extends WOComponent {
 		// date and groupList
 		
 		String dateString = req.stringFormValueForKey("date");
-		date = (NSTimestamp)MyUtility.dateFormat().parseObject(
-				dateString, new java.text.ParsePosition(0));
+		date = MyUtility.parseDate(dateString);
 		Integer year = (date == null)?(Integer)application().valueForKey("year"):
 			MyUtility.eduYearForDate(date);
 		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(

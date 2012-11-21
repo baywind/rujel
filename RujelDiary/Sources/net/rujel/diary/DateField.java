@@ -29,8 +29,6 @@
 
 package net.rujel.diary;
 
-import java.text.ParsePosition;
-
 import net.rujel.base.MyUtility;
 
 import com.webobjects.appserver.*;
@@ -64,7 +62,7 @@ public class DateField extends com.webobjects.appserver.WOComponent {
 				onBlur = "if(value==defaultValue)className='default';";
 				String base = (String)valueForBinding("baseName");
 				base = req.stringFormValueForKey(base);
-				date = (NSTimestamp)MyUtility.dateFormat().parseObject(base, new ParsePosition(0));
+				date = MyUtility.parseDate(base);
 				if(date == null)
 					date = (NSTimestamp)application().valueForKey("today");
 				Integer shift = (Integer)valueForBinding("shift");
