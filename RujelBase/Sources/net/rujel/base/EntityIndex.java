@@ -110,7 +110,7 @@ public class EntityIndex extends _EntityIndex {
 		if(settings == null)
 			return false;
 		String dbName = settings.get("dbName", null);
-		return dbName.contains("%");
+		return (dbName != null && dbName.contains("%"));
 	}
 	
 	public static EntityIndex indexForObject(EOEnterpriseObject eo, boolean create) {

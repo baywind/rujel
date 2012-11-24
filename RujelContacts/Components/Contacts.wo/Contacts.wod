@@ -60,6 +60,7 @@ SwitchComponent1: WOSwitchComponent {
 	person = currPerson;
 	selection = selectedContact;
 	access = access;
+	value = "qqq";
 }
 
 SectionTabs : Tabs {
@@ -78,4 +79,7 @@ HasSections : WOConditional {
 
 CurrSection : WOString {
   value = session.state.section.value;
+}
+HasPresenter : WOConditional {
+  condition = presenter;
 }
