@@ -126,7 +126,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 					bonusText = bonus.reason();
 				BigDecimal bonusValue = (bonus == null)?Bonus.calculateBonus(prognosis,null,false)
 						:bonus.calculateValue(prognosis, false);
-				hasBonus = (bonus != null && 
+				hasBonus = (bonus != null && bonus.value() != null &&
 						bonus.value().compareTo(bonusValue) >= 0);
 				NamedFlags accessBonus = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.Bonus");
 				if(!((bonus == null)?accessBonus.flagForKey("create"):accessBonus.flagForKey("read")))

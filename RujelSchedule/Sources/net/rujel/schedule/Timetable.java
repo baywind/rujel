@@ -141,12 +141,28 @@ public class Timetable extends LessonList {
 			}
     	}
     	result.addObject(titles);
-    	Integer timeScheme = SettingsBase.numericSettingForCourse("timeScheme", course, ec);
-    	EOQualifier qual = (timeScheme == null)? null : new EOKeyValueQualifier("timeScheme",
-    			EOQualifier.QualifierOperatorEqual, new Integer(week));
+    	Integer timeScheme = new Integer(0);
+    	try {
+    		timeScheme = (Integer)course.eduGroup().valueForKey("section");
+    	} catch (Exception e) {
+    		try {
+    			timeScheme = (Integer)course.cycle().valueForKey("section");
+    		} catch (Exception e2) {
+				// Oops
+			}
+		}
+    	SettingsBase.numericSettingForCourse("timeScheme", course, ec);
+    	EOQualifier qual = new EOKeyValueQualifier("timeScheme",
+    			EOQualifier.QualifierOperatorEqual, timeScheme);
     	EOFetchSpecification fs = new EOFetchSpecification(
     			"ScheduleRing", qual, MyUtility.numSorter);
     	NSArray found = ec.objectsWithFetchSpecification(fs);
+    	if(timeScheme.intValue() > 0 && (found == null || found.count() == 0)) {
+    		qual = new EOKeyValueQualifier("timeScheme",
+        			EOQualifier.QualifierOperatorEqual, new Integer(0));
+    		fs.setQualifier(qual);
+    		found = ec.objectsWithFetchSpecification(fs);
+    	}
     	if(found != null && found.count() > 0) {
     		titles[0] = (String)strings().valueForKeyPath("RujelSchedule_Schedule.Rings");
     		Enumeration enu = found.objectEnumerator();

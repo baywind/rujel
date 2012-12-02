@@ -32,9 +32,13 @@ package net.rujel.autoitog;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+import net.rujel.base.Setting;
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.BorderSet;
+import net.rujel.criterial.FractionPresenter;
 import net.rujel.reusables.*;
 
 public class Bonus extends _Bonus {
@@ -75,7 +79,10 @@ public class Bonus extends _Bonus {
     
     public BigDecimal calculateValue(Prognosis prognosis, boolean update) {
     	try {
-    		BigDecimal topValue = prognosis.autoItog().borderSet().borderForKey(mark());
+    		BorderSet bSet = (BorderSet) prognosis.autoItog().borderSet();
+    		BigDecimal topValue = (bSet == null)?
+    				new BigDecimal(mark()):
+    				bSet.borderForKey(mark());
     		topValue = topValue.movePointLeft(2);
     		BigDecimal prognos = prognosis.value();
     		BigDecimal bonus = topValue.subtract(prognos);
@@ -97,8 +104,22 @@ public class Bonus extends _Bonus {
     public static BigDecimal calculateBonus(Prognosis prognosis,Bonus toUpdate,boolean setValue) {
     	try {
     		BorderSet bSet = (BorderSet) prognosis.autoItog().borderSet();
-    		if(bSet == null)
-    			return null;
+    		FractionPresenter presenter = bSet;
+    		if(bSet == null) {
+    			presenter = FractionPresenter.PERCENTAGE;
+    			EOEditingContext ec = prognosis.editingContext();
+    			Setting bs = SettingsBase.settingForCourse("bonusBorders",prognosis.course(),ec);
+    			if(bs == null)
+    				return null;
+    			if(bs.numericValue() != null) {
+    				bSet = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(ec, 
+    						BorderSet.ENTITY_NAME, bs.numericValue());
+    			} else if(bs.textValue() != null) {
+    				bSet = (BorderSet)BorderSet.fractionPresenterForTitle(ec, bs.textValue());
+    			} else {
+    				return null;
+    			}
+    		}
     		EOEnterpriseObject border = bSet.borderForFraction(prognosis.value(), true); 
     		if(border == null)
     			return null;
@@ -109,7 +130,10 @@ public class Bonus extends _Bonus {
     			return null;
     		BigDecimal bonus = topValue.subtract(prognos);
     		if(toUpdate != null) {
-    			toUpdate.setMark((String)border.valueForKey("title"));
+    			if(presenter == bSet)
+    				toUpdate.setMark((String)border.valueForKey("title"));
+    			else
+    				toUpdate.setMark(presenter.presentFraction(topValue));
     			if(setValue)
     				toUpdate.setValue(bonus);
     		}

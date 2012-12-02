@@ -56,7 +56,9 @@ public class RingsSetup extends LessonList {
 	public NSArray list;
 	public Object item;
     public Boolean noEdit;
-	
+	public Boolean useGlobal;
+	public String title;
+    
     public RingsSetup(WOContext context) {
         super(context);
     }
@@ -64,20 +66,57 @@ public class RingsSetup extends LessonList {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
-	        list = null;
-	        noEdit = (Boolean)session().valueForKeyPath("readAccess._edit.ScheduleRing");
-	        if(!noEdit && list().count() > 0)
-	        	noEdit = Boolean.TRUE;
+			updateSection();
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 		}
 		super.appendToResponse(aResponse, aContext);
 	}
 	        
 	public WOActionResults toggleEdit() {
-    	noEdit = Boolean.valueOf(!noEdit.booleanValue());
+    	noEdit = (Boolean)session().valueForKeyPath("readAccess._edit.ScheduleRing");
+    	if(!noEdit && useGlobal) {
+    		list = NSArray.EmptyArray;
+    		useGlobal = Boolean.FALSE;
+    		if((Integer)session().valueForKeyPath("state.section.idx") > 0) {
+    			title = (String)session().valueForKeyPath(
+				"strings.RujelSchedule_Schedule.makeLocal") 
+				+ " \"" + session().valueForKeyPath("state.section.value") + '"';
+    		}
+    	}
     	return null;
     }
     
+	public void updateSection() {
+		Integer currSection = (Integer)session().valueForKeyPath("state.section.idx");
+    	EOQualifier qual = new EOKeyValueQualifier("timeScheme", 
+    			EOQualifier.QualifierOperatorEqual, currSection);
+    	EOFetchSpecification fs = new EOFetchSpecification("ScheduleRing",qual,MyUtility.numSorter);
+    	list = ec.objectsWithFetchSpecification(fs);
+    	if((list == null || list.count() == 0) && currSection.intValue() > 0) {
+        	qual = new EOKeyValueQualifier("timeScheme", 
+        			EOQualifier.QualifierOperatorEqual, new Integer(0));
+        	fs.setQualifier(qual);
+        	list = ec.objectsWithFetchSpecification(fs);
+        	useGlobal = Boolean.valueOf(list != null && list.count() > 0);
+        	noEdit = useGlobal;
+        	if(useGlobal)
+        		title = (String)session().valueForKeyPath(
+        				"strings.RujelSchedule_Schedule.useGlobal");
+        	else
+        		title = null;
+    	} else {
+    		useGlobal = Boolean.FALSE;
+        	noEdit = Boolean.TRUE;
+        	if(currSection.intValue() == 0)
+        		title = (String)session().valueForKeyPath(
+					"strings.RujelSchedule_Schedule.isGlobal");
+        	else
+        		title = (String)session().valueForKeyPath(
+					"strings.RujelSchedule_Schedule.isLocal") 
+					+ " \"" + session().valueForKeyPath("state.section.value") + '"';
+    	}
+	}
+	
     public NSArray list() {
     	if(list != null)
     		return list;
@@ -93,7 +132,6 @@ public class RingsSetup extends LessonList {
     public WOActionResults save() {
     	int idx = list.count() +1;
     	WORequest req = context().request();
-    	final Integer zero = new Integer(0);
 		SimpleDateFormat format = new SimpleDateFormat("HH:mm");
 		boolean fail = false;
 		NSMutableArray newList = list.mutableClone();
@@ -106,11 +144,12 @@ public class RingsSetup extends LessonList {
     			newVal = req.stringFormValueForKey("end" + idx);
     			if(newVal == null)
     				break;
-    			NSTimestamp newEnd = (NSTimestamp)format.parseObject(newVal);
+    			Date newEnd = (Date)format.parseObject(newVal);
     			EOEnterpriseObject ring = EOUtilities.createAndInsertInstance(ec, "ScheduleRing");
-    			ring.takeValueForKey(zero, "timeScheme");
+    			ring.takeValueForKey((Integer)session().valueForKeyPath("state.section.idx"),
+    					"timeScheme");
     			ring.takeValueForKey(new NSTimestamp(newStart), "startTime");
-    			ring.takeValueForKey(newEnd, "endTime");
+    			ring.takeValueForKey(new NSTimestamp(newEnd), "endTime");
     			newList.addObject(ring);
     		} catch (Exception e) {
 				fail = true;
@@ -161,7 +200,16 @@ public class RingsSetup extends LessonList {
     						new Object[] {session(),e});
     			}
     		}
-			list = newList;
+			if(newList.count() == 0) {
+				updateSection();
+			} else {
+				list = newList;
+				useGlobal = Boolean.FALSE;
+				Integer currSection = (Integer)session().valueForKeyPath("state.section.idx");
+	        	if(currSection.intValue() > 0)
+	        		title = (String)session().valueForKeyPath(
+						"strings.RujelSchedule_Schedule.isLocal");
+			}
     	} else {
 			noEdit = Boolean.TRUE;
     	}
