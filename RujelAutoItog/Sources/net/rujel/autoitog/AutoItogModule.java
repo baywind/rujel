@@ -556,14 +556,14 @@ public class AutoItogModule {
 			}
 			prognos.setAutoItog(itog);
 			prognos.updateFireDate(cto);
-			if(!prognos.fireDate().equals(itog.fireDate())) {
-	    		Timeout timeout = Timeout.Utility.chooseTimeout(
-	    				prognos.getStudentTimeout(), cto);
-				EOEnterpriseObject commentEO = ItogMark.getItogComment(course.cycle(),
-						itog.itogContainer(), prognos.student(), true);
-				Timeout.Utility.setTimeoutComment(commentEO, timeout);
+			Timeout timeout = null;
+			if(EOPeriod.Utility.compareDates(prognos.fireDate(), itog.fireDate()) != 0) {
+	    		timeout = Timeout.Utility.chooseTimeout(prognos.getStudentTimeout(),cto);
 			}
 			ItogMark itogMark = prognos.convertToItogMark(null, overwrite, buf);
+			EOEnterpriseObject commentEO = itogMark.commentEO(timeout != null);
+			if(commentEO != null)
+				Timeout.Utility.setTimeoutComment(commentEO, timeout);
 			if(itogMark != null)
 				inCourse++;
 			if(buf.charAt(buf.length() -1) == 0) {
@@ -742,7 +742,7 @@ cycleCourses:
 			//single timouts are checked inside convertPrognosesForCourseAndPeriod()
 			Prognosis.convertPrognoses(course,
 					autoItog.itogContainer(),autoItog.fireDate(),buf);
-		}
+		} // cycleCourses
 		message(buf);
 	}
 /*

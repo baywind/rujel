@@ -152,8 +152,11 @@ public class ItogMark extends _ItogMark
 	public static final String MANUAL = "manual";
 	
 	public EOEnterpriseObject commentEO() {
+		return commentEO(false);
+	}
+	public EOEnterpriseObject commentEO(boolean create) {
 		if(_commentEO == null) {
-			_commentEO = getItogComment(cycle(), container(), student(),false);
+			_commentEO = getItogComment(cycle(), container(), student(),create);
 			if(_commentEO == null) {
 				_commentEO = NullValue;
 				return null;
@@ -180,7 +183,7 @@ public class ItogMark extends _ItogMark
 			}
 			public void takeValueForKey(Object value, String key) {
 				Object tmp = valueForKey(key);
-				if(tmp != null && tmp.equals(value))
+				if((tmp == null)?value == null:tmp.equals(value))
 					return;
 				comments.takeValueForKey(value, key);
 				if(comments.count() > 0) {
