@@ -41,6 +41,7 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 			new Boolean[] {Boolean.TRUE,Boolean.TRUE},
 			new String[] {"unsubmitted","unsubmittedZPU"});
 	public Integer section;
+	public String sectionName;
 	
     public Tabel(WOContext context) {
         super(context);
@@ -1088,7 +1089,39 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 	public WOActionResults noSection() {
 		section = null;
 		go();
+		if(sectionName != null)
+			sectionName = (String)session().valueForKeyPath("strings.RujelBase_Base.noLimit");
 		return null;
+	}
+	
+	public void setSection(Integer sect) {
+		section = sect;
+		if(sectionName != null) {
+			updateSectionName();
+		}
+		go();
+	}
+	
+	public void updateSectionName() {
+		if(section == null) {
+			sectionName = (String)session().valueForKeyPath("strings.RujelBase_Base.noLimit");
+			return;
+		}
+		NSArray sections = (NSArray)session().valueForKeyPath("strings.sections.list");
+		if(sections == null)
+			return;
+		Enumeration enu = sections.objectEnumerator();
+		sectionName = null;
+		while (enu.hasMoreElements()) {
+			NSDictionary dict = (NSDictionary) enu.nextElement();
+			if(section.equals(dict.valueForKey("idx"))) {
+				sectionName = (String)dict.valueForKey("value");
+				return;
+			}
+			if(sectionName == null)
+				sectionName = (String)session().valueForKeyPath(
+						"strings.RujelEduPlan_EduPlan.sections.sections");
+		}
 	}
 	
 	public String noneSectionClass() {
