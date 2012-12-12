@@ -162,31 +162,31 @@ public class Main extends WOComponent {
 				}
 				courses = new NSArray(crs);
 			}
+			getCourses:
 			if(courses == null) {
 				try {
 					NSDictionary dict = new NSDictionary(new Object[] {year,eduGroup},
 							new String[] {"eduYear","eduGroup"});
 					courses = EOUtilities.objectsMatchingValues(ec,EduCourse.entityName, dict);
-					if(courses != null && courses.count() > 0 && studentID != null) {
+				} catch (Exception e) {
+					logger.log(Level.INFO,"Failed to get courses for eduGroup: " + currGr,e);
+					break getCourses;
+				}
+				if(studentID != null) {
+					try {
 						Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(
 								ec, Student.entityName,studentID);
 						if(eduGroup.isInGroup(student))
 							courses = BaseCourse.coursesForStudent(courses, student);
 						else
 							studentID = null;
-					}
-				} catch (Exception e) {
-					logger.log(Level.INFO,"Failed to get courses for eduGroup: " + currGr,e);
-				}
-				if(courses != null && courses.count() > 0 && studentID != null) {
-					try {
 					} catch (Exception e) {
 						logger.log(Level.INFO,"Failed to get courses for studentID: "
 								+ studentID,e);
 					}
 				}
-			}
-		}
+			} // getCourses
+		} // eduGroup != null
 
 		super.appendToResponse(aResponse, aContext);
 	}

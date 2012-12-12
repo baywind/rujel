@@ -190,63 +190,6 @@ public class EMailBroadcast implements Runnable{
 				ses = ((SessionedEditingContext)ec).session();
 			StudentReports reports = new StudentReports(ses);
 			reporter = (NSDictionary)reports.defaultReporter();
-			/*
-			String root = SettingsReader.stringForKeyPath("reportsDir", "CONFIGDIR/RujelReports");
-			root = Various.convertFilePath(root);
-			File dir = new File(root,"StudentReport");
-			File file = new File(dir,"defaultSettings.plist");
-			String reporterID = null;
-			NSDictionary settings = null;
-			if(file.exists()) {
-				try {
-					settings = (NSDictionary)PlistReader.readPlist(
-							new FileInputStream(file), null);
-					reporterID = (String)settings.valueForKey("reporterID");
-					if("default".equals(reporterID))
-						reporterID = null;
-				} catch (Exception e) {
-					logger.log(WOLogLevel.WARNING,"Failed to read report defaultSettins",e);
-				}
-			}
-			if(reporterID != null) {
-				file = new File(dir,reporterID + ".plist");
-				if(file.exists()) {
-					try {
-						reporter = (NSDictionary)PlistReader.readPlist(
-								new FileInputStream(file), null);
-						if(!reporterID.equals(reporter.valueForKey("id"))) {
-							reporter = null;
-						}
-					} catch (Exception e) {}
-				}
-				if(reporter == null) {
-					File[] files = dir.listFiles(PlistReader.Filter);
-					for (int i = 0; i < files.length; i++) {
-						try {
-							reporter = (NSDictionary)PlistReader.readPlist(
-									new FileInputStream(files[i]), null);
-							if(reporterID.equals(reporter.valueForKey("id"))) {
-								break;
-							} else {
-								reporter = null;
-							}
-						} catch (Exception e) {}
-					}
-				}
-			}
-			if(reporter == null) {
-				file = new File(dir,"DefaultReporter.plist");
-				try {
-					reporter = (NSDictionary)PlistReader.readPlist(
-							new FileInputStream(file), null);
-				} catch (Exception e) {
-					throw new IllegalStateException("Error reading DefaultReporter",e);
-				}
-			}
-			if(settings != null) {
-				reporter.takeValueForKey(settings, "settings");
-			}
-			*/
 		} // get default reporter
 //		ec.unlock();
 		idx = -1;
@@ -266,8 +209,8 @@ gr:		while (eduGroups.hasMoreElements()) {
 			dict.setObjectForKey(eduGroup,"eduGroup");
 			NSArray existingCourses = EOUtilities.objectsMatchingValues(ec,
 					EduCourse.entityName,dict);
-			if(existingCourses == null || existingCourses.count() == 0)
-				continue gr;
+//			if(existingCourses == null || existingCourses.count() == 0)
+//				continue gr;
 			NSMutableDictionary params = new NSMutableDictionary();
 			params.takeValueForKey(eduGroup, "eduGroup");
 			params.takeValueForKey(students,"students");
