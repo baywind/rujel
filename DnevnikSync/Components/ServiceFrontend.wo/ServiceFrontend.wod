@@ -1,5 +1,7 @@
 PageWrapper : PageWrapper {
   title = "SOAP testing";
+  action = download;
+  onLoad = onLoad;
 }
 
 PGrName : WOString {
@@ -217,4 +219,44 @@ AutoSync : WOConditional {
 
 SyncTime : WOString {
   value = syncTime;
+}
+
+NoTab : OnClickContainer {
+  elementName = "div";
+  class = noTabClass;
+  invokeAction = clear;
+}
+
+ExportButton : OnClickContainer {
+  elementName = "span";
+  class = "button";
+  onclick = session.ajaxPopup;
+  invokeAction = export;
+}
+
+ExportForm : WOForm {
+}
+
+ShowUntagged : WORadioButton {
+  name = "untagged";
+  selection = unticked;
+  value = 0;
+}
+
+HideUntagged : WORadioButton {
+  name = "untagged";
+  selection = unticked;
+  value = 1;
+}
+
+RenameUntagged : WORadioButton {
+  name = "untagged";
+  selection = unticked;
+  value = 2;
+}
+
+Export : WOSubmitButton {
+  action = export;
+  value = "Получить файл";
+  onclick = "return ajaxPost(form);";
 }

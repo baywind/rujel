@@ -339,7 +339,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     			archive.takeValueForKey(currReason, "objectIdentifier");
     			archive.takeValueForKey(currReason.reason(),"@reason");
     			archive.takeValueForKey(MyUtility.dateFormat().format(currReason.begin()),"@begin");
-    			archive.takeValueForKey(MyUtility.dateFormat().format(currReason.end()),"@end");
+    			if(currReason.end() != null)
+    				archive.takeValueForKey(MyUtility.dateFormat().format(currReason.end()),"@end");
     			if(currReason.verification() != null)
     				archive.takeValueForKey(currReason.verification(),"@verification");
     			if(currReason.namedFlags().flagForKey("forTeacher"))

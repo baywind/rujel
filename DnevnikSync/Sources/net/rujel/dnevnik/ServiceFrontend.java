@@ -10,6 +10,7 @@ import org.apache.axis.types.UnsignedByte;
 
 import ru.mos.dnevnik.*;
 
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.contacts.Contact;
 import net.rujel.eduplan.EduPeriod;
@@ -19,13 +20,17 @@ import net.rujel.interfaces.Student;
 import net.rujel.io.ExtBase;
 import net.rujel.io.ExtSystem;
 import net.rujel.io.SyncEvent;
+import net.rujel.io.XMLGenerator;
+import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.Progress;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WOResponse;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
@@ -56,7 +61,7 @@ public class ServiceFrontend extends WOComponent {
 	public NSArray events;
 	public NSTimestamp since;
 	public NSTimestamp to;
-	public Integer limit;
+	public Integer unticked;
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
 	protected PerPersonLink ppl;
 	public Boolean sendAll;
@@ -93,7 +98,10 @@ public class ServiceFrontend extends WOComponent {
 		}
         if(sendAll) {
         	active = "Оценки";
+        	unticked = 0;
         	select();
+        } else {
+        	unticked = 1;
         }
     }
     
@@ -105,9 +113,14 @@ public class ServiceFrontend extends WOComponent {
     		events = null;
     	} else if(active.equals("Оценки")) {
             events = SyncEvent.eventsForSystem(sync, null, 5, "marks");
-            SyncEvent last = (SyncEvent)events.objectAtIndex(0);
-            since = last.execTime();
-            to = since.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
+            if(events == null) {
+            	to =  new NSTimestamp();
+            	since = to.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
+            } else {
+            	SyncEvent last = (SyncEvent)events.objectAtIndex(0);
+            	since = last.execTime();
+            	to = since.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
+            }
     	} else if(active.equals("Периоды")) {
             events = SyncEvent.eventsForSystem(sync, null, 10, "!marks");
             if(soap != null) {
@@ -115,7 +128,9 @@ public class ServiceFrontend extends WOComponent {
             		perGroups = new NSArray(
             				soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
             	} catch (Exception e) {
-            		// TODO: handle exception
+            		Sychroniser.logger.log(WOLogLevel.WARNING,
+            				"Error retrieving ReportingPeriodGroupCollection", 
+            				new Object[] {session(), e});
             	}
             }
     	} else if (active instanceof EduGroup) {
@@ -132,15 +147,22 @@ public class ServiceFrontend extends WOComponent {
     }
     
     public void clear() {
-    	if(active instanceof EduGroup) {
+//    	if(active instanceof EduGroup) {
     		active = null;
     		errors = null;
     		events = null;
-    	}
+//    	}
     }
     
     public boolean isGroup() {
     	return (active instanceof EduGroup);
+    }
+    
+    public String noTabClass() {
+    	if(active == null)
+    		return "selection";
+    	else
+    		return "grey";
     }
     
     public String periods() {
@@ -534,5 +556,169 @@ public class ServiceFrontend extends WOComponent {
 			ec.revert();
 		}
 		return null;
+	}
+
+	public WOActionResults export() {
+		NSDictionary reporter = (NSDictionary)PlistReader.readPlist(
+				"oejdCSV.plist", "DnevnikSync", null);
+		reporter.takeValueForKeyPath(unticked, "settings.byContact");
+		if(active == null) {
+    		WOComponent resultp = pageWithName("ExportParams");
+    		if(!sendAll) {
+				Enumeration enu = activeContacts();
+				if(enu != null) {
+					NSMutableDictionary preload = new NSMutableDictionary(Boolean.TRUE,"PRELOADED");
+					preload.takeValueForKey("contactFlags", "paramKey");
+					while (enu.hasMoreElements()) {
+						Contact cnt = (Contact) enu.nextElement();
+						Student student = (Student)cnt.person();
+						preload.setObjectForKey(cnt.flags(), student);
+					}
+					preload(preload, reporter);
+				}
+    		}
+    		reporter.takeValueForKey("item", "resultPath");
+    		resultp.takeValueForKey(this, "returnPage");
+    		resultp.takeValueForKey(reporter, "reporter");
+    		return resultp;
+		}
+ 		if(ec.hasChanges()) {
+ 			try {
+ 				ec.saveChanges();
+ 			} catch (Exception e) {
+ 				session().takeValueForKey(e.getMessage(), "message");
+ 				return RedirectPopup.getRedirect(context(), this);
+ 			}
+ 		}
+	   	NSMutableDictionary reportDict = new NSMutableDictionary();
+		reportDict.takeValueForKey(reporter,"reporter");
+		reportDict.takeValueForKey(session().valueForKeyPath("state.section"), "section");
+		reportDict.takeValueForKey(ec,"ec");
+		reportDict.takeValueForKey(sync.getIndexes(null), "indexes");
+		reportDict.takeValueForKey("ImportExport", "reportDir");
+		reportDict.takeValueForKey(session().valueForKey("today"), "today");
+
+		NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
+				(Integer)session().valueForKey("eduYear")), "eduYear");
+		info.takeValueForKey(sync.getDataDict(null), "extraData");
+		reportDict.takeValueForKey(info, "info");
+		if (!sendAll) {
+			NSMutableDictionary preload = new NSMutableDictionary(Boolean.TRUE,"PRELOADED");
+			preload.takeValueForKey("contactFlags", "paramKey");
+			NSMutableArray students = null;
+			if(active instanceof EduGroup) {
+				reportDict.takeValueForKey(active, "eduGroup");
+				Enumeration enu = events.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Student student = (Student) enu.nextElement();
+					NSArray contacts = (ppl==null)?null:(NSArray)ppl.forPersonLink(student);
+					if(contacts != null && contacts.count() > 0) {
+						Contact cnt = (Contact)contacts.objectAtIndex(0);
+						preload.setObjectForKey(cnt.flags(), student);
+						if(cnt.flags().intValue() == 0)
+							continue;
+						if(students == null)
+							students = new NSMutableArray(student);
+						else
+							students.addObject(student);
+					}
+				}
+				
+			} else  {
+				Enumeration enu = activeContacts();
+				if(enu != null) {
+					students = new NSMutableArray();
+					while (enu.hasMoreElements()) {
+						Contact cnt = (Contact) enu.nextElement();
+						Student student = (Student)cnt.person();
+						preload.setObjectForKey(cnt.flags(), student);
+						if(!students.containsObject(student) && cnt.flags().intValue() > 0)
+							students.addObject(student);
+					}
+				}
+			}
+			preload(preload, reporter);
+			if(unticked.intValue() == 1)
+				reportDict.takeValueForKey(students, "students");
+			else
+				reportDict.takeValueForKey(events, "students");
+		}
+		
+		Progress progress = (Progress)pageWithName("Progress");
+		progress.returnPage = this;
+		progress.resultPath = "item";
+		progress.title = (String)reporter.valueForKey("title");
+		progress.state = XMLGenerator.backgroundGenerate(reportDict);
+		return progress.refresh();
+	}
+	
+	public String onLoad() {
+		if(item instanceof byte[]) {
+			session().setObjectForKey(item, "download");
+			return "window.location=globalActionUrl;";
+		}
+		return null;
+	}
+	
+	public WOActionResults download() {
+		item = session().objectForKey("download");
+		if(!(item instanceof byte[]))
+			return null;
+		WOResponse response = application().createResponseInContext(context());
+		response.setContent((byte[])item);
+		response.setHeader("application/octet-stream","Content-Type");
+		if(active instanceof EduGroup) {
+			StringBuilder buf = new StringBuilder("attachment; filename=\"persdata");
+			EduGroup gr = (EduGroup)active;
+			buf.append(gr.grade()).append('-').append(gr.title()).append(".csv\"");
+		} else {
+			response.setHeader("attachment; filename=\"persdata.csv\"","Content-Disposition");
+		}
+		item = null;
+		session().removeObjectForKey("download");
+		return response;
+	}
+	
+	protected Enumeration activeContacts() {
+		EOEnterpriseObject contype = Contact.getType(ec, 
+				OEJDUtiliser.class.getCanonicalName(), false);
+		if(contype == null)
+			return null;
+		NSArray contacts = EOUtilities.objectsWithQualifierFormat(ec, Contact.ENTITY_NAME, 
+				"type = %@ AND flags >= 1", new NSArray(contype));
+		if(contacts == null || contacts.count() == 0)
+			return null;
+		return contacts.objectEnumerator();
+		/*
+		Enumeration enu = contacts.objectEnumerator();
+		NSMutableArray students = new NSMutableArray();
+		while (enu.hasMoreElements()) {
+			Contact cnt = (Contact) enu.nextElement();
+			Student student = (Student)cnt.person();
+			if(!students.containsObject(student))
+				students.addObject(student);
+		}
+		return students;*/
+	}
+	
+	protected void preload(NSMutableDictionary preload, NSDictionary reporter) {
+		NSMutableDictionary sdict = (NSMutableDictionary)reporter.valueForKey("sync");
+		if(sdict == null) {
+			sdict = new NSMutableDictionary();
+			reporter.takeValueForKey(sdict, "sync");
+		}
+		Object forTag = sdict.valueForKey("person");
+		if(forTag == null) {
+			forTag = preload;
+		} else {
+			if (forTag instanceof NSArray) {
+				if(!(forTag instanceof NSMutableArray))
+					forTag = ((NSMutableArray)forTag).mutableClone();
+			} else {
+				forTag = new NSMutableArray(forTag);
+			}
+			((NSMutableArray)forTag).addObject(preload);
+		}
+		sdict.takeValueForKey(forTag, "person");
 	}
 }

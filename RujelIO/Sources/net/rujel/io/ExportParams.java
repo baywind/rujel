@@ -165,11 +165,13 @@ public class ExportParams extends WOComponent {
 			}
 		}
 		reportDict.takeValueForKey(info, "info");
-		
-		returnPage.takeValueForKey(plist, "reporter");
+		if(returnPage instanceof ImportExport)
+			returnPage.takeValueForKey(plist, "reporter");
 		Progress progress = (Progress)pageWithName("Progress");
 		progress.returnPage = returnPage;
-		progress.resultPath = "result";
+		progress.resultPath = (String)plist.valueForKey("resultPath");
+		if (progress.resultPath == null)
+			progress.resultPath = "result";
 		progress.title = (String)plist.valueForKey("title");
 		progress.state = XMLGenerator.backgroundGenerate(reportDict);
 		return progress.refresh();

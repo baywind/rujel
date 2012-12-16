@@ -277,11 +277,12 @@ public class XMLGenerator extends AbstractObjectReader {
         if(tmp != null)
         	handler.prepareAttribute("version", tmp);
         Integer eduYear = (Integer)in.ses.valueForKey("eduYear");
+        EOEditingContext ec;
         {
         	EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
         	if(os == null)
         		os = EOObjectStoreCoordinator.defaultCoordinator();
-			EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
+			ec = (EOEditingContext)in.options.valueForKey("ec");
 			if(ec == null) {
 				ec = new SessionedEditingContext(os, in.ses);
 				in.options.takeValueForKey(ec,"ec");
@@ -324,8 +325,10 @@ public class XMLGenerator extends AbstractObjectReader {
 			}
 		}
 		NSArray courses = (NSArray)in.options.valueForKey("courses");
-		if(courses != null)
+		if(courses != null) {
+			courses = EOUtilities.localInstancesOfObjects(ec, courses);
 			groups = null;
+		}
 		handler.startElement("courses");
 		if(courses == null) {
 			Enumeration enu = groups.objectEnumerator();
@@ -339,7 +342,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			NSMutableArray grades = new NSMutableArray();
 			while (enu.hasMoreElements()) {
 				EduGroup gr = (EduGroup) enu.nextElement();
-				courses = EOUtilities.objectsMatchingKeyAndValue(gr.editingContext(),
+				courses = EOUtilities.objectsMatchingKeyAndValue(ec,
 						EduCourse.entityName, "eduGroup", gr);
 				processCourses(courses, generators, in, state);
 				if(!grades.containsObject(gr.grade())) {
@@ -365,16 +368,22 @@ public class XMLGenerator extends AbstractObjectReader {
 	
 	private NSArray prepareGroups(RujelInputSource in) throws SAXException {
 		NSArray groups = (NSArray)in.options.valueForKey("eduGroups");
+		EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
 		if(groups == null) {
 			EduGroup gr = (EduGroup)in.options.valueForKey("eduGroup");
-			if(gr != null)
+			if(gr != null) {
+				gr = (EduGroup)EOUtilities.localInstanceOfObject(ec, gr);
 				groups = new NSArray(gr);
+			}
+		} else {
+			groups = EOUtilities.localInstancesOfObjects(ec, groups);
 		}
 		NSMutableSet persons = (NSMutableSet)in.options.valueForKey("persons");
 		NSArray students = (NSArray)in.options.valueForKey("students");
 		if(students == null) {
 			Student stu = (Student)in.options.valueForKey("student");
 			if(stu != null) {
+				stu = (Student)EOUtilities.localInstanceOfObject(ec, stu);
 				students = new NSArray(stu);
 				if(groups == null) {
 					EduGroup gr = stu.recentMainEduGroup();
@@ -382,7 +391,9 @@ public class XMLGenerator extends AbstractObjectReader {
 						groups = new NSArray(gr);
 				}
 			}
-		} else if(groups == null) {
+		} else {
+			students = EOUtilities.localInstancesOfObjects(ec, students);
+			if(groups == null) {
 			Enumeration enu = students.objectEnumerator();
 			NSMutableArray tmp = new NSMutableArray();
 			while (enu.hasMoreElements()) {
@@ -396,11 +407,11 @@ public class XMLGenerator extends AbstractObjectReader {
 			if(tmp.count() > 0)
 				groups = tmp;
 		}
+		}
 		if(students != null && persons != null)
 			persons.addObjectsFromArray(students);
 		if(groups == null) {
 			NSTimestamp date = (NSTimestamp)in.ses.valueForKey("today");
-			EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
 			Object section = in.ses.valueForKeyPath("state.section");
 			if(section != null)
 				in.ses.takeValueForKeyPath(in.options.valueForKey("section"),"state.section");

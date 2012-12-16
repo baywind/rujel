@@ -7,14 +7,24 @@
 	<webobject name = "CurrSection"/></div>
 <div id = "SectionTabs" style = "display:none;">
 <webobject name = "SectionTabs"/></div></div></webobject>
-<table align = "center" cellpadding = "0" style = "border-collapse:collapse;">
+<table align = "center" cellpadding = "0" style = "border-collapse:collapse;" width = "100%">
 <tr><th colspan = "2" style = "font-size:160%;padding:1ex;">Взаимодействие с ОЭЖД</th></tr>
 <tr><webobject name = "CanSelect">
 <td width = "20%" valign = "top" class = "selectionBorder" 
 	style = "border-style:solid solid none none;"><webobject name = "CanSeeContacts">
+<webobject name = "NoTab">Все</webobject>
 <webobject name="ClassListing1"></webobject></webobject>
 <div style = "font-weight:bold; margin-top:1em;">Синхронизировать:</div>
 <webobject name = "Tabs"/>
+<webobject name = "CanSelect"><webobject name = "ExportForm">
+<table style = "text-align:left;border:1px solid #cccccc; margin:1em;" align = "center">
+<caption valign = "top" style = "white-space:nowrap;">Персональные данные</caption>
+<tr><th>Неотмеченных:</th></tr>
+<tr><td><webobject name = "ShowUntagged"/> Выгружать <br/>
+<webobject name = "HideUntagged"/> Скрывать<br/>
+<webobject name = "RenameUntagged"/> Обезличивать</td></tr>
+<tr><td align = "center"><webobject name = "Export"/></td></tr>
+</table></webobject></webobject>
 </td></webobject>
 <td valign = "top" class = "backfield1"><webobject name = "NoSelection">
 <div style = "font-size:150%;margin:3em;">Выберите класс, чтобы указать, оценки каких учащихся отправлять
@@ -22,6 +32,8 @@
  Либо выберите режим ручной синхронизации.</div>
 </webobject>
 <webobject name = "ServiceWorks"><div style = "padding:3px;">
+
+<hr/>
 <webobject name = "IsPeriods">
 <table border = "1" cellspacing = "5" cellpadding = "2"><tr valign = "top">
 <webobject name = "PeriodGroups"><td>
