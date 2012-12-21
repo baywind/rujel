@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogMark;
+import net.rujel.eduresults.ModuleInit;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter.AddOn;
@@ -389,6 +390,7 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     		}
 			ec.saveChanges();
 			logger.log(WOLogLevel.EDITING,"Forced prognosis execution",itog);
+//			ModuleInit.prepareStats(course, prognosis.itogContainer(), true);
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error forcing prognosis execution",
 					new Object[] {session(),prognosis,e});

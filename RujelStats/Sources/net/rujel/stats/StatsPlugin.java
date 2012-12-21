@@ -6,6 +6,7 @@ import java.util.Enumeration;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -29,6 +30,11 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 //	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     public void setCourse(EduCourse aCourse) {
     	course = aCourse;
+    	item = null;
+    	refresh();
+    }
+    
+    public void refresh() {
 		NSKeyValueCodingAdditions readAccess = (NSKeyValueCodingAdditions)
 			session().valueForKey("readAccess");
 		session().setObjectForKey(course, "statCourseReport");
@@ -67,11 +73,12 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 			Grouping grouping = Description.getGrouping(entName, 
 					statField, param1, param2,create);
 			Object desc = null;
-			if((grouping == null || ec.globalIDForObject(grouping).isTemporary())) {
+			if(grouping == valueForKeyPath("item.grouping")
+					|| ec.globalIDForObject(grouping).isTemporary()) {
 				Method ifEmpty = (Method)cfg.valueForKey("ifEmpty");
-				if(ifEmpty != null);
-				dict = StatsModule._execIfEmpty(ifEmpty, grouping, create, 
-						param1, param2, ec, entName, statField);
+				if(ifEmpty != null)
+					dict = StatsModule._execIfEmpty(ifEmpty, grouping, create, 
+							param1, param2, ec, entName, statField);
 				desc = Description.getDescription(entName, statField, 
 						entForParam(param1), entForParam(param2), ec, create);
 				if(desc == null) {
@@ -79,19 +86,24 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				} else if (((Description)desc).description() == null) {
 					NSKeyValueCoding.Utility.takeValueForKey(desc, cfg.valueForKey(
 							Description.DESCRIPTION_KEY), Description.DESCRIPTION_KEY);
+				}
+				if(ec.hasChanges()) {
 					try {
 						ec.saveChanges();
 					} catch (Exception e) {
+						StatsModule.logger.log(WOLogLevel.WARNING,
+								"Error autocreating stats.Description",
+								new Object[] {session(),cfg,e});
 						ec.revert();
 					}
-				}
+				}					
 			} else {
 				dict = grouping.dict();
 				desc = grouping.description();
 			}
 			if(!desc.equals(currDesc)) {
 				if(rows.count() > 0)
-					rows.addObject(NSDictionary.EmptyDictionary);
+					rows.addObject(new NSDictionary(Boolean.TRUE,"noRecalc"));
 				currDesc = desc;
 				NSArray keys = (NSArray)cfg.valueForKey("keys");
 				if(keys == null && (desc instanceof Description))
@@ -145,6 +157,8 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				if(currKeys.count() > cols)
 					cols = currKeys.count() +2;
 				rowDict.takeValueForKey(currKeys.objects(),"values");
+				rowDict.takeValueForKey(Boolean.TRUE, "isTitle");
+				rowDict.takeValueForKey(readAccess.valueForKeyPath("_edit.Stats"),"noRecalc");
 				rows.addObject(rowDict);
 			} // titleRow
 			NSMutableDictionary rowDict = new NSMutableDictionary();
@@ -155,7 +169,6 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 			buf.append(cfg.valueForKey("title"));
 			buf.append("</td>");
 			rowDict.takeValueForKey(buf.toString(), "title");
-			Object[] row = new Object[currKeys.count()];
 			buf.delete(0, buf.length());
 			buf.append("<td>");
 			if(grouping != null) {
@@ -164,6 +177,7 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 			buf.append("</td>");
 			rowDict.takeValueForKey(buf.toString(), "total");
 			buf.delete(0, buf.length());
+			Object[] row = new Object[currKeys.count()];
 			Enumeration kEnu = dict.keyEnumerator();
 			while (kEnu.hasMoreElements()) {
 				Object key = kEnu.nextElement();
@@ -220,9 +234,49 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 			}
 			rowDict.takeValueForKey(row, "values");
 //			rowDict.takeValueForKey(new Integer(row.length), "valuesCount");
+			if(parent() == null && Various.boolForObject(
+					readAccess.valueForKeyPath("edit.Stats"))) {
+//				rowDict.takeValueForKey(cfg.valueForKey("ifEmpty"), "ifEmpty");
+				rowDict.takeValueForKey(grouping, "grouping");
+//				rowDict.takeValueForKey(param1, "param1");
+//				rowDict.takeValueForKey(param2, "param2");
+//				rowDict.takeValueForKey(entName, "entName");
+//				rowDict.takeValueForKey(statField, "statField");
+			} else {
+				rowDict.takeValueForKey(Boolean.TRUE,"noRecalc");
+			}
 			rows.addObject(rowDict);
 		} // process reports
 	}
+        
+    public WOActionResults recalculate() {
+    	refresh();
+/*    	if(!(item instanceof NSDictionary))
+    		return null;
+    	
+    	Method ifEmpty = (Method)((NSDictionary)item).valueForKey("ifEmpty");
+    	Grouping grouping = (Grouping)((NSDictionary)item).valueForKey("grouping");
+    	EOEditingContext ec = grouping.editingContext();
+    	EOEnterpriseObject param1 = (EOEnterpriseObject)((NSDictionary)item).valueForKey("param1");
+    	EOEnterpriseObject param2 = (EOEnterpriseObject)((NSDictionary)item).valueForKey("param2");
+    	String entName = (String)((NSDictionary)item).valueForKey("entName");
+    	String statField = (String)((NSDictionary)item).valueForKey("statField");
+    	NSDictionary dict = StatsModule._execIfEmpty(ifEmpty, grouping, false, 
+				param1, param2, ec, entName, statField);
+    	if(dict != null) {
+    		grouping.setDict(dict);
+    		try {
+				ec.saveChanges();
+				StatsModule.logger.log(WOLogLevel.FINE,"Stats recalculated",
+						new Object[] {session(),grouping});
+			} catch (Exception e) {
+				ec.revert();
+				StatsModule.logger.log(WOLogLevel.WARNING,"Errror recalculating Stats",
+						new Object[] {session(),grouping,e});
+			}
+    	}
+*/    	return this;
+    }
     
 	private static String entForParam(Object param) {
 		if(param == null)

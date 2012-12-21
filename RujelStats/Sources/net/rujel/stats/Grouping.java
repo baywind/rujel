@@ -106,6 +106,7 @@ public class Grouping extends _Grouping {
 			if(count == null)
 				return;
 			entry = EOUtilities.createAndInsertInstance(editingContext(), "StatEntry");
+			entry.takeValueForKey(key, "statKey");
 			addObjectToBothSidesOfRelationshipWithKey(entry, STAT_ENTRIES_KEY);
 		} else {
 			for (int i = list.count() -1; i >= 0; i--) {
@@ -197,11 +198,11 @@ public class Grouping extends _Grouping {
 		_keys = null;
 		NSMutableDictionary dict = (newDict == null)? new NSMutableDictionary():
 														newDict.mutableClone();
-		Integer total = (Integer)dict.removeObjectForKey(TOTAL_KEY);
 		if(dict.objectForKey("keys") instanceof NSArray) {
 			_keys = (NSArray)dict.removeObjectForKey("keys");
 		}
 		_dict = dict.immutableClone();
+		Integer total = (Integer)dict.removeObjectForKey(TOTAL_KEY);
 		int checksum = 0;
 		NSArray statEntries = statEntries();
 		EOEditingContext ec = editingContext();
