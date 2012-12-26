@@ -473,11 +473,22 @@ public class LessonNoteEditor extends WOComponent {
 			EOGlobalID gid = ec.globalIDForObject((EduLesson)currPerPersonLink);
 			newLesson = (gid == null || gid.isTemporary());
 		}
+		NSMutableArray objectsSaved = null;
 		if(ec.hasChanges()) {
 			NSMutableSet changes = new NSMutableSet();
 			NSArray objects = ec.insertedObjects();
 			if(objects != null && objects.count() > 0) {
 				changes.addObjectsFromArray((NSArray)objects.valueForKey("entityName"));
+				Enumeration enu = objects.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+					if(obj instanceof EduLesson && obj != currPerPersonLink) {
+						if(objectsSaved == null)
+							objectsSaved = new NSMutableArray(obj);
+						else
+							objectsSaved.addObject(obj);
+					}
+				}
 			} else {
 				newLesson = false;
 			}
@@ -580,6 +591,26 @@ public class LessonNoteEditor extends WOComponent {
 						dict.takeValueForKey(entityName, "entityName");
 						session().setObjectForKey(dict, "objectSaved");
 						session().valueForKeyPath("modules.objectSaved");
+						session().removeObjectForKey("objectSaved");
+					}
+					if(objectsSaved != null) {
+						boolean dfltArch = SettingsReader.boolForKeyPath("markarchive.archiveAll",
+								SettingsReader.boolForKeyPath("markarchive.forceArchives",false));
+
+						Enumeration enu = objectsSaved.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							EduLesson obj = (EduLesson) enu.nextElement();
+							if(SettingsReader.boolForKeyPath(
+									"markarchive." + obj.entityName(),dfltArch)) {
+								EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+										ec,"MarkArchive");
+								archive.takeValueForKey(obj, "object");
+								archive.takeValueForKey(new Integer(1), "actionType");
+								ec.saveChanges();
+							}
+							session().setObjectForKey(obj, "objectSaved");
+							session().valueForKeyPath("modules.objectSaved");
+						}
 						session().removeObjectForKey("objectSaved");
 					}
 					if(weekFootprint != null)

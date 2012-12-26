@@ -279,30 +279,41 @@ public class AutoItogModule {
 
 	public static Object objectSaved(WOContext ctx) {
 		WOSession ses = ctx.session();
-		NSDictionary dict = (NSDictionary)ses.objectForKey("objectSaved");
-		EduCourse course = (EduCourse)dict.valueForKey("course");
-		if(course == null)
-			course = (EduCourse)dict.valueForKey("eduCourse");
-		if(course == null)
-			course = (EduCourse)dict.valueForKeyPath("lesson.course");
+		Object obj = ses.objectForKey("objectSaved");
+		EduCourse course;
+		NSTimestamp date;
+		Student student = null;
+		if(obj instanceof EduLesson) {
+			course = ((EduLesson)obj).course();
+			date = ((EduLesson)obj).date();
+		} else if(obj instanceof NSDictionary) {
+			NSDictionary dict = (NSDictionary)obj;
+			course = (EduCourse)dict.valueForKey("course");
+			if(course == null)
+				course = (EduCourse)dict.valueForKey("eduCourse");
+			if(course == null)
+				course = (EduCourse)dict.valueForKeyPath("lesson.course");
+			date = (NSTimestamp)dict.valueForKey("date");
+			if(date == null)
+				date = (NSTimestamp)dict.valueForKeyPath("lesson.date");
+			if(date == null)
+				date = (NSTimestamp)ses.objectForKey("recentDate");
+			student = (Student)dict.valueForKey("student");
+		} else {
+			return null;
+		}
 		if(course == null)
 			return null;
-		NSTimestamp date = (NSTimestamp)dict.valueForKey("date");
-		if(date == null)
-			date = (NSTimestamp)dict.valueForKeyPath("lesson.date");
-		if(date == null)
-			date = (NSTimestamp)ses.objectForKey("recentDate");
 		if(date == null)
 			return null;
 		EOEditingContext ec = course.editingContext();
-		Student student = (Student)dict.valueForKey("student");
 		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey("AutoItog.PrognosesAddOn");
 		if(student == null && addOn != null) {
 			addOn.setCourse(course, date);
 		}
 		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", 
 				SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
-		NSArray autoItogs = AutoItog.relatedToObject(dict, course);
+		NSArray autoItogs = AutoItog.relatedToObject(obj, course);
 		boolean newObj = (autoItogs == null || autoItogs.count() == 0);
 		if(newObj) {
 //			NSArray marks = (NSArray)dict.valueForKeyPath("lesson.marks");
@@ -316,7 +327,7 @@ public class AutoItogModule {
 			AutoItog ai = (AutoItog) enu.nextElement();
 			if(ai.calculator() == null || ai.namedFlags().flagForKey("inactive"))
 				continue;
-			Integer relKey = ai.calculator().relKeyForObject(dict);
+			Integer relKey = ai.calculator().relKeyForObject(obj);
 			if(relKey == null)
 				continue;
 			if(newObj) {

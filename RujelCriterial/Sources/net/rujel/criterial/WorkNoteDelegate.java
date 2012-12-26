@@ -208,6 +208,19 @@ public class WorkNoteDelegate implements NoteDelegate {
 					arcLevel = 3;
 				}
 			}
+			if(arcLevel > 1) {
+				NSMutableDictionary dict = new NSMutableDictionary(student,"student");
+				dict.takeValueForKey(lsn.course(), "course");
+				dict.takeValueForKey(work, "lesson");
+				EOEditingContext ec = lsn.editingContext();
+				NSMutableArray toSave = (NSMutableArray)ec.userInfoForKey("toSave");
+				if(toSave == null) {
+					toSave = new NSMutableArray(dict);
+					ec.setUserInfoForKey(toSave, "toSave");
+				} else {
+					toSave.addObject(dict);
+				}
+			}
 			if(work != null || moveNotes) {
 				arcLevel = setWorkNote(note, student, arcLevel);
 				useNote = true;

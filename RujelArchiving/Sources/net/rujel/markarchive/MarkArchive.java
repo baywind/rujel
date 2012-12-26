@@ -94,6 +94,22 @@ public class MarkArchive extends _MarkArchive
 		}
 		EOEnterpriseObject usedEntity = getUsedEntity(eo.entityName(), eo.editingContext());
 		setUsedEntity(usedEntity);
+		for (int i = 0; i < keys.length; i++) {
+				String key = (String)usedEntity.valueForKey(keys[i]);
+				if(key == null)
+					continue;
+				Object value = pKey.valueForKey(key);
+				if(value != null)
+					continue;
+				try {
+					value = eo.valueForKey(key);
+					if(value == null)
+						continue;
+					if(!(pKey instanceof NSMutableDictionary))
+						pKey = pKey.mutableClone();
+					pKey.takeValueForKey(value, key);
+				} catch (Exception e) {}
+		}
 		setIdentifierFromDictionary(usedEntity, pKey);
 	}
 
@@ -383,12 +399,17 @@ public class MarkArchive extends _MarkArchive
 		if(key != null) {
 			takeArchiveValueForKey(eo.valueForKey(key).toString(),key);
 		} else {
+			try {
+				NSMutableDictionary archDict = (NSMutableDictionary)eo.valueForKey("archiveDict");
+				setArchiveDict(archDict);
+			} catch (Exception e) {
 			Enumeration enu = eo.attributeKeys().objectEnumerator();
 			while (enu.hasMoreElements()) {
 				key = (String) enu.nextElement();
 				Object value = eo.valueForKey(key);
 				if(value == null) continue;
 				takeArchiveValueForKey(value, key);
+			}
 			}
 			//setArchiveDict(eo.valuesForKeys(keys));
 		}

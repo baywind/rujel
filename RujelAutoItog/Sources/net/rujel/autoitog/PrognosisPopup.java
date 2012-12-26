@@ -35,7 +35,6 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogMark;
-import net.rujel.eduresults.ModuleInit;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter.AddOn;

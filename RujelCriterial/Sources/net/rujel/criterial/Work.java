@@ -333,6 +333,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		BigDecimal decimalWeightSum = BigDecimal.ZERO;//new BigDecimal(weightSum.intValue());
 		BigDecimal sum = BigDecimal.ZERO;
 		BigDecimal result = null;
+		int count = 0;
 		for (int i = 0; i < marks.length; i++) {
 			EOEnterpriseObject mask = (EOEnterpriseObject)criterMask.objectAtIndex(i);
 			Number num = (Number)mask.valueForKey("max");
@@ -364,10 +365,11 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 				BigDecimal value = new BigDecimal(val.intValue());
 				value = (value.multiply(weight)).divide(max,6,BigDecimal.ROUND_CEILING);
 				sum = sum.add(value);
+				count++;
 			}
 			decimalWeightSum = decimalWeightSum.add(weight);
 		}
-		if(decimalWeightSum.intValue() == 0)
+		if(count == 0 || decimalWeightSum.intValue() == 0)
 			return null;
 		result = sum.divide(decimalWeightSum,4,BigDecimal.ROUND_HALF_UP);
 		return result;
@@ -509,8 +511,14 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 			return;
 		} //mark for wrong criterion
 		Mark[] marks = (Mark[])_marksIndex.objectForKey(object.student());
-		if (marks != null)
-		marks[idx] = null;
+		if (marks != null) {
+			marks[idx] = null;
+			for (int i = 0; i < marks.length; i++) {
+				if(marks[i] != null)
+					return;
+			}
+			_marksIndex.removeObjectForKey(object.student());
+		}
     }
 	
     public void setCriterMask(NSArray aValue) {

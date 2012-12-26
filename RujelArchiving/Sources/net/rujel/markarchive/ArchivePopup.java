@@ -194,11 +194,21 @@ public class ArchivePopup extends com.webobjects.appserver.WOComponent {
 					archive.setReason(reason);
 				ec.saveChanges();
 	        	session().removeObjectForKey("MarkArchive.reason");
-				session().setObjectForKey(initData, "objectSaved");
-				session().valueForKeyPath("modules.objectSaved");
-				session().removeObjectForKey("objectSaved");
 				logger.log(WOLogLevel.EDITING,"Changes are saved and archived",
 						new Object[] {session(),archive,initData});
+				session().setObjectForKey(initData, "objectSaved");
+				session().valueForKeyPath("modules.objectSaved");
+				NSMutableArray toSave = (NSMutableArray)ec.userInfoForKey("toSave");
+				if(toSave != null) {
+					Enumeration enu = toSave.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						Object tsObj = enu.nextElement();
+						session().setObjectForKey(tsObj, "objectSaved");
+						session().valueForKeyPath("modules.objectSaved");
+					}
+					ec.setUserInfoForKey(null, "objectSaved");
+				}
+				session().removeObjectForKey("objectSaved");
 			} catch (Exception e) {
 				session().takeValueForKey(e.getMessage(), "message");
 				if(reason != null)
