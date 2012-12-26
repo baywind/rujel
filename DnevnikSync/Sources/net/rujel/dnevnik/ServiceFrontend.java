@@ -1,26 +1,23 @@
 package net.rujel.dnevnik;
 
 import java.net.URL;
-import java.rmi.RemoteException;
-import java.util.Calendar;
+//import java.rmi.RemoteException;
+//import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import org.apache.axis.types.UnsignedByte;
+//import org.apache.axis.types.UnsignedByte;
 
 import ru.mos.dnevnik.*;
 
 import net.rujel.base.MyUtility;
-import net.rujel.base.SettingsBase;
+//import net.rujel.base.SettingsBase;
 import net.rujel.contacts.Contact;
-import net.rujel.eduplan.EduPeriod;
+//import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.interfaces.Student;
-import net.rujel.io.ExtBase;
-import net.rujel.io.ExtSystem;
-import net.rujel.io.SyncEvent;
-import net.rujel.io.XMLGenerator;
+import net.rujel.io.*;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
@@ -32,16 +29,8 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOSortOrdering;
-import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSForwardException;
-import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSTimestamp;
+import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
 
 public class ServiceFrontend extends WOComponent {
 	
@@ -52,8 +41,8 @@ public class ServiceFrontend extends WOComponent {
 	public String schoolGuid;
 	public Integer year;
 
-	public NSArray perGroups;
-	public ReportingPeriodGroup pgr;
+//	public NSArray perGroups;
+//	public ReportingPeriodGroup pgr;
 	public Object item;
 	public Object item2;
 	public NSArray errors;
@@ -89,8 +78,8 @@ public class ServiceFrontend extends WOComponent {
         	URL serviceURL = new URL(tmp);
         	ImportServiceLocator locator = new  ImportServiceLocator();
         	soap = locator.getImportServiceSoap12(serviceURL);
-        	perGroups = new NSArray(
-        			soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
+//        	perGroups = new NSArray(
+//        			soap.getReportingPeriodGroupCollection(schoolGuid, year.intValue()));
         } catch (Exception e) {
         	soap = null;
         	item = e;
@@ -113,7 +102,7 @@ public class ServiceFrontend extends WOComponent {
     		events = null;
     	} else if(active.equals("Оценки")) {
             events = SyncEvent.eventsForSystem(sync, null, 5, "marks");
-            if(events == null) {
+            if(events == null || events.count() == 0) {
             	to =  new NSTimestamp();
             	since = to.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
             } else {
@@ -121,7 +110,7 @@ public class ServiceFrontend extends WOComponent {
             	since = last.execTime();
             	to = since.timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
             }
-    	} else if(active.equals("Периоды")) {
+/*    	} else if(active.equals("Периоды")) {
             events = SyncEvent.eventsForSystem(sync, null, 10, "!marks");
             if(soap != null) {
             	try {
@@ -132,8 +121,9 @@ public class ServiceFrontend extends WOComponent {
             				"Error retrieving ReportingPeriodGroupCollection", 
             				new Object[] {session(), e});
             	}
-            }
+            } */
     	} else if (active instanceof EduGroup) {
+    		errors = null;
 			events = ((EduGroup)active).list();
 			EOEnterpriseObject contype = Contact.getType(ec, 
 					OEJDUtiliser.class.getCanonicalName(), true);
@@ -164,7 +154,7 @@ public class ServiceFrontend extends WOComponent {
     	else
     		return "grey";
     }
-    
+    /*
     public String periods() {
     	if(pgr == null)
     		return null;
@@ -374,7 +364,7 @@ public class ServiceFrontend extends WOComponent {
     	}
     	events = events.arrayByAddingObject(SyncEvent.addEvent(sync, "groups"));
     	return null;
-     }
+	}
     
 	public WOActionResults syncTimetable() {
 		NSArray list = new NSArray(new EOSortOrdering[] {
@@ -449,7 +439,7 @@ public class ServiceFrontend extends WOComponent {
 		ec.saveChanges();
 //        events = SyncEvent.eventsForSystem(sync, null, 20, "marks");
 		return null;
-	}
+	} */
 
 	public WOActionResults dateFromEvent() {
 		if(!(item instanceof SyncEvent))
@@ -515,6 +505,11 @@ public class ServiceFrontend extends WOComponent {
 			if(studentActive != was) {
 				cnt.setFlags(new Integer((studentActive)?1:0));
 			}
+			if(!studentActive) {
+				NSArray contacts = (ppl==null)?null:(NSArray)ppl.forPersonLink((Student)item);
+				if(contacts != null && contacts.count() > 1)
+					ec.deleteObject(cnt);
+			}
 		} else if (item2 instanceof NSDictionary) {
 			NSMutableDictionary dict = (NSMutableDictionary)item2;
 			dict.takeValueForKey(item, "person");
@@ -543,6 +538,7 @@ public class ServiceFrontend extends WOComponent {
 				cnt.setType(contype);
 				cnt.takeValuesFromDictionary(dict);
 			}
+			errors = null;
 		}
 		if(!ec.hasChanges())
 			return null;
@@ -671,6 +667,7 @@ public class ServiceFrontend extends WOComponent {
 			StringBuilder buf = new StringBuilder("attachment; filename=\"persdata");
 			EduGroup gr = (EduGroup)active;
 			buf.append(gr.grade()).append('-').append(gr.title()).append(".csv\"");
+			response.setHeader(buf.toString(),"Content-Disposition");
 		} else {
 			response.setHeader("attachment; filename=\"persdata.csv\"","Content-Disposition");
 		}

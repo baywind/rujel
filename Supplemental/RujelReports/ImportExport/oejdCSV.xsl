@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="text" indent="no" omit-xml-declaration="yes"
-		media-type="text/csv" encoding="windows-1251"/>
+		media-type="text/csv" encoding="UTF-8"/>
 <xsl:strip-space elements="*"/>
 
 <xsl:variable name="persdata" select="document('persdata.xml')/persdata"/>
@@ -28,7 +28,7 @@
 <xsl:text>Фамилия [nvarchar(50)];Отчество (опционально) [nvarchar(50)];Дата рождения [date];</xsl:text>
 <xsl:text>Пол [nvarchar(10)];E-mail (опционально)  [nvarchar(200)];GUID [guid] персоны;</xsl:text>
 <xsl:text>GUID [guid] школы;GUID [guid] класса;Роль [nvarchar(20)];GUID родителя [guid];GUID [guid] персоны;</xsl:text>
-<xsl:text>&#xd;&#xa;</xsl:text>
+<xsl:text>&#xa;</xsl:text><!-- it was &#xd;&#xa; -->
 	<xsl:apply-templates select="ejdata/eduGroups"/>
 	<xsl:for-each select="$persdata/person[@type = 'teacher']">
 		<xsl:if test="not (@id = $tutors)">
@@ -36,7 +36,7 @@
 			<xsl:call-template name="person">
 				<xsl:with-param name="pers" select="current()"/>
 			</xsl:call-template>
-			<xsl:text>;Учитель;;&#xd;&#xa;</xsl:text>
+			<xsl:text>;Учитель;;&#xa;</xsl:text>
 		</xsl:if>
 	</xsl:for-each>
 </xsl:template>
@@ -101,7 +101,7 @@
 	<xsl:call-template name="guid">
 		<xsl:with-param name="syncdata" select="../syncdata"/>
 	</xsl:call-template>
-	<xsl:text>Ученик;;&#xd;&#xa;</xsl:text></xsl:if>
+	<xsl:text>Ученик;;&#xa;</xsl:text></xsl:if>
 </xsl:template>
 
 <xsl:template match="teacher">
@@ -113,7 +113,7 @@
 	<xsl:call-template name="guid">
 		<xsl:with-param name="syncdata" select="../syncdata"/>
 	</xsl:call-template>
-	<xsl:text>Учитель;;&#xd;&#xa;</xsl:text>
+	<xsl:text>Учитель;;&#xa;</xsl:text>
 </xsl:template>
 
 <xsl:template name="guid">

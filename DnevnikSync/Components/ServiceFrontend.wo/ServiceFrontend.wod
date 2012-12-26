@@ -227,13 +227,6 @@ NoTab : OnClickContainer {
   invokeAction = clear;
 }
 
-ExportButton : OnClickContainer {
-  elementName = "span";
-  class = "button";
-  onclick = session.ajaxPopup;
-  invokeAction = export;
-}
-
 ExportForm : WOForm {
 }
 
