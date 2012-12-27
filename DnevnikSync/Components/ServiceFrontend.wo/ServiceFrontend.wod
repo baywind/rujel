@@ -253,3 +253,7 @@ Export : WOSubmitButton {
   value = "Получить файл";
   onclick = "return ajaxPost(form);";
 }
+
+GetLog : WOHyperlink {
+  action = logFile;
+}

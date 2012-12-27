@@ -54,6 +54,7 @@ import net.rujel.ui.Progress;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOMessage;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
@@ -371,7 +372,7 @@ public class Sychroniser implements Runnable {
 					}
 				}
 				errors.addObject(dict);
-				if(e instanceof RemoteException) {
+				if(e instanceof RemoteException || e instanceof EOObjectNotAvailableException) {
 					if(logWriter != null) {
 						try {
 							logWriter.write(id);
@@ -422,25 +423,38 @@ public class Sychroniser implements Runnable {
 			String full = subj.fullName();
 			for (int i = 0; i < subjs.length; i++) {
 				String name = subjs[i].getName();
-				if(name.equalsIgnoreCase(subject) || name.equalsIgnoreCase(full)) {
+				String nameFull = subjs[i].getNameFull();
+				if(name.equalsIgnoreCase(subject) || name.equalsIgnoreCase(full) || 
+						(nameFull != null && 
+						 nameFull.equalsIgnoreCase(subject) || nameFull.equalsIgnoreCase(full))) {
 					preset = subjs[i].getID();
 					best = 1;
 					break;
 				}
-				int correlation = Various.correlation(name, subject);
-				float relative = ((float)correlation)/
-						(Math.max(name.length(), subject.length()) -1);
+				float relative = relativeCorrelation(name, subject);
 				if(relative > best) {
 					preset = subjs[i].getID();
 					best = relative;
 				}
 				if(full != null) {
-					correlation = Various.correlation(name, full);
-					relative = ((float)correlation)/
-							(Math.max(name.length(), full.length()) -1);
+					relative = relativeCorrelation(name, full);
 					if(relative > best) {
 						preset = subjs[i].getID();
 						best = relative;
+					}
+				}
+				if(nameFull != null) {
+					relative = relativeCorrelation(nameFull, subject);
+					if(relative > best) {
+						preset = subjs[i].getID();
+						best = relative;
+					}
+					if(full != null) {
+						relative = relativeCorrelation(nameFull, full);
+						if(relative > best) {
+							preset = subjs[i].getID();
+							best = relative;
+						}
 					}
 				}
 			} // test presets
@@ -482,6 +496,11 @@ public class Sychroniser implements Runnable {
 			return result;
 		}
 		return Long.parseLong(subjExtid); 
+	}
+	private float relativeCorrelation(String str1, String str2) {
+		int correlation = Various.correlation(str1, str2);
+		return ((float)correlation)/
+				(Math.max(str1.length(), str2.length()) -1);
 	}
 	
 	private InsertLessonResult insertLesson(String groupGuid, long subjectID, String teacherGuid,

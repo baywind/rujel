@@ -1,9 +1,12 @@
 package net.rujel.dnevnik;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.URL;
 //import java.rmi.RemoteException;
 //import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 //import org.apache.axis.types.UnsignedByte;
@@ -20,6 +23,7 @@ import net.rujel.interfaces.Student;
 import net.rujel.io.*;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.Progress;
 import net.rujel.ui.RedirectPopup;
@@ -717,5 +721,26 @@ public class ServiceFrontend extends WOComponent {
 			((NSMutableArray)forTag).addObject(preload);
 		}
 		sdict.takeValueForKey(forTag, "person");
+	}
+	
+	public WOActionResults logFile() {
+		String logPath = System.getProperty("WOOutputPath");
+		if(logPath == null)
+			logPath = LogManager.getLogManager().getProperty(
+					"java.util.logging.FileHandler.pattern");
+		logPath = NSPathUtilities.stringByDeletingLastPathComponent(logPath);
+		String filename = SettingsReader.stringForKeyPath("dnevnik.logFile", "OEJDsync.log");
+		File log = new File(logPath, filename);
+		WOResponse response = application().createResponseInContext(context());
+		response.setHeader("application/octet-stream","Content-Type");
+		response.setHeader("attachment; filename=\"" + filename + "\"","Content-Disposition");
+
+		try {
+			response.setContentStream(new FileInputStream(log),4096,log.length());
+		} catch (Exception e) {
+			response.setContent(WOLogFormatter.formatTrowable(e));
+		}
+		response.disableClientCaching();
+		return response;
 	}
 }

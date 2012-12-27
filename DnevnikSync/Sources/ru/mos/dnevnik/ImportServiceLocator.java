@@ -22,7 +22,7 @@ public class ImportServiceLocator extends org.apache.axis.client.Service impleme
     }
 
     // Use to get a proxy class for ImportServiceSoap
-    private java.lang.String ImportServiceSoap_address = "http://31.13.60.189/services.dnevnik.mos.ru/ImportService.asmx";
+    private java.lang.String ImportServiceSoap_address = "https://services.dnevnik.mos.ru/ImportService.asmx";
 
     public java.lang.String getImportServiceSoapAddress() {
         return ImportServiceSoap_address;
@@ -67,7 +67,7 @@ public class ImportServiceLocator extends org.apache.axis.client.Service impleme
 
 
     // Use to get a proxy class for ImportServiceSoap12
-    private java.lang.String ImportServiceSoap12_address = "http://31.13.60.189/services.dnevnik.mos.ru/ImportService.asmx";
+    private java.lang.String ImportServiceSoap12_address = "https://services.dnevnik.mos.ru/ImportService.asmx";
 
     public java.lang.String getImportServiceSoap12Address() {
         return ImportServiceSoap12_address;
