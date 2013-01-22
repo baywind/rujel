@@ -324,9 +324,25 @@ public class XMLGenerator extends AbstractObjectReader {
 				return;
 			}
 		}
+		{
+			NSArray students = (NSArray)in.options.valueForKey("students");
+			if(students != null)
+				in.options.takeValueForKey(
+						EOUtilities.localInstancesOfObjects(ec, students), "students");
+			EOEnterpriseObject student = (EOEnterpriseObject)in.options.valueForKey("student");
+			if(student != null)
+				in.options.takeValueForKey(
+						EOUtilities.localInstanceOfObject(ec, student), "student");
+		}
+		{
+			EduGroup gr = (EduGroup)in.options.valueForKey("eduGroup");
+			if(gr != null)
+				in.options.takeValueForKey(EOUtilities.localInstanceOfObject(ec, gr), "eduGroup");
+		}
 		NSArray courses = (NSArray)in.options.valueForKey("courses");
 		if(courses != null) {
 			courses = EOUtilities.localInstancesOfObjects(ec, courses);
+			in.options.takeValueForKey(courses, "courses");
 			groups = null;
 		}
 		handler.startElement("courses");
@@ -355,6 +371,7 @@ public class XMLGenerator extends AbstractObjectReader {
 		}
 		courses = (NSArray)in.options.valueForKey("extraCourses");
 		if(courses instanceof NSMutableArray) {
+			courses = EOUtilities.localInstancesOfObjects(ec, courses);
 			EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)courses, EduCourse.sorter);
 			processCourses(courses, generators, in, null);
 		}
@@ -772,8 +789,13 @@ public class XMLGenerator extends AbstractObjectReader {
 			}
 			generateForList(students, "student", sync);
 			students = (NSArray)in.options.valueForKey("teachers");
-			NSMutableArray teachers = (students == null)?
-					new NSMutableArray() : students.mutableClone();
+			NSMutableArray teachers = new NSMutableArray();
+			if(students != null) {
+				EOEditingContext ec = (EOEditingContext)in.options.valueForKey("ec");
+				if(ec != null)
+					students = EOUtilities.localInstancesOfObjects(ec, students);
+				teachers.addObjectsFromArray(students);
+			}
 			
 			if(courses != null && courses.count() > 0) {
 				Enumeration enu = courses.objectEnumerator();
