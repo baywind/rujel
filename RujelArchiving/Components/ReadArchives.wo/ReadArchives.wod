@@ -1,0 +1,140 @@
+PageWrapper : PageWrapper {
+  title = session.strings.RujelArchiving_Archive.ReadArchives.title;
+}
+
+Title : WOString {
+  value = session.strings.RujelArchiving_Archive.ReadArchives.title;
+}
+
+Rows : WORepetition {
+  list = records;
+  item = item;
+}
+
+Form : WOForm {
+}
+
+PeriodTitle: WOString {
+	value = application.strings.Reusables_Strings.dataTypes.period;
+	valueWhenEmpty = "period";
+	escapeHTML = false;
+}
+
+PeriodTitle2: WOString {
+	value = application.strings.Reusables_Strings.dataTypes.since;
+	valueWhenEmpty = "begin";
+	escapeHTML = false;
+}
+
+PeriodTitle3: WOString {
+	value = application.strings.Reusables_Strings.dataTypes.to;
+	valueWhenEmpty = "end";
+	escapeHTML = false;
+}
+
+SinceField: WOTextField {
+	value = since;
+	size = 19;
+	maxlength = 19;
+	name = "begin";
+  dateformat = "yyyy-MM-dd HH:mm:ss";
+}
+
+ToField: WOTextField {
+	value = to;
+	size = 19;
+	maxlength = 19;
+	name = "end";
+  dateformat = "yyyy-MM-dd HH:mm:ss";
+}
+
+Submit : WOSubmitButton {
+  value = application.strings.Reusables_Strings.uiElements.Select;
+  action = select;
+}
+
+DateTitle : WOString {
+  value = application.strings.Reusables_Strings.dataTypes.Date;
+  valueWhenEmpty = "Date";
+  escapeHTML = false;
+}
+
+TimeTitle : WOString {
+  value = application.strings.Reusables_Strings.dataTypes.Time;
+  valueWhenEmpty = "Time";
+  escapeHTML = false;
+}
+
+AuthorTitle : WOString {
+  value = application.strings.RujelArchiving_Archive.author;
+  valueWhenEmpty = "Author";
+  escapeHTML = false;
+}
+
+Timestamp : WOString {
+  value = item.timestamp;
+  dateformat = "yyyy-MM-dd HH:mm:ss";
+}
+
+Author : WOString {
+  value = item.user;
+}
+
+Entity : WOString {
+  value = item.usedEntity.usedEntity;
+}
+
+ActionType : WOString {
+  value = item.actionType;
+}
+
+Radio0 : WORadioButton {
+  value = 0;
+  selection = level;
+  name = "actionType";
+}
+
+Action0 : WOString {
+  value = session.strings.RujelArchiving_Archive.ReadArchives.action0;
+}
+
+Radio2 : WORadioButton {
+  value = 2;
+  selection = level;
+  name = "actionType";
+}
+
+Action2 : WOString {
+  value = session.strings.RujelArchiving_Archive.ReadArchives.action2;
+}
+
+Radio3 : WORadioButton {
+  value = 3;
+  selection = level;
+  name = "actionType";
+}
+
+Action3 : WOString {
+  value = session.strings.RujelArchiving_Archive.ReadArchives.action3;
+}
+
+RowContainer : WOGenericContainer {
+  elementName = "tr";
+  class = rowClass;
+}
+
+EntityTitle : WOString {
+  value = session.strings.RujelArchiving_Archive.entity;
+  escapeHTML = false;
+  valueWhenEmpty = "Entity";
+}
+
+ReasonTitle : WOString {
+  value = application.strings.RujelArchiving_Archive.reason;
+  valueWhenEmpty = "Reason";
+  escapeHTML = false;
+}
+
+Reason : WOString {
+  value = item.reason;
+}

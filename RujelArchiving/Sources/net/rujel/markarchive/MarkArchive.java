@@ -35,6 +35,8 @@ import net.rujel.reusables.*;
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
+import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 
 import java.lang.ref.WeakReference;
@@ -47,6 +49,27 @@ public class MarkArchive extends _MarkArchive
 {
 	public static final String REASON_KEY = "?";
 	protected static final Logger logger = Logger.getLogger("rujel.markarchive");
+	public static NSArray backSorter = new NSArray(
+			new EOSortOrdering(TIMESTAMP_KEY, EOSortOrdering.CompareDescending));
+	
+	public static Object init(Object obj, WOContext ctx) {
+		if (obj == null || obj.equals("init")) {
+			try {
+				Object access = PlistReader.readPlist("access.plist", "RujelArchiving", null);
+				WOApplication.application().takeValueForKey(access, "defaultAccess");
+			} catch (NSKeyValueCoding.UnknownKeyException e) {
+				// default access not supported
+			}
+		} else if(obj.equals("regimes")) {
+			if(Various.boolForObject(ctx.session().valueForKeyPath(
+					"readAccess._read.ReadArchives")))
+				return null;
+			return WOApplication.application().valueForKeyPath(
+					"strings.RujelArchiving_Archive.ReadArchives");
+		}
+		return null;
+	}
+
 	
     public MarkArchive() {
         super();
