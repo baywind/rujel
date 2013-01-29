@@ -103,6 +103,8 @@ public class Sychroniser implements Runnable {
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
 	protected EOEnterpriseObject contype;
 	protected EntityIndex studentEI;
+	protected int marks;
+	protected int actions;
 	
 	public Sychroniser(EOEditingContext ec, Integer eduYear) {
 		super();
@@ -180,6 +182,8 @@ public class Sychroniser implements Runnable {
 						new Object[] {ses,e,logPath});
 			}
 			logger.log(WOLogLevel.INFO,"Starting Dnevnik sync");
+			actions = 0;
+			marks = 0;
 			NSArray result = syncChanges();
 			if(state != null) {
 				synchronized (state) {
@@ -192,6 +196,10 @@ public class Sychroniser implements Runnable {
 			logWriter.write(ses.sessionID());
 			logWriter.write(' ');
 			logWriter.write(df.format(new Date()));
+			logWriter.write(". marks sent: ");
+			logWriter.write(Integer.toString(marks));
+			logWriter.write(", total remote actions: ");
+			logWriter.write(Integer.toString(actions));
 			logWriter.newLine();
 			logWriter.flush();
 		} catch (Exception e) {
@@ -473,6 +481,7 @@ public class Sychroniser implements Runnable {
 			long result = 0;
 			try {
 				result = soap.insertSubject(schoolGuid, subject, full, area);
+				actions++;
 			} catch (RemoteException e) {
 				if(!e.getMessage().contains("Entity already exists: subject")) {
 					throw new AttributedRemoteException(e,
@@ -509,7 +518,10 @@ public class Sychroniser implements Runnable {
 			num = 0;
 		try {
 			UnsignedByte number = new UnsignedByte(num);
-			return soap.insertLesson(groupGuid, subjectID, teacherGuid, cal, number);
+			InsertLessonResult result =
+				soap.insertLesson(groupGuid, subjectID, teacherGuid, cal, number);
+			actions++;
+			return result;
 		} catch (RemoteException e) {
 			if(e.getMessage().contains("Entity already exists: Lesson"))
 				return insertLesson(groupGuid, subjectID, teacherGuid, cal, num +1);
@@ -578,6 +590,7 @@ public class Sychroniser implements Runnable {
 		 while (match == null) {
 			try {
 				soap.insertSubGroup(extid, title.toString(), parentGuid, null);
+				actions++;
 				match = (SyncMatch)EOUtilities.createAndInsertInstance(ec, SyncMatch.ENTITY_NAME);
 			} catch (RemoteException e) {
 				if(e.getMessage().contains("Entity already exists: Sub group")) {
@@ -638,6 +651,7 @@ public class Sychroniser implements Runnable {
 				String personGuid = personMatch.extID();
 				try {
 					soap.insertGroupMembership(personGuid, guid);
+					actions++;
 				} catch (RemoteException e) {
 					state.addMessage("insertGroupMembership(" + personGuid + ',' + guid + "): " +
 							WOMessage.stringByEscapingHTMLString(e.getMessage()));
@@ -651,6 +665,7 @@ public class Sychroniser implements Runnable {
 		if(forcedID != null) {
 			try {
 				soap.insertGroupMembership(force.extID(), guid);
+				actions++;
 				buf.append(',').append(forcedID);
 				if(exist != null)
 					exist.removeObject(forcedID);
@@ -670,6 +685,7 @@ public class Sychroniser implements Runnable {
 					continue;
 				String personGuid = personMatch.extID();
 				soap.deleteGroupMembership(personGuid, guid);
+				actions++;
 			}
 		}
 		if(update)
@@ -694,6 +710,7 @@ public class Sychroniser implements Runnable {
 			if(works == null || works.count() == 0) {
 				try {
 					soap.deleteLesson(lessonID);
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Lesson")) {
 						throw new AttributedRemoteException(e, new Object[] {lessonID});
@@ -772,6 +789,7 @@ public class Sychroniser implements Runnable {
 				}
 				try {
 					soap.updateLesson(ids[0], subjectID, teacherGuid, cal, new UnsignedByte(number));
+					actions++;
 				} catch (RemoteException e) {
 					throw new AttributedRemoteException(e,
 							new Object[] {ids[0], subjectID, teacherGuid, cal, number});
@@ -782,6 +800,7 @@ public class Sychroniser implements Runnable {
 			try {
 				soap.updateWork(ids[1], null, null, ONE, null,
 						arch.getArchiveValueForKey("theme"));
+				actions++;
 			} catch (RemoteException e) {
 				if(!e.getMessage().contains("Entity not found: Work")) {
 					throw new AttributedRemoteException(e,new Object[] {ids[1], "null", "null",
@@ -789,6 +808,7 @@ public class Sychroniser implements Runnable {
 				}
 				ids[1] = soap.insertWork(ids[0], EduWorkType.LessonAnswer, EduMarkType.Mark5, 
 						ONE, "Работа на уроке", arch.getArchiveValueForKey("theme"));
+				actions++;
 				StringBuilder buf = new StringBuilder();
 				buf.append(ids[0]).append(' ').append(ids[1]);
 				tsMatch.setExtID(buf.toString());
@@ -900,12 +920,14 @@ public class Sychroniser implements Runnable {
 		personGuid = personGuid.toUpperCase();
 		if(arch.actionType().intValue() >= 3) {
 			soap.updateLessonLogEntry(lessonID, personGuid, EduLessonLogEntryStatus.Attend);
+			actions++;
 		} else {
 			String note = arch.getArchiveValueForKey("text");
 			boolean att = (BaseLesson.isSkip(note) == 0);
 			try {
 				soap.updateLessonLogEntry(lessonID, personGuid, 
 						(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
+				actions++;
 			} catch (RemoteException e) {
 				if(e.getMessage().contains("student doesn't have membership in the group")) {
 					EduLesson lesson = (EduLesson)EOUtilities.objectWithPrimaryKeyValue(ec, 
@@ -915,7 +937,8 @@ public class Sychroniser implements Runnable {
 					if(syncCourse(lesson.course(), personMatch))
 						soap.updateLessonLogEntry(lessonID, personGuid, 
 							(att)?EduLessonLogEntryStatus.Attend : EduLessonLogEntryStatus.Absent);
-					}
+					actions++;
+				}
 			}
 		}
 	}
@@ -974,6 +997,7 @@ public class Sychroniser implements Runnable {
 					String wID = (String)toDelete.objectAtIndex(0);
 					try {
 						soap.deleteWork(Long.parseLong(wID));
+						actions++;
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
 							throw new AttributedRemoteException(e,new Object[] {wID});					}
@@ -1146,6 +1170,7 @@ public class Sychroniser implements Runnable {
 						workType = EduWorkType.LessonAnswer;
 					try {
 						workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
+						actions++;
 					} catch (RemoteException e) {
 						throw new AttributedRemoteException(e,
 								new Object[] {lessonID, workType, markType, ONE, name, ""});
@@ -1154,6 +1179,7 @@ public class Sychroniser implements Runnable {
 					try {
 //						EduWorkType type = (workType == EduWorkType.LessonBehavior)? null : workType;
 						soap.updateWork(workID.longValue(), workType, markType, ONE, name, null);
+						actions++;
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
 							throw new AttributedRemoteException(e,
@@ -1161,12 +1187,14 @@ public class Sychroniser implements Runnable {
 						if(workType == null)
 							workType = EduWorkType.LessonAnswer;
 						workID = soap.insertWork(lessonID, workType, markType, ONE, name, "");
+						actions++;
 					}
 				}
 				criteria[i].takeValueForKey(workID, "workID");
 			} else if(workID != null) {
 				try {
 					soap.deleteWork(workID.longValue());
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Work"))
 						throw new AttributedRemoteException(e,new Object[] {workID});
@@ -1402,6 +1430,7 @@ public class Sychroniser implements Runnable {
 			if(act >= 3) {
 				try {
 					soap.deleteMark(workID.longValue(), personGuid, ZERO);
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
 						throw new AttributedRemoteException(e,
@@ -1414,6 +1443,7 @@ public class Sychroniser implements Runnable {
 			if(value == null || ".".equals(value)) {
 				try {
 					soap.deleteMark(workID.longValue(), personGuid, ZERO);
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
 						throw new AttributedRemoteException(e,
@@ -1461,9 +1491,12 @@ public class Sychroniser implements Runnable {
 			if(act == 1) {
 				try {
 					soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
+					actions++;
+					marks++;
 				} catch (RemoteException e) {
 					if(e.getMessage().contains("Entity already exists: Mark")) {
 						soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
+						actions++;
 					} else if(e.getMessage().contains(
 							"student doesn't have membership in the group")) {
 						Work work = (Work)EOUtilities.objectWithPrimaryKeyValue(ec, 
@@ -1472,6 +1505,8 @@ public class Sychroniser implements Runnable {
 							return;
 						if(syncCourse(work.course(), personMatch))
 							soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
+							actions++;
+							marks++;
 					} else {
 						throw new AttributedRemoteException(e, new Object[] {
 								workID, personGuid, mark, markType,ZERO, bonus, text});
@@ -1480,11 +1515,14 @@ public class Sychroniser implements Runnable {
 			} else {
 				try {
 					soap.updateMark(workID, personGuid, ZERO, mark, markType, bonus, text);
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
 						throw new AttributedRemoteException(e, new Object[] {
 								workID, personGuid, ZERO, mark, markType, bonus, text});
 					soap.insertMark(workID, personGuid, mark, markType, ZERO, bonus, text);
+					actions++;
+					marks++;
 				}
 			}
 //			text = null;
@@ -1599,6 +1637,8 @@ public class Sychroniser implements Runnable {
 				try {
 					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
 							markType, ftype, value, bonus, null);
+					actions++;
+					marks++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity already exists: FinalMark"))
 						throw new AttributedRemoteException(e,
@@ -1606,11 +1646,13 @@ public class Sychroniser implements Runnable {
 										markType, ftype, value, bonus, "null"});
 					soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
 							markType, ftype, value, bonus, null);
+					actions++;
 				}
 			} else {
 				try {
 					soap.updateFinalMark(groupGuid, subjectID, studentGuid, 
 							markType, ftype, value, bonus, null);
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: FinalMark"))
 						throw new AttributedRemoteException(e,
@@ -1618,6 +1660,8 @@ public class Sychroniser implements Runnable {
 										markType, ftype, value, bonus, "null"});
 					soap.insertFinalMark(groupGuid, subjectID, studentGuid,
 							markType, ftype, value, bonus, null);
+					actions++;
+					marks++;
 				}
 			}
 		} else {
@@ -1627,6 +1671,8 @@ public class Sychroniser implements Runnable {
 				try {
 					soap.insertPeriodMark(groupGuid, subjectID, studentGuid,
 							markType, periodType, periodNumber, value, bonus, null);
+					actions++;
+					marks++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity already exists: Mark"))
 						throw new AttributedRemoteException(e,
@@ -1634,11 +1680,13 @@ public class Sychroniser implements Runnable {
 										periodType, periodNumber, value, bonus, "null"});
 					soap.updatePeriodMark(groupGuid, subjectID, studentGuid,
 							markType, periodType, periodNumber, value, bonus, null);
+					actions++;
 				}
 			} else {
 				try {
 					soap.updatePeriodMark(groupGuid, subjectID, studentGuid, 
 						markType, periodType, periodNumber, value, bonus, null);
+					actions++;
 				} catch (RemoteException e) {
 					if(!e.getMessage().contains("Entity not found: Mark"))
 						throw new AttributedRemoteException(e,
@@ -1646,6 +1694,8 @@ public class Sychroniser implements Runnable {
 										periodType, periodNumber, value, bonus, "null"});
 					soap.insertPeriodMark(groupGuid, subjectID, studentGuid, 
 							markType, periodType, periodNumber, value, bonus, null);
+					actions++;
+					marks++;
 				}
 			}
 		}
