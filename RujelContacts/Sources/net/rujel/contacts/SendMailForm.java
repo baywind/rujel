@@ -169,10 +169,25 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 //		if(sign != null) {
 //			text = text + "\n\n---\n" + sign;
 //		}
+		StringBuilder buf = new StringBuilder("Initiating email broadcast for ");
 		NSMutableDictionary param = new NSMutableDictionary();
-		param.takeValueForKey(dict.valueForKey("students"), "students");
+		param.takeValueForKey(session().valueForKey("user").toString(), "user");
+		{
+			NSArray students = (NSArray)dict.valueForKey("students");
+			param.takeValueForKey(students, "students");
+			if(students != null)
+				buf.append(students.count()).append(" students in ");
+		}
 		param.takeValueForKey(adrSet, "adrSet");
+		EduGroup eduGroup = (EduGroup)dict.valueForKey("eduGroup");
 		NSMutableDictionary logParam = new NSMutableDictionary(session(),WOLogFormatter.SESSION);
+		if(eduGroup != null) {
+			param.takeValueForKey(eduGroup, "eduGroup");
+			param.takeValueForKey(eduGroup.name(), "groupName");
+			logParam.takeValueForKey(eduGroup,WOLogFormatter.EO);
+			logParam.takeValueForKey(eduGroup.name(), "eduGroup");
+			buf.append('"').append(eduGroup.name()).append('"');
+		}
 		if(attach) {
 			param.takeValueForKey(dict.valueForKey("reporter"), "reporter");
 			param.takeValueForKey(dict.valueForKey("courses"), "courses");
@@ -181,22 +196,18 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 			param.takeValueForKey(dict.valueForKey("since"), "since");
 			param.takeValueForKey(dict.valueForKey("to"), "to");
 			logParam.takeValueForKey(dict.valueForKeyPath("reporter.title"),"type");
-		}
-		EduGroup eduGroup = (EduGroup)dict.valueForKey("eduGroup");
-		if(eduGroup != null) {
-			param.takeValueForKey(eduGroup, "eduGroup");
-			param.takeValueForKey(eduGroup.name(), "groupName");
+			buf.append(" with attachment \"").append(
+					dict.valueForKeyPath("reporter.title")).append('"');
 		}
 		param.takeValueForKey(session().valueForKey("today"), "date");
 		param.takeValueForKey(text, "messageText");
 		param.takeValueForKey(dict.valueForKey("sign"), "sign");
 		param.takeValueForKey(subject, "subject");
-		logParam.takeValueForKey(eduGroup,WOLogFormatter.EO);
-		logParam.takeValueForKey(eduGroup.name(), "eduGroup");
 		param.takeValueForKey(logParam,"logParam");
 		param.takeValueForKey("Done manual mailing","logMessage");
 		
 		param.takeValueForKey(new WeakReference(session()), "callerSession");
+		logger.log(WOLogLevel.FINE,buf.toString(),session());
 		EMailBroadcast.broadcastMarks(param);
 		message = (String)session().valueForKeyPath(
 				"strings.RujelContacts_Contacts.broadcastInitiated");

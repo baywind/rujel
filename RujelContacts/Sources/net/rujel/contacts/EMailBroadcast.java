@@ -467,7 +467,10 @@ gr:		while (eduGroups.hasMoreElements()) {
 		if(mailer == null) {
 			mailer = new Mailer();
 			logger.log(WOLogLevel.FINEST,"Mailer instantiated",ses);
+		} else {
+			mailer.extraHeaders.removeAllObjects();
 		}
+		mailer.extraHeaders.takeValueForKey(params.valueForKey("user"), "X-rujel-user");
 		StringBuffer textBuf = new StringBuffer();
 		boolean allowRequest = false;
 		if(reporter != null) {
