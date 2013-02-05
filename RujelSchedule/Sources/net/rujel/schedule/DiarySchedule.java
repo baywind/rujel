@@ -34,6 +34,7 @@ import java.util.Enumeration;
 
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOResponse;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOFetchSpecification;
@@ -41,6 +42,7 @@ import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -48,6 +50,7 @@ import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.Various;
 import net.rujel.ui.LessonList;
 
@@ -58,6 +61,7 @@ public class DiarySchedule extends LessonList {
 	public NSMutableArray coming;
 	public NSKeyValueCoding item;
 	public NSTimestamp date;
+	public NSDictionary forCourse;
 	
 	public DiarySchedule(WOContext context) {
         super(context);
@@ -86,8 +90,16 @@ public class DiarySchedule extends LessonList {
 		EOFetchSpecification fs = new EOFetchSpecification(ScheduleEntry.ENTITY_NAME,
 				quals[0],list);
 		list = ec.objectsWithFetchSpecification(fs);
+		try {
+			Number currGr = (Number)valueForBinding("group");
+			EduGroup gr = (EduGroup)EOUtilities.objectWithPrimaryKeyValue(
+					ec, EduGroup.entityName, currGr);
+			forCourse = SettingsBase.courseDict(gr);
+		} catch (Exception e) {
+			forCourse = null;
+		}
 		if(list != null && list.count() > 0) {
-	    	int week = SettingsBase.numericSettingForCourse("EduPeriod", null, ec,7);
+	    	int week = SettingsBase.numericSettingForCourse("EduPeriod", forCourse, ec,7);
 			ScheduleEntry sdl = (ScheduleEntry)list.objectAtIndex(0);
 			NSTimestamp min = sdl.validSince();
 			NSMutableDictionary dict = new NSMutableDictionary( new Object[] {min,min},

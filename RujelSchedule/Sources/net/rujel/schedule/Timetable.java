@@ -115,9 +115,12 @@ public class Timetable extends LessonList {
 
     protected NSArray sequence() {
     	EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
-    	int week = SettingsBase.numericSettingForCourse("EduPeriod", course, ec,7);
+    	NSKeyValueCodingAdditions forCourse = course;
+    	if(forCourse == null)
+    		forCourse = (NSKeyValueCodingAdditions)valueForBinding("forCourse");
+    	int week = SettingsBase.numericSettingForCourse("EduPeriod", forCourse, ec,7);
 		int weekStart = SettingsBase.numericSettingForCourse(
-				"weekStart", course, ec, Calendar.MONDAY);
+				"weekStart", forCourse, ec, Calendar.MONDAY);
     	NSMutableArray result = new NSMutableArray(week);
     	cols = week +1;
 		String[] titles = new String[cols];
@@ -141,17 +144,20 @@ public class Timetable extends LessonList {
 			}
     	}
     	result.addObject(titles);
-    	Integer timeScheme = new Integer(0);
+    	Integer timeScheme = null;
+//    	SettingsBase.numericSettingForCourse("timeScheme", forCourse, ec);
     	try {
-    		timeScheme = (Integer)course.eduGroup().valueForKey("section");
+    		timeScheme = (Integer)forCourse.valueForKeyPath("eduGroup.section");
     	} catch (Exception e) {
+    	}
+    	if(timeScheme == null) {
     		try {
-    			timeScheme = (Integer)course.cycle().valueForKey("section");
+    			timeScheme = (Integer)(Integer)forCourse.valueForKeyPath("cycle.section");
     		} catch (Exception e2) {
-				// Oops
 			}
 		}
-    	SettingsBase.numericSettingForCourse("timeScheme", course, ec);
+    	if(timeScheme == null)
+    		timeScheme = new Integer(0);
     	EOQualifier qual = new EOKeyValueQualifier("timeScheme",
     			EOQualifier.QualifierOperatorEqual, timeScheme);
     	EOFetchSpecification fs = new EOFetchSpecification(
