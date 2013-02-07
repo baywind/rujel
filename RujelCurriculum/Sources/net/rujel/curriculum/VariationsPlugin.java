@@ -259,7 +259,6 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 	public static NSDictionary planFact(EduCourse course, NSTimestamp date,
 			WeekFootprint weekFootprint) {
 		int minPlan = 0;
-		int plan = 0;
 		int maxDev = 0;
 		int weeks = 0;
 		int extraDays = 0;
@@ -291,11 +290,6 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			}
 			cal.set(Calendar.HOUR_OF_DAY, 12);
 			date = new NSTimestamp(cal.getTimeInMillis());
-			weeks = weeks(listName, cal, ec, weekDays, weekStart);
-			if(cal.getTimeInMillis() != date.getTime())
-				extraDays = EOPeriod.Utility.countDays(cal.getTime(), date) -1;
-		} else {
-			weeks = weeks(listName, null, ec, weekDays, weekStart);
 		}
 		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec,
 				"PlanDetail","course", course);
@@ -308,33 +302,71 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 					continue;
 				EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
 //				int days = 0;
-				if(date == null || date.compare(per.end()) > 0) {
-// TODO 			if(hours.intValue() < 0) { // calculate plan and update hours
-//					days += per.daysInPeriod(null,listName);
-					minPlan += Math.abs(hours.intValue());
-				} else if(date.compare(per.begin()) >= 0) {
-					hours = (Integer)pd.valueForKey("weekly");
-					cal.setTime(per.begin());
+				if(hours.intValue() > 0 &&
+						(date == null || EOPeriod.Utility.compareDates(date,per.end()) >= 0)) {
+					minPlan += hours.intValue();
+					continue;
+				}
+				if(date != null && EOPeriod.Utility.compareDates(date,per.begin()) < 0)
+					continue;
+				hours = (Integer)pd.valueForKey("weekly");
+				if(hours == null || hours.intValue() == 0)
+					continue;
+				maxDev = hours.intValue();
+				NSMutableArray holidays = new NSMutableArray();
+				NSTimestamp start = per.begin();
+				cal.setTime(per.begin());
+				if(cal.get(Calendar.DAY_OF_WEEK) != weekStart) {
+					cal.add(Calendar.DATE, 1);
 					while(cal.get(Calendar.DAY_OF_WEEK) != weekStart)
 						cal.add(Calendar.DATE, -1);
-					beginDate = new NSTimestamp(cal.getTimeInMillis());
-					if(hours == null || hours.intValue() == 0)
-						continue;
-					maxDev = hours.intValue();
-					int perDays = EOPeriod.Utility.countDays(beginDate, date);
-					int perWeeks = perDays/weekDays;
-					
-					minPlan += perWeeks*maxDev;
+					start = new NSTimestamp(cal.getTimeInMillis());
+					if(start.before(per.begin())) {
+						Period pre = new Period.ByDates(start,per.begin());
+						holidays.addObject(pre);
+					}
 				}
-				plan = minPlan;
-				/*if(maxDev == 0)
-					active = 2;*/
+				if(beginDate == null)
+					beginDate = start;
+				NSTimestamp end = per.end();
+				boolean fin = (date == null ||
+						EOPeriod.Utility.compareDates(date,end) >= 0); 
+				if(!fin)
+					end = date;
+				NSArray realHolidays = Holiday.holidaysInDates(start,end, ec, listName);
+				holidays.addObjectsFromArray(realHolidays);
+				int perDays = EOPeriod.Utility.countDays(start, end);
+				int left = perDays%weekDays;
+				int perWeeks = perDays/weekDays;
+				cal.setTime(end);
+				if(left > 0) {
+					if (fin) {
+						cal.add(Calendar.DATE, 1);
+						NSTimestamp afterEnd = new NSTimestamp(cal.getTimeInMillis());
+						cal.add(Calendar.DATE, weekDays - left -1);
+						end = new NSTimestamp(cal.getTimeInMillis());
+						holidays.addObject(new Period.ByDates(afterEnd,end));
+						perWeeks++;
+					} else {
+						extraDays = left;
+						cal.add(Calendar.DATE, -left);
+					}
+				}
+				perWeeks -= holidayWeeks(holidays, weekStart, weekDays, start, end);
+				minPlan += perWeeks*maxDev;
+				weeks += perWeeks;
 			}
 		} else {  // no details
+			if(date != null) {
+				weeks = weeks(listName, cal, ec, weekDays, weekStart);
+				if(cal.getTimeInMillis() != date.getTime())
+					extraDays = EOPeriod.Utility.countDays(cal.getTime(), date) -1;
+			} else {
+				weeks = weeks(listName, null, ec, weekDays, weekStart);
+			}
 			PlanCycle cl = (PlanCycle)course.cycle();
 			maxDev = cl.weekly(course);
 			minPlan = maxDev * weeks;
-			plan = minPlan;
 			/*
 			if(active == 2) {
 				EOQualifier[] quals = new EOQualifier[2];
@@ -400,8 +432,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey(new Integer(plus), "plus");
 			result.takeValueForKey(new Integer(minus), "minus");
 			result.takeValueForKey(new Integer(plus - minus), "netChange");
-			plan = minPlan;
 		} // accont for variations
+		int plan = minPlan;
 		if(weekFootprint == null)
 			weekFootprint = new WeekFootprint(course);
 		if(extraDays == 0) {
