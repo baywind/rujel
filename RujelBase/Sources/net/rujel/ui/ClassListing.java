@@ -29,6 +29,8 @@
 
 package net.rujel.ui;
 
+import java.util.Enumeration;
+
 import net.rujel.interfaces.*;
 //import net.rujel.vseobuch.*;
 
@@ -66,8 +68,17 @@ public class ClassListing extends WOComponent {
 	}
 	
 	public NSArray groups() {
-		return listGroups((NSTimestamp)session().valueForKey("today"),
+		Object sect = session().objectForKey("tmpSection");
+		Object storedSection = null;
+		if(sect != null) {
+			storedSection = session().valueForKeyPath("state.section");
+			session().takeValueForKeyPath(sect, "state.section");
+		}
+		NSArray result = listGroups((NSTimestamp)session().valueForKey("today"),
 				(EOEditingContext)valueForBinding("editingContext"));
+		if(storedSection != null)
+			session().takeValueForKeyPath(storedSection, "state.section");
+		return result;
 	}
 	
 	public boolean isStateless() {
@@ -84,6 +95,7 @@ public class ClassListing extends WOComponent {
     
     public WOActionResults anAction() {
         setValueForBinding(currClass,"selection");
+        session().removeObjectForKey("tmpSection");
 		return (WOActionResults)valueForBinding("selectAction");
     }
 
@@ -93,5 +105,44 @@ public class ClassListing extends WOComponent {
 		} catch (NSKeyValueCoding.UnknownKeyException e) {
 			return null;
 		}
+	}
+
+	public Object currSection() {
+		Object sect = session().objectForKey("tmpSection");
+		if(sect == null) {
+			EduGroup selection = (EduGroup)valueForBinding("selection");
+			if(selection != null) {
+				try {
+					sect = selection.valueForKey("section");
+					if(sect == null)
+						return session().valueForKeyPath("state.section");
+					NSArray sects = (NSArray)session().valueForKeyPath("strings.sections.list");
+					if(sects == null)
+						return null;
+					Enumeration enu = sects.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						NSDictionary dict = (NSDictionary) enu.nextElement();
+						if(sect.equals(dict.valueForKey("idx"))) {
+							sect = dict;
+							break;
+						}
+					}
+					if(!(sect instanceof NSDictionary))
+						return session().valueForKeyPath("state.section");
+					session().setObjectForKey(sect, "tmpSection");
+				} catch (NSKeyValueCoding.UnknownKeyException e) {
+				}
+			}
+		}
+		if(sect == null)
+			sect = session().valueForKeyPath("state.section");
+		return sect;
+	}
+
+	public void setCurrSection(Object currSection) {
+		if(currSection == null)
+			session().removeObjectForKey("tmpSection");
+		else
+			session().setObjectForKey(currSection, "tmpSection");
 	}
 }
