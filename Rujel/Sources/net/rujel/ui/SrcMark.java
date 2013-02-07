@@ -30,6 +30,7 @@
 package net.rujel.ui;
 
 import net.rujel.base.CourseInspector;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -134,6 +135,11 @@ public class SrcMark extends WOComponent {
 			return null;
 		NSMutableArray cycles = EduCycle.Lister.cyclesForEduGroup((EduGroup)selection).mutableClone();
 		dict.takeValueForKey(selection, "eduGroup");
+		if(SettingsBase.numericSettingForCourse("coursesDone", 
+				SettingsBase.courseDict((EduGroup)selection), ec, 0) > 0) {
+			popupCycles = cycles.mutableClone();
+			return null;
+		}
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enumerator = cycles.objectEnumerator();
 		NSMutableSet coursesSet = new NSMutableSet(courses);
