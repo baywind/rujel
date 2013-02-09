@@ -108,8 +108,8 @@ public class CoursesSelector extends WOComponent {
 	
 	public boolean setSelection(Object val) {
 		selection = val;
-//		if(selection == NullValue)
-//			selection = null;
+		if(selection == NullValue && currTab != TEACHER_TAB)
+			selection = null;
 		if(hasBinding("selection"))
 			setValueForBinding(selection,"selection");
 		if(selection == null) {
