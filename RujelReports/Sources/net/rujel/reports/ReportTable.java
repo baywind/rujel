@@ -272,17 +272,18 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     	if(itemRow == null || itemDict == null) {
     		return null;
     	}
+    	Object value = itemRow;
     	String keyPath = (String)itemDict.valueForKey("keyPath");
     	if(keyPath != null) {
     		if(keyPath.equals("."))
     			return itemRow;
-    		return NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, keyPath);
+    		value = NSKeyValueCodingAdditions.Utility.valueForKeyPath(value, keyPath);
     	}
-    	if(itemDict.valueForKey("value") != null && itemDict.valueForKey("subParams") != null) {
-    		return DisplayAny.ValueReader.evaluateValue(itemDict.valueForKey("value"),
-    				itemRow, page);
+    	if(itemDict.valueForKey("itemValue") != null) { // && itemDict.valueForKey("subParams") != null
+    		value = DisplayAny.ValueReader.evaluateValue(itemDict.valueForKey("itemValue"),
+    				value, page);
     	}
-    	return itemRow;
+    	return value;
      }
     
     public String rowspan() {

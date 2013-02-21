@@ -51,17 +51,10 @@
 			<string>05</string>
 		</dict>
 	</array>
-	<key>value</key>
+	<key>itemValue</key>
 	<dict>
 		<key>className</key>
 		<string>net.rujel.base.SettingsBase</string>
-		<key>_object</key>
-		<dict>
-			<key>methodName</key>
-			<string>settingForCourse(String, NSKeyValueCodingAdditions, EOEditingContext)</string>
-			<key>className</key>
-			<string>net.rujel.base.SettingsBase</string>
-		</dict>
 		<key>methodName</key>
 		<string>settingForCourse</string>
 		<key>paramClasses</key>
