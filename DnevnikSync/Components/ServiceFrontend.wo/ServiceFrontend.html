@@ -9,7 +9,7 @@
 <webobject name = "SectionTabs"/></div></div></webobject>
 <table align = "center" cellpadding = "0" style = "border-collapse:collapse;" width = "100%">
 <tr><th colspan = "2" style = "font-size:160%;padding:1ex;">Взаимодействие с ОЭЖД</th></tr>
-<tr><webobject name = "CanSelect">
+<tr>
 <td width = "20%" valign = "top" class = "selectionBorder" 
 	style = "border-style:solid solid none none;"><webobject name = "CanSeeContacts">
 <webobject name = "NoTab">Все</webobject>
@@ -34,12 +34,16 @@
 <tr><td align = "center"><webobject name = "Export"/></td></tr></tbody>
 </table></webobject>
 <div style = "text-align:center;"><webobject name = "GetLog">Загрузить лог</webobject></div>
-</td></webobject>
+</td>
 <td valign = "top" class = "backfield1"><webobject name = "NoSelection">
-<div style = "font-size:150%;margin:3em;">Выберите класс, чтобы указать, оценки каких учащихся отправлять
- в "Общегородской электронный журнал и дневник".<br/>
- Либо выберите режим ручной синхронизации.</div>
-</webobject>
+<div style = "font-size:150%;margin:3em;"><p>
+ Выберите класс, чтобы указать, <webobject name = "CanSelect">оценки каких учащихся отправлять
+ в "Общегородской электронный журнал и дневник".</webobject><webobject name = "CantSelect">
+ какие фамилии учащихся не должны обезличиваться при выгрузке.
+ </webobject></p>
+ <p>Либо выберите режим ручной синхронизации.</p>
+ <p>Для автоматической синхронизации, первую синхронизацию необходимо активировать вручную.</p>
+ </div></webobject>
 <webobject name = "ServiceWorks"><div style = "padding:3px;">
 
 <hr/>
@@ -65,11 +69,12 @@
 </webobject></table>
 </webobject>
 <webobject name = "IfMarks">
-		<webobject name = "AutoSync"><p style = "max-width:40em;margin:auto;">Согласно настройке, ежедневно в 
+		<webobject name = "AutoSync"><p style = "max-width:40em;margin:auto;">
+		Согласно настройке, ежедневно в 
 	<strong><webobject name = "SyncTime"/></strong> происходит автоматическая синхронизация 
 	выставленных за день оценок с Общегородским электронным журналом.</p></webobject>
-	<div style = "max-width:40em;margin:auto;">Здесь можно вручную инициировать синхронизацию оценок,
-		выставленных за указанный период:</div>
+	<div style = "max-width:40em;margin:auto;">
+	Здесь можно вручную инициировать синхронизацию оценок, выставленных за указанный период:</div>
 		<webobject name = "SyncForm">
 		<strong>с:</strong> <webobject name = "Since"/>
 		<strong>по:</strong> <webobject name = "To"/>
@@ -86,7 +91,8 @@
 	</webobject></table></webobject></div></webobject>
 <webobject name = "IfGroup">
 	<div style = "max-width:40em;margin:1ex auto;">Установите галки напротив тех учащихся, 
-		оценки которых должны отправляться в ОЭЖД.</div>
+	<webobject name = "CantSelect">чьи фамилии не должны обезличиваться при выгрузке</webobject>
+	<webobject name = "CanSelect">оценки которых должны отправляться в ОЭЖД.</webobject></div>
 	<webobject name = "SetupForm"><webobject name = "Ticker"/>
 	<table><thead>
 		<tr><th>Учащийся</th>

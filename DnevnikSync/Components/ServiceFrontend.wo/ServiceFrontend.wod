@@ -212,7 +212,10 @@ CanSelect : WOConditional {
   condition = sendAll;
   negate = true;
 }
-
+CantSelect : WOConditional {
+  condition = sendAll;
+  negate = false;
+}
 AutoSync : WOConditional {
   condition = syncTime;
 }

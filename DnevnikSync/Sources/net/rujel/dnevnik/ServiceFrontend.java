@@ -59,7 +59,7 @@ public class ServiceFrontend extends WOComponent {
 	public boolean exportAll;
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
 	protected PerPersonLink ppl;
-	public Boolean sendAll;
+	public boolean sendAll;
 	public String syncTime = SettingsReader.stringForKeyPath("dnevnik.syncTime", null);
 
 	public Object active;
@@ -566,7 +566,7 @@ public class ServiceFrontend extends WOComponent {
 			reporter.takeValueForKeyPath(Boolean.TRUE, "settings.limitExport");
 		if(active == null) {
     		WOComponent resultp = pageWithName("ExportParams");
-    		if(!sendAll) {
+//    		if(!sendAll) {
 				Enumeration enu = activeContacts();
 				if(enu != null) {
 					NSMutableDictionary preload = new NSMutableDictionary(Boolean.TRUE,"PRELOADED");
@@ -581,7 +581,7 @@ public class ServiceFrontend extends WOComponent {
 					}
 					preload(preload, reporter);
 				}
-    		}
+//    		}
     		reporter.takeValueForKey("item", "resultPath");
     		resultp.takeValueForKey(this, "returnPage");
     		resultp.takeValueForKey(reporter, "reporter");
