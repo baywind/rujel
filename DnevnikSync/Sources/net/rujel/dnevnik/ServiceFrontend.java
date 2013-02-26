@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import ru.mos.dnevnik.*;
 
+import net.rujel.base.EntityIndex;
 import net.rujel.base.MyUtility;
 //import net.rujel.base.SettingsBase;
 import net.rujel.contacts.Contact;
@@ -54,7 +55,8 @@ public class ServiceFrontend extends WOComponent {
 	public NSArray events;
 	public NSTimestamp since;
 	public NSTimestamp to;
-	public Integer unticked;
+	public Integer code = new Integer(33);
+	public boolean exportAll;
 	protected int timeShift = SettingsReader.intForKeyPath("dnevnik.timeZone", 4);
 	protected PerPersonLink ppl;
 	public Boolean sendAll;
@@ -77,6 +79,7 @@ public class ServiceFrontend extends WOComponent {
         }
         year = (Integer)context.session().valueForKey("eduYear");
         sendAll = SettingsReader.boolForKeyPath("dnevnik.sendAll", false);
+        exportAll = sendAll;
         try {
         	String tmp = SettingsReader.stringForKeyPath("dnevnik.serviceURL", null);
         	URL serviceURL = new URL(tmp);
@@ -91,10 +94,7 @@ public class ServiceFrontend extends WOComponent {
 		}
         if(sendAll) {
         	active = "Оценки";
-        	unticked = 0;
         	select();
-        } else {
-        	unticked = 1;
         }
     }
     
@@ -561,7 +561,9 @@ public class ServiceFrontend extends WOComponent {
 	public WOActionResults export() {
 		NSDictionary reporter = (NSDictionary)PlistReader.readPlist(
 				"oejdCSV.plist", "DnevnikSync", null);
-		reporter.takeValueForKeyPath(unticked, "settings.byContact");
+		reporter.takeValueForKeyPath(code, "settings.byContact");
+		if(!exportAll)
+			reporter.takeValueForKeyPath(Boolean.TRUE, "settings.limitExport");
 		if(active == null) {
     		WOComponent resultp = pageWithName("ExportParams");
     		if(!sendAll) {
@@ -572,7 +574,10 @@ public class ServiceFrontend extends WOComponent {
 					while (enu.hasMoreElements()) {
 						Contact cnt = (Contact) enu.nextElement();
 						Student student = (Student)cnt.person();
-						preload.setObjectForKey(cnt.flags(), student);
+						int flags = cnt.flags().intValue();
+						if(cnt.contact() != null)
+							flags += 32;
+						preload.setObjectForKey(flags, student);
 					}
 					preload(preload, reporter);
 				}
@@ -602,47 +607,46 @@ public class ServiceFrontend extends WOComponent {
 				(Integer)session().valueForKey("eduYear")), "eduYear");
 		info.takeValueForKey(sync.getDataDict(null), "extraData");
 		reportDict.takeValueForKey(info, "info");
-		if (!sendAll) {
-			NSMutableDictionary preload = new NSMutableDictionary(Boolean.TRUE,"PRELOADED");
-			preload.takeValueForKey("contactFlags", "paramKey");
-			NSMutableArray students = null;
-			if(active instanceof EduGroup) {
-				reportDict.takeValueForKey(active, "eduGroup");
-				Enumeration enu = events.objectEnumerator();
-				while (enu.hasMoreElements()) {
-					Student student = (Student) enu.nextElement();
-					NSArray contacts = (ppl==null)?null:(NSArray)ppl.forPersonLink(student);
-					if(contacts != null && contacts.count() > 0) {
-						Contact cnt = (Contact)contacts.objectAtIndex(0);
-						preload.setObjectForKey(cnt.flags(), student);
-						if(cnt.flags().intValue() == 0)
-							continue;
-						if(students == null)
-							students = new NSMutableArray(student);
-						else
-							students.addObject(student);
-					}
-				}
-				
-			} else  {
-				Enumeration enu = activeContacts();
-				if(enu != null) {
-					students = new NSMutableArray();
-					while (enu.hasMoreElements()) {
-						Contact cnt = (Contact) enu.nextElement();
-						Student student = (Student)cnt.person();
-						preload.setObjectForKey(cnt.flags(), student);
-						if(!students.containsObject(student) && cnt.flags().intValue() > 0)
-							students.addObject(student);
-					}
+		
+		NSMutableDictionary preload = new NSMutableDictionary(Boolean.TRUE,"PRELOADED");
+		preload.takeValueForKey("contactFlags", "paramKey");
+		if(active instanceof EduGroup) {
+			reportDict.takeValueForKey(active, "eduGroup");
+			Enumeration enu = events.objectEnumerator();
+			NSArray students = (exportAll)?events:new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				Student student = (Student) enu.nextElement();
+				NSArray contacts = (ppl==null)?null:(NSArray)ppl.forPersonLink(student);
+				if(contacts != null && contacts.count() > 0) {
+					Contact cnt = (Contact)contacts.objectAtIndex(0);
+					int flags = cnt.flags().intValue();
+					if(!exportAll && flags != 0)
+						((NSMutableArray)students).addObject(student);
+					if(cnt.contact() != null)
+						flags += 32;
+					preload.setObjectForKey(flags, student);
 				}
 			}
-			preload(preload, reporter);
-			if(unticked.intValue() == 1)
+			reportDict.takeValueForKey(students, "students");
+		} else  {
+			Enumeration enu = activeContacts();
+			if(enu != null) {
+				NSMutableArray students = (exportAll)?null:new NSMutableArray();
+				while (enu.hasMoreElements()) {
+					Contact cnt = (Contact) enu.nextElement();
+					Student student = (Student)cnt.person();
+					int flags = cnt.flags().intValue();
+					if(!exportAll && flags != 0 && !students.containsObject(student))
+						((NSMutableArray)students).addObject(student);
+					if(cnt.contact() != null)
+						flags += 32;
+					preload.setObjectForKey(flags, student);
+				}
 				reportDict.takeValueForKey(students, "students");
-			else
-				reportDict.takeValueForKey(events, "students");
+			}
 		}
+		if(preload.count() > 1)
+			preload(preload, reporter);
 		
 		Progress progress = (Progress)pageWithName("Progress");
 		progress.returnPage = this;
@@ -683,10 +687,12 @@ public class ServiceFrontend extends WOComponent {
 	protected Enumeration activeContacts() {
 		EOEnterpriseObject contype = Contact.getType(ec, 
 				OEJDUtiliser.class.getCanonicalName(), false);
+		EntityIndex ent = EntityIndex.indexForEntityName(ec, Student.entityName, false);
 		if(contype == null)
 			return null;
 		NSArray contacts = EOUtilities.objectsWithQualifierFormat(ec, Contact.ENTITY_NAME, 
-				"type = %@ AND flags >= 1", new NSArray(contype));
+				"type = %@ AND flags >= 1 AND personEntity = %@", 
+				new NSArray(new Object[] {contype, ent}));
 		if(contacts == null || contacts.count() == 0)
 			return null;
 		return contacts.objectEnumerator();

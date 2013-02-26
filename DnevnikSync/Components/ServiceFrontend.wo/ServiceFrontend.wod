@@ -230,22 +230,39 @@ NoTab : OnClickContainer {
 ExportForm : WOForm {
 }
 
-ShowUntagged : WORadioButton {
-  name = "untagged";
-  selection = unticked;
-  value = 0;
+ShowAll : WORadioButton {
+  name = "exportAll";
+  selection = exportAll;
+  value = true;
+  disabled = sendAll;
 }
 
 HideUntagged : WORadioButton {
-  name = "untagged";
-  selection = unticked;
-  value = 1;
+  name = "exportAll";
+  selection = exportAll;
+  value = false;
+  disabled = sendAll;
 }
 
-RenameUntagged : WORadioButton {
-  name = "untagged";
-  selection = unticked;
-  value = 2;
+CodeAll : WORadioButton {
+  name = "code";
+  selection = code;
+  value = 512;
+}
+CodeUntagged : WORadioButton {
+  name = "code";
+  selection = code;
+  value = 1;
+}
+CodeNoReason : WORadioButton {
+  name = "code";
+  selection = code;
+  value = 33;
+}
+DontCode : WORadioButton {
+  name = "code";
+  selection = code;
+  value = 0;
 }
 
 Export : WOSubmitButton {

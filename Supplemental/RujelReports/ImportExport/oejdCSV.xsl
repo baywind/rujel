@@ -61,7 +61,7 @@
 		<xsl:with-param name="syncdata" select="$pers/syncdata"/>
 	</xsl:call-template>
 	<xsl:choose>
-	<xsl:when test="not($options/byContact) or $options/byContact=0 or $pers/@type='teacher' or $pers/syncdata/param[@key='contactFlags']">
+	<xsl:when test="not($options/byContact) or $options/byContact=0 or $pers/@type='teacher' or $pers/syncdata/param[@key='contactFlags']>=$options/byContact">
 	<xsl:value-of select="$pers/name[@type='first']"/><xsl:text>;</xsl:text>
 	<xsl:value-of select="$pers/name[@type='last']"/><xsl:text>;</xsl:text>
 	<xsl:value-of select="$pers/name[@type='second']"/><xsl:text>;</xsl:text>
@@ -93,7 +93,7 @@
 <xsl:template match="student">
 	<xsl:param name="groupData"/>
 	<xsl:variable name="pers"  select="$persdata/person[@id=current()/@id and @type='student']"/>
-	<xsl:if test="not($options/byContact) or $options/byContact=0 or $options/byContact=2 or $pers/syncdata/param[@key='contactFlags']">
+	<xsl:if test="not($options/limitExport) or $pers/syncdata/param[@key='contactFlags']">
 	<xsl:value-of select="$schoolData"/><xsl:value-of select="$groupData"/>
 	<xsl:call-template name="person">
 		<xsl:with-param name="pers" select="$pers"/>

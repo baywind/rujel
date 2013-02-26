@@ -16,15 +16,23 @@
 <webobject name="ClassListing1"></webobject></webobject>
 <div style = "font-weight:bold; margin-top:1em;">Синхронизировать:</div>
 <webobject name = "Tabs"/>
-<webobject name = "CanSelect"><webobject name = "ExportForm">
+<webobject name = "ExportForm">
 <table style = "text-align:left;border:1px solid #cccccc; margin:1em;" align = "center">
 <caption valign = "top" style = "white-space:nowrap;">Персональные данные</caption>
-<tr><th>Неотмеченных:</th></tr>
-<tr><td><webobject name = "ShowUntagged"/> Выгружать <br/>
-<webobject name = "HideUntagged"/> Скрывать<br/>
-<webobject name = "RenameUntagged"/> Обезличивать</td></tr>
-<tr><td align = "center"><webobject name = "Export"/></td></tr>
-</table></webobject></webobject>
+<tbody>
+<tr><th>Выгружать:</th></tr>
+<tr><td><webobject name = "ShowAll"/> Всех<br/>
+<webobject name = "HideUntagged"/> Отмеченных</td></tr>
+</tbody><tbody>
+<tr><th>Обезличивать:</th></tr>
+<tr><td><webobject name = "CodeAll"/> Всех<br/>
+	<webobject name = "CodeNoReason"/> Без обоснования<br/>
+	<webobject name = "CodeUntagged"/> Неотмеченных<br/>
+	<webobject name = "DontCode"/> Никого<br/>
+</td></tr>
+</tbody><tbody>
+<tr><td align = "center"><webobject name = "Export"/></td></tr></tbody>
+</table></webobject>
 <div style = "text-align:center;"><webobject name = "GetLog">Загрузить лог</webobject></div>
 </td></webobject>
 <td valign = "top" class = "backfield1"><webobject name = "NoSelection">
