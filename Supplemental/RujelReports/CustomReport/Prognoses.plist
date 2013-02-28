@@ -278,7 +278,7 @@
 			<key>title</key>
 			<string>Только активные</string>
 			<key>active</key>
-			<true/>
+			<false/>
 		</dict>
 		<dict>
 			<key>comment</key>

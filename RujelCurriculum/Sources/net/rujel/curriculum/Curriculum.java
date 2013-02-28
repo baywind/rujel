@@ -38,6 +38,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
+import net.rujel.reports.ReportTable;
 import net.rujel.reusables.*;
 import net.rujel.ui.TeacherSelector;
 
@@ -264,14 +265,17 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     		} else {
     			set.removeAllObjects();
     		}
-    		String keyPath = (String)itemDict.valueForKeyPath("keyPath");
+//    		String keyPath = (String)itemDict.valueForKeyPath("keyPath");
 			Object compare = null;
     		while (enu.hasMoreElements()) {
 				Object row = enu.nextElement();
+				/*
 	    		if(keyPath == null || keyPath.equals("."))
 	    			compare = row;
 	    		else
 	    			compare = NSKeyValueCodingAdditions.Utility.valueForKeyPath(row, keyPath);
+	    		*/
+				compare = ReportTable.valueFromDict(itemDict, row, this);
 	    		if((item==null)?compare==null:item.equals(compare))
 	    			set.addObject(row);
 			}
