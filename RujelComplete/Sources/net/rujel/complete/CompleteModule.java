@@ -234,7 +234,7 @@ public class CompleteModule {
 					EduCourse.class, NSArray.class, SettingsBase.class);
 			dict.takeValueForKey(method, "parsedMethod");
 			dict.takeValueForKey(new NSArray(args), "paramValues");
-			result.takeValueForKey(dict, "value");
+			result.takeValueForKey(dict, "itemValue");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

@@ -195,7 +195,7 @@ public class StatsModule {
 EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Boolean.TYPE);
 				valueDict.setObjectForKey(method, "parsedMethod");
 				valueDict.setObjectForKey(new NSArray(params), "paramValues");
-				reportDict.setObjectForKey(valueDict, "value");
+				reportDict.setObjectForKey(valueDict, "itemValue");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
