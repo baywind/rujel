@@ -106,6 +106,8 @@ public class ModuleInit {
 			return deleteStudents(ctx);
 		} else if("xmlGeneration".equals(obj)) {
 			return xmlGeneration(ctx);
+		} else if("archiveType".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelCriterial_Strings.archiveType");
 		}
 		return null;
 	}

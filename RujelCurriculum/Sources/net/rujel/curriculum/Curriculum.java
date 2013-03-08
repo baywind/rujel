@@ -352,6 +352,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     						currReason.teacher(), true, 2, 1, 1),"@teacher");
     			if(currReason.namedFlags().flagForKey("forEduGroup"))
     				archive.takeValueForKey(currReason.eduGroup().name(),"@eduGroup");
+    			archive.takeValueForKey(new Integer(
+    					(ec.globalIDForObject(currReason).isTemporary())?1:2), "actionType");
     		}
 			boolean add = (Reason.ENTITY_NAME.equals(currTab.valueForKey("entity")) &&
 					ec.globalIDForObject(currReason).isTemporary());
@@ -546,6 +548,12 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			}
 			if(currReason.editingContext() != null) {
 				Object[] args = new Object[] {session(),ec.globalIDForObject(currReason)};
+	    		if(ifArchive) {
+	    			EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+	    			archive.takeValueForKey(currReason, "objectIdentifier");
+	    			archive.takeValueForKey(".","@reason");
+	    			archive.takeValueForKey(new Integer(3), "actionType");
+	    		}
 				ec.deleteObject(currReason);
 				ec.saveChanges();
 				logger.log(WOLogLevel.EDITING,"Reason deleted",args);

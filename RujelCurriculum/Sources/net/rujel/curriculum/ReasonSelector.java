@@ -180,6 +180,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		}
     		if(ifArchive && hasChanges) {
     			EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
+    			archive.takeValueForKey(new Integer((reasonID.intValue() == 0)?1:2), "actionType");
     			archive.takeValueForKey(reason, "objectIdentifier");
     			archive.takeValueForKey(reasonText,"@reason");
     			archive.takeValueForKey(begin,"@begin");

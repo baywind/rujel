@@ -4,6 +4,7 @@ PageWrapper : PageWrapper {
 
 Title : WOString {
   value = session.strings.RujelArchiving_Archive.ReadArchives.title;
+  escapeHTML = false;
 }
 
 Rows : WORepetition {
@@ -20,35 +21,35 @@ PeriodTitle: WOString {
 	escapeHTML = false;
 }
 
-PeriodTitle2: WOString {
+SinceTitle: WOString {
 	value = application.strings.Reusables_Strings.dataTypes.since;
 	valueWhenEmpty = "begin";
 	escapeHTML = false;
 }
 
-PeriodTitle3: WOString {
+ToTitle: WOString {
 	value = application.strings.Reusables_Strings.dataTypes.to;
 	valueWhenEmpty = "end";
 	escapeHTML = false;
 }
 
 SinceField: WOTextField {
-	value = since;
-	size = 19;
+	value = params.since;
+	size = 20;
 	maxlength = 19;
 	name = "begin";
   dateformat = "yyyy-MM-dd HH:mm:ss";
 }
 
 ToField: WOTextField {
-	value = to;
-	size = 19;
+	value = params.to;
+	size = 20;
 	maxlength = 19;
 	name = "end";
   dateformat = "yyyy-MM-dd HH:mm:ss";
 }
 
-Submit : WOSubmitButton {
+Select : WOSubmitButton {
   value = application.strings.Reusables_Strings.uiElements.Select;
   action = select;
 }
@@ -81,7 +82,7 @@ Author : WOString {
 }
 
 Entity : WOString {
-  value = item.usedEntity.usedEntity;
+  value = item.usedEntity.title;
 }
 
 ActionType : WOString {
@@ -90,7 +91,7 @@ ActionType : WOString {
 
 Radio0 : WORadioButton {
   value = 0;
-  selection = level;
+  selection = params.level;
   name = "actionType";
 }
 
@@ -100,7 +101,7 @@ Action0 : WOString {
 
 Radio2 : WORadioButton {
   value = 2;
-  selection = level;
+  selection = params.level;
   name = "actionType";
 }
 
@@ -110,7 +111,7 @@ Action2 : WOString {
 
 Radio3 : WORadioButton {
   value = 3;
-  selection = level;
+  selection = params.level;
   name = "actionType";
 }
 
@@ -120,7 +121,7 @@ Action3 : WOString {
 
 RowContainer : WOGenericContainer {
   elementName = "tr";
-  class = rowClass;
+  class = item.rowClass;
 }
 
 EntityTitle : WOString {
@@ -137,4 +138,65 @@ ReasonTitle : WOString {
 
 Reason : WOString {
   value = item.reason;
+}
+
+EduGroup : WOString {
+  value = item.group;
+}
+
+Subject : WOString {
+  value = item.subject;
+  escapeHTML = false;
+}
+
+TeacherName : PersonDisplay {
+  person = item.course.teacher;
+  last = 2;
+  first = 1;
+  second = 1;
+}
+
+ChooseEnt : WOPopUpButton {
+  list = entities;
+  item = item;
+  displayString = item.title;
+  selection = params.usedEntity;
+  noSelectionString = "-= ??? =-";
+}
+
+EduGroupLabel: WOString {
+	value = application.strings.RujelInterfaces_Names.EduGroup.this;
+	valueWhenEmpty = "Class";
+	escapeHTML = false;
+}
+SubjectLabel: WOString {
+	value = application.strings.RujelInterfaces_Names.EduCycle.subject;
+	valueWhenEmpty = "Subject";
+	escapeHTML = false;
+}
+TeacherLabel: WOString {
+	value = application.strings.RujelInterfaces_Names.EduCourse.teacher;
+	valueWhenEmpty = "Teacher";
+	escapeHTML = false;
+}
+
+ActionTitle : WOString {
+  value = session.strings.RujelArchiving_Archive.ReadArchives.actionTitle;
+  escapeHTML = false;
+}
+
+TeacherCell : WOGenericContainer {
+  elementName = "td";
+  class = item.teacherClass;
+  title = item.teacherName;
+}
+
+HasCourse : WOConditional {
+  condition = params.usedEntity.noCourse;
+  negate = true;
+}
+
+HasTeacher : WOConditional {
+  condition = params.usedEntity.noTeacher;
+  negate = true;
 }

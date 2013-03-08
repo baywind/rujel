@@ -112,6 +112,7 @@ public class MarkArchive extends _MarkArchive
 			if(dict == null)
 				dict = new NSMutableDictionary();
 			dict.takeValueForKey(actionType(), ACTION_TYPE_KEY);
+//			dict.takeValueForKey(new WeakReference<MarkArchive>(this), ENTITY_NAME);
 			waiterForEc(eo.editingContext()).registerArchive(dict, eo);
 			return;
 		}
@@ -134,6 +135,13 @@ public class MarkArchive extends _MarkArchive
 				} catch (Exception e) {}
 		}
 		setIdentifierFromDictionary(usedEntity, pKey);
+	}
+	
+	public void setActionType(Integer value) {
+		super.setActionType(value);
+		EOEditingContext ec = editingContext();
+		if(ec == null || ec.deletedObjects().contains(this))
+			dict.takeValueForKey(value, ACTION_TYPE_KEY);
 	}
 
 	public static NSDictionary objectIdentifierDict(EOEnterpriseObject eo) {
@@ -298,7 +306,7 @@ public class MarkArchive extends _MarkArchive
 	
 	public Integer getKeyValue(String key) {
 		EOEnterpriseObject ent = usedEntity();
-		if(usedEntity() == null)
+		if(ent == null)
 			throw new IllegalStateException("Not initialised yet");
 		for (int i = 0; i < keys.length; i++) {
 			String test = (String)ent.valueForKey(keys[i]);
@@ -628,11 +636,8 @@ public class MarkArchive extends _MarkArchive
 		public void fire(NSNotification notification) {
 			EOEditingContext ec = editingContext();
 			if(ec == null) {
-				WOSession ses = null;
-				if(ec instanceof SessionedEditingContext)
-					ses = ((SessionedEditingContext)ec).session();
 				logger.log(WOLogLevel.WARNING,
-						"Failed to save archives: editingContext garbage collected",ses);
+						"Failed to save archives: editingContext garbage collected");
 				return;
 			}
 			NSMutableSet left = null;
@@ -672,8 +677,15 @@ public class MarkArchive extends _MarkArchive
 						}
 					}
 				}
-				if(pKey != null) {		
+				if(pKey != null) {
 					Integer actionType = (Integer)dict.removeObjectForKey(ACTION_TYPE_KEY);
+/*					WeakReference<MarkArchive> maRef =
+						(WeakReference<MarkArchive>)dict.removeObjectForKey(ENTITY_NAME);
+					MarkArchive pre = maRef.get();
+					if(pre != null) {
+						actionType = pre.actionType();
+						dict = pre.dict;
+					} */
 					MarkArchive arch = (MarkArchive)EOUtilities.createAndInsertInstance(
 							ec, "MarkArchive");
 					arch.setUsedEntityName(usedEntity);

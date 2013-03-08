@@ -212,5 +212,14 @@
 		<key>sort</key>
 		<string>20</string>
 	</dict>
+	<key>archiveType</key>
+	<dict>
+		<key>entityName</key>
+		<string>Prognosis</string>
+		<key>title</key>
+		<string>Прогноз</string>
+		<key>course</key>
+		<string>course</string>
+	</dict>
 </dict>
 </plist>

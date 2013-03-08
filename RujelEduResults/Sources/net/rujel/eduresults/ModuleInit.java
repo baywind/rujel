@@ -80,6 +80,8 @@ public class ModuleInit {
 					new String[] {"entity","studentPath","checkPath","checkCourse"});
 		} else if("deleteStudents".equals(obj)) {
 			return deleteStudents(ctx);
+		} else if("archiveType".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.archiveType");
 		}
 		return null;
 	}

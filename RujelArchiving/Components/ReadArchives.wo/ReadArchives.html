@@ -3,16 +3,19 @@
 <webobject name = "Form">
 <table align = "center">
 <tr><th colspan = "2"><webobject name="PeriodTitle"/>:</th>
-<th>action</th>
-<td rowspan = "3" style = "padding:10px;"><webobject name = "Submit"/></td>
+<th><webobject name = "ActionTitle"/></th>
+<td></td>
 </tr>
-<tr><td><webobject name="PeriodTitle2"/></td><td><webobject name="SinceField"/></td>
+<tr><th align = "right"><webobject name="SinceTitle"/>:</th><td><webobject name="SinceField"/></td>
 <td rowspan = "2">
 	<webobject name = "Radio0"/> <webobject name = "Action0"/>
 <br/><webobject name = "Radio2"/> <webobject name = "Action2"/>
 <br/><webobject name = "Radio3"/> <webobject name = "Action3"/>
-</td></tr>
-<tr><td><webobject name="PeriodTitle3"/></td><td><webobject name="ToField"/></td></tr>
+</td><td><webobject name = "ChooseEnt"/></td>
+</tr>
+<tr><th align = "right"><webobject name="ToTitle"/>:</th><td><webobject name="ToField"/></td>
+<td style = "padding:10px;"><webobject name = "Select"/></td>
+</tr>
 </table>
 </webobject>
 <table align = "center">
@@ -20,15 +23,22 @@
 <tr class = "orange"><th><webobject name = "DateTitle"/> + <webobject name = "TimeTitle"/>
 </th><th><webobject name = "AuthorTitle"/>
 </th><th><webobject name = "EntityTitle"/>
-</th><th>action
+</th><webobject name = "HasCourse"><th><webobject name="EduGroupLabel"/>
+</th><th><webobject name="SubjectLabel"/>
+</th><webobject name = "HasTeacher"><th><webobject name="TeacherLabel"/>
+</th></webobject></webobject><th>?
 </th><th><webobject name = "ReasonTitle"/>
 </th></tr>
 </thead><tbody><webobject name = "Rows">
 <webobject name = "RowContainer">
 	<td><webobject name = "Timestamp"/></td>
 	<td><webobject name = "Author"/></td>
-	<td><webobject name = "Entity"/></td>
-	<td><webobject name = "ActionType"/></td>
+	<td align = "center"><webobject name = "Entity"/></td><webobject name = "HasCourse">
+	<td align = "center"><webobject name = "EduGroup"/></td>
+	<td><webobject name = "Subject"/></td><webobject name = "HasTeacher">
+	<webobject name = "TeacherCell"><webobject name = "TeacherName"/></webobject>
+	</webobject></webobject>
+	<td align = "center"><webobject name = "ActionType"/></td>
 	<td><webobject name = "Reason"/></td>
 </webobject>
 </webobject></tbody>

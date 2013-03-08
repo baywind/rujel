@@ -170,12 +170,12 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
     	if(date == null || !MyUtility.dateFormat().format(date).equals(oldDate))
     		return updateDate();
     	if(abs == null) {
-    		session().takeValueForKey(application().valueForKeyPath(
+    		session().takeValueForKey(session().valueForKeyPath(
     				"strings.RujelCurriculum_Curriculum.messages.wrongVariation"), "message");
     		return this;
     	}
     	if(reason == null) {
-    		session().takeValueForKey(application().valueForKeyPath(
+    		session().takeValueForKey(session().valueForKeyPath(
     				"strings.RujelCurriculum_Curriculum.messages.reasonRequired"), "message");
     		return this;
     	}

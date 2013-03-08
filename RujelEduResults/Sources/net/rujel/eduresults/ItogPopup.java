@@ -269,7 +269,7 @@ public class ItogPopup extends WOComponent {
 			if(ifArchive) {
 				EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(ec,"MarkArchive");
 				archive.takeValueForKey(itog, "objectIdentifier");
-				archive.takeValueForKey(".", '@' + "mark");
+				archive.takeValueForKey(".", "@mark");
 				archive.takeValueForKey(changeReason, "reason");
 				archive.takeValueForKey(new Integer(3), "actionType");
 			}

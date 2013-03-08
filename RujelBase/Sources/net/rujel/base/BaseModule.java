@@ -84,6 +84,8 @@ public class BaseModule {
 		} else if("xmlGeneration".equals(obj)) {
 			NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
 			return new LessonsXML(options);
+		} else if("archiveType".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelBase_Base.archiveType");
 		}
 		return null;
 	}
