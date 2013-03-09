@@ -422,6 +422,8 @@ public class AutoItogModule {
 		String calcName = prognosis.autoItog().calculatorName();
 		//calcName = calcName.substring(calcName.lastIndexOf('.') +1);
 		archive.takeValueForKey(calcName, "reason");
+		archive.takeValueForKey(new Integer(
+				(ec.globalIDForObject(prognosis).isTemporary())?1:2), "actionType");
 	}
 	
 	public static NSMutableDictionary printStudentResults(WOContext ctx) {

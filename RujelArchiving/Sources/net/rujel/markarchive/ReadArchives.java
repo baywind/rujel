@@ -4,37 +4,31 @@ import java.util.Enumeration;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
+import com.webobjects.appserver.WOMessage;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOAndQualifier;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOKeyValueQualifier;
-import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSKeyValueCoding;
-import com.webobjects.foundation.NSLocking;
-import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSTimestamp;
+import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
 
 public class ReadArchives extends WOComponent {
 	
-	public NSMutableArray records;
+	protected NSMutableArray records;
+	public NSArray list;
 	public Object item;
 	public NSMutableArray entities;
 	protected NSMutableDictionary byEnt; 
-//	public NSDictionary currEntity;
 	
 	public EOEditingContext ec;
 	public NSMutableDictionary params;
+	protected NSMutableArray sorter = MarkArchive.backSorter.mutableClone();
+	public NSDictionary sortStyle;
 	
     public ReadArchives(WOContext context) {
         super(context);
@@ -97,6 +91,7 @@ public class ReadArchives extends WOComponent {
     
     public void select() {
     	records.removeAllObjects();
+    	list = null;
     	NSMutableArray quals = new NSMutableArray();
 		quals.addObject(new EOKeyValueQualifier(MarkArchive.ACTION_TYPE_KEY, 
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, params.valueForKey("level")));
@@ -111,33 +106,42 @@ public class ReadArchives extends WOComponent {
 					EOQualifier.QualifierOperatorEqual,
 					params.valueForKeyPath("usedEntity.usedEntity")));
 		}
+		NSArray found = new NSArray(new EOSortOrdering[] {
+				new EOSortOrdering(MarkArchive.WOSID_KEY,EOSortOrdering.CompareAscending),
+				new EOSortOrdering(MarkArchive.KEY1_KEY,EOSortOrdering.CompareAscending),
+				new EOSortOrdering(MarkArchive.KEY2_KEY,EOSortOrdering.CompareAscending),
+				new EOSortOrdering(MarkArchive.KEY3_KEY,EOSortOrdering.CompareAscending),
+				new EOSortOrdering(MarkArchive.TIMESTAMP_KEY, EOSortOrdering.CompareAscending)});
 		EOFetchSpecification fs = new EOFetchSpecification(MarkArchive.ENTITY_NAME,
-				new EOAndQualifier(quals),MarkArchive.backSorter);
-		NSArray found = ec.objectsWithFetchSpecification(fs);
+				new EOAndQualifier(quals),found);
+		found = ec.objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0)
 			return;
 //		if(found.count() > 1000) {
 //			session().takeValueForKey(found.count() + " — That's too much!", "message");
 //			return;
 //		}
-		boolean checkUser;
+/*		boolean checkUser;
 		{
 			Object user = session().valueForKey("user"); 
 			if(user != null) {
 				String name = user.getClass().getName();
 				checkUser = "net.rujel.user.TableUser".equals(name);
 			} else {
-				checkUser = false;
+				checkUser = Boolean.getBoolean("ReadArchives.forceCheckUser");
 			}
-			checkUser = true; // TODO: comment this out
-		}
+		} */
 		Enumeration enu = found.objectEnumerator();
 		NSMutableDictionary dict = null;
+		int noWarn = 0;
 		while (enu.hasMoreElements()) {
 			MarkArchive arch = (MarkArchive) enu.nextElement();
-			ifsame:
-				if (dict != null && arch.actionType().intValue() == 1 &&
-						"green".equals(dict.valueForKey("rowClass"))) {
+			ifsame: // grouping
+				if (dict != null) { // && arch.actionType().intValue() == 1 &&
+//						"green".equals(dict.valueForKey("rowClass"))) {
+					String grouping = (String)dict.valueForKeyPath("usedEntity.grouping");
+					if(grouping == null)
+						break ifsame;
 					Object prev = dict.valueForKey("arch");
 					MarkArchive prevMA;
 					if(prev instanceof MarkArchive)
@@ -147,12 +151,13 @@ public class ReadArchives extends WOComponent {
 					else
 						break ifsame;
 					if (!(arch.wosid().equals(prevMA.wosid()) && 
-							arch.usedEntity().equals(prevMA.usedEntity())))
+							arch.usedEntity().equals(prevMA.usedEntity()) &&
+							arch.actionType().equals(prevMA.actionType())))
 						break ifsame;
 					EOEnterpriseObject ue = arch.usedEntity(); 
 					for (int j = 0; j < MarkArchive.keys.length; j++) {
 						String test = (String)ue.valueForKey(MarkArchive.keys[j]);
-						if(test == null || test.equals("student") || test.equals("studentID"))
+						if(test == null || test.equals(grouping) || test.equals(grouping + "ID"))
 							continue;
 						Object val1 = arch.valueForKey(MarkArchive.keys[j]);
 						Object val2 = prevMA.valueForKey(MarkArchive.keys[j]);
@@ -164,7 +169,18 @@ public class ReadArchives extends WOComponent {
 						dict.takeValueForKey(prev, "arch");
 					}
 					((NSMutableArray)prev).addObject(arch);
-					dict.takeValueForKey("*" + ((NSMutableArray)prev).count(),"reason");
+					if(arch.reason() != null) {
+						String reason = (String)dict.valueForKey("reason");
+						String aRsn = WOMessage.stringByEscapingHTMLAttributeValue(arch.reason());
+						if(reason == null) {
+							dict.takeValueForKey("font-style:italic;", "actStyle");
+							dict.takeValueForKey(aRsn, "reason");
+						} else if(!reason.contains(aRsn)) {
+							reason = reason + "; " + aRsn;
+							dict.takeValueForKey(reason, "reason");
+						}
+					}
+					dict.takeValueForKey("*" + ((NSMutableArray)prev).count(),"multiplier");
 					continue;
 				} // ifsame
 
@@ -172,7 +188,11 @@ public class ReadArchives extends WOComponent {
 			dict.takeValueForKey(rowClass(arch), "rowClass");
 			dict.takeValueForKey(arch.timestamp(), MarkArchive.TIMESTAMP_KEY);
 			dict.takeValueForKey(arch.user(), MarkArchive.USER_KEY);
-			dict.takeValueForKey(arch.reason(), "reason");
+			if(arch.reason() != null) {
+				dict.takeValueForKey("font-style:italic;", "actStyle");
+				dict.takeValueForKey(
+						WOMessage.stringByEscapingHTMLAttributeValue(arch.reason()), "reason");
+			}
 			{
 				NSArray actionTypes = (NSArray)session().valueForKeyPath(
 						"strings.RujelArchiving_Archive.actionTypes");
@@ -236,25 +256,51 @@ public class ReadArchives extends WOComponent {
 					EduCycle cycle = (EduCycle)EOUtilities.objectWithPrimaryKeyValue(ec, 
 							EduCycle.entityName, cID);
 					dict.takeValueForKey(cycle.subject(), "subject");
-					dict.takeValueForKey(cycle.grade().toString(), "group");
+					Integer grade = cycle.grade();
+					dict.takeValueForKey(grade, "grade");
+					dict.takeValueForKey(grade.toString(), "group");
+					dict.takeValueForKey(cycle, "cycle");
 				} catch (Exception e) {
 					continue;
 				}
 			} else {
 				dict.takeValueForKey(course.subjectWithComment(), "subject");
-				if(course.eduGroup() == null)
-					dict.takeValueForKey(course.cycle().grade().toString(), "group");
-				else
-					dict.takeValueForKey(course.eduGroup().name(), "group");
+				dict.takeValueForKey(course.cycle(), "cycle");
+				dict.takeValueForKey(course.cycle().grade(), "grade");
+				if(course.eduGroup() == null) {
+					Integer grade = course.cycle().grade();
+					dict.takeValueForKey(grade.toString(), "group");
+					dict.takeValueForKey(grade, "grade");
+				} else {
+					EduGroup gr = course.eduGroup();
+					dict.takeValueForKey(gr.name(), "group");
+					dict.takeValueForKey(gr.grade(), "grade");
+				}
 				Teacher teacher = course.teacher(arch.timestamp());
 				String teacherName = (teacher == null)? null :
 					Person.Utility.fullName(teacher,true, 2, 2, 2);
 				dict.takeValueForKey(teacherName, "teacherName");
-				if(checkUser && teacherName != null && !teacherName.equals(arch.user())) {
+				if(teacherName != null && !teacherName.equals(arch.user())) {
 					dict.takeValueForKey("warning", "teacherClass");
+				} else {
+					noWarn++;
 				}
 			}
 		} // found.objectEnumerator();
+		if(noWarn == 0)
+			records.takeValueForKey(null, "teacherClass");
+		if(sortStyle != null && params.valueForKey("usedEntity") != null) {
+			if((Various.boolForObject(params.valueForKeyPath("usedEntity.noTeacher"))
+					&& sortStyle.valueForKey("teacher") != null) ||
+			(Various.boolForObject(params.valueForKeyPath("usedEntity.noCourse"))
+					&& (sortStyle.valueForKey("teacher") != null ||
+							sortStyle.valueForKey("group") != null ||
+							sortStyle.valueForKey("subject") != null))) {
+				sorter = MarkArchive.backSorter.mutableClone();
+				sortStyle = null;
+			}
+		}
+    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
     }
     
     public static String rowClass(MarkArchive ma) {
@@ -270,9 +316,91 @@ public class ReadArchives extends WOComponent {
 		}
     }
     
-    public String rowClass() {
-    	if (item instanceof MarkArchive)
-			return rowClass((MarkArchive) item);
-    	return null;
+    public void sortByDate() {
+    	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
+    	sortStyle = null;
+    	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY)) {
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    	} else if(sorter.count() < 2) {
+    		if(so.selector() == EOSortOrdering.CompareDescending) {
+    			so = new EOSortOrdering(MarkArchive.TIMESTAMP_KEY,EOSortOrdering.CompareAscending);
+    			sortStyle = new NSDictionary("selection","date");
+    		} else {
+    			so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    		}
+    	} else if(so.selector() != EOSortOrdering.CompareDescending) {
+    		sortStyle = new NSDictionary("selection","date");
+    	}
+    	sorter.removeAllObjects();
+    	sorter.addObject(so);
+    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
+    }
+    
+    public void sortBySubject() {
+    	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
+    	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY))
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    	sorter.removeAllObjects();
+    	if(sortStyle == null || sortStyle.valueForKey("subject") == null) {
+    		sorter.addObject(new EOSortOrdering("cycle",EOSortOrdering.CompareAscending));
+    		sorter.addObject(new EOSortOrdering("course",EOSortOrdering.CompareAscending));
+    		sortStyle = new NSDictionary("selection","subject");
+    	} else {
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    		sortStyle = null;
+    	}
+    	sorter.addObject(so);
+    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
+    }
+    
+    public void sortByGroup() {
+    	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
+    	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY))
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    	sorter.removeAllObjects();
+    	if(sortStyle == null || sortStyle.valueForKey("group") == null) {
+    		sorter.addObject(new EOSortOrdering("grade",EOSortOrdering.CompareAscending));
+    		sorter.addObject(new EOSortOrdering("group",EOSortOrdering.CompareCaseInsensitiveAscending));
+    		sortStyle = new NSDictionary("selection","group");
+    	} else {
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    		sortStyle = null;
+    	}
+    	sorter.addObject(so);
+    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
+    }
+
+    public void sortByTeacher() {
+    	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
+    	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY))
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    	sorter.removeAllObjects();
+    	if(sortStyle == null || sortStyle.valueForKey("teacher") == null) {
+    		sorter.addObject(new EOSortOrdering("teacherName",
+    				EOSortOrdering.CompareCaseInsensitiveAscending));
+    		sortStyle = new NSDictionary("selection","teacher");
+    	} else {
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    		sortStyle = null;
+    	}
+    	sorter.addObject(so);
+    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
+    }
+
+    public void sortByUser() {
+    	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
+    	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY))
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    	sorter.removeAllObjects();
+    	if(sortStyle == null || sortStyle.valueForKey("user") == null) {
+    		sorter.addObject(new EOSortOrdering(MarkArchive.USER_KEY,
+    				EOSortOrdering.CompareCaseInsensitiveAscending));
+    		sortStyle = new NSDictionary("selection","user");
+    	} else {
+    		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+    		sortStyle = null;
+    	}
+    	sorter.addObject(so);
+    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
     }
 }

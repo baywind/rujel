@@ -551,6 +551,8 @@
 				<key>fromEntity</key>
 				<string>EduLesson</string>
 			</dict>
+			<key>grouping</key>
+			<string>student</string>
 		</dict>
 		<dict>
 			<key>entityName</key>

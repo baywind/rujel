@@ -20,26 +20,28 @@
 </webobject>
 <table align = "center">
 <thead>
-<tr class = "orange"><th><webobject name = "DateTitle"/> + <webobject name = "TimeTitle"/>
-</th><th><webobject name = "AuthorTitle"/>
-</th><th><webobject name = "EntityTitle"/>
-</th><webobject name = "HasCourse"><th><webobject name="EduGroupLabel"/>
-</th><th><webobject name="SubjectLabel"/>
-</th><webobject name = "HasTeacher"><th><webobject name="TeacherLabel"/>
-</th></webobject></webobject><th>?
-</th><th><webobject name = "ReasonTitle"/>
-</th></tr>
+<tr class = "orange"><webobject name = "DateTH">
+<webobject name = "DateTitle"/> + <webobject name = "TimeTitle"/></webobject>
+<webobject name = "UserTH"><webobject name = "AuthorTitle"/></webobject>
+<th><webobject name = "EntityTitle"/></th>
+<th>?</th><webobject name = "HasCourse">
+<webobject name = "GroupTH"><webobject name="EduGroupLabel"/></webobject>
+<webobject name = "SubjectTH"><webobject name="SubjectLabel"/></webobject>
+<webobject name = "TeacherTH"><webobject name="TeacherLabel"/></webobject>
+</webobject>
+
+</tr>
 </thead><tbody><webobject name = "Rows">
 <webobject name = "RowContainer">
 	<td><webobject name = "Timestamp"/></td>
 	<td><webobject name = "Author"/></td>
-	<td align = "center"><webobject name = "Entity"/></td><webobject name = "HasCourse">
-	<td align = "center"><webobject name = "EduGroup"/></td>
+	<td align = "center"><webobject name = "Entity"/></td>
+	<webobject name = "ActCell">
+		<webobject name = "ActionType"/><webobject name = "Multiplier"/></webobject>
+	<webobject name = "HasCourse"><td align = "center"><webobject name = "EduGroup"/></td>
 	<td><webobject name = "Subject"/></td><webobject name = "HasTeacher">
 	<webobject name = "TeacherCell"><webobject name = "TeacherName"/></webobject>
 	</webobject></webobject>
-	<td align = "center"><webobject name = "ActionType"/></td>
-	<td><webobject name = "Reason"/></td>
 </webobject>
 </webobject></tbody>
 </table>

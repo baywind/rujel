@@ -218,7 +218,18 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			try {
 				PlanCycle l = (PlanCycle)left;
 				PlanCycle r = (PlanCycle)right;
-				return comparator.compare(l.subjectEO(), r.subjectEO());
+				int result = comparator.compare(l.subjectEO(), r.subjectEO());
+				if(result == NSComparator.OrderedSame) {
+					left = l.grade();
+					right = r.grade();
+					if(right == null)
+						result =  NSComparator.OrderedAscending;
+					else if(left == null)
+						result =  NSComparator.OrderedDescending;
+					else
+						result = compareValues(left,right,EOSortOrdering.CompareAscending);
+				}
+				return result;
 			} catch  (ComparisonException ex) {
 				throw new NSForwardException(ex,"Error comparing");
 			} catch (ClassCastException ce) {

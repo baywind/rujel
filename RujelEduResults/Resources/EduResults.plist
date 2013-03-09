@@ -175,6 +175,8 @@
 		<string>eduCycle</string>
 		<key>noTeacher</key>
 		<true/>
+		<key>grouping</key>
+		<string>student</string>
 	</dict>
 </dict>
 </plist>

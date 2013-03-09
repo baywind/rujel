@@ -220,6 +220,8 @@
 		<string>Прогноз</string>
 		<key>course</key>
 		<string>course</string>
+		<key>grouping</key>
+		<string>student</string>
 	</dict>
 </dict>
 </plist>

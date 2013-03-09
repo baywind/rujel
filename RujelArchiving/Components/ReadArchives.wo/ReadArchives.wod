@@ -8,7 +8,7 @@ Title : WOString {
 }
 
 Rows : WORepetition {
-  list = records;
+  list = list;
   item = item;
 }
 
@@ -130,16 +130,6 @@ EntityTitle : WOString {
   valueWhenEmpty = "Entity";
 }
 
-ReasonTitle : WOString {
-  value = application.strings.RujelArchiving_Archive.reason;
-  valueWhenEmpty = "Reason";
-  escapeHTML = false;
-}
-
-Reason : WOString {
-  value = item.reason;
-}
-
 EduGroup : WOString {
   value = item.group;
 }
@@ -199,4 +189,51 @@ HasCourse : WOConditional {
 HasTeacher : WOConditional {
   condition = params.usedEntity.noTeacher;
   negate = true;
+}
+
+SubjectTH : OnClickContainer {
+  elementName = "th";
+  onclick = session.tryLoad;
+  invokeAction = sortBySubject;
+  class = sortStyle.subject;
+}
+
+TeacherTH : OnClickContainer {
+  elementName = "th";
+  onclick = session.tryLoad;
+  hide = params.usedEntity.noTeacher;
+  invokeAction = sortByTeacher;
+  class = sortStyle.teacher;
+}
+
+GroupTH : OnClickContainer {
+  elementName = "th";
+  onclick = session.tryLoad;
+  invokeAction = sortByGroup;
+  class = sortStyle.group;
+}
+
+UserTH : OnClickContainer {
+  elementName = "th";
+  onclick = session.tryLoad;
+  invokeAction = sortByUser;
+  class = sortStyle.user;
+}
+
+DateTH : OnClickContainer {
+  elementName = "th";
+  onclick = session.tryLoad;
+  invokeAction = sortByDate;
+  class = sortStyle.date;
+}
+
+Multiplier : WOString {
+  value = item.multiplier;
+}
+
+ActCell : WOGenericContainer {
+  elementName = "td";
+  align = "center";
+  title = item.reason;
+  style = item.actStyle;
 }
