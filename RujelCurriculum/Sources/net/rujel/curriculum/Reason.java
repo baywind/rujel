@@ -290,8 +290,18 @@ public class Reason extends _Reason {
 		NSDictionary values = new NSDictionary( new Object[] {key, new Integer(1)},
 				new String[] {VERIFICATION_KEY,FLAGS_KEY});
 		NSArray found = EOUtilities.objectsMatchingValues(ec, ENTITY_NAME, values);
-		if(found != null && found.count() > 0) {
-			return (Reason)found.objectAtIndex(0);
+		if(found != null) {
+			for (int i = 0; i < found.count(); i++) {
+				Reason reason = (Reason)found.objectAtIndex(i);
+				if(EOPeriod.Utility.compareDates(reason.end(), holiday.begin()) >= 0 &&
+						EOPeriod.Utility.compareDates(reason.begin(), holiday.end()) <= 0) {
+					if(EOPeriod.Utility.compareDates(reason.begin(), holiday.begin()) > 0)
+						reason.setBegin(holiday.begin());
+					if(EOPeriod.Utility.compareDates(reason.end(), holiday.end()) < 0)
+						reason.setEnd(holiday.end());
+					return reason;
+				}
+			}
 		}
 		if(!create)
 			return null;
@@ -400,7 +410,8 @@ public class Reason extends _Reason {
 								buf.toString(),var,BEGIN_KEY);
 					else
 						throw new NSValidation.ValidationException(
-								buf.toString(),var,END_KEY);				}
+								buf.toString(),var,END_KEY);
+					}
 			} // enu variations
 		}
 	}
