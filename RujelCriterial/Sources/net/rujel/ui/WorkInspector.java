@@ -41,7 +41,6 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
-import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -478,11 +477,16 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
     
     public String checked() {
-    	if(isCheckBox() && (itemMask() != null ||
-    			(work == null && critIdx < 0 && 
-    					Various.boolForObject(dict.valueForKey("trimmedWeight")))))
+    	if(!isCheckBox())
+    		return null;
+    	if((itemMask() != null))
     		return "checked";
-    	return null;
+    	if(work != null || critIdx >= 0)
+    		return null;
+    	BigDecimal weight = (BigDecimal)dict.valueForKey("trimmedWeight");
+    	if(weight == null || weight.compareTo(BigDecimal.ZERO) == 0)
+    		return null;
+    	return "checked";
     }
     
     protected EOEnterpriseObject itemMask() {

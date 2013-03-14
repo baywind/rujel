@@ -191,7 +191,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 					} else {
 						export.beginValue();
 						Object value = item;
-						if(subDict.valueForKey("value") != null)
+						if(subDict.valueForKey("itemValue") != null)
 							value = valueOf.valueForKeyPath("item.subDict.value");
 						NSDictionary bindings = new NSDictionary(
 								new Object[] {WOAssociation.associationWithValue(value),
