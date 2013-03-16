@@ -237,6 +237,19 @@ public class MarkArchive extends _MarkArchive
 		setIdentifierFromDictionary(usedEntity(),identifierDict);
 	}
 	
+	public NSMutableDictionary getIdentifierDictionary() {
+		NSMutableDictionary identifierDict = new NSMutableDictionary();
+		EOEnterpriseObject ue = usedEntity();
+		identifierDict.takeValueForKey(ue.valueForKey("usedEntity"), USED_ENTITY_KEY);
+		for (int i = 0; i < keys.length; i++) {
+			String key = (String)ue.valueForKey(keys[i]);
+			if(key == null)
+				continue;
+			identifierDict.takeValueForKey(valueForKey(keys[i]), key);
+		}
+		return identifierDict;
+	}
+	
 	public void setIdentifierFromDictionary (String entityName, NSDictionary identifierDict) {
 		EOEnterpriseObject usedEntity = usedEntity();
 		if(usedEntity == null || !entityName.equals(usedEntity.valueForKey("usedEntity"))) {

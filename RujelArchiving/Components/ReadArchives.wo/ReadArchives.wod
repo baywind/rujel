@@ -13,6 +13,7 @@ Rows : WORepetition {
 }
 
 Form : WOForm {
+  multipleSubmit = true;
 }
 
 PeriodTitle: WOString {
@@ -67,7 +68,7 @@ TimeTitle : WOString {
 }
 
 AuthorTitle : WOString {
-  value = application.strings.RujelArchiving_Archive.author;
+  value = session.strings.RujelArchiving_Archive.author;
   valueWhenEmpty = "Author";
   escapeHTML = false;
 }
@@ -144,6 +145,8 @@ TeacherName : PersonDisplay {
   last = 2;
   first = 1;
   second = 1;
+  valueWhenEmpty = item.teacherName;
+  emptyStyle = "font-style:italic;";
 }
 
 ChooseEnt : WOPopUpButton {
@@ -201,9 +204,9 @@ SubjectTH : OnClickContainer {
 TeacherTH : OnClickContainer {
   elementName = "th";
   onclick = session.tryLoad;
-  hide = params.usedEntity.noTeacher;
   invokeAction = sortByTeacher;
   class = sortStyle.teacher;
+  hide = params.usedEntity.noTeacher;
 }
 
 GroupTH : OnClickContainer {
@@ -236,4 +239,51 @@ ActCell : WOGenericContainer {
   align = "center";
   title = item.reason;
   style = item.actStyle;
+}
+
+UserCell : OnClickContainer {
+  elementName = "td";
+  title = item.wosid;
+  onclick = session.tryLoad;
+  invokeAction = filterUser;
+}
+
+ExtraQuals : WORepetition {
+  list = params.extraQuals;
+  item = item;
+}
+
+QualTitle : WOString {
+  value = item.title;
+  escapeHTML = false;
+}
+
+QualSpan : WOGenericContainer {
+  elementName = "span";
+  class = item.styleClass;
+  style = "padding:1px 2px;";
+}
+
+QualValue : WOString {
+  value = item.value;
+  escapeHTML = false;
+}
+
+Cross : WOImageButton {
+  framework = "RujelBase";
+  filename = "cross.png";
+  height = 12;
+  width = 12;
+  action = removeExtra;
+}
+HasWarnings : WOConditional {
+  condition = params.warnings;
+}
+
+ToggleWarnings : OnClickContainer {
+  elementName = "td";
+  onclick = session.tryLoad;
+  invokeAction = toggleWarnings;
+  class = params.warnings;
+  align = "center";
 }
