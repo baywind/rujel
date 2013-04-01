@@ -749,4 +749,10 @@ public class ServiceFrontend extends WOComponent {
 		response.disableClientCaching();
 		return response;
 	}
+	
+	public WOActionResults showGUID() {
+		WOComponent page = pageWithName("GUIDpresenter");
+		page.takeValueForKey(item, "student");
+		return page;
+	}
 }

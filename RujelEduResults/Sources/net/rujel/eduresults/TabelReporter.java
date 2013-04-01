@@ -213,6 +213,7 @@ public class TabelReporter extends WOComponent {
 			item = null;
 			while (enu.hasMoreElements()) {
 				ItogContainer itog = (ItogContainer) enu.nextElement();
+				if(itog.eduYear() == null) continue;
 				if(itog.eduYear().intValue() != year) {
 					year = itog.eduYear().intValue();
 					if(item != null) {

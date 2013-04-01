@@ -40,6 +40,7 @@ import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EOInitialiser;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
@@ -177,7 +178,8 @@ public class AutoItog extends _AutoItog {
 				continue;
 			NSTimestamp fire = (NSTimestamp)obj.valueForKey(FIRE_DATE_KEY);
 			fire = combineDateAndTime(fire, ai.fireTime());
-			if(fire.compare(date) < 0)
+			int compare = EOPeriod.Utility.compareDates(fire, date);
+			if(compare < 0 || (compare == 0 && !MyUtility.isEvening(fire)))
 				continue;
 			types.addObject(type);
 			result.addObject(ai);

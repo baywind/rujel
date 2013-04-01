@@ -1,5 +1,5 @@
 PageWrapper : PageWrapper {
-  title = "SOAP testing";
+  title = "ОЭЖД";
   action = download;
   onLoad = onLoad;
 }
@@ -276,4 +276,11 @@ Export : WOSubmitButton {
 
 GetLog : WOHyperlink {
   action = logFile;
+}
+
+ShowGUID : OnClickContainer {
+  elementName = "td";
+  invokeAction = showGUID;
+  onclick = session.ajaxPopup;
+  style = "font-size:small;";
 }
