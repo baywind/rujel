@@ -32,6 +32,7 @@ package net.rujel.ui;
 import net.rujel.criterial.*;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Person;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.*;
 import net.rujel.base.Indexer;
 import net.rujel.base.Setting;
@@ -43,6 +44,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 
 import java.math.BigDecimal;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class MarksPresenter extends NotePresenter {
@@ -80,6 +82,17 @@ public class MarksPresenter extends NotePresenter {
 		if(critItem instanceof Integer)
 			return (Integer)critItem;
 		return (Integer)NSKeyValueCoding.Utility.valueForKey(critItem, "criterion");
+	}
+	
+	protected String critName() {
+		String key = null;
+		if(critItem instanceof NSKeyValueCoding)
+			key = (String)((NSKeyValueCoding)critItem).valueForKey("title");
+		if(key == null && lesson() != null)
+			key = lesson().criterName(critItem());
+		if (key == null)
+			key = CriteriaSet.titleForCriterion(critItem().intValue());
+		return key;
 	}
 	
     public MarksPresenter(WOContext context) {
@@ -199,20 +212,13 @@ public class MarksPresenter extends NotePresenter {
 	public String markValue() {
 		if(hasBinding("data")) {
 			NSKeyValueCoding data = (NSKeyValueCoding)valueForBinding("data");
-			String key = (lesson() == null)?CriteriaSet.titleForCriterion(critItem().intValue()):
-				lesson().criterName(critItem());
+			String key = critName();
 			Object result = data.valueForKey(key);
 			return (result==null)?null:result.toString();
 		}
 		if(student() == null) {
 			StringBuffer result = new StringBuffer("<big>");
-			if(critItem instanceof NSKeyValueCoding)
-				result.append(NSKeyValueCoding.Utility.valueForKey(critItem, "title"));
-			else if(lesson() != null) 
-				result.append(lesson().criterName(critItem()));
-			else
-				result.append(CriteriaSet.titleForCriterion(critItem().intValue()));
-			result.append("</big>");
+			result.append(critName()).append("</big>");
 			if(lesson() != null) {
 				CriteriaSet cs = lesson().critSet();
 				String max = null;
@@ -257,15 +263,15 @@ public class MarksPresenter extends NotePresenter {
 						max = maxInt.toString();
 					}
 					}
-				}
+				} // if(max == null)
 				if(max != null) {
 					result.append("<br/><small>(");
 					result.append(max);
 					result.append(")</small>");
 				}
-			}
+			} //if(lesson() != null)
 			return result.toString();
-		}
+		} // if(student() == null)
 		if(!access().flagForKey("read")) return "#";
         if (mark() == null) {
 			if(Various.boolForObject(valueForBinding("full")) 
@@ -349,7 +355,7 @@ public class MarksPresenter extends NotePresenter {
 		} else if (newMarkValue == null) {
 			lesson().removeObjectFromBothSidesOfRelationshipWithKey(_mark,"marks");
 			lesson().editingContext().deleteObject(_mark);
-			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
+			archiveMarkValue(newMarkValue, critName());
 			if(_archive != null)
 				_archive.takeValueForKey(new Integer(3), "actionType");
 			_mark = null;
@@ -368,7 +374,7 @@ public class MarksPresenter extends NotePresenter {
         		if(hasBinding("archive")) {
         			String message = (String)session().valueForKeyPath(
 							"strings.RujelCriterial_Strings.messages.illegalMark");
-					message = String.format(message, lesson().criterName(critItem()));
+					message = String.format(message, critName());
         			session().takeValueForKey(message, "message");
 //        			lesson().editingContext().revert();
         		}
@@ -378,7 +384,7 @@ public class MarksPresenter extends NotePresenter {
         	}
         }
         if(archive) {
-			archiveMarkValue(newMarkValue, lesson().criterName(critItem()));
+			archiveMarkValue(newMarkValue, critName());
 			if(notNew && shouldUpdateArchive())
 				_archive.takeValueForKey(new Integer(2), "actionType");
 		}
@@ -398,8 +404,7 @@ public class MarksPresenter extends NotePresenter {
 				for (int i = 0; i < marks.length; i++) {
 					Mark mark = marks[i];
 					if(mark == null) continue;
-					String crit = lesson().criterName(mark.criterion());
-					_archive.takeValueForKey(mark.present(), '@' + crit);
+					_archive.takeValueForKey(mark.present(), '@' + critName());
 				}
 			}
 			if(noteForStudent() != null)
@@ -773,5 +778,69 @@ public class MarksPresenter extends NotePresenter {
 		if(lesson().critSet() != null && lesson().critSet().criterionForNum(new Integer(0)) == null)
 			return false;
 		return true;
+	}
+	
+	public static NSDictionary prepareInit(
+			EOEnterpriseObject ma, EOEnterpriseObject parent, EduCourse course) {
+		EOEditingContext ec = (parent == null)?ma.editingContext(): parent.editingContext();
+		NSMutableDictionary ident = new NSMutableDictionary("Mark","entityName");
+		ident.takeValueForKey(ec, "editingContext");
+		if(ma != null) {
+//		try {
+			Integer studentID = (Integer)ma.valueForKey("#student");
+			Student student = (Student)EOUtilities.faultWithPrimaryKeyValue(ec,
+					Student.entityName, studentID);
+			ident.takeValueForKey(student, "student");
+//		} catch (Exception e) {
+		}
+		ident.takeValueForKey(course, "eduCourse");
+		Integer workID = (Integer)((parent == null)?
+				ma.valueForKey("#work") : parent.valueForKey("#work"));
+		try {
+			Work work = (Work)EOUtilities.objectWithPrimaryKeyValue(ec,Work.ENTITY_NAME, workID);
+			ident.takeValueForKey(work.usedCriteria(), "criteria");
+			ident.takeValueForKey(work, "lesson");
+			ident.takeValueForKey(work, "work");
+			ident.takeValueForKey(work.course(), "eduCourse");
+		} catch (EOObjectNotAvailableException e) {
+			if(parent == null)
+				return ident;
+			if(course == null) {
+				Integer crID = (Integer)parent.valueForKey("#course");
+				try {
+					course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
+							EduCourse.entityName, crID);
+				} catch (Exception e2) {
+					return ident;
+				}
+			}
+			CriteriaSet set = CriteriaSet.critSetForCourse(course);
+			NSDictionary dict = (NSDictionary)parent.valueForKey("archiveDictionary");
+			Enumeration enu = dict.keyEnumerator();
+			NSMutableArray criteria = new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				if(key.charAt(0) != 'm')
+					continue;
+				try {
+					Integer cr = new Integer(key.substring(1));
+					if(set == null)
+						criteria.addObject(cr);
+					else {
+						EOEnterpriseObject criter = set.criterionForNum(cr);
+						if(criter == null)
+							criteria.addObject(cr);
+						else
+							criteria.addObject(criter);
+					}
+				} catch (NumberFormatException e1) {
+					continue;
+				}
+			}
+			if(criteria.count() > 0)
+				ident.takeValueForKey(criteria, "criteria");
+//		} catch (Exception e) {
+		}
+		return ident;
 	}
 }

@@ -40,6 +40,7 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 
 import java.lang.ref.WeakReference;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
@@ -51,6 +52,8 @@ public class MarkArchive extends _MarkArchive
 	protected static final Logger logger = Logger.getLogger("rujel.markarchive");
 	public static NSArray backSorter = new NSArray(
 			new EOSortOrdering(TIMESTAMP_KEY, EOSortOrdering.CompareDescending));
+	public static final NSArray idKeys = new NSArray( new String[] {
+			USED_ENTITY_KEY, KEY1_KEY, KEY2_KEY, KEY3_KEY});
 	
 	public static Object init(Object obj, WOContext ctx) {
 		if (obj == null || obj.equals("init")) {
@@ -258,7 +261,7 @@ public class MarkArchive extends _MarkArchive
 		setIdentifierFromDictionary(usedEntity, identifierDict);
 	}
 	
-	protected static final String[] keys = new String[] {"key1","key2","key3"};
+	protected static final String[] keys = new String[] {KEY1_KEY, KEY2_KEY, KEY3_KEY};
 	public void setIdentifierFromDictionary (EOEnterpriseObject usedEntity,
 											 NSDictionary identifierDict) {
 		deleteInsertedDuplicates(usedEntity, identifierDict);
@@ -332,6 +335,20 @@ public class MarkArchive extends _MarkArchive
 		return null;
 	}
 	
+	public boolean sameIdentifier(MarkArchive ma) {
+		if(ma == null)
+			return false;
+		if(ma.usedEntity() != this.usedEntity())
+			return false;
+		for (int i = 0; i < keys.length; i++) {
+			Object local = this.valueForKey(keys[i]);
+			Object ext = this.valueForKey(keys[i]);
+			if((local == null)? ext != null : !local.equals(ext))
+				return false;
+		}
+		return true;
+	}
+	
 	/*
 	protected NSMutableDictionary awaitedKeys;
 	
@@ -395,7 +412,7 @@ public class MarkArchive extends _MarkArchive
 				value = pKey.valueForKey(tmpKey);
 			}
 			if(value == null) {
-				logger.log(WOLogLevel.FINE,"Key '" + key + "' not available for " +
+				logger.log(WOLogLevel.FINER,"Key '" + key + "' not available for " +
 						usedEntity.valueForKey("usedEntity"), pKey);
 				continue;
 			}
@@ -547,7 +564,27 @@ public class MarkArchive extends _MarkArchive
 					return null;
 				}
 			}
+			if("decimal".equals(key)) {
+				if(value instanceof Number)
+					return value;
+				try {
+					BigDecimal val = new BigDecimal(value.toString());
+					if(val.compareTo(BigDecimal.ZERO) == 0)
+						return BigDecimal.ZERO;
+					val = val.stripTrailingZeros();
+					if(val.scale() < 0)
+						return val.setScale(0);
+					return val;
+				} catch (Exception e) {
+					return null;
+				}
+			}
+			if("eo".equals(key)) {
+				return Various.parseEO(value.toString(), editingContext());
+			}
 			throw new IllegalArgumentException("Wrong formatter");
+		} else if(key.charAt(0) == '#') {
+			return getKeyValue(key.substring(1));
 		} else {
 			return super.valueForKey(key);
 		}

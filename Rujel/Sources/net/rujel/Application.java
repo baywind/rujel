@@ -171,6 +171,7 @@ public class Application extends UTF8Application {
 			keyValueCache = new KeyValueCache(cacheSize);
 		}
 		setPageCacheSize(SettingsReader.intForKeyPath("ui.pageCacheSize", 5));
+		setPermanentPageCacheSize(SettingsReader.intForKeyPath("ui.permanentPageCacheSize", 2));
 		
 		if (!Boolean.getBoolean("DisableScheduledTasks")) {
 			timer = new Timer(true);

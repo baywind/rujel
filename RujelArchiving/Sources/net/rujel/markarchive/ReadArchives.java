@@ -2,6 +2,7 @@ package net.rujel.markarchive;
 
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
@@ -16,6 +17,7 @@ import com.webobjects.appserver.WOMessage;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
+import com.webobjects.appserver.WOActionResults;
 
 public class ReadArchives extends WOComponent {
 	
@@ -32,7 +34,7 @@ public class ReadArchives extends WOComponent {
 	
     public ReadArchives(WOContext context) {
         super(context);
-		ec = new SessionedEditingContext(session());
+		ec = new SessionedEditingContext(context.session());
 		params = new NSMutableDictionary();
 		{
 			NSTimestamp to = (NSTimestamp)session().valueForKey("today");
@@ -67,40 +69,82 @@ public class ReadArchives extends WOComponent {
 		}
 		for (int i = 0; i < used.count(); i++) {
 			EOEnterpriseObject ue = (EOEnterpriseObject)used.objectAtIndex(i);
-			String name = (String)ue.valueForKey("usedEntity");
-			if(byEnt.valueForKey(name) != null)
-				continue;
-			NSMutableDictionary ent = new NSMutableDictionary(name,"entityName");
-			ent.takeValueForKey(ue, "usedEntity");
-			ent.takeValueForKey(name,"title");
-			for (int j = 0; j < MarkArchive.keys.length; j++) {
-				String test = (String)ue.valueForKey(MarkArchive.keys[j]);
-				if(test == null)
-					continue;
-				if(test.equals("course") || test.equals("courseID")) {
-					ent.takeValueForKey("course", "course");
-					break;
-				}
-			}
-			byEnt.takeValueForKey(ent, name);
-			entities.addObject(ent);
+			entDict(ue);
 		}
 		records = new NSMutableArray();
+		if(!Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReadArchives"))) {
+			String username = (String)context.session().valueForKeyPath("user.present");
+			if(username != null)
+				filterUser(username);
+		}
 		select();
+		session().savePageInPermanentCache(this);
+    }
+    
+    public String title() {
+    	return (String)session().valueForKeyPath(
+    			"strings.RujelArchiving_Archive.ReadArchives.title");
+    }
+    
+    public NSDictionary entDict(EOEnterpriseObject usedEntity) {
+		String entityName = (String)usedEntity.valueForKey("usedEntity");
+    	NSMutableDictionary ent = (NSMutableDictionary)byEnt.valueForKey(entityName);
+    	if(ent == null) {
+    		ent = new NSMutableDictionary(entityName,"entityName");
+    		ent.takeValueForKey(usedEntity, "usedEntity");
+    		ent.takeValueForKey(entityName,"title");
+    		for (int j = 0; j < MarkArchive.keys.length; j++) {
+    			String test = (String)usedEntity.valueForKey(MarkArchive.keys[j]);
+    			if(test == null)
+    				continue;
+    			if(test.equals("course") || test.equals("courseID")) {
+    				ent.takeValueForKey("course", "course");
+    				break;
+    			}
+    		}
+    		byEnt.takeValueForKey(ent, entityName);
+    		entities.addObject(ent);
+    	}
+		return ent;
+    }
+    
+    private NSTimestamp dateBatch(NSTimestamp startDate, NSMutableArray quals) {
+    	if(startDate == null)
+    		startDate = (NSTimestamp)params.valueForKey("since");
+    	if(startDate == null) {
+    		Integer year = (Integer)session().valueForKey("eduYear");
+    		startDate = MyUtility.dayInEduYear(year.intValue() -1);
+    		params.takeValueForKey(startDate, "since");
+    	}
+    	long start = startDate.getTime();
+    	EOQualifier qual = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,startDate);
+    	NSTimestamp finDate = (NSTimestamp)params.valueForKey("to");
+    	long fin = (finDate == null)?System.currentTimeMillis():finDate.getTime();
+    	if((fin - start) > NSLocking.OneWeek) {
+    		finDate = startDate.timestampByAddingGregorianUnits(0, 0, 7, 0, 0, 0);
+    	}
+    	if(finDate != null) {
+        	EOQualifier qual1 = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
+    				EOQualifier.QualifierOperatorLessThan,finDate);
+        	qual = new EOAndQualifier(new NSArray(new EOQualifier[] {qual,qual1}));
+    	}
+    	if(quals.count() == 0)
+    		quals.addObject(qual);
+    	else
+    		quals.replaceObjectAtIndex(qual, 0);
+    	if ((fin - start) <= NSLocking.OneWeek)
+    		return null;
+    	return finDate;
     }
     
     public void select() {
     	records.removeAllObjects();
     	list = null;
     	NSMutableArray quals = new NSMutableArray();
+    	NSTimestamp finDate = dateBatch((NSTimestamp)params.valueForKey("since"), quals);
 		quals.addObject(new EOKeyValueQualifier(MarkArchive.ACTION_TYPE_KEY, 
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, params.valueForKey("level")));
-		quals.addObject(new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, params.valueForKey("since")));
-		if(params.valueForKey("to") != null) {
-			quals.addObject(new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
-					EOQualifier.QualifierOperatorLessThanOrEqualTo, params.valueForKey("to")));
-		}
 		if(params.valueForKey("usedEntity") != null) {
 			quals.addObject(new EOKeyValueQualifier(MarkArchive.USED_ENTITY_KEY, 
 					EOQualifier.QualifierOperatorEqual,
@@ -117,18 +161,30 @@ public class ReadArchives extends WOComponent {
 				qd.takeValueForKey(Boolean.TRUE, "used");
 			}
 		}
-		found = new NSArray(new EOSortOrdering[] {
+		NSArray recordsSorter = new NSArray(new EOSortOrdering[] {
 				new EOSortOrdering(MarkArchive.WOSID_KEY,EOSortOrdering.CompareAscending),
 				new EOSortOrdering(MarkArchive.KEY1_KEY,EOSortOrdering.CompareAscending),
 				new EOSortOrdering(MarkArchive.KEY2_KEY,EOSortOrdering.CompareAscending),
 				new EOSortOrdering(MarkArchive.KEY3_KEY,EOSortOrdering.CompareAscending),
 				new EOSortOrdering(MarkArchive.TIMESTAMP_KEY, EOSortOrdering.CompareAscending)});
 		EOFetchSpecification fs = new EOFetchSpecification(MarkArchive.ENTITY_NAME,
-				new EOAndQualifier(quals),found);
+				new EOAndQualifier(quals),recordsSorter);
 		found = ec.objectsWithFetchSpecification(fs);
 		params.removeObjectForKey("warnings");
-		if(found == null || found.count() == 0)
-			return;
+		if(found == null || found.count() == 0) {
+			while(finDate != null) {
+				NSTimestamp startDate = finDate;
+				finDate = dateBatch(startDate, quals);
+				fs.setQualifier(new EOAndQualifier(quals));
+				found = ec.objectsWithFetchSpecification(fs);
+				if(found != null && found.count() > 0) {
+					params.takeValueForKey(startDate, "since");
+					break;
+				}
+			}
+			if(found == null || found.count() == 0)
+				return;
+		}
 //		if(found.count() > 1000) {
 //			session().takeValueForKey(found.count() + " — That's too much!", "message");
 //			return;
@@ -146,7 +202,28 @@ public class ReadArchives extends WOComponent {
 		Enumeration enu = found.objectEnumerator();
 		NSMutableDictionary dict = null;
 		int noWarn = 0;
-		while (enu.hasMoreElements()) {
+		NSArray actionTypes = (NSArray)session().valueForKeyPath(
+				"strings.RujelArchiving_Archive.actionTypes");
+		while (enu.hasMoreElements() || finDate != null) {
+			if(!enu.hasMoreElements()) {
+				if(records.count() > 500) {
+					params.takeValueForKey(finDate, "to");
+					session().takeValueForKey(session().valueForKeyPath(
+						"strings.RujelArchiving_Archive.ReadArchives.limitedSelection"), "message");
+					break;
+				}
+				while(finDate != null) {
+					finDate = dateBatch(finDate, quals);
+					fs.setQualifier(new EOAndQualifier(quals));
+					found = ec.objectsWithFetchSpecification(fs);
+					if(found != null && found.count() > 0)
+						break;
+				}
+				if(found == null || found.count() == 0)
+					break;
+				else
+					enu = found.objectEnumerator();
+			}
 			MarkArchive arch = (MarkArchive) enu.nextElement();
 			ifsame: // grouping
 				if (dict != null) { // && arch.actionType().intValue() == 1 &&
@@ -180,7 +257,9 @@ public class ReadArchives extends WOComponent {
 						prev = new NSMutableArray(prevMA);
 						dict.takeValueForKey(prev, "arch");
 					}
-					((NSMutableArray)prev).addObject(arch);
+					Various.addToSortedList(arch, (NSMutableArray)prev, MarkArchive.TIMESTAMP_KEY,
+							EOSortOrdering.CompareAscending);
+//					((NSMutableArray)prev).addObject(arch);
 					if(arch.reason() != null) {
 						String reason = (String)dict.valueForKey("reason");
 						String aRsn = WOMessage.stringByEscapingHTMLAttributeValue(arch.reason());
@@ -206,25 +285,16 @@ public class ReadArchives extends WOComponent {
 				dict.takeValueForKey(
 						WOMessage.stringByEscapingHTMLAttributeValue(arch.reason()), "reason");
 			}
-			{
-				NSArray actionTypes = (NSArray)session().valueForKeyPath(
-						"strings.RujelArchiving_Archive.actionTypes");
-				if(actionTypes == null || actionTypes.count() < 4) {
-					dict.takeValueForKey(arch.actionType(), "actionType");
-				} else {
-					Integer at = arch.actionType();
-					if(at == null || at < 1 || at > 3)
-						at = 0;
-					dict.takeValueForKey(actionTypes.objectAtIndex(at), "actionType");
-				}
+			if(actionTypes == null || actionTypes.count() < 4) {
+				dict.takeValueForKey(arch.actionType(), "actionType");
+			} else {
+				Integer at = arch.actionType();
+				if(at == null || at < 1 || at > 3)
+					at = 0;
+				dict.takeValueForKey(actionTypes.objectAtIndex(at), "actionType");
 			}
 			records.addObject(dict);
-			String ent = (String)arch.valueForKeyPath("usedEntity.usedEntity");
-			NSDictionary entDict = (NSDictionary)byEnt.valueForKey(ent);
-			if(entDict == null) {
-				dict.takeValueForKey(new NSDictionary(ent,"title"), "usedEntity");
-				continue;
-			}
+			NSDictionary entDict = entDict(arch.usedEntity());
 			dict.takeValueForKey(entDict, "usedEntity");
 			Object courseRef = entDict.valueForKey("course");
 			EduCourse course = null;
@@ -421,6 +491,8 @@ public class ReadArchives extends WOComponent {
     }
     
     protected void prepareList(NSArray extraQuals) {
+    	if(records.count() == 0)
+    		return;
     	if(extraQuals == null)
     		extraQuals = (NSArray)params.valueForKey("extraQuals");
     	NSMutableArray quals = new NSMutableArray();
@@ -453,12 +525,25 @@ public class ReadArchives extends WOComponent {
     }
     
     public void filterUser() {
-    	NSMutableDictionary dict = new NSMutableDictionary(MarkArchive.USER_KEY,"attribute");
     	Object value = valueForKeyPath("item.user");
+    	filterUser(value);
+    }
+    
+    public void filterUser(Object value) {
+    	NSMutableDictionary byKey = (NSMutableDictionary)params.valueForKey("byKey");
+    	if(byKey == null) {
+    		byKey = new NSMutableDictionary();
+    		params.takeValueForKey(byKey, "byKey");
+    	}
+    	NSMutableDictionary dict = (NSMutableDictionary)byKey.valueForKey(MarkArchive.USER_KEY);
+    	if(dict == null) {
+    		dict = new NSMutableDictionary(MarkArchive.USER_KEY,"attribute");
+    		byKey.takeValueForKey(dict, MarkArchive.USER_KEY);
+        	dict.takeValueForKey(
+        			session().valueForKeyPath("strings.RujelArchiving_Archive.author"), "title");
+        	dict.takeValueForKey("ungerade", "styleClass");
+    	}
     	dict.takeValueForKey(value, "value");
-    	dict.takeValueForKey(
-    			session().valueForKeyPath("strings.RujelArchiving_Archive.author"), "title");
-    	dict.takeValueForKey("ungerade", "styleClass");
     	EOQualifier qual = new EOKeyValueQualifier(MarkArchive.USER_KEY, 
     			EOQualifier.QualifierOperatorEqual, value);
     	dict.takeValueForKey(qual, "qualifier");
@@ -491,6 +576,11 @@ public class ReadArchives extends WOComponent {
     }
     
     public void removeExtra() {
+    	NSMutableDictionary byKey = (NSMutableDictionary)params.valueForKey("byKey");
+    	if(byKey != null) {
+    		String key = (String)valueForKeyPath("item.attribute");
+    		byKey.takeValueForKey(null, key);
+    	}
     	NSMutableArray extraQuals = (NSMutableArray)params.valueForKey("extraQuals");
     	if(extraQuals == null)
     		return;
@@ -510,4 +600,11 @@ public class ReadArchives extends WOComponent {
     		params.takeValueForKey("selection", "warnings");
     	prepareList(null);
     }
+
+	public WOActionResults expand() {
+		WOComponent inspector = pageWithName("ArchiveInspector");
+		inspector.takeValueForKey(this, "returnPage");
+		inspector.takeValueForKey(item, "dict");
+		return inspector;
+	}
 }

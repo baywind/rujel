@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
@@ -603,5 +604,75 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(buf.length() == 0)
     		return null;
     	return buf.toString();
+    }
+    
+    public static String presentArchiveCriteria(EOEnterpriseObject arch, EduCourse course) {
+    	EOEditingContext ec = arch.editingContext();
+		if(course == null) {
+			Integer crID = (Integer)arch.valueForKey("#course");
+			course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
+					EduCourse.entityName, crID);
+		}
+		CriteriaSet set = CriteriaSet.critSetForCourse(course);
+		if(set == null) {
+			Object max = arch.valueForKey("@m0");
+			if(max != null)
+				return max.toString();
+			NSDictionary dict = (NSDictionary)arch.valueForKey("archiveDictionary");
+			Enumeration enu = dict.keyEnumerator();
+			NSMutableArray criteria = new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				String key = (String) enu.nextElement();
+				if(key.charAt(0) != 'm')
+					continue;
+				try {
+					Integer cr = new Integer(key.substring(1));
+					NSMutableDictionary cd = new NSMutableDictionary(cr,"sort");
+					cd.takeValueForKey(CriteriaSet.titleForCriterion(cr), "title");
+					cd.takeValueForKey(dict.valueForKey(key), "max");
+					criteria.addObject(cd);
+				} catch (NumberFormatException e1) {
+					continue;
+				}
+			}
+			if(criteria.count() == 0)
+				return null;
+			if(criteria.count() > 1)
+				EOSortOrdering.sortArrayUsingKeyOrderArray(criteria, ModulesInitialiser.sorter);
+			enu = criteria.objectEnumerator();
+			StringBuilder buf = new StringBuilder();
+			while (enu.hasMoreElements()) {
+				NSDictionary cd = (NSDictionary) enu.nextElement();
+				if(buf.length() > 0)
+					buf.append(", ");
+				buf.append("<strong>").append(cd.valueForKey("title")).append(":</strong>");
+				buf.append(cd.valueForKey("max"));
+			}
+			return buf.toString();
+		}
+		Enumeration enu = set.sortedCriteria().objectEnumerator();
+		StringBuilder buf = new StringBuilder();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject cr = (EOEnterpriseObject) enu.nextElement();
+			String key = "@m" + cr.valueForKey("criterion");
+			Object max = arch.valueForKey(key);
+			if(max == null)
+				continue;
+			if(buf.length() > 0)
+				buf.append(", ");
+			key = (String)cr.valueForKey("title");
+			if(key != null)
+				buf.append("<strong>").append(key).append(":</strong>");
+			Indexer indexer = (Indexer)cr.valueForKey("indexer");
+			if(indexer == null) {
+				buf.append(max);
+				continue;
+			}
+			String val = indexer.valueForIndex(indexer.maxIndex(), null);
+			if(val != null && (val.length() < 3 ||
+					(val.charAt(0)=='&' && val.length() < 10)))
+				buf.append(val);
+		}
+		return buf.toString();
     }
 }

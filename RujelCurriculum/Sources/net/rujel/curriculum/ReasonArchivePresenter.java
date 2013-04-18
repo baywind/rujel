@@ -52,7 +52,9 @@ public class ReasonArchivePresenter extends com.webobjects.appserver.WOComponent
 	}
 	
 	protected static String presentDate(Object date) {
-		if(date instanceof NSTimestamp) {
+		if(date == null) {
+			return null;
+		} else if(date instanceof NSTimestamp) {
 			return MyUtility.dateFormat().format(date);
 		} else {
 			String dateString = date.toString();

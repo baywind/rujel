@@ -135,6 +135,8 @@ public class TabelReporter extends WOComponent {
 			ItogMark currMark = (ItogMark)enu.nextElement();
 			EduCycle cycle = currMark.cycle();
 			perItem = currMark.container();
+			if(perItem.eduYear() == null)
+				continue;
 			forCycle = (NSMutableDictionary)marksAgregate.objectForKey(cycle.subject());
 			if(forCycle == null) {
 				forCycle = new NSMutableDictionary();
@@ -162,6 +164,9 @@ public class TabelReporter extends WOComponent {
 			int i = 1;
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject comment = (EOEnterpriseObject) enu.nextElement();
+				perItem = (ItogContainer)comment.valueForKey(ItogMark.CONTAINER_KEY);
+				if(perItem.eduYear() == null)
+					continue;
 				item = ItogMark.commentsDict(comment);
 				if(eduYear == null && item.valueForKey(ItogMark.MANUAL)==null)
 					continue;
@@ -170,7 +175,6 @@ public class TabelReporter extends WOComponent {
 				item.takeValueForKey(alias, "alias");
 				EduCycle cycle = (EduCycle)comment.valueForKey(ItogMark.CYCLE_KEY);
 				item.takeValueForKey(cycle.subject(), "subject");
-				perItem = (ItogContainer)comment.valueForKey(ItogMark.CONTAINER_KEY);
 				item.takeValueForKey(perItem, ItogMark.CONTAINER_KEY);
 				comments.addObject(item);
 				forCycle = (NSMutableDictionary)marksAgregate.objectForKey(cycle.subject());

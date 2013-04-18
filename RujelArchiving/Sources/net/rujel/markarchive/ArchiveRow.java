@@ -29,6 +29,8 @@
 
 package net.rujel.markarchive;
 
+import net.rujel.reusables.Various;
+
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
@@ -82,7 +84,7 @@ public class ArchiveRow extends com.webobjects.appserver.WOComponent {
 		else if (archItem.reason() == null)
 			return null;
 		String reas = archItem.reason();
-		if(reas.length() < 10)
+		if(reas.length() < 10 || Various.boolForObject(valueForBinding("fullReason")))
 			return reas;
 		StringBuffer result = new StringBuffer("<div style=\"width:5em;\" title=\"");
 		result.append(WOMessage.stringByEscapingHTMLAttributeValue(reas));
