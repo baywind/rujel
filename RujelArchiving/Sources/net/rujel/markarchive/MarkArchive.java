@@ -342,7 +342,7 @@ public class MarkArchive extends _MarkArchive
 			return false;
 		for (int i = 0; i < keys.length; i++) {
 			Object local = this.valueForKey(keys[i]);
-			Object ext = this.valueForKey(keys[i]);
+			Object ext = ma.valueForKey(keys[i]);
 			if((local == null)? ext != null : !local.equals(ext))
 				return false;
 		}
