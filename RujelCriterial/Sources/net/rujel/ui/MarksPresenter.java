@@ -404,7 +404,8 @@ public class MarksPresenter extends NotePresenter {
 				for (int i = 0; i < marks.length; i++) {
 					Mark mark = marks[i];
 					if(mark == null) continue;
-					_archive.takeValueForKey(mark.present(), '@' + critName());
+					String crit = lesson().criterName(mark.criterion());
+					_archive.takeValueForKey(mark.present(), '@' + crit);
 				}
 			}
 			if(noteForStudent() != null)
