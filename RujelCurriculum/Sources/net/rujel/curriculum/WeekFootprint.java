@@ -430,19 +430,28 @@ public class WeekFootprint {
 					return assumption(cal, i - day, num);
 				}
 				NSMutableArray as = assumed[i].mutableClone();
+				NSMutableArray rls = real[i].mutableClone();
+				int substract = 0;
 				for (int j = 0; j < real[i].count(); j++) {
 					EOEnterpriseObject rl = (EOEnterpriseObject)real[i].objectAtIndex(j);
 					EduLesson lsn = null;
 					if(rl instanceof EduLesson) {
 						lsn = (EduLesson)rl;
+						if(as.removeObject(lsn.number()))
+							rls.removeIdenticalObject(lsn);
 					} else if(rl instanceof Variation) {
-						lsn = ((Variation)rl).relatedLesson();
-					}
-					if(lsn != null)
-						as.removeObject(lsn.number());
+						Variation var = (Variation)rl;
+						lsn = var.relatedLesson();
+						if(lsn != null)
+							rls.removeIdenticalObject(lsn);
+						else
+							substract -= var.value();
+						rls.removeIdenticalObject(rl);
+					} 
 				}
-				if(as.count() > 0)
-					return assumption(cal, i - day, (Integer)as.objectAtIndex(0));
+				if(as.count() > rls.count() + substract)
+					return assumption(cal, i - day,
+							(Integer)as.objectAtIndex(substract + rls.count()));
 			} // cycle week
 			cal.add(Calendar.DATE, active.length - day);
 			day = 0;
