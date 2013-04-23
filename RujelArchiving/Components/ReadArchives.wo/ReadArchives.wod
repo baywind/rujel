@@ -305,3 +305,10 @@ ObjectCell : OnClickContainer {
 CanEdit : WOConditional {
   condition = session.readAccess.edit.ReadArchives;
 }
+
+CourseCell : OnClickContainer {
+  elementName = "td";
+  onclick = session.tryLoad;
+  invokeAction = filterCourse;
+  disabled = cantFilterCourse;
+}

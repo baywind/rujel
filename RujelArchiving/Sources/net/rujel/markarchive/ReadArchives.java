@@ -22,7 +22,7 @@ import com.webobjects.appserver.WOActionResults;
 public class ReadArchives extends WOComponent {
 	
 	protected NSMutableArray records;
-	public NSArray list;
+	public NSMutableArray list;
 	public Object item;
 	public NSMutableArray entities;
 	protected NSMutableDictionary byEnt; 
@@ -75,7 +75,7 @@ public class ReadArchives extends WOComponent {
 		if(!Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReadArchives"))) {
 			String username = (String)context.session().valueForKeyPath("user.present");
 			if(username != null)
-				filterUser(username);
+				setFilterUser(username);
 		}
 		select();
 		session().savePageInPermanentCache(this);
@@ -156,8 +156,9 @@ public class ReadArchives extends WOComponent {
 			while (enu.hasMoreElements()) {
 				NSDictionary qd = (NSDictionary) enu.nextElement();
 				EOQualifier qual = (EOQualifier)qd.valueForKey("qualifier");
-				if(qual != null)
-					quals.addObject(qual);
+				if(qual == null)
+					continue;
+				quals.addObject(qual);
 				qd.takeValueForKey(Boolean.TRUE, "used");
 			}
 		}
@@ -386,7 +387,7 @@ public class ReadArchives extends WOComponent {
 				sortStyle = null;
 			}
 		}
-    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
+		prepareList(null);
     }
     
     public static String rowClass(MarkArchive ma) {
@@ -419,7 +420,7 @@ public class ReadArchives extends WOComponent {
     	}
     	sorter.removeAllObjects();
     	sorter.addObject(so);
-    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+    	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
     }
     
     public void sortBySubject() {
@@ -436,7 +437,7 @@ public class ReadArchives extends WOComponent {
     		sortStyle = null;
     	}
     	sorter.addObject(so);
-    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+    	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
     }
     
     public void sortByGroup() {
@@ -453,7 +454,7 @@ public class ReadArchives extends WOComponent {
     		sortStyle = null;
     	}
     	sorter.addObject(so);
-    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+    	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
     }
 
     public void sortByTeacher() {
@@ -470,7 +471,7 @@ public class ReadArchives extends WOComponent {
     		sortStyle = null;
     	}
     	sorter.addObject(so);
-    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+    	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
     }
 
     public void sortByUser() {
@@ -487,12 +488,14 @@ public class ReadArchives extends WOComponent {
     		sortStyle = null;
     	}
     	sorter.addObject(so);
-    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+    	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
     }
     
     protected void prepareList(NSArray extraQuals) {
-    	if(records.count() == 0)
+    	if(records.count() == 0) {
+    		list = null;
     		return;
+    	}
     	if(extraQuals == null)
     		extraQuals = (NSArray)params.valueForKey("extraQuals");
     	NSMutableArray quals = new NSMutableArray();
@@ -500,36 +503,34 @@ public class ReadArchives extends WOComponent {
     		Enumeration enu = extraQuals.objectEnumerator();
     		while (enu.hasMoreElements()) {
     			NSDictionary qd = (NSDictionary) enu.nextElement();
-    			EOQualifier qual = (EOQualifier)qd.valueForKey("qualifier");
-    			if(qual != null && !Various.boolForObject(qd.valueForKey("used")))
+    			if(Various.boolForObject(qd.valueForKey("used")))
+    					continue;
+    			EOQualifier qual = (EOQualifier)qd.valueForKey("filter");
+    			if(qual != null)
     				quals.addObject(qual);
     		}
     	}
+    	list = records.mutableClone();
     	if("selection".equals(params.valueForKey("warnings")))
     		quals.addObject(new EOKeyValueQualifier("teacherClass",
     				EOQualifier.QualifierOperatorEqual,"warning"));
-		if(quals.count() == 0) {
-	    	list = EOSortOrdering.sortedArrayUsingKeyOrderArray(records, sorter);
-	    	return;
-		}
-		EOQualifier qual;
-		if(quals.count() == 1)
-			qual = (EOQualifier)quals.objectAtIndex(0);
-		else
-			qual = new EOAndQualifier(quals);
-    	list = EOQualifier.filteredArrayWithQualifier(records, qual);
-    	if(list instanceof NSMutableArray)
-    		EOSortOrdering.sortArrayUsingKeyOrderArray((NSMutableArray)list, sorter);
-    	else
-    		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+    	if(quals.count() > 0) {
+    		EOQualifier qual;
+    		if(quals.count() == 1)
+    			qual = (EOQualifier)quals.objectAtIndex(0);
+    		else
+    			qual = new EOAndQualifier(quals);
+    		EOQualifier.filterArrayWithQualifier(list, qual);
+    	}
+    	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
     }
     
     public void filterUser() {
     	Object value = valueForKeyPath("item.user");
-    	filterUser(value);
+    	setFilterUser(value);
     }
     
-    public void filterUser(Object value) {
+    public void setFilterUser(Object value) {
     	NSMutableDictionary byKey = (NSMutableDictionary)params.valueForKey("byKey");
     	if(byKey == null) {
     		byKey = new NSMutableDictionary();
@@ -547,6 +548,7 @@ public class ReadArchives extends WOComponent {
     	EOQualifier qual = new EOKeyValueQualifier(MarkArchive.USER_KEY, 
     			EOQualifier.QualifierOperatorEqual, value);
     	dict.takeValueForKey(qual, "qualifier");
+    	dict.takeValueForKey(qual, "filter");
     	if(valueForKeyPath("sortStyle.user") != null) {
         	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
         	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY))
@@ -563,6 +565,64 @@ public class ReadArchives extends WOComponent {
     		for (int i = 0; i < extraQuals.count(); i++) {
     			NSMutableDictionary exist = (NSMutableDictionary)extraQuals.objectAtIndex(i);
 				if(MarkArchive.USER_KEY.equals(exist.valueForKey("attribute"))) {
+					if(value.equals(exist.valueForKey("value")))
+						return;
+					extraQuals.replaceObjectAtIndex(dict, i);
+			    	prepareList(extraQuals);
+					return;
+				}
+			}
+			extraQuals.addObject(dict);
+    	}
+    	prepareList(extraQuals);
+    }
+
+    public void filterCourse() {
+    	EduCourse course = (EduCourse)valueForKeyPath("item.course");
+    	setFilterCourse(course);
+    }
+    public void setFilterCourse(EduCourse course) {
+    	NSMutableDictionary byKey = (NSMutableDictionary)params.valueForKey("byKey");
+    	if(byKey == null) {
+    		byKey = new NSMutableDictionary();
+    		params.takeValueForKey(byKey, "byKey");
+    	}
+    	NSMutableDictionary dict = (NSMutableDictionary)byKey.valueForKey("course");
+    	if(dict == null) {
+    		dict = new NSMutableDictionary("course","attribute");
+    		byKey.takeValueForKey(dict, "course");
+        	dict.takeValueForKey(session().valueForKeyPath(
+        			"strings.RujelInterfaces_Names.EduCourse.this"), "title");
+        	dict.takeValueForKey("gerade", "styleClass");
+    	}
+    	StringBuilder value = new StringBuilder();
+    	value.append(course.eduGroup().name()).append(" ; ");
+    	value.append(course.subjectWithComment()).append(" ; ");
+    	if(course.teacher() == null)
+    		value.append("<em>").append(
+    				session().valueForKeyPath("strings.RujelBase_Base.vacant")).append("</em>");
+    	else
+    		value.append(Person.Utility.fullName(course.teacher(), true, 2, 1, 1));
+    	dict.takeValueForKey(value, "value");
+    	EOQualifier qual = new EOKeyValueQualifier("course", 
+    			EOQualifier.QualifierOperatorEqual, course);
+    	dict.takeValueForKey(qual, "filter");
+    	if(valueForKeyPath("sortStyle.subject") != null) {
+        	EOSortOrdering so = (EOSortOrdering)sorter.lastObject();
+        	if(so == null || !so.key().equals(MarkArchive.TIMESTAMP_KEY))
+        		so = (EOSortOrdering)MarkArchive.backSorter.objectAtIndex(0);
+        	sorter.removeAllObjects();
+        	sorter.addObject(so);
+    		sortStyle = null;
+    	}
+    	NSMutableArray extraQuals = (NSMutableArray)params.valueForKey("extraQuals");
+    	if(extraQuals == null) {
+    		extraQuals = new NSMutableArray(dict);
+    		params.takeValueForKey(extraQuals, "extraQuals");
+    	} else {
+    		for (int i = 0; i < extraQuals.count(); i++) {
+    			NSMutableDictionary exist = (NSMutableDictionary)extraQuals.objectAtIndex(i);
+				if("course".equals(exist.valueForKey("attribute"))) {
 					if(value.equals(exist.valueForKey("value")))
 						return;
 					extraQuals.replaceObjectAtIndex(dict, i);
@@ -606,5 +666,10 @@ public class ReadArchives extends WOComponent {
 		inspector.takeValueForKey(this, "returnPage");
 		inspector.takeValueForKey(item, "dict");
 		return inspector;
+	}
+	
+	public boolean cantFilterCourse() {
+		return (valueForKeyPath("item.course") == null ||
+				valueForKeyPath("params.byKey.course") != null);
 	}
 }
