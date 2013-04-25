@@ -46,18 +46,21 @@ public class ArchiveInspector extends WOComponent {
 	public void setDict(NSMutableDictionary dict) {
 		this.dict = dict;
 		Object arch = dict.valueForKey("arch");
-		String groupingKey = null;
 		NSDictionary ue = (NSDictionary)dict.valueForKey("usedEntity");
+		String groupingKey = (String)ue.valueForKey("grouping");
 		if(arch instanceof MarkArchive) {
 			ma = (MarkArchive)arch;
 			grouping = null;
 			list = prehistory((MarkArchive)arch);
 			if(ma.actionType().intValue() >= 3)
 				prepareChildren();
+			groupingKey = null;
 		} else if(arch instanceof NSArray) {
-			list = (NSArray)arch;
 			ma = (MarkArchive)((NSArray)arch).objectAtIndex(0);
-			groupingKey = (String)ue.valueForKey("grouping");
+			if(groupingKey == null)
+				list = prehistory(ma);
+			else
+				list = (NSArray)arch;
 		}
 		NSArray pDicts = (NSArray)ue.valueForKey("params");
 		if(pDicts == null)

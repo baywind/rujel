@@ -229,9 +229,6 @@ public class ReadArchives extends WOComponent {
 			ifsame: // grouping
 				if (dict != null) { // && arch.actionType().intValue() == 1 &&
 //						"green".equals(dict.valueForKey("rowClass"))) {
-					String grouping = (String)dict.valueForKeyPath("usedEntity.grouping");
-					if(grouping == null)
-						break ifsame;
 					Object prev = dict.valueForKey("arch");
 					MarkArchive prevMA;
 					if(prev instanceof MarkArchive)
@@ -240,6 +237,29 @@ public class ReadArchives extends WOComponent {
 						prevMA = (MarkArchive)((NSArray)prev).objectAtIndex(0);
 					else
 						break ifsame;
+					String grouping = (String)dict.valueForKeyPath("usedEntity.grouping");
+					if(grouping == null) {
+						if(!arch.sameIdentifier(prevMA))
+							break ifsame;
+						Integer at = arch.actionType();
+						if(at == null || at < 1 || at > 3)
+							at = 0;
+						if(actionTypes == null || actionTypes.count() < 4) {
+							Integer actionType = (Integer)dict.valueForKey("actionType");
+							if(actionType == null || actionType < at) {
+								dict.takeValueForKey(at, "actionType");
+								dict.takeValueForKey(rowClass(arch), "rowClass");
+							}
+						} else {
+							String actionType = (String)dict.valueForKey("actionType");
+							int atIdx = (actionType == null)?-1:actionTypes.indexOf(actionType);
+							if(atIdx < at) {
+								dict.takeValueForKey(actionTypes.objectAtIndex(at), "actionType");
+								dict.takeValueForKey(rowClass(arch), "rowClass");
+							}
+						}
+
+					} else {
 					if (!(arch.wosid().equals(prevMA.wosid()) && 
 							arch.usedEntity().equals(prevMA.usedEntity()) &&
 							arch.actionType().equals(prevMA.actionType())))
@@ -253,6 +273,7 @@ public class ReadArchives extends WOComponent {
 						Object val2 = prevMA.valueForKey(MarkArchive.keys[j]);
 						if((val1 == null)?val2 != null : !val1.equals(val2))
 							break ifsame;
+					}
 					}
 					if(!(prev instanceof NSMutableArray)) {
 						prev = new NSMutableArray(prevMA);
