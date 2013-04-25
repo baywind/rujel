@@ -725,16 +725,11 @@ public class LessonNoteEditor extends WOComponent {
 						entityName = EduLesson.entityName;
 					dict.takeValueForKey(entityName, "entityName");
 				}
-				ec.deleteObject(currLesson());
-/*				if(idx < (allLessons.count() - 1)) { //lower numbers of following lessons
-					idx++;
-					while(idx < allLessons.count()) {
-						((EduLesson)allLessons.objectAtIndex(idx)).setNumber(new Integer(num));
-						idx++;
-						num++;
-					}
-				} // end number lowering */
 				logger.log(level,"Deleting lesson ",new Object[] {session(),currLesson()});
+				context().setUserInfoForKey(currPerPersonLink, "deleteLesson");
+				session().valueForKeyPath("modules.deleteLesson");
+				context().setUserInfoForKey(null, "deleteLesson");
+				ec.deleteObject(currLesson());
 				ec.saveChanges();
 				if(idx >= 0)
 					fullList.removeObjectAtIndex(idx);

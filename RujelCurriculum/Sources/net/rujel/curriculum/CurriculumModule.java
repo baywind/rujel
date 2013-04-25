@@ -91,6 +91,8 @@ public class CurriculumModule {
 					"strings.RujelCurriculum_Curriculum.courseComplete");
 		} else if("deleteCourse".equals(obj)) {
 			return deleteCourse(ctx);
+		} else if("deleteLesson".equals(obj)) {
+			return deleteLesson(ctx);
 		} else if("assumeNextLesson".equals(obj)) {
 			return assumeNextLesson(ctx);
 		} else if("objectSaved".equals(obj)) {
@@ -221,6 +223,24 @@ public class CurriculumModule {
 				"strings.RujelCurriculum_Curriculum.messages.courseHasVariations");
 		ctx.session().takeValueForKey(message, "message");
 		return message;
+	}
+	
+	public static Object deleteLesson(WOContext ctx) {
+		EduLesson lesson = (EduLesson)ctx.userInfoForKey("deleteLesson");
+		EOEditingContext ec = lesson.editingContext();
+		NSArray vars = EOUtilities.objectsMatchingKeyAndValue(ec, 
+				Variation.ENTITY_NAME, "relatedLesson", lesson);
+		if(vars != null && vars.count() > 0) {
+			Enumeration enu = vars.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Variation var = (Variation) enu.nextElement();
+//				if(var.value().intValue() > 0)
+					ec.deleteObject(var);
+//				else
+//					var.setRelatedLesson(null);
+			}
+		}
+		return null;
 	}
 	
 	public static NSDictionary assumeNextLesson(WOContext ctx) {

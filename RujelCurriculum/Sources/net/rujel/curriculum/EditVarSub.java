@@ -120,11 +120,9 @@ public class EditVarSub extends WOComponent {
     			Variation.ENTITY_NAME,quals[1],null);
     	NSArray found = fromCourse.editingContext().objectsWithFetchSpecification(fs);
     	reason = null;
-    	if(found != null && found.count() > 0) {
-    		Variation back = chooseBack(found);
-    		if(back != null)
-    			reason = back.reason();
-    	}
+    	Variation back = chooseBack(found);
+    	if(back != null)
+    		reason = back.reason();
     	cantSave = Boolean.FALSE;
     }
     
@@ -251,14 +249,13 @@ public class EditVarSub extends WOComponent {
     			EOQualifier.QualifierOperatorEqual, fromCourse);
        	fs.setQualifier(new EOAndQualifier(new NSArray(quals)));
        	found = ec.objectsWithFetchSpecification(fs);
-       	Variation back = null;
-       	if(found == null || found.count() == 0) {
+       	Variation back = chooseBack(found);
+       	if(back == null) {
        		back = (Variation)EOUtilities.createAndInsertInstance(ec, Variation.ENTITY_NAME);
     		back.addObjectToBothSidesOfRelationshipWithKey(fromCourse, "course");
     		back.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
     		back.setValue(new Integer(-1));
        	} else {
-       		back = chooseBack(found);
        		if(back.relatedLesson() == lesson)
        			return done(changed);
        		if(back.value().intValue() < -1) {
@@ -295,13 +292,18 @@ public class EditVarSub extends WOComponent {
 	}
 	
     protected Variation chooseBack(NSArray found) {
+    	if(found == null || found.count() == 0)
+    		return null;
    		int lvl = 0;
    		Variation back = null;
    		for (int i = 0; i < found.count(); i++) {
 			Variation var = (Variation)found.objectAtIndex(i);
-			if(var.relatedLesson() == lesson) {
+			EduLesson lsn = var.relatedLesson(); 
+			if(lsn == lesson) {
 		       	session().removeObjectForKey("lessonProperties");
 				return var;
+			} else if(lsn != null && lsn.date() != null) {
+				continue;
 			}
 			if(var.reason() == reason && lvl < 4) {
 				lvl = 3;
@@ -361,7 +363,7 @@ public class EditVarSub extends WOComponent {
     
     public WOActionResults delete() {
     	EOEditingContext ec = toCourse.editingContext();
-    	if(lesson != null) {
+    	if(lesson != null && lesson.editingContext() != null) {
     	EOQualifier[] quals = new EOQualifier[2];
        	quals[0] = new EOKeyValueQualifier("relatedLesson",
     			EOQualifier.QualifierOperatorEqual, lesson);
