@@ -108,7 +108,7 @@ public class ReadArchives extends WOComponent {
 		return ent;
     }
     
-    private NSTimestamp dateBatch(NSTimestamp startDate, NSMutableArray quals) {
+    private NSTimestamp dateBatch(NSTimestamp startDate, NSMutableArray quals, int days) {
     	if(startDate == null)
     		startDate = (NSTimestamp)params.valueForKey("since");
     	if(startDate == null) {
@@ -121,8 +121,8 @@ public class ReadArchives extends WOComponent {
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,startDate);
     	NSTimestamp finDate = (NSTimestamp)params.valueForKey("to");
     	long fin = (finDate == null)?System.currentTimeMillis():finDate.getTime();
-    	if((fin - start) > NSLocking.OneWeek) {
-    		finDate = startDate.timestampByAddingGregorianUnits(0, 0, 7, 0, 0, 0);
+    	if((fin - start) > days*NSLocking.OneDay) {
+    		finDate = startDate.timestampByAddingGregorianUnits(0, 0, days, 0, 0, 0);
     	}
     	if(finDate != null) {
         	EOQualifier qual1 = new EOKeyValueQualifier(MarkArchive.TIMESTAMP_KEY, 
@@ -133,7 +133,7 @@ public class ReadArchives extends WOComponent {
     		quals.addObject(qual);
     	else
     		quals.replaceObjectAtIndex(qual, 0);
-    	if ((fin - start) <= NSLocking.OneWeek)
+    	if ((fin - start) <= days*NSLocking.OneDay)
     		return null;
     	return finDate;
     }
@@ -141,10 +141,13 @@ public class ReadArchives extends WOComponent {
     public void select() {
     	records.removeAllObjects();
     	list = null;
-    	NSMutableArray quals = new NSMutableArray();
-    	NSTimestamp finDate = dateBatch((NSTimestamp)params.valueForKey("since"), quals);
-		quals.addObject(new EOKeyValueQualifier(MarkArchive.ACTION_TYPE_KEY, 
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, params.valueForKey("level")));
+    	NSMutableArray quals = new NSMutableArray(NSKeyValueCoding.NullValue);
+    	Number level = (Number)params.valueForKey("level");
+    	if(level != null && level.intValue() > 0)
+    		quals.addObject(new EOKeyValueQualifier(MarkArchive.ACTION_TYPE_KEY, 
+    				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, level));
+    	else
+    		level = null;
 		if(params.valueForKey("usedEntity") != null) {
 			quals.addObject(new EOKeyValueQualifier(MarkArchive.USED_ENTITY_KEY, 
 					EOQualifier.QualifierOperatorEqual,
@@ -162,6 +165,8 @@ public class ReadArchives extends WOComponent {
 				qd.takeValueForKey(Boolean.TRUE, "used");
 			}
 		}
+		int days = (quals.count() == 1)?1:(quals.count() == 2)?3:7;
+    	NSTimestamp finDate = dateBatch((NSTimestamp)params.valueForKey("since"), quals,days);
 		NSArray recordsSorter = new NSArray(new EOSortOrdering[] {
 				new EOSortOrdering(MarkArchive.WOSID_KEY,EOSortOrdering.CompareAscending),
 				new EOSortOrdering(MarkArchive.KEY1_KEY,EOSortOrdering.CompareAscending),
@@ -175,7 +180,7 @@ public class ReadArchives extends WOComponent {
 		if(found == null || found.count() == 0) {
 			while(finDate != null) {
 				NSTimestamp startDate = finDate;
-				finDate = dateBatch(startDate, quals);
+				finDate = dateBatch(startDate, quals, 7);
 				fs.setQualifier(new EOAndQualifier(quals));
 				found = ec.objectsWithFetchSpecification(fs);
 				if(found != null && found.count() > 0) {
@@ -214,7 +219,7 @@ public class ReadArchives extends WOComponent {
 					break;
 				}
 				while(finDate != null) {
-					finDate = dateBatch(finDate, quals);
+					finDate = dateBatch(finDate, quals, days);
 					fs.setQualifier(new EOAndQualifier(quals));
 					found = ec.objectsWithFetchSpecification(fs);
 					if(found != null && found.count() > 0)
