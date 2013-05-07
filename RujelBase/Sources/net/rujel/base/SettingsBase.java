@@ -391,7 +391,7 @@ public class SettingsBase extends _SettingsBase implements Setting {
 			Setting setting = forCourse(course);
 			if(numeric != null && !numeric.equals(setting.numericValue()))
 				continue;
-			if(text != null && !text.equals(setting.numericValue()))
+			if(text != null && !text.equals(setting.textValue()))
 				continue;
 			result.addObject(course);
 		}
