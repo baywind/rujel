@@ -253,11 +253,11 @@ public class Prognosis extends _Prognosis {
 		return updateFireDate(courseTimeout);
 	}
 
-	public void setUpdateWithCourseTimeout(CourseTimeout courseTimeout) {
-		if(courseTimeout == null)
+	public void setUpdateWithCourseTimeout(Object courseTimeout) {
+		if(courseTimeout == NullValue)
 			updateFireDate();
 		else
-			updateFireDate(courseTimeout);
+			updateFireDate((CourseTimeout)courseTimeout);
 	}
 
 	public NSTimestamp updateFireDate(CourseTimeout courseTimeout) {

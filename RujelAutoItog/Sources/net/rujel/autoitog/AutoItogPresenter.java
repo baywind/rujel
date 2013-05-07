@@ -30,13 +30,20 @@
 package net.rujel.autoitog;
 
 import java.text.SimpleDateFormat;
+import java.util.Enumeration;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.ExtDynamicElement;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 
@@ -52,6 +59,15 @@ public class AutoItogPresenter extends ExtDynamicElement {
 		if(itog == null) {
 			aResponse.appendContentString((String)aContext.session().valueForKeyPath(
 					"strings.RujelAutoItog_AutoItog.properties.AutoItog.this"));
+			NamedFlags access = (NamedFlags)aContext.session().valueForKeyPath(
+					"readAccess.FLAGS.AutoItog");
+			if(access.intValue() < 16 || valueForBinding("itogsList", aContext) == null)
+				return;
+			aResponse.appendContentString(" <span onclick = \"if(tryLoad())window.location = '");
+			aResponse.appendContentString(aContext.componentActionURL());
+			aResponse.appendContentString(
+					"';\" onmouseover = \"dim(this);\" onmouseout = \"unDim(this)\">");
+			aResponse.appendContentString("#</span>");
 			return;
 		}
 		String listName = (String)valueForBinding("listName", aContext);
@@ -107,8 +123,16 @@ public class AutoItogPresenter extends ExtDynamicElement {
 
 	protected WOActionResults action(WOContext aContext) {
 		ItogContainer itog = (ItogContainer)valueForBinding("value",aContext);
-		if(itog == null)
-			return null;
+		if(itog == null) {
+			try {
+				updateDates(aContext);
+			} catch (Exception e) {
+				aContext.session().takeValueForKey(e.getMessage(), "message");
+				AutoItogEditor.logger.log(WOLogLevel.WARNING, "Failed updating dates",
+						new Object[] {aContext.session(),e});
+			}
+			return super.action(aContext);
+		}
 		WOComponent popup = WOApplication.application().pageWithName(
 				"AutoItogEditor", aContext);
 		popup.takeValueForKey(aContext.page(), "returnPage");
@@ -120,5 +144,34 @@ public class AutoItogPresenter extends ExtDynamicElement {
 			popup.takeValueForKey(autoItog, "autoItog");
 //		}
 		return popup;
+	}
+	
+	private void updateDates(WOContext aContext) {
+		NSArray itogsList = (NSArray)valueForBinding("itogsList", aContext);
+//			EOUtilities.objectsMatchingKeyAndValue(ec, 
+//				ItogContainer.ENTITY_NAME, ItogContainer.EDU_YEAR_KEY, eduYear);
+		if(itogsList == null || itogsList.count() == 0)
+			return;
+		String listName = (String)valueForBinding("listName", aContext);
+		EOEditingContext ec = (EOEditingContext)valueForBinding("ec", aContext);
+		Integer eduYear = (Integer)aContext.session().valueForKey("eduYear");
+		SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
+		NSArray courses = base.coursesForSetting(listName, null,eduYear);
+		if(courses == null || courses.count() == 0)
+			return;
+		Enumeration enu = courses.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduCourse course = (EduCourse) enu.nextElement();
+			for (int i = 0; i < itogsList.count(); i++) {
+				ItogContainer itog = (ItogContainer)itogsList.objectAtIndex(i);
+				AutoItog ai = AutoItog.forListName(listName, itog);
+				NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, ai);
+				if(prognoses == null || prognoses.count() == 0)
+					continue;
+				CourseTimeout cto = CourseTimeout.getTimeoutForCourseAndPeriod(course, itog);
+				prognoses.takeValueForKey(cto, "updateWithCourseTimeout");
+				ec.saveChanges();
+			}
+		}
 	}
 }

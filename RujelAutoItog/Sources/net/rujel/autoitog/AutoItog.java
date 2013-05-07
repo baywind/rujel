@@ -54,9 +54,10 @@ public class AutoItog extends _AutoItog {
 	public static final NSArray flagNames = new NSArray(new String[]
 	               {"noTimeouts","manual","runningTotal","-8-","hideInReport","inactive"});
 	
-	public static final NSArray dateTimeSorter = new NSArray( new EOSortOrdering[] {
+	protected static final NSArray aiSorter = new NSArray( new EOSortOrdering[] {
 		EOSortOrdering.sortOrderingWithKey(FIRE_DATE_KEY,EOSortOrdering.CompareAscending),
-		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending)
+		EOSortOrdering.sortOrderingWithKey(FIRE_TIME_KEY,EOSortOrdering.CompareAscending),
+		EOSortOrdering.sortOrderingWithKey("itogContainer.itogType.sort",EOSortOrdering.CompareAscending)
 		});
 	public static final NSArray typeSorter = new NSArray(
 			new EOSortOrdering(ITOG_CONTAINER_KEY,EOSortOrdering.CompareAscending));
@@ -157,7 +158,7 @@ public class AutoItog extends _AutoItog {
     		types.removeAllObjects();
      	}
     	if (result.count() > 1) {
-     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, dateTimeSorter);
+     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, aiSorter);
 		}
     	NSArray allowedTypes = ItogType.typesForList(listName, ec);
     	Enumeration enu = result.objectEnumerator();

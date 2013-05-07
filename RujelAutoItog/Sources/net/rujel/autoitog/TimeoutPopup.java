@@ -216,18 +216,18 @@ public class TimeoutPopup extends WOComponent {
 					related = timeout.relatedPrognoses();
 				if(newRelated==null || newRelated.count() == 0) {
 					if(related != null && related.count() > 0) {
-						related.takeValueForKey(null,"updateWithCourseTimeout");
+						related.takeValueForKey(NullValue,"updateWithCourseTimeout");
 					}
 				} else {
 					if(timeout instanceof CourseTimeout)
 						newRelated.takeValueForKey(timeout,"updateWithCourseTimeout");
 					else 
-						newRelated.takeValueForKey(null,"updateWithCourseTimeout");
+						newRelated.takeValueForKey(NullValue,"updateWithCourseTimeout");
 					if(related != null && related.count() > 0) {
 						NSMutableArray tmp = related.mutableClone();
 						tmp.removeObjectsInArray(newRelated);
 						if(tmp.count() > 0)
-							tmp.takeValueForKey(null,"updateWithCourseTimeout");
+							tmp.takeValueForKey(NullValue,"updateWithCourseTimeout");
 					}
 				}
 				ec.saveChanges();
