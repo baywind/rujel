@@ -42,9 +42,8 @@ public class CourseInspector extends WOComponent {
     		return;
     	}
     	changes = course.teacherChanges();
-    	if(changes != null && changes.count() > 1) {
+    	if(changes != null && changes.count() > 1)
     		changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(changes, MyUtility.dateSorter);
-    	}
     }
 
 	public String title() {
@@ -77,8 +76,9 @@ public class CourseInspector extends WOComponent {
 		} else {
 			course.setTeacher(null);
 		}
-        changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(
-        		course.teacherChanges(),MyUtility.dateSorter);
+    	changes = course.teacherChanges();
+    	if(changes != null && changes.count() > 1)
+    		changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(changes, MyUtility.dateSorter);
 	}
 	
 	public WOComponent chooseCourseTeacher() {
@@ -122,6 +122,7 @@ public class CourseInspector extends WOComponent {
 	}
 
 	public WOActionResults save() {
+		course.namedFlags().setFlagForKey((changes.count() > 0), "teacherChanged");
 		if(course.editingContext().hasChanges()) {
 			try {
 				course.editingContext().saveChanges();
@@ -133,6 +134,8 @@ public class CourseInspector extends WOComponent {
 				session().takeValueForKey(e.getMessage(), "message");
 				course.editingContext().revert();
 			}
+			if(returnPage.name().endsWith("LessonNoteEditor"))
+				returnPage.valueForKey("refresh");
 		}
 		returnPage.ensureAwakeInContext(context());
 		return returnPage;
@@ -142,6 +145,12 @@ public class CourseInspector extends WOComponent {
 		course.editingContext().revert();
 		returnPage.ensureAwakeInContext(context());
 		return returnPage;
+	}
+	
+	public Object cantDelete() {
+		if(updater == null)
+			return Boolean.TRUE;
+		return session().valueForKeyPath("readAccess._delete.course");
 	}
 	
 	public WOActionResults delete() {
@@ -216,8 +225,10 @@ public class CourseInspector extends WOComponent {
 				course.removeObjectFromBothSidesOfRelationshipWithKey(change,
 						BaseCourse.TEACHER_CHANGES_KEY);
 				change.editingContext().deleteObject(change);
-				changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(
-			        		course.teacherChanges(),MyUtility.dateSorter);
+				changes = course.teacherChanges();
+				if(changes != null && changes.count() > 1)
+					changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+							changes,MyUtility.dateSorter);
 				return;
 			}
 			if(teacher instanceof Null)

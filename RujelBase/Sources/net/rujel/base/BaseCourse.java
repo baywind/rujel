@@ -95,6 +95,7 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	public EOEnterpriseObject teacherChange(NSTimestamp onDate) {
 		return teacherChange(onDate,null);
 	}
+	
 	public EOEnterpriseObject teacherChange(NSTimestamp onDate, NSTimestamp[] dates) {
 		if(onDate == null || !namedFlags().flagForKey("teacherChanged")
 				|| teacherChanges().count() == 0) {
@@ -444,7 +445,8 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 
 	public void setFlags(Integer value) {
 		_flags = null;
-		super.setFlags(value);
+		if(value == null || !value.equals(super.flags()))
+			super.setFlags(value);
 	}
 	
 	public static NSArray coursesForStudent(NSArray initialCourses, Object student) {

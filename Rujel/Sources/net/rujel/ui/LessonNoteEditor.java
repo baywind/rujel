@@ -46,12 +46,15 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.appserver.WOActionResults;
 
 public class LessonNoteEditor extends WOComponent {
 	protected static Logger logger = Logger.getLogger("rujel.journal");
 	public EduCourse course;
 	public WeekFootprint weekFootprint;
 	private PerPersonLink currPerPersonLink;
+	public Teacher activeTeacher;
+	public String teacherStyle;
 
 	public EduLesson currLesson() {
 		if(currPerPersonLink instanceof EduLesson)
@@ -194,8 +197,8 @@ public class LessonNoteEditor extends WOComponent {
 		StringBuilder buf = new StringBuilder(50);
 		buf.append(course.eduGroup().name()).append(" : ");
 		buf.append(course.cycle().subject()).append(" - ");
-		if(course.teacher() != null)
-			buf.append(Person.Utility.fullName(course.teacher(),true,2,1,1));
+		if(activeTeacher != null)
+			buf.append(Person.Utility.fullName(activeTeacher,true,2,1,1));
 		else
 			buf.append(application().valueForKeyPath("strings.RujelBase_Base.vacant"));
 		return buf.toString();
@@ -322,6 +325,9 @@ public class LessonNoteEditor extends WOComponent {
 		autoSelectTab();
 		updateLessonList(false);
 		session().takeValueForKey(Boolean.FALSE,"prolong");
+		activeTeacher = course.teacher((NSTimestamp)session().valueForKey("today"));
+		if(activeTeacher != course.teacher())
+			teacherStyle = "font-style:italic;";
 	}
 	
 	public void autoSelectTab() {
@@ -1260,7 +1266,7 @@ public class LessonNoteEditor extends WOComponent {
 	
 	public WOActionResults chooseTeacher() {
 		WOComponent resultPage = srcMark();
- 		resultPage.takeValueForKey(course.teacher(), "currTeacher");
+ 		resultPage.takeValueForKey(activeTeacher, "currTeacher");
 		return resultPage;
 	}
 	
@@ -1289,5 +1295,12 @@ public class LessonNoteEditor extends WOComponent {
 		} catch (NSKeyValueCoding.UnknownKeyException e) {
 			return null;
 		}
+	}
+
+	public WOActionResults inspectCourse() {
+		WOComponent result = pageWithName("CourseInspector");
+		result.takeValueForKey(this, "returnPage");
+		result.takeValueForKey(course, "course");
+		return result;
 	}
 }

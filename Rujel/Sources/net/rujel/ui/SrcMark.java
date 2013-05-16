@@ -409,4 +409,30 @@ public class SrcMark extends WOComponent {
 		}, "updater");
 		return result;
 	}
+	
+	public String courseTeacher() {
+		if(item == null)
+			return null;
+		boolean em = false;
+		Teacher teacher = (Teacher)item.valueForKey("teacher");
+		if(item instanceof EduCourse) {
+			Teacher t = ((EduCourse)item).teacher((NSTimestamp)session().valueForKey("today"));
+			if(t != teacher) {
+				em = true;
+				teacher = t;
+			}
+		}
+		if(teacher == null) {
+			StringBuilder buf = new StringBuilder("<em>");
+			buf.append(session().valueForKeyPath("strings.RujelBase_Base.vacant"));
+			buf.append("</em>");
+			return buf.toString();
+		} else if(em) {
+			StringBuilder buf = new StringBuilder("<em>");
+			buf.append(Person.Utility.fullName(teacher, true, 2, 1, 1));
+			buf.append("</em>");
+			return buf.toString();
+		}
+		return Person.Utility.fullName(teacher, true, 2, 1, 1);
+	}
 }
