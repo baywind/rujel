@@ -227,6 +227,8 @@ public class CurriculumModule {
 	
 	public static Object deleteLesson(WOContext ctx) {
 		EduLesson lesson = (EduLesson)ctx.userInfoForKey("deleteLesson");
+		if(lesson == null || !EduLesson.entityName.equals(lesson.entityName()))
+			return null;
 		EOEditingContext ec = lesson.editingContext();
 		NSArray vars = EOUtilities.objectsMatchingKeyAndValue(ec, 
 				Variation.ENTITY_NAME, "relatedLesson", lesson);
