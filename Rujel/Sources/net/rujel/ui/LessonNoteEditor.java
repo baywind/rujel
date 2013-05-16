@@ -326,7 +326,9 @@ public class LessonNoteEditor extends WOComponent {
 		updateLessonList(false);
 		session().takeValueForKey(Boolean.FALSE,"prolong");
 		activeTeacher = course.teacher((NSTimestamp)session().valueForKey("today"));
-		if(activeTeacher != course.teacher())
+		if(activeTeacher == course.teacher())
+			teacherStyle = null;
+		else
 			teacherStyle = "font-style:italic;";
 	}
 	
