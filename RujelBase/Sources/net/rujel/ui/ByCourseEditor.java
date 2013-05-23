@@ -233,6 +233,8 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     	if(selected.equals(inSes.valueForKey("idx"))) {
     		if(saved != null && selected.equals(saved.valueForKey("idx")))
     			tmpValues.removeObjectForKey("savedSection");
+    		else
+    			session().removeObjectForKey("tmpSection");
     		return;
     	}
     	if(saved == null)
