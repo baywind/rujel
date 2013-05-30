@@ -528,9 +528,11 @@ cycleStudents:
 					report("Setting mark to student not in group", prognos, buf);
 				}
 				ItogMark itogMark = prognos.convertToItogMark(itogs,overwrite, buf);
-				EOEnterpriseObject commentEO = itogMark.commentEO(timeout != null);
-				if(commentEO != null)
-					Timeout.Utility.setTimeoutComment(commentEO, timeout);
+				if(itogMark != null) {
+					EOEnterpriseObject commentEO = itogMark.commentEO(timeout != null);
+					if(commentEO != null)
+						Timeout.Utility.setTimeoutComment(commentEO, timeout);
+				}
 				if(buf.charAt(buf.length() -1) != 0 &&
 						itogMark != null && (overwrite || !itogs.containsObject(itogMark))) {
 					itogMark.readFlags().setFlagForKey(scheduled == null,"manual");
@@ -577,8 +579,7 @@ cycleStudents:
 				buf.append("Failed to save itogs based on prognoses for course");
 				ec.revert();
 			}
-			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(
-					course, itog);
+			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, itog);
 			if(grouping != null) {
 				itogs = ItogMark.getItogMarks(course.cycle(), itog, null, ec);
 				itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
