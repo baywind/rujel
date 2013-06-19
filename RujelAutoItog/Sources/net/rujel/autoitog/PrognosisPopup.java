@@ -161,7 +161,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	if(prognosis !=null || mark != null) {
     		EOEditingContext ec = course.editingContext();
 	    	Logger logger = Logger.getLogger("rujel.autoitog");
-	    	int actionType = 0;
+	    	int actionType = 164;
     		if(mark == null) {
     			if(calculation) {
     				prognosis = eduPeriod.calculator().calculateForStudent(student, course, 
@@ -169,6 +169,8 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     				changeReason = eduPeriod.calculatorName();
     				if(prognosis != null)
     					mark = prognosis.mark();
+    				else
+    					ec.revert();
     			} else {
     				if(ec.globalIDForObject(prognosis).isTemporary()) {
     					ec.revert();
@@ -186,11 +188,11 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
        				prognosis.setCourse(course);
        				prognosis.setAutoItog(eduPeriod);
        				actionType = 1;
+     			} else {
+     				actionType = 2;
      			}
     			if(!mark.equals(prognosis.mark()) && eduPeriod.namedFlags().flagForKey("manual")) {
     				prognosis.setMark(mark);
-    				if(actionType != 1)
-    					actionType = 2;
     			}
    				prognosis.updateFireDate();
 	    		Bonus bonus = prognosis.bonus();
@@ -377,6 +379,11 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     
     public WOActionResults perform() {
     	ItogMark itog = prognosis.convertToItogMark(null, false, null);
+    	if(itog == null) {
+			session().takeValueForKey(session().valueForKeyPath(
+					"strings.RujelAutoItog_AutoItog.ui.disabledPrognosis"), "message");
+			return RedirectPopup.getRedirect(context(), returnPage);
+    	}
     	Logger logger = Logger.getLogger("rujel.autoitog");
     	EOEditingContext ec = prognosis.editingContext();
     	try {
