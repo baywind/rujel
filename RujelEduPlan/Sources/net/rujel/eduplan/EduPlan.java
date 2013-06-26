@@ -119,6 +119,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 				"strings.RujelEduPlan_EduPlan.settingEditors");
 		} else if("xmlGeneration".equals(obj)) {
 			return xmlGeneration(ctx);
+		} else if("adminModules".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelEduPlan_EduPlan.adminModules");
 		}
 		return null;
 	}

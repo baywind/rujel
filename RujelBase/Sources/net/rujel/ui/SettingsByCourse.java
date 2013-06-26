@@ -75,11 +75,21 @@ public class SettingsByCourse extends WOComponent {
     }*/
     
     public SettingsBase base() {
-    	if(base != null)
+    	if(hasBinding("base")) {
+    		SettingsBase bound = (SettingsBase)valueForBinding("base");
+    		if(bound == base)
+    			return base;
+    		if(bound != null) {
+    			reset();
+    			base = bound;
+    			return base;
+    		}
+    	}
+    	String key = (String)valueForBinding("key");
+    	if(base != null && base.key().equals(key))
     		return base;
-    	base = (SettingsBase)valueForBinding("base");
+    	reset();
     	if(base == null && hasBinding("key")) {
-    		String key = (String)valueForBinding("key");
     		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
     		if(ec == null)
     			ec = (EOEditingContext)parent().valueForKey("ec");
@@ -130,7 +140,12 @@ public class SettingsByCourse extends WOComponent {
 	public Boolean hideDetails() {
 		if(!Various.boolForObject(valueForBinding("hideEmptyDetails")))
 			return Boolean.FALSE;
-		return Boolean.valueOf(byCourse().count() <= 1);
+		int cnt = byCourse().count();
+		if (cnt > 1)
+			return Boolean.FALSE;
+		if(cnt == 0)
+			return Boolean.TRUE;
+		return Boolean.valueOf(valueForBinding("selector") != null);
 	}
 	
 	public String editorHead() {
@@ -146,6 +161,21 @@ public class SettingsByCourse extends WOComponent {
     			return "<td />";
     	}
     	return null;
+	}
+	
+	public String colspan() {
+    	if(Various.boolForObject(valueForBinding("readOnly")))
+    		return "4";
+    	NamedFlags access = (NamedFlags)valueForBinding("access");
+    	if(access == null)
+    		access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
+    	if(access.flagForKey("edit") || access.flagForKey("delete")) {
+    		if(access.flagForKey("edit") && access.flagForKey("delete"))
+    			return "6";
+    		else
+    			return "5";
+    	}
+    	return "4";
 	}
 	
     public WOActionResults addByCourse() {
@@ -240,19 +270,19 @@ public class SettingsByCourse extends WOComponent {
     		return (Boolean)session().valueForKeyPath("readAccess.edit.QualifiedSetting");
  	}
 	
-	public WOActionResults saveSort() {
-		EOEditingContext ec = base().editingContext();
+	public WOActionResults saveSetting() {
+		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
 		if(!ec.hasChanges())
 			return null;
 		try {
 			ec.saveChanges();
-			ByCourseEditor.logger.log(WOLogLevel.COREDATA_EDITING,
-					"QualifiedSetttings order saved", new Object[] {session(),base()});
+			ByCourseEditor.logger.log(WOLogLevel.CONFIG,"Saved configuration for '" + 
+					base.key() + '\'', new Object[] {session(),base()});
 		} catch (Exception e) {
+			session().takeValueForKey(e.getMessage(), "message");
+			ByCourseEditor.logger.log(WOLogLevel.WARNING,"Failed saving configuration for '" + 
+					base.key() + '\'', new Object[] {session(),base(),e});
 			ec.revert();
-			ByCourseEditor.logger.log(WOLogLevel.WARNING,
-					"Error saving QualifiedSetttings order",
-					new Object[] {session(),base(),e});
 		}
 		return null;
 	}
@@ -324,7 +354,7 @@ public class SettingsByCourse extends WOComponent {
     			"strings.RujelBase_Base.SettingsBase.testSettings"), "title");
     	return result;
     }
-
+    
     public boolean synchronizesVariablesWithBindings() {
         return false;
 	}

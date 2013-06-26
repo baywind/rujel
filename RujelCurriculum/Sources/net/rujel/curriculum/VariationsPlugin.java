@@ -151,7 +151,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				cal.setTime(eduPer.begin());
 				cal.add(Calendar.DATE, -1);
 				cal.set(Calendar.HOUR_OF_DAY, 20);
-				Period per = new Period.ByDates(perFin,new NSTimestamp(cal.getTimeInMillis()));
+				Period per = new EOPeriod.ByDates(perFin,new NSTimestamp(cal.getTimeInMillis()));
 				holidays.addObject(per);
 			}
 			cal.setTime(eduPer.end());
@@ -179,7 +179,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			} else {
 				cal.add(Calendar.DATE, -week);
 			}
-			Period per = new Period.ByDates(perFin,finDate);
+			Period per = new EOPeriod.ByDates(perFin,finDate);
 			holidays.addObject(per);
 		} else {
 			cal.setTime(finDate);
@@ -322,7 +322,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						cal.add(Calendar.DATE, -1);
 					start = new NSTimestamp(cal.getTimeInMillis());
 					if(start.before(per.begin())) {
-						Period pre = new Period.ByDates(start,per.begin());
+						Period pre = new EOPeriod.ByDates(start,per.begin());
 						holidays.addObject(pre);
 					}
 				}
@@ -345,7 +345,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						NSTimestamp afterEnd = new NSTimestamp(cal.getTimeInMillis());
 						cal.add(Calendar.DATE, weekDays - left -1);
 						end = new NSTimestamp(cal.getTimeInMillis());
-						holidays.addObject(new Period.ByDates(afterEnd,end));
+						holidays.addObject(new EOPeriod.ByDates(afterEnd,end));
 						perWeeks++;
 					} else {
 						extraDays = left;

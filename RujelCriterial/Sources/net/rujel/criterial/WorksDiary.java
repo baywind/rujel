@@ -223,9 +223,9 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 				result.append(cal.get(Calendar.DATE)).append(' ');
 				result.append(monthDate.objectAtIndex(cal.get(Calendar.MONTH)));
 				result.append(' ').append(cal.get(Calendar.YEAR)).append(" (");
-				result.append(weekdayShort.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1)).append(')');
+				result.append(weekdayShort.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK))).append(')');
 			} else {
-				result.append(weekdayLong.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1));
+				result.append(weekdayLong.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK)));
 				result.append(", ").append(cal.get(Calendar.DATE)).append(' ');
 				result.append(monthDate.objectAtIndex(cal.get(Calendar.MONTH)));
 			}
@@ -257,7 +257,7 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 			result.append(cal.get(Calendar.DATE)).append(' ');
 			result.append(monthDate.objectAtIndex(cal.get(Calendar.MONTH)));
 			result.append(" (");
-			result.append(weekdayShort.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1)).append(')');
+			result.append(weekdayShort.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK))).append(')');
 			//MyUtility.dateFormat().format(item.date(), result, new FieldPosition(0));
 			result.append(' ');
 		}

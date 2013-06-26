@@ -545,7 +545,7 @@ public class Overview extends WOComponent {
 		nextPage.takeValueForKey(courseItem.valueForKey("course"), "course");
 		Period per = period;
 		if(per == null) {
-			per = new Period.ByDates(since,to);
+			per = new EOPeriod.ByDates(since,to);
 		}
 		nextPage.takeValueForKey(per, "period");
 		return nextPage;

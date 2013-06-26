@@ -39,6 +39,8 @@ import net.rujel.reusables.Various;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
@@ -106,9 +108,31 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     	if(value != null) {
     		if(Various.boolForObject(itemDict().valueForKey("or")) && item != null)
     			return item;
-    		String bool = (String)itemDict().valueForKey("boolean");
-    		if(bool != null)
-    			return Boolean.valueOf(Various.boolForObject(value));
+    		{
+    			Object bool = itemDict().valueForKey("boolean");
+    			if(bool != null)
+    				return Boolean.valueOf(Various.boolForObject(value));
+    		}
+    		{
+    			Object select = itemDict().valueForKey("select");
+    			String key = (String)itemDict().valueForKey("idAttribute");
+    			if(select != null && key != null) {
+    				select = DisplayAny.ValueReader.evaluateValue(select, paramsDict(), this);
+    				Enumeration enu = ((NSArray)select).objectEnumerator();
+    				while (enu.hasMoreElements()) {
+						Object object = (Object) enu.nextElement();
+	    				if(object instanceof EOEnterpriseObject && key.equals("PRIMARY_KEY")) {
+	    					EOEnterpriseObject eo = (EOEnterpriseObject)object;
+	    					EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
+	    					if(value.equals(((EOKeyGlobalID)gid).keyValues()[0]))
+	    						return object;
+	    				} else if(value.equals(((NSKeyValueCoding)object).valueForKey(key))) {
+	    					return object;
+	    				}
+					}
+					return null;
+    			}
+    		}
     		return value;
     	} else if(Various.boolForObject(itemDict().valueForKey("range"))) {
     		StringBuilder buf = new StringBuilder();
@@ -132,24 +156,38 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     	}
     	value = valueOf.valueForKeyPath("paramsDict.itemDict.default" + 
     			((secondSelector)?"Min":"Value"));
-    	if(value != null)
+    	if(value != null && paramsDict() instanceof NSMutableDictionary)
     		paramsDict().takeValueForKey(value, attribute);
     	return value;
     }
     
     public void setValue(Object value) {
-    	if(value == null)
+    	if(value == null && paramsDict() instanceof NSMutableDictionary)
     		value = NullValue;
     	boolean secondSelector = (itemDict().valueForKey("secondSelector") != null);
     	String attribute = attribute();
     	if(secondSelector)
     		attribute = "min_" + attribute;
 		if(value instanceof Boolean) {
-			String bool = (String)itemDict().valueForKey("boolean");
-			if("string".equalsIgnoreCase(bool)) {
+			Object bool = itemDict().valueForKey("boolean");
+			if("string".equals(bool)) {
 				value = value.toString();
-			} else if("number".equalsIgnoreCase(bool)) {
+			} else if("number".equals(bool)) {
 				value = new Integer(((Boolean)value).booleanValue()? 1 : 0);
+			} else {
+				value = ((Boolean)value).booleanValue()?bool:null;
+			}
+		} else if(value instanceof NSKeyValueCoding) {
+			String key = (String)itemDict().valueForKey("idAttribute");
+			if(key != null) {
+				if(value instanceof EOEnterpriseObject && key.equals("PRIMARY_KEY")) {
+					EOEnterpriseObject eo = (EOEnterpriseObject)value;
+					EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
+					Object pKey = ((EOKeyGlobalID)gid).keyValues()[0];
+					value = pKey;
+				} else {
+					value = ((NSKeyValueCoding)value).valueForKey(key);
+				}
 			}
 		}
     	paramsDict().takeValueForKey(value, attribute);

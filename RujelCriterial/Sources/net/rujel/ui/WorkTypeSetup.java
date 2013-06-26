@@ -27,12 +27,16 @@ public class WorkTypeSetup extends WOComponent {
         super(context);
     }
     
+	public static NSArray types(EOEditingContext ec) {
+		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,null,
+				ModulesInitialiser.sorter);
+		return ec.objectsWithFetchSpecification(fs);
+	}
+	
 	public NSArray types() {
 		if(types == null) {
-			EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,null,
-					ModulesInitialiser.sorter);
 			EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
-			NSArray tmp = ec.objectsWithFetchSpecification(fs);
+			NSArray tmp = types(ec);
 			types = (tmp == null)?new NSMutableArray() : tmp.mutableClone();
 		}
 		if(currType != null && currType.editingContext() == null) {

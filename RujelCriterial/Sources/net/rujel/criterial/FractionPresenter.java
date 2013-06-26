@@ -86,7 +86,8 @@ public interface FractionPresenter {
 	
 		public BigDecimal borderForKey(String key) throws IllegalArgumentException {
 			try {
-				return new BigDecimal(key);
+				BigDecimal dec = new BigDecimal(key);
+				return dec.movePointLeft(2);
 			} catch (NumberFormatException nex) {
 				throw new IllegalArgumentException("No such key - '" + key +'\'');
 			}

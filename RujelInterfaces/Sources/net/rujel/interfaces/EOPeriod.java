@@ -78,7 +78,7 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 
 	
 	public static class Utility {
-		public static boolean contains(EOPeriod period, Date date) {
+		public static boolean contains(Period period, Date date) {
 			if(date == null) return false;
 			boolean begin = period.begin().compareTo(date) <= 0;
 			if(!begin && period.begin().getTime() - date.getTime() > NSLocking.OneDay)
@@ -184,5 +184,38 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			return result;
 		}
 
+	}
+
+	public static class ByDates implements Period {
+		private NSTimestamp begin;
+		private NSTimestamp end;
+		
+		public ByDates(NSTimestamp begin, NSTimestamp end) {
+			this.begin = begin;
+			this.end = end;
+		}
+		
+		private static final String typeID = "Period.ByDates";
+		public String typeID() {
+			return typeID;
+		}
+		
+		public NSTimestamp begin() {
+			return begin;
+		}
+		public NSTimestamp end() {
+			return end;
+		}
+
+		public boolean contains(Date date) {
+			return Utility.contains(this, date);
+		}
+		
+		public int countInYear() {
+			return 0;
+		}
+		public EOPeriod nextPeriod() {
+			return null;
+		}
 	}
 }

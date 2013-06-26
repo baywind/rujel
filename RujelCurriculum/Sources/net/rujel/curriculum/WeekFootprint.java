@@ -567,7 +567,7 @@ public class WeekFootprint {
 						buf.append('+');
 					buf.append(count);
 					buf.append(" : ");
-					buf.append(weekdays.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1));
+					buf.append(weekdays.objectAtIndex(cal.get(Calendar.DAY_OF_WEEK)));
 					buf.append(',').append(' ');
 					MyUtility.dateFormat().format(new NSTimestamp(cal.getTimeInMillis()), buf, fp);
 				}

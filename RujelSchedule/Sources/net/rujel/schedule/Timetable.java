@@ -129,7 +129,7 @@ public class Timetable extends LessonList {
     				"Reusables_Strings.presets.weekdayShort":
     					"Reusables_Strings.presets.weekdayLong");
     		for (int i = 1; i < cols; i++) {
-    			int widx = (weekStart -2 +i)%7;
+    			int widx = (weekStart -1 +i)%7;
     			String weekday = (String)weekDays.objectAtIndex(widx);
     			if(week > 7) {
     				StringBuilder buf = new StringBuilder(weekday);

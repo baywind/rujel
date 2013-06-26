@@ -101,6 +101,8 @@ public class CurriculumModule {
 			return accessModifier(ctx);
 		} else if("archiveType".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelCurriculum_Curriculum.archiveType");
+		} else if("adminModules".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelCurriculum_Curriculum.adminModules");
 		} 
 		return null;
 	}

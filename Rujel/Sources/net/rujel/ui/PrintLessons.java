@@ -76,7 +76,7 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     }
 */
     public String presentPeriod() {
-    	if(period == null)
+    	if(period == null || (period.begin() == null && period.end() == null))
     		return null;
     	if (period instanceof EOPeriod) {
 			return (String)NSKeyValueCoding.Utility.valueForKey(period, "name");
@@ -84,8 +84,14 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
 			StringBuffer buf = new StringBuffer();
 			Format df = MyUtility.dateFormat();
 			FieldPosition fp = new FieldPosition(0);
-			df.format(period.begin(), buf, fp);
+			if(period.begin() == null)
+				buf.append("...");
+			else
+				df.format(period.begin(), buf, fp);
 			buf.append(" - ");
+			if(period.end() == null)
+				buf.append("...");
+			else
 			df.format(period.end(), buf, fp);
 			return buf.toString();
 		}
@@ -102,10 +108,12 @@ public class PrintLessons extends com.webobjects.appserver.WOComponent {
     	if(course.lessons() == null)
     		return null;
     	NSMutableArray result = course.lessons().mutableClone();
-    	if(period != null) {
-    		NSArray args = new NSArray(new Object[] {period.begin(),period.end()});
-    		EOQualifier qual = EOQualifier.qualifierWithQualifierFormat("date >= %@ AND date <= %@", args);
-    		EOQualifier.filterArrayWithQualifier(result, qual);
+    	if(period != null && (period.begin() != null || period.end() != null)) {
+    		for (int i = result.count() -1; i >= 0; i--) {
+				EduLesson lesson = (EduLesson)result.objectAtIndex(i);
+				if(!period.contains(lesson.date()))
+					result.removeObjectAtIndex(i);
+			}
     	}
     	EOSortOrdering.sortArrayUsingKeyOrderArray(result, EduLesson.sorter);
     	return result;

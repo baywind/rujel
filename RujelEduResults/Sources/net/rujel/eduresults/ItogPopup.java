@@ -221,8 +221,7 @@ public class ItogPopup extends WOComponent {
 						Integer count = (Integer)archive.valueForKey("archivesCount");
 						itog.readFlags().setFlagForKey(count.intValue() > 0,"changed");
 					}
-					if(!same)
-						archive.takeValueForKey(new Integer((newItog)?1:2), "actionType");
+					archive.takeValueForKey(new Integer((newItog)?1:2), "actionType");
 				}
 				//}
 

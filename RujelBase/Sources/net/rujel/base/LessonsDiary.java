@@ -101,7 +101,7 @@ public class LessonsDiary extends WOComponent {
 		result.append(monthDate.objectAtIndex(cal.get(Calendar.MONTH)));
 		result.append(" (");
 		result.append(weekdayShort.
-				objectAtIndex(cal.get(Calendar.DAY_OF_WEEK) -1)).append(')');
+				objectAtIndex(cal.get(Calendar.DAY_OF_WEEK))).append(')');
 		//MyUtility.dateFormat().format(item.date(), result, new FieldPosition(0));
 		result.append(' ');
 		return result.toString();

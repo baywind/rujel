@@ -224,8 +224,13 @@ public class ModuleInit {
 		Enumeration enu = setup.keyEnumerator();
 		while (enu.hasMoreElements()) {
 			String key = (String) enu.nextElement();
-			if(Various.boolForObject(ses.valueForKeyPath("readAccess.read." + key)))
-				result.addObject(setup.valueForKey(key));
+			if(Various.boolForObject(ses.valueForKeyPath("readAccess.read." + key))) {
+				Object module = setup.valueForKey(key);
+				if(module instanceof NSArray)
+					result.addObjectsFromArray((NSArray)module);
+				else
+					result.addObject(module);
+			}
 		}
 		return result;
 	}
