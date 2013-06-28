@@ -1,4 +1,6 @@
-﻿импорт учителей
+﻿secondary LDAP server
+
+импорт учителей
 
 datePicker
 
