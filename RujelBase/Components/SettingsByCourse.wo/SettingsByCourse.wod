@@ -127,6 +127,7 @@ BaseString : WOString {
   value = application.strings.RujelBase_Base.SettingsBase.default;
   escapeHTML = false;
 }
+
 SortForm : WOForm {
   action = saveSetting;
 }
@@ -192,11 +193,6 @@ BaseCell : WOGenericContainer {
   align = "center";
   class = "highlight2";
   colspan = colspan;
-}
-
-AddTitle : WOString {
-  value = session.strings.RujelBase_Base.SettingsBase.addByCourse;
-  escapeHTML = false;
 }
 
 CanSave : WOConditional {

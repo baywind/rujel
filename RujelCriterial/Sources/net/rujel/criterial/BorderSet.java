@@ -98,20 +98,25 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
+		flush();
+	}
+
+	public void flush() {
 		_sortedBorders = null;
 		_presenter = null;
 	}
-
     
 	private transient NSArray _sortedBorders;
 	public NSArray sortedBorders() {
 		if(_sortedBorders == null) {
+			if(borders() == null)
+				return null;
 			_sortedBorders = EOSortOrdering.sortedArrayUsingKeyOrderArray(
 					borders(),new NSArray(so)).immutableClone();
 		}
 		return _sortedBorders;
 	}
-	
+		
 	public NSArray sortedTitles() {
 		NSMutableArray result = new NSMutableArray(zeroValue());
 		result.addObjectsFromArray((NSArray)sortedBorders().valueForKey("title"));
@@ -128,7 +133,10 @@ public class BorderSet extends _BorderSet implements FractionPresenter
 		super.addToBorders(object);
     }
 	
-	
+    public void removeFromBorders(EOEnterpriseObject object) {
+		_sortedBorders = null;
+		super.removeFromBorders(object);
+    }
 
 	public EOEnterpriseObject borderEOForKey(String key) {
 		EOQualifier qual = new EOKeyValueQualifier("title",EOQualifier.QualifierOperatorEqual,key);
@@ -221,10 +229,13 @@ selection:
 			int comparator = fraction.compareTo(curr);
 			if(comparator > 0) {
 				result = border;//(String)border.valueForKey("title");
+			} else if(comparator == 0 && !exclude().booleanValue()) {
+				result = border;
+				if(!findNext)
+					break selection;
 			} else {
-				if((comparator == 0 && !exclude().booleanValue()) ^ findNext) {
-					result = border;//(String)border.valueForKey("title");
-				}
+				if(findNext)
+					result = border;
 				break selection;
 			}
 		}

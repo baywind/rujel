@@ -79,7 +79,9 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     
     public WOElement template() {
     	isBase = (bc() instanceof SettingsBase);
-    	if(!isBase)
+    	if(isBase)
+    		rowspan = null;
+    	else
     		prepare();
     	if(hasBinding("rowspan"))
     		setValueForBinding(rowspan, "rowspan");

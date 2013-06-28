@@ -109,9 +109,9 @@ public interface FractionPresenter {
 		
 		public String title() {
 			if(string == null)
-			return "none";
+				return "none";
 			else
-				return string;
+				return "none" + string;
 		}
 		
 		public String presentFraction(double fraction) {

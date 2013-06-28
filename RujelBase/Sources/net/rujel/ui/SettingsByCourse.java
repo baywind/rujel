@@ -138,6 +138,7 @@ public class SettingsByCourse extends WOComponent {
 	}
     
 	public Boolean hideDetails() {
+		rowspan = null;
 		if(!Various.boolForObject(valueForBinding("hideEmptyDetails")))
 			return Boolean.FALSE;
 		int cnt = byCourse().count();
@@ -313,7 +314,8 @@ public class SettingsByCourse extends WOComponent {
     
     public String title() {
     	Object binding = valueForBinding("title");
-    	setItem(null);
+    	if(!hideDetails())
+    		setItem(null);
     	if(binding == null)
     		return null;
     	if(binding instanceof CharSequence) {

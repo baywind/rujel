@@ -4,6 +4,7 @@ PageWrapper : PageWrapper {
   cssResource = currModule.cssResource;
   scriptResource = currModule.scriptResource;
   hasChanges = ec.hasChanges;
+  onLoad = "pagePreflight()";
 }
 
 Title : WOString {
@@ -44,7 +45,6 @@ SettingsByCourse : SettingsByCourse {
   create = true;
   ec = ec;
   hideEmptyDetails = true;
-  numericValue = session.eduYear;
   title = grItem.settingTitle;
   canSave = true;
 }

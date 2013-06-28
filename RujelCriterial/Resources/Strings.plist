@@ -135,6 +135,72 @@
 			<key>scriptResource</key>
 			<string>sorting.js</string>
 		</dict>
+		<key>BorderSet</key>
+		<dict>
+			<key>title</key>
+			<string>Преобразование процентов</string>
+			<key>component</key>
+			<string>BordersSetup</string>
+			<key>sort</key>
+			<string>35</string>
+			<key>bsTitle</key>
+			<string>Набор</string>
+			<key>newBSet</key>
+			<string>Новый набор</string>
+			<key>comparison</key>
+			<string>Сравнение</string>
+			<key>valueType</key>
+			<string>Тип значения</string>
+			<key>textType</key>
+			<string>текст</string>
+			<key>colorType</key>
+			<string>цвет</string>
+			<key>value</key>
+			<string>Значение</string>
+			<key>namedPresenter</key>
+			<string>Имя...</string>
+			<key>settings</key>
+			<array>
+				<dict>
+					<key>settingBase</key>
+					<string>presenters.workIntegral</string>
+					<key>description</key>
+					<string>Интегральная оценка за работу (с весом > 0)</string>
+					<key>defaultValue</key>
+					<string>%</string>
+				</dict>
+				<dict>
+					<key>settingBase</key>
+					<string>presenters.weightless</string>
+					<key>description</key>
+					<string>Интегральная оценка за работу (с весом = 0)</string>
+					<key>defaultValue</key>
+					<string>none#</string>
+				</dict>
+				<dict>
+					<key>settingBase</key>
+					<string>presenters.integralColor</string>
+					<key>description</key>
+					<string>Цвет подсветки интегральной (с весом > 0)</string>
+					<key>defaultValue</key>
+					<string>color</string>
+				</dict>
+				<dict>
+					<key>settingBase</key>
+					<string>presenters.weightlessColor</string>
+					<key>description</key>
+					<string>Цвет подсветки интегральной (с весом = 0)</string>
+					<key>defaultValue</key>
+					<string>color</string>
+				</dict>
+				<dict>
+					<key>settingBase</key>
+					<string>bonusBorders</string>
+					<key>description</key>
+					<string>Граничные проценты для назначения бонусов при 100-балльном оценивании.</string>
+				</dict>
+			</array>
+		</dict>
 		<key>SettingsBase</key>
 		<array>
 			<dict>

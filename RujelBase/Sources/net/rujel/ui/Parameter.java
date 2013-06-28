@@ -102,6 +102,8 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     public Object value() {
     	boolean secondSelector = (itemDict().valueForKey("secondSelector") != null);
     	String attribute = attribute();
+//    	if(paramsDict() == null)
+//    		return null;
     	Object value = paramsDict().valueForKey(attribute);
     	if(value == NullValue)
     		return null;
