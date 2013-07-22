@@ -96,10 +96,11 @@ public class Reprimand extends _Reprimand {
 		NSTimestamp now = new NSTimestamp(cal.getTimeInMillis());
 		Integer eduYear = MyUtility.eduYearForDate(now);
 
-		EOObjectStore os = EOObjectStoreCoordinator.defaultCoordinator();
-		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+		EOObjectStore os = null;
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false))
 			os = DataBaseConnector.objectStoreForTag(eduYear.toString());
-		}
+		if(os == null)
+			os = EOObjectStoreCoordinator.defaultCoordinator();
 		EOEditingContext ec = new EOEditingContext(os);
 		ec.lock();
 		try {

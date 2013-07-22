@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.rest.Agregator.ParseError;
 import net.rujel.reusables.DataBaseConnector;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
 
@@ -45,6 +46,8 @@ import com.webobjects.appserver.WORequest;
 import com.webobjects.appserver.WORequestHandler;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOObjectStore;
+import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class AgregationHandler extends WORequestHandler {
@@ -73,9 +76,23 @@ public class AgregationHandler extends WORequestHandler {
 		if(eduYear == null)
 			eduYear = MyUtility.eduYearForDate(null);
 		context.setUserInfoForKey(eduYear, "eduYear");
-		if(txt == null)
-			txt = eduYear.toString();
-		EOEditingContext ec = new EOEditingContext(DataBaseConnector.objectStoreForTag(txt));
+		EOEditingContext ec;
+		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+			if(txt == null)
+				txt = eduYear.toString();
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(txt);
+			if(os == null) {
+				WOResponse response =  WOApplication.application().createResponseInContext(context);
+				response.setHeader("text/plain; charset=UTF-8","Content-Type");
+				response.setStatus(WOResponse.HTTP_STATUS_INTERNAL_ERROR);
+				response.appendContentString("Requested eduYear '");
+				response.appendContentString(txt);
+				response.appendContentString("' was not found in database.");
+			}
+			ec = new EOEditingContext(os);
+		} else {
+			ec = new EOEditingContext();
+		}
 		ec.lock();
 		byte[] result;
 		try {

@@ -121,6 +121,8 @@ public class Sychroniser implements Runnable {
 		EOEditingContext ec;
 		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
 			EOObjectStore os = DataBaseConnector.objectStoreForTag(eduYear.toString());
+			if(os == null)
+				os = EOObjectStoreCoordinator.defaultCoordinator();
 			ec = new EOEditingContext(os);
 		} else {
 			ec = new EOEditingContext();
