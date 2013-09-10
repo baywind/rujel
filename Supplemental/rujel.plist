@@ -27,6 +27,13 @@
 		<string>17.11.2012</string>
 		<key>diaryURL</key>
 		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
+		<key>_serverURL</key>
+		<string>ms45.edu.ru</string>
+	</dict>
+	<key>auth</key>
+	<dict>
+		<key>_secureForm</key>
+		<true/>
 	</dict>
 </dict>
 </plist>

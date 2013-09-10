@@ -71,4 +71,14 @@ public class Main extends com.webobjects.appserver.WOComponent {
     public String version() {
     	return System.getProperty("RujelVersion");
     }
+
+	public String action() {
+		if(SettingsReader.boolForKeyPath("auth.secureForm", false)) {
+			StringBuilder buf = new StringBuilder("https://");
+			buf.append(application().valueForKey("host"));
+			buf.append(context().directActionURLForActionNamed("login", null));
+			return buf.toString();
+		}
+		return null;
+	}
 }
