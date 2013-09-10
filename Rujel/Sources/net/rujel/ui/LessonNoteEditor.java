@@ -524,12 +524,14 @@ public class LessonNoteEditor extends WOComponent {
 								SettingsReader.boolForKeyPath("markarchive.archiveAll",
 								SettingsReader.boolForKeyPath("markarchive.forceArchives",false)));
 						if(shouldArchive) {
+							NSDictionary snapshot = (newLesson)? null :
+								ec.committedSnapshotForObject(currLesson());
+							if(!newLesson)
+								session().setObjectForKey(snapshot, "committedSnapshot");
 							try {
 								archiveDict = (NSMutableDictionary)currLesson().valueForKey(
 								"archiveDict");
 							} catch (Exception e) {
-								NSDictionary snapshot = (newLesson)? null :
-									ec.committedSnapshotForObject(currLesson());
 								if(!newLesson)
 									snapshot = currLesson().changesFromSnapshot(snapshot);
 								if(newLesson || snapshot.count() > 0) {
@@ -621,6 +623,7 @@ public class LessonNoteEditor extends WOComponent {
 						}
 						session().removeObjectForKey("objectSaved");
 					}
+					session().removeObjectForKey("committedSnapshot");
 					if(weekFootprint != null)
 						weekFootprint.addObject(currLesson());
 					if(reset) {
@@ -712,6 +715,7 @@ public class LessonNoteEditor extends WOComponent {
 					dict.takeValueForKey(entityName, "entityName");
 					dict.takeValueForKey(currLesson().date(), "date");
 					dict.takeValueForKey(identifier, "pKey");
+					dict.takeValueForKey(course, "course");
 					try {
 						EOEnterpriseObject ue = EOUtilities.objectMatchingKeyAndValue(ec,
 								"UsedEntity", "usedEntity", entityName);

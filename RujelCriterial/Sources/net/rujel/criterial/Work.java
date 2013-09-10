@@ -42,6 +42,8 @@ import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import com.webobjects.appserver.WOApplication;
+import com.webobjects.appserver.WOMessage;
+
 import java.math.*;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -589,6 +591,8 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		String result = homeTask();
 		if(result != null && result.charAt(0) != '/' && !result.contains("://"))
 			result = "http://" + result;
+		if(result != null)
+			result = WOMessage.stringByEscapingHTMLAttributeValue(result);
 		return result;
 	}
 	

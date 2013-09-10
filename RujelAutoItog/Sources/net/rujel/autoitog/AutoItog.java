@@ -162,7 +162,7 @@ public class AutoItog extends _AutoItog {
 		}
     	NSArray allowedTypes = ItogType.typesForList(listName, ec);
     	Enumeration enu = result.objectEnumerator();
-    	result.removeAllObjects();// = new NSMutableArray();
+    	result = new NSMutableArray();
     	while (enu.hasMoreElements()) {
     		EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
 			Object type = obj.valueForKeyPath("itogContainer.itogType");
