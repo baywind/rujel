@@ -1,6 +1,4 @@
-﻿в описании работы выбор критериев по вертикали
-
-secondary LDAP server
+﻿secondary LDAP server
 
 импорт учителей
 

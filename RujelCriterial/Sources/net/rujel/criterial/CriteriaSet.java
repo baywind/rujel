@@ -53,7 +53,7 @@ public class CriteriaSet extends _CriteriaSet
     }
 	
     public static final NSArray flagNames = new NSArray(
-    		new String[] {"fixMax","fixWeight","fixList"});
+    		new String[] {"fixMax","fixWeight","fixList","numerousCriteria"});
     
     public static EOQualifier HASNUM = new EOKeyValueQualifier("criterion", 
     		EOQualifier.QualifierOperatorGreaterThan, new Integer(0));
