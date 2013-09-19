@@ -50,6 +50,7 @@ import com.webobjects.foundation.NSTimestamp;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.EduPeriod;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.SettingsReader;
@@ -529,7 +530,7 @@ public class Timetable extends LessonList {
 				ScheduleEntry sdl = (ScheduleEntry) enu.nextElement();
 				Integer index = new Integer((sdl.weekdayNum().intValue() - weekStart +1)*100 
 						+ sdl.num().intValue());
-				if(!toAdd.containsObject(index) && sdl.isActual(date)) {
+				if(!toAdd.containsObject(index) && sdl.isActual(date)) { //remove ScheduleEntry
 					boolean nolessons = false;
 					NSTimestamp since = sdl.validSince();
 					if(lessons != null && lessons.count() > 0) {
@@ -540,9 +541,9 @@ public class Timetable extends LessonList {
 						while (lenu.hasMoreElements()) {
 							EduLesson lesson = (EduLesson) lenu.nextElement();
 							NSTimestamp lDate = lesson.date();
-							if(lDate.compare(date) >= 0)
+							if(EOPeriod.Utility.compareDates(lDate, date) >= 0)
 								continue;
-							if(since != null && lDate.before(since))
+							if(since != null && EOPeriod.Utility.compareDates(lDate, since) < 0)
 								continue;
 							totalLessons++;
 							cal.setTime(lDate);
@@ -553,15 +554,16 @@ public class Timetable extends LessonList {
 								sdlLessons++;
 						} // course.lessons enumeration
 						if(totalLessons == 0)
-							lessons = null;
+							nolessons = EduPeriod.activeDaysInDates(
+									since, date, listName, ec) < week;
 						else
 							nolessons = (sdlLessons == 0);
-					} 
-					if (lessons == null || lessons.count() == 0){
+					} // count lessons before schedule change
+					else {
 						nolessons = EduPeriod.activeDaysInDates(since, date, listName, ec) < week;
 					}
 		    		NSTimestamp yesterday = date.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
-					if(sdl.isTemporary() || nolessons) {
+					if(sdl.isTemporary() || nolessons) { // add to deletion pool
 						if(pool == null)
 							pool = new NSMutableArray(sdl);
 						else
@@ -572,7 +574,7 @@ public class Timetable extends LessonList {
 				} else if(toAdd.containsObject(index)){
 					toAdd.removeObject(index);
 					NSTimestamp valid = sdl.validSince();
-					if(valid != null && valid.after(date)) {
+					if(valid != null && EOPeriod.Utility.compareDates(valid, date) > 0) {
 						sdl.setValidSince(date);
 					} else {
 						valid = sdl.validTo();
@@ -588,14 +590,13 @@ public class Timetable extends LessonList {
     	}
     	if(toAdd.count() > 0) { // add
     		Enumeration enu = toAdd.objectEnumerator();
-    		boolean hasdate = (found != null && found.count() > 0
-    				&& lessons != null && lessons.count() > 0);
-    		if(hasdate) {
+    		if(lessons != null && lessons.count() > 0) {
     			quals[0] = new EOKeyValueQualifier("date",
     					EOQualifier.QualifierOperatorLessThan, date);
     			lessons = EOQualifier.filteredArrayWithQualifier(lessons, quals[0]);
-    			hasdate = (lessons != null && lessons.count() > 0);
     		}
+    		boolean hasdate = (found != null && found.count() > 0
+    				&& lessons != null && lessons.count() > 0);
     		while (enu.hasMoreElements()) {
 				Integer index = (Integer) enu.nextElement();
 				ScheduleEntry sdl = null;
