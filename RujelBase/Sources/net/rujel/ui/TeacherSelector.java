@@ -132,17 +132,17 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			EduCourse course = (EduCourse) enu.nextElement();
 			if(section != null && !section.equals(course.valueForKeyPath("cycle.section")))
 				continue;
-			Object subject = course.cycle().subject();
 			Teacher teacher = course.teacher();
-			if(teacher != null) {
-				all.addObject(teacher);
-				NSMutableSet bySubj = (NSMutableSet)dict.objectForKey(subject);
-				if(bySubj == null) {
-					bySubj = new NSMutableSet(teacher);
-					dict.setObjectForKey(bySubj, subject);
-				} else {
-					bySubj.addObject(teacher);
-				}
+			if(teacher == null)
+				continue;
+			all.addObject(teacher);
+			Object subject = course.cycle().subject();
+			NSMutableSet bySubj = (NSMutableSet)dict.objectForKey(subject);
+			if(bySubj == null) {
+				bySubj = new NSMutableSet(teacher);
+				dict.setObjectForKey(bySubj, subject);
+			} else {
+				bySubj.addObject(teacher);
 			}
 			if(smartEduPlan) {
 				subject = course.valueForKeyPath("cycle.subjectEO");
