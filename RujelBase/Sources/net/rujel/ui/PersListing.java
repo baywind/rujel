@@ -350,9 +350,18 @@ public class PersListing extends WOComponent {
 //		onEdit = null;
 	}
 
-	public void delete() {
-		NSMutableArray fullList = (NSMutableArray)session().valueForKey("personList");
-		fullList.removeObject(item);
+	public WOActionResults delete() {
+		NSMutableArray personList = (NSMutableArray)session().valueForKey("personList");		
+		if(personList != null && personList.count() > 0) {
+			for (int i = 0; i < personList.count(); i++) {
+				PersonLink pers = (PersonLink) personList.objectAtIndex(i);
+				if(item == EOUtilities.localInstanceOfObject(ec, pers.person())) {
+					personList.removeObjectAtIndex(i);
+					break;
+				}
+			}
+		}
+		return context().page();
 //		onEdit = null;
 	}
 	

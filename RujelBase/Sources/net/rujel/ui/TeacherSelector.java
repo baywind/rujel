@@ -290,6 +290,26 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		}
 		return (String)session().valueForKey("tryLoad");
 	}
+	
+	public WOActionResults deleteTeacher() {
+		NSMutableArray personList = (NSMutableArray)session().valueForKey("personList");
+		if(item == selection) {
+			selection = null;
+			setValueForBinding(selection, "selection");
+		}
+		if(personList != null && personList.count() > 0) {
+			for (int i = 0; i < personList.count(); i++) {
+				EOEnterpriseObject pers = (EOEnterpriseObject) personList.objectAtIndex(i);
+				if(pers instanceof Teacher) {
+					if(item == EOUtilities.localInstanceOfObject(editingContext, pers)) {
+						personList.removeObjectAtIndex(i);
+						break;
+					}
+				}
+			}
+		}
+		return context().page();
+	}
 
 	public String onSubmit() {
 		if(Various.boolForObject(valueForBinding("useAjaxPost")))

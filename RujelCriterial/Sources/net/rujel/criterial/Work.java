@@ -738,7 +738,9 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	public void setTrimmedWeight(BigDecimal aValue) {
 		if(Various.boolForObject(valueForKeyPath("workType.namedFlags.fixWeight")))
 			return;
-		if(weight().compareTo(aValue) != 0) {
+		if(aValue == null)
+			aValue = BigDecimal.ZERO;
+		if(weight() == null || weight().compareTo(aValue) != 0) {
 			if(trimmedWeight().compareTo(BigDecimal.ZERO) == 0 
 					|| aValue.compareTo(BigDecimal.ZERO) == 0)
 				_integralPresenter = null;
