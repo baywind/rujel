@@ -158,8 +158,17 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     	}
     	value = valueOf.valueForKeyPath("paramsDict.itemDict.default" + 
     			((secondSelector)?"Min":"Value"));
-    	if(value != null && paramsDict() instanceof NSMutableDictionary)
-    		paramsDict().takeValueForKey(value, attribute);
+    	if(value != null) {
+    		boolean update = (_paramsDict instanceof NSMutableDictionary);
+    		if(!update && _paramsDict instanceof EOEnterpriseObject) {
+    			EOEnterpriseObject eo = (EOEnterpriseObject)_paramsDict;
+    			com.webobjects.eocontrol.EOEditingContext ec = eo.editingContext();
+    			EOGlobalID gid = ec.globalIDForObject(eo);
+    			update = gid.isTemporary();
+    		}
+			if(update)
+				setValue(value);
+    	}
     	return value;
     }
     
@@ -172,12 +181,14 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
     		attribute = "min_" + attribute;
 		if(value instanceof Boolean) {
 			Object bool = itemDict().valueForKey("boolean");
+			if(bool != null) {
 			if("string".equals(bool)) {
 				value = value.toString();
 			} else if("number".equals(bool)) {
 				value = new Integer(((Boolean)value).booleanValue()? 1 : 0);
 			} else {
 				value = ((Boolean)value).booleanValue()?bool:null;
+			}
 			}
 		} else if(value instanceof NSKeyValueCoding) {
 			String key = (String)itemDict().valueForKey("idAttribute");

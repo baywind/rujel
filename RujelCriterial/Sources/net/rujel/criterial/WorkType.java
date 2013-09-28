@@ -32,6 +32,9 @@ package net.rujel.criterial;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
+import net.rujel.base.Setting;
+import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
@@ -54,19 +57,38 @@ public class WorkType extends _WorkType {
 	public static final NSDictionary specTypes = new NSDictionary (
 			new Integer[] {new Integer(38)}, new String[] {"onLesson"});
 
-	
-	public static WorkType defaultType(EOEditingContext ctx) {
+	public static WorkType defaultType(EduCourse course) {
+		EOEditingContext ec = course.editingContext();
+		Setting typeSetting = SettingsBase.settingForCourse("defaultWorkType",course, ec);
+		if(typeSetting != null && typeSetting.numericValue() != null) {
+			try {
+				return (WorkType)EOUtilities.objectWithPrimaryKeyValue(
+						ec, "WorkType", typeSetting.numericValue());
+			} catch (Exception e) {
+				Logger.getLogger("rujel.criterial").log(
+						WOLogLevel.WARNING,"Default WorkType is unknown",
+						new Object[] {typeSetting, e});
+			}
+		}
+		return defaultType(ec);
+	}
+
+	public static WorkType defaultType(EOEditingContext ec) {
 		EOQualifier qual = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
 				EOQualifier.QualifierOperatorLessThan, new Integer(16));
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,
 				ModulesInitialiser.sorter);
 		fs.setFetchLimit(1);
-		NSArray found = ctx.objectsWithFetchSpecification(fs);
-		if(found != null && found.count() > 0) {
-			WorkType type = (WorkType)found.objectAtIndex(0);
-			return type;
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0) {
+			qual = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
+					EOQualifier.QualifierOperatorLessThan, new Integer(64));
+			fs.setQualifier(qual);
+			found = ec.objectsWithFetchSpecification(fs);
+			if(found == null || found.count() == 0)
+				return null;
 		}
-		return null;
+		return (WorkType)found.objectAtIndex(0);
 	}
 	
 	public static WorkType getSpecType(EOEditingContext ec, String type) {

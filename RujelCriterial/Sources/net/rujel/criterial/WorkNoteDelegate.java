@@ -306,11 +306,11 @@ public class WorkNoteDelegate implements NoteDelegate {
 			return work;
 		work = (Work)EOUtilities.createAndInsertInstance(
 				lsn.editingContext(), Work.ENTITY_NAME);
+		work.setWorkType(WorkType.getSpecType(lsn.editingContext(), "onLesson"));
 		work.addObjectToBothSidesOfRelationshipWithKey(lsn.course(), "course");
-		NSTimestamp date = (NSTimestamp)lsn.valueForKey("date");
+		NSTimestamp date = lsn.date();
 		work.setDate(date);
 		work.setAnnounce(date);
-		work.setWorkType(WorkType.getSpecType(lsn.editingContext(), "onLesson"));
 		work.setTheme((String)WOApplication.application().valueForKeyPath(
 				"strings.RujelCriterial_Strings.spesTypes.onLesson.typeName"));
 		work.setNumber(lsn.number());

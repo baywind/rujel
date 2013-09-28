@@ -543,18 +543,9 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	}
 	public void setCourse(EduCourse newCourse) {
 		takeStoredValueForKey(newCourse,"course");
-		if(newCourse != null &&(workType() == null || course() == null)) {
-			EOEditingContext ec = editingContext();
-			EOEnterpriseObject type = SettingsBase.settingForCourse("defaultWorkType",
-					newCourse, ec);
-			if(type != null) {
-				Integer typeID = (Integer)type.valueForKey(SettingsBase.NUMERIC_VALUE_KEY);
-				type = EOUtilities.objectWithPrimaryKeyValue(ec, "WorkType", typeID);
-				setWorkType(type);
-			}
-		}
+		if(newCourse != null && workType() == null)
+			setWorkType(WorkType.defaultType(newCourse));
 	}
-	
 
 	public NSArray students() {
 		NSArray marked = marksIndex().allKeys();

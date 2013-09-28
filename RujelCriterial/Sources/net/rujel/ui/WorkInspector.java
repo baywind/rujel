@@ -102,7 +102,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(dict == null)
     		dict = new NSMutableDictionary();
     	if(dict.valueForKey(Work.WORK_TYPE_KEY) == null)
-			dict.takeValueForKey(WorkType.defaultType(ec), Work.WORK_TYPE_KEY);
+			dict.takeValueForKey(WorkType.defaultType(course), Work.WORK_TYPE_KEY);
     	if(dict.valueForKey("trimmedWeight") == null) {
     		WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
     		BigDecimal weight = (type == null)?null:type.dfltWeight();
