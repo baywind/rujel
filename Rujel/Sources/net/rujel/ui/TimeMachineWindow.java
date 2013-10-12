@@ -56,9 +56,11 @@ public class TimeMachineWindow extends WOComponent {
 	}
 	
 	public String onClick() {
-		StringBuffer buf = new StringBuffer("get(this,'form').dateField.value='");
+		StringBuffer buf = new StringBuffer("todayCal.setSelected('");
 		MyUtility.dateFormat().format(new NSTimestamp(), buf, new FieldPosition(0));
-		buf.append("';");
+//		buf.append("'); todayCal.makeSelectedDateVisible('");
+//		MyUtility.dateFormat().format(new NSTimestamp(), buf, new FieldPosition(0));
+		buf.append("');");// todayCal.draw();");
 		return buf.toString();
 	}
 }

@@ -14,6 +14,7 @@ import com.webobjects.appserver.WOComponent;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSTimestamp;
 
 public class EditVarSub extends WOComponent {
@@ -61,8 +62,14 @@ public class EditVarSub extends WOComponent {
        	}
     }
     
-    public void setVariation(Variation var) {
-   		variation = var;
+    public void setVariation(Object var) {
+    	if(var instanceof Variation) {
+    		variation = (Variation)var;
+    	} else {
+    		setLesson((EduLesson)NSKeyValueCoding.Utility.valueForKey(var,"lesson"));
+    		cantSave = Boolean.FALSE;
+    		return;
+    	}
 		reason = variation.reason();
    		Variation back = variation.getPaired();
 		if(back != null) {

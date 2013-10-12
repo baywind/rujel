@@ -118,7 +118,7 @@ public class LessonList extends WOComponent {
 		if(valueForBinding("selector") == null)
 			return "focus";
 		else
-			return null;
+			return "currDate";
 	}
 	
 	public String themeFieldID() {

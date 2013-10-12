@@ -194,6 +194,7 @@ public class VariationsList extends WOComponent {
     		nextPage.takeValueForKey(aDate, "date");
     		nextPage.takeValueForKey(Boolean.TRUE, "negative");
     	}
+    	hasChanges = true;
     	return nextPage;
     }
     

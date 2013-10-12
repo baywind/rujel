@@ -490,8 +490,35 @@ public class WeekFootprint {
 				NSMutableDictionary sg = new NSMutableDictionary();
 				sg.takeValueForKey(begin.timestampByAddingGregorianUnits(0, 0, i, 0, 0, 0),"date");
 				sg.takeValueForKey(new Integer(count),"value");
-				if(count > 0)
+				if(count > 0) {
 					sg.takeValueForKey(Boolean.TRUE, "positive");
+					sg.takeValueForKey(Boolean.TRUE, "cantSubmit");
+					if(count == 1) {
+						NSMutableSet suggestLesson = new NSMutableSet();
+						NSMutableSet skipLesson = new NSMutableSet();
+						Enumeration enu = real[i].objectEnumerator();
+						while (enu.hasMoreElements()) {
+							EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
+							if(obj instanceof BaseLesson) {
+								if(!skipLesson.containsObject(obj)) {
+									Integer num = ((BaseLesson)obj).number();
+									if(!assumed[i].containsObject(num))
+										suggestLesson.addObject(obj);
+								}
+							} else if(obj instanceof Variation) {
+								EduLesson lesson = ((Variation)obj).relatedLesson();
+								if(lesson != null) {
+									skipLesson.addObject(lesson);
+									suggestLesson.removeObject(lesson);
+								}
+							}
+						}
+						if(suggestLesson.count() == 1) {
+							sg.takeValueForKey(suggestLesson.anyObject(),"lesson");
+							sg.takeValueForKey(Boolean.FALSE, "cantSubmit");
+						}
+					}
+				}
 				result.addObject(sg);
 			}
 		}
