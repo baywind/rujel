@@ -468,7 +468,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 				"if(selectType[1].checked){alert('");
 		buf.append(session().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.messages.joinRequiresLesson"));
-		buf.append("');return false;}");
+		buf.append("');return false;}else{return tryLoad();}");
 		return buf.toString();
 	}
 	
