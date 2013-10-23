@@ -296,6 +296,8 @@ public class LessonNoteEditor extends WOComponent {
 				tab = (NSRange)baseTabs.lastObject();
 				if(move)
 					_currTab = (GenericTab) tab;
+				if(tab == null)
+					break;
 			}
 		}
 	}
