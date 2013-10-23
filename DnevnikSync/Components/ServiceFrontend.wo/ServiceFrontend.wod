@@ -1,7 +1,15 @@
 PageWrapper : PageWrapper {
   title = "ОЭЖД";
-  action = download;
-  onLoad = onLoad;
+  resourcesFramework = "RujelBase";
+  scriptResource = "sorting.js";
+}
+
+DownloadFrame : WOGenericContainer {
+  elementName = "iframe";
+  name = "download";
+  invokeAction = download;
+  src = src;
+  style = "display:none;";
 }
 
 PGrName : WOString {
@@ -228,6 +236,7 @@ NoTab : OnClickContainer {
   elementName = "div";
   class = noTabClass;
   invokeAction = clear;
+  onclick = session.checkRun;
 }
 
 ExportForm : WOForm {
@@ -276,6 +285,7 @@ Export : WOSubmitButton {
 
 GetLog : WOHyperlink {
   action = logFile;
+  target = "download";
 }
 
 ShowGUID : OnClickContainer {

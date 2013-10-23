@@ -65,6 +65,7 @@ AvailableTitle : WOString {
 ExportButton : WOHyperlink {
   action = export;
   string = application.strings.RujelReports_Reports.export;
+  target = "download";
 }
 
 PropSelector : PropSelector {

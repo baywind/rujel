@@ -151,7 +151,7 @@ public class ImportExport extends LessonList {
     
     public String onLoad() {
     	if(result != null)
-    		return "window.location=globalActionUrl;";
+    		return null;//"window.location=globalActionUrl;";
     	reporter = (NSMutableDictionary)context().userInfoForKey("submittedReporter");
     	if(reporter != null)
     		return "ajaxPopupAction(globalActionUrl,null);";

@@ -63,6 +63,7 @@ public class ServiceFrontend extends WOComponent {
 	public String syncTime = SettingsReader.stringForKeyPath("dnevnik.syncTime", null);
 
 	public Object active;
+	public Object fileToLoad;
 
     public ServiceFrontend(WOContext context) {
         super(context);
@@ -582,7 +583,7 @@ public class ServiceFrontend extends WOComponent {
 					preload(preload, reporter);
 				}
 //    		}
-    		reporter.takeValueForKey("item", "resultPath");
+    		reporter.takeValueForKey("fileToLoad", "resultPath");
     		resultp.takeValueForKey(this, "returnPage");
     		resultp.takeValueForKey(reporter, "reporter");
     		return resultp;
@@ -650,26 +651,23 @@ public class ServiceFrontend extends WOComponent {
 		
 		Progress progress = (Progress)pageWithName("Progress");
 		progress.returnPage = this;
-		progress.resultPath = "item";
+		progress.resultPath = "fileToLoad";
 		progress.title = (String)reporter.valueForKey("title");
 		progress.state = XMLGenerator.backgroundGenerate(reportDict);
 		return progress.refresh();
 	}
 	
-	public String onLoad() {
-		if(item instanceof byte[]) {
-			session().setObjectForKey(item, "download");
-			return "window.location=globalActionUrl;";
-		}
+	public String src() {
+		if(fileToLoad instanceof byte[])
+			return context().componentActionURL();
 		return null;
 	}
 	
 	public WOActionResults download() {
-		item = session().objectForKey("download");
-		if(!(item instanceof byte[]))
+		if(!(fileToLoad instanceof byte[]))
 			return null;
 		WOResponse response = application().createResponseInContext(context());
-		response.setContent((byte[])item);
+		response.setContent((byte[])fileToLoad);
 		response.setHeader("application/octet-stream","Content-Type");
 		if(active instanceof EduGroup) {
 			StringBuilder buf = new StringBuilder("attachment; filename=\"persdata");
@@ -679,8 +677,7 @@ public class ServiceFrontend extends WOComponent {
 		} else {
 			response.setHeader("attachment; filename=\"persdata.csv\"","Content-Disposition");
 		}
-		item = null;
-		session().removeObjectForKey("download");
+		fileToLoad = null;
 		return response;
 	}
 	

@@ -329,7 +329,7 @@ function bodyOnLoad() {
 	var root = window.addEventListener || window.attachEvent ? window : 
 				document.addEventListener ? document : null;
 	root.onbeforeunload = function() {
-		if(!loading)
+		if(!loading && timeout > -5)
 			return unloadAlert;
 	};
 	addOnsubmit(document.forms);
