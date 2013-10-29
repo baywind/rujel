@@ -98,11 +98,14 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		return "gerade";
     }
     
+    private static final String[] keys = new String[] {
+    	Holiday.NAME_KEY,Holiday.BEGIN_KEY,Holiday.END_KEY};
     public WOActionResults save() {
     	if(dict.count() == 0)
     		return null;
     	EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
     	Holiday hd = (Holiday)dict.removeObjectForKey("selection");
+		SettingsBase base = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
     	if(hd == null) {
     		hd = (Holiday)EOUtilities.createAndInsertInstance(ec, Holiday.ENTITY_NAME);
     		hd.takeValuesFromDictionary(dict);
@@ -110,12 +113,11 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     			hd.setEnd(hd.begin());
     		if(notGlobal())
     			hd.setListName(listName);
-    	} else if(Various.boolForObject(dict.valueForKey("delete"))) {
+    	} else if(Various.boolForObject(dict.removeObjectForKey("delete"))) {
     		String hdList = hd.listName();
     		if(hdList != null || !notGlobal()) {
     			ec.deleteObject(hd);
     		} else {
-    			SettingsBase base = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
     			hd.setListName(base.textValue());
     			NSArray byCourse = base.qualifiedSettings();
     			if(byCourse != null && byCourse.count() > 0) {
@@ -123,7 +125,6 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     				if(listName != null || !listName.equals(base.textValue()))
     					lists.addObject(listName);
     				Enumeration enu = byCourse.objectEnumerator();
-    				dict.removeObjectForKey("delete");
     				while (enu.hasMoreElements()) {
     					QualifiedSetting bc = (QualifiedSetting) enu.nextElement();
     					String ln = bc.textValue();
@@ -142,17 +143,24 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     			dict.takeValueForKey(listName, "listName");
     		hd = null;
     	} else {
-    		if(!hd.name().equals(dict.valueForKey(Holiday.NAME_KEY)))
-    			hd.takeValueForKey(dict.valueForKey(Holiday.NAME_KEY), Holiday.NAME_KEY);
-    		if(!hd.begin().equals(dict.valueForKey(Holiday.BEGIN_KEY)))
-    			hd.takeValueForKey(dict.valueForKey(Holiday.BEGIN_KEY), Holiday.BEGIN_KEY);
-    		if(!hd.end().equals(dict.valueForKey(Holiday.END_KEY)))
-    			hd.takeValueForKey(dict.valueForKey(Holiday.END_KEY), Holiday.END_KEY);
+    			
+    			
+        	for (int i = 0; i < keys.length; i++) {
+        		Object hdValue = hd.valueForKey(keys[i]);
+        		Object dictValue = dict.valueForKey(keys[i]);
+        		if(!hdValue.equals(dictValue)) {
+            		if(hd.listName() == null && notGlobal()) {
+                		hd = (Holiday)EOUtilities.createAndInsertInstance(ec, Holiday.ENTITY_NAME);
+                		hd.takeValuesFromDictionary(dict);
+            			hd.setListName(listName);
+            			break;
+            		} else {
+            			hd.takeValueForKey(dictValue, keys[i]);
+            		}
+        		}
+    		}
     	}
-    	if(!ec.hasChanges()) {
-    		dict.removeAllObjects();
-    		return null;
-    	}
+    	if(ec.hasChanges()) {
     	try {
      		ec.saveChanges();
      		if(hd != null)
@@ -161,12 +169,54 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
      			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Deleted Holiday", 
      					new Object[] {session(),dict});
 	    	_list = null;
-	    	dict.removeAllObjects();
     	} catch (Exception e) {
     		session().takeValueForKey(e.getMessage(), "message");
 			EduPlan.logger.log(WOLogLevel.INFO,"Error saving Holidays changes",
 					new Object[] {session(),(hd==null)?dict:hd,e});
+			ec.revert();
+			return null;
 		}
+    	}
+    	if(hd != null && hd.listName() != null) {
+    		_list = EOUtilities.objectsMatchingValues(ec, Holiday.ENTITY_NAME, dict);
+    		Integer eduYear = (Integer)session().valueForKey("eduYear");
+    		NSMutableArray names = (NSMutableArray) base.availableValues(eduYear, 
+    				SettingsBase.TEXT_VALUE_KEY);
+    		if(_list.count() >= names.count()) {
+    			Enumeration enu = _list.objectEnumerator();
+    			while (enu.hasMoreElements()) {
+    				Holiday holiday = (Holiday) enu.nextElement();
+    				String ln = holiday.listName();
+    				if(ln == null) {
+    					break;
+    				}
+    				if(!names.removeObject(holiday.listName()))
+    					continue;
+    				if(ln.equals(base.textValue())) {
+    					hd = holiday;
+    					hd.setListName(null);
+    				} else {
+    					ec.deleteObject(holiday);
+    				}
+    			}
+    			if(names.count() > 0) {
+    				ec.revert();
+    			} else {
+    				try {
+    					ec.saveChanges();
+    					EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,
+    							"Merging same Holidays in all regimes", hd);
+    				} catch (Exception e) {
+    					EduPlan.logger.log(WOLogLevel.INFO,
+    							"Failed merging same Holidays in all regimes",
+    							new Object[] {session(),hd,e});
+    					ec.revert();
+    				}
+    			}
+    		}
+    		_list = null;
+    	}
+    	dict.removeAllObjects();
     	return null;
     }
     
@@ -178,9 +228,9 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     
     public void select() {
     	dict.takeValueForKey(item, "selection");
-    	dict.takeValueForKey(item.name(), Holiday.NAME_KEY);
-    	dict.takeValueForKey(item.begin(), Holiday.BEGIN_KEY);
-    	dict.takeValueForKey(item.end(), Holiday.END_KEY);
+    	for (int i = 0; i < keys.length; i++) {
+        	dict.takeValueForKey(item.valueForKey(keys[i]), keys[i]);
+		}
     	dict.removeObjectForKey("delete");
     }
 	

@@ -57,9 +57,14 @@ public class Holiday extends _Holiday implements EOPeriod {
 	}
 	
 	public static NSArray holidaysForList(String listName, EOEditingContext ec) {
-		EOQualifier qual = (listName == null)? new EOKeyValueQualifier(LIST_NAME_KEY,
-    			EOQualifier.QualifierOperatorEqual,null): EOQualifier.qualifierWithQualifierFormat(
-    				"listName = nil OR listName = %@", new NSArray(listName));
+		EOQualifier qual = new EOKeyValueQualifier(LIST_NAME_KEY,
+    			EOQualifier.QualifierOperatorEqual,null);
+		if (listName != null) {
+			EOQualifier[] quals = new EOQualifier[] {qual, null};
+			quals[1] = new EOKeyValueQualifier(LIST_NAME_KEY,
+					EOQualifier.QualifierOperatorEqual,listName);
+			qual = new EOOrQualifier(new NSArray(quals));
+		}
     	EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,sorter);
     	return ec.objectsWithFetchSpecification(fs);
 	}
