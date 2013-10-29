@@ -195,7 +195,7 @@ OuterResources : ResourceLink {
 }
 
 Rujel : WOString {
-  value = session.strings.Strings.title;
+  value = application.strings.Strings.title;
   escapeHTML = false;
 }
 
@@ -249,5 +249,5 @@ KalendaeLocal : ResourceLink {
 Kalendae : ResourceLink {
   framework = "Reusables";
   cssLink = "kalendae.css";
-  jsLink = "kalendae.standalone.min.js";
+  jsLink = "kalendae.standalone.js";
 }
