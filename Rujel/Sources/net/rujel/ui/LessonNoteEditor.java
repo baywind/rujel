@@ -429,9 +429,13 @@ public class LessonNoteEditor extends WOComponent {
 			} else {
 				lessonsList = fullList;
 			}
-			EduLesson lesson = (EduLesson)lessonsList.lastObject();
-			if(lesson != null)
+			if(lessonsList.count() > 0) {
+				EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(0);
+				session().setObjectForKey(lesson.date(), "minDate");
+				lesson = (EduLesson)lessonsList.lastObject();
+				session().setObjectForKey(lesson.date(), "maxDate");
 				session().setObjectForKey(lesson.date(), "recentDate");
+			}
 		} else {
 			lessonsList = null;
 			session().setObjectForKey(session().valueForKey("today"), "recentDate");
@@ -604,6 +608,12 @@ public class LessonNoteEditor extends WOComponent {
 						session().setObjectForKey(dict, "objectSaved");
 						session().valueForKeyPath("modules.objectSaved");
 						session().removeObjectForKey("objectSaved");
+						NSTimestamp date = (NSTimestamp)session().objectForKey("minDate");
+						if(EOPeriod.Utility.compareDates(currLesson().date(), date) < 0)
+							session().setObjectForKey(currLesson().date(), "minDate");
+						date = (NSTimestamp)session().objectForKey("maxDate");
+						if(EOPeriod.Utility.compareDates(currLesson().date(), date) > 0)
+							session().setObjectForKey(currLesson().date(), "maxDate");
 					}
 					if(objectsSaved != null) {
 						boolean dfltArch = SettingsReader.boolForKeyPath("markarchive.archiveAll",

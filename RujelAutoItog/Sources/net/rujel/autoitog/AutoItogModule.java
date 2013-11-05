@@ -311,7 +311,7 @@ public class AutoItogModule {
 		EOEditingContext ec = course.editingContext();
 		PrognosesAddOn addOn = (PrognosesAddOn)ses.objectForKey("AutoItog.PrognosesAddOn");
 		if(student == null && addOn != null) {
-			addOn.setCourse(course, date);
+			addOn.setCourse(course, date,date);
 		}
 		boolean canArchive = SettingsReader.boolForKeyPath("markarchive.Prognosis", 
 				SettingsReader.boolForKeyPath("markarchive.archiveAll", false));

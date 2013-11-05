@@ -123,13 +123,17 @@ public class AutoItog extends _AutoItog {
     }
     
     public static NSArray currentAutoItogsForCourse(EduCourse course,NSTimestamp date) {
+    	return currentAutoItogsForCourse(course, date, date);
+    }
+        public static NSArray currentAutoItogsForCourse(EduCourse course,
+        		NSTimestamp minDate, NSTimestamp maxDate) {
     	EOEditingContext ec = course.editingContext();
     	String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
     	EOQualifier[] quals = new EOQualifier[3];
     	quals[0] = new EOKeyValueQualifier(LIST_NAME_KEY,
     			EOQualifier.QualifierOperatorEqual,listName);
     	quals[1] = new EOKeyValueQualifier(FIRE_DATE_KEY,
-    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
+    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, minDate);
     	quals[2] = new EOKeyValueQualifier(FLAGS_KEY,
     			EOQualifier.QualifierOperatorLessThan, new Integer(32));
     	quals[0] = new EOAndQualifier(new NSArray(quals));
@@ -154,6 +158,7 @@ public class AutoItog extends _AutoItog {
 				EOQualifier.filterArrayWithQualifier(result, new EOKeyValueQualifier(
 						ITOG_CONTAINER_KEY, EOQualifier.QualifierOperatorNotEqual,itog));
 				result.addObject(CourseTimeout.getTimeoutForCourseAndPeriod(course, itog));
+				types.addObject(itog);
 			}
     		types.removeAllObjects();
      	}
@@ -179,11 +184,13 @@ public class AutoItog extends _AutoItog {
 				continue;
 			NSTimestamp fire = (NSTimestamp)obj.valueForKey(FIRE_DATE_KEY);
 			fire = combineDateAndTime(fire, ai.fireTime());
-			int compare = EOPeriod.Utility.compareDates(fire, date);
-			if(compare < 0 || (compare == 0 && !MyUtility.isEvening(fire)))
+			int compare = EOPeriod.Utility.compareDates(fire, minDate);
+			if(compare <= 0)
 				continue;
-			types.addObject(type);
 			result.addObject(ai);
+			compare = EOPeriod.Utility.compareDates(fire, maxDate);
+			if(compare > 0 || (compare == 0 && MyUtility.isEvening(fire)))
+				types.addObject(type);
 		}
     	return result;
     }

@@ -51,6 +51,7 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 	protected Student _student;
 	protected NSDictionary _prognosesForStudent;
 	protected NSMutableDictionary _courseTimeouts;
+	private Period _dates;
 
 	public PrognosesAddOn(WOSession ses) {
 		super((NSDictionary)WOApplication.application().
@@ -85,32 +86,39 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 		_prognosesForStudent = null;
 		_timeout = null;
 		_prognosis = null;
-		currDate = null;
+		_dates = null;
 	}
 
 	public void update(EduCourse crs) {
+		NSTimestamp minDate = (NSTimestamp)session.objectForKey("minDate");
+		NSTimestamp maxDate = (NSTimestamp)session.objectForKey("maxDate");
+		if(minDate != null && maxDate != null) {
+			setCourse(crs, minDate, maxDate);
+			return;
+		}
 		NSTimestamp date = (NSTimestamp)session.objectForKey("recentDate");
 		if(date == null)
 			date = (NSTimestamp)session.valueForKey("today");
-		setCourse(crs, date);
+		setCourse(crs, date, date);
 	}
 
-	public void setCourse(EduCourse newCourse, NSTimestamp date) {
+	public void setCourse(EduCourse newCourse, NSTimestamp minDate, NSTimestamp maxDate) {
 		if(newCourse != _course)
 			reset();
 		if(newCourse == null) {
 			return;
 		}
 		_course = newCourse;
-		if(_periods == null || !date.equals(currDate)) {
-			_periods = AutoItog.currentAutoItogsForCourse(_course, date);
+		if(_periods == null || _dates == null || 
+				!(_dates.contains(minDate) && _dates.contains(maxDate))) {
+			_periods = AutoItog.currentAutoItogsForCourse(_course, minDate, maxDate);
 			agregate = null;
 			_prognosesForStudent = null;
 //			_prognosis = null;
 			_courseTimeouts.removeAllObjects();
 //			_timeout =null;
 		}
-		currDate = date;
+		_dates = new Period.ByDates(minDate, maxDate);
 		if(_periods == null)
 			return;
 		Enumeration enu = _periods.objectEnumerator();
@@ -136,8 +144,6 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 			_periods = periods;
 		}
 	}
-
-	protected NSTimestamp currDate;
 
 	protected Prognosis _prognosis;
 	public Prognosis prognosis() {
