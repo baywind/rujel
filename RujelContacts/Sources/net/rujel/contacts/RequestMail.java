@@ -50,6 +50,7 @@ public class RequestMail extends WODirectAction {
 		if(mail == null) {
 			WOComponent page = pageWithName("MailRequest");
 			page.takeValueForKey(anActionName, "code");
+			page.takeValueForKey(studentID, "studentID");
 			return page;
 		}
 		String id = mail.toLowerCase() + studentID;
@@ -58,7 +59,9 @@ public class RequestMail extends WODirectAction {
 		}
 		
 		NSMutableDictionary params = new NSMutableDictionary();
-		NSTimestamp date = new NSTimestamp();
+		NSTimestamp date = MyUtility.parseDate(
+				SettingsReader.stringForKeyPath("ui.defaultDate", null));
+		if(date == null) date = new NSTimestamp();
 		params.takeValueForKey(date, "date");
 		params.takeValueForKey(NSDictionary.EmptyDictionary, "reporter");
 		
@@ -67,32 +70,50 @@ public class RequestMail extends WODirectAction {
 		try {
 			Student student = (Student)EOUtilities.objectWithPrimaryKeyValue(ec, 
 					Student.entityName, studentID);
-			params.takeValueForKey(ec, "editingContext");
-			params.takeValueForKey(student.recentMainEduGroup(), "eduGroup");
-			params.takeValueForKey(new NSArray(student), "students");
-			EduGroup gr = student.recentMainEduGroup();
-			{
-				NSMutableDictionary dict = new NSMutableDictionary();
-				dict.takeValueForKey(MyUtility.eduYearForDate(date), "eduYear");
-				if(gr != null) {
-					params.takeValueForKey(gr.name(), "groupName");
-					dict.takeValueForKey(gr,"eduGroup");
-					params.takeValueForKey(EOUtilities.objectsMatchingValues(ec,
-							EduCourse.entityName, dict), "courses");
-					dict.takeValueForKey(new NSDictionary(gr.grade(),"grade"),"cycle");
-				}
-				Setting setting = SettingsBase.settingForCourse(
-						EduPeriod.ENTITY_NAME, dict, ec);
-				String listName = (setting == null)?null:setting.textValue();
-				Period period = EduPeriod.getCurrentPeriod(date, listName, ec);;
-				params.takeValueForKey(period, "period");
-			}
 			NSArray mails = EOUtilities.objectsWithQualifierFormat(ec, Contact.ENTITY_NAME,
 					"persID = %d AND ( contact caseInsensitiveLike '*<" + mail +
 					">' OR contact caseInsensitiveLike '" + mail + "')",
 					new NSArray(Contact.idForPerson(student.person())));
 			if(mails == null || mails.count() == 0)
 				return error("illegalMail");
+			params.takeValueForKey(ec, "editingContext");
+			EduGroup gr = student.recentMainEduGroup();
+			params.takeValueForKey(gr, "eduGroup");
+			params.takeValueForKey(gr.name(), "groupName");
+			{
+				NSDictionary dict = new NSDictionary(
+						new Object[] {MyUtility.eduYearForDate(date),gr},
+						new String[] {"eduYear","eduGroup"});
+				params.takeValueForKey(EOUtilities.objectsMatchingValues(ec,
+						EduCourse.entityName, dict), "courses");
+			}
+			params.takeValueForKey(new NSArray(student), "students");
+			String per = request().stringFormValueForKey("period");
+			Period period = null;
+			if(per != null) {
+				try {
+					Integer perID = new Integer(per);
+					period = (EduPeriod)EOUtilities.objectWithPrimaryKeyValue(ec, 
+							EduPeriod.ENTITY_NAME, perID);
+				} catch (Exception e) {
+				}
+			}
+			if(period == null) {
+				NSTimestamp since = MyUtility.parseDate(request().stringFormValueForKey("since"));
+				NSTimestamp to = MyUtility.parseDate(request().stringFormValueForKey("to"));
+				params.takeValueForKey(since, "since");
+				params.takeValueForKey(to, "to");
+				if(since != null && to != null)
+					period = new Period.ByDates(since, to);
+			}
+			if(period == null) {
+				NSDictionary dict = SettingsBase.courseDict(gr, MyUtility.eduYearForDate(date));
+				Setting setting = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME, dict, ec);
+				String listName = (setting == null)?null:setting.textValue();
+				period = EduPeriod.getCurrentPeriod(date, listName, ec);
+			}
+			params.takeValueForKey(period, "period");
+			
 			NSMutableSet set = new NSMutableSet();
 			for (int i = 0; i < mails.count(); i++) {
 				Contact cnt = (Contact)mails.objectAtIndex(i);
@@ -120,6 +141,7 @@ public class RequestMail extends WODirectAction {
 				"strings.RujelContacts_Contacts.MailRequest.initiated"), "message");
 		return result;
 	}
+
 	
 	protected WOActionResults error(String amessage) {
 		String message = "strings.RujelContacts_Contacts.MailRequest." + amessage;
