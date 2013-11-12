@@ -292,10 +292,6 @@ public class CurriculumModule {
 			if(!lesson.entityName().equals(EduLesson.entityName))
 				return null;
 			course = lesson.course();
-			String widget = SettingsBase.stringSettingForCourse(
-						"PlanFactWidget", course, course.editingContext());
-			if("hide".equals(widget))
-				return null;
 			date = lesson.date();
 			NSArray related = EOUtilities.objectsMatchingKeyAndValue(lesson.editingContext(), 
 					Variation.ENTITY_NAME, "relatedLesson", lesson);
@@ -304,6 +300,10 @@ public class CurriculumModule {
 			}
 		}
 		if(course != null) {
+			String widget = SettingsBase.stringSettingForCourse(
+					"PlanFactWidget", course, course.editingContext());
+			if("hide".equals(widget))
+				return null;
 			String usr = (String)ctx.session().valueForKeyPath("user.present");
 			if(usr == null)
 				usr = "??" + Person.Utility.fullName(course.teacher(), true, 2, 1, 1);
