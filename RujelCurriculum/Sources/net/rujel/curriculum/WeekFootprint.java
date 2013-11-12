@@ -502,7 +502,7 @@ public class WeekFootprint {
 							if(obj instanceof BaseLesson) {
 								if(!skipLesson.containsObject(obj)) {
 									Integer num = ((BaseLesson)obj).number();
-									if(!assumed[i].containsObject(num))
+									if(assumed[i] == null || !assumed[i].containsObject(num))
 										suggestLesson.addObject(obj);
 								}
 							} else if(obj instanceof Variation) {

@@ -192,7 +192,9 @@ public class StatsPlugin extends com.webobjects.appserver.WOComponent {
 				if(key.equals("total")) {
 					Number total = (Number)dict.objectForKey("total");
 					if(grouping == null) {
-						rowDict.takeValueForKey(total, "total");
+						buf.append("<td>").append(total).append("</td>");
+						rowDict.takeValueForKey(buf.toString(), "total");
+						buf.delete(0, buf.length());
 						continue;
 					} else if(total.equals(grouping.total())) {
 						continue;

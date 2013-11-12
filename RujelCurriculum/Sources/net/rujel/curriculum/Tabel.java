@@ -152,12 +152,8 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
     	}
     	EOFetchSpecification fs = new EOFetchSpecification(PlanCycle.ENTITY_NAME,qual,null);
     	NSArray list = ec.objectsWithFetchSpecification(fs);
-    	if(list == null || list.count() == 0) {
-    		String message = (String)session().valueForKeyPath(
-						"strings.RujelCurriculum_Curriculum.Tabel.noData");
-    		session().takeValueForKey(message, "message");
-    		return null;
-    	}
+    	if(list == null || list.count() == 0)
+    		return noData();
     	qual = Various.getEOInQualifier("cycle", list);
     	quals = new NSMutableArray(qual);
     	quals.addObject(new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,
@@ -165,6 +161,8 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		qual = new EOAndQualifier(quals);
 		fs = new EOFetchSpecification(EduCourse.entityName,qual,null);
 		NSArray courses = ec.objectsWithFetchSpecification(fs);
+		if(courses == null || courses.count() == 0)
+			return noData();
     	quals = monthQual();
 //		cal.set(Calendar.YEAR,((Integer)currMonth.valueForKey("year")).intValue());
 //		cal.set(Calendar.MONTH, ((Integer)currMonth.valueForKey("month")).intValue());
@@ -188,12 +186,8 @@ public class Tabel extends com.webobjects.appserver.WOComponent {
 		qual = new EOAndQualifier(quals);
     	fs = new EOFetchSpecification(EduLesson.entityName,qual,null);
     	list = ec.objectsWithFetchSpecification(fs);
-    	if(list == null || list.count() == 0) {
-    		String message = (String)session().valueForKeyPath(
-					"strings.RujelCurriculum_Curriculum.Tabel.noData");
-    		session().takeValueForKey(message, "message");
-    		return null;
-    	}
+    	if(list == null || list.count() == 0)
+    		return noData();
     	boolean omitUnsubmitted = !Various.boolForObject(options.valueForKey("unsubmitted"));
     	NSMutableDictionary byTeacher = new NSMutableDictionary();
     	NSMutableDictionary subsByTeacher = new NSMutableDictionary();
@@ -410,6 +404,13 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 		}
     	return exportPage;
     }
+
+	private WOActionResults noData() {
+		String message = (String)session().valueForKeyPath(
+					"strings.RujelCurriculum_Curriculum.Tabel.noData");
+		session().takeValueForKey(message, "message");
+		return null;
+	}
     
 	public WOActionResults exportDetails() {
 		if(details == null || details.count() == 0) {
