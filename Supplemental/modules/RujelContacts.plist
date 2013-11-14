@@ -20,8 +20,8 @@
 		<string>rujel@rujel.net</string>
 		<key>messageLag</key>
 		<string>1</string>
-		<key>_messageFilePath</key>
-		<string>CONFIGDIR/message.txt</string>
+		<key>messageFilePath</key>
+		<string>/Users/Shared/RujelDeploy/rpms/rujel/RUJEL/Configuration/message.txt</string>
 		<key>dontSend</key>
 		<string>true</string>
 		<key>writeToFile</key>

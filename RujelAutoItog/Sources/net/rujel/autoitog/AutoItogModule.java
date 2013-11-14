@@ -995,6 +995,8 @@ cycleCourses:
 				"strings.RujelAutoItog_AutoItog.prognoses");
 		int sort = 50;
 		NSMutableArray result = new NSMutableArray();
+		Boolean addCalculations = Boolean.valueOf(
+				SettingsReader.boolForKeyPath("edu.prognonesStatCalculations", false));
 		while (enu.hasMoreElements()) {
 			AutoItog perType = (AutoItog) enu.nextElement();
 			ItogContainer period = perType.itogContainer();
@@ -1005,6 +1007,7 @@ cycleCourses:
 			dict.setObjectForKey(period.title(),"title");
 			dict.setObjectForKey(title,"description");
 			dict.setObjectForKey(period,"param2");
+			dict.setObjectForKey(addCalculations,"addCalculations");
 			result.addObject(dict);
 			sort++;
 		}

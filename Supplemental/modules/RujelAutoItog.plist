@@ -19,6 +19,8 @@
 		<string>45</string>
 		<key>overwriteItogsScheduled</key>
 		<string>false</string>
+		<key>prognonesStatCalculations</key>
+		<string>true</string>
 	</dict>
 </dict>
 </plist>
