@@ -340,6 +340,10 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		}
 		person = (PersonLink)EOUtilities.localInstanceOfObject(ec,
 				(EOEnterpriseObject)person);
+		if(person == null || ec.globalIDForObject((EOEnterpriseObject)person).isTemporary()) {
+			ec.revert();
+			return;
+		}
 		if (group() != null) {
 			Enumeration enu = group().vseList().objectEnumerator();
 			while (enu.hasMoreElements()) {
