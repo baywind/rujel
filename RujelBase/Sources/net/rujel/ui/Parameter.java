@@ -250,6 +250,24 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		return "return isNumberInput(event,true);";
 	}
 	
+	public String styleClass() {
+		Object result = valueOf.valueForKeyPath("paramsDict.itemDict.styleClass");
+		if(!(result instanceof String)) {
+			result = valueOf.valueForKeyPath("paramsDict.itemDict.formatter");
+			if(result instanceof String) {
+				if(result.equals("0"))
+					result = "numeric";
+				else if(((String)result).charAt(0) == '0')
+					result = "decimal";
+			} else {
+				result = null;
+			}
+		}
+		if("date".equals(result))
+			result = "date auto-kal";
+		return (String)result;
+	}
+	
 	public Format formatter() {
 		Object result = valueOf.valueForKeyPath("paramsDict.itemDict.formatter");
 		if(result == null)
