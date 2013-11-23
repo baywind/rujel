@@ -142,7 +142,10 @@ public class QueryParams extends WOComponent {
 							}
 						}
 						inDict = new NSMutableDictionary(inEntity,"entity");
-						NSMutableArray attrQuals = new NSMutableArray(qual);
+						NSMutableArray attrQuals = new NSMutableArray();
+						if(dict.valueForKey("qualifierFormat") != null
+								|| dict.valueForKey("qualifierSelector") != null)
+								attrQuals.addObject(qual);
 						qual = Parameter.qualForParam(in, params,onpage);
 						if(qual != null) {
 							attrQuals.addObject(qual);

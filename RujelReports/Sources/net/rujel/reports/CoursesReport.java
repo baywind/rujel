@@ -137,4 +137,8 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 //		curSource = null;
 		return null;
 	}
+	
+	public void sectionChanged() {
+		reports = null;
+	}
 }

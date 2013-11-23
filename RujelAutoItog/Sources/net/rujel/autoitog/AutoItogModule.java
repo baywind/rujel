@@ -948,8 +948,7 @@ cycleCourses:
 			EduCourse course = (EduCourse)ctx.page().valueForKey("course");
 			list = AutoItog.currentAutoItogsForCourse(course, date);
 		} catch (Exception e) {
-	    	String listName = SettingsBase.stringSettingForCourse(
-	    			ItogMark.ENTITY_NAME, null, ec);
+			String listName = ModuleInit.sectionListName(ctx.session(), ec);
 	    	EOQualifier[] quals = new EOQualifier[3];
 	    	quals[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
 	    			EOQualifier.QualifierOperatorEqual,listName);

@@ -32,12 +32,14 @@ package net.rujel.eduresults;
 import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.appserver.WOSession;
 
 import java.lang.reflect.Method;
 import java.util.Enumeration;
@@ -215,12 +217,9 @@ public class ModuleInit {
 				ec = new SessionedEditingContext(ctx.session());
 			}
 //			ec.lock();
+			String listName = sectionListName(ctx.session(), ec);
 			Integer year = (Integer)ctx.session().valueForKey("eduYear");
-			EOQualifier qual = new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual,year);
-			EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,
-					qual,ItogContainer.sorter);
-			list = ec.objectsWithFetchSpecification(fs);
+			list = ItogType.itogsForTypeList(ItogType.typesForList(listName, ec),year);
 		}
 		if(list == null || list.count() == 0) {
 //			ec.unlock();
@@ -238,11 +237,12 @@ public class ModuleInit {
 					EduCourse.class, ItogContainer.class);
 			template.setObjectForKey(method,"ifEmpty");
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.getLogger("rujel.itog").log(WOLogLevel.WARNING,
+					"Error getting statCourse method",e);
 		}
 
-		String title = (String)WOApplication.application().valueForKeyPath(
-				"strings.RujelEduResults_EduResults.itogAddOn.title");
+		template.takeValueForKey(WOApplication.application().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.itogAddOn.title"), "description");
 		int sort = 30;
 		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,null,null);
 		fs.setFetchLimit(1);
@@ -256,7 +256,6 @@ public class ModuleInit {
 				continue;
 			NSMutableDictionary dict = template.mutableClone();
 			dict.setObjectForKey(itog.title(),"title");
-			dict.setObjectForKey(title,"description");
 			dict.setObjectForKey(itog,"param2");
 			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(Boolean.TRUE, "addCalculations");
@@ -265,6 +264,21 @@ public class ModuleInit {
 		}
 //		ec.unlock();
 		return result;
+	}
+	
+	public static String sectionListName(WOSession session, EOEditingContext ec) {
+		NSMutableDictionary courseDict = null;
+		Integer section = (Integer)session.valueForKeyPath("state.section.idx");
+		if(section != null) {
+			NSDictionary sectDict = new NSDictionary(section,"section");
+			courseDict = new NSMutableDictionary(3);
+			courseDict.takeValueForKey(session.valueForKeyPath("eduYear"),"eduYear");
+			courseDict.takeValueForKey(sectDict, "eduGroup");
+			courseDict.takeValueForKey(sectDict, "cycle");
+		}
+		String listName = SettingsBase.stringSettingForCourse(
+				ItogMark.ENTITY_NAME, courseDict, ec);
+		return listName;
 	}
 	
 	public static Object deleteStudents(WOContext ctx) {
