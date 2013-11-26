@@ -35,6 +35,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 	private boolean noMarks;
 	private boolean moveNotes;
 	private NSArray indexRows;
+	private Integer courseMax;
 	public static Integer specFlags = (Integer)WorkType.specTypes.valueForKey("onLesson");
 
 	
@@ -72,14 +73,15 @@ public class WorkNoteDelegate implements NoteDelegate {
 		if(note != null)
 			note = note.trim();
 		Integer num = null;
-		Integer max = null;
-		if(work(false) != null) {
+		Integer max = courseMax;
+		if(max == null && work(false) != null) {
 			NSArray criterMask = work.criterMask();
 			if(criterMask != null && criterMask.count() == 1) {
 				EOEnterpriseObject mask = (EOEnterpriseObject)criterMask.objectAtIndex(0);
 				Integer cr = (Integer)mask.valueForKey("criterion");
-				if(cr.intValue() == 0)
+				if(cr.intValue() == 0) {
 					max = (Integer)mask.valueForKey("max");
+				}
 			} else if(criterMask != null && criterMask.count() > 1) {
 				noMarks = true;
 			}
@@ -93,8 +95,8 @@ public class WorkNoteDelegate implements NoteDelegate {
 				if(critSet != null) {
 					EOEnterpriseObject criter = critSet.criterionForNum(new Integer(0));
 					if(criter != null) {
-						if(max == null)
-							max = (Integer)criter.valueForKey("dfltMax");
+						if(courseMax == null)
+							courseMax = (Integer)criter.valueForKey("dfltMax");
 						Indexer indexer = (Indexer)criter.valueForKey("indexer");
 						if(indexer != null)
 							indexRows = indexer.indexRows();
@@ -102,6 +104,11 @@ public class WorkNoteDelegate implements NoteDelegate {
 						noMarks = true;
 					}
 				}
+				if(courseMax == null)
+					courseMax = SettingsBase.numericSettingForCourse("CriterlessMax",
+							lsn.course(), lsn.editingContext());
+				if(max == null)
+					max = courseMax;
 				if(indexRows == null)
 					indexRows = NSArray.EmptyArray;
 			} // prepare indexRows
@@ -154,10 +161,6 @@ public class WorkNoteDelegate implements NoteDelegate {
 					} catch (Exception e) {}
 				}
 				if(num != null) {
-					if (max == null) {
-						max = SettingsBase.numericSettingForCourse("CriterlessMax",
-								lsn.course(), lsn.editingContext());
-					}
 					if(max != null && num.intValue() <= max.intValue()) {
 						while (idx < note.length()) {
 							if(Character.isLetterOrDigit(note.charAt(idx)))

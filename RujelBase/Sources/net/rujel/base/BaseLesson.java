@@ -169,7 +169,7 @@ public class BaseLesson extends _BaseLesson implements EduLesson {
 		int idx = skip;
 		while (idx < newNote.length()) {
 			char c = newNote.charAt(idx);
-			if(c != ' ' && c != ':' && c != '|')
+			if(!Character.isWhitespace(c) && c != ':' && c != '|')
 					break;
 			idx++;
 		}
