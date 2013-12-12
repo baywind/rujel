@@ -43,6 +43,7 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSMutableSet;
@@ -53,7 +54,7 @@ public class ExtSystem extends _ExtSystem {
 		super.awakeFromInsertion(ec);
 	}
 
-	protected NSMutableDictionary entIdxes;
+	private NSMutableDictionary entIdxes;
 
 	public void turnIntoFault(EOFaultHandler handler) {
 		super.turnIntoFault(handler);
@@ -72,6 +73,21 @@ public class ExtSystem extends _ExtSystem {
 	public boolean cachesIndexes() {
 		return entIdxes != null;
 	}
+	
+	public EntityIndex indexForEntity(String entityName) {
+		if(entIdxes != null) {
+			NSKeyValueCoding obj = (NSKeyValueCoding) entIdxes.valueForKey(entityName);
+			if(obj instanceof EntityIndex)
+				return (EntityIndex)obj;
+			if(obj != null)
+				return (EntityIndex)obj.valueForKey(EntityIndex.ENTITY_NAME);
+		}
+		EntityIndex ei = EntityIndex.indexForEntityName(editingContext(), entityName, false);
+		if(entIdxes != null)
+			entIdxes.takeValueForKey(ei, entityName);
+		return ei;
+	}
+	
 	public String extidForObject(EOEnterpriseObject eo, ExtBase base) {
 		if(eo == null)
 			return null;
@@ -85,7 +101,7 @@ public class ExtSystem extends _ExtSystem {
 				match = addMatch(entity,objID,base);
 				String guid = UUID.randomUUID().toString();
 				match.setExtID(guid);
-//				editingContext().saveChanges();
+				editingContext().saveChanges();
 				return guid;
 			}
 			return null;
@@ -143,7 +159,7 @@ public class ExtSystem extends _ExtSystem {
 	
 	private void matchDict(String entityName, NSMutableArray ids, NSMutableDictionary dict,
 			NSArray list, int last, ExtBase base) {
-		EntityIndex ei = EntityIndex.indexForEntityName(editingContext(), entityName, false);
+		EntityIndex ei = indexForEntity(entityName);
 		EOQualifier[] qual = new EOQualifier[2];
 		qual[0] = SyncMatch.matchQualifier(this, base, ei, null, null);
 		qual[1] = Various.getEOInQualifier(SyncMatch.OBJ_ID_KEY, ids);
@@ -177,7 +193,10 @@ public class ExtSystem extends _ExtSystem {
 				used.addObject(id);
 		}
 		if(ml != null) {
-			Integer eduYear = (ei.isYearly())?eduYear = MyUtility.eduYear(editingContext()):null;
+			Boolean isYearly = (Boolean)editingContext().userInfoForKey("yearly");
+			if(isYearly == null)
+				isYearly = Boolean.valueOf(ei.isYearly());
+			Integer eduYear = (isYearly.booleanValue())?MyUtility.eduYear(editingContext()):null;
 			for (int i = 0; i < ml.length; i++) {
 				if(ml[i] != null)
 					continue;

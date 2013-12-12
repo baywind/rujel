@@ -65,6 +65,9 @@ public class ExtBase extends _ExtBase {
 	}
 	
 	public static ExtBase localBase(EOEditingContext ec) {
+		return localBase(ec,false);
+	}
+	public static ExtBase localBase(EOEditingContext ec, boolean yearly) {
 		if(localBaseGID != null)
 			return (ExtBase)ec.faultForGlobalID(localBaseGID, ec);
 		ExtSystem localSystem = ExtSystem.extSystemNamed("Rujel", ec, true);

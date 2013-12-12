@@ -33,6 +33,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.EntityIndex;
 import net.rujel.base.MyUtility;
+import net.rujel.reusables.Various;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
@@ -58,20 +59,11 @@ public class SyncMatch extends _SyncMatch {
 	}
 	
 	public void setEntity(String entity) {
-		EntityIndex ei = null;
 		ExtSystem sys = extSystem();
-		if(sys.entIdxes != null) {
-			ei = (EntityIndex)sys.entIdxes.valueForKey(entity);
-			if(ei != null && ei.editingContext() != editingContext())
-				ei = null;
-		}
-		if(ei == null) {
-			ei = EntityIndex.indexForEntityName(editingContext(),entity, false);
-			if(sys.entIdxes != null)
-				sys.entIdxes.takeValueForKey(ei, entity);
-		}
+		EntityIndex ei = sys.indexForEntity(entity);
 		setEntityIndex(ei);
-		if(ei.isYearly())
+		Boolean isYearly = (Boolean)editingContext().userInfoForKey("yearly");
+		if((isYearly == null)?ei.isYearly():isYearly.booleanValue())
 			setEduYear(MyUtility.eduYear(editingContext()));
 	}
 	
@@ -105,9 +97,15 @@ public class SyncMatch extends _SyncMatch {
 			quals.addObject(new EOKeyValueQualifier(OBJ_ID_KEY, 
 					EOQualifier.QualifierOperatorEqual, objectID));
 		}
+		boolean yearly = Various.boolForObject(ec.userInfoForKey("yearly"));
 		if(eduYear == null)
 			eduYear = MyUtility.eduYear(ec);
-		{
+		else
+			yearly = true;
+		if(yearly) {
+			quals.addObject(new EOKeyValueQualifier(EDU_YEAR_KEY, 
+					EOQualifier.QualifierOperatorEqual, eduYear));
+		} else {
 			EOQualifier[] qual = new EOQualifier[2];
 			qual[0] = new EOKeyValueQualifier(EDU_YEAR_KEY, 
 					EOQualifier.QualifierOperatorEqual, eduYear);
@@ -126,18 +124,7 @@ public class SyncMatch extends _SyncMatch {
 	public static SyncMatch getMatch(ExtSystem sys, ExtBase base, String entity, Integer objID) {
 		if(sys == null)
 			sys = base.extSystem();
-		EOEditingContext ec = sys.editingContext();
-		EntityIndex ei = null;
-		if(sys.entIdxes != null) {
-			ei = (EntityIndex)sys.entIdxes.valueForKey(entity);
-			if(ei != null && ei.editingContext() != ec)
-				ei = null;
-		}
-		if(ei == null) {
-			ei = EntityIndex.indexForEntityName(ec, entity, false);
-			if(sys.entIdxes != null)
-				sys.entIdxes.takeValueForKey(ei, entity);
-		}
+		EntityIndex ei = sys.indexForEntity(entity);
 		return getMatch(sys, base, ei, objID);
 	}
 	
@@ -159,17 +146,7 @@ public class SyncMatch extends _SyncMatch {
 	
 	public static NSMutableDictionary dictForEntity(String entityName, ExtSystem sys, ExtBase base) {
 		EOEditingContext ec = sys.editingContext();
-		EntityIndex ei = null;
-		if(sys.entIdxes != null) {
-			ei = (EntityIndex)sys.entIdxes.valueForKey(entityName);
-			if(ei != null && ei.editingContext() != ec)
-				ei = null;
-		}
-		if(ei == null) {
-			ei = EntityIndex.indexForEntityName(ec, entityName, false);
-			if(sys.entIdxes != null)
-				sys.entIdxes.takeValueForKey(ei, entityName);
-		}
+		EntityIndex ei = sys.indexForEntity(entityName);
 		EOQualifier qual = matchQualifier(sys, base, ei, null, null);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		NSArray found = ec.objectsWithFetchSpecification(fs);

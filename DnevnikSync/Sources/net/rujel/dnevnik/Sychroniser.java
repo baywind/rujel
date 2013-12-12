@@ -158,7 +158,13 @@ public class Sychroniser implements Runnable {
 		WOSession ses = MyUtility.dummyContext(null).session();
 		try {
 			ec = ses.defaultEditingContext();
+			ec.setUserInfoForKey(Boolean.TRUE,"yearly");
 			system = (ExtSystem)EOUtilities.localInstanceOfObject(ec, system);
+			if(contype != null)
+				contype = EOUtilities.localInstanceOfObject(ec, contype);
+			if(criteriaSettings != null)
+				criteriaSettings = (SettingsBase) EOUtilities.localInstanceOfObject(
+						ec, criteriaSettings);
 			localBase = null;
 			lessonEI = null;
 			timeslotEI = null;
@@ -541,11 +547,13 @@ public class Sychroniser implements Runnable {
 		}
 		BaseCourse course = (BaseCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
 				BaseCourse.ENTITY_NAME, courseID);
+//		ec.setUserInfoForKey(Boolean.TRUE,"yearly");
 		NSArray audience = EOUtilities.rawRowsMatchingKeyAndValue(ec,
 				"CourseAudience", "courseID", courseID);
 		if(audience == null || audience.count() == 0)
 			return localBase.extidForObject(course.eduGroup());
 		String parentGuid = localBase.extidForObject(course.eduGroup());
+//		ec.setUserInfoForKey(null,"yearly");
 	/*	if(course.namedFlags().flagForKey("mixedGroup")) {
 			Integer grade = course.cycle().grade();
 			SyncMatch pmatch = SyncMatch.getMatch(null, localBase, 
@@ -1002,7 +1010,8 @@ public class Sychroniser implements Runnable {
 						actions++;
 					} catch (RemoteException e) {
 						if(!e.getMessage().contains("Entity not found: Work"))
-							throw new AttributedRemoteException(e,new Object[] {wID});					}
+							throw new AttributedRemoteException(e,new Object[] {wID});
+					}
 				}
 			}
 			ec.deleteObject(match);
@@ -1011,7 +1020,8 @@ public class Sychroniser implements Runnable {
 		}
 		Integer courseID = arch.getKeyValue("course");
 		EduCourse course = (EduCourse)EOUtilities.objectWithPrimaryKeyValue(ec,
-				EduCourse.entityName, courseID);
+				EduCourse.entityName, courseID); // TODO: java.lang.IllegalArgumentException:
+		// Attempt to insert null object into an  com.webobjects.foundation.NSDictionary
 		if(!syncCourse(course))
 			return null;
 		String maxVal = arch.getArchiveValueForKey("m0");
@@ -1600,7 +1610,9 @@ public class Sychroniser implements Runnable {
 		}
 		if(group == null) */
 		EduGroup group = student.recentMainEduGroup();
+//		ec.setUserInfoForKey(Boolean.TRUE,"yearly");
 		String groupGuid = localBase.extidForObject(group);
+//		ec.setUserInfoForKey(null,"yearly");
 		if(groupGuid == null) {
 			return;
 		}

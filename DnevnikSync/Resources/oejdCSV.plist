@@ -124,7 +124,7 @@
 	<dict>
 		<key>eduGroup</key>
 		<array>
-			<string>GUID</string>
+			<string>GUIDyearly</string>
 			<dict>
 				<key>paramKey</key>
 				<string>itogList</string>

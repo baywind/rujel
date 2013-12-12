@@ -103,6 +103,13 @@ public class SyncGenerator extends GeneratorModule {
 			handler.startElement("syncdata");
 		while (enu.hasMoreElements()) {
 			NSKeyValueCoding pre = (NSKeyValueCoding) enu.nextElement();
+			boolean yearly = (pre instanceof NSDictionary);
+			if(yearly) {
+				Object tmp = pre.valueForKey("yearly");
+				yearly = (tmp instanceof NSKeyValueCoding);
+				if(yearly)
+					pre = (NSKeyValueCoding)tmp;
+			}
 			if(pre instanceof ExtBase) {
 				ExtBase sys = (ExtBase)pre;
 				if(sys.isLocalBase())
@@ -110,7 +117,10 @@ public class SyncGenerator extends GeneratorModule {
 				else
 					handler.prepareAttribute("product", sys.extSystem().productName());
 				handler.prepareAttribute("base", sys.baseID());
+				if(yearly)
+					sys.editingContext().setUserInfoForKey(Boolean.TRUE,"yearly");
 				String extID = ((ExtBase)pre).extidForObject((EOEnterpriseObject)object);
+				sys.editingContext().setUserInfoForKey(null,"yearly");
 				handler.element("extid", extID);
 				continue;
 			}
@@ -118,7 +128,10 @@ public class SyncGenerator extends GeneratorModule {
 				ExtSystem sys = (ExtSystem)pre;
 				handler.prepareAttribute("product", sys.productName());
 				handler.prepareAttribute("base", sys.productName());
+				if(yearly)
+					sys.editingContext().setUserInfoForKey(Boolean.TRUE,"yearly");
 				String extID = ((ExtSystem)pre).extidForObject((EOEnterpriseObject)object, null);
+				sys.editingContext().setUserInfoForKey(null,"yearly");
 				handler.element("extid", extID);
 				continue;
 			}
@@ -343,6 +356,11 @@ public class SyncGenerator extends GeneratorModule {
 			ec = new EOEditingContext();
 		if("GUID".equals(plistData)) {
 			prepared.addObject(ExtBase.localBase(ec));
+		} else if("GUIDyearly".equals(plistData)) {
+			ExtBase base = ExtBase.localBase(ec);
+			NSDictionary dict = new NSDictionary(base,"yearly");
+					//new Object[] {base, Boolean.TRUE},new String[] {"sync","yearly"});
+			prepared.addObject(dict);
 		} else if(plistData instanceof String) {
 			if(((String) plistData).charAt(0) == '@') {
 				interpretSync(settings.valueForKeyPath(((String)plistData).substring(1)), prepared);
