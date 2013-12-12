@@ -45,11 +45,13 @@ import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSTimestamp;
@@ -218,6 +220,8 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	protected String listName;
     	protected boolean recalc;
     	protected WeakReference sesRef;
+    	protected String userName;
+    	protected String wosid;
     	
     	public Updater(AutoItog autoItog, String listName, 
     			boolean recalculate, WOSession session) {
@@ -228,6 +232,20 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
         		this.listName = listName;
         		recalc = recalculate;
         		sesRef = new WeakReference(session);
+        		userName = (String)session.valueForKeyPath("user.present");
+        		if(userName == null)
+        			userName = "Global recalc";
+        		wosid = session.sessionID();
+    		} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to initialize AutoItogUpdate",
+						new Object [] {session,ai,e});
+				if(session != null) {
+					StringBuilder message = new StringBuilder();
+					message.append(session.valueForKeyPath(
+							"strings.RujelAutoItog_AutoItog.ui.updateError"));
+					message.append(' ').append(ai.itogContainer().title());
+					session.takeValueForKey(message.toString(), "message");
+				}
     		} finally {
     			ec.unlock();
     		}
@@ -247,6 +265,10 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     			}
     			Enumeration enu = courses.objectEnumerator();
     			Calculator calculator = ai.calculator();
+    			boolean ifArchive = (recalc && calculator != null &&
+    					SettingsReader.boolForKeyPath("markarchive.Prognosis", 
+						SettingsReader.boolForKeyPath("markarchive.archiveAll", false))
+						&& ai.namedFlags().flagForKey("manual"));
     			while (enu.hasMoreElements()) {
     				EduCourse course = (EduCourse) enu.nextElement();
     				NSArray prognoses = null;
@@ -260,6 +282,24 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     				} else {
     					prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, ai);
     				}
+    				for (int i = 0; i < prognoses.count(); i++) {
+						Prognosis prognosis = (Prognosis)prognoses.objectAtIndex(i);
+						prognosis.updateFireDate(cto);
+						if(ifArchive) {
+							NSDictionary snapshot = ec.committedSnapshotForObject(prognosis);
+							if(snapshot != null && snapshot
+									.valueForKey("mark").equals(prognosis.mark()))
+								continue;
+							EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+										ec,"MarkArchive");
+							archive.takeValueForKey(prognosis, "object");
+							archive.takeValueForKey(ai.calculatorName(), "reason");
+							archive.takeValueForKey(new Integer(
+								(ec.globalIDForObject(prognosis).isTemporary())?1:2), "actionType");
+							archive.takeValueForKey(wosid, "wosid");
+							archive.takeValueForKey(userName, "user");
+						}
+					}
     				prognoses.takeValueForKey(cto, "updateWithCourseTimeout");
     				ec.saveChanges();
     			}

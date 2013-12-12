@@ -74,7 +74,7 @@ public class IntegralCalculator extends WorkCalculator {
 		Prognosis progn = Prognosis.getPrognosis(student, course,
 				period.itogContainer(), (count > 0));
 		if(count == 0) {
-			if(progn != null)
+			if(progn != null && !progn.namedFlags().flagForKey("keep"))
 				progn.editingContext().deleteObject(progn);
 			return null;
 		}
