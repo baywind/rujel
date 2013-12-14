@@ -203,9 +203,17 @@ public class Prognosis extends _Prognosis {
 	
 	protected Object _relatedItog;
 	public ItogMark relatedItog() {
+		return relatedItog(null);
+	}
+	public ItogMark relatedItog(NSArray itogs) {
 		if(_relatedItog == null) {
-			_relatedItog = ItogMark.getItogMark(course().cycle(),itogContainer(),
-					student(),editingContext());
+			if(itogs == null) {
+				_relatedItog = ItogMark.getItogMark(course().cycle(),itogContainer(),
+						student(),editingContext());
+			} else {
+				_relatedItog = ItogMark.getItogMark(course().cycle(),itogContainer(),
+						student(),itogs);
+			}
 			if(_relatedItog == null) {
 				_relatedItog = NullValue;
 				return null;

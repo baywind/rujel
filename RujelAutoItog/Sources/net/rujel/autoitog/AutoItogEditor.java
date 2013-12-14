@@ -43,6 +43,7 @@ import net.rujel.criterial.BorderSet;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.PerPersonLink;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
@@ -75,8 +76,10 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 	public BorderSet borderSet;
 	public NamedFlags namedFlags;
 	public boolean recalculate;
+	public boolean deleteItogs;
 	
 	public Boolean cantChange;
+	public Boolean canDeleteItogs;
 	
     public AutoItogEditor(WOContext context) {
         super(context);
@@ -121,10 +124,14 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	recalculate = (autoItog == null);
-    	if(recalculate)
+    	if(recalculate) {
     		cantChange = (Boolean)session().valueForKeyPath("readAccess._create.AutoItog");
-    	else
-    		cantChange = (Boolean)session().valueForKeyPath("readAccess._edit.autoItog");
+    		canDeleteItogs = Boolean.FALSE;
+    	} else {
+    		NamedFlags flags = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.autoItog");
+    		cantChange = (Boolean)flags.valueForKey("_edit");
+    		canDeleteItogs = Boolean.valueOf(flags.getFlag(4));
+    	}
     	super.appendToResponse(aResponse, aContext);
     }
 
@@ -173,9 +180,9 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     		ec.saveChanges();
    			logger.log(WOLogLevel.COREDATA_EDITING, "Saved AutoItog", 
 					new Object[] {session(),autoItog});
-    		if(recalculate || changeDate) {
-    			Thread t = new Thread(new Updater(autoItog, listName, recalculate,session()),
-    					"AutoItogUpdate");
+    		if(recalculate || deleteItogs || changeDate) {
+    			Thread t = new Thread(new Updater(
+    					autoItog, listName, recalculate, deleteItogs,session()),"AutoItogUpdate");
 				t.setPriority(Thread.MIN_PRIORITY + 1);
 				t.start();
 				StringBuilder message = new StringBuilder();
@@ -222,15 +229,17 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	protected WeakReference sesRef;
     	protected String userName;
     	protected String wosid;
+    	protected boolean delItog;
     	
     	public Updater(AutoItog autoItog, String listName, 
-    			boolean recalculate, WOSession session) {
+    			boolean recalculate, boolean deleteItogs, WOSession session) {
     		ec = new EOEditingContext(autoItog.editingContext().rootObjectStore());
     		ec.lock();
     		try {
     			ai = (AutoItog)EOUtilities.localInstanceOfObject(ec, autoItog);
         		this.listName = listName;
         		recalc = recalculate;
+        		delItog = deleteItogs;
         		sesRef = new WeakReference(session);
         		userName = (String)session.valueForKeyPath("user.present");
         		if(userName == null)
@@ -253,12 +262,12 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	
     	public void run() {
     		ec.lock();
-			WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
     		try {
     			ItogContainer itog = ai.itogContainer();
     			SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
     			NSArray courses = base.coursesForSetting(listName, null,itog.eduYear());
     			if(courses == null || courses.count() == 0) {
+    				WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
     				logger.log(WOLogLevel.FINER,"No Prognoses to update",
     						new Object[] {ses,ai});
     				return;
@@ -269,8 +278,20 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     					SettingsReader.boolForKeyPath("markarchive.Prognosis", 
 						SettingsReader.boolForKeyPath("markarchive.archiveAll", false))
 						&& ai.namedFlags().flagForKey("manual"));
+    			boolean itogArchive = delItog &&
+    					SettingsReader.boolForKeyPath("markarchive.ItogMark", 
+						SettingsReader.boolForKeyPath("markarchive.archiveAll", false));
+    			EduCycle cycle = null;
+    			NSArray itogs = null;
+    			String delReason = (delItog)?(String)WOApplication.application().valueForKeyPath(
+								"strings.RujelAutoItog_AutoItog.ui.deleteItogs"):null;
+    			int delCount = 0;
     			while (enu.hasMoreElements()) {
     				EduCourse course = (EduCourse) enu.nextElement();
+    				if(delItog && course.cycle() != cycle) {
+    					cycle = course.cycle();
+    					itogs = ItogMark.getItogMarks(course.cycle(),itog,null,ec);
+    				}
     				NSArray prognoses = null;
 					CourseTimeout cto = CourseTimeout.
 							getTimeoutForCourseAndPeriod(course, itog);
@@ -284,37 +305,68 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     				}
     				for (int i = 0; i < prognoses.count(); i++) {
 						Prognosis prognosis = (Prognosis)prognoses.objectAtIndex(i);
+						if(delItog) {
+							ItogMark itogMark = prognosis.relatedItog(itogs);
+							if(itogMark != null && !itogMark.readFlags().flagForKey("manual")) {
+								if(itogArchive) {
+									EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+											ec,"MarkArchive");
+									archive.takeValueForKey(itogMark, "objectIdentifier");
+									archive.takeValueForKey(".", "@mark");
+									archive.takeValueForKey(delReason,"reason");
+									archive.takeValueForKey(new Integer(3), "actionType");
+									archive.takeValueForKey(wosid, "wosid");
+									archive.takeValueForKey(userName, "user");
+								}
+								ec.deleteObject(itogMark);
+								prognosis._relatedItog = NullValue;
+								delCount++;
+							}
+						}
 						prognosis.updateFireDate(cto);
 						if(ifArchive) {
 							NSDictionary snapshot = ec.committedSnapshotForObject(prognosis);
-							if(snapshot != null && snapshot
-									.valueForKey("mark").equals(prognosis.mark()))
-								continue;
-							EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
+							if(snapshot == null || !snapshot
+									.valueForKey("mark").equals(prognosis.mark())) {
+								EOEnterpriseObject archive = EOUtilities.createAndInsertInstance(
 										ec,"MarkArchive");
-							archive.takeValueForKey(prognosis, "object");
-							archive.takeValueForKey(ai.calculatorName(), "reason");
-							archive.takeValueForKey(new Integer(
-								(ec.globalIDForObject(prognosis).isTemporary())?1:2), "actionType");
-							archive.takeValueForKey(wosid, "wosid");
-							archive.takeValueForKey(userName, "user");
+								archive.takeValueForKey(prognosis, "object");
+								archive.takeValueForKey(ai.calculatorName(), "reason");
+								archive.takeValueForKey(new Integer((ec.globalIDForObject(
+										prognosis).isTemporary())?1:2), "actionType");
+								archive.takeValueForKey(wosid, "wosid");
+								archive.takeValueForKey(userName, "user");
+							}
 						}
 					}
-    				prognoses.takeValueForKey(cto, "updateWithCourseTimeout");
     				ec.saveChanges();
     			}
+    			WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
 				if(ses != null) {
 					StringBuilder message = new StringBuilder();
 					message.append(ses.valueForKeyPath(
 							"strings.RujelAutoItog_AutoItog.ui.updateFinished"));
 					message.append(' ').append(ai.itogContainer().title());
 					ses.takeValueForKey(message.toString(), "message");
+					if(delCount > 0) {
+						message.delete(0, message.length());
+						message.append(ses.valueForKeyPath(
+							"strings.RujelAutoItog_AutoItog.ui.itogsDeleted"));
+						message.append(' ').append(delCount);
+						ses.takeValueForKey(message.toString(), "message");
+					}
 				}
 				logger.log(WOLogLevel.INFO,"Prognoses update complete",
 						new Object[] {ses,ai});
+				if(delCount > 0) {
+					logger.log(WOLogLevel.MASS_EDITING,"Deleted related ItogMarks: " + delCount,
+							new Object[] {ses,ai.itogContainer()});	
+				}
 			} catch (Exception e) {
+				WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
 				logger.log(WOLogLevel.WARNING,"Error updating prognoses",
 						new Object [] {ses,ai,e});
+				ec.revert();
 				if(ses != null) {
 					StringBuilder message = new StringBuilder();
 					message.append(ses.valueForKeyPath(
