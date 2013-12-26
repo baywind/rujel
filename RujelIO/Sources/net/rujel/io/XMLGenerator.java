@@ -711,7 +711,7 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.startElement("persdata");
 			GeneratorModule sync = (GeneratorModule)in.options.valueForKey("sync");
 			NSMutableSet persons = (NSMutableSet)in.options.valueForKey("persons");
-			if(persons != null) {
+			if(persons != null && persons.count() > 0) {
 				if(sync != null)
 					sync.preload("person", persons.allObjects());
 				Enumeration enu = persons.objectEnumerator();

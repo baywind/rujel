@@ -207,6 +207,7 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
     		return;
     	Enumeration enu = reports.objectEnumerator();
     	while (enu.hasMoreElements()) {
+    		System.gc();
 			NSKeyValueCoding rep = (NSKeyValueCoding) enu.nextElement();
 			String id = (String)rep.valueForKey("id");
 //			File file = new File(cDir,id + ".html");

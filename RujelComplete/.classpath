@@ -4,6 +4,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelBase"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelInterfaces"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Reusables"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RujelIO"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
 	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>

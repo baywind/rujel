@@ -41,6 +41,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Student;
+import net.rujel.io.XMLGenerator;
 import net.rujel.reports.StudentReports;
 import net.rujel.reusables.*;
 
@@ -50,6 +51,7 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 
 public class Executor implements Runnable {
 	public static final Logger logger = Logger.getLogger("rujel.complete");
@@ -124,7 +126,9 @@ public class Executor implements Runnable {
 				if(task == null) {
 					break;
 				}
+				logger.log(WOLogLevel.FINE,"Starting Completion process",ses);
 				progress().takeValueForKey(task, "task");
+				ctx.setUserInfoForKey(task, "Executor$Task");
 				ses.takeValueForKey(task.date, "today");
 				ses.takeValueForKeyPath(task.section, "state.section");
 //				MultiECLockManager lm = ((MultiECLockManager.Session)ses).ecLockManager();
@@ -250,6 +254,7 @@ public class Executor implements Runnable {
 	
 	protected void writeStudents(EduCourse course, EOEditingContext ec) {
 		EduGroup gr = course.eduGroup();
+		NSArray grlist = null;
 		NSArray courses = null;
 		if(gr != null) {
 			courses = EOUtilities.objectsWithQualifierFormat(ec,
@@ -271,10 +276,15 @@ public class Executor implements Runnable {
 		FileWriterUtil folder = completeFolder(task.year, STUDENTS, false, false, true);
 		folder.ctx = ctx;
 		WOSession ses = ctx.session();
+		if(courses != null && courses.count() > 1) {
+			try {
+				courses = courses.sortedArrayUsingComparator(new AdaptingComparator());
+			} catch (ComparisonException e) {
+				logger.log(WOLogLevel.WARNING,"Error sorting courses", new Object[] {ses,e});
+			}
+		}
 		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ses);
 		StudentReports str = new StudentReports(ses);
-		NSMutableArray reports = (NSMutableArray)ses.valueForKeyPath("modules.studentReporter");
-		reports.insertObjectAtIndex(str.defaultReporter(),0);
 //		File groupDir = new File(folder,grDir);
 		NSMutableDictionary grDict = null;
 		NSMutableArray updateGroups = new NSMutableArray();
@@ -285,28 +295,58 @@ public class Executor implements Runnable {
 				grDict = new NSMutableDictionary();
 			folder.enterDir(grDir, true);
 			updateGroups.addObject(gr);
+			grlist = gr.list();
 		}
 		boolean updateList = false;
 		for (int i = 0; i < task.studentIDs.length; i++) {
 			Student student = (Student)ec.faultForGlobalID(task.studentIDs[i], ec);
-			if(gr == null || !gr.list().containsObject(student)) {
-				gr = student.recentMainEduGroup();
-				if(grDict != null) {
-					folder.leaveDir();
-					if(grDict.count() > 0) {
-						catalog.takeValueForKey(grDict, folder.currDir().getName());
-						updateList = true;
-					}
+			if(gr == null || !grlist.containsObject(student)) {
+				EduGroup tmpgr = student.recentMainEduGroup();
+				if(tmpgr == null)
+					continue;
+				try {
+					if(grDict != null) {
+						if(grDict.count() > 0) {
+							catalog.takeValueForKey(grDict, folder.currDir().getName());
+							updateList = true;
+						}
+						boolean xml = true;
+						for (int j = 0; j < grlist.count(); j++) {
+							String key = MyUtility.getID((Student)grlist.objectAtIndex(j));
+							if(!Various.boolForObject(grDict.valueForKey(key))) {
+								xml = false;
+								break;
+							}
+						}
+						if(xml) {
+							NSMutableDictionary settings = new NSMutableDictionary(gr, "eduGroup");
+							settings.takeValueForKey(courses,"courses");
+							settings.takeValueForKey(grlist,"students");
+							NSMutableDictionary counters = new NSMutableDictionary();
+							settings.takeValueForKey(counters, "counters");
+							byte[] fullData = XMLGenerator.generate(ses, settings);
+							if(counters.count() > 0)
+								folder.writeData("raw.xml", new NSData(fullData));
+						}
+						folder.leaveDir();
+					} // end with pref group
+					gr = tmpgr;
+					courses = EOUtilities.objectsWithQualifierFormat(ec,
+							EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
+							new NSArray(new Object[] {gr, task.year}));
+					if(courses != null && courses.count() > 1)
+						courses = courses.sortedArrayUsingComparator(new AdaptingComparator());
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Error preparing raw.xml",
+							new Object[] {ses,gr,e});
 				}
 				String grDir = StudentCatalog.groupDirName(gr,false);
-				courses = EOUtilities.objectsWithQualifierFormat(ec,
-						EduCourse.entityName, "eduGroup = %@ AND eduYear = %d",
-						new NSArray(new Object[] {gr, task.year}));
 				grDict = (NSMutableDictionary)catalog.valueForKey(grDir);
 				if(grDict == null)
 					grDict = new NSMutableDictionary();
 				folder.enterDir(grDir, true);
 				updateGroups.addObject(gr);
+				grlist = gr.list();
 			}
 			String key = ((EOKeyGlobalID)task.studentIDs[i]).keyValues()[0].toString();
 //			File stDir = new File(groupDir,key);
@@ -327,7 +367,7 @@ public class Executor implements Runnable {
 				}
 			}
 			if(ready) {
-				StudentCatalog.completeStudent(gr, student, reports,courses, folder);
+				StudentCatalog.completeStudent(gr, student, str.reporterList(),courses, folder);
 				grDict.takeValueForKey(Boolean.TRUE, key);
 			} else {
 				File stDir = new File(folder.currDir(),key);
@@ -340,11 +380,34 @@ public class Executor implements Runnable {
 					stDir.delete();
 				}
 			}
-		}
+		} // task.studentIDs[]
 		if(grDict != null) {
 			if(grDict.count() > 0) {
 				catalog.takeValueForKey(grDict, folder.currDir().getName());
 				updateList = true;
+				boolean xml = true;
+				for (int j = 0; j < grlist.count(); j++) {
+					String key = MyUtility.getID((Student)grlist.objectAtIndex(j));
+					if(!Various.boolForObject(grDict.valueForKey(key))) {
+						xml = false;
+						break;
+					}
+				}
+				try {
+					if(xml) {
+						NSMutableDictionary settings = new NSMutableDictionary(gr, "eduGroup");
+						settings.takeValueForKey(courses,"courses");
+						settings.takeValueForKey(grlist,"students");
+						NSMutableDictionary counters = new NSMutableDictionary();
+						settings.takeValueForKey(counters, "counters");
+						byte[] fullData = XMLGenerator.generate(ses, settings);
+						if(counters.count() > 0)
+							folder.writeData("raw.xml", new NSData(fullData));
+					}
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING,"Error writing raw.xml for group",
+							new Object[] {ses,gr,e});
+				}
 			}
 			folder.leaveDir();
 		}

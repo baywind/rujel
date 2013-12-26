@@ -31,21 +31,28 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
+import net.rujel.io.XMLGenerator;
+import net.rujel.reports.StudentReports;
+import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.FileWriterUtil;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSData;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 
 import com.webobjects.foundation.NSTimestamp;
 
@@ -62,6 +69,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	protected String grFolder;
 	public boolean grReports;
 	public int total;
+	public String defaultReport;
 	
     public StudentCatalog(WOContext context) {
         super(context);
@@ -141,6 +149,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		if(grReports != null && grReports.count() == 0)
 			grReports = null;
 		NSArray groups = null;
+		StudentReports studentReports = new StudentReports(ses);
 		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
 			NSArray list = (NSArray)sect.valueForKey("list");
 			sect = (NSDictionary)list.objectAtIndex(0);
@@ -158,6 +167,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		    			folder.ctx);
 		    	page.takeValueForKey(ec, "ec");
 		    	page.takeValueForKey(groups, "eduGroups");
+		    	page.takeValueForKey(studentReports.defaultID(), "defaultReport");
 		    	page.takeValueForKey(Boolean.valueOf(grReports != null), "grReports");
 		    	folder.writeFile("list" + item.valueForKey("idx") + ".html", page);
 			}
@@ -175,10 +185,6 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	    	folder.writeFile("list.html", page);
 		}
 		Enumeration grenu = groups.objectEnumerator();
-		NSMutableArray reports = (NSMutableArray)ses.valueForKeyPath(
-				"modules.studentReporter");
-		reports.insertObjectAtIndex(WOApplication.application().valueForKeyPath(
-				"strings.Strings.Overview.defaultReporter"),0);
 		Integer year = (Integer) ses.valueForKey("eduYear");
 		int[] idx = new int [] {0,0};
 		while (grenu.hasMoreElements()) {
@@ -188,6 +194,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 				idx[0]++;
 				continue;
 			}
+			System.gc();
 			EduGroup gr = (EduGroup) next;
 //			File grDir = new File(folder,groupDirName(gr));
 			EOEditingContext tmpEC = new SessionedEditingContext(
@@ -201,10 +208,36 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 			if(grReports != null) {
 				completeGroup(gr, list, grReports, folder);
 			}
-			Enumeration stenu = list.objectEnumerator();
 			NSArray args = new NSArray(new Object[] {year, gr });
 			NSArray existingCourses = EOUtilities.objectsWithQualifierFormat(tmpEC,
 					EduCourse.entityName,"eduYear = %d AND eduGroup = %@",args);
+			NSMutableDictionary grxml = (NSMutableDictionary)folder.ctx.userInfoForKey("grxml");
+			if(grxml == null) {
+				grxml = new NSMutableDictionary();
+				folder.ctx.setUserInfoForKey(grxml, "grxml");
+			}
+			try {
+				if(existingCourses != null && existingCourses.count() > 1)
+					existingCourses = existingCourses.sortedArrayUsingComparator(
+							new AdaptingComparator());
+				NSMutableDictionary settings = new NSMutableDictionary(gr, "eduGroup");
+				settings.takeValueForKey(existingCourses,"courses");
+				settings.takeValueForKey(gr.list(),"students");
+				NSMutableDictionary counters = new NSMutableDictionary();
+				settings.takeValueForKey(counters, "counters");
+				byte[] fullData = XMLGenerator.generate(ses, settings);
+				grxml.takeValueForKey(settings.valueForKey("persons"), "persons");
+				grxml.takeValueForKey(fullData, "fullData");
+				grxml.takeValueForKey(new Integer(counters.count()),"counters");
+				grxml.takeValueForKey(gr,"gr");
+				if(counters.count() > 0)
+					folder.writeData("raw.xml", new NSData(fullData));
+			} catch (Exception e) {
+				Executor.logger.log(WOLogLevel.WARNING,"Error generating group xml",
+						new Object[] {ses,gr,e});
+			}
+
+			Enumeration stenu = list.objectEnumerator();
 			idx[0]++;
 			idx[1] = 0;
 			while (stenu.hasMoreElements()) {
@@ -218,7 +251,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 				Student student = (Student) stenu.nextElement();
 //		    	EOKeyGlobalID gid = (EOKeyGlobalID)student.editingContext().globalIDForObject(student);
 //				File stDir = new File(grDir,gid.keyValues()[0].toString());
-				completeStudent(gr, student, reports, existingCourses,
+				completeStudent(gr, student, studentReports.reporterList(), existingCourses,
 						folder);
 			}
 			tmpEC.unlock();
@@ -301,11 +334,11 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     	exec.enterDir(gid.keyValues()[0].toString(), false);
 //		if(!stDir.exists())
 //			stDir.mkdirs();
-		WOComponent page = WOApplication.application().pageWithName("StudentPage", exec.ctx);
+		NSKeyValueCoding page = WOApplication.application().pageWithName("StudentPage", exec.ctx);
 		page.takeValueForKey(student, "student");
 		page.takeValueForKey(gr, "eduGroup");
 		page.takeValueForKey(reports, "reports");
-		exec.writeFile("index.html", page);
+		exec.writeFile("index.html", (WOComponent)page);
 /*		reportsForStudent(reports, student, ctx, existingCourses, stDir, overwrite);
     }
     private static void reportsForStudent(NSArray reports, Student student, WOContext ctx,
@@ -314,13 +347,83 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		NSArray array = new NSArray(student);
 		while (repEnu.hasMoreElements()) {
 			NSDictionary reporter = (NSDictionary) repEnu.nextElement();
-			page = WOApplication.application().pageWithName("PrintReport",exec.ctx);
+			boolean xml = (reporter.valueForKey("component") == null);
+			if(xml)
+				page = new NSMutableDictionary();
+			else
+				page = WOApplication.application().pageWithName("PrintReport",exec.ctx);
 			page.takeValueForKey(reporter,"reporter");
 			page.takeValueForKey(existingCourses,"courses");
+			page.takeValueForKey(gr, "eduGroup");
 			page.takeValueForKey(array,"students");
 			String filename = reporter.valueForKey("id") + ".html";
-//			exec.writeData(filename, com.webobjects.foundation.NSData.EmptyData); 
-			exec.writeFile(filename, page);
+			if(xml) {
+				if(reporter.valueForKey("transform") == null)
+					continue;
+				WOSession ses = exec.ctx.session();
+				NSMutableDictionary info = new NSMutableDictionary(MyUtility.presentEduYear(
+						(Integer)ses.valueForKey("eduYear")), "eduYear");
+				page.takeValueForKey(info, "info");
+				if(Various.boolForObject(reporter.valueForKeyPath("settings.courses.hidden"))) {
+					SettingsBase reportCourses = SettingsBase.baseForKey(
+							"reportCourses", gr.editingContext(), false);
+					page.takeValueForKey(reportCourses, "reportCourses");
+				}
+				NSMutableDictionary counters = new NSMutableDictionary();
+				page.takeValueForKey(counters, "counters");
+				try {
+					byte[] report;
+					if(Various.boolForObject(reporter.valueForKey("studentInOptions"))) {
+						NSMutableDictionary grxml = (NSMutableDictionary)exec.ctx.userInfoForKey(
+						"grxml");
+						if(grxml == null) {
+							grxml = new NSMutableDictionary();
+							exec.ctx.setUserInfoForKey(grxml, "grxml");
+						}
+						page.takeValueForKey(student,"student");
+						byte[] fullData;
+						if(grxml.valueForKey("gr") != gr) {
+							Executor.Task task =
+								(Executor.Task)exec.ctx.userInfoForKey("Executor$Task");
+							page.takeValueForKey(null,"reporter");
+							if(task != null && task.studentIDs != null 
+									&& task.studentIDs.length > 0) {
+								NSMutableArray students =
+									new NSMutableArray(task.studentIDs.length);
+								EOEditingContext ec = gr.editingContext();
+								for (int i = 0; i < task.studentIDs.length; i++) {
+									students.addObject(ec.faultForGlobalID(task.studentIDs[i], ec));
+								}
+								page.takeValueForKey(students,"students");
+							} else {
+								page.takeValueForKey(gr.list(),"students");
+							}
+							fullData = XMLGenerator.generate(ses, (NSMutableDictionary)page);
+							grxml.takeValueForKey(page.valueForKey("persons"), "persons");
+							grxml.takeValueForKey(fullData, "fullData");
+							grxml.takeValueForKey(new Integer(counters.count()),"counters");
+							grxml.takeValueForKey(gr,"gr");
+							page.takeValueForKey(reporter,"reporter");
+						} else {
+							page.takeValueForKey(null,"students");
+							page.takeValueForKey(grxml.valueForKey("persons"), "persons");
+							fullData = (byte[])grxml.valueForKey("fullData");
+						}
+						report = XMLGenerator.transformData(ses, (NSDictionary)page, fullData);
+					} else { // studentInOptions
+						report = XMLGenerator.generate(ses, (NSMutableDictionary)page);
+					}
+					if(report != null && report.length > 1) {
+						NSData data = new NSData(report);
+						exec.writeData(filename, data);
+					}
+				} catch (Exception e) {
+					Executor.logger.log(WOLogLevel.WARNING,"Error generating " + filename,
+							new Object[] {ses,e});
+				}
+			} else {
+				exec.writeFile(filename, (WOComponent)page);
+			}
 		}
 		exec.leaveDir();
     }
