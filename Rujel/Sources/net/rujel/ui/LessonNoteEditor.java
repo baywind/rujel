@@ -413,6 +413,7 @@ public class LessonNoteEditor extends WOComponent {
 		if(reload || fullList == null)
 			fullList = lessonListForCourseAndPresent(course, present, null);
 		if(fullList != null && fullList.count() > 0) {
+			Period per = null;
 			if(currTab() != null) {
 				autoSelectTab();
 				if(currTab() instanceof NSRange) {
@@ -426,15 +427,31 @@ public class LessonNoteEditor extends WOComponent {
 				EOQualifier qual = currTab().qualifier();
 				if(qual != null)
 					lessonsList = EOQualifier.filteredArrayWithQualifier(lessonsList, qual);
+				per = currTab().period();
 			} else {
 				lessonsList = fullList;
 			}
-			if(lessonsList.count() > 0) {
+			if(per != null) {
+				session().setObjectForKey(per.begin(), "minDate");
+				session().setObjectForKey(per.end(), "maxDate");
+				NSTimestamp recentDate = (NSTimestamp)session().objectForKey("recentDate");
+				if(!per.contains(recentDate)) {
+					recentDate = (NSTimestamp)session().valueForKey("today");
+					if(per.contains(recentDate))
+						session().setObjectForKey(recentDate, "recentDate");
+					else
+						session().setObjectForKey(per.end(), "recentDate");
+				}
+			} else if(lessonsList.count() > 0) {
 				EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(0);
 				session().setObjectForKey(lesson.date(), "minDate");
 				lesson = (EduLesson)lessonsList.lastObject();
 				session().setObjectForKey(lesson.date(), "maxDate");
 				session().setObjectForKey(lesson.date(), "recentDate");
+			} else {
+				session().removeObjectForKey("minDate");
+				session().removeObjectForKey("maxDate");
+				session().setObjectForKey(session().valueForKey("today"), "recentDate");
 			}
 		} else {
 			lessonsList = null;

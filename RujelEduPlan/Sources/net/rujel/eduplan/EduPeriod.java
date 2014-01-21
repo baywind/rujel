@@ -339,6 +339,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		protected EOQualifier qual;
 		protected boolean current;
 		protected int code;
+		protected Period per;
 		
 		public PeriodTab(EduPeriod period, boolean isCurrent) {
 			title = period.title();
@@ -359,6 +360,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 					("date",EOQualifier.QualifierOperatorLessThanOrEqualTo,period.end()));
 			qual = new EOAndQualifier(quals);
 			hover = period.name();
+			per = new Period.ByDates(period.begin(), period.end());
 		}
 		public boolean defaultCurrent() {
 			return current;
@@ -384,6 +386,9 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 
 		public int hashCode() {
 			return code;
+		}
+		public Period period() {
+			return per;
 		}
 	}
 	

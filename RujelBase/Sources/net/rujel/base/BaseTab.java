@@ -230,6 +230,10 @@ public class BaseTab extends _BaseTab {
 			if(fn == null)
 				return "1";
 			return fn.toString();
+		}
+
+		public Period period() {
+			return null;
 		}	
 	}
 }

@@ -29,8 +29,10 @@
 
 package net.rujel.ui;
 
+import java.util.Date;
 import java.util.Enumeration;
 
+import net.rujel.reusables.Period;
 import net.rujel.reusables.StringStorage;
 import net.rujel.reusables.Tabs;
 import net.rujel.reusables.Various;
@@ -98,6 +100,16 @@ public class CustomTab extends WOComponent {
 			if(parentRange == null)
 				return Integer.MAX_VALUE;
 			return parentRange.maxRange();
+		}
+
+		public Period period() {
+			if(params == null)
+				return null;
+			Date minDate = (Date)params.valueForKey("min_date");
+			Date maxDate = (Date)params.valueForKey("max_date");
+			if(minDate == null || maxDate == null)
+				return null;
+			return new Period.ByDates(minDate, maxDate);
 		}	
 	}
 	
