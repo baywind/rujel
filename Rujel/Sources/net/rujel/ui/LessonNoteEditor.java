@@ -435,7 +435,7 @@ public class LessonNoteEditor extends WOComponent {
 				session().setObjectForKey(per.begin(), "minDate");
 				session().setObjectForKey(per.end(), "maxDate");
 				NSTimestamp recentDate = (NSTimestamp)session().objectForKey("recentDate");
-				if(!per.contains(recentDate)) {
+				if(recentDate == null || !per.contains(recentDate)) {
 					recentDate = (NSTimestamp)session().valueForKey("today");
 					if(per.contains(recentDate))
 						session().setObjectForKey(recentDate, "recentDate");

@@ -360,7 +360,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 					("date",EOQualifier.QualifierOperatorLessThanOrEqualTo,period.end()));
 			qual = new EOAndQualifier(quals);
 			hover = period.name();
-			per = new Period.ByDates(period.begin(), period.end());
+			per = new EOPeriod.ByDates(period.begin(), period.end());
 		}
 		public boolean defaultCurrent() {
 			return current;
