@@ -42,6 +42,8 @@ import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOObjectNotAvailableException;
 import com.webobjects.eoaccess.EOUtilities;
+
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 import net.rujel.reusables.WOLogLevel;
@@ -406,6 +408,10 @@ public class LessonNoteEditor extends WOComponent {
 		return found.mutableClone();
 	}
 
+	public void updateLessonList() {
+		updateLessonList(false);
+	}
+	
 	public void updateLessonList(boolean reload) {
 		if(valueForKeyPath("currLesson.editingContext") != null) {
 			ec.refaultObject(currLesson());
@@ -431,6 +437,32 @@ public class LessonNoteEditor extends WOComponent {
 			} else {
 				lessonsList = fullList;
 			}
+			if(lessonsList.count() > 0 && present.valueForKey("filter") != null) {
+				NSArray filters = (NSArray)present.valueForKey("filter");
+				Enumeration enu = filters.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					NSDictionary filter = (NSDictionary) enu.nextElement();
+					Object attribute = filter.valueForKey("attribute");
+					if(attribute == null)
+						continue;
+					attribute = session().valueForKeyPath("state." + attribute);
+					if(attribute == null)
+						attribute = filter.valueForKey("defaultValue");
+					try {
+						if(Various.boolForObject(filter.valueForKey("useIndex"))) {
+							NSArray select = (NSArray)filter.valueForKey("select");
+							attribute = new Integer(select.indexOf(attribute));
+						}
+						String meth = (String)filter.valueForKey("filterClass");
+						Class cl = Class.forName(meth);
+						meth = (String)filter.valueForKey("method");
+						Method method = cl.getMethod(meth, NSArray.class, Object.class);
+						lessonsList = (NSArray)method.invoke(null, lessonsList, attribute);
+					} catch (Exception e) {
+						continue;
+					}
+				}
+			} // filter
 			if(per != null) {
 				session().setObjectForKey(per.begin(), "minDate");
 				session().setObjectForKey(per.end(), "maxDate");
@@ -456,6 +488,8 @@ public class LessonNoteEditor extends WOComponent {
 		} else {
 			lessonsList = null;
 			session().setObjectForKey(session().valueForKey("today"), "recentDate");
+			session().removeObjectForKey("minDate");
+			session().removeObjectForKey("maxDate");
 		}
 	}
 	

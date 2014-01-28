@@ -41,6 +41,7 @@ import com.webobjects.foundation.*;
 
 import net.rujel.base.BaseLesson.NoteDelegate;
 import net.rujel.base.BaseLesson.TaskDelegate;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
@@ -215,6 +216,10 @@ public class HomeWorkDelegate extends TaskDelegate {
 			namedFlags.setFlagForKey(true, "fixHometask");
 			result.takeValueForKey(namedFlags, "namedFlags");*/
 		}
+		String defaultHometask = SettingsBase.stringSettingForCourse("defaultHometask",
+				lesson.course(), ec);
+		if(defaultHometask != null)
+			result.takeValueForKey(defaultHometask, Work.THEME_KEY);
 		return result;
 	}
 	

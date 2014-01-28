@@ -30,11 +30,14 @@
 package net.rujel.ui;
 
 import java.util.Date;
+import java.util.Enumeration;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.criterial.*;
+
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
@@ -279,6 +282,64 @@ public class WorkList extends LessonList {
 			buf.append(max);
 		buf.append("</td>");
 		return buf.toString();
+	}
+	
+	public static NSArray filterWorks(NSArray works, Object filter) {
+		if(works == null || works.count() == 0 || filter == null)
+			return works;
+		int level = -1;
+		if(filter instanceof NSKeyValueCoding)
+			filter = ((NSKeyValueCoding) filter).valueForKey("level");
+		if(filter instanceof Number)
+			level = ((Number) filter).intValue();
+		if(filter instanceof String) {
+			NSArray list = (NSArray) WOApplication.application().valueForKeyPath(
+					"strings.RujelCriterial_Strings.worksTab.filter");
+			NSDictionary dict = (NSDictionary)list.objectAtIndex(0);
+			list = (NSArray) dict.valueForKey("select");
+			level = list.indexOf(filter);
+		}
+		if(level <= 0)
+			return works;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = works.objectEnumerator();
+		Integer lag = null;
+		while (enu.hasMoreElements()) {
+			Work w = (Work) enu.nextElement();
+			if(level > 3 && !w.hasWeight())
+				continue;
+			boolean compulsory = (w.isCompulsory() && w.hasWeight()); 
+			if(compulsory) {
+				if(lag == null) {
+					lag = SettingsBase.numericSettingForCourse("countMarklessWorkAfter", 
+							w.course(), w.editingContext());
+					if(lag == null)
+						lag = new Integer(-1);
+				}
+				if(lag.intValue() < 0 || 
+						EOPeriod.Utility.countDays(w.date(), null) > lag.intValue()) {
+					result.addObject(w);
+					continue;
+				}
+			}
+			if(w.criterMask() == null || w.criterMask().count() == 0) {
+				continue;
+			} else if(level < 2) {
+				result.addObject(w);
+				continue;
+			}
+			if(w.marks() == null || w.marks().count() == 0) {
+				if(compulsory) {
+					if(level > 3)
+						continue;
+				} else {
+					if(level > 2 || w.isHometask())
+						continue;
+				}
+			}
+			result.addObject(w);
+		}
+		return result;
 	}
 }
 	
