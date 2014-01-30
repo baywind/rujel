@@ -61,7 +61,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 			return note; 
 		Mark mark = work.markForStudentAndCriterion(student, new Integer(0));
 		if(mark == null)
-			return note;
+			return (moveNotes)?note:null;
 		if(note == null)
 			return mark.value().toString();
 		return mark.value().toString() + ": " + note;

@@ -219,7 +219,10 @@ public class CoursesSelector extends WOComponent {
 					courses = EOQualifier.filteredArrayWithQualifier(courses, quals[0]);
 				}
 			}
-			courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);
+			NSArray so = (NSArray)session().valueForKeyPath("state.coursesSorter");
+			if(so == null)
+				so = EduCourse.sorter;
+			courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, so);
 			setValueForBinding(courses, "courses");
 		}
 		if(val instanceof EOEnterpriseObject)

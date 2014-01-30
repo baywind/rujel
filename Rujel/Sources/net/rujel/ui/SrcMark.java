@@ -378,7 +378,7 @@ public class SrcMark extends WOComponent {
     }
 	
 	public String title() {
-		return (String)valueForKeyPath("application.strings.Strings.SrcMark.title");
+		return (String)valueForKeyPath("session.strings.Strings.SrcMark.title");
     }
 
 	public WOActionResults chooseTeacherForDict() {
@@ -435,4 +435,43 @@ public class SrcMark extends WOComponent {
 		}
 		return Person.Utility.fullName(teacher, true, 2, 1, 1);
 	}
+
+
+	public boolean ifGroup() {
+		Integer sesTab = (Integer)session().valueForKeyPath("state.courseSelector");
+		return (sesTab == null || sesTab.intValue() == 0);
+	}
+
+
+	public WOActionResults sortBy(String field) {
+		if(courses == null || courses.count() < 2)
+			return null;
+		NSMutableArray so = (NSMutableArray)session().valueForKeyPath("state.coursesSorter");
+		if(so == null) {
+			so = EduCourse.sorter.mutableClone();
+			session().takeValueForKeyPath(so, "state.coursesSorter");
+		} else {
+			EOSortOrdering s = (EOSortOrdering)so.objectAtIndex(0);
+			if(s.key().equals(field)) {
+				session().takeValueForKeyPath(null, "state.coursesSorter");
+				courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);
+				return null;
+			}
+		}
+		so.insertObjectAtIndex(new EOSortOrdering(field, EOSortOrdering.CompareAscending), 0);
+		if(so.count() > 3)
+			so.removeObjectsInRange(new NSRange(3, so.count() -3));
+		courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, so);
+		return null;
+	}
+	public WOActionResults sortByCycle() {
+		return sortBy("cycle");
+	}
+	public WOActionResults sortByGroup() {
+		return sortBy("eduGroup");
+	}
+	public WOActionResults sortByTeacher() {
+		return sortBy("teacher");
+	}
+
 }
