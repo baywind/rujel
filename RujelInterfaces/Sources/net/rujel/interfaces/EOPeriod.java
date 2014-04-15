@@ -195,7 +195,7 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			this.end = end;
 		}
 		
-		private static final String typeID = "Period.ByDates";
+		private static final String typeID = "EOPeriod.ByDates";
 		public String typeID() {
 			return typeID;
 		}

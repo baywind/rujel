@@ -33,6 +33,8 @@ import java.util.Enumeration;
 
 import net.rujel.base.BaseCourse;
 import net.rujel.base.SettingsBase;
+import net.rujel.eduplan.EduPeriod;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
@@ -44,6 +46,7 @@ import net.rujel.reusables.Period;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.*;
 
@@ -105,17 +108,47 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 			mainGroup = null;
 			while (enu.hasMoreElements()) {
 				EduCourse crs = (EduCourse) enu.nextElement();
-				if(mainGroup == null) {
-					mainGroup = crs.eduGroup();
-				} else if(mainGroup != crs.eduGroup()) {
-					mainGroup = null;
-					break;
+				EduGroup crgr = crs.eduGroup();
+				if(crgr.isInGroup(student)) {
+					if(mainGroup == null) {
+						mainGroup = crgr;
+					} else if(mainGroup != crgr) {
+						mainGroup = null;
+						break;
+					}
 				}
 			}
 		} else {
 			mainGroup = student.recentMainEduGroup();
 		}
 		courses = BaseCourse.coursesForStudent(list, student);
+		if(courses == null || courses.count() == 0)
+			return;
+		Enumeration enu = courses.objectEnumerator();
+		NSMutableArray result = new NSMutableArray(courses.count());
+		EOEditingContext ec = student.editingContext();
+		while (enu.hasMoreElements()) {
+			EduCourse crs = (EduCourse) enu.nextElement();
+			NSArray detail = EOUtilities.objectsMatchingKeyAndValue(ec,"PlanDetail","course", crs);
+			if(detail != null && detail.count() > 0) {
+				for (int i = 0; i < detail.count(); i++) {
+					NSKeyValueCoding dt = (NSKeyValueCoding)detail.objectAtIndex(i);
+					EduPeriod dtPer = (EduPeriod)dt.valueForKey("eduPeriod");
+					if(since != null && EOPeriod.Utility.compareDates(since, dtPer.end()) >= 0)
+						continue;
+					if(to != null && EOPeriod.Utility.compareDates(to, dtPer.begin()) <= 0)
+						continue;
+					Integer hours = (Integer)dt.valueForKey("hours");
+					if(hours != null && hours.intValue() > 0)
+						result.addObject(crs);
+					else
+						continue;
+				}
+			} else {
+				result.add(crs);
+			}
+		}
+		courses = result;
 	}
 	
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
@@ -136,6 +169,7 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 			//EOEditingContext ec = student.editingContext();
 
 			setCourses((NSArray)valueForBinding("courses"));
+			
 		} else {
 			t.setPriority(priority -1);
 		}

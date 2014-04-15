@@ -439,6 +439,8 @@ public class SrcMark extends WOComponent {
 
 	public boolean ifGroup() {
 		Integer sesTab = (Integer)session().valueForKeyPath("state.courseSelector");
+		if(sesTab == null && session().valueForKey("userPersonGID") != null)
+			return false;
 		return (sesTab == null || sesTab.intValue() == 0);
 	}
 
