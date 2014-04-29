@@ -197,7 +197,8 @@ public class TabelReporter extends WOComponent {
 		} //prepare comments
 		try {
 			cycles.sortUsingComparator(new AdaptingComparator());
-			EOSortOrdering.sortArrayUsingKeyOrderArray(perlist, ItogContainer.sorter);
+			perlist.sortUsingComparator(new AdaptingComparator(ItogContainer.class));
+//			EOSortOrdering.sortArrayUsingKeyOrderArray(perlist, ItogContainer.sorter);
 		} catch (ComparisonException e) {
 			;
 		}

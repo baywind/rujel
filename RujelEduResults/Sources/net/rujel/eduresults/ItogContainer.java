@@ -30,15 +30,18 @@
 package net.rujel.eduresults;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class ItogContainer extends _ItogContainer {
 	
+	@Deprecated
 	public static NSArray sorter = new NSArray(new EOSortOrdering[] {
 			new EOSortOrdering(EDU_YEAR_KEY,EOSortOrdering.CompareAscending),
 			new EOSortOrdering("itogType.sort",EOSortOrdering.CompareAscending),
@@ -53,7 +56,12 @@ public class ItogContainer extends _ItogContainer {
 				ENTITY_NAME, EDU_YEAR_KEY, eduYear);
 		if(result == null || result.count() < 2)
 			return result;
-		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
+		try {
+			return result.sortedArrayUsingComparator(new AdaptingComparator(ItogContainer.class));
+		} catch (ComparisonException e) {
+			return result;
+		}
+//		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
 	}
 	
 	public static NSArray itogsForCourse(EduCourse course) {
@@ -135,11 +143,25 @@ public class ItogContainer extends _ItogContainer {
 			ItogContainer r = (ItogContainer)right;
 			int result = compareValues(l.eduYear(), r.eduYear(),
 					EOSortOrdering.CompareAscending);
-			if(result == NSComparator.OrderedSame)
-			result = compareValues(l.valueForKeyPath("itogType.sort"), 
-					r.valueForKeyPath("itogType.sort"), EOSortOrdering.CompareAscending);
-			if(result == NSComparator.OrderedSame)
+			if(result != NSComparator.OrderedSame)
+				return result;
+			Integer lcnt = (Integer)l.valueForKeyPath("itogType.inYearCount");
+			if(lcnt == null)
+				return NSComparator.OrderedAscending;
+			boolean same = (lcnt.intValue() > 1 &&
+					lcnt.equals(r.valueForKeyPath("itogType.inYearCount")));
+			if(same)
 				result = compareValues(l.num(), r.num(), EOSortOrdering.CompareAscending);
+			else
+				result = compareValues(l.valueForKeyPath("itogType.sort"), 
+					r.valueForKeyPath("itogType.sort"), EOSortOrdering.CompareAscending);
+			if(result != NSComparator.OrderedSame)
+				return result;
+			if(!same)
+				result = compareValues(l.num(), r.num(), EOSortOrdering.CompareAscending);
+			else
+				result = compareValues(l.valueForKeyPath("itogType.sort"), 
+					r.valueForKeyPath("itogType.sort"), EOSortOrdering.CompareAscending);
 			return result;
 		}
 		public int compareCaseInsensitiveAscending(Object left, Object right)  {

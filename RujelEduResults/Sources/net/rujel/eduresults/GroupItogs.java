@@ -9,6 +9,7 @@ import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
+import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOContext;
@@ -19,8 +20,8 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
@@ -130,7 +131,10 @@ public class GroupItogs extends WOComponent {
 						NSMutableArray tmp = (byCycle[index] instanceof NSMutableArray)?
 								(NSMutableArray)byCycle[index] : byCycle[index].mutableClone();
 						tmp.addObject(itog.container());
-						EOSortOrdering.sortArrayUsingKeyOrderArray(tmp, ItogContainer.sorter);
+						try {
+							tmp.sortUsingComparator(new AdaptingComparator(ItogContainer.class));
+						} catch (ComparisonException e) {}
+//						EOSortOrdering.sortArrayUsingKeyOrderArray(tmp, ItogContainer.sorter);
 						byCycle[index] = tmp;
 					}
 					index = 0;
@@ -265,7 +269,9 @@ public class GroupItogs extends WOComponent {
 				return;
 			}
 			toAdd.addObjectsFromArray(byCycle[index]);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(toAdd, ItogContainer.sorter);
+			try {
+				toAdd.sortUsingComparator(new AdaptingComparator(ItogContainer.class));
+			} catch (ComparisonException e) {}
 			itogs = toAdd.immutableClone();
 		}
 		byCycle[index] = itogs;

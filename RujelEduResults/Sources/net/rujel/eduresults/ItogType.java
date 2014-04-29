@@ -30,11 +30,15 @@
 package net.rujel.eduresults;
 
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.AdaptingComparator;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
@@ -55,8 +59,13 @@ public class ItogType extends _ItogType {
 				{ItogContainer.EDU_YEAR_KEY, ItogContainer.ITOG_TYPE_KEY});
 		NSArray result = EOUtilities.objectsMatchingValues(editingContext(),
 				ItogContainer.ENTITY_NAME, qual);
-		if(result != null && result.count() > 1)
-			result = EOSortOrdering.sortedArrayUsingKeyOrderArray(result,ItogContainer.sorter);
+		if(result != null && result.count() > 1) {
+//			result = EOSortOrdering.sortedArrayUsingKeyOrderArray(result,ItogContainer.sorter);
+			try {
+				result = result.sortedArrayUsingComparator(
+						new AdaptingComparator(ItogContainer.class));
+			} catch (ComparisonException e) {}
+		}
 		return result;
 	}
 	
@@ -134,6 +143,13 @@ public class ItogType extends _ItogType {
 		while (enu.hasMoreElements()) {
 			ItogType type = (ItogType) enu.nextElement();
 			result.addObjectsFromArray(type.itogsInYear(eduYear));
+		}
+		try {
+			result.sortUsingComparator(new AdaptingComparator(ItogContainer.class));
+		} catch (ComparisonException e) {
+			ItogType type = (ItogType)list.objectAtIndex(0);
+			Logger.getLogger("rujel.itog").log(WOLogLevel.WARNING,"Error sorting itogs",
+					new Object[] {type,e});
 		}
 		return result;
 	}
