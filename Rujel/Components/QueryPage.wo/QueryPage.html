@@ -1,0 +1,47 @@
+<script language = "JavaScript">
+	function describe(cell) {
+		displayElts(cell,"form","");
+		cell.onmouseover='';
+		cell.onmouseout='';
+	}
+	function displayElts(cell,tag,value) {
+		elts = cell.getElementsByTagName(tag);
+		for(i=0;i<elts.length;i++) {
+			elts[i].style.display = value;
+		}
+	}
+</script>
+<webobject name = "UploadForm"><webobject name = "Qupload"/> <webobject name = "AddNewParam"/></webobject>
+<webobject name = "QueryForm">
+	<table>
+	<tr class = "grey"><th align = "right">Model:</th>
+		<td><webobject name = "Model"/></td><td></td></tr>
+	<webobject name = "Params">
+		<tr class = "gerade"><th><webobject name = "ParamName"/></th>
+			<td><webobject name = "Parameter"/></td>
+			<webobject name = "DeleteRow">X</webobject></tr>
+	</webobject>
+	<tr><td><webobject name = "NewParamName"/></td>
+		<td><webobject name = "NewParamType"/> <webobject name = "AddNewParam"/></td></tr>
+	</table>
+	
+	<p>Query : <br/>
+	<webobject name = "QueryText"/></p>
+	<p><webobject name = "PerformQuery"/></p>
+	<p><webobject name = "DatabaseMessage"/></p>
+</webobject>
+<webobject name = "HasResult">
+<table border = "1" align = "center">
+<thead>
+<tr><webobject name = "Columns">
+	<th><webobject name = "ColTitle"/>
+	<webobject name = "DecodeForm"><webobject name = "DecodeOptions"/></webobject>
+	</th>
+</webobject></tr>
+</thead>
+<tbody><webobject name = "ResultRows">
+	<tr><webobject name = "Columns"><td><webobject name = "Value"/>
+		<span class = "dimtext"><webobject name = "ExtValue"/></span></td></webobject></tr>
+</webobject></tbody>
+</table>
+</webobject><webobject name = "SaveQuery">Save query</webobject>

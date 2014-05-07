@@ -24,7 +24,7 @@
 	<key>ui</key>
 	<dict>
 		<key>defaultDate</key>
-		<string>17.11.2012</string>
+		<string>15.04.2014</string>
 		<key>diaryURL</key>
 		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
 		<key>_serverURL</key>

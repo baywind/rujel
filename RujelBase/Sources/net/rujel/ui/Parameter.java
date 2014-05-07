@@ -318,7 +318,12 @@ public class Parameter extends com.webobjects.appserver.WOComponent {
 		}
 		WOComponent selector = pageWithName("SelectorPopup");
 		selector.takeValueForKey(context().page(), "returnPage");
-		selector.takeValueForKey("params." + attribute(), "resultPath");
+		if(Various.boolForObject(itemDict().valueForKey("resultToDict"))) {
+			selector.takeValueForKey(attribute(), "resultPath");
+			selector.takeValueForKey(paramsDict(), "resultGetter");
+		} else {
+			selector.takeValueForKey("params." + attribute(), "resultPath");
+		}
 		Object value = (Various.boolForObject(itemDict().valueForKey("or")))? item : value();
 		selector.takeValueForKey(value, "value");
 		NSMutableDictionary dict = (NSMutableDictionary)itemDict().valueForKey("popup");

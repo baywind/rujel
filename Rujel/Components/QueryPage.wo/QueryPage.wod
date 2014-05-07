@@ -1,0 +1,118 @@
+QueryText : WOText {
+  value = query.sql;
+  rows = 5;
+  cols = 60;
+}
+
+HasResult : WOConditional {
+  condition = result;
+}
+
+Columns : WORepetition {
+  list = cols;
+  item = colItem;
+}
+
+ColTitle : WOString {
+  value = colName;
+}
+
+ResultRows : WORepetition {
+  list = result;
+  item = rowItem;
+}
+
+DatabaseMessage : WOString {
+  value = message;
+}
+
+Value : WOString {
+  value = value;
+  escapeHTML = false;
+}
+
+QueryForm : WOForm {
+  multipleSubmit = true;
+}
+
+PerformQuery : WOSubmitButton {
+  value = "Run";
+  action = performQuery;
+}
+
+Model : WOPopUpButton {
+  list = models;
+  item = colItem;
+  selection = currentModel;
+  displayString = colItem.name;
+}
+
+UploadForm : WOForm {
+  enctype = "multipart/form-data";
+}
+
+Qupload : WOFileUpload {
+  data = queryPlist;
+  filePath = params.uploadFilename;
+}
+
+SaveQuery : WOHyperlink {
+  action = saveQuery;
+  target = "download";
+}
+
+Params : WORepetition {
+  list = query.parameters;
+  item = rowItem;
+}
+
+ParamName : WOString {
+  value = rowItem.attribute;
+}
+
+Parameter : Parameter {
+  itemDict = rowItem;
+  paramsDict = params;
+  editingContext = ec; 
+}
+
+NewParamName : WOTextField {
+  value = params.newParamName;
+}
+
+NewParamType : WOPopUpButton {
+  list = plist.parameters;
+  item = colItem;
+  displayString = colItem.title;
+  selection = params.newParamType;
+  noSelectionString = "-=New param type=-";
+}
+
+AddNewParam : WOSubmitButton {
+  action = addNewParam;
+}
+
+DeleteRow : OnClickContainer {
+  elementName = "td";
+  invokeAction = deleteParam;
+  onclick = session.tryLoad;
+  style = "color:#FF0000;";
+}
+
+DecodeForm : WOForm {
+  action = applyExtInfo;
+}
+
+DecodeOptions : WOPopUpButton {
+  list = extoptions;
+  item = rowItem;
+  displayString = rowItem.name;
+  selection = extInfo;
+  onchange = "if(checkRun())form.submit();";
+  noSelectionString = "-= Decode =-";
+}
+
+ExtValue : DisplayAny {
+  value = extValue;
+  dict = extInfo.displayDict;
+}
