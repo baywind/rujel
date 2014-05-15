@@ -85,7 +85,7 @@ public class TabelReporter extends WOComponent {
 	        if(context().hasSession())
 	        	eduYear = (Integer)session().valueForKey("eduYear");
 	        else
-	        	eduYear = MyUtility.eduYearForDate(new NSTimestamp());
+	        	eduYear = MyUtility.eduYearForDate(null);
 			return;
 		}
 			EduCourse course = (EduCourse)list.objectAtIndex(0);

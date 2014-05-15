@@ -84,6 +84,8 @@ public class ModuleInit {
 			return deleteStudents(ctx);
 		} else if("archiveType".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.archiveType");
+		} else if("journalPlugins".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.groupTabel");
 		}
 		return null;
 	}
