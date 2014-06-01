@@ -77,6 +77,7 @@ public class CourseSelector extends WOComponent {
     public WOActionResults select() {
     	selection = courseItem;
     	setValueForBinding(selection, "selection");
+		session().removeObjectForKey("tmpSection");
     	return (WOActionResults)valueForBinding("selectAction");
     }
     

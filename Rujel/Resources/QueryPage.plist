@@ -167,6 +167,38 @@
 				</dict>
 			</dict>
 		</dict>
+		<dict>
+			<key>title</key>
+			<string>Курс</string>
+			<key>attribute</key>
+			<string>eduCourse</string>
+			<key>format</key>
+			<string>%[eduGroup.name]s | %[subjectWithComment]s | %[teacher.person.lastName]s %[teacher.person.initials]s</string>
+			<key>escapeHTML</key>
+			<false/>
+			<key>resultToDict</key>
+			<true/>
+			<key>popup</key>
+	<dict>
+		<key>invokeAction</key>
+		<true/>
+		<key>style</key>
+		<string>min-width:20em</string>
+		<key>takeValuesFromRequest</key>
+		<false/>
+		<key>title</key>
+		<string>Выберите курс</string>
+		<key>presenter</key>
+		<string>CourseSelector</string>
+		<key>presenterBindings</key>
+		<dict>
+			<key>selection</key>
+			<string>.</string>
+			<key>useAjax</key>
+			<true/>
+		</dict>
+	</dict>
+		</dict>
 	</array>
 	<key>extoptions</key>
 	<array>
@@ -190,6 +222,8 @@
 					<key>second</key>
 					<string>1</string>
 				</dict>
+				<key>format</key>
+				<string>%[person.lastName]s %[person.initials]s</string>
 			</dict>
 		</dict>
 		<dict>
@@ -212,6 +246,23 @@
 					<key>second</key>
 					<string>0</string>
 				</dict>
+				<key>format</key>
+				<string>%[person.lastName]s %[person.firstName]s</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>EduCourse</string>
+			<key>interface</key>
+			<string>EduCourse</string>
+			<key>entity</key>
+			<string>BaseCourse</string>
+			<key>displayDict</key>
+			<dict>
+				<key>format</key>
+				<string>%[eduGroup.name]s | %[subjectWithComment]s | %[teacher.person.lastName]s %[teacher.person.initials]s</string>
+				<key>escapeHTML</key>
+				<false/>
 			</dict>
 		</dict>
 		<dict>
@@ -230,6 +281,17 @@
 			<string>EduGroup</string>
 			<key>interface</key>
 			<string>EduGroup</string>
+			<key>displayDict</key>
+			<dict>
+				<key>value</key>
+				<string>.name</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>ItogContainer</string>
+			<key>entity</key>
+			<string>ItogContainer</string>
 			<key>displayDict</key>
 			<dict>
 				<key>value</key>

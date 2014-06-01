@@ -1,29 +1,41 @@
+ModelReport : WOHyperlink {
+	action = modelReport;
+	target = "_blank";
+}
+NewQueryText : WOText {
+  value = newIter.query.sql;
+  rows = 6;
+  cols = 70;
+}
 QueryText : WOText {
-  value = query.sql;
-  rows = 5;
-  cols = 60;
+  value = iter.query.sql;
+  rows = 6;
+  cols = 70;
 }
 
-HasResult : WOConditional {
-  condition = result;
+Iterations : WORepetition {
+  list = iterations;
+  item = iter;
 }
 
 Columns : WORepetition {
-  list = cols;
+  list = iter.cols;
   item = colItem;
 }
 
 ColTitle : WOString {
-  value = colName;
+  value = colItem;
 }
 
 ResultRows : WORepetition {
-  list = result;
+  list = iter.result;
   item = rowItem;
 }
-
+NewIterMessage : WOString {
+  value = newIter.message;
+}
 DatabaseMessage : WOString {
-  value = message;
+  value = iter.message;
 }
 
 Value : WOString {
@@ -33,18 +45,20 @@ Value : WOString {
 
 QueryForm : WOForm {
   multipleSubmit = true;
+  style = "clear:right;";
 }
 
 PerformQuery : WOSubmitButton {
   value = "Run";
   action = performQuery;
 }
-
+NewModel : WOPopUpButton {
+  list = models;
+  selection = newIter.query.model;
+}
 Model : WOPopUpButton {
   list = models;
-  item = colItem;
-  selection = currentModel;
-  displayString = colItem.name;
+  selection = iter.query.model;
 }
 
 UploadForm : WOForm {
@@ -62,7 +76,7 @@ SaveQuery : WOHyperlink {
 }
 
 Params : WORepetition {
-  list = query.parameters;
+  list =rootQuery.parameters;
   item = rowItem;
 }
 
@@ -73,7 +87,7 @@ ParamName : WOString {
 Parameter : Parameter {
   itemDict = rowItem;
   paramsDict = params;
-  editingContext = ec; 
+  editingContext = ecs.curr; 
 }
 
 NewParamName : WOTextField {
@@ -115,4 +129,109 @@ DecodeOptions : WOPopUpButton {
 ExtValue : DisplayAny {
   value = extValue;
   dict = extInfo.displayDict;
+}
+
+ExtModel : WOPopUpButton {
+  list = models;
+  selection = iter.extModel;
+}
+ExtText : WOText {
+  value = iter.extSql;
+  rows = 5;
+  cols = 40;
+}
+ExtQueryModel : WOPopUpButton {
+  list = models;
+  selection = colItem.model;
+}
+ExtQueryText : WOText {
+  value = colItem.sql;
+  rows = 5;
+  cols = 40;
+}
+PerfomExt : WOSubmitButton {
+  value = "Run ext";
+  action = performExtQuery;
+}
+
+ExtKey : WOString {
+  value = colItem.key;
+}
+ExtTitle : WOString {
+  value = colItem.title;
+  escapeHTML = false;
+}
+ExtTitleCell : WOGenericContainer {
+  elementName = "td";
+  title = colItem.sql;
+}
+
+ExtQueries : WORepetition {
+  list = iter.query.extQueries;
+  item = colItem;
+}
+
+ShowNewIter : WOConditional {
+  condition = newIter;
+}
+
+IsRecent : WOConditional {
+  condition = iter.recent;
+}
+
+AddIteration : OnClickContainer {
+  elementName = "span";
+  onclick = session.checkRun;
+  invokeAction = addIteration;
+  class = "orange";
+}
+
+DownloadCSV : WOHyperlink {
+  action = exportCSV;
+  target = "download";
+  style = "float:right;";
+}
+
+HasResult : WOConditional {
+  condition = iter.result.count;
+}
+
+CancelIter : OnClickContainer {
+  elementName = "span";
+  onclick = session.checkRun;
+  invokeAction = cancelIteration;
+  class = "dimtext";
+  hide = noIterations;
+}
+
+IterNum : WOString {
+  value = iter.index;
+}
+
+NewYear : WOTextField {
+  value = newIter.query.year;
+  size = 4;
+  title = "year";
+  class = "titled";
+}
+
+IterYear : WOTextField {
+  value = iter.query.year;
+  size = 4;
+  title = "year";
+  class = "titled";
+}
+
+ExtYear : WOTextField {
+  value = iter.extYear;
+  size = 4;
+  title = "year";
+  class = "titled";
+}
+
+ExtQueryYear : WOTextField {
+  value = colItem.year;
+  size = 4;
+  title = "year";
+  class = "titled";
 }
