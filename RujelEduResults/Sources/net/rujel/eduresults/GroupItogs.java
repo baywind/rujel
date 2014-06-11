@@ -37,6 +37,7 @@ public class GroupItogs extends WOComponent {
 	protected NSMutableDictionary cDict;
 	public NSArray[] byCycle;
 	public int index;
+	public int stIndex;
 	public NSArray complete;
 	public NSDictionary pedsovet;
 	
@@ -348,4 +349,8 @@ public class GroupItogs extends WOComponent {
 			}
 		} catch (Exception e) {}
 	}
+
+    public String number() {
+    	return Integer.toString(stIndex +1);
+    }
 }
