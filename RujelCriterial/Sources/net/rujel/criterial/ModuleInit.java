@@ -108,6 +108,8 @@ public class ModuleInit {
 			return xmlGeneration(ctx);
 		} else if("archiveType".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelCriterial_Strings.archiveType");
+		} else if("usedModels".equals(obj)) {
+			return "Criterial";
 		}
 		return null;
 	}

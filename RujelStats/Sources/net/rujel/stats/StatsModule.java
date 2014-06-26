@@ -71,6 +71,8 @@ public class StatsModule {
 		} else if("courseComplete".equals(obj)) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelStats_Stats.courseComplete");
+		} else if("usedModels".equals(obj)) {
+			return "Stats";
 		}
 		return null;
 	}

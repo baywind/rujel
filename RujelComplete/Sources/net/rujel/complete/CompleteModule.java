@@ -75,6 +75,8 @@ public class CompleteModule {
 			return ctx.session().valueForKeyPath("strings.RujelComplete_Complete.adminModule");
 		} else if("accessModifier".equals(obj)) {
 			return new ClosingLock(ctx.session());
+		} else if(obj.equals("usedModels")) {
+			return "Complete";
 		}
 		return null;
 	}

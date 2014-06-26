@@ -64,6 +64,8 @@ public class UserModule {
 			return ctx.session().valueForKeyPath("strings.RujelUsers_UserStrings.adminModule");
 		} else if("accessModifier".equals(obj)) {
 			return null;
+		} else if("usedModels".equals(obj)) {
+			return "RujelUsers";
 		}
 		return null;
 	}

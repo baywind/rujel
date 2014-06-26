@@ -98,6 +98,8 @@ public class EMailBroadcast implements Runnable{
 					"readAccess._read.SendMailForm")))
 				return null;
 			return ctx.session().valueForKeyPath("strings.RujelContacts_Contacts.dashboard");
+		} else if(obj.equals("usedModels")) {
+			return "Contacts";
 		}
 		return null;
 	}

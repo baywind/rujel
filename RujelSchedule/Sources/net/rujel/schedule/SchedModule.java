@@ -93,6 +93,8 @@ public class SchedModule {
 		} else if("xmlGeneration".equals(obj)) {
 			NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
 			return new ScheduleXML(options);
+		} else if("usedModels".equals(obj)) {
+			return "Schedule";
 		}
 		return null;
 	}

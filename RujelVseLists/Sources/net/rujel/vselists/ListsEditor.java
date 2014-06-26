@@ -78,6 +78,8 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 					"strings.RujelVseLists_VseStrings.listRegime");
 		} else if(obj.equals("personInspector")) {
 			return personInspector(ctx);
+		} else if("usedModels".equals(obj)) {
+			return "VseLists";
 		}
 		return null;
 	}

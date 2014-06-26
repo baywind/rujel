@@ -50,9 +50,9 @@ public class DirectAction extends WODirectAction {
     public WOActionResults performActionNamed(String anActionName) {
     	if("env".equals(anActionName))
     		return envAction();
-		WOResponse response = Application.errorResponse(context());
-		if(response != null)
-			return response;
+		String errorMessage = ((Application)WOApplication.application())._errorMessage;
+		if(errorMessage != null)
+			return Application.errorResponse(context(),errorMessage);
 		return super.performActionNamed(anActionName);
     }
     

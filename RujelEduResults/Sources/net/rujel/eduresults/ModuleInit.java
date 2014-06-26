@@ -86,6 +86,8 @@ public class ModuleInit {
 			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.archiveType");
 		} else if("journalPlugins".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.groupTabel");
+		} else if("usedModels".equals(obj)) {
+			return "EduResults";
 		}
 		return null;
 	}

@@ -35,11 +35,19 @@ import net.rujel.reusables.*;
 
 import com.apress.practicalwo.practicalutilities.WORequestAdditions;
 import com.webobjects.eoaccess.EODatabaseContext;
+import com.webobjects.eoaccess.EOModel;
+import com.webobjects.eocontrol.EOObjectStore;
 import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
+import com.webobjects.jdbcadaptor.JDBCAdaptorException;
 import com.webobjects.appserver.*;
 
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Timer;
@@ -93,7 +101,8 @@ public class Application extends UTF8Application {
 		}
 		
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
-		if(SettingsReader.boolForKeyPath("dbConnection.yearTag", false)) {
+		NSArray usedModels = ModulesInitialiser.useModules(null, "usedModels");
+		
 			NSTimestamp today = null;
 			String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
 			if(defaultDate == null) {
@@ -108,56 +117,19 @@ public class Application extends UTF8Application {
 				}
 			}
 			year = MyUtility.eduYearForDate(today);
-			if(!DataBaseConnector.makeConnections(
-					EOObjectStoreCoordinator.defaultCoordinator(), year.toString())) {
-				logger.log(WOLogLevel.INFO,"Trying to connect to previous year database: " + 
-						(year.intValue() -1));
-				if(!DataBaseConnector.makeConnections(EOObjectStoreCoordinator.defaultCoordinator(), 
-							Integer.toString(year.intValue() -1))) {
+			NSArray problems = DataBaseConnector.makeConnections(year.toString(), usedModels,false);
+			if(problems != null) {
+				logger.info("Trying to resolve database problems");
+				if(dealWithDbProblems(problems, usedModels)) {
 					logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
 					System.err.println("Could not connect to database!");
 					_errorMessage = handler.toString();
 					Logger.getLogger("").removeHandler(handler);
 					handler.close();
-//					terminate();
 					return;
-				} else {
-					if(SettingsReader.boolForKeyPath("dbConnection.disableSchemaUpdate", false)) {
-						year = new Integer(year.intValue() -1);
-					} else {
-						InputStream next = resourceManager().inputStreamForResourceNamed(
-								"nextYear.sql", null, null);
-						logger.log(WOLogLevel.INFO,"Trying to create database for year " + year);
-						NSMutableDictionary params = new NSMutableDictionary();
-						params.takeValueForKey(new NSDictionary(
-								new String[] {"RujelYear%s",Integer.toString(year.intValue() -1)},
-								new String[] {"dbName","args"}
-						), "RujelYearOld");
-						params.takeValueForKey(new NSDictionary(
-								new String[] {"RujelYear%s",year.toString()},
-								new String[] {"dbName","args"}
-						), "RujelYearNew");
-						if(DataBaseUtility.executeScript(next,params)) {
-							if(!DataBaseConnector.makeConnections(
-									EOObjectStoreCoordinator.defaultCoordinator(),year.toString()))
-								year = new Integer(year.intValue() -1);
-						} else {
-							year = new Integer(year.intValue() -1);
-						}
-					}
 				}
 			}
-		} else {
-			if(!DataBaseConnector.makeConnections()) {
-				logger.log(WOLogLevel.SEVERE,"Could not connect to database!");
-				System.err.println("Could not connect to database!");
-				_errorMessage = handler.toString();
-				Logger.getLogger("").removeHandler(handler);
-				handler.close();
-//				terminate();
-				return;
-			}
-		}
+			
 		NSDictionary access = (NSDictionary)PlistReader.readPlist("access.plist", null, null);
 		ReadAccess.mergeDefaultAccess(access);
 		
@@ -216,6 +188,84 @@ public class Application extends UTF8Application {
 				 + ' ' + System.getProperty("RujelRevision"), webserverConnectURL());
 	}
 	
+	private boolean dealWithDbProblems(NSArray problems, NSArray usedModels) {
+		if(problems == null)
+			return false;
+		if(problems == NSArray.EmptyArray)
+			return true;
+		if(SettingsReader.boolForKeyPath("dbConnection.disableSchemaUpdate", false))
+			return true;
+		boolean shouldCreateSchema = false;
+		Boolean prevYear = null;
+		for (int i = 0; i < problems.count(); i++) {
+			Object pr = problems.objectAtIndex(i);
+			if(pr instanceof EOModel) {
+				NSDictionary userInfo = ((EOModel)pr).userInfo();
+				Number versionFound = (Number)userInfo.valueForKey("versionFound");
+				if(versionFound == null)
+					return true;
+				if(versionFound.intValue() > 0) {
+					return true;
+				} else {
+					shouldCreateSchema = true;
+				}
+				continue;
+			}
+			Exception err = (Exception)((NSMutableDictionary)pr).removeObjectForKey("error");
+			if(err instanceof NumberFormatException)
+				return true;
+			String url = (String)((NSDictionary)pr).valueForKey("URL");
+			String[] splitUrl = DataBaseUtility.extractDBfromURL(url);
+			try {
+				NSDictionary plist = (NSDictionary)PlistReader.readPlist(
+						DataBaseUtility.dbEngine(url) + ".plist", null, null);
+				String user = (String)((NSDictionary)pr).valueForKey("username");
+				String password = (String)((NSDictionary)pr).valueForKey("password");
+				String driverName = (String)((NSDictionary)pr).valueForKey("driver");
+				if(driverName != null) {
+					Class driverClass = Class.forName(driverName);
+					Constructor driverConstructor = driverClass.getConstructor((Class[])null);
+					Driver driver = (Driver)driverConstructor.newInstance((Object[])null);
+					DriverManager.registerDriver(driver);
+				}
+				if(err instanceof java.sql.SQLException) {
+					logger.log(WOLogLevel.INFO,"Creating required database " + splitUrl[1]);
+					Connection conn = DriverManager.getConnection(splitUrl[0],user,password);
+					Statement stmnt = conn.createStatement();
+					NSArray lines = (NSArray)plist.valueForKey("createDatabase");
+					for (int j = 0; j < lines.count(); j++) {
+						String line = (String)lines.objectAtIndex(j);
+						line = String.format(line, splitUrl[1]);
+						stmnt.executeUpdate(line);
+					}
+					stmnt.close();
+					conn.close();
+				}
+				logger.log(WOLogLevel.INFO,"Database '" + splitUrl[1] + 
+						"' created. Creating system tables.");
+				Connection conn = DriverManager.getConnection(url,user,password);
+				Statement stmnt = conn.createStatement();
+				NSArray lines = (NSArray)plist.valueForKey("systemTables");
+				for (int j = 0; j < lines.count(); j++) {
+					stmnt.executeUpdate((String)lines.objectAtIndex(j));
+				}
+				stmnt.close();
+				conn.close();
+				shouldCreateSchema = true;
+			} catch (Exception e) {
+				logger.log(WOLogLevel.SEVERE, "Failed to create database " +
+						((NSDictionary)pr).valueForKey("URL"),e);
+				return true;
+			}
+		}
+		if(shouldCreateSchema)
+			problems = DataBaseConnector.makeConnections(year.toString(), usedModels,true);
+		if(prevYear != null && prevYear.booleanValue()) {
+			EOObjectStore os = DataBaseConnector.objectStoreForTag(Integer.toString(year -1));
+		}
+		return (problems != null && problems.count() > 0);
+	}
+	
 	public Timer timer() {
 		return timer;
 	}
@@ -241,7 +291,7 @@ public class Application extends UTF8Application {
     
     public WOResponse handleSessionRestorationErrorInContext(WOContext aContext) {
     	if(_errorMessage != null) {
-    		return errorResponse(aContext);
+    		return errorResponse(aContext, _errorMessage);
     	}
     	WOComponent page = pageWithName("MessagePage", aContext);
     	logger.log(WOLogLevel.FINE, "SessionRestorationErrorInContext",
@@ -255,7 +305,7 @@ public class Application extends UTF8Application {
     
     public WOResponse handleSessionCreationErrorInContext(WOContext aContext) {
     	if(_errorMessage != null) {
-    		return errorResponse(aContext);
+    		return errorResponse(aContext, _errorMessage);
     	}
     	WOComponent page = pageWithName("MessagePage", aContext);
     	Object[] args = new Object[3];
@@ -368,8 +418,8 @@ public class Application extends UTF8Application {
 		return diaryUrl;
 	}
 	
-	public static WOResponse errorResponse(WOContext context) {
-		String errorMessage = ((Application)application())._errorMessage;
+	public static WOResponse errorResponse(WOContext context, String errorMessage) {
+//		String errorMessage = ((Application)application())._errorMessage;
 		if(errorMessage == null)
 			return null;
 		WOResponse response = context.response();

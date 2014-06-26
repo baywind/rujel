@@ -40,7 +40,6 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequestHandler;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOObjectStore;
-import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.eocontrol.EOSharedEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
@@ -88,8 +87,8 @@ public class Application extends UTF8Application {
 		}		
 		//EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());
 		_year = MyUtility.eduYearForDate(today());
-		DataBaseConnector.makeConnections(
-				EOObjectStoreCoordinator.defaultCoordinator(), _year.toString());
+		NSArray usedModels = ModulesInitialiser.useModules(null, "usedModels");
+		DataBaseConnector.makeConnections(_year.toString(), usedModels,false);
 		
 		ecForYear.takeValueForKey(EOSharedEditingContext.defaultSharedEditingContext(),
 				_year.toString());

@@ -48,6 +48,8 @@ public class IOModule {
 		} else if(obj.equals("regimes")) {
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelIO_ImportExport.ioRegime");
+		} else if("usedModels".equals(obj)) {
+			return "RujelSync";
 		}
 		return null;
 	}

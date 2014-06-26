@@ -86,6 +86,8 @@ public class BaseModule {
 			return new LessonsXML(options);
 		} else if("archiveType".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelBase_Base.archiveType");
+		} else if("usedModels".equals(obj)) {
+			return new NSArray(new String[] {"BaseStatic","BaseYearly"});
 		}
 		return null;
 	}

@@ -69,6 +69,8 @@ public class MarkArchive extends _MarkArchive
 				return null;
 			return WOApplication.application().valueForKeyPath(
 					"strings.RujelArchiving_Archive.ReadArchives");
+		} else if(obj.equals("usedModels")) {
+			return "MarkArchive";
 		}
 		return null;
 	}

@@ -110,6 +110,8 @@ public class AutoItogModule {
 			return xmlGeneration(ctx);
 		} else if("archiveType".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelAutoItog_AutoItog.archiveType");
+		} else if(obj.equals("usedModels")) {
+			return "AutoItog";
 		}
 		return null;
 	}
