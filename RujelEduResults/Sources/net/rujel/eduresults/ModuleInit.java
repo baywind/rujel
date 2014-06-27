@@ -41,6 +41,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.logging.Logger;
@@ -300,6 +301,25 @@ public class ModuleInit {
 			if(result == null)
 				result = "Related itogs found";
 			return result;
+		}
+		return null;
+	}
+
+	public static Object initialData(WOContext ctx) {
+		EOEditingContext prevEc = (EOEditingContext)ctx.userInfoForKey("prevEc");
+		EOEditingContext ec = (EOEditingContext)ctx.userInfoForKey("ec");
+		if(prevEc == null) { // load predefined data
+			Logger logger = Logger.getLogger("rujel.eduresults");
+			try {
+				EOObjectStoreCoordinator os = EOObjectStoreCoordinator.defaultCoordinator();
+				InputStream data = WOApplication.application().resourceManager().
+				inputStreamForResourceNamed("dataEduResults.sql", "RujelEduResults", null);
+				DataBaseUtility.executeScript(os, "EduResults", data);
+				logger.log(WOLogLevel.INFO, "Loaded inital EduResults data");
+			} catch (Exception e) {
+				ec.revert();
+				logger.log(WOLogLevel.WARNING,"Failed to load inital EduResults data  ",e);
+			}
 		}
 		return null;
 	}

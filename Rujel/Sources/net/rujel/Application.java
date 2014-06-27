@@ -36,13 +36,11 @@ import net.rujel.reusables.*;
 import com.apress.practicalwo.practicalutilities.WORequestAdditions;
 import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.eoaccess.EOModel;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOObjectStore;
-import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
-import com.webobjects.jdbcadaptor.JDBCAdaptorException;
 import com.webobjects.appserver.*;
 
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -196,7 +194,7 @@ public class Application extends UTF8Application {
 		if(SettingsReader.boolForKeyPath("dbConnection.disableSchemaUpdate", false))
 			return true;
 		boolean shouldCreateSchema = false;
-		Boolean prevYear = null;
+		Boolean isYear = null;
 		for (int i = 0; i < problems.count(); i++) {
 			Object pr = problems.objectAtIndex(i);
 			if(pr instanceof EOModel) {
@@ -252,17 +250,49 @@ public class Application extends UTF8Application {
 				stmnt.close();
 				conn.close();
 				shouldCreateSchema = true;
+				if(isYear == null || isYear.booleanValue()) {
+					isYear = Boolean.valueOf(splitUrl[1].contains(year.toString()));
+				}
 			} catch (Exception e) {
 				logger.log(WOLogLevel.SEVERE, "Failed to create database " +
 						((NSDictionary)pr).valueForKey("URL"),e);
 				return true;
 			}
 		}
-		if(shouldCreateSchema)
+		if(shouldCreateSchema) {
 			problems = DataBaseConnector.makeConnections(year.toString(), usedModels,true);
-		if(prevYear != null && prevYear.booleanValue()) {
-			EOObjectStore os = DataBaseConnector.objectStoreForTag(Integer.toString(year -1));
-		}
+			WORequest request = createRequest("GET","dummy","HTTP/1.0",null,null,null);
+			WOContext ctx = new WOContext(request) {
+				public boolean shouldNotStorePageInBacktrackCache() {
+					return true;
+				}
+			};
+			ctx.setUserInfoForKey(year, "eduYear");
+			EOEditingContext ec = new EOEditingContext();
+			ctx.setUserInfoForKey(ec, "ec");
+			EOEditingContext prevEc = null;
+			if(problems == null && isYear != null && isYear.booleanValue()) {
+				Integer prevYear = new Integer(year -1);
+				EOObjectStore os = DataBaseConnector.objectStoreForTag(prevYear.toString());
+				if(os != null) {
+					ctx.setUserInfoForKey(prevYear, "prevYear");
+					prevEc = new EOEditingContext(os);
+					ctx.setUserInfoForKey(prevEc, "prevEc");
+				}
+			}
+			try {
+				ec.lock();
+				if(prevEc != null)
+					prevEc.lock();
+				ModulesInitialiser.useModules(ctx, "initialData");
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to add initial data.",e);
+			} finally {
+				ec.unlock();
+				if(prevEc != null)
+					prevEc.unlock();
+			}
+		} // shouldCreateSchema
 		return (problems != null && problems.count() > 0);
 	}
 	

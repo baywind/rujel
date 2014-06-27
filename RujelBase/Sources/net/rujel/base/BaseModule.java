@@ -30,14 +30,23 @@
 package net.rujel.base;
 
 
+import java.util.Enumeration;
+import java.util.logging.Logger;
+
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
+import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
+import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -88,6 +97,8 @@ public class BaseModule {
 			return ctx.session().valueForKeyPath("strings.RujelBase_Base.archiveType");
 		} else if("usedModels".equals(obj)) {
 			return new NSArray(new String[] {"BaseStatic","BaseYearly"});
+		} else if("initialData".equals(obj)) {
+			return initialData(ctx);
 		}
 		return null;
 	}
@@ -142,5 +153,111 @@ public class BaseModule {
 					"strings.RujelBase_Base.relatedNotesFound");
 		}
 		return null;
+	}
+	
+	public static Object initialData(WOContext ctx) {
+		EOEditingContext prevEc = (EOEditingContext)ctx.userInfoForKey("prevEc");
+		if(prevEc == null)
+			return null;
+		Logger logger = Logger.getLogger("rujel.base");
+		EOEditingContext ec = (EOEditingContext)ctx.userInfoForKey("ec");
+		EOQualifier[] quals = new EOQualifier[] {
+				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
+						EOQualifier.QualifierOperatorNotEqual, "CompletionActive"),
+						new EOKeyValueQualifier(SettingsBase.KEY_KEY,
+								EOQualifier.QualifierOperatorNotEqual, "coursesDone")
+		};
+		quals[0] = new EOOrQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(SettingsBase.ENTITY_NAME,quals[0],null);
+		NSArray found = prevEc.objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0) try {
+			Enumeration enu = found.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				SettingsBase sb = (SettingsBase) enu.nextElement();
+				SettingsBase newO = (SettingsBase)EOUtilities.createAndInsertInstance(
+						ec, SettingsBase.ENTITY_NAME);
+				newO.setKey(sb.key());
+				newO.setNumericValue(sb.numericValue());
+				newO.setTextValue(sb.textValue());
+				NSArray qualifiedSettings = sb.qualifiedSettings();
+				if(qualifiedSettings != null && qualifiedSettings.count() > 0) {
+					Enumeration qenu = qualifiedSettings.objectEnumerator();
+					while (qenu.hasMoreElements()) {
+						QualifiedSetting qs = (QualifiedSetting) qenu.nextElement();
+						if(qs.eduYear() != null && !qs.eduYear().equals(ctx.valueForKey("eduYear")))
+							continue;
+						QualifiedSetting newQ = (QualifiedSetting)EOUtilities.
+								createAndInsertInstance(ec, QualifiedSetting.ENTITY_NAME);
+						newQ.addObjectToBothSidesOfRelationshipWithKey(newO,
+								QualifiedSetting.SETTINGS_BASE_KEY);
+						newQ.setNumericValue(qs.numericValue());
+						newQ.setTextValue(qs.textValue());
+						newQ.setSort(qs.sort());
+						newQ.setQualifierString(qs.qualifierString());
+						newQ.setArgumentsString(qs.argumentsString());
+					}
+				}
+			}
+			ec.saveChanges();
+			logger.log(WOLogLevel.INFO,"Copied SettingsBase from previous year");
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Failed to copy SettingsBase from previous year", e);
+			ec.revert();
+		} // found SettingsBase
+		
+		found = EOUtilities.objectsForEntityNamed(prevEc, Indexer.ENTITY_NAME);
+		if(found != null && found.count() > 0) try {
+			Enumeration enu = found.objectEnumerator();
+			NSMutableDictionary done = (NSMutableDictionary)ctx.userInfoForKey("doneIndexers");
+			if(done == null) {
+				done = new NSMutableDictionary();
+				ctx.setUserInfoForKey(done, "doneIndexers");
+			}
+			while (enu.hasMoreElements()) {
+				Indexer idx = (Indexer) enu.nextElement();
+				EOGlobalID gid = prevEc.globalIDForObject(idx);
+				if(done != null && done.containsKey(gid))
+					continue;
+				idx = copyIndexer(ec, idx);
+				done.setObjectForKey(idx, gid);
+			}
+			ec.saveChanges();
+			enu = done.keyEnumerator();
+			while (enu.hasMoreElements()) {
+				EOGlobalID gid = (EOGlobalID) enu.nextElement();
+				Object value = done.objectForKey(gid);
+				if(value instanceof EOEnterpriseObject)
+					done.setObjectForKey(ec.globalIDForObject((EOEnterpriseObject)value), gid);
+			}
+			logger.log(WOLogLevel.INFO,"Copied Indexers from previous year");
+		} catch (Exception e) {
+			logger.log(WOLogLevel.WARNING,"Failed to copy Indexers from previous year", e);
+			ec.revert();
+		} // found Indexer
+		return null;
+	}
+
+	public static Indexer copyIndexer(EOEditingContext ec, Indexer idx) {
+		Indexer newI = (Indexer)EOUtilities.createAndInsertInstance(
+				ec, Indexer.ENTITY_NAME);
+		newI.setTitle(idx.title());
+		newI.setType(idx.type());
+		newI.setDefaultValue(idx.defaultValue());
+		newI.setFormatString(idx.formatString());
+		newI.setComment(idx.comment());
+		NSArray index = idx.indexRows();
+		if(index == null || index.count() == 0)
+			return newI;
+		Enumeration ienu = index.objectEnumerator();
+		while (ienu.hasMoreElements()) {
+			IndexRow ir = (IndexRow) ienu.nextElement();
+			IndexRow newR = (IndexRow)EOUtilities.createAndInsertInstance(
+					ec, IndexRow.ENTITY_NAME);
+			newR.addObjectToBothSidesOfRelationshipWithKey(newI, IndexRow.INDEXER_KEY);
+			newR.setIdx(ir.idx());
+			newR.setValue(ir.value());
+			newR.setComment(ir.comment());
+		}
+		return newI;
 	}
 }

@@ -29,14 +29,18 @@
 
 package net.rujel.criterial;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.BaseLesson;
+import net.rujel.base.BaseModule;
+import net.rujel.base.Indexer;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
+import net.rujel.reusables.DataBaseUtility;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -110,10 +114,13 @@ public class ModuleInit {
 			return ctx.session().valueForKeyPath("strings.RujelCriterial_Strings.archiveType");
 		} else if("usedModels".equals(obj)) {
 			return "Criterial";
+		} else if("initialData".equals(obj)) {
+			return initialData(ctx);
 		}
 		return null;
 	}
 	
+
 	public static void init() {
 		EOInitialiser.initialiseRelationship("WorkNote","student",false,"studentID","Student").
 						anyInverseRelationship().setPropagatesPrimaryKey(true);
@@ -262,4 +269,134 @@ public class ModuleInit {
 		}
 		return new CriterialXML(options);
 	}
+
+	public static Object initialData(WOContext ctx) {
+		EOEditingContext prevEc = (EOEditingContext)ctx.userInfoForKey("prevEc");
+		Logger logger = Logger.getLogger("rujel.criterial");
+		if(prevEc == null) { // load predefined data
+			try {
+				InputStream data = WOApplication.application().resourceManager().
+				inputStreamForResourceNamed("dataCriterial.sql", "RujelCriterial", null);
+				//			EOEditingContext ec = (EOEditingContext)ctx.userInfoForKey("ec");
+				EOObjectStoreCoordinator os = EOObjectStoreCoordinator.defaultCoordinator();
+				DataBaseUtility.executeScript(os, "Criterial", data);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING, "Failed to load inital data for Criterial model",e);
+			}
+		} else { // copy from previous year
+			EOEditingContext ec = (EOEditingContext)ctx.userInfoForKey("ec");
+			NSArray found = EOUtilities.objectsForEntityNamed(prevEc, WorkType.ENTITY_NAME);
+			if(found != null && found.count() > 0) try {
+				Enumeration enu = found.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEnterpriseObject wt = (EOEnterpriseObject) enu.nextElement();
+					EOEnterpriseObject newT = EOUtilities.createAndInsertInstance(
+							ec, WorkType.ENTITY_NAME);
+					newT.updateFromSnapshot(wt.snapshot());
+				}
+				ec.saveChanges();
+				logger.log(WOLogLevel.INFO,"Copied WorkTypes from previous year");
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to copy WorkTypes from previous year", e);
+				ec.revert();
+			}
+
+			found = EOUtilities.objectsForEntityNamed(prevEc, BorderSet.ENTITY_NAME);
+			if(found != null && found.count() > 0) try { // Borders
+				Enumeration enu = found.objectEnumerator();
+				NSArray keys = new NSArray(new String[] {BorderSet.TITLE_KEY,
+						BorderSet.ZERO_VALUE_KEY,BorderSet.FORMAT_STRING_KEY,
+						BorderSet.VALUE_TYPE_KEY, BorderSet.USE_CLASS_KEY, BorderSet.EXCLUDE_KEY});
+				while (enu.hasMoreElements()) {
+					BorderSet bs = (BorderSet) enu.nextElement();
+					BorderSet newT = (BorderSet)EOUtilities.createAndInsertInstance(
+							ec, BorderSet.ENTITY_NAME);
+					newT.takeValuesFromDictionary(bs.valuesForKeys(keys));
+					NSArray borders = bs.borders();
+					if(borders != null && borders.count() > 0) {
+						Enumeration benu = borders.objectEnumerator();
+						while (benu.hasMoreElements()) {
+							EOEnterpriseObject b = (EOEnterpriseObject) benu.nextElement();
+							EOEnterpriseObject newB = EOUtilities.createAndInsertInstance(
+									ec, b.entityName());
+							newT.addObjectToBothSidesOfRelationshipWithKey(
+									newB, BorderSet.BORDERS_KEY);
+							newB.takeValueForKey(b.valueForKey("title"), "title");
+							newB.takeValueForKey(b.valueForKey("least"), "least");
+						}
+					}
+				}
+				ec.saveChanges();
+				logger.log(WOLogLevel.INFO,"Copied BorderSets from previous year");
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to copy BorderSets from previous year", e);
+				ec.revert();
+			}
+			
+			found = EOUtilities.objectsForEntityNamed(prevEc, CriteriaSet.ENTITY_NAME);
+			if(found != null && found.count() > 0) try { // CriteriaSet
+				Enumeration enu = found.objectEnumerator();
+				NSMutableDictionary indexes = (NSMutableDictionary)
+						ctx.userInfoForKey("doneIndexers");
+				NSArray keys = new NSArray( new String[] {"criterion","title",
+						"dfltMax","dfltWeight","comment","flags"});
+				while (enu.hasMoreElements()) {
+					CriteriaSet bs = (CriteriaSet) enu.nextElement();
+					CriteriaSet newT = (CriteriaSet)EOUtilities.createAndInsertInstance(
+							ec, CriteriaSet.ENTITY_NAME);
+					newT.setSetName(bs.setName());
+					newT.setComment(bs.comment());
+					newT.setFlags(bs.flags());
+					NSArray crits = bs.criteria();
+					if(crits != null && crits.count() > 0) {
+						Enumeration cenu = crits.objectEnumerator();
+						while (cenu.hasMoreElements()) {
+							EOEnterpriseObject b = (EOEnterpriseObject) cenu.nextElement();
+							EOEnterpriseObject newB = EOUtilities.createAndInsertInstance(
+									ec, b.entityName());
+							newT.addObjectToBothSidesOfRelationshipWithKey(
+									newB, CriteriaSet.CRITERIA_KEY);
+							newB.takeValuesFromDictionary(b.valuesForKeys(keys));
+							Indexer idx = (Indexer)b.valueForKey("indexer");
+							if(idx != null) {
+								EOGlobalID gid = prevEc.globalIDForObject(idx);
+								if(indexes == null) {
+									indexes = new NSMutableDictionary();
+									ctx.setUserInfoForKey(indexes, "doneIndexers");
+								}
+								Object val = indexes.objectForKey(gid);
+								if(val instanceof Indexer) {
+									idx = (Indexer)val;
+									if(idx.editingContext() != ec)
+										idx = (Indexer)EOUtilities.localInstanceOfObject(ec, idx);
+								} else if(val instanceof EOGlobalID) {
+									idx = (Indexer)ec.faultForGlobalID((EOGlobalID)val, ec);
+								} else {
+									idx = BaseModule.copyIndexer(ec, idx);
+									indexes.setObjectForKey(idx, gid);
+								}
+								newB.addObjectToBothSidesOfRelationshipWithKey(idx, "indexer");
+							}
+						}
+					}
+				}
+				ec.saveChanges();
+				enu = indexes.keyEnumerator();
+				while (enu.hasMoreElements()) {
+					EOGlobalID gid = (EOGlobalID) enu.nextElement();
+					Object value = indexes.objectForKey(gid);
+					if(value instanceof EOEnterpriseObject) {
+						EOGlobalID newGid = ec.globalIDForObject((EOEnterpriseObject)value);
+						indexes.setObjectForKey(newGid, gid);
+					}
+				}
+				logger.log(WOLogLevel.INFO,"Copied CriteriaSets from previous year");
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to copy CriteriaSets from previous year", e);
+				ec.revert();
+			}
+		}
+		return null;
+	}
+
 }

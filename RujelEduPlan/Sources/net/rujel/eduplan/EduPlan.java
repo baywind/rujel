@@ -123,6 +123,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 			return ctx.session().valueForKeyPath("strings.RujelEduPlan_EduPlan.adminModules");
 		} else if("usedModels".equals(obj)) {
 			return new NSArray(new String[] {"EduPlanModel","EduPlanYearly"});
+		} else if("initialData".equals(obj)) {
+			return InitialDataGenerator.initialData(ctx);
 		}
 		return null;
 	}
