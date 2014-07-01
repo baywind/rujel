@@ -113,26 +113,37 @@ public class ItogType extends _ItogType {
 	public static NSArray typesForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
 		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
-		return typesForList(listName, ec);
+		return typesForList(listName, course.eduYear(), ec);
 	}
-	public static NSArray typesForList(String listName, EOEditingContext ec) {
-		EOQualifier qual = new EOKeyValueQualifier("listName",
-				EOQualifier.QualifierOperatorEqual,listName);
-		NSArray sorter = new NSArray(new EOSortOrdering("itogType.sort",
-				EOSortOrdering.CompareAscending));
-		EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",qual,sorter);
-		NSArray list = ec.objectsWithFetchSpecification(fs);
+	public static NSArray typesForList(String listName, Integer eduYear, EOEditingContext ec) {
+		NSArray list = getTypeList(listName, eduYear, ec);
 		if(list == null || list.count() == 0) {
 			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, null, ec);
-			qual = new EOKeyValueQualifier("listName",
-					EOQualifier.QualifierOperatorEqual,listName);
-			fs.setQualifier(qual);
-			list = ec.objectsWithFetchSpecification(fs);
-			// log this
+			list = getTypeList(listName, eduYear, ec);
 		}
-		if(list != null && list.count() > 0)
-			list = (NSArray)list.valueForKey("itogType");
-		return list;
+		if(list == null || list.count() == 0)
+			return list;
+		if(list.count() > 1) {
+			NSArray sorter = new NSArray(new EOSortOrdering("itogType.sort",
+					EOSortOrdering.CompareAscending));
+			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+		}
+		return (NSArray)list.valueForKey("itogType");
+	}
+	
+	public static NSArray getTypeList(String listName, Integer eduYear, EOEditingContext ec) {
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual, eduYear);
+		quals[1] = new EOKeyValueQualifier("eduYear",
+				EOQualifier.QualifierOperatorEqual, new Integer(0));
+		quals[1] = new EOOrQualifier(new NSArray(quals));
+		quals[0] = new EOKeyValueQualifier("listName",
+				EOQualifier.QualifierOperatorEqual,listName);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+//		NSArray sorter = new NSArray(new EOSortOrdering("itogType.sort",
+//				EOSortOrdering.CompareAscending));
+		EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",quals[0],null);
+		return ec.objectsWithFetchSpecification(fs);
 	}
 	
 	public static NSArray itogsForTypeList(NSArray list, Integer eduYear) {

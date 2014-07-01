@@ -40,9 +40,9 @@ public class ItogTypeEditor extends com.webobjects.appserver.WOComponent {
 			if(itogCount.intValue() == 0)
 				itogCount = null;
 			EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
-			NSArray types = EOUtilities.objectsMatchingKeyAndValue(ec,
+			NSArray itogs = EOUtilities.objectsMatchingKeyAndValue(ec,
 					ItogContainer.ENTITY_NAME, ItogContainer.ITOG_TYPE_KEY, type);
-			canDelete = (types == null || types.count() == 0);
+			canDelete = (itogs == null || itogs.count() == 0);
 			cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.currType");
 		}
 		super.appendToResponse(aResponse, aContext);

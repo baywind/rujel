@@ -208,7 +208,7 @@ public class GroupItogs extends WOComponent {
 		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME,crs,ec);
 		NSArray itogs = (NSArray)forListName.valueForKey(listName);
 		if(itogs == null) {
-			itogs = ItogType.typesForList(listName, ec);
+			itogs = ItogType.typesForList(listName, crs.eduYear(), ec);
 			itogs = ItogType.itogsForTypeList(itogs,crs.eduYear());
 			forListName.takeValueForKey(itogs, listName);
 		}

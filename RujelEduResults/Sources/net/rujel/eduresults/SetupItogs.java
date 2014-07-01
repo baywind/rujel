@@ -18,6 +18,7 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
@@ -76,9 +77,16 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 						"Created default ItogMark ListName setting: " + listName,
 						new Object[] {session(), base});
 			} else {
-				EOQualifier qual = new EOKeyValueQualifier("listName",
+				EOQualifier[] quals = new EOQualifier[2];
+				quals[0] = new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual,
+						session().valueForKey("eduYear"));
+				quals[1] = new EOKeyValueQualifier("eduYear",
+						EOQualifier.QualifierOperatorEqual, new Integer(0));
+				quals[1] = new EOOrQualifier(new NSArray(quals));
+				quals[0] = new EOKeyValueQualifier("listName",
 						EOQualifier.QualifierOperatorNotEqual,listName);
-				fs = new EOFetchSpecification("ItogTypeList",qual,null);
+				quals[0] = new EOAndQualifier(new NSArray(quals));
+				fs = new EOFetchSpecification("ItogTypeList",quals[0],null);
 				extraLists = ec.objectsWithFetchSpecification(fs);
 			}
 		} catch (Exception e) {
@@ -93,8 +101,8 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	public void setListName(String name) {
 		listName = name;
 		if(listName != null) {
-			NSArray used = EOUtilities.objectsMatchingKeyAndValue(ec, 
-					"ItogTypeList", "listName", listName);
+			Integer eduYear = (Integer)session().valueForKey("eduYear");
+			NSArray used = ItogType.getTypeList(listName, eduYear, ec);
 			if(used == null || used.count() == 0) {
 				activeTypes.removeAllObjects();
 				itogsList = null;
@@ -140,9 +148,9 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults saveList() {
 		ec.lock();
+		Integer eduYear = (Integer)session().valueForKey("eduYear");
 		try {
-			NSArray previous = EOUtilities.objectsMatchingKeyAndValue(ec, 
-					"ItogTypeList", "listName", listName);
+			NSArray previous = ItogType.getTypeList(listName, eduYear, ec);
 			NSMutableArray toDelete = (previous==null || previous.count() == 0)?
 					new NSMutableArray() : previous.mutableClone();
 			NSMutableArray toAdd = activeTypes.mutableClone();
@@ -150,6 +158,12 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject tl = (EOEnterpriseObject) enu.nextElement();
 				ItogType it = (ItogType)tl.valueForKey("itogType");
+				Integer year = (Integer)tl.valueForKey("eduYear");
+				if(year == null || year.intValue() == 0) { // add year tags
+					toDelete.removeObject(tl);
+					tl.takeValueForKey(new Integer(eduYear -1), "eduYear");
+					continue;
+				}
 				if(toAdd.removeObject(it)) {
 					toDelete.removeObject(tl);
 				}
@@ -162,6 +176,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 					if(tl == null) {
 						tl = EOUtilities.createAndInsertInstance(ec, "ItogTypeList");
 						tl.takeValueForKey(listName, "listName");
+						tl.takeValueForKey(eduYear, "eduYear");
 					}
 					tl.addObjectToBothSidesOfRelationshipWithKey(it, "itogType");
 				}
@@ -225,6 +240,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 				EOEnterpriseObject tl = EOUtilities.createAndInsertInstance(ec,
 						"ItogTypeList");
 				tl.takeValueForKey(listName, "listName");
+				tl.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
 				tl.addObjectToBothSidesOfRelationshipWithKey(type, "itogType");
 				activeTypes.addObject(type);
 				ec.saveChanges();

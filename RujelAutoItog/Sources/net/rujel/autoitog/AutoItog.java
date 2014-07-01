@@ -165,7 +165,7 @@ public class AutoItog extends _AutoItog {
     	if (result.count() > 1) {
      		EOSortOrdering.sortArrayUsingKeyOrderArray(result, aiSorter);
 		}
-    	NSArray allowedTypes = ItogType.typesForList(listName, ec);
+    	NSArray allowedTypes = ItogType.typesForList(listName, course.eduYear(), ec);
     	Enumeration enu = result.objectEnumerator();
     	result = new NSMutableArray();
     	while (enu.hasMoreElements()) {
@@ -441,12 +441,16 @@ public class AutoItog extends _AutoItog {
     	if(flags().intValue() >= 32)
     		return true;
     	Object type = itogContainer().itogType();
-    	if(type == null)
+    	Integer eduYear = itogContainer().eduYear();
+    	if(type == null || eduYear == null)
     		return true;
     	NSArray list = new NSArray(new EOQualifier[] {
+        	new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual, new Integer(0)),
+        	new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual, eduYear)});
+    	list = new NSArray(new EOQualifier[] {
     		new EOKeyValueQualifier("itogType", EOQualifier.QualifierOperatorEqual, type),
     		new EOKeyValueQualifier("listName", EOQualifier.QualifierOperatorEqual, listName()),
-    	});
+    		new EOOrQualifier(list)});
     	EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",
     			new EOAndQualifier(list),null);
     	list = editingContext().objectsWithFetchSpecification(fs);

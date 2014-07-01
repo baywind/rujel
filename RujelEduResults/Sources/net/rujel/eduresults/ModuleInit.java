@@ -224,7 +224,7 @@ public class ModuleInit {
 //			ec.lock();
 			String listName = sectionListName(ctx.session(), ec);
 			Integer year = (Integer)ctx.session().valueForKey("eduYear");
-			list = ItogType.itogsForTypeList(ItogType.typesForList(listName, ec),year);
+			list = ItogType.itogsForTypeList(ItogType.typesForList(listName, year, ec), year);
 		}
 		if(list == null || list.count() == 0) {
 //			ec.unlock();
