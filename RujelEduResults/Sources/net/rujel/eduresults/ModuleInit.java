@@ -36,6 +36,7 @@ import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 
 import com.webobjects.foundation.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
@@ -89,6 +90,8 @@ public class ModuleInit {
 			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.groupTabel");
 		} else if("usedModels".equals(obj)) {
 			return "EduResults";
+		} else if("initialData".equals(obj)) {
+			return initialData(ctx);
 		}
 		return null;
 	}
@@ -308,8 +311,8 @@ public class ModuleInit {
 	public static Object initialData(WOContext ctx) {
 		EOEditingContext prevEc = (EOEditingContext)ctx.userInfoForKey("prevEc");
 		EOEditingContext ec = (EOEditingContext)ctx.userInfoForKey("ec");
+		Logger logger = Logger.getLogger("rujel.eduresults");
 		if(prevEc == null) { // load predefined data
-			Logger logger = Logger.getLogger("rujel.eduresults");
 			try {
 				EOObjectStoreCoordinator os = EOObjectStoreCoordinator.defaultCoordinator();
 				InputStream data = WOApplication.application().resourceManager().
@@ -320,7 +323,49 @@ public class ModuleInit {
 				ec.revert();
 				logger.log(WOLogLevel.WARNING,"Failed to load inital EduResults data  ",e);
 			}
+		} else { // copy ItogTypeList from previous year
+			Integer prevYear = (Integer)ctx.userInfoForKey("prevYear");
+			Integer eduYear = (Integer)ctx.userInfoForKey("eduYear");
+			SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, prevEc, true);
+			NSArray lists = base.availableValues(null, SettingsBase.TEXT_VALUE_KEY);
+			Enumeration enu = lists.objectEnumerator();
+			NSMutableArray types = new NSMutableArray();
+			while (enu.hasMoreElements()) {
+				String listName = (String) enu.nextElement();
+				try {
+					NSArray typeList = ItogType.getTypeList(listName, prevYear, prevEc);
+					if(typeList == null || typeList.count() == 0)
+						continue;
+					Enumeration tenu = typeList.objectEnumerator();
+					while (tenu.hasMoreElements()) {
+						EOEnterpriseObject tl = (EOEnterpriseObject) tenu.nextElement();
+						Integer year = (Integer)tl.valueForKey("eduYear");
+						if(year == null || year.intValue() == 0)
+							tl.takeValueForKey(prevYear, "eduYear");
+						ItogType type = (ItogType)tl.valueForKey("itogType");
+						type = (ItogType)EOUtilities.localInstanceOfObject(ec, type);
+						if(!types.containsObject(type)) {
+							if(type.inYearCount() > 0)
+								type.generateItogsInYear(eduYear);
+							types.addObject(type);
+						}
+						EOEnterpriseObject newTL = EOUtilities.createAndInsertInstance(
+								ec, "ItogTypeList");
+						newTL.takeValueForKey(listName, "listName");
+						newTL.takeValueForKey(eduYear, "eduYear");
+						newTL.addObjectToBothSidesOfRelationshipWithKey(type, "itogType");
+					} // typeList.objectEnumerator();
+					ec.saveChanges();
+					if(prevEc.hasChanges())
+						prevEc.saveChanges();
+				} catch (Exception e) {
+					ec.revert();
+					logger.log(WOLogLevel.WARNING,"Failed to copy ItogTypeList for listName: "
+							+ listName,e);
+				}
+			} //lists.objectEnumerator();
 		}
+		logger.log(WOLogLevel.INFO, "Copied ItogTypeList from previous year");
 		return null;
 	}
 }

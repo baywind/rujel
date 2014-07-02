@@ -92,7 +92,7 @@ public class ItogType extends _ItogType {
 			while (enu.hasMoreElements()) {
 				ItogContainer ic = (ItogContainer) enu.nextElement();
 				int idx = ic.num().intValue() -1;
-				if(idx > 0 && idx < result.length)
+				if(idx >= 0 && idx < result.length)
 					result[idx] = ic;
 			}
 		}
