@@ -195,7 +195,7 @@ public class InitialDataGenerator {
 
 	protected static boolean generateHolidays(EOEditingContext ec, Integer eduYear) {
 		NSArray presets = (NSArray)WOApplication.application().valueForKeyPath(
-		"RujelEduPlan_EduPlan.defaultHolidays");
+		"strings.RujelEduPlan_EduPlan.defaultHolidays");
 		if(presets == null || presets.count() == 0)
 			return false;
 		Enumeration enu = presets.objectEnumerator();

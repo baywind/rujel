@@ -38,6 +38,7 @@ import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.eoaccess.EOModel;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOObjectStore;
+import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 
@@ -143,10 +144,17 @@ public class Application extends UTF8Application {
 		setPageCacheSize(SettingsReader.intForKeyPath("ui.pageCacheSize", 5));
 		setPermanentPageCacheSize(SettingsReader.intForKeyPath("ui.permanentPageCacheSize", 2));
 		
-		if (!Boolean.getBoolean("DisableScheduledTasks")) {
+		if (defaultDate == null && !Boolean.getBoolean("DisableScheduledTasks")) {
 			timer = new Timer(true);
 			TimerTask task = new TimerTask() {
 				public void run() {
+					Application app = (Application)WOApplication.application();
+					Integer y = app.year;
+					try {
+						app.testNextYear();
+					} catch (Exception e) {
+						app.year = y;
+					}
 					ModulesInitialiser.useModules(null, "scheduleTask");
 				}
 			};
@@ -294,6 +302,26 @@ public class Application extends UTF8Application {
 			}
 		} // shouldCreateSchema
 		return (problems != null && problems.count() > 0);
+	}
+	
+	public void testNextYear() {
+		Integer currYear = MyUtility.eduYearForDate(null);
+		if(currYear.equals(year))
+			return;
+		NSArray usedModels = ModulesInitialiser.useModules(null, "usedModels");
+		EOObjectStoreCoordinator old = EOObjectStoreCoordinator.defaultCoordinator();
+		EOObjectStoreCoordinator os = new EOObjectStoreCoordinator();
+		EOObjectStoreCoordinator.setDefaultCoordinator(os);
+		old.dispose();
+		year = currYear;
+		NSArray problems = DataBaseConnector.makeConnections(year.toString(), usedModels,false);
+		if(problems != null) {
+			logger.info("Trying to resolve database problems");
+			if(dealWithDbProblems(problems, usedModels)) {
+				logger.log(WOLogLevel.SEVERE,"Could not connect to next eduYear database!");
+				return;
+			}
+		}
 	}
 	
 	public Timer timer() {

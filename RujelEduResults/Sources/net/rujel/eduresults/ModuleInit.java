@@ -324,10 +324,14 @@ public class ModuleInit {
 				logger.log(WOLogLevel.WARNING,"Failed to load inital EduResults data  ",e);
 			}
 		} else { // copy ItogTypeList from previous year
-			Integer prevYear = (Integer)ctx.userInfoForKey("prevYear");
 			Integer eduYear = (Integer)ctx.userInfoForKey("eduYear");
+			NSArray lists = EOUtilities.objectsMatchingKeyAndValue(ec,
+					"ItogTypeList", "eduYear", eduYear);
+			if(lists != null && lists.count() > 0)
+				return null;
+			Integer prevYear = (Integer)ctx.userInfoForKey("prevYear");
 			SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, prevEc, true);
-			NSArray lists = base.availableValues(null, SettingsBase.TEXT_VALUE_KEY);
+			lists = base.availableValues(null, SettingsBase.TEXT_VALUE_KEY);
 			Enumeration enu = lists.objectEnumerator();
 			NSMutableArray types = new NSMutableArray();
 			while (enu.hasMoreElements()) {
