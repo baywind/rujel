@@ -31,7 +31,6 @@ package net.rujel.eduplan;
 
 import java.util.Enumeration;
 
-import net.rujel.base.QualifiedSetting;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -105,51 +104,54 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		return null;
     	EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
     	Holiday hd = (Holiday)dict.removeObjectForKey("selection");
+		boolean forAll = Various.boolForObject(dict.removeObjectForKey("forAll"));
 		SettingsBase base = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
-    	if(hd == null) {
+    	if(hd == null) { // creating
     		hd = (Holiday)EOUtilities.createAndInsertInstance(ec, Holiday.ENTITY_NAME);
     		hd.takeValuesFromDictionary(dict);
     		if(hd.end() == null)
     			hd.setEnd(hd.begin());
-    		if(notGlobal())
+    		if(!forAll)
     			hd.setListName(listName);
-    	} else if(Various.boolForObject(dict.removeObjectForKey("delete"))) {
+    		
+    	} else if(Various.boolForObject(dict.removeObjectForKey("delete"))) { // deleting
     		String hdList = hd.listName();
-    		if(hdList != null || !notGlobal()) {
+    		if(hdList != null || forAll) {
     			ec.deleteObject(hd);
     		} else {
-    			hd.setListName(base.textValue());
-    			NSArray byCourse = base.qualifiedSettings();
-    			if(byCourse != null && byCourse.count() > 0) {
-    				NSMutableArray lists = new NSMutableArray(base.textValue());
-    				if(listName != null || !listName.equals(base.textValue()))
-    					lists.addObject(listName);
-    				Enumeration enu = byCourse.objectEnumerator();
+        		Integer eduYear = (Integer)session().valueForKey("eduYear");
+    			NSMutableArray names = (NSMutableArray) base.availableValues(eduYear, 
+        				SettingsBase.TEXT_VALUE_KEY);
+    			if(names.count() < 2) {
+    				ec.deleteObject(hd);
+    			} else {
+    				Enumeration enu = names.objectEnumerator();
     				while (enu.hasMoreElements()) {
-    					QualifiedSetting bc = (QualifiedSetting) enu.nextElement();
-    					String ln = bc.textValue();
-						if(!lists.containsObject(ln)) {
-				    		hd = (Holiday)EOUtilities.createAndInsertInstance(ec,
-				    				Holiday.ENTITY_NAME);
-				    		hd.takeValuesFromDictionary(dict);
-				    		hd.setListName(ln);
-							lists.addObject(ln);
-						}
-					} // cycle list names
+    					String ln = (String)enu.nextElement();
+    					if(ln.equals(listName))
+    						continue;
+    					if(hd == null) {
+    						hd = (Holiday)EOUtilities.createAndInsertInstance(ec,
+    								Holiday.ENTITY_NAME);
+    						hd.takeValuesFromDictionary(dict);
+    					}
+    					hd.setListName(ln);
+    					hd = null;
+    				}
     			}
+
     		}
     		dict.takeValueForKey(hdList, Holiday.LIST_NAME_KEY);
     		if(notGlobal())
     			dict.takeValueForKey(listName, "listName");
     		hd = null;
-    	} else {
-    			
-    			
+    		
+    	} else { // editing
         	for (int i = 0; i < keys.length; i++) {
         		Object hdValue = hd.valueForKey(keys[i]);
         		Object dictValue = dict.valueForKey(keys[i]);
         		if(!hdValue.equals(dictValue)) {
-            		if(hd.listName() == null && notGlobal()) {
+            		if(hd.listName() == null && (!forAll || notGlobal())) {
                 		hd = (Holiday)EOUtilities.createAndInsertInstance(ec, Holiday.ENTITY_NAME);
                 		hd.takeValuesFromDictionary(dict);
             			hd.setListName(listName);
@@ -177,29 +179,38 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 			return null;
 		}
     	}
-    	if(hd != null && hd.listName() != null) {
-    		_list = EOUtilities.objectsMatchingValues(ec, Holiday.ENTITY_NAME, dict);
+    	if(forAll || (hd != null && hd.listName() != null)) {
+    		if(forAll) {
+    			_list = EOUtilities.objectsMatchingKeyAndValue(ec, Holiday.ENTITY_NAME, 
+    					Holiday.NAME_KEY, dict.valueForKey(Holiday.NAME_KEY));
+    		} else {
+    			_list = EOUtilities.objectsMatchingValues(ec, Holiday.ENTITY_NAME, dict);
+    		}
     		Integer eduYear = (Integer)session().valueForKey("eduYear");
     		NSMutableArray names = (NSMutableArray) base.availableValues(eduYear, 
     				SettingsBase.TEXT_VALUE_KEY);
-    		if(_list.count() >= names.count()) {
+    		if(forAll || _list.count() >= names.count()) {
     			Enumeration enu = _list.objectEnumerator();
+    			String baseLN = base.textValue();
     			while (enu.hasMoreElements()) {
     				Holiday holiday = (Holiday) enu.nextElement();
     				String ln = holiday.listName();
     				if(ln == null) {
-    					break;
-    				}
-    				if(!names.removeObject(holiday.listName()))
+    					if(baseLN != null) {
+    						baseLN = null;
+    						continue;
+    					}
+    				} else if(!names.removeObject(ln))
     					continue;
-    				if(ln.equals(base.textValue())) {
+    				if(baseLN != null && baseLN.equals(ln)) {
     					hd = holiday;
     					hd.setListName(null);
+    					baseLN = null;
     				} else {
     					ec.deleteObject(holiday);
     				}
     			}
-    			if(names.count() > 0) {
+    			if(!forAll && names.count() > 0) {
     				ec.revert();
     			} else {
     				try {
@@ -213,10 +224,11 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     					ec.revert();
     				}
     			}
-    		}
+    		} // (_list.count() >= names.count())
     		_list = null;
     	}
     	dict.removeAllObjects();
+		dict.takeValueForKey(Boolean.TRUE, "forAll");
     	return null;
     }
     
@@ -231,6 +243,8 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     	for (int i = 0; i < keys.length; i++) {
         	dict.takeValueForKey(item.valueForKey(keys[i]), keys[i]);
 		}
+    	dict.takeValueForKey(Boolean.valueOf(!notGlobal() && 
+    			item.valueForKey(Holiday.LIST_NAME_KEY) == null), "forAll");
     	dict.removeObjectForKey("delete");
     }
 	
@@ -243,6 +257,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		listName = (String)ln;
     		_list = null;
     		dict.removeAllObjects();
+    		dict.takeValueForKey(Boolean.TRUE, "forAll");
     		_notGlobal = null;
     		item = null;
     	}
