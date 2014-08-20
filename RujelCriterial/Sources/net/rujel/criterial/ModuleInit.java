@@ -37,6 +37,8 @@ import java.util.logging.Logger;
 import net.rujel.base.BaseLesson;
 import net.rujel.base.BaseModule;
 import net.rujel.base.Indexer;
+import net.rujel.base.QualifiedSetting;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
@@ -340,6 +342,7 @@ public class ModuleInit {
 						ctx.userInfoForKey("doneIndexers");
 				NSArray keys = new NSArray( new String[] {"criterion","title",
 						"dfltMax","dfltWeight","comment","flags"});
+				NSMutableDictionary idMatch = new NSMutableDictionary();
 				while (enu.hasMoreElements()) {
 					CriteriaSet bs = (CriteriaSet) enu.nextElement();
 					CriteriaSet newT = (CriteriaSet)EOUtilities.createAndInsertInstance(
@@ -347,6 +350,10 @@ public class ModuleInit {
 					newT.setSetName(bs.setName());
 					newT.setComment(bs.comment());
 					newT.setFlags(bs.flags());
+					{
+						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(bs);
+						idMatch.setObjectForKey(newT, gid.keyValues()[0]);
+					}
 					NSArray crits = bs.criteria();
 					if(crits != null && crits.count() > 0) {
 						Enumeration cenu = crits.objectEnumerator();
@@ -390,6 +397,37 @@ public class ModuleInit {
 						indexes.setObjectForKey(newGid, gid);
 					}
 				}
+				SettingsBase oldBase = SettingsBase.baseForKey(
+						CriteriaSet.ENTITY_NAME, prevEc, false);
+				if(oldBase != null) {
+					SettingsBase newBase = SettingsBase.baseForKey(
+							CriteriaSet.ENTITY_NAME, ec, true);
+					CriteriaSet newCS = (CriteriaSet)idMatch.objectForKey(oldBase.numericValue());
+					EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(newCS);
+					newBase.setTextValue(newCS.setName());
+					newBase.setNumericValue((Integer)gid.keyValues()[0]);
+					NSArray qslist = oldBase.qualifiedSettings();
+					if(qslist != null && qslist.count() > 0) {
+						enu = qslist.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							QualifiedSetting qs = (QualifiedSetting) enu.nextElement();
+							if(qs.eduYear() != null)
+								continue;
+							QualifiedSetting newQ = (QualifiedSetting)EOUtilities.
+									createAndInsertInstance(ec, QualifiedSetting.ENTITY_NAME);
+							newQ.addObjectToBothSidesOfRelationshipWithKey(newBase,
+									QualifiedSetting.SETTINGS_BASE_KEY);
+							newQ.setSort(qs.sort());
+							newQ.setQualifierString(qs.qualifierString());
+							newQ.setArgumentsString(qs.argumentsString());
+							newCS = (CriteriaSet)idMatch.objectForKey(qs.numericValue());
+							gid = (EOKeyGlobalID)ec.globalIDForObject(newCS);
+							newQ.setTextValue(newCS.setName());
+							newQ.setNumericValue((Integer)gid.keyValues()[0]);
+						}
+					}
+				}
+				ec.saveChanges();
 				logger.log(WOLogLevel.INFO,"Copied CriteriaSets from previous year");
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Failed to copy CriteriaSets from previous year", e);

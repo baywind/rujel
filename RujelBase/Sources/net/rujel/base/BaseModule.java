@@ -41,12 +41,12 @@ import net.rujel.reusables.WOLogLevel;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.eoaccess.EOUtilities;
+import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
-import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -164,10 +164,12 @@ public class BaseModule {
 		EOQualifier[] quals = new EOQualifier[] {
 				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
 						EOQualifier.QualifierOperatorNotEqual, "CompletionActive"),
-						new EOKeyValueQualifier(SettingsBase.KEY_KEY,
-								EOQualifier.QualifierOperatorNotEqual, "coursesDone")
+				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
+								EOQualifier.QualifierOperatorNotEqual, "coursesDone"),
+				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
+						EOQualifier.QualifierOperatorNotEqual, "CriteriaSet")
 		};
-		quals[0] = new EOOrQualifier(new NSArray(quals));
+		quals[0] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(SettingsBase.ENTITY_NAME,quals[0],null);
 		NSArray found = prevEc.objectsWithFetchSpecification(fs);
 		if(found != null && found.count() > 0) try {
