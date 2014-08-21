@@ -69,14 +69,14 @@ public class InitialDataGenerator {
 				data = WOApplication.application().resourceManager().
 				inputStreamForResourceNamed("dataEduPlanYearly.sql", "RujelEduPlan", null);
 				DataBaseUtility.executeScript(os, "EduPlanYearly", data);
-				EduPlan.logger.log(WOLogLevel.INFO, "Loaded inital data for EduPlan models");
-				Integer eduYear = (Integer)ctx.userInfoForKey("year");
+				EduPlan.logger.log(WOLogLevel.INFO, "Loaded inital EduPlan");
+				Integer eduYear = (Integer)ctx.userInfoForKey("eduYear");
 				NSArray holidays = EOUtilities.objectsForEntityNamed(ec, Holiday.ENTITY_NAME);
 				if(holidays == null || holidays.count() == 0) {
 					generateHolidays(ec, eduYear);
 				}
 				ec.saveChanges();
-				EduPlan.logger.log(WOLogLevel.INFO, "Loaded inital data for EduPlan models");
+				EduPlan.logger.log(WOLogLevel.INFO, "Loaded inital Holidays for EduPlan models");
 			} catch (Exception e) {
 				ec.revert();
 				EduPlan.logger.log(WOLogLevel.WARNING,
