@@ -52,5 +52,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelREST"/>
 	<classpathentry kind="con" path="WOFramework/RujelREST"/>
 	<classpathentry kind="con" path="WOFramework/DnevnikSync"/>
+	<classpathentry kind="con" path="WOFramework/PostgresqlPlugIn"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
