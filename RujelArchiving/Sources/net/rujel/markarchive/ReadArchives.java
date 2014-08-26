@@ -35,6 +35,7 @@ public class ReadArchives extends WOComponent {
     public ReadArchives(WOContext context) {
         super(context);
 		ec = new SessionedEditingContext(context.session());
+		records = new NSMutableArray();
 		params = new NSMutableDictionary();
 		{
 			NSTimestamp to = (NSTimestamp)session().valueForKey("today");
@@ -71,7 +72,6 @@ public class ReadArchives extends WOComponent {
 			EOEnterpriseObject ue = (EOEnterpriseObject)used.objectAtIndex(i);
 			entDict(ue);
 		}
-		records = new NSMutableArray();
 		if(!Various.boolForObject(session().valueForKeyPath("readAccess.edit.ReadArchives"))) {
 			String username = (String)context.session().valueForKeyPath("user.present");
 			if(username != null)
