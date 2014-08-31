@@ -48,8 +48,12 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.*;
 
 import net.rujel.base.MyUtility;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.Person;
+import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
+import net.rujel.interfaces.Teacher;
+import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -60,6 +64,7 @@ public class ImportList extends WOComponent {
     }
     
     public VseEduGroup targetGroup;
+    public NSArray lists;
     public Object item;
     public Object item2;
     public int index;
@@ -72,10 +77,21 @@ public class ImportList extends WOComponent {
     public NSTimestamp onDate;
     public NSMutableArray resultingList;
     public NSMutableArray leavers;
+    protected EOEditingContext ec;
 
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-    	if(targetGroup == null)
-    		targetGroup = (VseEduGroup)valueForBinding("params");
+    	if(lists == null) {
+    		Object prm = valueForBinding("params");
+    		if(prm instanceof VseEduGroup) {
+    			targetGroup = (VseEduGroup)prm;
+    			ec = targetGroup.editingContext();
+    			lists = targetGroup.lists();
+    		} else if (prm instanceof NSArray) {
+    			lists = (NSArray)prm;
+    			EOEnterpriseObject eo = (EOEnterpriseObject)lists.objectAtIndex(0);
+    			ec = eo.editingContext();
+    		}
+    	}
     	if(!Various.boolForObject(valueForBinding("interpreted"))) {
     		toAdd = null;
     		toExclude = null;
@@ -97,13 +113,14 @@ public class ImportList extends WOComponent {
     	NSArray list = (NSArray)valueForBinding("list");
     	if(list == null)
     		return;
-    	NSArray grList = targetGroup.lists();
     	Enumeration enu = list.objectEnumerator();
     	while (enu.hasMoreElements()) {
 			NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
 			if(dict.valueForKey("lastName") == null && dict.valueForKey("firstName") == null)
 				continue;
-			VseList vseList = findEntry(dict, grList); // find in target group
+			if(!params.containsKey("showDate") && dict.valueForKey("birthDate") != null)
+				params.takeValueForKey(Boolean.TRUE, "showDate");
+			EOEnterpriseObject vseList = findEntry(dict); // find in target group
 			if(vseList == null) {
 				if(toAdd == null)
 					toAdd = new NSMutableArray(dict);
@@ -123,50 +140,52 @@ public class ImportList extends WOComponent {
 		    	if(name != null)
 		    		quals.addObject(new EOKeyValueQualifier(VsePerson.SECOND_NAME_KEY,
 		    				EOQualifier.QualifierOperatorEqual, name));
-		    	NSArray found = (quals.count() < 2)? null :Person.Utility.search(
-		    		targetGroup.editingContext(),new EOAndQualifier(quals), Student.entityName);
+		    	NSArray found = null;
+		    	if(quals.count() >= 2) {
+			    	EOQualifier qual = new EOAndQualifier(quals);
+	    			if(targetGroup == null) {
+	    				found = Person.Utility.search(ec,qual,Teacher.entityName);
+	    			}
+	    			if(found == null || found.count() == 0)
+	    				found = Person.Utility.search(ec,qual,Student.entityName);
+		    	}
+		    	if(found == null || found.count() == 0) {
+	    			Integer matches = (Integer)dict.valueForKey("matches");
+	    			if(matches.intValue() < 2 || dict.valueForKey("sex") == null) { // no name row
+	    				omit.addObject(dict);
+	    			}
+    				continue;
+		    	}
 		    	if(found != null && found.count() > 0) {
 		    		Enumeration fenu = found.objectEnumerator();
-		    		int grade = targetGroup.absGrade().intValue();
+		    		int grade = (targetGroup==null)?0:targetGroup.absGrade().intValue();
 		    		boolean unchanged = true;
 		    		while (fenu.hasMoreElements()) { // exclude students from distant grades
-						VseStudent stu = (VseStudent) fenu.nextElement();
-						int stGrade = stu.absGrade().intValue();
-						if(Math.abs(stGrade - grade) > 2) {
-							if(unchanged) {
-								found = found.mutableClone();
-								unchanged = false;
+						PersonLink stu = (PersonLink) fenu.nextElement();
+						if(!dict.containsKey("sex"))
+			    			dict.takeValueForKey(stu.person().sex(), "sex");
+						if(stu instanceof VseStudent) {
+							int stGrade = ((VseStudent)stu).absGrade().intValue();
+							if(grade > 0 && Math.abs(stGrade - grade) > 2) {
+								if(unchanged) {
+									found = found.mutableClone();
+									unchanged = false;
+								}
+								((NSMutableArray)found).removeIdenticalObject(stu);
 							}
-							((NSMutableArray)found).removeIdenticalObject(stu);
 						}
-					}
+		    		}
 		    		if(found.count() > 0) {
 		    			dict.takeValueForKey(found, "found");
 		    			dict.takeValueForKey(found.objectAtIndex(0), "student");
 		    			params.takeValueForKey(Boolean.TRUE, "showFound");
 		    		}
-	    		} else {  // found student for name else
-	    			Integer matches = (Integer)dict.valueForKey("matches");
-	    			if(matches.intValue() < 2)
-	    				omit.addObject(dict);
 		    	}
-		    	if(dict.valueForKey("sex") == null) {
-		    		if(found != null && found.count() > 0) {
-		    			VseStudent stu = (VseStudent)found.objectAtIndex(0);
-		    			dict.takeValueForKey(stu.valueForKeyPath("person.sex"), "sex");
-		    		} else {
-		    			int idx = omit.indexOfIdenticalObject(dict);
-		    			if(idx < 0)
-		    				omit.addObject(dict);
-		    		}
-		    	}
-			} else {
+			} else { // found in group
 				if(toExclude == null)
-					toExclude = grList.mutableClone();
+					toExclude = lists.mutableClone();
 				toExclude.removeIdenticalObject(vseList);
 			}
-			if(!params.containsKey("showDate") && dict.valueForKey("birthDate") != null)
-				params.takeValueForKey(Boolean.TRUE, "showDate");
 		} // list enumeration
     	NSArray sorter = new NSArray(new EOSortOrdering[] {
     			EOSortOrdering.sortOrderingWithKey("lastName", EOSortOrdering.CompareAscending),
@@ -180,7 +199,7 @@ public class ImportList extends WOComponent {
     	if(toStay != null && toStay.count() > 1)
     		EOSortOrdering.sortArrayUsingKeyOrderArray(toStay, sorter);
     	
-    	if(toExclude != null && toExclude.count() > 0) {
+    	if(targetGroup != null && toExclude != null && toExclude.count() > 0) {
     		enu = toExclude.immutableClone().objectEnumerator();
     		NSTimestamp today = (NSTimestamp)session().valueForKey("today");
     		while (enu.hasMoreElements()) {
@@ -191,20 +210,28 @@ public class ImportList extends WOComponent {
     		if(toExclude.count() > 1) {
     	    	EOSortOrdering.sortArrayUsingKeyOrderArray(toExclude, VseList.sorter);
     		}
-    	}
+    	} else if(toExclude.count() > 1) {
+	    	try {
+				toExclude.sortUsingComparator(new AdaptingComparator());
+			} catch (Exception e) {}
+		}
     	if(toExclude != null && toExclude.count() == 0) {
     		toExclude = null;
     	}
     	onDate = (NSTimestamp)session().valueForKey("today");
     }
     
-    private VseList findEntry(NSMutableDictionary dict, NSArray lists) {
+    private EOEnterpriseObject findEntry(NSMutableDictionary dict) {
     	String last = (String)dict.valueForKey("lastName");
     	String first = (String)dict.valueForKey("firstName");
     	Enumeration enu = lists.objectEnumerator();
     	while (enu.hasMoreElements()) {
-    		VseList vseList = (VseList) enu.nextElement();
-    		Person person = vseList.student().person();
+    		EOEnterpriseObject vseList = (EOEnterpriseObject) enu.nextElement();
+    		Person person = null;
+    		if(vseList instanceof VseList)
+    			person = ((VseList)vseList).student().person();
+    		else if(vseList instanceof PersonLink)
+    			person = ((PersonLink)vseList).person();
 			if(compareValue(person, "lastName", last) &&
 					compareValue(person, "firstName", first)) {
 				dict.takeValueForKey(vseList, "existing");
@@ -277,10 +304,9 @@ public class ImportList extends WOComponent {
     }
     
     public WOActionResults apply() {
-    	EOEditingContext ec = targetGroup.editingContext();
     	if(toAdd != null) {
     		Enumeration enu = toAdd.objectEnumerator();
-    		boolean initial = (targetGroup.lists() == null || targetGroup.lists().count() == 0);
+    		boolean initial = (lists == null || lists.count() == 0);
     		if(initial) {
     	    	Integer eduYear = MyUtility.eduYearForDate(onDate);
     	    	initial = (targetGroup.firstYear().intValue() >= eduYear.intValue());
@@ -289,10 +315,11 @@ public class ImportList extends WOComponent {
 				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
 				if(omit.indexOfIdenticalObject(dict) >= 0)
 					continue;
-				VseStudent student = (VseStudent)dict.valueForKey("student");
+				EOEnterpriseObject student = (EOEnterpriseObject)dict.valueForKey("student");
 				if(student == null) {
-					student = (VseStudent)Person.Utility.create(ec, VseStudent.ENTITY_NAME, null);
-					Person person = student.person();
+					String ent = (targetGroup==null)?VseTeacher.ENTITY_NAME:VseStudent.ENTITY_NAME;
+					student = (EOEnterpriseObject)Person.Utility.create(ec,ent , null);
+					Person person = ((PersonLink)student).person();
 					person.setLastName((String)dict.valueForKey("lastName"));
 					person.setFirstName((String)dict.valueForKey("firstName"));
 					person.setSecondName((String)dict.valueForKey("secondName"));
@@ -301,16 +328,24 @@ public class ImportList extends WOComponent {
 					if(sex == null)
 						sex = Boolean.FALSE;
 					person.setSex(sex);
-					student.setEnter(onDate);
-					student.setAbsGrade(targetGroup.absGrade());
+					student.takeValueForKey(onDate,VseStudent.ENTER_KEY);
+					if(targetGroup != null)
+						student.takeValueForKey(targetGroup.absGrade(),VseStudent.ABS_GRADE_KEY);
+				} else if(targetGroup == null) {
+					VsePerson pers = (VsePerson)((PersonLink)student).person();
+					student = EOUtilities.createAndInsertInstance(ec, VseTeacher.ENTITY_NAME);
+					student.takeValueForKey(onDate,VseStudent.ENTER_KEY);
+					student.addObjectToBothSidesOfRelationshipWithKey(pers, VseTeacher.PERSON_KEY);
 				}
-				VseList vseList = (VseList)EOUtilities.createAndInsertInstance(
-						ec, VseList.ENTITY_NAME);
-				vseList.addObjectToBothSidesOfRelationshipWithKey(student, VseList.STUDENT_KEY);
-				targetGroup.addObjectToBothSidesOfRelationshipWithKey(
-						vseList, VseEduGroup.LISTS_KEY);
-				if(!initial)
-					vseList.setEnter(onDate);
+				if(targetGroup != null) {
+					VseList vseList = (VseList)EOUtilities.createAndInsertInstance(
+							ec, VseList.ENTITY_NAME);
+					vseList.addObjectToBothSidesOfRelationshipWithKey(student,VseList.STUDENT_KEY);
+					targetGroup.addObjectToBothSidesOfRelationshipWithKey(
+							vseList, VseEduGroup.LISTS_KEY);
+					if(!initial)
+						vseList.setEnter(onDate);
+				}
 			} // toAdd enumeration
     	} // add new
     	if(toUpdate != null) {
@@ -339,22 +374,23 @@ public class ImportList extends WOComponent {
     		NSTimestamp leaveDate = null;
         	NSMutableArray changed = (NSMutableArray)params.valueForKey("changed");
     		if(onDate != null) {
-    			leaveDate= onDate.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
+    			leaveDate = onDate.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
             	if(changed == null) {
             		changed = new NSMutableArray();
             		params.takeValueForKey(changed, "changed");
             	}
     		}
     		while (enu.hasMoreElements()) {
-				VseList vseList = (VseList) enu.nextElement();
+				Object vseList = enu.nextElement();
 				if(omit.indexOfIdenticalObject(vseList) >= 0)
 					continue;
 				if(onDate == null) {
-					targetGroup.removeObjectFromBothSidesOfRelationshipWithKey(
-							vseList, VseEduGroup.LISTS_KEY);
-					ec.deleteObject(vseList);
+					if(targetGroup != null)
+						targetGroup.removeObjectFromBothSidesOfRelationshipWithKey(
+								(VseList)vseList, VseEduGroup.LISTS_KEY);
+					ec.deleteObject((EOEnterpriseObject)vseList);
 				} else {
-					vseList.setLeave(leaveDate);
+					((EOEnterpriseObject)vseList).takeValueForKey(leaveDate, VseList.LEAVE_KEY);
 					changed.addObject(vseList);
 				}
     		}
@@ -362,14 +398,14 @@ public class ImportList extends WOComponent {
     	if(!ec.hasChanges())
     		return (WOComponent)session().valueForKey("pullComponent");
     	// prepare results
-		Enumeration enu = targetGroup.lists().objectEnumerator();
+		Enumeration enu = lists.objectEnumerator();
 		resultingList = new NSMutableArray();
 		leavers = new NSMutableArray();
 		Calendar cal = Calendar.getInstance();
-		long now = onDate.getTime();
+		long now = (onDate==null)?System.currentTimeMillis() :onDate.getTime();
 		while (enu.hasMoreElements()) {
-			VseList l = (VseList) enu.nextElement();
-			NSTimestamp border = l.leave();
+			EOEnterpriseObject l = (EOEnterpriseObject) enu.nextElement();
+			NSTimestamp border = (NSTimestamp)l.valueForKey(VseList.LEAVE_KEY);
 			if(border != null) {
 				if(border.getTime() < now - NSLocking.OneDay) {
 					leavers.addObject(l);
@@ -385,7 +421,7 @@ public class ImportList extends WOComponent {
 					}
 				}
 			}
-			border = l.enter();
+			border = (NSTimestamp)l.valueForKey(VseList.ENTER_KEY);
 			if(border != null) {
 				if(border.getTime() > now) {
 					leavers.addObject(l);
@@ -394,20 +430,30 @@ public class ImportList extends WOComponent {
 			}
 			resultingList.addObject(l);
 		} // targetGroup.lists enumeration
-		if(resultingList.count() > 1)
-			EOSortOrdering.sortArrayUsingKeyOrderArray(resultingList, VseList.sorter);
-		if(leavers.count() > 1)
-			EOSortOrdering.sortArrayUsingKeyOrderArray(leavers, VseList.sorter);
+		AdaptingComparator ac = (targetGroup == null)?new AdaptingComparator():null;
+		if(resultingList.count() > 1) {
+			if(targetGroup == null) try {
+				resultingList.sortUsingComparator(ac);
+			} catch (Exception e) {}
+			else
+				EOSortOrdering.sortArrayUsingKeyOrderArray(resultingList, VseList.sorter);
+		}
+		if(leavers.count() > 1) {
+			if(targetGroup == null) try {
+				resultingList.sortUsingComparator(ac);
+			} catch (Exception e) {}
+			else
+				EOSortOrdering.sortArrayUsingKeyOrderArray(leavers, VseList.sorter);
+		}
     	return null;
     }
     
     public String rowClass() {
     	Boolean sex = (Boolean)valueForKeyPath((item instanceof VseList)?
-    			"item.student.person.sex":"item.sex");
+    			"item.student.person.sex":"item.person.sex");
     	if(sex == null) return "grey";
     	if(item instanceof EOEnterpriseObject) {
-    		EOGlobalID gid = targetGroup.editingContext().globalIDForObject(
-    				(EOEnterpriseObject)item);
+    		EOGlobalID gid = ec.globalIDForObject((EOEnterpriseObject)item);
     		if(gid.isTemporary()) {
     			return (sex.booleanValue())?"foundMale":"foundFemale";    		
     		}
@@ -428,8 +474,8 @@ public class ImportList extends WOComponent {
 		EOEnterpriseObject student = (EOEnterpriseObject)valueForKeyPath("item.student");
 		if(student == null)
 			return null;
-		EOEditingContext ec = new SessionedEditingContext(targetGroup.editingContext(), session());
-		student = EOUtilities.localInstanceOfObject(ec, student);
+		EOEditingContext nec = new SessionedEditingContext(ec, session());
+		student = EOUtilities.localInstanceOfObject(nec, student);
 		WOComponent popup = pageWithName("PersonInspector");
 		popup.takeValueForKey(context().page(), "returnPage");
 		popup.takeValueForKey(student, "personLink");
@@ -437,7 +483,7 @@ public class ImportList extends WOComponent {
 	}
 
 	public WOActionResults revert() {
-		targetGroup.editingContext().revert();
+		ec.revert();
 		resultingList = null;
 		leavers = null;
 		return null;
@@ -448,8 +494,17 @@ public class ImportList extends WOComponent {
 	}
 	
 	public String presentFound() {
+		if(item2 instanceof VseTeacher) {
+			String message = (String)session().valueForKeyPath(
+				"strings.RujelVseLists_VseStrings.import.fired");
+			NSTimestamp date = ((VseTeacher)item2).leave();
+			if(date == null)
+				((VseTeacher)item2).enter();
+			message = message + MyUtility.dateFormat().format(date);
+			return message;
+		}
 		if(!(item2 instanceof VseStudent))
-			return null;
+			return "???";
 		VseStudent st = (VseStudent)item2;
 		VseList member = st.memberOf(onDate);
 		if(member == null)
@@ -466,7 +521,7 @@ public class ImportList extends WOComponent {
 				MyUtility.eduYearForDate(date);
 			String message;
 			if((date==null)?year.intValue() < MyUtility.eduYearForDate(onDate).intValue() :
-				date.before(onDate)) {
+				EOPeriod.Utility.compareDates(date, onDate) < 0) {
 				message = (String)session().valueForKeyPath(
 						"strings.RujelVseLists_VseStrings.import.wasIn");
 			} else {
@@ -486,7 +541,7 @@ public class ImportList extends WOComponent {
     
 	public WOActionResults save() {
 		try {
-			targetGroup.editingContext().saveChanges();
+			ec.saveChanges();
 			ListsEditor.logger.log(WOLogLevel.MASS_EDITING,"Imported students for group",
 					new Object[] {session(),targetGroup});
 		} catch (Exception e) {
@@ -499,6 +554,19 @@ public class ImportList extends WOComponent {
 		result.valueForKey("switchMode");
 		result.takeValueForKey(targetGroup, "selection");
 		return result;
+	}
+	
+	public PersonLink plinkItem() {
+		if (item == null)
+			return null;
+		Object obj = this.item;
+		if(obj instanceof NSDictionary)
+			obj = ((NSDictionary)obj).valueForKey("existing");
+		if(obj instanceof PersonLink)
+			return (PersonLink)obj;
+		if(obj instanceof VseList)
+			return ((VseList)obj).student();
+		return null;
 	}
 	
     public boolean isStateless() {

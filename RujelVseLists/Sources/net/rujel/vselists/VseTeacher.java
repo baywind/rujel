@@ -84,12 +84,21 @@ public class VseTeacher extends _VseTeacher implements Teacher{
 		return teacher;
 	}
 	
-	public static NSArray agregatedList(
-									EOEditingContext ec, NSTimestamp date) {
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,null,null);
+	public static NSArray allTeachers(EOEditingContext ec, NSTimestamp date) {
+		EOQualifier qual = null;
+		if(date != null) {
+			NSArray args = new NSArray(new Object[] {date,date});
+			qual = EOQualifier.qualifierWithQualifierFormat(
+					"(enter = nil OR enter <= %@) AND (leave = nil OR leave >= %@)", args);
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		fs.setRefreshesRefetchedObjects(true);
 		fs.setPrefetchingRelationshipKeyPaths(new NSArray("person"));
-		NSArray list = ec.objectsWithFetchSpecification(fs);
+		return ec.objectsWithFetchSpecification(fs);
+	}
+	
+	public static NSArray agregatedList(EOEditingContext ec, NSTimestamp date) {
+		NSArray list = allTeachers(ec, null);
 		if(list == null)
 			list = NSArray.EmptyArray;
 		NSMutableDictionary agregate = VsePerson.agregateByLetter(list);

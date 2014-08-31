@@ -46,7 +46,9 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EONotQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -167,6 +169,10 @@ public class BaseModule {
 				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
 								EOQualifier.QualifierOperatorNotEqual, "coursesDone"),
 				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
+								EOQualifier.QualifierOperatorNotEqual, "defaultWorkType"),
+				new EONotQualifier(new EOKeyValueQualifier(SettingsBase.KEY_KEY,
+								EOQualifier.QualifierOperatorLike, "presenters.*")),
+				new EOKeyValueQualifier(SettingsBase.KEY_KEY,
 						EOQualifier.QualifierOperatorNotEqual, "CriteriaSet")
 		};
 		quals[0] = new EOAndQualifier(new NSArray(quals));
@@ -176,6 +182,8 @@ public class BaseModule {
 			Enumeration enu = found.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				SettingsBase sb = (SettingsBase) enu.nextElement();
+				copySetting(sb, ec, null);
+				/*
 				SettingsBase newO = (SettingsBase)EOUtilities.createAndInsertInstance(
 						ec, SettingsBase.ENTITY_NAME);
 				newO.setKey(sb.key());
@@ -198,7 +206,7 @@ public class BaseModule {
 						newQ.setQualifierString(qs.qualifierString());
 						newQ.setArgumentsString(qs.argumentsString());
 					}
-				}
+				}*/
 			}
 			ec.saveChanges();
 			logger.log(WOLogLevel.INFO,"Copied SettingsBase from previous year");
@@ -239,6 +247,51 @@ public class BaseModule {
 		return null;
 	}
 
+	public static void copySetting(SettingsBase oldBase, EOEditingContext newEC,
+			NSMutableDictionary idMatch) {
+		SettingsBase newBase = SettingsBase.baseForKey(oldBase.key(), newEC, true);
+		newBase.setTextValue(oldBase.textValue());
+		Integer num = oldBase.numericValue();
+		if(num != null) {
+			if(idMatch == null) {
+				newBase.setNumericValue(num);
+			} else {
+				EOEnterpriseObject newCS = (EOEnterpriseObject)idMatch.objectForKey(num);
+				EOKeyGlobalID gid = (EOKeyGlobalID)newEC.globalIDForObject(newCS);
+				newBase.setNumericValue((Integer)gid.keyValues()[0]);
+			}
+		}
+		NSArray qslist = oldBase.qualifiedSettings();
+		if(qslist != null && qslist.count() > 0) {
+			Enumeration enu = qslist.objectEnumerator();
+			Integer year = (Integer)newEC.userInfoForKey("eduYear");
+			while (enu.hasMoreElements()) {
+				QualifiedSetting qs = (QualifiedSetting) enu.nextElement();
+				if(qs.eduYear() != null && !qs.eduYear().equals(year))
+					continue;
+				QualifiedSetting newQ = (QualifiedSetting)EOUtilities.
+				createAndInsertInstance(newEC, QualifiedSetting.ENTITY_NAME);
+				newQ.addObjectToBothSidesOfRelationshipWithKey(newBase,
+						QualifiedSetting.SETTINGS_BASE_KEY);
+				newQ.setSort(qs.sort());
+				newQ.setQualifierString(qs.qualifierString());
+				newQ.setArgumentsString(qs.argumentsString());
+				newQ.setTextValue(qs.textValue());
+				num = qs.numericValue();
+				if(num == null)
+					continue;
+				if(idMatch == null) {
+					newQ.setNumericValue(num);
+				} else {
+					EOEnterpriseObject newCS = (EOEnterpriseObject)idMatch.objectForKey(num);
+					EOKeyGlobalID gid = (EOKeyGlobalID)newEC.globalIDForObject(newCS);
+					newQ.setNumericValue((Integer)gid.keyValues()[0]);
+				}
+			}
+		}
+	}
+
+	
 	public static Indexer copyIndexer(EOEditingContext ec, Indexer idx) {
 		Indexer newI = (Indexer)EOUtilities.createAndInsertInstance(
 				ec, Indexer.ENTITY_NAME);

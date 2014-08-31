@@ -704,8 +704,10 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		page.takeValueForKey(this, "returnPage");
 		page.takeValueForKey("ImportList", "consumerComponent");		
 		page.takeValueForKey(session().valueForKeyPath(
-				"strings.RujelVseLists_VseStrings.importAssistance"), "fields");		
-		if (selection instanceof VseEduGroup)
+				"strings.RujelVseLists_VseStrings.importAssistance"), "fields");
+		if(mode.intValue() > 0)
+			page.takeValueForKey(VseTeacher.allTeachers(ec, date), "consumerParams");
+		else if (selection instanceof VseEduGroup)
 			page.takeValueForKey(selection, "consumerParams");
 		return page;
 	}

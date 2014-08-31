@@ -277,6 +277,7 @@ public class Application extends UTF8Application {
 			};
 			ctx.setUserInfoForKey(year, "eduYear");
 			EOEditingContext ec = new EOEditingContext();
+			ec.setUserInfoForKey(year, "eduYear");
 			ctx.setUserInfoForKey(ec, "ec");
 			EOEditingContext prevEc = null;
 			if(problems == null && isYear != null && isYear.booleanValue()) {
@@ -285,6 +286,7 @@ public class Application extends UTF8Application {
 				if(os != null) {
 					ctx.setUserInfoForKey(prevYear, "prevYear");
 					prevEc = new EOEditingContext(os);
+					prevEc.setUserInfoForKey(prevYear, "eduYear");
 					ctx.setUserInfoForKey(prevEc, "prevEc");
 				}
 			}

@@ -290,14 +290,25 @@ public class ModuleInit {
 			NSArray found = EOUtilities.objectsForEntityNamed(prevEc, WorkType.ENTITY_NAME);
 			if(found != null && found.count() > 0) try {
 				Enumeration enu = found.objectEnumerator();
+				NSMutableDictionary idMatch = new NSMutableDictionary();
 				while (enu.hasMoreElements()) {
 					EOEnterpriseObject wt = (EOEnterpriseObject) enu.nextElement();
 					EOEnterpriseObject newT = EOUtilities.createAndInsertInstance(
 							ec, WorkType.ENTITY_NAME);
 					newT.updateFromSnapshot(wt.snapshot());
+					{
+						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(wt);
+						idMatch.setObjectForKey(newT, gid.keyValues()[0]);
+					}
 				}
 				ec.saveChanges();
 				logger.log(WOLogLevel.INFO,"Copied WorkTypes from previous year");
+				SettingsBase base = SettingsBase.baseForKey("defaultWorkType", prevEc, false);
+				if(base != null) {
+					BaseModule.copySetting(base, ec, idMatch);
+					ec.saveChanges();
+					logger.log(WOLogLevel.INFO,"Copied WorkType settings from previous year");
+				}
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Failed to copy WorkTypes from previous year", e);
 				ec.revert();
@@ -306,6 +317,7 @@ public class ModuleInit {
 			found = EOUtilities.objectsForEntityNamed(prevEc, BorderSet.ENTITY_NAME);
 			if(found != null && found.count() > 0) try { // Borders
 				Enumeration enu = found.objectEnumerator();
+				NSMutableDictionary idMatch = new NSMutableDictionary(found.count());
 				NSArray keys = new NSArray(new String[] {BorderSet.TITLE_KEY,
 						BorderSet.ZERO_VALUE_KEY,BorderSet.FORMAT_STRING_KEY,
 						BorderSet.VALUE_TYPE_KEY, BorderSet.USE_CLASS_KEY, BorderSet.EXCLUDE_KEY});
@@ -314,6 +326,10 @@ public class ModuleInit {
 					BorderSet newT = (BorderSet)EOUtilities.createAndInsertInstance(
 							ec, BorderSet.ENTITY_NAME);
 					newT.takeValuesFromDictionary(bs.valuesForKeys(keys));
+					{
+						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(bs);
+						idMatch.setObjectForKey(newT, gid.keyValues()[0]);
+					}
 					NSArray borders = bs.borders();
 					if(borders != null && borders.count() > 0) {
 						Enumeration benu = borders.objectEnumerator();
@@ -330,6 +346,15 @@ public class ModuleInit {
 				}
 				ec.saveChanges();
 				logger.log(WOLogLevel.INFO,"Copied BorderSets from previous year");
+				NSArray presenters = EOUtilities.objectsWithQualifierFormat(prevEc, 
+						SettingsBase.ENTITY_NAME, "key like 'presenters.*'", null);
+				if(presenters != null && presenters.count() > 0) {
+					enu = presenters.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						SettingsBase base = (SettingsBase) enu.nextElement();
+						BaseModule.copySetting(base, ec, idMatch);
+					}
+				}
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Failed to copy BorderSets from previous year", e);
 				ec.revert();
@@ -388,6 +413,7 @@ public class ModuleInit {
 					}
 				}
 				ec.saveChanges();
+				logger.log(WOLogLevel.INFO,"Copied CriteriaSets from previous year");
 				enu = indexes.keyEnumerator();
 				while (enu.hasMoreElements()) {
 					EOGlobalID gid = (EOGlobalID) enu.nextElement();
@@ -400,35 +426,10 @@ public class ModuleInit {
 				SettingsBase oldBase = SettingsBase.baseForKey(
 						CriteriaSet.ENTITY_NAME, prevEc, false);
 				if(oldBase != null) {
-					SettingsBase newBase = SettingsBase.baseForKey(
-							CriteriaSet.ENTITY_NAME, ec, true);
-					CriteriaSet newCS = (CriteriaSet)idMatch.objectForKey(oldBase.numericValue());
-					EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(newCS);
-					newBase.setTextValue(newCS.setName());
-					newBase.setNumericValue((Integer)gid.keyValues()[0]);
-					NSArray qslist = oldBase.qualifiedSettings();
-					if(qslist != null && qslist.count() > 0) {
-						enu = qslist.objectEnumerator();
-						while (enu.hasMoreElements()) {
-							QualifiedSetting qs = (QualifiedSetting) enu.nextElement();
-							if(qs.eduYear() != null)
-								continue;
-							QualifiedSetting newQ = (QualifiedSetting)EOUtilities.
-									createAndInsertInstance(ec, QualifiedSetting.ENTITY_NAME);
-							newQ.addObjectToBothSidesOfRelationshipWithKey(newBase,
-									QualifiedSetting.SETTINGS_BASE_KEY);
-							newQ.setSort(qs.sort());
-							newQ.setQualifierString(qs.qualifierString());
-							newQ.setArgumentsString(qs.argumentsString());
-							newCS = (CriteriaSet)idMatch.objectForKey(qs.numericValue());
-							gid = (EOKeyGlobalID)ec.globalIDForObject(newCS);
-							newQ.setTextValue(newCS.setName());
-							newQ.setNumericValue((Integer)gid.keyValues()[0]);
-						}
-					}
+					BaseModule.copySetting(oldBase, ec, idMatch);
+					ec.saveChanges();
+					logger.log(WOLogLevel.INFO,"Copied CriteriaSet settings from previous year");
 				}
-				ec.saveChanges();
-				logger.log(WOLogLevel.INFO,"Copied CriteriaSets from previous year");
 			} catch (Exception e) {
 				logger.log(WOLogLevel.WARNING,"Failed to copy CriteriaSets from previous year", e);
 				ec.revert();
@@ -436,5 +437,4 @@ public class ModuleInit {
 		}
 		return null;
 	}
-
 }

@@ -32,7 +32,7 @@ public class GroupTabel extends WOComponent {
     public NSMutableArray containers;
     public NSArray students;
     protected NSArray found;
-    protected NSMutableDictionary forStudent;
+    protected NSMutableDictionary forStudent = new NSMutableDictionary();
     public Object item;
     public ItogContainer itog;
 	public NSMutableArray years;
