@@ -315,7 +315,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 		WOComponent popup = pageWithName("PersonInspector");
 		popup.takeValueForKey(this, "returnPage");
 		popup.takeValueForKey(plink(), "personLink");
-		popup.takeValueForKey("newPerson", "resultPath");
+//		popup.takeValueForKey("newPerson", "resultPath");
 		return popup;
 	}
 	
@@ -346,8 +346,10 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 			ec.revert();
 			return;
 		}
+		if(date == null)
+			date = (NSTimestamp)session().valueForKey("today");
 		if (group() != null) {
-			Enumeration enu = group().vseList().objectEnumerator();
+			Enumeration enu = group().vseList(date).objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject vl = (EOEnterpriseObject) enu.nextElement();
 				if (vl.valueForKeyPath("student.person") == person.person()) {
@@ -357,8 +359,6 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 				}
 			}
 		}
-		if(date == null)
-			date = (NSTimestamp)session().valueForKey("today");
 		ec.lock();
 		try {
 			if (student) {
@@ -390,7 +390,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
 					if(aStudent.enter() == null)
 						aStudent.setEnter(date);
 				}
-			} else {
+			} else { // if (student) 
 				if(!(person instanceof VseTeacher))
 					person = VseTeacher.teacherForPerson(person.person(), date, true);
 			}
