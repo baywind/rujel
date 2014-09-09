@@ -463,7 +463,7 @@ public class LessonNoteEditor extends WOComponent {
 					}
 				}
 			} // filter
-			if(per != null) {
+			/*if(per != null) {
 				session().setObjectForKey(per.begin(), "minDate");
 				session().setObjectForKey(per.end(), "maxDate");
 				NSTimestamp recentDate = (NSTimestamp)session().objectForKey("recentDate");
@@ -474,20 +474,39 @@ public class LessonNoteEditor extends WOComponent {
 					else
 						session().setObjectForKey(per.end(), "recentDate");
 				}
-			} else if(lessonsList.count() > 0) {
+			} else*/ 
+			if(lessonsList.count() > 0) {
 				EduLesson lesson = (EduLesson)lessonsList.objectAtIndex(0);
 				session().setObjectForKey(lesson.date(), "minDate");
 				lesson = (EduLesson)lessonsList.lastObject();
 				session().setObjectForKey(lesson.date(), "maxDate");
 				session().setObjectForKey(lesson.date(), "recentDate");
 			} else {
-				session().removeObjectForKey("minDate");
-				session().removeObjectForKey("maxDate");
-				session().setObjectForKey(session().valueForKey("today"), "recentDate");
+				NSTimestamp recentDate = (NSTimestamp)session().objectForKey("recentDate");
+				if(recentDate == null)
+					recentDate = (NSTimestamp)session().valueForKey("today");
+				if(per != null && !per.contains(recentDate)) {
+					session().setObjectForKey(per.begin(), "minDate");
+					session().setObjectForKey(per.end(), "maxDate");
+					long mid = (per.begin().getTime()/2) + (per.end().getTime()/2);
+					session().setObjectForKey(new NSTimestamp(mid), "recentDate");
+				} else {
+					session().removeObjectForKey("minDate");
+					session().removeObjectForKey("maxDate");
+					session().setObjectForKey(recentDate, "recentDate");
+				}
 			}
-		} else {
+		} else { // fulllist == null
 			lessonsList = null;
-			session().setObjectForKey(session().valueForKey("today"), "recentDate");
+			NSTimestamp recentDate = (NSTimestamp)session().valueForKey("today");
+			if(currTab() != null) {
+				Period per = currTab().period();
+				if(per != null) {
+					long mid = (per.begin().getTime()/2) + (per.end().getTime()/2);
+					recentDate = new NSTimestamp(mid);
+				}
+			}
+			session().setObjectForKey(recentDate, "recentDate");
 			session().removeObjectForKey("minDate");
 			session().removeObjectForKey("maxDate");
 		}

@@ -87,7 +87,10 @@ public class ModuleInit {
 		} else if("archiveType".equals(obj)) {
 			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.archiveType");
 		} else if("journalPlugins".equals(obj)) {
-			return ctx.session().valueForKeyPath("strings.RujelEduResults_EduResults.groupTabel");
+			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.ItogMark")))
+				return ctx.session().valueForKeyPath(
+						"strings.RujelEduResults_EduResults.groupTabel");
+			else return null;
 		} else if("usedModels".equals(obj)) {
 			return "EduResults";
 		} else if("initialData".equals(obj)) {
