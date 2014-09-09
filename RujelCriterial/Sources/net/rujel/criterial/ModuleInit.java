@@ -37,7 +37,6 @@ import java.util.logging.Logger;
 import net.rujel.base.BaseLesson;
 import net.rujel.base.BaseModule;
 import net.rujel.base.Indexer;
-import net.rujel.base.QualifiedSetting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
