@@ -133,16 +133,17 @@ public class StudentReporter extends com.webobjects.appserver.WOComponent {
 			if(detail != null && detail.count() > 0) {
 				for (int i = 0; i < detail.count(); i++) {
 					NSKeyValueCoding dt = (NSKeyValueCoding)detail.objectAtIndex(i);
+					{
+						Integer hours = (Integer)dt.valueForKey("hours");
+						if(hours.intValue() == 0)
+							continue;
+					}
 					EduPeriod dtPer = (EduPeriod)dt.valueForKey("eduPeriod");
 					if(since != null && EOPeriod.Utility.compareDates(since, dtPer.end()) >= 0)
 						continue;
 					if(to != null && EOPeriod.Utility.compareDates(to, dtPer.begin()) <= 0)
 						continue;
-					Integer hours = (Integer)dt.valueForKey("hours");
-					if(hours != null && hours.intValue() > 0)
-						result.addObject(crs);
-					else
-						continue;
+					result.addObject(crs);
 				}
 			} else {
 				result.add(crs);
