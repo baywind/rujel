@@ -286,6 +286,16 @@ public class SrcMark extends WOComponent {
 								} else {
 									found = (((EduCourse)cur).cycle() == cycle);
 								}
+							} else if (cur instanceof EduCycle) {
+								if(cur == cycle) {
+									tmp.replaceObjectAtIndex(aCourse, i);
+									currIndex = i;
+									break;
+								} else if(found) {
+									tmp.insertObjectAtIndex(aCourse, i);
+									currIndex = i;
+									break;
+								}
 							}
 						}
 					} else {
