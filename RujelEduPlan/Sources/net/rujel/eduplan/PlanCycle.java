@@ -409,7 +409,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOEnterpriseObject ph = planHours(course.eduGroup());
 		if(ph != null) {
 			Integer hrs = (Integer)ph.valueForKey("weeklyHours");
-			if(hrs != null)
+			if(hrs != null && hrs.intValue() >= 0)
 				return hrs.intValue();
 		}
 		return weeklyHours(course)[0];

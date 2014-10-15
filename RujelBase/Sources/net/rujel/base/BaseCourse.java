@@ -97,12 +97,12 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 	}
 	
 	public EOEnterpriseObject teacherChange(NSTimestamp onDate, NSTimestamp[] dates) {
+		if(dates != null) {
+			dates[0] = null;
+			dates[1] = null;
+		}
 		if(onDate == null || !namedFlags().flagForKey("teacherChanged")
 				|| teacherChanges().count() == 0) {
-			if(dates != null) {
-				dates[0] = null;
-				dates[1] = null;
-			}
 			return null;
 		}
 		EOEnterpriseObject result = null;

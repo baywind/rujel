@@ -7,7 +7,9 @@ import java.util.GregorianCalendar;
 
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
+import net.rujel.eduplan.EduPeriod;
 import net.rujel.eduplan.PlanCycle;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
@@ -22,6 +24,7 @@ import net.rujel.reusables.Various;
 import net.rujel.ui.TeacherSelector;
 
 import com.webobjects.appserver.*;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
@@ -297,28 +300,56 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     		loads = new NSMutableDictionary();
     		while (enu.hasMoreElements()) {
     			EduCourse course = (EduCourse) enu.nextElement();
-    			PlanCycle cycle = (PlanCycle)course.cycle();
-    			int hours = cycle.weekly(course);
+				NSArray pdetails = EOUtilities.objectsMatchingKeyAndValue(ec,
+						"PlanDetail","course", course);
+				int hours[] = new int[] {0,0};
+				if(pdetails != null && pdetails.count() > 0) {
+					Enumeration denu = pdetails.objectEnumerator();
+					NSTimestamp minBegin = null;
+					NSTimestamp maxEnd = null;
+					while (denu.hasMoreElements()) {
+						EOEnterpriseObject pd = (EOEnterpriseObject)denu.nextElement();
+						EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
+						if(EOPeriod.Utility.compareDates(per.end(), firstDay) <= 0)
+							continue;
+						if(EOPeriod.Utility.compareDates(per.begin(), lastDay) >= 0)
+							continue;
+						if(minBegin == null || minBegin.after(per.begin())) {
+							minBegin = per.begin();
+							hours[0] = (Integer)pd.valueForKey("weekly");
+						}
+						if(maxEnd == null || maxEnd.before(per.end())) {
+							maxEnd = per.end();
+							hours[1] = (Integer)pd.valueForKey("weekly");
+						}
+					}
+				} else {
+	    			PlanCycle cycle = (PlanCycle)course.cycle();
+	    			hours[0] = cycle.weekly(course);
+	    			hours[1] = hours[0];
+				}
     			Object startTeacher = course.teacher(firstDay);
     			if(startTeacher == null) startTeacher = NSDictionary.EmptyDictionary;
     			int[] load = (int[])loads.objectForKey(startTeacher);
     			if(load == null) {
-    				load = new int[] {hours, 0};
+    				load = new int[] {hours[0], 0};
     				loads.setObjectForKey(load, startTeacher);
     			} else {
-    				load[0] += hours;
+    				load[0] += hours[0];
     			}
     			Object endTeacher = course.teacher(lastDay);
     			if(endTeacher == null) endTeacher = NSDictionary.EmptyDictionary;
-    			if(startTeacher == endTeacher)
+    			if(startTeacher == endTeacher) {
+    				load[1] += (hours[1] - hours[0]);
     				continue;
-    			load[1] -= hours;
+    			}
+    			load[1] -= hours[0];
     			load = (int[])loads.objectForKey(endTeacher);
     			if(load == null) {
-    				load = new int[] {0, hours};
+    				load = new int[] {0, hours[1]};
     				loads.setObjectForKey(load, endTeacher);
     			} else {
-    				load[1] += hours;
+    				load[1] += hours[1];
     			}
     		}
     	} // show load
@@ -496,11 +527,11 @@ vars:		while (vEnu.hasMoreElements()) { // variations
     	cal.setTime(lastDay);
     	int lastDOY = cal.get(Calendar.DAY_OF_YEAR);
     	int days = lastDOY - firstDOY +1;
-    	currMonth.takeValueForKey(new Integer(days), "days");
     	if(days > 0)
     		maxDOY = 0;
     	else
     		days += maxDOY;
+    	currMonth.takeValueForKey(new Integer(days), "days");
     	// courses for teacher
     	EOQualifier[] quals = new EOQualifier[2];//NSMutableArray();
     	quals[0] = new EOKeyValueQualifier("date",
@@ -524,7 +555,10 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 		details = new NSMutableArray();
 		final NSMutableArray clear = new NSMutableArray();
 		Integer school = (Integer)session().valueForKey("school");
-    	if(list != null && list.count() > 0) {  // recent cources
+		NSArray detailsSorter = new NSArray(new Object[] {
+	 		EOSortOrdering.sortOrderingWithKey("eduPeriod.begin",EOSortOrdering.CompareAscending),
+	 		EOSortOrdering.sortOrderingWithKey("eduPeriod.end",EOSortOrdering.CompareDescending)});
+    	if(list != null && list.count() > 0) {  // recent courses
 	    	quals[1] = new EOKeyValueQualifier("date",
 	    			EOQualifier.QualifierOperatorLessThanOrEqualTo,lastDay);
     		Enumeration enu = list.objectEnumerator();
@@ -534,13 +568,55 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 					continue;
 				if(section != null && !section.equals(course.valueForKeyPath("cycle.section")))
 					continue;
-				EOEnterpriseObject ct = course.teacherChange(lastDay,dates);
+				EOEnterpriseObject ct = course.teacherChange(lastDay,dates);				
 				if(ct != null)
 					continue;
 				PlanCycle cycle = (PlanCycle)course.cycle();
 				int hours = cycle.weekly(course);
+				if(dates[0] != null && dates[0].compare(firstDay) < 0)
+						dates[0] = null;
+				if(dates[1] != null && dates[0].compare(lastDay) > 0)
+					dates[1] = null;
+				NSArray pdetails = EOUtilities.objectsMatchingKeyAndValue(ec,
+						"PlanDetail","course", course);
+				pdetails = EOSortOrdering.sortedArrayUsingKeyOrderArray(pdetails, detailsSorter);
+		    	StringBuilder buf = new StringBuilder(3);
+				if(pdetails != null && pdetails.count() > 0) {
+					hours = (dates[0] == null)?-Math.abs(hours):0;
+					NSTimestamp since = (dates[0]==null)? firstDay : dates[0];
+					NSTimestamp to = (dates[1]==null)? lastDay : dates[1];
+					for (int i = 0; i < pdetails.count(); i++) {
+						EOEnterpriseObject pd = (EOEnterpriseObject)pdetails.objectAtIndex(i);
+						EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
+						if(EOPeriod.Utility.compareDates(per.end(), since) <= 0)
+							continue;
+						if(EOPeriod.Utility.compareDates(per.begin(), to) >= 0)
+							break;
+						Integer dHours = (Integer)pd.valueForKey("weekly");
+						if(hours < 0) {
+							hours = dHours.intValue();
+							if(dates[0] == null) {
+								//EOPeriod.Utility.compareDates(per.begin(), firstDay) < 0
+								weekly += hours;
+							} else {
+								buf.append('+');
+								change += hours;
+							}
+							buf.append(dHours);
+						} else {
+							int diff = dHours.intValue() - hours;
+							if(diff > 0)
+								buf.append('+');
+							buf.append(diff);
+							change += diff;
+							hours = dHours.intValue();
+						}
+					} // for (details)
+					if(hours <= 0)
+						continue;
+				} // has details
 				NSMutableDictionary dict = new NSMutableDictionary(course,"course");
-				if(dates[0] != null && dates[0].compare(firstDay) > 0) {
+				if(dates[0] != null) {
 			    	quals[0] = new EOKeyValueQualifier("date",
 			    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,dates[0]);
 			    	dict.takeValueForKey(new EOAndQualifier(new NSArray(quals)),"qual");
@@ -552,15 +628,19 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 						info[i] = clear;
 					}
 			    	dict.takeValueForKey(info, "info");
-			    	StringBuilder buf = new StringBuilder(3);
-			    	buf.append('+').append(hours);
-			    	dict.takeValueForKey(buf.toString(), "hours");
-			    	change += hours;
+			    	if(buf.length() == 0) {
+			    		buf.append('+').append(hours);
+			    		change += hours;
+			    	}
 				} else {
 			    	dict.takeValueForKey(monthQual,"qual");
-					weekly += hours;
-					dict.takeValueForKey(new Integer(hours), "hours");
+			    	if(pdetails == null || pdetails.count() == 0)
+			    		weekly += hours;
 				}
+				if(buf.length() > 0)
+					dict.takeValueForKey(buf.toString(), "hours");
+				else
+					dict.takeValueForKey(new Integer(hours), "hours");
 		    	details.addObject(dict);
     		} // courses enumeration
     	} // recent cources
@@ -592,10 +672,50 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 				NSTimestamp begin = dates[0];
 				if(begin != null && begin.compare(lastDay) > 0)
 					continue;
-		    	NSMutableArray[] info = null;
+
+				StringBuilder buf = new StringBuilder(3);
+				NSArray pdetails = EOUtilities.objectsMatchingKeyAndValue(ec,
+						"PlanDetail","course", course);
+				pdetails = EOSortOrdering.sortedArrayUsingKeyOrderArray(pdetails, detailsSorter);
+				if(pdetails != null && pdetails.count() > 0) {
+					hours = -Math.abs(hours);
+					NSTimestamp since = (dates[0]==null)? firstDay : dates[0];
+					NSTimestamp to = (dates[1]==null)? lastDay : dates[1];
+					for (int i = 0; i < pdetails.count(); i++) {
+						EOEnterpriseObject pd = (EOEnterpriseObject)pdetails.objectAtIndex(i);
+						EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
+						if(EOPeriod.Utility.compareDates(per.end(), since) <= 0)
+							continue;
+						if(EOPeriod.Utility.compareDates(per.begin(), to) >= 0)
+							break;
+						Integer dHours = (Integer)pd.valueForKey("weekly");
+						if(hours < 0) {
+							hours = dHours.intValue();
+							if(begin == null || begin.compare(firstDay) < 0) {
+								weekly += hours;
+							} else {
+								buf.append('+');
+								change += hours;
+							}
+							buf.append(dHours);
+						} else {
+							int diff = dHours.intValue() - hours;
+							if(diff > 0)
+								buf.append('+');
+							buf.append(diff);
+							change += diff;
+							hours = dHours.intValue();
+						}
+					} // for (details)
+					if(hours <= 0)
+						continue;
+				} // has details
+
+				NSMutableArray[] info = null;
 				if(begin == null || begin.compare(firstDay) < 0) {
 					begin = firstDay;
-					weekly += hours;
+					if(pdetails == null || pdetails.count() == 0)
+						weekly += hours;
 				} else {
 					info = new NSMutableArray[days +1];
 			    	cal.setTime(begin);
@@ -604,15 +724,13 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 			    	for (int i = fin; i > 0; i--) {
 						info[i] = clear;
 					}
-			    	StringBuilder buf = new StringBuilder(3);
-			    	buf.append('+').append(hours);
-			    	dict.takeValueForKey(buf.toString(), "hours");
-			    	change += hours;
+			    	if(buf.length() == 0) {
+			    		buf.append('+').append(hours);
+				    	change += hours;
+			    	}
 				}
 				if(end.compare(lastDay) > 0) {
 					end = lastDay;
-					if(begin == firstDay)
-						dict.takeValueForKey(new Integer(hours), "hours");
 				} else {
 					if(info == null)
 						info = new NSMutableArray[days +1];
@@ -623,15 +741,16 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 						info[i] = clear;
 					}
 			    	change -= hours;
-			    	StringBuilder buf = new StringBuilder(3);
-					if(begin == firstDay) {
-				    	buf.append('-');
-					} else {
-						buf.append("&plusmn;");
-					}
-					buf.append(hours);
-			    	dict.takeValueForKey(buf.toString(), "hours");
+			    	if(hours > 0) {
+			    		if(buf.length() == 0)
+			    			buf.append(hours);
+			    		buf.append('-').append(hours);
+			    	}
 				}
+				if(buf.length() > 0)
+					dict.takeValueForKey(buf.toString(), "hours");
+				else
+					dict.takeValueForKey(new Integer(hours), "hours");
 		    	dict.takeValueForKey(info, "info");
 		    	quals[0] = new EOKeyValueQualifier("date",
 		    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo,begin);
