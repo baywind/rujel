@@ -47,7 +47,6 @@ import com.webobjects.appserver.WORequestHandler;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOObjectStore;
-import com.webobjects.eocontrol.EOObjectStoreCoordinator;
 import com.webobjects.foundation.NSMutableDictionary;
 
 public class AgregationHandler extends WORequestHandler {

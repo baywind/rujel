@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 
 import net.rujel.base.BaseLesson;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
@@ -445,6 +446,16 @@ public class LessonList extends WOComponent {
 		} catch (Exception e) {
 			// illegal value
 		}
+	}
+	
+	public String hometaskClass() {
+		if(lessonItem == null || lessonItem.homeTask() != null)
+			return null;
+		if(SettingsBase.numericSettingForCourse("alertMissingHometask", lessonItem.course(),
+				lessonItem.editingContext(), 0) > 0) {
+			return "alertingBackground";
+		}
+		return null;
 	}
 	
 }

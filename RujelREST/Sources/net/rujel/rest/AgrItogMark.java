@@ -145,7 +145,8 @@ public class AgrItogMark extends AgrEntity {
 		if(attribute.equals("mark"))
 			return mark.mark();
 		if(attribute.equals("value")) {
-			if(mark.readFlags().flagForKey("forced")) {
+			BigDecimal val = mark.value();
+			if(val == null || mark.readFlags().flagForKey("forced")) {
 				String m = mark.mark();
 				if(m == null)
 					return new Integer(0);
@@ -161,7 +162,6 @@ public class AgrItogMark extends AgrEntity {
 					return null;
 				return new Integer(0);
 			}
-			BigDecimal val = mark.value();
 			if(val.compareTo(BigDecimal.ONE) == 0)
 				return new Integer(1);
 			if(val.compareTo(BigDecimal.ZERO) == 0)
