@@ -453,6 +453,18 @@ public class LessonList extends WOComponent {
 			return null;
 		if(SettingsBase.numericSettingForCourse("alertMissingHometask", lessonItem.course(),
 				lessonItem.editingContext(), 0) > 0) {
+			NSArray list = (NSArray)valueForBinding("lessonsList");
+			if(list != null && list.count() > 1) {
+				NSTimestamp date = lessonItem.date();
+				Enumeration enu = list.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EduLesson lesson = (EduLesson) enu.nextElement();
+					if(!date.equals(lesson.date()))
+						continue;
+					if(lesson.homeTask() != null)
+						return null;
+				}
+			}
 			return "alertingBackground";
 		}
 		return null;
