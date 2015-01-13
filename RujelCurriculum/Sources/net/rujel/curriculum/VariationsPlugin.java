@@ -305,6 +305,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				if(hours.intValue() > 0 &&
 						(date == null || EOPeriod.Utility.compareDates(date,per.end()) >= 0)) {
 					minPlan += hours.intValue();
+					beginDate = per.end();
 					continue;
 				}
 				if(date != null && EOPeriod.Utility.compareDates(date,per.begin()) < 0)
@@ -326,8 +327,8 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 						holidays.addObject(pre);
 					}
 				}
-				if(beginDate == null)
-					beginDate = start;
+//				if(beginDate == null)
+//					beginDate = start;
 				NSTimestamp end = per.end();
 				boolean fin = (date == null ||
 						EOPeriod.Utility.compareDates(date,end) >= 0); 
