@@ -166,7 +166,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 					EOQualifier.QualifierOperatorEqual,section));
 		EOQualifier qual = (quals.count() == 0)? null :
 			 (quals.count() == 1)? (EOQualifier)quals.objectAtIndex(0): new EOAndQualifier(quals);
-		EOFetchSpecification fs = new EOFetchSpecification("PlanCycle",qual,null);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,null);
 		return ec.objectsWithFetchSpecification(fs);		
 	}
 	

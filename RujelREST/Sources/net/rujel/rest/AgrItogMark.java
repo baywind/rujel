@@ -133,7 +133,7 @@ public class AgrItogMark extends AgrEntity {
 		if(attribute.equals("eduYear"))
 			return mark.container().eduYear();
 		if(attribute.equals("course")) //wrap
-			return new Wrapper(mark.assumeCourse());
+			return new AgrEduCourse.Wrapper(mark.assumeCourse());
 		if(attribute.equals("student")) //wrap
 //			return mark.student();
 //			return WOLogFormatter.formatEO(mark.student());

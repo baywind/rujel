@@ -120,21 +120,30 @@ public class AgregationHandler extends WORequestHandler {
 			}
 			txt = req.stringFormValueForKey("_agr" + lvl);
 			String[] prevAgr = res.agregates;
-			res.agregates = txt.split(",");
-			Agregator[] agregators = new Agregator[res.agregates.length];
-			for (int i = 0; i < res.agregates.length; i++) {
-				String key = res.agregates[i].trim();
-				res.agregates[i] = key;
-				String source = req.stringFormValueForKey(key);
-				if(source == null)
-					continue;
-				try {
-					agregators[i] = Agregator.parceAgregator(source);
-					agregators[i].name = key;
-				} catch (ParseError e) {
-					return parseError(e, context);
+			Agregator[] agregators;
+			if(txt != null && txt.length() > 0) {
+				res.agregates = txt.split(",");
+				agregators = new Agregator[res.agregates.length];
+				for (int i = 0; i < res.agregates.length; i++) {
+					String key = res.agregates[i].trim();
+					res.agregates[i] = key;
+					String source = req.stringFormValueForKey(key);
+					if(source == null)
+						continue;
+					try {
+						agregators[i] = Agregator.parceAgregator(source);
+						agregators[i].name = key;
+					} catch (ParseError e) {
+						return parseError(e, context);
+					}
 				}
+			} else {
+				agregators = null;
+				res.agregates = null;
 			}
+			txt = req.stringFormValueForKey("_list" + lvl);
+			if(txt != null)
+				res.lists = txt.split(",");
 			res.agregate(agregators, enu, prevAgr);
 			res.level = new Integer(lvl);
 			enu = (res.rows == null || res.rows.count() == 0)? null : res.rows.objectEnumerator();

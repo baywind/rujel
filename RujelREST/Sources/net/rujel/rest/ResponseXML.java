@@ -19,6 +19,7 @@ import org.xml.sax.XMLReader;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSMutableSet;
 
 import net.rujel.reusables.xml.AbstractObjectReader;
 import net.rujel.reusables.xml.TransormationErrorListener;
@@ -101,6 +102,26 @@ public class ResponseXML extends AbstractObjectReader{
 							if(value.getAttribute() != null)
 								handler.prepareAttribute("attribute",value.getAttribute());
 							handler.element("agregate", value.toString());
+						}
+					}
+					if(in.lists != null) {
+						for (int i = 0; i < in.lists.length; i++) {
+							String key = in.lists[i];
+							NSMutableSet list = (NSMutableSet)row.valueForKey(key);
+							if(list == null || list.count() == 0)
+								continue;
+							handler.prepareAttribute("attribute", key);
+							handler.startElement("list");
+							Enumeration lenu = list.objectEnumerator();
+							while (lenu.hasMoreElements()) {
+								Object val = (Object) lenu.nextElement();
+								if(val instanceof AgrEntity.Wrapper) {
+									((AgrEntity.Wrapper)val).parce(handler);
+								} else {
+									handler.element("value", val.toString());
+								}
+							}
+							handler.endElement("list");
 						}
 					}
 					handler.endElement("grouping");

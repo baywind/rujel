@@ -33,13 +33,17 @@ import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
+import org.xml.sax.SAXException;
+
 import net.rujel.rest.Agregator.ParseError;
+import net.rujel.reusables.xml.EasyGenerationContentHandlerProxy;
 
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOOrQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
@@ -58,6 +62,8 @@ public abstract class AgrEntity {
 		AgrEntity result = null;
 		if(entName.equalsIgnoreCase("itogMark"))
 			result = new AgrItogMark();
+		if(entName.equalsIgnoreCase("course"))
+			result = new AgrEduCourse();
 		if(result == null)
 			throw new IllegalArgumentException("Unknown entity name '" + entName + '\'');
 		result.ec = ec;
@@ -126,7 +132,28 @@ public abstract class AgrEntity {
 	public static void addIntToQuals(NSMutableArray quals, String attrib, String value)
 															throws ParseError {
 		Object[] snv = selectorAndValue(value);
-		if(snv != null) {
+		if(snv != null && snv.length > 0) {
+			if(snv[0] == EOQualifier.QualifierOperatorEqual) {
+				if(snv.length > 2) {
+					NSMutableArray or = new NSMutableArray();
+					for (int i = 1; i < snv.length; i++) {
+						or.addObject(new EOKeyValueQualifier(attrib, 
+								(NSSelector)snv[0], new Integer((String)snv[i])));
+					}
+					quals.addObject(new EOOrQualifier(or));
+				} else {
+					quals.addObject(new EOKeyValueQualifier(attrib, 
+							(NSSelector)snv[0], new Integer((String)snv[1])));
+				}
+			} else {
+				quals.addObject(new EOKeyValueQualifier(attrib, 
+						(NSSelector)snv[0], new Integer((String)snv[1])));
+				if(snv.length >= 4) {
+					quals.addObject(new EOKeyValueQualifier(attrib, 
+							(NSSelector)snv[2], new Integer((String)snv[3])));
+				}
+			}
+/*			
 			quals.addObject(new EOKeyValueQualifier(attrib, 
 					(NSSelector)snv[0], new Integer((String)snv[1])));
 			if(snv.length > 2) {
@@ -139,7 +166,7 @@ public abstract class AgrEntity {
 					quals.addObject(new EOKeyValueQualifier(attrib, 
 							(NSSelector)snv[2], new Integer((String)snv[3])));
 				}
-			}
+			} */
 		}
 	}
 	
@@ -183,6 +210,7 @@ public abstract class AgrEntity {
 		private int base;
 		private AgrEntity ent;
 		private Enumeration recent;
+		private Wrapper ongoing;
 		
 		public RowsEnum(AgrEntity entity, NSArray baseQuals, NSDictionary iterate) {
 			ent = entity;
@@ -204,7 +232,7 @@ public abstract class AgrEntity {
 		}
 
 		public boolean hasMoreElements() {
-			if(recent != null && recent.hasMoreElements())
+			if(nextRecent())
 					return true;
 			while(nextIteration()) {
 				EOQualifier qual = new EOAndQualifier(quals);
@@ -213,8 +241,24 @@ public abstract class AgrEntity {
 				NSArray found = ent.ec.objectsWithFetchSpecification(fs);
 				if(found != null && found.count() > 0) {
 					recent = found.objectEnumerator();
-					return true;
+					if(nextRecent())
+						return true;
 				}
+			}
+			return false;
+		}
+		
+		private boolean nextRecent() {
+			if(ongoing != null)
+				return true;
+			if(recent == null)
+				return false;
+			while (recent.hasMoreElements()) {
+				NSDictionary row = (NSDictionary) recent.nextElement();
+				ongoing = ent.new Wrapper(ent.ec.faultForRawRow(row, ent.entityName()));
+				if(qualifies(ongoing))
+					return true;
+				ongoing = null;
 			}
 			return false;
 		}
@@ -251,10 +295,17 @@ public abstract class AgrEntity {
 		public NSKeyValueCoding nextElement() {
 			if(!hasMoreElements())
 				throw new NoSuchElementException();
-			NSDictionary row = (NSDictionary) recent.nextElement();
-			return ent.new Wrapper(ent.ec.faultForRawRow(row, ent.entityName()));
+//			if(!nextRecent())
+//				throw new NoSuchElementException();
+			Wrapper result = ongoing;
+			ongoing = null;
+			return result;
 		}
 		
+		protected boolean qualifies(Wrapper obj) {
+			return true;
+		}
+
 	}
 	
 	public class Wrapper implements NSKeyValueCoding {
@@ -291,6 +342,12 @@ public abstract class AgrEntity {
 		
 		public String toString() {
 			return obj.entityName() + '#' + obj.hashCode();
+		}
+		
+		public void parce(EasyGenerationContentHandlerProxy handler) throws SAXException {
+			handler.prepareAttribute("entity", obj.entityName());
+			handler.prepareAttribute("id", Integer.toString(obj.hashCode()));
+			handler.element("object", null);
 		}
 	}
 }

@@ -38,8 +38,11 @@ import org.xml.sax.InputSource;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
+import com.webobjects.foundation.NSSet;
 
 public class ReportSource extends InputSource {
 
@@ -47,6 +50,7 @@ public class ReportSource extends InputSource {
 	public NSDictionary attributes;
 	public String[] groupings;
 	public String[] agregates;
+	public String[] lists;
 	public NSArray rows;
 	public Integer level;
 
@@ -64,7 +68,7 @@ public class ReportSource extends InputSource {
 			}
 			NSMutableDictionary dict = agrDict;
 			for (int i = 0; i < groupings.length; i++) {
-				Object key = row.valueForKey(groupings[i]);
+				Object key = NSKeyValueCodingAdditions.Utility.valueForKeyPath(row,groupings[i]);
 				if(key == null)
 					key = NSKeyValueCoding.NullValue;
 				NSMutableDictionary found = (NSMutableDictionary)dict.objectForKey(key);
@@ -76,27 +80,50 @@ public class ReportSource extends InputSource {
 			}
 			if(dict.count() == 0) {
 				for (int i = 0; i < groupings.length; i++) {
-					dict.takeValueForKey(row.valueForKey(groupings[i]), groupings[i]);
+					Object val = NSKeyValueCodingAdditions.Utility.valueForKeyPath(
+							row,groupings[i]);
+					dict.takeValueForKey(val, groupings[i]);
 				}
 				agrList.addObject(dict);
 				dict.setObjectForKey(new Counter(1), "_count_");
-				if(agregators == null) continue;
-				for (int i = 0; i < agregators.length; i++) {
-					Agregator agr = agregators[i];
-					if(agr == null)
-						continue;
-					else
-						agr = agr.emptyClone();
-					dict.setObjectForKey(agr, agregators[i].name);
-					agr.scan(row);
+				if(agregators != null) {
+					for (int i = 0; i < agregators.length; i++) {
+						Agregator agr = agregators[i];
+						if(agr == null)
+							continue;
+						else
+							agr = agr.emptyClone();
+						dict.setObjectForKey(agr, agregators[i].name);
+						agr.scan(row);
+					}
 				}
 			} else {
 				dict.valueForKeyPath("_count_.raise");
-				if(agregates == null) continue;
-				for (int i = 0; i < agregates.length; i++) {
-					Agregator agregator = (Agregator)dict.valueForKey(agregates[i]);
-					if(agregator != null)
-						agregator.scan(row);
+				if(agregates != null) {
+					for (int i = 0; i < agregates.length; i++) {
+						Agregator agregator = (Agregator)dict.valueForKey(agregates[i]);
+						if(agregator != null)
+							agregator.scan(row);
+					}
+				}
+			}
+			if(lists != null && lists.length > 0) {
+				for (int i = 0; i < lists.length; i++) {
+					Object value = NSKeyValueCodingAdditions.Utility.valueForKeyPath(row,lists[i]);
+					if(value == null)
+						continue;
+					NSMutableSet list = (NSMutableSet)dict.valueForKey(lists[i]);
+					if(list == null) {
+						list = new NSMutableSet();
+						dict.setObjectForKey(list, lists[i]);
+					}
+					if(value instanceof NSArray) {
+						list.addObjectsFromArray((NSArray)value);
+					} else if (value instanceof NSSet) {
+						list.unionSet((NSSet)value);
+					} else {
+						list.addObject(value);
+					}
 				}
 			}
 		} // rows enumeration
