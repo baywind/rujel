@@ -17,6 +17,7 @@ import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.EOAndQualifier;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
@@ -54,9 +55,65 @@ public class AgrEduCourse extends AgrEntity {
 				year = MyUtility.eduYearForDate(null);
 			quals.addObject(new EOKeyValueQualifier(BaseCourse.EDU_YEAR_KEY, 
 					EOQualifier.QualifierOperatorEqual, year));
+			params.takeValueForKey(year.toString(), "eduYear");
 		} else {
 			addIntToQuals(quals, BaseCourse.EDU_YEAR_KEY, txt);
 		}
+		NSArray cycles = cyclesForParams(params,ec);
+		if(cycles == null || cycles.count() == 0)
+			return null;
+//		NSMutableDictionary iterate = new NSMutableDictionary(cycles,"cycle");
+		txt = (String)params.valueForKey("form");
+		if(txt != null) {
+			Object[] snv = selectorAndValue(txt);
+			if(snv.length > 2) {
+				snv[0] = null;
+				quals.addObject(Various.getEOInQualifier("form", new NSArray(snv)));
+			} else {
+				quals.addObject(new EOKeyValueQualifier("form", 
+						(NSSelector)snv[0], snv[1]));
+			}
+
+		}
+		
+		// TODO: qualifier for Teacher
+
+		txt = (String)params.valueForKey("results");
+		final Object[] snv = selectorAndValue(txt);
+		return new RowsEnum(this, quals, "cycle",cycles) {
+			protected boolean qualifies(Wrapper obj) {
+				if(snv != null) {
+					Integer res = getResults((EduCourse)obj.obj);
+					if(snv[0] == EOQualifier.QualifierOperatorEqual) {
+						for (int i = 1; i < snv.length; i++) {
+							if(res.intValue() == Integer.parseInt((String)snv[i]))
+								return true;
+						}
+						return false;
+					}
+					if(!EOQualifier.ComparisonSupport.compareValues(res,new Integer((String)snv[1]), 
+							(NSSelector)snv[0]))
+						return false;
+//					EOKeyValueQualifier qual = new EOKeyValueQualifier("results", 
+//							(NSSelector)snv[0], new Integer((String)snv[1]));
+//					if(!qual.evaluateWithObject(obj))
+//						return false;
+					if(snv.length >= 4) {
+//						qual = new EOKeyValueQualifier("results", 
+//								(NSSelector)snv[2], new Integer((String)snv[3]));
+//						if(!qual.evaluateWithObject(obj))
+//							return false;
+						return EOQualifier.ComparisonSupport.compareValues(res,
+								new Integer((String)snv[3]), (NSSelector)snv[2]);
+					}
+				}
+				return true;
+			}
+		};
+	}
+
+	public static NSArray cyclesForParams(NSDictionary params, EOEditingContext ec) throws ParseError {
+		String txt;
 		NSMutableArray cycleQuals = new NSMutableArray();
 		txt = (String)params.valueForKey("grade");
 		addIntToQuals(cycleQuals, PlanCycle.GRADE_KEY, txt);
@@ -78,51 +135,7 @@ public class AgrEduCourse extends AgrEntity {
 			 (EOQualifier)cycleQuals.objectAtIndex(0): new EOAndQualifier(cycleQuals);
 		EOFetchSpecification fs = new EOFetchSpecification(PlanCycle.ENTITY_NAME,cqual,null);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
-		if(found == null || found.count() == 0)
-			return null;
-		NSMutableDictionary iterate = new NSMutableDictionary(found,"cycle");
-		txt = (String)params.valueForKey("form");
-		if(txt != null) {
-			Object[] snv = selectorAndValue(txt);
-			if(snv.length > 2) {
-				snv[0] = null;
-				quals.addObject(Various.getEOInQualifier("form", new NSArray(snv)));
-			} else {
-				quals.addObject(new EOKeyValueQualifier("form", 
-						(NSSelector)snv[0], snv[1]));
-			}
-
-		}
-		
-		// TODO: qualifier for Teacher
-
-		txt = (String)params.valueForKey("results");
-		final Object[] snv = selectorAndValue(txt);
-		return new RowsEnum(this, quals, iterate) {
-			protected boolean qualifies(Wrapper obj) {
-				if(snv != null) {
-					if(snv[0] == EOQualifier.QualifierOperatorEqual) {
-						Integer res = getResults((EduCourse)obj.obj);
-						for (int i = 1; i < snv.length; i++) {
-							if(res.intValue() == Integer.parseInt((String)snv[i]))
-								return true;
-						}
-						return false;
-					}
-					EOKeyValueQualifier qual = new EOKeyValueQualifier("results", 
-							(NSSelector)snv[0], new Integer((String)snv[1]));
-					if(!qual.evaluateWithObject(obj))
-						return false;
-					if(snv.length >= 4) {
-						qual = new EOKeyValueQualifier("results", 
-								(NSSelector)snv[2], new Integer((String)snv[3]));
-						if(!qual.evaluateWithObject(obj))
-							return false;
-					}
-				}
-				return true;
-			}
-		};
+		return found;
 	}
 
 	@Override

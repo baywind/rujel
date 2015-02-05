@@ -46,7 +46,7 @@ public class ItogContainer extends _ItogContainer {
 			new EOSortOrdering(EDU_YEAR_KEY,EOSortOrdering.CompareAscending),
 			new EOSortOrdering("itogType.sort",EOSortOrdering.CompareAscending),
 			new EOSortOrdering(NUM_KEY,EOSortOrdering.CompareAscending)
-	}); 
+	});
 
 	public static void init() {
 	}

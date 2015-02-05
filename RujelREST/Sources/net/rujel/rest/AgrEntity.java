@@ -206,11 +206,31 @@ public abstract class AgrEntity {
 		private String[] itrAttr;
 		private NSArray[] itrValues;
 		private int[] itrIdx;
-		private NSMutableArray quals;
+		protected NSMutableDictionary iterDict;
+		protected NSMutableArray quals;
 		private int base;
-		private AgrEntity ent;
+		protected AgrEntity ent;
 		private Enumeration recent;
 		private Wrapper ongoing;
+		
+		public RowsEnum(AgrEntity entity,NSArray baseQuals,String itrAttr,NSArray itrValue) {
+			this(entity,baseQuals,new String[]{itrAttr},new NSArray[] {itrValue});
+		}
+		
+		public RowsEnum(AgrEntity entity,NSArray baseQuals,String[] itrAttr,NSArray[] itrValues) {
+			ent = entity;
+			quals = baseQuals.mutableClone();
+			base = quals.count();
+			if(itrAttr != null) {
+				int len = itrAttr.length;
+				this.itrAttr = new String[len];
+				this.itrValues = new NSArray[len];
+				for (int i = 0; i < len; i++) {
+					this.itrAttr[i] = itrAttr[i];
+					this.itrValues[i] = itrValues[i].immutableClone();
+				}
+			}
+		}
 		
 		public RowsEnum(AgrEntity entity, NSArray baseQuals, NSDictionary iterate) {
 			ent = entity;
@@ -255,7 +275,9 @@ public abstract class AgrEntity {
 				return false;
 			while (recent.hasMoreElements()) {
 				NSDictionary row = (NSDictionary) recent.nextElement();
-				ongoing = ent.new Wrapper(ent.ec.faultForRawRow(row, ent.entityName()));
+				ongoing = ent.new Wrapper(row);
+				if(iterDict != null)
+					ongoing.iterDict = this.iterDict.immutableClone();
 				if(qualifies(ongoing))
 					return true;
 				ongoing = null;
@@ -267,9 +289,12 @@ public abstract class AgrEntity {
 			if(itrAttr == null)
 				return (recent == null);
 			if(itrIdx == null) {
+				iterDict = new NSMutableDictionary();
 				for (int i = 0; i < itrAttr.length; i++) {
+					Object value = itrValues[i].objectAtIndex(0);
 					quals.addObject(new EOKeyValueQualifier(itrAttr[i],
-							EOQualifier.QualifierOperatorEqual, itrValues[i].objectAtIndex(0)));
+							EOQualifier.QualifierOperatorEqual, value));
+					iterDict.takeValueForKey(value, itrAttr[i]);
 				}
 				itrIdx = new int[itrAttr.length];
 				return true;
@@ -278,16 +303,20 @@ public abstract class AgrEntity {
 			itrIdx[i]++;
 			while (itrIdx[i] >= itrValues[i].count()) {
 				itrIdx[i] = 0;
+				Object value = itrValues[i].objectAtIndex(0);
 				EOQualifier qual = new EOKeyValueQualifier(itrAttr[i],
-						EOQualifier.QualifierOperatorEqual, itrValues[i].objectAtIndex(0));
+						EOQualifier.QualifierOperatorEqual, value);
+				iterDict.takeValueForKey(value, itrAttr[i]);
 				quals.replaceObjectAtIndex(qual, base + i);
 				i++;
 				if(i >= itrIdx.length)
 					return false;
 				itrIdx[i]++;
 			}
+			Object value = itrValues[i].objectAtIndex(itrIdx[i]);
 			EOQualifier qual = new EOKeyValueQualifier(itrAttr[i],
-					EOQualifier.QualifierOperatorEqual, itrValues[i].objectAtIndex(itrIdx[i]));
+					EOQualifier.QualifierOperatorEqual, value);
+			iterDict.takeValueForKey(value, itrAttr[i]);
 			quals.replaceObjectAtIndex(qual, base + i);
 			return true;
 		}
@@ -308,12 +337,19 @@ public abstract class AgrEntity {
 
 	}
 	
-	public class Wrapper implements NSKeyValueCoding {
+	protected class Wrapper implements NSKeyValueCoding {
+		protected NSDictionary row;
 		protected EOEnterpriseObject obj;
 		protected NSMutableDictionary dict = new NSMutableDictionary();
+		protected NSDictionary iterDict;
 		
-		public Wrapper(EOEnterpriseObject row) {
-			obj = row;
+		public Wrapper(NSKeyValueCoding row) {
+			if(row instanceof EOEnterpriseObject) {
+				obj = (EOEnterpriseObject)row;
+			} else if(row instanceof NSDictionary) {
+				this.row = (NSDictionary)row;
+				obj = ec.faultForRawRow((NSDictionary)row, entityName());
+			}
 		}
 		
 		public Object valueForKey(String key) {

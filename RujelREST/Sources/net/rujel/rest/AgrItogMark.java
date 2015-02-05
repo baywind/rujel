@@ -2,12 +2,12 @@ package net.rujel.rest;
 
 import java.math.BigDecimal;
 import java.util.Enumeration;
+import java.util.TreeSet;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.rest.Agregator.ParseError;
-import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.EOAndQualifier;
@@ -15,10 +15,10 @@ import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
 
 public class AgrItogMark extends AgrEntity {
 	
@@ -35,6 +35,13 @@ public class AgrItogMark extends AgrEntity {
 
 	public Enumeration getObjectsEnumeration(NSDictionary params) throws ParseError {
 		NSMutableArray quals = new NSMutableArray();
+		NSArray found = AgrEduCourse.cyclesForParams(params,ec);
+		if(found == null || found.count() == 0)
+			return null;
+//		NSMutableDictionary iterate = new NSMutableDictionary(found,"cycle");
+		NSArray[] itrValues = new NSArray[2];
+		itrValues[1] = found;
+		
 		String txt = (String)params.valueForKey("eduYear");
 		if(txt == null) {
 			Integer year = (Integer)WOApplication.application().valueForKey("year");
@@ -42,27 +49,48 @@ public class AgrItogMark extends AgrEntity {
 				year = MyUtility.eduYearForDate(null);
 			quals.addObject(new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY, 
 					EOQualifier.QualifierOperatorEqual, year));
+			params.takeValueForKey(year.toString(), "eduYear");
 		} else {
 			addIntToQuals(quals, ItogContainer.EDU_YEAR_KEY, txt);
 		}
 		txt = (String)params.valueForKey("perCount");
-		addIntToQuals(quals, "itogType.inYearCount", txt);
+		if(txt != null) {
+			if(txt.equals("0")) {
+				quals.addObject(new EOKeyValueQualifier("itogType.inYearCount", 
+					EOQualifier.QualifierOperatorEqual, new Integer(1)));
+			} else if(txt.equals("1")) {
+				quals.addObject(new EOKeyValueQualifier("itogType.inYearCount", 
+						EOQualifier.QualifierOperatorEqual, new Integer(1)));
+				quals.addObject(new EOKeyValueQualifier("itogType.title", 
+						EOQualifier.QualifierOperatorCaseInsensitiveLike, "*год*"));				
+			} else {
+				addIntToQuals(quals, "itogType.inYearCount", txt);
+			}
+		}		
 		txt = (String)params.valueForKey("perNum");
 		addIntToQuals(quals, ItogContainer.NUM_KEY, txt);
 		EOQualifier qual = new EOAndQualifier(quals);
 		quals.removeAllObjects();
-		EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,qual,null);
-		NSArray found = ec.objectsWithFetchSpecification(fs);
+		NSArray sorter = new NSArray(new EOSortOrdering[] {
+				new EOSortOrdering(ItogContainer.EDU_YEAR_KEY,EOSortOrdering.CompareAscending),
+				new EOSortOrdering("itogType.inYearCount",EOSortOrdering.CompareDescending),
+				new EOSortOrdering(ItogContainer.NUM_KEY,EOSortOrdering.CompareAscending),
+				new EOSortOrdering("itogType.sort",EOSortOrdering.CompareDescending)
+		});
+		EOFetchSpecification fs = new EOFetchSpecification(ItogContainer.ENTITY_NAME,qual,sorter);
+		found = ec.objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0)
 			return null;
-		NSMutableDictionary iterate = new NSMutableDictionary();
+		itrValues[0] = found;
+/*		NSMutableDictionary iterate = new NSMutableDictionary();
 		if(found.count() > 1) {
 			iterate.takeValueForKey(found, ItogMark.CONTAINER_KEY);
 		} else {
 			quals.addObject(new EOKeyValueQualifier(ItogMark.CONTAINER_KEY, 
 					EOQualifier.QualifierOperatorEqual, found.objectAtIndex(0)));
 		}
-		txt = (String)params.valueForKey("grade");
+//
+  		txt = (String)params.valueForKey("grade");
 		if(txt == null) {
 			int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
 			int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
@@ -108,6 +136,7 @@ public class AgrItogMark extends AgrEntity {
 				iterate.takeValueForKey(new NSArray(list), "cycle.grade");
 			}
 		} // iterator for grade
+		*/
 		txt = (String)params.valueForKey("mark");
 		if(txt != null) {
 			quals.addObject(new EOKeyValueQualifier(ItogMark.MARK_KEY, 
@@ -116,9 +145,37 @@ public class AgrItogMark extends AgrEntity {
 		txt = (String)params.valueForKey("value");
 		addDecToQuals(quals, ItogMark.VALUE_KEY, txt);
 				
-		//TODO: qualifiers for subject, student and course
+		//TODO: qualifiers for student and course
 		
-		return new RowsEnum(this, quals, iterate);
+		String[] itrAttr = new String[] {ItogMark.CONTAINER_KEY,ItogMark.CYCLE_KEY};
+		return new RowsEnum(this, quals,itrAttr,itrValues) {
+			
+			private Integer curCycle;
+			private Integer curResultCount;
+			private Integer curResultNumber;
+			private TreeSet<Integer> mentionedStudents = new TreeSet();
+			
+			protected boolean qualifies(Wrapper obj) {
+				Integer val = (Integer)obj.row.valueForKey("eduCycleID");
+				if(curCycle == null || !curCycle.equals(val)) {
+					curCycle = val;
+					mentionedStudents.clear();
+				}
+				ItogContainer cur = (ItogContainer)iterDict.valueForKey(ItogMark.CONTAINER_KEY);
+				val = cur.itogType().inYearCount();
+				if(curResultCount == null || !curResultCount.equals(val)) {
+					curResultCount = val;
+					mentionedStudents.clear();
+				}
+				val = cur.num();
+				if(curResultNumber == null || !curResultNumber.equals(val)) {
+					curResultNumber = val;
+					mentionedStudents.clear();
+				}
+				val = (Integer)obj.row.valueForKey("studentID");
+				return mentionedStudents.add(val);
+			}
+		};
 	}
 	
 	public Object getValue(EOEnterpriseObject obj, String attribute) {
@@ -140,8 +197,14 @@ public class AgrItogMark extends AgrEntity {
 			return new Wrapper(mark.student());
 		if(attribute.equals("perNum"))
 			return mark.container().num();
-		if(attribute.equals("perCount"))
-			return mark.container().itogType().inYearCount();
+		if(attribute.equals("perCount")) {
+			Integer inYear = mark.container().itogType().inYearCount();
+			if(inYear.intValue() == 1) {
+				if(!mark.container().itogType().title().toLowerCase().contains("год"))
+					return new Integer(0);
+			}
+			return inYear;
+		}
 		if(attribute.equals("mark"))
 			return mark.mark();
 		if(attribute.equals("value")) {
