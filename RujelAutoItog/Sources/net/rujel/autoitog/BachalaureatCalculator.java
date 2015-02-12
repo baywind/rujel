@@ -328,12 +328,12 @@ public class BachalaureatCalculator extends WorkCalculator {
 
 	public Prognosis calculateForStudent(Student student, EduCourse course, 
 			AutoItog period, NSArray works) {
-		if(works == null || works.count() == 0) {
-			return null;
-		}
-		EOEditingContext ec = course.editingContext();
-		NSDictionary agregatedWorks = agregateWorks(works);
+//		if(works == null || works.count() == 0) {
+//			return null;
+//		}
 		boolean noWorks = (works == null || works.count() == 0);
+		EOEditingContext ec = course.editingContext();
+		NSDictionary agregatedWorks = (noWorks)?null:agregateWorks(works);
 		Prognosis progn = Prognosis.getPrognosis(student, course, period.itogContainer(), !noWorks);
 		if(noWorks) {
 			if(progn != null)

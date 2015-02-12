@@ -49,10 +49,11 @@ import com.webobjects.eocontrol.*;
 public class WorkType extends _WorkType {
 
 	public static final NSArray flagNames = new NSArray (new String[] {
-			"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","system","unused"});
+			"fixWeight","fixCompulsory","fixHometask","compulsory","hometask","system",
+			"specCriter","-128-","-256-","-512-","-1024-","-2048-","-4096-","unused"});
 
 	public static final EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
-			EOQualifier.QualifierOperatorLessThan,new Integer(64));
+			EOQualifier.QualifierOperatorLessThan,new Integer(8192));
 	
 	public static final NSDictionary specTypes = new NSDictionary (
 			new Integer[] {new Integer(38)}, new String[] {"onLesson"});

@@ -3,6 +3,7 @@ package net.rujel.ui;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
+import net.rujel.criterial.CriteriaSet;
 import net.rujel.criterial.WorkType;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.WOLogLevel;
@@ -14,6 +15,7 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 
 public class WorkTypeSetup extends WOComponent {
@@ -22,6 +24,8 @@ public class WorkTypeSetup extends WOComponent {
     public NSMutableArray types;
     public WorkType typeItem;
     public WorkType currType;
+    public NSMutableArray critSets;
+    public Object item;
 
 	public WorkTypeSetup(WOContext context) {
         super(context);
@@ -38,6 +42,19 @@ public class WorkTypeSetup extends WOComponent {
 			EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
 			NSArray tmp = types(ec);
 			types = (tmp == null)?new NSMutableArray() : tmp.mutableClone();
+
+			NSArray found = EOUtilities.objectsForEntityNamed(ec, CriteriaSet.ENTITY_NAME);
+	        String noneTitle = (String)session().valueForKeyPath(
+					"strings.RujelCriterial_Strings.setup.CriteriaSet.none");
+	        if(noneTitle == null) noneTitle = "none";
+	        NSDictionary none = new NSDictionary(noneTitle,CriteriaSet.SET_NAME_KEY);
+	        if(found != null && found.count() > 0) {
+	        	critSets = found.mutableClone();
+	        	EOSortOrdering.sortArrayUsingKeyOrderArray(critSets, SetupCriteria.sorter);
+	        	critSets.insertObjectAtIndex(none, 0);
+	        } else {
+	        	critSets = new NSMutableArray(none);
+	        }
 		}
 		if(currType != null && currType.editingContext() == null) {
 			types.removeObject(currType);
@@ -193,5 +210,30 @@ public class WorkTypeSetup extends WOComponent {
 	
 	public void reset() {
 		super.reset();
+	}
+
+	public Object selectedCritSet() {
+		if(typeItem == null || !typeItem.namedFlags().flagForKey("specCriter"))
+			return null;
+		Object result = typeItem.criteriaSet();
+		if(result == null)
+			result = critSets.objectAtIndex(0);
+		return result;
+	}
+
+	public void setSelectedCritSet(Object selectedCritSet) {
+		if(typeItem == null)
+			return;
+		if(selectedCritSet == null) {
+			typeItem.setCriteriaSet(null);
+			typeItem.namedFlags().setFlagForKey(false, "specCriter");
+		} else {
+			typeItem.namedFlags().setFlagForKey(true, "specCriter");
+			if (selectedCritSet instanceof CriteriaSet)
+				typeItem.setCriteriaSet((CriteriaSet)selectedCritSet);
+			else
+				typeItem.setCriteriaSet(null);
+		}
+		// TODO
 	}
 }

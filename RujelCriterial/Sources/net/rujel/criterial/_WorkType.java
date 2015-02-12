@@ -49,6 +49,7 @@ public abstract class _WorkType extends EOGenericRecord {
 	public static final String TYPE_NAME_KEY = "typeName";
 
 	// Relationships
+	public static final String CRITERIA_SET_KEY = "criteriaSet";
 
   public String colorNoWeight() {
     return (String) storedValueForKey(COLOR_NO_WEIGHT_KEY);
@@ -98,4 +99,12 @@ public abstract class _WorkType extends EOGenericRecord {
     takeStoredValueForKey(value, TYPE_NAME_KEY);
   }
 
+  public net.rujel.criterial.CriteriaSet criteriaSet() {
+    return (net.rujel.criterial.CriteriaSet)storedValueForKey(CRITERIA_SET_KEY);
+  }
+
+  public void setCriteriaSet(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, CRITERIA_SET_KEY);
+  }
+  
 }

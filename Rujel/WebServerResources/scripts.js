@@ -500,7 +500,7 @@ function ajaxPost(ini,aevent) {
 	if(ini.form)
 		aForm = ini.form;
 	var params = formParams(ini);
-	if(!presubmit(aForm))
+	if(ini.type != "select-one" && !presubmit(aForm))
 		return false;
 	getAjaxPopup(aevent, aForm.action, params);
 	return false;

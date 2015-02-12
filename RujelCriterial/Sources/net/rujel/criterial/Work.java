@@ -157,7 +157,10 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	public transient Object _critSet;
 	public CriteriaSet critSet() {
 		if(_critSet == null) {
-			_critSet = CriteriaSet.critSetForCourse(course());
+			if(workType() == null || !workType().namedFlags().flagForKey("specCriter"))
+				_critSet = CriteriaSet.critSetForCourse(course());
+			else
+				_critSet = workType().criteriaSet();
 			if(_critSet == null)
 				_critSet = NullValue;
 		}

@@ -42,6 +42,7 @@ import net.rujel.interfaces.EduLesson;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -85,7 +86,23 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(course == null)
     		course = (EduCourse)returnPage.valueForKey("course");
     	EOEditingContext ec = course.editingContext();
-    	critSet = CriteriaSet.critSetForCourse(course);
+    	if(types == null) {
+    		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,
+   				WorkType.activeQualifier, ModulesInitialiser.sorter);
+    		types = ec.objectsWithFetchSpecification(fs);
+    	}
+    	if(dict == null)
+    		dict = new NSMutableDictionary();
+    	WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
+    	if(type == null) {
+    		type = WorkType.defaultType(course);
+			dict.takeValueForKey(type, Work.WORK_TYPE_KEY);
+    	}
+    	if(type != null && type.namedFlags().flagForKey("specCriter")) {
+    		critSet = type.criteriaSet();
+    	} else {
+    		critSet = CriteriaSet.critSetForCourse(course);
+    	}
     	if(critSet != null) {
     		NamedFlags critFlags = critSet.namedFlags();
     		disableMax = (critFlags.flagForKey("fixList"))?"disabled":null;
@@ -94,17 +111,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		disableMax = null;
     		disableWeight = null;
     	}
-    	if(types == null) {
-    		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,
-   				WorkType.activeQualifier, ModulesInitialiser.sorter);
-    		types = ec.objectsWithFetchSpecification(fs);
-    	}
-    	if(dict == null)
-    		dict = new NSMutableDictionary();
-    	if(dict.valueForKey(Work.WORK_TYPE_KEY) == null)
-			dict.takeValueForKey(WorkType.defaultType(course), Work.WORK_TYPE_KEY);
     	if(dict.valueForKey("trimmedWeight") == null) {
-    		WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
     		BigDecimal weight = (type == null)?null:type.dfltWeight();
     		if(weight != null) {
     			if(weight.compareTo(BigDecimal.ZERO) == 0)
@@ -123,7 +130,6 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(dict.valueForKey(Work.DATE_KEY) == null)
     		dict.takeValueForKey(session().valueForKey("today"), Work.DATE_KEY);
     	if(namedFlags == null) {
-    		WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
     		namedFlags = (type==null)?new NamedFlags(WorkType.flagNames):
     			type.namedFlags().and(24);
     	}
@@ -161,13 +167,30 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     }
         
     public WOActionResults save() {
+    	WorkType type = (WorkType)dict.objectForKey(Work.WORK_TYPE_KEY);
+    	WORequest req = context().request();
+    	if(!Various.boolForObject(req.formValueForKey("doSave"))) {
+        	if(type != null && type.namedFlags().flagForKey("specCriter")) {
+        		critSet = type.criteriaSet();
+        	} else {
+        		critSet = CriteriaSet.critSetForCourse(course);
+        	}
+        	if(critSet != null) {
+        		NamedFlags critFlags = critSet.namedFlags();
+        		disableMax = (critFlags.flagForKey("fixList"))?"disabled":null;
+        		disableWeight = (critFlags.flagForKey("fixWeight"))?"disabled":null;
+        	} else {
+        		disableMax = null;
+        		disableWeight = null;
+        	}
+        	return this;
+    	}
      	EOEditingContext ec = course.editingContext();
     	boolean created = (work == null);
     	if(created) {
     		work = (Work)EOUtilities.createAndInsertInstance(ec, Work.ENTITY_NAME);
     		work.addObjectToBothSidesOfRelationshipWithKey(course, "course");
     	}
-    	WorkType type = (WorkType)dict.objectForKey(Work.WORK_TYPE_KEY);
     	if(type != null) {
     		work.setWorkType(type);
     		if(!type.namedFlags().flagForKey("fixHometask"))
@@ -200,7 +223,6 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		load = load + minutes;
     	if(work.load() == null || work.load().intValue() != load)
     		work.setLoad(new Integer(load));
-    	WORequest req = context().request();
 //    	NSNumberFormatter frmt = new NSNumberFormatter("0");
     	int critCount = 0;
     	String crCnt = req.stringFormValueForKey("critCount");
@@ -527,12 +549,17 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     public String typeChange() {
     	if(types == null || types.count() == 0)
     		return null;
+		CriteriaSet forCourse = CriteriaSet.critSetForCourse(course);
     	StringBuilder buf = new StringBuilder("switch(value){");
     	for (int i = 0; i < types.count(); i++) {
 			WorkType type = (WorkType) types.objectAtIndex(i);
-			buf.append("case '").append(i).append("': setDefaults(");
-			buf.append(type.dfltFlags()).append(',').append(type.trimmedWeight());
-			buf.append(");break;");
+			buf.append("case '").append(i).append("': ");
+			if(critSet==(type.namedFlags().flagForKey("specCriter")?type.criteriaSet():forCourse)){
+				buf.append("setDefaults(").append(type.dfltFlags()).append(',');
+				buf.append(type.trimmedWeight()).append(");break;");
+			} else {
+				buf.append("ajaxPost(this);break;");
+			}
 		}
     	buf.append("default: setDefaults(0);};");
     	return buf.toString();
