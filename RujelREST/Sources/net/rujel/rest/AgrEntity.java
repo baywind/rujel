@@ -36,6 +36,7 @@ import java.util.NoSuchElementException;
 import org.xml.sax.SAXException;
 
 import net.rujel.rest.Agregator.ParseError;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.xml.EasyGenerationContentHandlerProxy;
 
 import com.webobjects.eocontrol.EOAndQualifier;
@@ -111,9 +112,9 @@ public abstract class AgrEntity {
 						result[1] = value.substring(i,split);
 						result[3] = value.substring(split +1, value.length() -1);
 					} else if("{".equals(op)) {
-						if(value.charAt(value.length() -1) != '}')
-							throw new Agregator.ParseError("Closing bracket not found",
-									value.length() -1, value);
+						int end = value.lastIndexOf('}');
+						if(end < i)
+							throw new Agregator.ParseError("Closing bracket not found",end, value);
 						String[] values = value.substring(i, value.length() -1).split(",");
 						result = new Object[values.length +1];
 						result[0] = EOQualifier.QualifierOperatorEqual;
@@ -200,6 +201,38 @@ public abstract class AgrEntity {
 				}
 			}
 		}
+	}
+	
+	public static EOQualifier  getStringQual(String attrib, String value) 
+	throws ParseError {
+		if(value == null || value.length() == 0 ||value.equals("*"))
+			return null;
+		String trim = value.trim();
+		if((trim.charAt(0) == '\'' && trim.charAt(trim.length() -1) == '\'') ||
+				(trim.charAt(0) == '\"' && trim.charAt(trim.length() -1) == '\"')) {
+			return new EOKeyValueQualifier(attrib, EOQualifier.QualifierOperatorEqual,
+					 trim.substring(1, trim.length() -1));
+		}
+		array:
+		if(trim.charAt(0) == '{' && trim.charAt(trim.length() -1) == '}') {
+			int idx = 1;
+			while (Character.isWhitespace(trim.charAt(idx))) {
+				idx++;
+			}
+			if(idx >= trim.length() -1)
+				break array;
+			NSMutableArray values = new NSMutableArray();
+			char quot = trim.charAt(idx);
+			do {
+				int next = trim.indexOf(quot, idx + 1);
+				if(next < idx)
+					throw new ParseError("Cant find closing quote " + attrib, idx, trim);
+				values.addObject(trim.substring(idx+1, next));
+				idx = trim.indexOf(quot, next + 2);
+			} while (idx > 0);
+			return Various.getEOInQualifier(attrib, values);
+		}
+		return new EOKeyValueQualifier(attrib, EOQualifier.QualifierOperatorEqual,trim);
 	}
 	
 	protected static class RowsEnum implements Enumeration {

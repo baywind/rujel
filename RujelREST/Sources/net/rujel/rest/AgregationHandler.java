@@ -92,6 +92,7 @@ public class AgregationHandler extends WORequestHandler {
 		} else {
 			ec = new EOEditingContext();
 		}
+		ec.setUserInfoForKey(eduYear, "eduYear");
 		ec.lock();
 		byte[] result;
 		try {

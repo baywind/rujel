@@ -7,7 +7,10 @@ import java.util.TreeSet;
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
+import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Student;
 import net.rujel.rest.Agregator.ParseError;
+import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.EOAndQualifier;
@@ -19,11 +22,12 @@ import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableSet;
 
 public class AgrItogMark extends AgrEntity {
 	
 	private static final String[] attributes = new String[] {
-		"eduYear","perCount","perNum","grade","subject","course","student","mark","value"};
+		"eduYear","perCount","perNum","grade","subject","course","student","mark","value","form"};
 	
 	public String entityName() {
 		return ItogMark.ENTITY_NAME;
@@ -139,11 +143,45 @@ public class AgrItogMark extends AgrEntity {
 		*/
 		txt = (String)params.valueForKey("mark");
 		if(txt != null) {
-			quals.addObject(new EOKeyValueQualifier(ItogMark.MARK_KEY, 
-					EOQualifier.QualifierOperatorEqual, txt));
+			qual = getStringQual(ItogMark.MARK_KEY, txt);
+			if(qual != null)
+			quals.addObject(qual);
 		}
 		txt = (String)params.valueForKey("value");
 		addDecToQuals(quals, ItogMark.VALUE_KEY, txt);
+		
+		txt = (String)params.valueForKey("form");
+		final NSArray groups;
+		groupsQual:
+		if(txt != null) {
+			NSArray list = EduGroup.Lister.listGroups(MyUtility.date(ec), ec);
+			if(list == null || list.count() == 0)
+				return null;
+			qual = getStringQual("name", txt);
+			if(qual == null) {
+				groups = null;
+				break groupsQual;
+			}
+			list = EOQualifier.filteredArrayWithQualifier(list, qual);
+			if(list == null || list.count() == 0)
+				return null;
+			groups = list;
+			if(list.count() == 1) {
+				EduGroup gr = (EduGroup)list.objectAtIndex(0);
+				list = gr.list();
+			} else {
+				Enumeration enu = list.objectEnumerator();
+				NSMutableSet students = new NSMutableSet();
+				while (enu.hasMoreElements()) {
+					EduGroup gr = (EduGroup) enu.nextElement();
+					students.addObjectsFromArray(gr.list());
+				}
+				list = students.allObjects();
+			}
+			quals.addObject(Various.getEOInQualifier(ItogMark.STUDENT_KEY, list));
+		} else {
+			groups = null;
+		}
 				
 		//TODO: qualifiers for student and course
 		
@@ -173,7 +211,22 @@ public class AgrItogMark extends AgrEntity {
 					mentionedStudents.clear();
 				}
 				val = (Integer)obj.row.valueForKey("studentID");
-				return mentionedStudents.add(val);
+				if(mentionedStudents.add(val)) {
+					if(groups != null) {
+						Enumeration enu = groups.objectEnumerator();
+						while (enu.hasMoreElements()) {
+							EduGroup gr = (EduGroup) enu.nextElement();
+							if(gr.isInGroup((Student)obj.obj.valueForKey(ItogMark.STUDENT_KEY))) {
+								obj.dict.takeValueForKey(gr.name(), "form");
+								return true;
+							}
+						}
+						return false;
+					}
+					return true;
+				} else {
+					return false;
+				}
 			}
 		};
 	}
@@ -230,6 +283,13 @@ public class AgrItogMark extends AgrEntity {
 			if(val.compareTo(BigDecimal.ZERO) == 0)
 				return new Integer(0);
 			return val;
+		}
+		if(attribute.equals("form")) {
+			Object val = mark.student().valueForKeyPath("recentMainEduGroup.name");
+			if(val == null) {
+				val = mark.valueForKeyPath("assumeCourse.eduGroup.name");
+			}
+			return (val == null)?"???":val;
 		}
 		throw new IllegalArgumentException("Unknown attribute '" + attribute + '\'');
 	}

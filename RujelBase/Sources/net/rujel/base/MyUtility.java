@@ -162,6 +162,11 @@ public class MyUtility {
 					return eduYear;
 			}
 			try {
+				eduYear = (Integer)ec.userInfoForKey("eduYear");
+				if(eduYear != null)
+					return eduYear;
+			} catch (Exception e) {}
+			try {
 				eduYear = (Integer)WOApplication.application().valueForKey("year");
 			} catch (Exception e) {}
 		}
@@ -182,11 +187,24 @@ public class MyUtility {
 					date = MyUtility.dayInEduYear(eduYear.intValue());
 			}
 		} else if(ec != null) {
-			String tag = (String)ec.rootObjectStore().userInfoForKey("tag");
-			if(tag != null) {
-				int eduYear = Integer.parseInt(tag);
-				date = MyUtility.dayInEduYear(eduYear);
+			try {
+				date = (NSTimestamp)ec.userInfoForKey("date");
+				if(date != null) return date;
+			} catch(Exception e) {}
+			Integer eduYear = null;
+			try {
+				eduYear = (Integer)ec.userInfoForKey("eduYear");
+			} catch (Exception e) {}
+			if(eduYear == null) {
+				String tag = (String)ec.rootObjectStore().userInfoForKey("tag");
+				if(tag != null) {
+					try{
+						eduYear = new Integer(tag);
+					} catch(Exception e) {}
+				}
 			}
+			if(eduYear != null)
+				date = MyUtility.dayInEduYear(eduYear);
 		}
 		if(date == null)
 			date = new NSTimestamp();

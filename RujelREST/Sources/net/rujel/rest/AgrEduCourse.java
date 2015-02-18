@@ -65,15 +65,9 @@ public class AgrEduCourse extends AgrEntity {
 //		NSMutableDictionary iterate = new NSMutableDictionary(cycles,"cycle");
 		txt = (String)params.valueForKey("form");
 		if(txt != null) {
-			Object[] snv = selectorAndValue(txt);
-			if(snv.length > 2) {
-				snv[0] = null;
-				quals.addObject(Various.getEOInQualifier("form", new NSArray(snv)));
-			} else {
-				quals.addObject(new EOKeyValueQualifier("form", 
-						(NSSelector)snv[0], snv[1]));
-			}
-
+			EOQualifier qual = getStringQual("form", txt);
+			if(qual != null)
+				quals.addObject(qual);
 		}
 		
 		// TODO: qualifier for Teacher
@@ -118,13 +112,18 @@ public class AgrEduCourse extends AgrEntity {
 		txt = (String)params.valueForKey("grade");
 		addIntToQuals(cycleQuals, PlanCycle.GRADE_KEY, txt);
 		txt = (String)params.valueForKey("subject");
-		if(txt != null) {
-			EOQualifier squal = new EOOrQualifier(new NSArray(new EOKeyValueQualifier[] {
-					new EOKeyValueQualifier(Subject.SUBJECT_KEY,
-							EOQualifier.QualifierOperatorCaseInsensitiveLike,txt),
-							new EOKeyValueQualifier(Subject.FULL_NAME_KEY,
-									EOQualifier.QualifierOperatorCaseInsensitiveLike,txt)					
-			}));
+		if(txt != null && txt.length() > 0) {
+			EOQualifier squal;
+			if(txt.charAt(0) == '{') {
+				squal = getStringQual(Subject.SUBJECT_KEY, txt);
+			} else {
+				squal = new EOOrQualifier(new NSArray(new EOKeyValueQualifier[] {
+						new EOKeyValueQualifier(Subject.SUBJECT_KEY,
+								EOQualifier.QualifierOperatorCaseInsensitiveLike,txt),
+								new EOKeyValueQualifier(Subject.FULL_NAME_KEY,
+										EOQualifier.QualifierOperatorCaseInsensitiveLike,txt)					
+				}));
+			}
 			EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME,squal,null);
 			NSArray subjects = ec.objectsWithFetchSpecification(fs);
 			if(subjects == null || subjects.count() == 0)
