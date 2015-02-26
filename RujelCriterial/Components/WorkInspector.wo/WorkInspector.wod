@@ -160,7 +160,7 @@ MaxField : WOGenericElement {
 	elementName = "input";
 	type = inputType;
 	name = maxName;
-	size = 2;
+	size = 3;
 	value = criterMax;
 	checked = checked;
 	style = "text-align:center;";
@@ -179,7 +179,7 @@ WeightField : WOGenericElement {
 	elementName = "input";
 	type = "text";
 	name = weightName;
-	size = 2;
+	size = 3;
 	value = criterWeight;
 	style = "text-align:center;";
 	disabled = disableWeight;

@@ -48,10 +48,11 @@ import java.math.BigDecimal;
 public class StudentMarks extends WOComponent {	
 	public static final String workIntegral = SettingsReader.stringForKeyPath(
 			"criterial.workIntegral","%");
-	public static final NSArray noCriteria = new NSArray(new NSDictionary("#","title"));
+//	public static final NSArray noCriteria = new NSArray(new NSDictionary("#","title"));
 
     public NSKeyValueCoding workItem;
     public Object critItem;
+    public NSKeyValueCoding specItem;
     
     protected static final NSArray FLAGS = new NSArray(new Object[] {
     		"marked","markable","all"}); 
@@ -288,9 +289,84 @@ public class StudentMarks extends WOComponent {
 			if(works != null && works.count() > 0) {
 				EduCourse c = (EduCourse)courses.objectAtIndex(i);
 				NSMutableDictionary courseItem = formatCourse(c);
-				NSArray criteria = (NSArray)courseItem.valueForKeyPath("criteria.title");
+				NSArray criteria = (NSArray)courseItem.valueForKey("criteria");
+				int max = CriteriaSet.maxCriterionInWorks(works);
+				if(criteria == null) {
+					criteria = CriteriaSet.criteriaForMax(max);
+					courseItem.takeValueForKey(criteria, "criteria");
+				}
+				criteria = (NSArray)criteria.valueForKey("title");
+				NSMutableDictionary byCritSet = new NSMutableDictionary();
+				if(!Various.boolForObject(options.valueForKey("short"))) {
+					Enumeration enu = works.objectEnumerator();
+					CriteriaSet courseCS = CriteriaSet.critSetForCourse(c);
+					while (enu.hasMoreElements()) {
+						Work work = (Work) enu.nextElement();
+						if(!Various.boolForObject(work.valueForKeyPath(
+								"workType.namedFlags.specCriter")) || work.critSet() == courseCS)
+							continue;
+						Object cs = work.critSet();
+						if(cs == null)
+							cs = NullValue;
+						NSMutableDictionary dict = (NSMutableDictionary)byCritSet.objectForKey(cs);
+						if(dict == null) {
+							dict = new NSMutableDictionary(cs,"critSet");
+							dict.setObjectForKey(new NSMutableSet(work.workType()),"types");
+							dict.setObjectForKey(new NSMutableArray(work), "works");
+							byCritSet.setObjectForKey(dict, cs);
+						} else {
+							NSMutableSet set = (NSMutableSet)dict.objectForKey("types");
+							set.addObject(work.workType());
+							NSMutableArray list = (NSMutableArray)dict.objectForKey("works");
+							list.addObject(work);
+						}
+						NSArray mask = work.criterMask();
+						if(mask != null && mask.count() > 0) {
+							if(mask.count() == 1) {
+								EOEnterpriseObject m = (EOEnterpriseObject)mask.objectAtIndex(0);
+								if(((Integer)m.valueForKey("criterion")).intValue() == 0)
+									continue;
+							}
+							dict.takeValueForKey(Boolean.TRUE, "required");
+						}						
+					}
+				}
+				boolean hideMax = Various.boolForObject(options.valueForKey("hideMax"));
+				if(byCritSet.count() > 0) {
+					Enumeration enu = byCritSet.objectEnumerator();
+					NSMutableArray specWorks = new NSMutableArray(byCritSet.count());
+					while (enu.hasMoreElements()) {
+						NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+						if(!Various.boolForObject(dict.valueForKey("required")))
+							continue;
+						NSMutableArray list = (NSMutableArray)dict.objectForKey("works");
+						works.removeObjectsInArray(list);
+						Object set = dict.objectForKey("critSet");
+						NSArray crits = null;
+						if(set instanceof CriteriaSet)
+							crits = ((CriteriaSet)set).sortedCriteria();
+						if(crits == null || crits.count() == 0) {
+							crits = CriteriaSet.criteriaForMax(
+									CriteriaSet.maxCriterionInWorks(list));
+						}
+						dict.setObjectForKey(crits, "criteria");
+						crits = (NSArray)crits.valueForKey("title");
+						dict.setObjectForKey(formatWorks(list, crits, hideMax), "works");
+						NSMutableSet types = (NSMutableSet)dict.objectForKey("types");
+						Enumeration tenu = types.objectEnumerator();
+						StringBuilder buf = new StringBuilder();
+						while (tenu.hasMoreElements()) {
+							WorkType type = (WorkType) tenu.nextElement();
+							if(buf.length() > 0)
+								buf.append(", ");
+							buf.append(type.typeName());
+						}
+						dict.takeValueForKey(buf.toString(), "title");
+						specWorks.addObject(dict);
+					}
+					courseItem.takeValueForKey(specWorks, "specWorks");
+				}
 				synchronized (dateFormat) {
-					boolean hideMax = Various.boolForObject(options.valueForKey("hideMax"));
 					courseItem.setObjectForKey(formatWorks(works,criteria, hideMax),"works");
 				}
 				result.setObjectForKey(courseItem, c);
@@ -330,7 +406,6 @@ public class StudentMarks extends WOComponent {
 				title = "%";
 			result.takeValueForKey(title, "integral");
 		}
-		NSArray criteria = CriteriaSet.criteriaForCourse(course);
 /*		NSMutableArray critDicts = new NSMutableArray();
 		if(criteria != null && criteria.count() > 0) {
 			Enumeration en = criteria.objectEnumerator();
@@ -350,10 +425,14 @@ public class StudentMarks extends WOComponent {
 				critDicts.addObject(critDict);
 			}
 		}*/
-		if(criteria == null || criteria.count() == 0)
-			criteria = noCriteria;
-		result.setObjectForKey(criteria,"criteria");
-		
+		CriteriaSet set = CriteriaSet.critSetForCourse(course);
+		if (set!=null) {
+			NSArray criteria = set.sortedCriteria();
+			if(criteria == null || criteria .count() == 0)
+				criteria = CriteriaSet.criteriaForMax(0);
+			result.setObjectForKey(criteria,"criteria");
+		}
+
 		return result;
 	}
 	
@@ -361,7 +440,7 @@ public class StudentMarks extends WOComponent {
 		if(works == null || works.count() ==0) return null;
 		NSArray blanc = null;
 		final String empty = "";
-		if(criteria != null && criteria.count() > 0) {
+		if(!hideMax && criteria != null && criteria.count() > 0) {
 			Object[] arr = new Object[criteria.count()];
 			for (int i = 0; i < arr.length; i++) {
 				arr[i] = empty;

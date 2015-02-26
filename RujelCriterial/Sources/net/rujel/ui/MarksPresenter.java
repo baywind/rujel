@@ -117,6 +117,9 @@ public class MarksPresenter extends NotePresenter {
 	protected NSArray allCriteria() {
 		NSArray _allCriteria = null;
 		if(_allCriteria == null) {
+			_allCriteria = (NSArray)valueForBinding("criteria");
+			if(_allCriteria != null)
+				return _allCriteria;
 			if(lesson() == null) {
 				EduCourse course = (EduCourse)valueForBinding("course");
 				if(course != null) {
@@ -628,7 +631,7 @@ public class MarksPresenter extends NotePresenter {
 		if(student() == null || lesson() == null)
 			return false;
 		if(Various.boolForObject(valueForBinding("full")) 
-				&& !lesson().usedCriteria().containsObject(critItem))
+				&& !lesson().usedCriteria().containsObject(critItem()))
 			return true;
         return (Various.boolForObject(valueForBinding("denyCreation")) && 
         		student() != null && lesson() != null && mark() == null);
