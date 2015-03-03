@@ -357,6 +357,13 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 				minPlan += perWeeks*maxDev;
 				weeks += perWeeks;
 			}
+			cal.setTime(date);
+			if(cal.get(Calendar.DAY_OF_WEEK) != weekStart) {
+				cal.add(Calendar.DATE, 1);
+				while(cal.get(Calendar.DAY_OF_WEEK) != weekStart)
+					cal.add(Calendar.DATE, -1);
+			}
+			cal.set(Calendar.HOUR_OF_DAY, 1);
 		} else {  // no details
 			if(date != null) {
 				weeks = weeks(listName, cal, ec, weekDays, weekStart);
