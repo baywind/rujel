@@ -45,17 +45,18 @@ public abstract class _Prognosis extends EOGenericRecord {
 	public static final String FIRE_DATE_KEY = "fireDate";
 	public static final String FLAGS_KEY = "flags";
 	public static final String MARK_KEY = "mark";
+	public static final String STATE_KEY = "state";
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
 	public static final String BONUS_KEY = "bonus";
 	public static final String ITOG_CONTAINER_KEY = "itogContainer";
 
-  public BigDecimal complete() {
-    return (BigDecimal) storedValueForKey(COMPLETE_KEY);
+  public java.math.BigDecimal complete() {
+    return (java.math.BigDecimal) storedValueForKey(COMPLETE_KEY);
   }
 
-  public void setComplete(BigDecimal value) {
+  public void setComplete(java.math.BigDecimal value) {
     takeStoredValueForKey(value, COMPLETE_KEY);
   }
 
@@ -83,11 +84,19 @@ public abstract class _Prognosis extends EOGenericRecord {
     takeStoredValueForKey(value, MARK_KEY);
   }
 
-  public BigDecimal value() {
-    return (BigDecimal) storedValueForKey(VALUE_KEY);
+  public Integer state() {
+    return (Integer) storedValueForKey(STATE_KEY);
   }
 
-  public void setValue(BigDecimal value) {
+  public void setState(Integer value) {
+    takeStoredValueForKey(value, STATE_KEY);
+  }
+
+  public java.math.BigDecimal value() {
+    return (java.math.BigDecimal) storedValueForKey(VALUE_KEY);
+  }
+
+  public void setValue(java.math.BigDecimal value) {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 

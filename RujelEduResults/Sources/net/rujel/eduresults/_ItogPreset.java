@@ -1,4 +1,4 @@
-// _ItogMark.java
+// _ItogPreset.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,7 +28,7 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to ItogMark.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to ItogPreset.java instead.
 
 package net.rujel.eduresults;
 
@@ -37,25 +37,16 @@ import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _ItogMark extends EOGenericRecord {
-	public static final String ENTITY_NAME = "ItogMark";
+public abstract class _ItogPreset extends EOGenericRecord {
+	public static final String ENTITY_NAME = "ItogPreset";
 
 	// Attributes
-	public static final String FLAGS_KEY = "flags";
 	public static final String MARK_KEY = "mark";
+	public static final String PRESET_GROUP_KEY = "presetGroup";
 	public static final String STATE_KEY = "state";
 	public static final String VALUE_KEY = "value";
 
 	// Relationships
-	public static final String CONTAINER_KEY = "container";
-
-  public Integer flags() {
-    return (Integer) storedValueForKey(FLAGS_KEY);
-  }
-
-  public void setFlags(Integer value) {
-    takeStoredValueForKey(value, FLAGS_KEY);
-  }
 
   public String mark() {
     return (String) storedValueForKey(MARK_KEY);
@@ -63,6 +54,14 @@ public abstract class _ItogMark extends EOGenericRecord {
 
   public void setMark(String value) {
     takeStoredValueForKey(value, MARK_KEY);
+  }
+
+  public Integer presetGroup() {
+    return (Integer) storedValueForKey(PRESET_GROUP_KEY);
+  }
+
+  public void setPresetGroup(Integer value) {
+    takeStoredValueForKey(value, PRESET_GROUP_KEY);
   }
 
   public Integer state() {
@@ -81,12 +80,4 @@ public abstract class _ItogMark extends EOGenericRecord {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 
-  public net.rujel.eduresults.ItogContainer container() {
-    return (net.rujel.eduresults.ItogContainer)storedValueForKey(CONTAINER_KEY);
-  }
-
-  public void setContainer(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, CONTAINER_KEY);
-  }
-  
 }

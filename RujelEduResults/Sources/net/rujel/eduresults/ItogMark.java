@@ -95,6 +95,7 @@ public class ItogMark extends _ItogMark
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
     	setFlags(new Integer(0));
+    	setState(new Integer(0));
     	setMark("?");
     }
 

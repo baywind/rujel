@@ -177,6 +177,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 						tl = EOUtilities.createAndInsertInstance(ec, "ItogTypeList");
 						tl.takeValueForKey(listName, "listName");
 						tl.takeValueForKey(eduYear, "eduYear");
+						tl.takeValueForKey(new Integer(1), "presetGroup");
 					}
 					tl.addObjectToBothSidesOfRelationshipWithKey(it, "itogType");
 				}
@@ -242,6 +243,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 				tl.takeValueForKey(listName, "listName");
 				tl.takeValueForKey(session().valueForKey("eduYear"), "eduYear");
 				tl.addObjectToBothSidesOfRelationshipWithKey(type, "itogType");
+				tl.takeValueForKey(new Integer(1), "presetGroup");
 				activeTypes.addObject(type);
 				ec.saveChanges();
 			}

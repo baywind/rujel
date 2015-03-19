@@ -38,6 +38,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
+import net.rujel.eduresults.ItogPreset;
 import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EOPeriod;
@@ -217,7 +218,7 @@ public class AutoItog extends _AutoItog {
 
     protected Calculator _calculator;
     public Calculator calculator() {
-    	if(_calculator == null) {
+    	if(_calculator == null || !_calculator.getClass().getName().equals(calculatorName())) {
     		_calculator = Calculator.calculatorForName(calculatorName());
     	}
     	return _calculator;
@@ -456,4 +457,17 @@ public class AutoItog extends _AutoItog {
     	list = editingContext().objectsWithFetchSpecification(fs);
     	return (list == null || list.count() == 0);
     }
+    public Integer presetGroup() {
+    	return ItogPreset.getPresetGroup(listName(),
+    			itogContainer().eduYear(), itogContainer().itogType());
+    }
+    
+    /*
+    protected NSArray _presets;
+    public NSArray itogPresets() {
+    	if(_presets == null) {
+    		_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup());
+    	}
+    	return _presets;
+    }*/
 }

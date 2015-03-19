@@ -361,6 +361,7 @@ public class ModuleInit {
 						newTL.takeValueForKey(listName, "listName");
 						newTL.takeValueForKey(eduYear, "eduYear");
 						newTL.addObjectToBothSidesOfRelationshipWithKey(type, "itogType");
+						newTL.takeValueForKey(tl.valueForKey("presetGroup"), "presetGroup");
 					} // typeList.objectEnumerator();
 					ec.saveChanges();
 					if(prevEc.hasChanges())

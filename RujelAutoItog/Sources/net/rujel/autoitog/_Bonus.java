@@ -64,11 +64,11 @@ public abstract class _Bonus extends EOGenericRecord {
     takeStoredValueForKey(value, REASON_KEY);
   }
 
-  public BigDecimal value() {
-    return (BigDecimal) storedValueForKey(VALUE_KEY);
+  public java.math.BigDecimal value() {
+    return (java.math.BigDecimal) storedValueForKey(VALUE_KEY);
   }
 
-  public void setValue(BigDecimal value) {
+  public void setValue(java.math.BigDecimal value) {
     takeStoredValueForKey(value, VALUE_KEY);
   }
 

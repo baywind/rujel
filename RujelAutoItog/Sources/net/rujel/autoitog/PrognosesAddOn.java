@@ -395,6 +395,7 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 			ec.saveChanges();
 		} catch (RuntimeException ex) {
 			ec.revert();
+			agregate = null;
 			Logger.getLogger("rujel.autoitog").log(WOLogLevel.WARNING,
 					"Error saving calculated prognoses",ex);
 			session.takeValueForKey(ex.getMessage(), "message");

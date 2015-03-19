@@ -78,6 +78,7 @@ public class Prognosis extends _Prognosis {
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
     	setFlags(new Integer(0));
+    	setState(new Integer(0));
     	setComplete(BigDecimal.ZERO);
     	super.setValue(BigDecimal.ZERO);
     }
@@ -136,7 +137,14 @@ public class Prognosis extends _Prognosis {
     }
     
     public void updateMarkFromValue() {
-		super.setMark(markFromValue());
+    	String mark = markFromValue();
+		super.setMark(mark);
+		if(mark == null)
+			return;
+		ItogPreset preset = ItogPreset.presetForMark(mark, 
+				autoItog().presetGroup(), editingContext());
+		if(preset != null)
+			setState(preset.state());
     }
 
     protected Object _autoItog;
@@ -414,6 +422,7 @@ public class Prognosis extends _Prognosis {
 				unchanged = true;
 		}
 		relatedItog().setValue(value());
+		relatedItog().setState(state());
 		if(!unchanged)
 			relatedItog().setMark((mark() == null)?" ":mark());
 		Bonus bonus = bonus();
@@ -422,6 +431,20 @@ public class Prognosis extends _Prognosis {
 		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
 				relatedItog().setMark(bonus.mark());
+				NSArray presets = EOUtilities.objectsMatchingKeyAndValue(editingContext(),
+						ItogPreset.ENTITY_NAME, ItogPreset.MARK_KEY, bonus.mark());
+				if(presets != null && presets.count() > 0) {
+					if(presets.count() > 1) {
+						Integer presetID = ItogPreset.getPresetGroup(container, course());
+						EOQualifier qual = new EOKeyValueQualifier(ItogPreset.PRESET_GROUP_KEY,
+								EOQualifier.QualifierOperatorEqual,presetID);
+						presets = EOQualifier.filteredArrayWithQualifier(presets, qual);
+					}
+					if(presets.count() > 0) {
+						ItogPreset preset = (ItogPreset)presets.objectAtIndex(0);
+						relatedItog().setState(preset.state());
+					}
+				}
 //				StringBuilder buf = new StringBuilder();
 				relatedItog().comments().takeValueForKey(bonus.reason(), bonusTitle);
 				report("Bonus is applied",this, buf);
