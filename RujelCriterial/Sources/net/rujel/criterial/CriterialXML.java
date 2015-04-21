@@ -191,7 +191,7 @@ public class CriterialXML extends GeneratorModule {
 	
 	
 	public Integer sort() {
-		return new Integer(20);
+		return Integer.valueOf(20);
 	}
 	
 	protected ForCourse forCourse;

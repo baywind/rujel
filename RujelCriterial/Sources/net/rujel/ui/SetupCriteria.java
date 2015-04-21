@@ -102,7 +102,7 @@ public class SetupCriteria extends WOComponent {
 			criteria = new NSMutableArray();
 			noCriter = new NSMutableDictionary();
 			if(crits != null && crits.count() > 0) {
-				Integer zero = new Integer(0);
+				Integer zero = Integer.valueOf(0);
 				for (int i = 0; i < crits.count(); i++) {
 					EOEnterpriseObject cr = (EOEnterpriseObject)crits.objectAtIndex(i);
 					if(zero.equals(cr.valueForKey("criterion")))
@@ -142,7 +142,7 @@ public class SetupCriteria extends WOComponent {
     			Various.boolForObject(critDict.removeObjectForKey("newCr")));
     	if(create) {
     		criterion = ((CriteriaSet)currSet).addCriterion();
-    		criterion.takeValueForKey(new Integer(0), "flags");
+    		criterion.takeValueForKey(Integer.valueOf(0), "flags");
     		criterion.takeValuesFromDictionary(critDict);
     	}
     	try {
@@ -237,7 +237,7 @@ public class SetupCriteria extends WOComponent {
 			EOEnterpriseObject crit = EOUtilities.createAndInsertInstance(ec,"Criterion");
 			crit.addObjectToBothSidesOfRelationshipWithKey(
 					(EOEnterpriseObject) currSet,"criteriaSet");
-			Integer zero = new Integer(0);
+			Integer zero = Integer.valueOf(0);
 			crit.takeValueForKey(zero,"criterion");
 			crit.takeValueForKey(zero,"flags");
     	}
@@ -441,7 +441,7 @@ public class SetupCriteria extends WOComponent {
 				EOEnterpriseObject crit = EOUtilities.createAndInsertInstance(ec,"Criterion");
 				crit.addObjectToBothSidesOfRelationshipWithKey((CriteriaSet) currSet,"criteriaSet");
 				crit.takeValuesFromDictionary((NSDictionary) noCriter);
-				Integer zero = new Integer(0);
+				Integer zero = Integer.valueOf(0);
 				crit.takeValueForKey(zero,"criterion");
 				crit.takeValueForKey(zero,"flags");
 				noCriter = crit;

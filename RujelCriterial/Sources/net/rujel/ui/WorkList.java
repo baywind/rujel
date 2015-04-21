@@ -275,7 +275,7 @@ public class WorkList extends LessonList {
 		else
 			buf.append(" style = \"font-weight:bold;\"");
 		buf.append('>');
-		Object max = work().maxForCriter(new Integer(0));
+		Object max = work().maxForCriter(Integer.valueOf(0));
 		if(max == null)
 			buf.append('-');
 		else
@@ -314,7 +314,7 @@ public class WorkList extends LessonList {
 					lag = SettingsBase.numericSettingForCourse("countMarklessWorkAfter", 
 							w.course(), w.editingContext());
 					if(lag == null)
-						lag = new Integer(-1);
+						lag = Integer.valueOf(-1);
 				}
 				if(lag.intValue() < 0 || 
 						EOPeriod.Utility.countDays(w.date(), null) > lag.intValue()) {
@@ -323,7 +323,9 @@ public class WorkList extends LessonList {
 				}
 			}
 			if(w.criterMask() == null || w.criterMask().count() == 0) {
-				continue;
+				CriteriaSet critSet = w.critSet();
+				if(critSet == null || critSet.criterionForNum(Integer.valueOf(0)) == null)
+					continue;
 			} else if(level < 2) {
 				result.addObject(w);
 				continue;
@@ -333,7 +335,7 @@ public class WorkList extends LessonList {
 					if(level > 3)
 						continue;
 				} else {
-					if(level > 2 || w.isHometask())
+					if(level > 2 || (level == 2 && w.isHometask()))
 						continue;
 				}
 			}

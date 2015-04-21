@@ -181,7 +181,7 @@ public class CriterSelector extends WOComponent {
 	}
 	
 	public WOActionResults selectText() {
-		return select(new Integer(-1));
+		return select(Integer.valueOf(-1));
 	}
 	
 	public WOActionResults select(Integer sel) {

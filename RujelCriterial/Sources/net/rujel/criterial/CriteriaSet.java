@@ -56,7 +56,7 @@ public class CriteriaSet extends _CriteriaSet
     		new String[] {"fixMax","fixWeight","fixList","numerousCriteria"});
     
     public static EOQualifier HASNUM = new EOKeyValueQualifier("criterion", 
-    		EOQualifier.QualifierOperatorGreaterThan, new Integer(0));
+    		EOQualifier.QualifierOperatorGreaterThan, Integer.valueOf(0));
     
 	/*
 	 // If you add instance variables to store property values you
@@ -71,7 +71,7 @@ public class CriteriaSet extends _CriteriaSet
 	 */
     
     public void awakeFromInsertion(EOEditingContext ec) {
-    	setFlags(new Integer(0));
+    	setFlags(Integer.valueOf(0));
     }
 	
 	public NSArray sortedCriteria() {
@@ -129,7 +129,7 @@ public class CriteriaSet extends _CriteriaSet
 	
 	public Integer criterionForName(String name) {
 		if(name == null)
-			return new Integer(0);
+			return Integer.valueOf(0);
 		EOEnterpriseObject crit = criterionNamed(name);
 		return (crit == null)?null:(Integer)crit.valueForKey("criterion");
 	}
@@ -140,10 +140,10 @@ public class CriteriaSet extends _CriteriaSet
 		NSArray criteria = criteria();
 		Number num = null;
 		if(criteria == null || criteria.count() == 0) {
-			num = new Integer(1);
+			num = Integer.valueOf(1);
 		} else {
 			num = (Number)criteria().valueForKeyPath("@max.criterion");
-			num = new Integer(num.intValue() + 1);
+			num = Integer.valueOf(num.intValue() + 1);
 		}
 		criterion.takeValueForKey(num,"criterion");
 		addObjectToBothSidesOfRelationshipWithKey(criterion,CRITERIA_KEY);
@@ -159,11 +159,11 @@ public class CriteriaSet extends _CriteriaSet
 	}
 	
 	public boolean onlyCriter() {
-		return (criterionForNum(new Integer(0)) == null);
+		return (criterionForNum(Integer.valueOf(0)) == null);
 	}
 	
 	public Integer criterlessMax() {
-		Integer zero = new Integer(0);
+		Integer zero = Integer.valueOf(0);
 		EOEnterpriseObject crit = criterionForNum(zero);
 		if(crit == null)
 			return null;
@@ -196,13 +196,13 @@ public class CriteriaSet extends _CriteriaSet
 	public static NSArray criteriaForMax(int maxCriter) {
 		if(maxCriter == 0)
 			return new NSArray(new NSDictionary(
-					new Object[] {"&bull;",new Integer(0)}, new String[] {"title","criterion"}));
+					new Object[] {"&bull;",Integer.valueOf(0)}, new String[] {"title","criterion"}));
 		char first = 'A';
 		NSDictionary[] result = new NSDictionary[maxCriter];
 		for (int i = 0; i < maxCriter; i++) {
 			String title = Character.toString((char)(first + i));
 			NSDictionary critDict = new NSDictionary( new Object[]
-					{title, new Integer(i + 1)} , new String[] {"title","criterion"});
+					{title, Integer.valueOf(i + 1)} , new String[] {"title","criterion"});
 			result[i] = critDict;
 		}
 		return new NSArray(result);
@@ -303,7 +303,7 @@ public class CriteriaSet extends _CriteriaSet
 					"strings.RujelCriterial_Strings.messages.critersDescRequired"));
     	if(namedFlags().flagForKey("fixList") && criteria.count() == 1) {
     		EOEnterpriseObject cr = (EOEnterpriseObject)criteria.objectAtIndex(0);
-    		if((new Integer(0)).equals(cr.valueForKey("criterion")))
+    		if((Integer.valueOf(0)).equals(cr.valueForKey("criterion")))
     			throw new ValidationException((String)
     					WOApplication.application().valueForKeyPath(
     					"strings.RujelCriterial_Strings.messages.criteriaRequired"));

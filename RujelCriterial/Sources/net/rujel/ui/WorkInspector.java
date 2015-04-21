@@ -149,9 +149,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		int hrs = mins / 60;
     		mins = mins % 60;
     		if(mins > 0)
-    			minutes = new Integer(mins);
+    			minutes = Integer.valueOf(mins);
     		if(hrs > 0)
-    			hours = new Integer(hrs);
+    			hours = Integer.valueOf(hrs);
     	}
     	dict = new NSMutableDictionary();
     	for (int i = 0; i < keys.count(); i++) {
@@ -211,7 +211,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		int num = 0;
     		if(lesson != null && lesson != work)
     			num = (lesson.number().intValue() - 100);
-    		work.setNumber(new Integer(num));
+    		work.setNumber(Integer.valueOf(num));
     	} else if(created || work.number() == null || work.number().intValue() < 100) {
     		MyUtility.setNumberToNewLesson(work,100);
     	}
@@ -222,14 +222,14 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	if(minutes != null)
     		load = load + minutes;
     	if(work.load() == null || work.load().intValue() != load)
-    		work.setLoad(new Integer(load));
+    		work.setLoad(Integer.valueOf(load));
 //    	NSNumberFormatter frmt = new NSNumberFormatter("0");
     	int critCount = 0;
     	String crCnt = req.stringFormValueForKey("critCount");
     	if(crCnt != null)
     		critCount = Integer.parseInt(crCnt);
     	for (int i = 0; i <= critCount; i++) { // prepare criter mask
-    		Integer criterion = new Integer(i);
+    		Integer criterion = Integer.valueOf(i);
 			EOEnterpriseObject mask = work.getCriterMask(criterion);
 			String value = req.stringFormValueForKey("m" + i);
 			Integer val = null;
@@ -382,20 +382,20 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     			if(max != null && max.intValue() > 0)
     				return max;
     		}
-     		return new Integer(1);
+     		return Integer.valueOf(1);
     	}
     	Integer count = (Integer)work.valueForKeyPath("critSet.criteria.@max.criterion");
     	if (count != null && count.intValue() > 0)
     		return count;
     	NSArray mask = work.criterMask();
     	if(mask == null || mask.count() == 0)
-    		return new Integer(1);
+    		return Integer.valueOf(1);
     	count = (Integer)mask.valueForKeyPath("@max.criterion");
-    	return new Integer (count.intValue() + 1);
+    	return Integer.valueOf(count.intValue() + 1);
     }
     
     protected Integer criterion() {
-    	return new Integer(critIdx + 1);
+    	return Integer.valueOf(critIdx + 1);
     }
     
     public String critName() {
@@ -610,7 +610,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     				buf.append((char)('A' + i -1));
     				buf.append(':').append(cvals[0]);
     			} else {
-    				EOEnterpriseObject criter = critSet.criterionForNum(new Integer(i));
+    				EOEnterpriseObject criter = critSet.criterionForNum(Integer.valueOf(i));
     				if(criter == null)
     					continue;
     				String title = (String)criter.valueForKey("title");

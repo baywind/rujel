@@ -59,7 +59,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 		String note = work.noteForStudent(student);
 		if(!moveMarks)
 			return note; 
-		Mark mark = work.markForStudentAndCriterion(student, new Integer(0));
+		Mark mark = work.markForStudentAndCriterion(student, Integer.valueOf(0));
 		if(mark == null)
 			return (moveNotes)?note:null;
 		if(note == null)
@@ -93,7 +93,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 				CriteriaSet critSet = (work!=null)?work.critSet():
 					CriteriaSet.critSetForCourse(lsn.course());
 				if(critSet != null) {
-					EOEnterpriseObject criter = critSet.criterionForNum(new Integer(0));
+					EOEnterpriseObject criter = critSet.criterionForNum(Integer.valueOf(0));
 					if(criter != null) {
 						if(courseMax == null)
 							courseMax = (Integer)criter.valueForKey("dfltMax");
@@ -183,7 +183,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 				if(criterMask == null || criterMask.count() == 0) {
 					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
 							lsn.editingContext(), "CriterMask");
-					mask.takeValueForKey(new Integer(0), "criterion");
+					mask.takeValueForKey(Integer.valueOf(0), "criterion");
 					work.addObjectToBothSidesOfRelationshipWithKey(mask, Work.CRITER_MASK_KEY);
 					mask.takeValueForKey(max, "max");
 					criterMask = work.criterMask();
@@ -194,7 +194,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 				}
 				if(mark == null) {
 					mark = (Mark)EOUtilities.createAndInsertInstance(lsn.editingContext(),"Mark");
-					mark.setCriterion(new Integer(0));
+					mark.setCriterion(Integer.valueOf(0));
 					mark.setStudent(student);
 					work.addObjectToBothSidesOfRelationshipWithKey(mark,Work.MARKS_KEY);
 					arcLevel = 1;
@@ -203,7 +203,7 @@ public class WorkNoteDelegate implements NoteDelegate {
 				}
 				mark.setValue(num);
 			} else if(work != null) { // num == null
-				Mark mark = work.markForStudentAndCriterion(student, new Integer(0));
+				Mark mark = work.markForStudentAndCriterion(student, Integer.valueOf(0));
 				if(mark != null) {
 					work.removeObjectFromBothSidesOfRelationshipWithKey(mark, Work.MARKS_KEY);
 					lsn.editingContext().deleteObject(mark);
@@ -242,9 +242,9 @@ public class WorkNoteDelegate implements NoteDelegate {
 			ident.takeValueForKey(lsn.course(), "eduCourse");
 			EOEnterpriseObject _archive = EOUtilities.createAndInsertInstance(
 					lsn.editingContext(),"MarkArchive");
-			_archive.takeValueForKey(new Integer(arcLevel), "actionType");
+			_archive.takeValueForKey(Integer.valueOf(arcLevel), "actionType");
 			if(num != null || arcLevel > 2)
-				_archive.takeValueForKey(num, '@' + work.criterName(new Integer(0)));
+				_archive.takeValueForKey(num, '@' + work.criterName(Integer.valueOf(0)));
 			if(note != null || arcLevel > 2)
 				_archive.takeValueForKey(note, "@text");
 			try {

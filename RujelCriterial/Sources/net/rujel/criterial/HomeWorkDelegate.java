@@ -73,7 +73,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 				 work.takeValuesFromDictionary(newDictForLesson(lesson));
 //				 MyUtility.setNumberToNewLesson(work);
 			 }
-			 work.setNumber(new Integer(lesson.number().intValue() - 100));
+			 work.setNumber(Integer.valueOf(lesson.number().intValue() - 100));
 			 work.setTheme(newTask);
 		 }
 	}
@@ -103,7 +103,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 		if(work == null)
 			return;
 		if(newNumber == null)
-			work.setNumber(new Integer(1));
+			work.setNumber(Integer.valueOf(1));
 		else
 			work.setNumber(newNumber.intValue() -100);
 	}
@@ -122,7 +122,7 @@ public class HomeWorkDelegate extends TaskDelegate {
 		quals[0] = new EOKeyValueQualifier("course",
 				EOQualifier.QualifierOperatorEqual,lesson.course());
 		quals[1] = new EOKeyValueQualifier(Work.FLAGS_KEY,
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, new Integer(16));
+				EOQualifier.QualifierOperatorGreaterThanOrEqualTo, Integer.valueOf(16));
 		NSDictionary stored = ec.committedSnapshotForObject(lesson);
 		NSTimestamp date = (NSTimestamp)stored.valueForKey("date");//lesson.date();
 		if(!date.equals(lesson.date()) && ec instanceof SessionedEditingContext) {

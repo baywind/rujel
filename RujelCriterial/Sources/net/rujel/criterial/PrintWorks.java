@@ -101,7 +101,7 @@ public class PrintWorks extends com.webobjects.appserver.WOComponent {
 		if(work == null)
 			return null;
 		if(critItem == null)
-			critItem = new Integer(0);
+			critItem = Integer.valueOf(0);
 		else if(critItem instanceof NSKeyValueCoding)
 			critItem = ((NSKeyValueCoding)critItem).valueForKey("criterion");
 		return work.maxForCriter((Integer)critItem);
@@ -137,7 +137,7 @@ public class PrintWorks extends com.webobjects.appserver.WOComponent {
 		else
 			buf.append(" style = \"font-weight:bold;\"");
 		buf.append('>');
-		Object max = work.maxForCriter(new Integer(0));
+		Object max = work.maxForCriter(Integer.valueOf(0));
 		if(max == null)
 			buf.append('-');
 		else

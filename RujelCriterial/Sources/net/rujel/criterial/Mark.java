@@ -144,7 +144,7 @@ public class Mark extends _Mark {
 		}
 		if(aValue instanceof Integer)
 			return (Integer)aValue;
-		return new Integer(aValue.intValue());
+		return Integer.valueOf(aValue.intValue());
 	}
 	
 	public void setValue(Integer aValue) {

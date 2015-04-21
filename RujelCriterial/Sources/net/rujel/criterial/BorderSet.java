@@ -46,7 +46,7 @@ public class BorderSet extends _BorderSet implements FractionPresenter
     }
 	
     public void awakeFromInsertion(EOEditingContext ec) {
-    	setValueType(new Integer(0));
+    	setValueType(Integer.valueOf(0));
     	setExclude(Boolean.FALSE);
     }
 

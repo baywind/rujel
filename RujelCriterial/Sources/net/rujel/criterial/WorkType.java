@@ -53,10 +53,10 @@ public class WorkType extends _WorkType {
 			"specCriter","-128-","-256-","-512-","-1024-","-2048-","-4096-","unused"});
 
 	public static final EOQualifier activeQualifier = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
-			EOQualifier.QualifierOperatorLessThan,new Integer(8192));
+			EOQualifier.QualifierOperatorLessThan,Integer.valueOf(8192));
 	
 	public static final NSDictionary specTypes = new NSDictionary (
-			new Integer[] {new Integer(38)}, new String[] {"onLesson"});
+			new Integer[] {Integer.valueOf(38)}, new String[] {"onLesson"});
 
 	public static WorkType defaultType(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
@@ -76,14 +76,14 @@ public class WorkType extends _WorkType {
 
 	public static WorkType defaultType(EOEditingContext ec) {
 		EOQualifier qual = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
-				EOQualifier.QualifierOperatorLessThan, new Integer(16));
+				EOQualifier.QualifierOperatorLessThan, Integer.valueOf(16));
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,
 				ModulesInitialiser.sorter);
 		fs.setFetchLimit(1);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found == null || found.count() == 0) {
 			qual = new EOKeyValueQualifier(DFLT_FLAGS_KEY,
-					EOQualifier.QualifierOperatorLessThan, new Integer(64));
+					EOQualifier.QualifierOperatorLessThan, Integer.valueOf(64));
 			fs.setQualifier(qual);
 			found = ec.objectsWithFetchSpecification(fs);
 			if(found == null || found.count() == 0)
@@ -114,10 +114,10 @@ public class WorkType extends _WorkType {
 		WorkType workType = (WorkType)EOUtilities.createAndInsertInstance(tmpEc, ENTITY_NAME);
 		workType.takeValuesFromDictionary(typeProps);
 		if(found == null || found.count() == 0) {
-			workType.setSort(new Integer(1));
+			workType.setSort(Integer.valueOf(1));
 		} else {
 			WorkType oldType = (WorkType)found.objectAtIndex(0);
-			workType.setSort(new Integer(oldType.sort().intValue() +1));
+			workType.setSort(Integer.valueOf(oldType.sort().intValue() +1));
 		}
 		try {
 			tmpEc.saveChanges();
@@ -185,7 +185,7 @@ public class WorkType extends _WorkType {
 	
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
-		super.setDfltFlags(new Integer(0));
+		super.setDfltFlags(Integer.valueOf(0));
 		setDfltWeight(BigDecimal.ZERO);
 	}
 

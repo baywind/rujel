@@ -58,7 +58,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	public void awakeFromInsertion(EOEditingContext ctx) {
 		super.awakeFromInsertion(ctx);
 		super.setWeight(BigDecimal.ZERO);
-		Integer zero = new Integer(0);
+		Integer zero = Integer.valueOf(0);
 		setLoad(zero);
 		setFlags(zero);
 		setAnnounce(new NSTimestamp());
@@ -152,10 +152,10 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	
 	public static NSArray allCriteria(int max) {
 		if(max <= 0)
-			return new NSArray(new Integer(0));
+			return new NSArray(Integer.valueOf(0));
 		Integer[] result = new Integer[max];
 		for (int i = 0; i < max; i++) {
-			result[i] = new Integer(i + 1);
+			result[i] = Integer.valueOf(i + 1);
 		}
 		return new NSArray(result);
 	}
@@ -291,14 +291,14 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	
 	public Integer critForName(String critName) {
 		if(critName == null || critName.length() == 0)
-			return new Integer(0);
+			return Integer.valueOf(0);
 		if(critSet() != null)
 			return critSet().criterionForName(critName);
 		if(critName.length() > 0)
 			return null;
 		char ch = critName.charAt(0);
 		ch = Character.toUpperCase(ch);
-		return new Integer(1 + (int)(ch - 'A'));
+		return Integer.valueOf(1 + (int)(ch - 'A'));
 	}
 	
 	public Mark markForStudentAndCriterion(Student student,String criterion) {
@@ -309,7 +309,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 
 		if(criterion == null || 
 				(integralPresenter() != null && criterion.equals(integralPresenter().title()))) {
-			return markForStudentAndCriterion(student,new Integer(0));
+			return markForStudentAndCriterion(student,Integer.valueOf(0));
 		}
 		Integer crit = critForName(criterion);
 		return markForStudentAndCriterion(student, crit);
@@ -609,7 +609,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 			Object prev = snapshot.valueForKey(ANNOUNCE_KEY);
 			if(prev instanceof NSTimestamp &&
 					EOPeriod.Utility.compareDates(value, (NSTimestamp)prev) != 0)
-				setNumber(new Integer(0));
+				setNumber(Integer.valueOf(0));
 		}
 		super.setAnnounce(value);
 	}
@@ -633,7 +633,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		if(theme() != null && theme().length() > 255) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelCriterial_Strings.messages.longText");
-			message = String.format(message,new Integer(theme().length()));
+			message = String.format(message,Integer.valueOf(theme().length()));
 			throw new NSValidation.ValidationException(message);
 		}
 		MyUtility.validateDateInEduYear(date(),course().eduYear(),DATE_KEY);
@@ -769,7 +769,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	protected void setIsFlag(boolean is,int flag) {
 		Integer flags = flags();
 		if(flags == null) {
-			setFlags(new Integer(flag));
+			setFlags(Integer.valueOf(flag));
 		} else {
 			int newFlags = flags.intValue();
 			if(is) {
@@ -778,7 +778,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 				newFlags = newFlags - (newFlags & flag);
 			}
 			if(newFlags != flags.intValue())
-				setFlags(new Integer(newFlags));
+				setFlags(Integer.valueOf(newFlags));
 		}
 	}
 	
@@ -852,9 +852,9 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		if(workType != null) {
 			Integer flags = (Integer)workType.valueForKey("dfltFlags");
 			if(flags == null) {
-				flags = new Integer(0);
+				flags = Integer.valueOf(0);
 			} else {
-				flags = new Integer(flags.intValue() & 24);
+				flags = Integer.valueOf(flags.intValue() & 24);
 			}
 			setFlags(flags);
 			BigDecimal weight = (BigDecimal)workType.valueForKey("dfltWeight");
@@ -878,12 +878,12 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 					}
 //					Integer minCrit = (Integer)valueForKeyPath("critSet.criteria.@min.criterion");
 					if(minCrit == null)
-						minCrit = new Integer(0);
+						minCrit = Integer.valueOf(0);
 					if(crMax == null)
 						crMax = SettingsBase.numericSettingForCourse("CriterlessMax",
 								course(), editingContext());
 					if(crMax == null)
-						crMax = new Integer(5);
+						crMax = Integer.valueOf(5);
 					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
 							editingContext(), "CriterMask");
 					mask.takeValueForKey(minCrit, "criterion");
@@ -946,7 +946,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		String note = noteForStudent(student);
 		if(SettingsBase.numericSettingForCourse("noLessonMarks",course(),editingContext(),0) > 0)
 			return note; 
-		Mark mark = markForStudentAndCriterion(student, new Integer(0));
+		Mark mark = markForStudentAndCriterion(student, Integer.valueOf(0));
 		if(mark == null)
 			return note;
 		if(note == null)
@@ -973,11 +973,11 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 			if(idx < note.length()) {
 				if(!Character.isLetter(note.charAt(idx)))
 					try {
-						num = new Integer(note.substring(0,idx));
+						num = Integer.valueOf(note.substring(0,idx));
 					} catch (Exception e) {}
 			} else {
 				try {
-					num = new Integer(note);
+					num = Integer.valueOf(note);
 				} catch (Exception e) {}
 			}
 			if(num != null) {
@@ -1003,7 +1003,7 @@ set:
 					if (max == null) {
 						max = SettingsBase.numericSettingForCourse("CriterlessMax",
 								course(), editingContext());
-						if(max == null) max = new Integer(5);
+						if(max == null) max = Integer.valueOf(5);
 					}
 				}
 				if(max == null)
@@ -1023,7 +1023,7 @@ set:
 				if(criterMask == null || criterMask.count() == 0) {
 					EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
 							editingContext(), "CriterMask");
-					mask.takeValueForKey(new Integer(0), "criterion");
+					mask.takeValueForKey(Integer.valueOf(0), "criterion");
 					this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
 					mask.takeValueForKey(max, "max");
 					criterMask = criterMask();
@@ -1034,7 +1034,7 @@ set:
 				}
 				if(mark == null) {
 					mark = (Mark)EOUtilities.createAndInsertInstance(editingContext(),"Mark");
-					mark.setCriterion(new Integer(0));
+					mark.setCriterion(Integer.valueOf(0));
 					mark.setStudent(student);
 					this.addObjectToBothSidesOfRelationshipWithKey(mark,MARKS_KEY);
 					arcLevel = 1;
@@ -1051,15 +1051,15 @@ set:
 				max = SettingsBase.numericSettingForCourse("CriterlessMax",
 					course(), editingContext());
 			if(max == null)
-				max = new Integer(5);
+				max = Integer.valueOf(5);
 			EOEnterpriseObject mask = EOUtilities.createAndInsertInstance(
 					editingContext(), "CriterMask");
-			mask.takeValueForKey(new Integer(0), "criterion");
+			mask.takeValueForKey(Integer.valueOf(0), "criterion");
 			this.addObjectToBothSidesOfRelationshipWithKey(mask, CRITER_MASK_KEY);
 			mask.takeValueForKey(max, "max");
 		} */
 		if(num == null) {
-			Mark mark = markForStudentAndCriterion(student, new Integer(0));
+			Mark mark = markForStudentAndCriterion(student, Integer.valueOf(0));
 			if(mark != null) {
 				removeObjectFromBothSidesOfRelationshipWithKey(mark, MARKS_KEY);
 				editingContext().deleteObject(mark);
@@ -1091,9 +1091,9 @@ set:
 			ident.takeValueForKey(course(), "eduCourse");
 			EOEnterpriseObject _archive = EOUtilities.createAndInsertInstance(
 					editingContext(),"MarkArchive");
-			_archive.takeValueForKey(new Integer(arcLevel), "actionType");
+			_archive.takeValueForKey(Integer.valueOf(arcLevel), "actionType");
 			if(num != null || arcLevel > 2)
-				_archive.takeValueForKey(num, '@' + criterName(new Integer(0)));
+				_archive.takeValueForKey(num, '@' + criterName(Integer.valueOf(0)));
 			if(note != null || arcLevel > 2)
 				_archive.takeValueForKey(note, "@text");
 			try {

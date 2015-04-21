@@ -144,7 +144,7 @@ public class MarksPresenter extends NotePresenter {
 				if(lesson() != null) {
 					_usedCriteria = lesson().usedCriteria();
 					if(_usedCriteria == NSArray.EmptyArray && preloadMark())
-						_usedCriteria = new NSArray(new Integer(0));
+						_usedCriteria = new NSArray(Integer.valueOf(0));
 				} else if(Various.boolForObject(valueForBinding("full"))) {
 					_usedCriteria = allCriteria();
 					return _usedCriteria;
@@ -340,7 +340,7 @@ public class MarksPresenter extends NotePresenter {
 						max = SettingsBase.numericSettingForCourse("CriterlessMax",
 			    				lesson().course(), lesson().editingContext());
 						if(max == null)
-							max = new Integer(5);
+							max = Integer.valueOf(5);
 					}
 				}
 				if(max != null) {
@@ -360,7 +360,7 @@ public class MarksPresenter extends NotePresenter {
 			lesson().editingContext().deleteObject(_mark);
 			archiveMarkValue(newMarkValue, critName());
 			if(_archive != null)
-				_archive.takeValueForKey(new Integer(3), "actionType");
+				_archive.takeValueForKey(Integer.valueOf(3), "actionType");
 			_mark = null;
 			return;
 		}
@@ -370,7 +370,7 @@ public class MarksPresenter extends NotePresenter {
         	int value = ((Number)newMarkValue).intValue();
         	archive = (archive || value != mark().value().intValue());
         	if(archive)
-        		mark().setValue(new Integer(value));
+        		mark().setValue(Integer.valueOf(value));
         } else {
         	Boolean tmp = mark().setPresent(newMarkValue.toString());
         	if(tmp == null) {
@@ -389,7 +389,7 @@ public class MarksPresenter extends NotePresenter {
         if(archive) {
 			archiveMarkValue(newMarkValue, critName());
 			if(notNew && shouldUpdateArchive())
-				_archive.takeValueForKey(new Integer(2), "actionType");
+				_archive.takeValueForKey(Integer.valueOf(2), "actionType");
 		}
 		/*if(mark().value() == null || mark().value().intValue() != newMarkValue.intValue()) {
 			NSTimestamp today = (NSTimestamp)session().valueForKey("today");
@@ -463,10 +463,10 @@ public class MarksPresenter extends NotePresenter {
 	protected Integer activeCriterion() {
 		//Boolean single = (Boolean)valueForBinding("single");
 		if(single())//(!hasBinding("single") ||Various.boolForObject(valueForBinding("single")))
-			return new Integer(0);
+			return Integer.valueOf(0);
 		Integer activeCriterion = (Integer)session().objectForKey("activeCriterion");
 		if(activeCriterion == null)
-			return new Integer(0);
+			return Integer.valueOf(0);
 		return activeCriterion;
 	}
 	
@@ -779,7 +779,8 @@ public class MarksPresenter extends NotePresenter {
 			return false;
 		if(usedCriteria().count() > 0)
 			return false;
-		if(lesson().critSet() != null && lesson().critSet().criterionForNum(new Integer(0)) == null)
+		if(lesson().critSet() != null
+				&& lesson().critSet().criterionForNum(Integer.valueOf(0)) == null)
 			return false;
 		return true;
 	}
