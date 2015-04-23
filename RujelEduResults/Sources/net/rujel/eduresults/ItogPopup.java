@@ -53,7 +53,9 @@ public class ItogPopup extends WOComponent {
     public ItogContainer itogContainer;
 	//public EduCycle cycle;
     public Student student;
-    public String mark;
+//    public String mark;
+    public NSArray presets;
+    public NSMutableDictionary dict = new NSMutableDictionary();
 	public AddOnPresenter.AddOn addOn;
 	public WOComponent returnPage;
 	public String changeReason;
@@ -65,6 +67,37 @@ public class ItogPopup extends WOComponent {
 	public ItogPopup(WOContext context) {
 		super(context);       
 	}
+	
+	public void setItog(ItogMark newItog) {
+		itog = newItog;
+		if(itog == null)
+			return;
+		if(itogContainer == null)
+			itogContainer = itog.container();
+		String mark = itog.mark();
+		dict.takeValueForKey(mark, ItogMark.MARK_KEY);
+		dict.takeValueForKey(itog.state(), ItogMark.STATE_KEY);
+		if(presets == null) {
+			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, course());
+			if( presetGroup != null && presetGroup.intValue() > 0) {
+				presets = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup);
+			}
+		}
+		dict.takeValueForKey(ItogPreset.presetForMark(mark, presets), "preset");
+	}
+	
+	public void setItogContainer(ItogContainer value) {
+		itogContainer = value;
+		dict.takeValueForKey(null, ItogMark.MARK_KEY);
+		dict.takeValueForKey(Integer.valueOf(0), ItogMark.STATE_KEY);
+		if(addOn != null) {
+			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, addOn.course());
+			if(presetGroup != null && presetGroup.intValue() > 0) {
+				presets = ItogPreset.listPresetGroup(itogContainer.editingContext(), presetGroup);
+				dict.takeValueForKey(presets.objectAtIndex(0), "preset");
+			}
+		}
+	}
 
 	public EduCourse course() {
 		if(addOn == null)
@@ -72,7 +105,7 @@ public class ItogPopup extends WOComponent {
 		return addOn.course();
 	}
 
-	
+	/*
 	public String mark() {
 		if(itog != null) {
 			mark = itog.mark();
@@ -80,10 +113,10 @@ public class ItogPopup extends WOComponent {
 			mark = null;
 		}
 		return mark;
-	}
+	}*/
 
 	public NSArray flaglist() {
-		if(mark == null) return null;
+		if(dict.valueForKey(ItogMark.MARK_KEY) == null) return null;
 		return ItogMark.flagKeys;
 	}
 
@@ -146,6 +179,8 @@ public class ItogPopup extends WOComponent {
 			}
 			
 		}
+		ItogPreset preset = (ItogPreset)dict.valueForKey("preset");
+		String mark = (preset == null)?(String)dict.valueForKey(ItogMark.MARK_KEY):preset.mark();
 		if(itog == null && mark == null)
 			return returnPage;
 		if(mark == null)
@@ -190,13 +225,21 @@ public class ItogPopup extends WOComponent {
 					if(!newItog)
 						itog.readFlags().setFlagForKey(true,"changed");
 					itog.setMark(mark);
+					if(preset == null) {
+						itog.takeValueForKey(dict.valueForKey(ItogMark.STATE_KEY),
+								ItogMark.STATE_KEY);
+					} else {
+						itog.setState(preset.state());
+						itog.setValue(preset.value());
+					}
 					itog.readFlags().setFlagForKey(true,"manual");
 				}
 				itog.readFlags().setFlagForKey(false,"constituents");
 				if(prognosis != null) {
 					boolean flag = true;
 					BigDecimal value = (BigDecimal)prognosis.valueForKey("value");
-					itog.setValue(value);
+					if(preset == null || preset.mark().equals(prognosis.valueForKey("mark")))
+						itog.setValue(value);
 					if(value != null) {
 						String fromValue = (String)prognosis.valueForKey("markFromValue");
 						if(fromValue != null)
@@ -357,6 +400,13 @@ public class ItogPopup extends WOComponent {
 			buf.append("<br/>\n");
 		}
 		return buf.toString();
+	}
+
+	public String manualMarkStyle() {
+		if(dict.valueForKey("preset") == null)
+			return null;
+		else
+			return "display:none;";
 	}
 
 }

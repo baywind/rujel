@@ -76,6 +76,25 @@
 			<key>inYearCount</key>
 			<string>в году</string>
 		</dict>
+		<key>ItogPreset</key>
+		<dict>
+			<key>this</key>
+			<string>Набор оценок</string>
+			<key>noPreset</key>
+			<string>Без набора</string>
+			<key>byValue</key>
+			<string>Определить по процентам успешности</string>
+			<key>good</key>
+			<string>хорошо</string>
+			<key>acceptable</key>
+			<string>удовлетворительно</string>
+			<key>bad</key>
+			<string>плохо</string>
+			<key>none</key>
+			<string>нет оценки</string>
+			<key>manual</key>
+			<string>вручную</string>
+		</dict>
 	</dict>
 	<key>studentReporter</key>
 	<array>

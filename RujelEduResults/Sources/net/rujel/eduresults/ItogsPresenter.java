@@ -141,12 +141,12 @@ public class ItogsPresenter extends AddOnPresenter {
     public WOComponent moreInfo() {
 		course().editingContext().revert();
         WOComponent nextPage = pageWithName("ItogPopup");
-		nextPage.takeValueForKey(itog(),"itog");
-		nextPage.takeValueForKey(student(),"student");
+		nextPage.takeValueForKey(currAddOn(),"addOn");
 		nextPage.takeValueForKey(periodItem,"itogContainer");
+		nextPage.takeValueForKey(student(),"student");
+		nextPage.takeValueForKey(itog(),"itog");
 //		nextPage.takeValueForKey(course(),"course");
 		nextPage.takeValueForKey(context().page(),"returnPage");
-		nextPage.takeValueForKey(currAddOn(),"addOn");
         return nextPage;
     }
 

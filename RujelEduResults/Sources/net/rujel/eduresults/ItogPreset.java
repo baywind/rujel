@@ -30,16 +30,20 @@
 package net.rujel.eduresults;
 
 import java.math.BigDecimal;
+import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 
 public class ItogPreset extends _ItogPreset {
 	
 	public static NSArray sorter = new NSArray( new EOSortOrdering[] {
+			new EOSortOrdering(PRESET_GROUP_KEY, EOSortOrdering.CompareAscending),
 			new EOSortOrdering(STATE_KEY, EOSortOrdering.CompareDescending),
 			new EOSortOrdering(VALUE_KEY, EOSortOrdering.CompareDescending)});
 	
@@ -137,6 +141,35 @@ public class ItogPreset extends _ItogPreset {
 		return getPresetGroup(listName, itog.eduYear(), itog.itogType());
 	}
 
+	public static NSMutableArray allPresets(EOEditingContext ec) {
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, null, sorter);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = found.objectEnumerator();
+		NSMutableDictionary dict = null;
+		NSMutableArray currList = null;
+		Integer curr = null;
+		while (enu.hasMoreElements()) {
+			ItogPreset preset = (ItogPreset) enu.nextElement();
+			if(curr == null || !curr.equals(preset.presetGroup())) {
+				if(dict != null) {
+					dict.takeValueForKey(nameForGroup(currList), "fullName");
+				}
+				curr = preset.presetGroup();
+				dict = new NSMutableDictionary(curr,PRESET_GROUP_KEY);
+				currList = new NSMutableArray(preset);
+				dict.takeValueForKey(currList,"list");
+				dict.takeValueForKey(preset.mark(), "max");
+				result.addObject(dict);
+			} else {
+				currList.addObject(preset);
+			}
+		}
+		dict.takeValueForKey(nameForGroup(currList), "fullName");
+		return result;
+	}
 
 	public static void init() {
 	}

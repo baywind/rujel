@@ -136,9 +136,9 @@ public class AutoItogPresenter extends ExtDynamicElement {
 		WOComponent popup = WOApplication.application().pageWithName(
 				"AutoItogEditor", aContext);
 		popup.takeValueForKey(aContext.page(), "returnPage");
-		popup.takeValueForKey(itog, "itog");
 		String listName = (String)valueForBinding("listName", aContext);
 		popup.takeValueForKey(listName, "listName");
+		popup.takeValueForKey(itog, "itog");
 		AutoItog autoItog = AutoItog.forListName(listName, itog);
 //		if(autoItog != null) {
 			popup.takeValueForKey(autoItog, "autoItog");

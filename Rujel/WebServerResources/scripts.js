@@ -712,7 +712,7 @@ function fitWindow(w,ph,pw) {
 
 function closePopup(aForm) {
 	container = document.getElementById('ajaxMask');
-	if(refreshRequired) {
+	if(refreshRequired && tryLoad()) {
 		container.innerHTML = '';
 		window.location = pageRefreshUrl;
 		return;

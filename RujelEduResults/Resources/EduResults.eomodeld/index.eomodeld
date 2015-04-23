@@ -333,8 +333,5 @@
         {className = "net.rujel.eduresults.ItogType"; name = ItogType; }, 
         {className = EOGenericRecord; name = ItogTypeList; }
     ); 
-    userInfo = {
-        framework = RujelEduResults; 
-        schemaVersion = {number = 4; title = "0.9.9"; }; 
-    }; 
+    userInfo = {framework = RujelEduResults; schemaVersion = {number = 4; title = "1.0"; }; }; 
 }
