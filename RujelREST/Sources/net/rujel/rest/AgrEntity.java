@@ -51,6 +51,7 @@ import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSRange;
 import com.webobjects.foundation.NSSelector;
 
 public abstract class AgrEntity {
@@ -65,6 +66,8 @@ public abstract class AgrEntity {
 			result = new AgrItogMark();
 		if(entName.equalsIgnoreCase("course"))
 			result = new AgrEduCourse();
+		if(entName.equalsIgnoreCase("prognos"))
+			result = new AgrPrognosis();
 		if(result == null)
 			throw new IllegalArgumentException("Unknown entity name '" + entName + '\'');
 		result.ec = ec;
@@ -237,7 +240,7 @@ public abstract class AgrEntity {
 	
 	protected static class RowsEnum implements Enumeration {
 		private String[] itrAttr;
-		private NSArray[] itrValues;
+		protected NSArray[] itrValues;
 		private int[] itrIdx;
 		protected NSMutableDictionary iterDict;
 		protected NSMutableArray quals;
@@ -296,6 +299,8 @@ public abstract class AgrEntity {
 					recent = found.objectEnumerator();
 					if(nextRecent())
 						return true;
+				} else {
+					recent = NSArray.EmptyArray.objectEnumerator();
 				}
 			}
 			return false;
@@ -317,8 +322,13 @@ public abstract class AgrEntity {
 			}
 			return false;
 		}
+		
+		protected void restart() {
+			itrIdx = null;
+			quals.removeObjectsInRange(new NSRange(base, itrAttr.length));
+		}
 
-		private boolean nextIteration() {
+		protected boolean nextIteration() {
 			if(itrAttr == null)
 				return (recent == null);
 			if(itrIdx == null) {
@@ -331,6 +341,8 @@ public abstract class AgrEntity {
 				}
 				itrIdx = new int[itrAttr.length];
 				return true;
+			} else if(recent == null) {
+				return false;
 			}
 			int i = 0;
 			itrIdx[i]++;
@@ -342,8 +354,10 @@ public abstract class AgrEntity {
 				iterDict.takeValueForKey(value, itrAttr[i]);
 				quals.replaceObjectAtIndex(qual, base + i);
 				i++;
-				if(i >= itrIdx.length)
+				if(i >= itrIdx.length) {
+					recent = null;
 					return false;
+				}
 				itrIdx[i]++;
 			}
 			Object value = itrValues[i].objectAtIndex(itrIdx[i]);

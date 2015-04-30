@@ -10,6 +10,7 @@ import net.rujel.eduplan.Subject;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.Teacher;
 import net.rujel.rest.Agregator.ParseError;
@@ -59,16 +60,20 @@ public class AgrEduCourse extends AgrEntity {
 		} else {
 			addIntToQuals(quals, BaseCourse.EDU_YEAR_KEY, txt);
 		}
+		txt = (String)params.valueForKey("form");
+		final EOQualifier formQual = getStringQual("form", txt);
+		if(formQual != null && params.valueForKey("grade") == null) {
+			NSArray list = groupsForForm(txt, ec);
+			if(list == null)
+				return null;
+			quals.addObject(Various.getEOInQualifier("eduGroup", list));
+			list = (NSArray)list.valueForKey("grade");
+			params.takeValueForKey(list.toString(), "grade");
+		}
 		NSArray cycles = cyclesForParams(params,ec);
 		if(cycles == null || cycles.count() == 0)
 			return null;
 //		NSMutableDictionary iterate = new NSMutableDictionary(cycles,"cycle");
-		txt = (String)params.valueForKey("form");
-		if(txt != null) {
-			EOQualifier qual = getStringQual("form", txt);
-			if(qual != null)
-				quals.addObject(qual);
-		}
 		
 		// TODO: qualifier for Teacher
 
@@ -76,6 +81,8 @@ public class AgrEduCourse extends AgrEntity {
 		final Object[] snv = selectorAndValue(txt);
 		return new RowsEnum(this, quals, "cycle",cycles) {
 			protected boolean qualifies(Wrapper obj) {
+				if(formQual != null && !formQual.evaluateWithObject(obj))
+					return false;
 				if(snv != null) {
 					Integer res = getResults((EduCourse)obj.obj);
 					if(snv[0] == EOQualifier.QualifierOperatorEqual) {
@@ -104,6 +111,21 @@ public class AgrEduCourse extends AgrEntity {
 				return true;
 			}
 		};
+	}
+	
+	public static NSArray groupsForForm(String form, EOEditingContext ec)  throws ParseError {
+		if(form == null)
+			return null;
+		NSArray list = EduGroup.Lister.listGroups(MyUtility.date(ec), ec);
+		if(list == null || list.count() == 0)
+			return null;
+		EOQualifier qual = getStringQual("name", form);
+		if(qual == null)
+			return null;
+		list = EOQualifier.filteredArrayWithQualifier(list, qual);
+		if(list == null || list.count() == 0)
+			return null;
+		return list;
 	}
 
 	public static NSArray cyclesForParams(NSDictionary params, EOEditingContext ec) throws ParseError {

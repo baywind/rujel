@@ -27,7 +27,7 @@ import com.webobjects.foundation.NSMutableSet;
 public class AgrItogMark extends AgrEntity {
 	
 	private static final String[] attributes = new String[] {
-		"eduYear","perCount","perNum","grade","subject","course","student","mark","value","form"};
+		"eduYear","perCount","perNum","grade","subject","course","student","mark","state","value","form"};
 	
 	public String entityName() {
 		return ItogMark.ENTITY_NAME;
@@ -141,6 +141,9 @@ public class AgrItogMark extends AgrEntity {
 			}
 		} // iterator for grade
 		*/
+		txt = (String)params.valueForKey("state");
+		addIntToQuals(quals, ItogMark.STATE_KEY, txt);
+
 		txt = (String)params.valueForKey("mark");
 		if(txt != null) {
 			qual = getStringQual(ItogMark.MARK_KEY, txt);
@@ -151,26 +154,14 @@ public class AgrItogMark extends AgrEntity {
 		addDecToQuals(quals, ItogMark.VALUE_KEY, txt);
 		
 		txt = (String)params.valueForKey("form");
-		final NSArray groups;
-		groupsQual:
-		if(txt != null) {
-			NSArray list = EduGroup.Lister.listGroups(MyUtility.date(ec), ec);
-			if(list == null || list.count() == 0)
-				return null;
-			qual = getStringQual("name", txt);
-			if(qual == null) {
-				groups = null;
-				break groupsQual;
-			}
-			list = EOQualifier.filteredArrayWithQualifier(list, qual);
-			if(list == null || list.count() == 0)
-				return null;
-			groups = list;
-			if(list.count() == 1) {
-				EduGroup gr = (EduGroup)list.objectAtIndex(0);
+		final NSArray groups = AgrEduCourse.groupsForForm(txt, ec);
+		if(groups != null) {
+			NSArray list;
+			if(groups.count() == 1) {
+				EduGroup gr = (EduGroup)groups.objectAtIndex(0);
 				list = gr.list();
 			} else {
-				Enumeration enu = list.objectEnumerator();
+				Enumeration enu = groups.objectEnumerator();
 				NSMutableSet students = new NSMutableSet();
 				while (enu.hasMoreElements()) {
 					EduGroup gr = (EduGroup) enu.nextElement();
@@ -179,8 +170,6 @@ public class AgrItogMark extends AgrEntity {
 				list = students.allObjects();
 			}
 			quals.addObject(Various.getEOInQualifier(ItogMark.STUDENT_KEY, list));
-		} else {
-			groups = null;
 		}
 				
 		//TODO: qualifiers for student and course
@@ -260,6 +249,8 @@ public class AgrItogMark extends AgrEntity {
 		}
 		if(attribute.equals("mark"))
 			return mark.mark();
+		if(attribute.equals("state"))
+			return mark.state();
 		if(attribute.equals("value")) {
 			BigDecimal val = mark.value();
 			if(val == null || mark.readFlags().flagForKey("forced")) {
