@@ -325,7 +325,8 @@ public abstract class AgrEntity {
 		
 		protected void restart() {
 			itrIdx = null;
-			quals.removeObjectsInRange(new NSRange(base, itrAttr.length));
+			if(quals.count() > base)
+				quals.removeObjectsInRange(new NSRange(base, itrAttr.length));
 		}
 
 		protected boolean nextIteration() {
@@ -334,6 +335,8 @@ public abstract class AgrEntity {
 			if(itrIdx == null) {
 				iterDict = new NSMutableDictionary();
 				for (int i = 0; i < itrAttr.length; i++) {
+					if(itrValues[i].count() == 0)
+						return false;
 					Object value = itrValues[i].objectAtIndex(0);
 					quals.addObject(new EOKeyValueQualifier(itrAttr[i],
 							EOQualifier.QualifierOperatorEqual, value));

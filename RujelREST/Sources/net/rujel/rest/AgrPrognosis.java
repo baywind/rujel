@@ -6,26 +6,38 @@ import java.util.Enumeration;
 import net.rujel.autoitog.AutoItog;
 import net.rujel.autoitog.Prognosis;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.eduresults.ItogContainer;
+import net.rujel.eduresults.ItogMark;
+import net.rujel.eduresults.ItogType;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.rest.Agregator.ParseError;
 import net.rujel.reusables.SettingsReader;
 
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
 public class AgrPrognosis extends AgrEntity {
 	
-	private static final String[] attributes = new String[] {
-		"eduYear","perCount","perNum","grade","subject","course","student","mark","state","value","form"};
+	protected static final String[] attributes = new String[] {"eduYear","perCount","perNum",
+		"grade","subject","course","student","mark","state","value","form"};
 	
+	protected static final NSArray itogSorter = new NSArray(new EOSortOrdering[] {
+			new EOSortOrdering(ItogContainer.EDU_YEAR_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering("itogType.inYearCount",EOSortOrdering.CompareDescending),
+			new EOSortOrdering(ItogContainer.NUM_KEY,EOSortOrdering.CompareAscending),
+			new EOSortOrdering("itogType.sort",EOSortOrdering.CompareDescending)
+	});
+
 	public String entityName() {
 		return Prognosis.ENTITY_NAME;
 	}
@@ -40,11 +52,13 @@ public class AgrPrognosis extends AgrEntity {
 		courseAgregator.ec = ec;
 		final Enumeration courses = courseAgregator.getObjectsEnumeration(params);
 		//eduYear is added to params
-		if(courses == null)
+		if(courses == null || !courses.hasMoreElements())
 			return null;
 		
 		String txt = (String)params.valueForKey("eduYear");
-		addIntToQuals(quals, ItogContainer.EDU_YEAR_KEY, txt);
+		final Integer eduYear = new Integer(txt);
+		quals.addObject(new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY,
+				EOQualifier.QualifierOperatorEqual, eduYear));
 		boolean defaultNum = true;
 		txt = (String)params.valueForKey("perCount");
 		if(txt != null) {
@@ -68,12 +82,7 @@ public class AgrPrognosis extends AgrEntity {
 		final boolean getDefault = defaultNum && (txt == null);
 		final EOQualifier itogQual = new EOAndQualifier(quals);
 		quals.removeAllObjects();
-		final NSArray sorter = new NSArray(new EOSortOrdering[] {
-				new EOSortOrdering(ItogContainer.EDU_YEAR_KEY,EOSortOrdering.CompareAscending),
-				new EOSortOrdering("itogType.inYearCount",EOSortOrdering.CompareDescending),
-				new EOSortOrdering(ItogContainer.NUM_KEY,EOSortOrdering.CompareAscending),
-				new EOSortOrdering("itogType.sort",EOSortOrdering.CompareDescending)
-		});
+		quals.addObject(NSArray.EmptyArray);
 		final NSTimestamp today;
 		String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
 		if(defaultDate == null) {
@@ -87,26 +96,6 @@ public class AgrPrognosis extends AgrEntity {
 			}
 			today = parced;
 		}
-		NSMutableArray containers = null;
-		{
-		EduCourse course = null;
-		while (courses.hasMoreElements() && (containers == null || containers.count() == 0)) {
-			Wrapper wrapped = (Wrapper)courses.nextElement();
-			course = (EduCourse) wrapped.obj;
-			if(getDefault) {
-				NSArray autoItogs = AutoItog.currentAutoItogsForCourse(course, today);
-				containers = (NSMutableArray)autoItogs.valueForKey(AutoItog.ITOG_CONTAINER_KEY);
-			} else {
-				containers = (NSMutableArray)ItogContainer.itogsForCourse(course);
-			}
-			EOQualifier.filterArrayWithQualifier(containers, itogQual);
-			EOSortOrdering.sortArrayUsingKeyOrderArray(containers, sorter);
-		}
-		if(containers == null || containers.count() == 0)
-			return null;
-		quals.addObject(new EOKeyValueQualifier("course", 
-				EOQualifier.QualifierOperatorEqual,course));
-		}
 		txt = (String)params.valueForKey("state");
 		addIntToQuals(quals, Prognosis.STATE_KEY, txt);
 
@@ -118,29 +107,54 @@ public class AgrPrognosis extends AgrEntity {
 		}
 		txt = (String)params.valueForKey("value");
 		addDecToQuals(quals, Prognosis.VALUE_KEY, txt);
-				
+
 		//TODO: qualifiers for student and course
 		
-		return new RowsEnum(this, quals,Prognosis.ITOG_CONTAINER_KEY,containers) {
+		return new RowsEnum(this, quals,Prognosis.ITOG_CONTAINER_KEY,NSArray.EmptyArray) {
+			private NSMutableDictionary<String, NSArray> itogByListName = new NSMutableDictionary();
+			private SettingsBase settings = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
+			
 			protected boolean nextIteration() {
 				if(super.nextIteration())
 					return true;
 				restart();
-				NSMutableArray itogs = null;
+				NSArray itogs = null;
 				while (courses.hasMoreElements() && (itogs == null || itogs.count() == 0)) {
 					Wrapper wrapped = (Wrapper)courses.nextElement();
 					EduCourse course = (EduCourse) wrapped.obj;
 					quals.replaceObjectAtIndex(new EOKeyValueQualifier("course", 
 							EOQualifier.QualifierOperatorEqual,course),0);
+			    	String listName = settings.forCourse(course).textValue();
+			    	itogs = itogByListName.objectForKey(listName);
+			    	if(itogs != null)
+			    		continue;
 					if(getDefault) {
-						NSArray autoItogs = AutoItog.currentAutoItogsForCourse(course, today);
-						itogs = (NSMutableArray)autoItogs.valueForKey(
-								AutoItog.ITOG_CONTAINER_KEY);
+				    	EOQualifier[] qs = new EOQualifier[3];
+				    	qs[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
+				    			EOQualifier.QualifierOperatorEqual,listName);
+				    	qs[1] = new EOKeyValueQualifier(AutoItog.FIRE_DATE_KEY,
+				    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, today);
+				    	qs[2] = new EOKeyValueQualifier(AutoItog.FLAGS_KEY,
+				    			EOQualifier.QualifierOperatorLessThan, new Integer(32));
+				    	qs[0] = new EOAndQualifier(new NSArray(qs));
+				    	EOFetchSpecification fs = new EOFetchSpecification(AutoItog.ENTITY_NAME,
+				    			qs[0],null);
+				    	NSArray found = ec.objectsWithFetchSpecification(fs);
+				    	itogs = (NSMutableArray)found.valueForKey(AutoItog.ITOG_CONTAINER_KEY);
 					} else {
-						itogs = (NSMutableArray)ItogContainer.itogsForCourse(course);
+						NSArray types = ItogType.typesForList(listName, eduYear, ec);
+						itogs = ItogType.itogsForTypeList(types,eduYear);
 					}
-					EOQualifier.filterArrayWithQualifier(itogs, itogQual);
-					EOSortOrdering.sortArrayUsingKeyOrderArray(itogs, sorter);
+					if(itogs == null || itogs.count() == 0) {
+						itogs = NSArray.EmptyArray;
+					} else {
+						if(!(itogs instanceof NSMutableArray))
+							itogs = itogs.mutableClone();
+						EOQualifier.filterArrayWithQualifier((NSMutableArray)itogs, itogQual);
+						EOSortOrdering.sortArrayUsingKeyOrderArray(
+								(NSMutableArray)itogs, itogSorter);
+			    	}
+					itogByListName.setObjectForKey(itogs, listName);
 				}
 				if(itogs == null || itogs.count() == 0)
 					return false;
