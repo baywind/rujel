@@ -141,6 +141,17 @@ public class Prognosis extends _Prognosis {
 		super.setMark(mark);
 		if(mark == null)
 			return;
+		NSArray presets = autoItog().itogPresets();
+		if(presets != null && presets.count() > 0) {
+			ItogPreset preset = (ItogPreset)presets.objectAtIndex(0);
+			if(preset.mark().charAt(0) == '%') {
+				preset = ItogPreset.presetForValue(value(), presets);
+				if(preset == null)
+					setState(Integer.valueOf(1));
+			} else {
+				preset = ItogPreset.presetForMark(mark, presets);
+			}
+		}
 		ItogPreset preset = ItogPreset.presetForMark(mark, 
 				autoItog().presetGroup(), editingContext());
 		if(preset != null)
@@ -431,30 +442,25 @@ public class Prognosis extends _Prognosis {
 		if(bonus != null) {
 			if(bonus.value().compareTo(BigDecimal.ZERO) > 0) {
 				relatedItog().setMark(bonus.mark());
-				NSArray presets = EOUtilities.objectsMatchingKeyAndValue(editingContext(),
-						ItogPreset.ENTITY_NAME, ItogPreset.MARK_KEY, bonus.mark());
+				NSArray presets = autoItog().itogPresets();
 				if(presets != null && presets.count() > 0) {
-					if(presets.count() > 1) {
-						Integer presetID = ItogPreset.getPresetGroup(container, course());
-						EOQualifier qual = new EOKeyValueQualifier(ItogPreset.PRESET_GROUP_KEY,
-								EOQualifier.QualifierOperatorEqual,presetID);
-						presets = EOQualifier.filteredArrayWithQualifier(presets, qual);
+					ItogPreset preset = (ItogPreset)presets.objectAtIndex(0);
+					if(preset.mark().charAt(0) == '%') {
+						BigDecimal value = value().add(bonus.value());
+						preset = ItogPreset.presetForValue(value, presets);
+						if(preset == null)
+							relatedItog().setState(Integer.valueOf(1));
+					} else {
+						preset = ItogPreset.presetForMark(bonus.mark(), presets);
 					}
-					if(presets.count() > 0) {
-						ItogPreset preset = (ItogPreset)presets.objectAtIndex(0);
+					if(preset != null)
 						relatedItog().setState(preset.state());
-					}
 				}
-//				StringBuilder buf = new StringBuilder();
 				relatedItog().comments().takeValueForKey(bonus.reason(), bonusTitle);
 				report("Bonus is applied",this, buf);
 			} else {
 				report("Bonus NOT applied",this, buf);
 				relatedItog().comments().takeValueForKey(null, bonusTitle);
-				/*
-    			removeObjectFromBothSidesOfRelationshipWithKey(bonus, "bonus");
-    			removeObjectFromBothSidesOfRelationshipWithKey(bonus.cycle(), "cycle");
-    			editingContext().deleteObject(bonus);*/
 			}
 			if(buf != null) {
 				buf.append(bonus.reason()).append(" : ").append(mark());

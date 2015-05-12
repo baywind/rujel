@@ -46,6 +46,8 @@ public class ItogPreset extends _ItogPreset {
 			new EOSortOrdering(PRESET_GROUP_KEY, EOSortOrdering.CompareAscending),
 			new EOSortOrdering(STATE_KEY, EOSortOrdering.CompareDescending),
 			new EOSortOrdering(VALUE_KEY, EOSortOrdering.CompareDescending)});
+	protected static NSArray valueSorter = new NSArray(
+			new EOSortOrdering(VALUE_KEY, EOSortOrdering.CompareDescending));
 	
 	public static NSArray listPresetGroup(EOEditingContext ec, Integer grNum) {
 		EOQualifier qual = new EOKeyValueQualifier(PRESET_GROUP_KEY,
@@ -61,6 +63,17 @@ public class ItogPreset extends _ItogPreset {
 		if(found == null || found.count() == 0)
 			return null;
 		return (ItogPreset)found.objectAtIndex(0);
+	}
+	
+	public static ItogPreset presetForValue(BigDecimal value, NSArray presets) {
+		presets = EOSortOrdering.sortedArrayUsingKeyOrderArray(presets, valueSorter);
+		Enumeration enu = presets.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			ItogPreset test = (ItogPreset) enu.nextElement();
+			if(value.compareTo(test.value()) >= 0)
+				return test;
+		}
+		return null;
 	}
 	
 	public static ItogPreset presetForMark(String mark, Integer grNum, EOEditingContext ec) {
@@ -100,40 +113,25 @@ public class ItogPreset extends _ItogPreset {
 	}
 	
 	public static String nameForGroup(NSArray group) {
-		StringBuilder buf = new StringBuilder(15);
 		ItogPreset pr = (ItogPreset)group.objectAtIndex(0);
-		buf.append(pr.mark());
+		String mark = pr.mark();
 		ItogPreset pr1 = lowMark(group);
-		if(pr1 != null && pr1 != pr)
-			buf.append("-").append(pr1.mark());
+		if(pr1 == null || pr1 == pr ||mark.equals(pr1.mark()))
+			return mark;
+		StringBuilder buf = new StringBuilder(15);
+		buf.append(mark).append('-').append(pr1.mark());
 		return buf.toString();
 	}
 	
+	
 	public static Integer getPresetGroup(String listName, Integer eduYear,
 			ItogType itogType) {
-		EOQualifier[] quals = new EOQualifier[3];
-		quals[0] = new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual, eduYear);
-		quals[1] = new EOKeyValueQualifier("eduYear",
-				EOQualifier.QualifierOperatorEqual, new Integer(0));
-		quals[1] = new EOOrQualifier(new NSArray(quals));
-		quals[0] = new EOKeyValueQualifier("listName",
-				EOQualifier.QualifierOperatorEqual,listName);
-		quals[2] = new EOKeyValueQualifier("itogType",
-				EOQualifier.QualifierOperatorEqual, itogType);
-		quals[0] = new EOAndQualifier(new NSArray(quals));
-		
-		EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",quals[0],null);
-		NSArray found = itogType.editingContext().objectsWithFetchSpecification(fs);
-		if(found == null || found.count() == 0)
+		EOEnterpriseObject itl = ItogType.itogTypeList(listName, eduYear, itogType);
+		if(itl == null)
 			return null;
-		Integer pr = null;
-		for (int i = 0; i < found.count(); i++) {
-			EOEnterpriseObject itl = (EOEnterpriseObject)found.objectAtIndex(i);
-			if(pr == null || eduYear.equals(itl.valueForKey("eduYear")))
-				pr = (Integer)itl.valueForKey(PRESET_GROUP_KEY);
-		}
-		return pr;
+		return (Integer)itl.valueForKey(PRESET_GROUP_KEY);
 	}
+
 	
 	public static Integer getPresetGroup(ItogContainer itog, NSKeyValueCodingAdditions course) {
 		String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course,

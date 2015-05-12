@@ -146,6 +146,34 @@ public class ItogType extends _ItogType {
 		return ec.objectsWithFetchSpecification(fs);
 	}
 	
+	public static EOEnterpriseObject itogTypeList(String listName, Integer eduYear,
+			ItogType itogType) {
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier("eduYear", EOQualifier.QualifierOperatorEqual, eduYear);
+		quals[1] = new EOKeyValueQualifier("eduYear",
+				EOQualifier.QualifierOperatorEqual, new Integer(0));
+		quals[1] = new EOOrQualifier(new NSArray(quals));
+		quals[0] = new EOKeyValueQualifier("listName",
+				EOQualifier.QualifierOperatorEqual,listName);
+		quals[2] = new EOKeyValueQualifier("itogType",
+				EOQualifier.QualifierOperatorEqual, itogType);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		
+		EOFetchSpecification fs = new EOFetchSpecification("ItogTypeList",quals[0],null);
+		NSArray found = itogType.editingContext().objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		EOEnterpriseObject result = null;
+		for (int i = 0; i < found.count(); i++) {
+			EOEnterpriseObject itl = (EOEnterpriseObject)found.objectAtIndex(i);
+			if(eduYear.equals(itl.valueForKey("eduYear")))
+				return itl;
+			if(result == null || result.valueForKey(ItogPreset.PRESET_GROUP_KEY) == null)
+				result = itl;
+		}
+		return result;
+	}
+	
 	public static NSArray itogsForTypeList(NSArray list, Integer eduYear) {
 		if(list == null || list.count() == 0)
 			return null;

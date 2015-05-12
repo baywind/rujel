@@ -457,17 +457,29 @@ public class AutoItog extends _AutoItog {
     	list = editingContext().objectsWithFetchSpecification(fs);
     	return (list == null || list.count() == 0);
     }
+    
+    protected EOEnterpriseObject _itogTypeList;
     public Integer presetGroup() {
-    	return ItogPreset.getPresetGroup(listName(),
-    			itogContainer().eduYear(), itogContainer().itogType());
+    	if(_itogTypeList == null)
+    		_itogTypeList = ItogType.itogTypeList(listName(), 
+    				itogContainer().eduYear(), itogContainer().itogType());
+    	if(_itogTypeList == null)
+    		return null;
+    	return (Integer)_itogTypeList.valueForKey(ItogPreset.PRESET_GROUP_KEY);
     }
     
-    /*
     protected NSArray _presets;
     public NSArray itogPresets() {
+    	Integer presetGroup = presetGroup();
+    	if(presetGroup == null)
+    		return null;
     	if(_presets == null) {
-    		_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup());
+    		_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup);
+    	} else if(_presets.count() > 0) {
+    		ItogPreset preset = (ItogPreset)_presets.objectAtIndex(0);
+    		if(!preset.presetGroup().equals(presetGroup))
+    			_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup);
     	}
     	return _presets;
-    }*/
+    }
 }
