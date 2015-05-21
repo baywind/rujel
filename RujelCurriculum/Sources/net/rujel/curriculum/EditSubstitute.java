@@ -264,7 +264,10 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
     		else if(!others.containsObject(substitute))
     			others = others.arrayByAddingObject(substitute);
     	} else {
-    		session().setObjectForKey(new NSDictionary(lesson.course(),"course"), "readAccess");
+    		NSDictionary dict = new NSDictionary(
+    				new Object[] {lesson.course(),Substitute.ENTITY_NAME},
+    				new String[] {"course","entityName"});
+    		session().setObjectForKey(dict, "readAccess");
     		cantSelect = (Boolean)session().valueForKeyPath("readAccess._edit.Substitute");
     		session().removeObjectForKey("readAccess");
     	}
@@ -493,7 +496,7 @@ public class EditSubstitute extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public WOComponent initial() {
-		if(cantSelect.booleanValue())
+		if(cantSelect.booleanValue() || teacher != null)
 			return this;
 		return selectTeacher();
 	}
