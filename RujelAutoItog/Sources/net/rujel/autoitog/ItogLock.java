@@ -47,7 +47,7 @@ public class ItogLock implements Modifier {
 			}
 		}
 		try {
-			EduCourse course = (EduCourse)ctx.page().valueForKeyPath("addOn.eduCourse");
+			EduCourse course = (EduCourse)ctx.page().valueForKeyPath("addOn.course");
 			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME,
 					course, course.editingContext());
 		} catch (Exception e) {

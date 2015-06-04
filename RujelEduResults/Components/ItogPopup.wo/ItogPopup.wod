@@ -162,6 +162,7 @@ IsNone : WORadioButton {
   value = 0;
   selection = dict.state;
   title = session.strings.RujelEduResults_EduResults.properties.ItogPreset.none;
+  disabled = readOnly;
 }
 
 IsBad : WORadioButton {
@@ -169,6 +170,7 @@ IsBad : WORadioButton {
   value = 1;
   selection = dict.state;
   title = session.strings.RujelEduResults_EduResults.properties.ItogPreset.bad;
+  disabled = readOnly;
 }
 
 IsSoSo : WORadioButton {
@@ -176,6 +178,7 @@ IsSoSo : WORadioButton {
   value = 2;
   selection = dict.state;
   title = session.strings.RujelEduResults_EduResults.properties.ItogPreset.acceptable;
+  disabled = readOnly;
 }
 
 IsGood : WORadioButton {
@@ -183,11 +186,25 @@ IsGood : WORadioButton {
   value = 3;
   selection = dict.state;
   title = session.strings.RujelEduResults_EduResults.properties.ItogPreset.good;
+  disabled = readOnly;
 }
 
 ManualMarkContainer : WOGenericContainer {
-  elementName = "tr";
-  class="orange";
+  elementName = "span";
   id = "manualMark";
-  style = manualMarkStyle;
+  style = "display:none;";
+  omitTags = dict.noPresets;
+}
+
+ReadOnly : WOConditional {
+  condition = readOnly;
+}
+
+MarkValue : WOString {
+  value = dict.mark;
+  valueWhenEmpty = "&oslash;";
+}
+
+HasPresets : WOConditional {
+  condition = presets.count;
 }

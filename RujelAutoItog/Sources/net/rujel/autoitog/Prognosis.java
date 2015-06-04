@@ -297,7 +297,8 @@ public class Prognosis extends _Prognosis {
 		if(result == null) {
 			result = autoItog().fireDate();
 		}
-		setFireDate(result);
+		if(EOPeriod.Utility.compareDates(result, fireDate()) != 0)
+			setFireDate(result);
 		return result;
 	}
 

@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
 import net.rujel.eduresults.ItogMark;
+import net.rujel.eduresults.ItogPreset;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter.AddOn;
@@ -62,6 +63,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     
     public String mark;
     public NamedFlags flags;
+    public NSMutableDictionary dict = new NSMutableDictionary();
     
     public String bonusPercent;
     public String bonusText;
@@ -72,7 +74,10 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     
     protected boolean calculation;
     public boolean noCancel = false;
+    public boolean cantChange;
+    public boolean cantEdit;
     
+  
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	if(addOn == null)
     		addOn = new PrognosesAddOn(session());
@@ -119,6 +124,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 		if(prognosis != null) {
 			flags.setFlags(prognosis.flags().intValue());
 			mark= prognosis.mark();
+			dict.takeValueForKey(prognosis.state(), ItogPreset.STATE_KEY);
 			addOn.setPrognosis(prognosis);
 			if(eduPeriod.calculator() != null) {
 				Bonus bonus = prognosis.bonus();
@@ -137,6 +143,24 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
 						(bonus != null && bonus.submitted())?"edit":"create");
 			}
 		}
+    	cantChange = !access().flagForKey((prognosis == null)?"create":"edit");
+    	cantEdit = cantChange || !eduPeriod.namedFlags().flagForKey("manual");
+    	if(!cantEdit) {
+			Integer presetGroup = ItogPreset.getPresetGroup(eduPeriod.itogContainer(), course);
+			if(presetGroup != null && presetGroup.intValue() > 0) {
+				NSArray presets = ItogPreset.listPresetGroup(
+						eduPeriod.editingContext(), presetGroup, true);
+				if(presets != null && presets.count() > 0) {
+					dict.takeValueForKey(presets, "presets");
+					if(mark == null)
+						dict.takeValueForKey(presets.objectAtIndex(0), "preset");
+					else
+						dict.takeValueForKey(ItogPreset.presetForMark(mark, presets), "preset");
+				} else {
+					dict.takeValueForKey(Boolean.TRUE, "noPresets");
+				}
+			}
+    	}
      	super.appendToResponse(aResponse, aContext);
     }
     
@@ -146,11 +170,6 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     	return true;
     }
 
-    public boolean cantChange() {
-    	String flag = (prognosis == null)?"create":"edit";
-    	return !access().flagForKey(flag);
-    }
-
     public NamedFlags access() {
     	return addOn.access();
     }
@@ -158,6 +177,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public WOActionResults save() {
     	if(prognosis != null && prognosis.editingContext() == null)
     		prognosis = null;
+		ItogPreset preset = (ItogPreset)dict.valueForKey("preset");
+		if(preset != null)
+			mark = preset.mark();
     	if(prognosis !=null || mark != null) {
     		EOEditingContext ec = course.editingContext();
 	    	Logger logger = Logger.getLogger("rujel.autoitog");
@@ -167,10 +189,12 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     				prognosis = eduPeriod.calculator().calculateForStudent(student, course, 
     						eduPeriod, eduPeriod.relatedForCourse(course));
     				changeReason = eduPeriod.calculatorName();
-    				if(prognosis != null)
+    				if(prognosis != null) {
     					mark = prognosis.mark();
-    				else
+    					dict.takeValueForKey(prognosis.state(), ItogPreset.STATE_KEY);
+    				} else {
     					ec.revert();
+    				}
     			} else {
     				if(ec.globalIDForObject(prognosis).isTemporary()) {
     					ec.revert();
@@ -191,8 +215,21 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
      			} else {
      				actionType = 2;
      			}
-    			if(!mark.equals(prognosis.mark()) && eduPeriod.namedFlags().flagForKey("manual")) {
-    				prognosis.setMark(mark);
+    			if(!cantEdit) {
+    				if(!mark.equals(prognosis.mark())) {
+//    					String oldMark = prognosis.mark();
+    					if(preset != null) {
+//    						BigDecimal oldValue = prognosis.value();
+//    						if(oldValue == null || BigDecimal.ZERO.compareTo(oldValue) == 0) {
+    							prognosis.setValue(preset.value());
+//    						}
+    					}
+    					prognosis.setMark(mark);
+    				}
+    				Integer state = (preset == null)?
+    						(Integer)dict.valueForKey(ItogPreset.STATE_KEY): preset.state();
+    				if(state != null && !state.equals(prognosis.state()))
+    					prognosis.setState(state);
     			}
    				prognosis.updateFireDate();
 	    		Bonus bonus = prognosis.bonus();
@@ -283,6 +320,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     public WOActionResults delete() {
     	mark = null;
     	calculation = false;
+    	dict.removeObjectForKey("preset");
     	return save();
     }
     

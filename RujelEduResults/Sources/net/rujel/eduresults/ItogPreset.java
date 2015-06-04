@@ -49,11 +49,22 @@ public class ItogPreset extends _ItogPreset {
 	protected static NSArray valueSorter = new NSArray(
 			new EOSortOrdering(VALUE_KEY, EOSortOrdering.CompareDescending));
 	
-	public static NSArray listPresetGroup(EOEditingContext ec, Integer grNum) {
+	public static final NSArray<String> stateSymbols = new NSArray<String>(new String[] {
+			"&oslash;","-","~","+"});
+	
+	public static NSArray listPresetGroup(EOEditingContext ec, Integer grNum, boolean notBorders) {
 		EOQualifier qual = new EOKeyValueQualifier(PRESET_GROUP_KEY,
 				EOQualifier.QualifierOperatorEqual, grNum);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, qual, sorter);
-		return ec.objectsWithFetchSpecification(fs);
+		NSArray result = ec.objectsWithFetchSpecification(fs);
+		if(result == null || result.count() == 0)
+			return null;
+		if(notBorders) {
+			ItogPreset preset = (ItogPreset)result.objectAtIndex(0);
+			if(preset.mark().charAt(0) == '%')
+				return NSArray.EmptyArray;
+		}
+		return result;
 	}
 	
 	public static ItogPreset presetForMark(String mark, NSArray presets) {
@@ -168,7 +179,7 @@ public class ItogPreset extends _ItogPreset {
 		dict.takeValueForKey(nameForGroup(currList), "fullName");
 		return result;
 	}
-
+	
 	public static void init() {
 	}
 	

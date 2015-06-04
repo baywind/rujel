@@ -79,22 +79,28 @@ public class ItogPopup extends WOComponent {
 		dict.takeValueForKey(itog.state(), ItogMark.STATE_KEY);
 		if(presets == null) {
 			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, course());
-			if( presetGroup != null && presetGroup.intValue() > 0) {
-				presets = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup);
+			if(presetGroup != null && presetGroup.intValue() > 0) {
+				presets = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup,true);
 			}
 		}
-		dict.takeValueForKey(ItogPreset.presetForMark(mark, presets), "preset");
+		if(presets != null && presets.count() > 0)
+			dict.takeValueForKey(ItogPreset.presetForMark(mark, presets), "preset");
+		else
+			dict.takeValueForKey(Boolean.TRUE, "noPresets");
 	}
 	
 	public void setItogContainer(ItogContainer value) {
 		itogContainer = value;
 		dict.takeValueForKey(null, ItogMark.MARK_KEY);
 		dict.takeValueForKey(Integer.valueOf(0), ItogMark.STATE_KEY);
-		if(addOn != null) {
+		if(presets == null && addOn != null) {
 			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, addOn.course());
 			if(presetGroup != null && presetGroup.intValue() > 0) {
-				presets = ItogPreset.listPresetGroup(itogContainer.editingContext(), presetGroup);
-				dict.takeValueForKey(presets.objectAtIndex(0), "preset");
+				presets = ItogPreset.listPresetGroup(itogContainer.editingContext(), presetGroup, true);
+				if(presets != null && presets.count() > 0)
+					dict.takeValueForKey(presets.objectAtIndex(0), "preset");
+				else
+					dict.takeValueForKey(Boolean.TRUE, "noPresets");
 			}
 		}
 	}
@@ -401,12 +407,12 @@ public class ItogPopup extends WOComponent {
 		}
 		return buf.toString();
 	}
-
+/*
 	public String manualMarkStyle() {
 		if(dict.valueForKey("preset") == null)
 			return null;
 		else
 			return "display:none;";
-	}
+	}*/
 
 }

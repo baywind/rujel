@@ -169,7 +169,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 			Integer preset = (Integer)tl.valueForKey(ItogPreset.PRESET_GROUP_KEY);
 			dict.takeValueForKey(preset, ItogPreset.PRESET_GROUP_KEY);
 			if(preset.intValue() > 0) {
-				NSArray presetGroup = ItogPreset.listPresetGroup(ec, preset);
+				NSArray presetGroup = ItogPreset.listPresetGroup(ec, preset, false);
 				ItogPreset p = (ItogPreset)presetGroup.objectAtIndex(0);
 				dict.takeValueForKey(p.mark(), "preset");
 			} else if(preset.intValue() < 0) {

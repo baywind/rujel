@@ -98,13 +98,10 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	Integer presetGroup = ItogPreset.getPresetGroup(listName, itog.eduYear(), itog.itogType());
     	if(presetGroup == null || presetGroup.intValue() <= 0)
     		return;
-    	NSArray presetList = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup);
-    	presetList = (NSArray)presetList.valueForKey(ItogPreset.MARK_KEY);
-    	String mark = (String)presetList.objectAtIndex(0);
-    	if(mark.charAt(0) == '%' && mark.equals(presetList.lastObject())) {
-//    		borderSet = null;
+    	NSArray presetList = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup, true);
+    	if(presetList == null || presetList.count() == 0)
     		return;
-    	}
+    	presetList = (NSArray)presetList.valueForKey(ItogPreset.MARK_KEY);
     	Enumeration enu = bsets.objectEnumerator();
     	NSMutableArray result = new NSMutableArray();
     	bset:

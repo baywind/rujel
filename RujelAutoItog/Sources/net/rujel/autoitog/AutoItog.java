@@ -474,11 +474,11 @@ public class AutoItog extends _AutoItog {
     	if(presetGroup == null)
     		return null;
     	if(_presets == null) {
-    		_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup);
+    		_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup, false);
     	} else if(_presets.count() > 0) {
     		ItogPreset preset = (ItogPreset)_presets.objectAtIndex(0);
     		if(!preset.presetGroup().equals(presetGroup))
-    			_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup);
+    			_presets = ItogPreset.listPresetGroup(editingContext(), presetGroup, false);
     	}
     	return _presets;
     }
