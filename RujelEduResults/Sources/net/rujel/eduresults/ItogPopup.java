@@ -70,14 +70,17 @@ public class ItogPopup extends WOComponent {
 	
 	public void setItog(ItogMark newItog) {
 		itog = newItog;
-		if(itog == null)
+		if(itog == null) {
+			dict.takeValueForKey(null, ItogMark.MARK_KEY);
+			dict.takeValueForKey(Integer.valueOf(0), ItogMark.STATE_KEY);
 			return;
+		}
 		if(itogContainer == null)
 			itogContainer = itog.container();
 		String mark = itog.mark();
 		dict.takeValueForKey(mark, ItogMark.MARK_KEY);
 		dict.takeValueForKey(itog.state(), ItogMark.STATE_KEY);
-		if(presets == null) {
+		if(presets == null && !readOnly()) {
 			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, course());
 			if(presetGroup != null && presetGroup.intValue() > 0) {
 				presets = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup,true);
@@ -91,9 +94,11 @@ public class ItogPopup extends WOComponent {
 	
 	public void setItogContainer(ItogContainer value) {
 		itogContainer = value;
-		dict.takeValueForKey(null, ItogMark.MARK_KEY);
-		dict.takeValueForKey(Integer.valueOf(0), ItogMark.STATE_KEY);
-		if(presets == null && addOn != null) {
+		if(itog == null) {
+			dict.takeValueForKey(null, ItogMark.MARK_KEY);
+			dict.takeValueForKey(Integer.valueOf(0), ItogMark.STATE_KEY);
+		}
+		if(presets == null && addOn != null && !readOnly()) {
 			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, addOn.course());
 			if(presetGroup != null && presetGroup.intValue() > 0) {
 				presets = ItogPreset.listPresetGroup(itogContainer.editingContext(), presetGroup, true);

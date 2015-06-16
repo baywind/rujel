@@ -469,9 +469,17 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     }
     
     public Boolean cantPerform() {
-    	if(prognosis == null || ItogMark.getItogMark(course.cycle(),prognosis.itogContainer(),
-				student,prognosis.editingContext()) != null)
+    	if(prognosis == null)
     		return Boolean.TRUE;
+    	ItogMark itog = ItogMark.getItogMark(course.cycle(),prognosis.itogContainer(),
+				student,prognosis.editingContext());
+    	if(itog != null)
+    		return Boolean.TRUE;
+    	if(access().flagForKey("edit") && 
+//    			EOPeriod.Utility.compareDates(eduPeriod.fireDate(), null) < 0 &&
+    			eduPeriod.fireDateTime().getTime() < System.currentTimeMillis()) {
+    		return Boolean.FALSE;
+    	}
     	return (Boolean)session().valueForKeyPath("readAccess._create.ItogMark");
     }
 }

@@ -131,8 +131,11 @@ public class Prognosis extends _Prognosis {
     	if(value() == null)
     		return null;
     	FractionPresenter presenter = autoItog().borderSet();
-    	if(presenter == null)
+    	if(presenter == null) {
+    		if(autoItog().calculatorName() == null)
+    			return null;
     		presenter = FractionPresenter.PERCENTAGE;
+    	}
     	return presenter.presentFraction(value());
     }
     

@@ -46,7 +46,7 @@
 				<key>changed</key>
 				<string>изменялась</string>
 				<key>forced</key>
-				<string>не соответствует успешности</string>
+				<string>не по результатам вычисления</string>
 				<key>incomplete</key>
 				<string>остались задолженности</string>
 				<key>manual</key>
