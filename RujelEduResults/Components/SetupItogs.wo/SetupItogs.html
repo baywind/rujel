@@ -19,8 +19,37 @@
 	</webobject></webobject></tbody></table></webobject></td>
 	<td rowspan = "2" class = "backfield2">
 		<webobject name = "HasSelection"><webobject name = "ItogTypeEditor">
-		<tr><th align = "right"><webobject name = "PresetTitle"/></th>
-			<td colspan = "3"><webobject name = "CurrPreset"/></td></tr>
+		<webobject name = "IsActive">
+			<tr><th align = "right"><webobject name = "PresetTitle"/></th>
+				<td colspan = "3">
+				<script language = "JavaScript">
+	function onselection(select) {
+	  var a = document.getElementById("persetPopupLink");
+	  if(select.value==0) {
+	    a.style.display='none';
+	  } else {
+	    a.style.display='';
+	  }
+	  var opt = select.getElementsByTagName("option")[select.selectedIndex];
+	  if(opt.text.charAt(0) == '<' || opt.text.indexOf('&lt;')==0) {
+	   getAjaxPopup(select, a.href, "gr=" + opt.value);
+	  }
+	}
+	
+	function editSelection(a) {
+	  var select = document.getElementById("presetSelector");
+	  if(select.value==0) {
+	    a.style.display='none';
+	    return false;
+	  }
+	  getAjaxPopup(a, a.href, "gr=" + select.value);
+	  return false;
+	}
+				</script>		
+				<webobject name = "CurrPreset"/>
+				<webobject name = "PopupLink"><webobject name="EditImage"/></webobject></td></tr>
+			</webobject>
+		
 		</webobject></webobject>
 		<table align = "center"><thead><tr>
 		<th><webobject name = "ThisYearTitle"/>:</th><webobject name = "Extensions">

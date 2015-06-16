@@ -124,10 +124,12 @@ public class ItogPreset extends _ItogPreset {
 	}
 	
 	public static String nameForGroup(NSArray group) {
+		if(group == null || group.count() == 0)
+			return null;
 		ItogPreset pr = (ItogPreset)group.objectAtIndex(0);
 		String mark = pr.mark();
 		ItogPreset pr1 = lowMark(group);
-		if(pr1 == null || pr1 == pr ||mark.equals(pr1.mark()))
+		if(pr1 == null || pr1 == pr || mark.equals(pr1.mark()))
 			return mark;
 		StringBuilder buf = new StringBuilder(15);
 		buf.append(mark).append('-').append(pr1.mark());
@@ -171,6 +173,7 @@ public class ItogPreset extends _ItogPreset {
 				currList = new NSMutableArray(preset);
 				dict.takeValueForKey(currList,"list");
 				dict.takeValueForKey(preset.mark(), "max");
+				dict.takeValueForKey(Boolean.valueOf(preset.mark().charAt(0) == '%'), "isPercent");
 				result.addObject(dict);
 			} else {
 				currList.addObject(preset);
@@ -185,7 +188,7 @@ public class ItogPreset extends _ItogPreset {
 	
     public void awakeFromInsertion(EOEditingContext ec) {
     	super.awakeFromInsertion(ec);
-    	setState(new Integer(0));
+    	setState(Integer.valueOf(0));
     }
 
 	public void turnIntoFault(EOFaultHandler handler) {

@@ -194,9 +194,29 @@ CurrPreset : WOPopUpButton {
   item = item;
   displayString = item.fullName;
   selection = currPreset;
+  value = item.presetGroup;
+  onchange = "onselection(this);";
+  id = "presetSelector";
 }
 
 PresetTitle : WOString {
   value = session.strings.RujelEduResults_EduResults.properties.ItogPreset.this;
   escapeHTML = false;
+}
+
+PopupLink : WOHyperlink {
+  action = editPreset;
+  onclick = "return editSelection(this);";
+  id = "persetPopupLink";
+  title = session.strings.Reusables_Strings.uiElements.Edit;
+}
+
+EditImage : WOImage {
+	filename = "files_edit.png";
+	framework = "app";
+	height = 16;
+	width = 16;
+}
+IsActive : WOConditional {
+  condition = currType.active;
 }

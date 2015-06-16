@@ -276,7 +276,7 @@ public class ItogPopup extends WOComponent {
 
 				ec.saveChanges();
 				String message = (newItog)?"New Itog created":"Itog is changed";
-				logger.logp(WOLogLevel.EDITING,getClass().getName(),"save",message,new Object[] {session(),itog});
+				logger.log(WOLogLevel.EDITING,message,new Object[] {session(),itog});
 				if (!same) {
 					ModuleInit.prepareStats(eduCourse, itogContainer,true);
 				}

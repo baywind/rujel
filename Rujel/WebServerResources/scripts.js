@@ -485,7 +485,7 @@ function formParams(ini) {
 				continue;
 		if(params.length > 0)
 			params = params + '&';
-		params = params.concat(elt.name,'=',elt.value);
+		params = params.concat(elt.name,'=',encodeURIComponent(elt.value));
 		//alert(elt.name + ' = ' + elt.value);
 	}
 	return params;

@@ -102,18 +102,39 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 				fs = new EOFetchSpecification("ItogTypeList",quals[0],null);
 				extraLists = ec.objectsWithFetchSpecification(fs);
 			}
+			updatePresets();
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,
 					"Error creating default ItogMark ListName setting",
 					new Object[] {session(), e});
 		} finally {
-			allPresets = ItogPreset.allPresets(ec);
-			NSMutableDictionary noPreset = new NSMutableDictionary(new Integer(0), "presetGroup");
-			noPreset.takeValueForKey(session().valueForKeyPath(
-					"strings.RujelEduResults_EduResults.properties.ItogPreset.noPreset"),
-					"fullName");
-			allPresets.insertObjectAtIndex(noPreset, 0);
 			ec.unlock();
+		}
+	}
+
+	protected void updatePresets() {
+		allPresets = ItogPreset.allPresets(ec);
+		NSMutableDictionary dict = new NSMutableDictionary(Integer.valueOf(0), "presetGroup");
+		dict.takeValueForKey(session().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.properties.ItogPreset.noPreset"),
+				"fullName");
+		allPresets.insertObjectAtIndex(dict, 0);
+		if(Various.boolForObject(session().valueForKeyPath("readAccess.create.ItogPreset"))) {
+			dict = (NSMutableDictionary)allPresets.lastObject();
+			Integer presetGroup = (Integer)dict.valueForKey(ItogPreset.PRESET_GROUP_KEY);
+			presetGroup = Integer.valueOf(presetGroup.intValue() +1);
+			dict = new NSMutableDictionary(presetGroup,ItogPreset.PRESET_GROUP_KEY);
+			dict.takeValueForKey(session().valueForKeyPath(
+					"strings.RujelEduResults_EduResults.properties.ItogPreset.newPreset"), 
+					"fullName");
+			allPresets.addObject(dict);
+			presetGroup = Integer.valueOf(-presetGroup.intValue());
+			dict = new NSMutableDictionary(presetGroup,ItogPreset.PRESET_GROUP_KEY);
+			dict.takeValueForKey(session().valueForKeyPath(
+			"strings.RujelEduResults_EduResults.properties.ItogPreset.newPercent"), 
+			"fullName");
+			dict.takeValueForKey(Boolean.TRUE, "isPercent");
+			allPresets.addObject(dict);
 		}
 	}
 	
@@ -167,16 +188,17 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		} else {
 			dict.takeValueForKey(Boolean.TRUE, "active");
 			Integer preset = (Integer)tl.valueForKey(ItogPreset.PRESET_GROUP_KEY);
-			dict.takeValueForKey(preset, ItogPreset.PRESET_GROUP_KEY);
 			if(preset.intValue() > 0) {
 				NSArray presetGroup = ItogPreset.listPresetGroup(ec, preset, false);
-				ItogPreset p = (ItogPreset)presetGroup.objectAtIndex(0);
-				dict.takeValueForKey(p.mark(), "preset");
-			} else if(preset.intValue() < 0) {
-				dict.takeValueForKey("%", "preset");
-			} else {
-				dict.takeValueForKey(null, "preset");
+				if(presetGroup == null) {
+					preset = Integer.valueOf(0);
+					tl.takeValueForKey(preset, ItogPreset.PRESET_GROUP_KEY);
+				} else {
+					ItogPreset p = (ItogPreset)presetGroup.objectAtIndex(0);
+					dict.takeValueForKey(p.mark(), "preset");
+				}
 			}
+			dict.takeValueForKey((preset.intValue() > 0)?preset:null, ItogPreset.PRESET_GROUP_KEY);
 		}
 	}
 	
@@ -528,8 +550,10 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 
 	public NSDictionary currPreset() {
 		Integer presetGroup = (Integer)currType.valueForKeyPath("ItogTypeList.presetGroup");
-		if(presetGroup == null)
+		if(presetGroup == null) {
+			presetGroup = (Integer)currType.valueForKey(ItogPreset.PRESET_GROUP_KEY);
 			return null;
+		}
 		for (int i = 0; i < allPresets.count(); i++) {
 			NSMutableDictionary dict = (NSMutableDictionary)allPresets.objectAtIndex(i);
 			if(presetGroup.equals(dict.valueForKey("presetGroup"))) {
@@ -540,10 +564,31 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setCurrPreset(NSDictionary currPreset) {
-		EOEnterpriseObject itl = (EOEnterpriseObject)currType.valueForKey("ItogTypeList");
-		if(itl == null)
-			return;
-		itl.takeValueForKey(currPreset.valueForKey("presetGroup"), "presetGroup");
+		if(currPreset == null) {
+			currPreset = (NSDictionary)allPresets.objectAtIndex(0);
+		}
+		Integer pg = (Integer)currPreset.valueForKey(ItogPreset.PRESET_GROUP_KEY);
+		if(!pg.equals(currType.valueForKey(ItogPreset.PRESET_GROUP_KEY))) {
+			currType.takeValueForKey(pg, ItogPreset.PRESET_GROUP_KEY);
+			EOEnterpriseObject itl = (EOEnterpriseObject)currType.valueForKey("ItogTypeList");
+			if(itl == null)
+				return;
+			itl.takeValueForKey(pg, ItogPreset.PRESET_GROUP_KEY);
+		}
 		currType.takeValueForKey(currPreset.valueForKey("max"), "preset");
+		if(allPresets.indexOfIdenticalObject(currPreset) <= 0)
+			updatePresets();
+	}
+	
+	public WOActionResults editPreset() {
+		WOComponent nextPage = pageWithName("PresetEditor");
+		nextPage.takeValueForKey(context().page(), "returnPage");
+		nextPage.takeValueForKey(ec, "ec");
+
+		nextPage.takeValueForKey("currPreset", "resultPath");
+		nextPage.takeValueForKey(this, "resultGetter");
+//		Integer presetGroup = (Integer)currType.valueForKeyPath("ItogTypeList.presetGroup");
+//		nextPage.takeValueForKey(presetGroup, "presetGroup");
+		return nextPage;
 	}
 }

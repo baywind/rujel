@@ -80,6 +80,10 @@
 		<dict>
 			<key>this</key>
 			<string>Набор оценок</string>
+			<key>percent</key>
+			<string>Уровни успешности</string>
+			<key>name</key>
+			<string>Название</string>
 			<key>noPreset</key>
 			<string>Без набора</string>
 			<key>byValue</key>
@@ -94,6 +98,14 @@
 			<string>нет оценки</string>
 			<key>manual</key>
 			<string>вручную</string>
+			<key>value</key>
+			<string>успешность</string>
+			<key>state</key>
+			<string>Уровень</string>
+			<key>newPreset</key>
+			<string>&lt;Новый набор&gt;</string>
+			<key>newPercent</key>
+			<string>&lt;Новый %&gt;</string>
 		</dict>
 	</dict>
 	<key>studentReporter</key>
