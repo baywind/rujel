@@ -414,16 +414,7 @@ public class AutoItogModule {
 						archivePrognosisChange(progn);
 					}
 				}
-				EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(
-						course, ai.itogContainer());
-				if(grouping != null) {
-//						NSDictionary stats = PrognosesAddOn.statCourse(
-//							course, prognoses.allValues());
-//						grouping.takeValueForKey(stats, "dict");
-					NSArray list = MyUtility.filterByGroup(prognoses.allValues(),
-							"student", course.groupList(), true);
-					grouping.takeValueForKey(list, "array");
-				}
+				PrognosesAddOn.feedStats(course, ai.itogContainer(), prognoses.allValues());
 			}
 		} else { // specific student
 			Prognosis progn = ai.calculator().calculateForStudent(student, course, ai,
@@ -434,17 +425,7 @@ public class AutoItogModule {
 					archivePrognosisChange(progn);
 				}
 			}
-			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(
-					course, ai.itogContainer());
-			if(grouping != null) {
-				NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
-						course, ai.itogContainer(),false);
-				prognoses = MyUtility.filterByGroup(prognoses, "student", 
-						course.groupList(), true);
-				grouping.takeValueForKey(prognoses, "array");
-//					NSDictionary stats = PrognosesAddOn.statCourse(course, eduPeriod);
-//					grouping.takeValueForKey(stats, "dict");
-			}
+			PrognosesAddOn.feedStats(course, ai.itogContainer(), null);
 			if(addOn != null)
 				addOn.setPrognosis(progn);
 //					addOn.reset();
@@ -657,7 +638,8 @@ public class AutoItogModule {
 			buf.append("Failed to save timed out prognoses");
 			ec.revert();
 		}
-		ModuleInit.prepareStats(course, itog, true);
+		ModuleInit.prepareStats(course, itog, ItogMark.MARK_KEY, true);
+		ModuleInit.prepareStats(course, itog, "stateKey", true);
 	}
 
 	//protected static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -946,11 +928,13 @@ cycleCourses:
 			ec = new SessionedEditingContext(ctx.session());
 		}
 		NSArray list = null;
+		String listName;
 		try {
 			EduCourse course = (EduCourse)ctx.page().valueForKey("course");
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
 			list = AutoItog.currentAutoItogsForCourse(course, date);
 		} catch (Exception e) {
-			String listName = ModuleInit.sectionListName(ctx.session(), ec);
+			listName = ModuleInit.sectionListName(ctx.session(), ec);
 	    	EOQualifier[] quals = new EOQualifier[3];
 	    	quals[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
 	    			EOQualifier.QualifierOperatorEqual,listName);
@@ -983,33 +967,49 @@ cycleCourses:
 		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary template = new NSMutableDictionary(Prognosis.ENTITY_NAME,"entName");
 		template.setObjectForKey(Prognosis.MARK_KEY, "statField");
-		template.setObjectForKey(ModuleInit.marksPreset(),"keys");
 		try {
 			Method method = PrognosesAddOn.class.getMethod("statCourse",
-					EduCourse.class, ItogContainer.class);
+					EduCourse.class, ItogContainer.class, String.class);
 			template.setObjectForKey(method,"ifEmpty");
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.log(WOLogLevel.WARNING,"Failed to get stats method",e);
 		}
-		
-		String title = (String)WOApplication.application().valueForKeyPath(
-				"strings.RujelAutoItog_AutoItog.prognoses");
+		template.setObjectForKey(ctx.session().valueForKeyPath(
+				"strings.RujelAutoItog_AutoItog.prognoses"),"description");
 		int sort = 50;
 		NSMutableArray result = new NSMutableArray();
 		Boolean addCalculations = Boolean.valueOf(
 				SettingsReader.boolForKeyPath("edu.prognonesStatCalculations", false));
+		Integer curGrNum = null;
 		while (enu.hasMoreElements()) {
 			AutoItog perType = (AutoItog) enu.nextElement();
 			ItogContainer period = perType.itogContainer();
 			if(period == null)
 				continue;
+			Integer grNum = ItogPreset.getPresetGroup(listName,period.eduYear(),period.itogType());
+			if(grNum != null && !grNum.equals(curGrNum)) {
+				NSArray presets = ItogPreset.listPresetGroup(ec, grNum, true);
+				if(presets != null)
+					presets = (NSArray)presets.valueForKey(ItogPreset.MARK_KEY);
+				template.takeValueForKey(presets, "keys");				
+			}
 			NSMutableDictionary dict = template.mutableClone();
+			String name = period.title();
 			dict.setObjectForKey(String.valueOf(sort),"sort");
-			dict.setObjectForKey(period.title(),"title");
-			dict.setObjectForKey(title,"description");
+			dict.setObjectForKey(name,"title");
 			dict.setObjectForKey(period,"param2");
 			dict.setObjectForKey(addCalculations,"addCalculations");
 			result.addObject(dict);
+
+			dict = dict.mutableClone();
+			dict.setObjectForKey("stateKey","statField");
+			dict.setObjectForKey(ItogPreset.stateSymbolsDescending, "keys");
+			dict.setObjectForKey(Boolean.FALSE, "addCalculations");
+			dict.setObjectForKey(String.valueOf(sort + list.count()),"sort");
+			StringBuilder buf = new StringBuilder(name.length() +2);
+			buf.append('~').append(name).append('~');
+			dict.setObjectForKey(buf.toString(),"title");
+			result.addObject(dict);			
 			sort++;
 		}
 		return result;

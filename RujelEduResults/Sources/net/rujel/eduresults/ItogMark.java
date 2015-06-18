@@ -390,5 +390,9 @@ public class ItogMark extends _ItogMark
 		return result;
 	}
 	
-	
+	public String stateKey() {
+		if(state() == null)
+			return null;
+		return ItogPreset.stateSymbols.objectAtIndex(state().intValue());
+	}
 }

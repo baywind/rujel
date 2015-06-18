@@ -375,7 +375,7 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 			EOEditingContext ec, String entName, String statField) {
 		Class[] paramClasses = ifEmpty.getParameterTypes();
 		Object[] params = new Object[paramClasses.length];
-		boolean[] unused = new boolean[] {true,true,true};
+		boolean[] unused = new boolean[] {true,true,true,true};
 		for (int i = 0; i < paramClasses.length; i++) {
 			if(paramClasses[i].isInstance(param1) && unused[1]) {
 				params[i] = param1;
@@ -386,6 +386,9 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 			} else if(paramClasses[i].isInstance(ec) && unused[0]) {
 				params[i] = ec;
 				unused[0] = false;
+			} else if(paramClasses[i].isInstance(statField) && unused[3]) {
+				params[i] = statField;
+				unused[3] = false;
 			}
 		}
 		NSDictionary dict = null;

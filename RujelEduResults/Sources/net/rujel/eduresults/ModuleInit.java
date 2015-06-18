@@ -122,14 +122,14 @@ public class ModuleInit {
 		return result;
 	}
 
-	public static NSDictionary statCourse(EduCourse course, ItogContainer container) {
+	public static NSDictionary statCourse(EduCourse course, ItogContainer container, String key) {
 		NSArray itogs = ItogMark.getItogMarks(course.cycle(), container, null);
 //		itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
 		if(itogs == null || itogs.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(itogs.count() > 1) {
-			EOSortOrdering so = new EOSortOrdering(ItogMark.MARK_KEY,
-					EOSortOrdering.CompareCaseInsensitiveAscending);
+			EOSortOrdering so = new EOSortOrdering(
+					key,EOSortOrdering.CompareCaseInsensitiveAscending);
 			itogs = EOSortOrdering.sortedArrayUsingKeyOrderArray(itogs, new NSArray(so));
 		}
 		NSMutableArray keys = new NSMutableArray();
@@ -144,12 +144,13 @@ public class ModuleInit {
 			ItogMark itog = (ItogMark) enu.nextElement();
 			if(!group.containsObject(itog.student()))
 				continue;
-			if((currKey==null)?itog.mark()==null:currKey.equalsIgnoreCase(itog.mark())) {
+			String mark = (String)itog.valueForKey(key);
+			if((currKey==null)?mark==null:currKey.equalsIgnoreCase(mark)) {
 				currCount++;
 			} else {
 				if(currCount > 0)
 					result.setObjectForKey(new Integer(currCount), (currKey==null)?" ":currKey);
-				currKey = itog.mark();
+				currKey = mark;
 				keys.addObject((currKey==null)?" ":currKey);
 				currCount = 1;
 			}
@@ -164,14 +165,15 @@ public class ModuleInit {
 		return result;
 	}
 	
-	public static EOEnterpriseObject getStatsGrouping (EduCourse course, ItogContainer period) {
+	public static EOEnterpriseObject getStatsGrouping (EduCourse course, ItogContainer period,
+			String key) {
 		EOEnterpriseObject grouping = null;
 		try {
 			Class descClass = Class.forName("net.rujel.stats.Description");
 			Method method = descClass.getMethod("getGrouping", String.class, String.class,
 					EOEnterpriseObject.class, EOEnterpriseObject.class, Boolean.TYPE);
 			grouping = (EOEnterpriseObject)method.invoke(null, ItogMark.ENTITY_NAME, 
-					ItogMark.MARK_KEY, course, period, Boolean.TRUE);
+					key, course, period, Boolean.TRUE);
 			if(grouping.valueForKeyPath("description.description") == null) {
 				String prName = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelEduResults_EduResults.properties.ItogMark.this");
@@ -184,8 +186,8 @@ public class ModuleInit {
 	}
 	
 	public static EOEnterpriseObject prepareStats(EduCourse course,
-			ItogContainer period, boolean save) {
-		EOEnterpriseObject grouping = getStatsGrouping(course, period);
+			ItogContainer period, String key, boolean save) {
+		EOEnterpriseObject grouping = getStatsGrouping(course, period, key);
 		if(grouping != null) {
 			NSArray itogs = ItogMark.getItogMarks(course.cycle(), period, null);
 			itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
@@ -205,22 +207,16 @@ public class ModuleInit {
 		}
 		return grouping;
 	}
-
-	
-	public static NSArray marksPreset() {
-		return ((NSArray)WOApplication.application().valueForKeyPath(
-				"strings.RujelEduResults_EduResults.marksPreset")).immutableClone();
-	}
 	
 	public static Object statCourseReport(WOContext ctx) {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
 			return null;
 		EOEditingContext ec = null;
 		EduCourse course = (EduCourse)ctx.session().objectForKey("statCourseReport");
-		NSArray list = null;
+		String listName;
 		if(course != null) {
 			ec = course.editingContext();
-			list = ItogContainer.itogsForCourse(course);
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
 		} else {
 			try {
 				ec = (EOEditingContext)ctx.page().valueForKey("ec");
@@ -228,10 +224,10 @@ public class ModuleInit {
 				ec = new SessionedEditingContext(ctx.session());
 			}
 //			ec.lock();
-			String listName = sectionListName(ctx.session(), ec);
-			Integer year = (Integer)ctx.session().valueForKey("eduYear");
-			list = ItogType.itogsForTypeList(ItogType.typesForList(listName, year, ec), year);
+			listName = sectionListName(ctx.session(), ec);
 		}
+		Integer year = (Integer)ctx.session().valueForKey("eduYear");
+		NSArray list = ItogType.itogsForTypeList(ItogType.typesForList(listName, year, ec), year);
 		if(list == null || list.count() == 0) {
 //			ec.unlock();
 			return null;
@@ -241,22 +237,21 @@ public class ModuleInit {
 		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary template = new NSMutableDictionary(ItogMark.ENTITY_NAME,"entName");
 		template.setObjectForKey(ItogMark.MARK_KEY, "statField");
-		template.setObjectForKey(marksPreset(),"keys");
-		
 		try {
 			Method method = ModuleInit.class.getMethod("statCourse",
-					EduCourse.class, ItogContainer.class);
+					EduCourse.class, ItogContainer.class, String.class);
 			template.setObjectForKey(method,"ifEmpty");
 		} catch (Exception e) {
 			Logger.getLogger("rujel.itog").log(WOLogLevel.WARNING,
 					"Error getting statCourse method",e);
 		}
-
 		template.takeValueForKey(WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.itogAddOn.title"), "description");
 		int sort = 30;
 		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,null,null);
 		fs.setFetchLimit(1);
+		Integer curGrNum = null;
+		int count = list.count();
 		while (enu.hasMoreElements()) {
 			ItogContainer itog = (ItogContainer) enu.nextElement();
 			EOQualifier qual = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY,
@@ -265,12 +260,30 @@ public class ModuleInit {
 			list = ec.objectsWithFetchSpecification(fs);
 			if(list == null || list.count() == 0)
 				continue;
+			Integer grNum = ItogPreset.getPresetGroup(listName, year, itog.itogType());
+			if(grNum != null && !grNum.equals(curGrNum)) {
+				NSArray presets = ItogPreset.listPresetGroup(ec, grNum, true);
+				if(presets != null)
+					presets = (NSArray)presets.valueForKey(ItogPreset.MARK_KEY);
+				template.takeValueForKey(presets, "keys");				
+			}
 			NSMutableDictionary dict = template.mutableClone();
-			dict.setObjectForKey(itog.title(),"title");
+			String title = itog.title();
+			dict.setObjectForKey(title,"title");
 			dict.setObjectForKey(itog,"param2");
 			dict.setObjectForKey(String.valueOf(sort),"sort");
 			dict.setObjectForKey(Boolean.TRUE, "addCalculations");
 			result.addObject(dict);
+//			sort++;
+			dict = dict.mutableClone();
+			dict.setObjectForKey("stateKey","statField");
+			dict.setObjectForKey(ItogPreset.stateSymbolsDescending, "keys");
+			dict.setObjectForKey(Boolean.FALSE, "addCalculations");
+			dict.setObjectForKey(String.valueOf(sort + count),"sort");
+			StringBuilder buf = new StringBuilder(title.length() +2);
+			buf.append('~').append(title).append('~');
+			dict.setObjectForKey(buf.toString(),"title");
+			result.addObject(dict);			
 			sort++;
 		}
 //		ec.unlock();

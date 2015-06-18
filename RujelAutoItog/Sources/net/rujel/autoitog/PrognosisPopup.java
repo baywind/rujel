@@ -295,16 +295,7 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     					archive.takeValueForKey(new Integer(actionType), "actionType");	
         				ec.saveChanges();
     				}
-					EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(course, eduPeriod.itogContainer());
-					if(grouping != null) {
-						NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(
-								course, eduPeriod.itogContainer(),false);
-						//NSDictionary stats = PrognosesAddOn.statCourse(course, eduPeriod);
-						prognoses = MyUtility.filterByGroup(prognoses, "student", 
-								course.groupList(), true);
-						grouping.takeValueForKey(prognoses, "array");
-						ec.saveChanges();
-					}
+					PrognosesAddOn.feedStats(course, eduPeriod.itogContainer(), null);
     			}
     			addOn.setPrognosis(prognosis);
     		} catch (Exception e) {

@@ -283,7 +283,8 @@ public class ItogPopup extends WOComponent {
 				String message = (newItog)?"New Itog created":"Itog is changed";
 				logger.log(WOLogLevel.EDITING,message,new Object[] {session(),itog});
 				if (!same) {
-					ModuleInit.prepareStats(eduCourse, itogContainer,true);
+					ModuleInit.prepareStats(eduCourse, itogContainer,ItogMark.MARK_KEY,true);
+					ModuleInit.prepareStats(eduCourse, itogContainer,"stateKey",true);
 				}
 			} catch (Exception ex) {
 				logger.log(WOLogLevel.WARNING,"Failed to save itog",
@@ -330,7 +331,8 @@ public class ItogPopup extends WOComponent {
 			ec.deleteObject(itog);
 			ec.saveChanges();
 			logger.logp(WOLogLevel.EDITING,getClass().getName(),"delete","Itog is deleted",new Object[] {session(),pKey});
-			ModuleInit.prepareStats(course, itogContainer,true);
+			ModuleInit.prepareStats(course, itogContainer,ItogMark.MARK_KEY,true);
+			ModuleInit.prepareStats(course, itogContainer,"stateKey",true);
 		} catch (Exception ex) {
 			logger.logp(WOLogLevel.WARNING,getClass().getName(),"delete","Failed to delete itog",new Object[] {session(),itog,ex});
 			session().takeValueForKey(ex.getMessage(),"message");

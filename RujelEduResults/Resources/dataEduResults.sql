@@ -17,4 +17,6 @@ INSERT INTO ITOG_PRESET (PR_ID,PRESET_GROUP,MARK_TITLE,VALUE_STATE,SUCCESS_VALUE
  (5,1,'5',3,'1.00'),
  (6,2,'зачёт',3,'1.00'),
  (7,2,'незач',1,'0.00'),
- (8,2,'осв',0,NULL);
+ (8,3,'%',2,'0.50'),
+ (9,3,'%',3,'0.70');
+ 

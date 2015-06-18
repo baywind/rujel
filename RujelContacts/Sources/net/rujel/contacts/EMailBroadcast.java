@@ -60,6 +60,8 @@ import javax.mail.internet.InternetAddress;
 
 public class EMailBroadcast implements Runnable{
 	public static final Logger logger = Logger.getLogger("rujel.contacts");
+	public static final String prefix =SettingsReader.stringForKeyPath(
+			"mail.subjectPrefix", "RUJEL: ");
 
 	public static Object init(Object obj, WOContext ctx) {
 		if (obj == null || obj.equals("init")) {
@@ -684,7 +686,7 @@ st:		while (stEnu.hasMoreElements()) {
 							attName = attName + ".html";
 						}
 					}
-					StringBuffer subject = new StringBuffer("RUJEL: ");
+					StringBuffer subject = new StringBuffer(prefix);
 					if(groupName != null) {
 						subject.append(groupName).append(" : ");
 					}

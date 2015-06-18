@@ -113,7 +113,7 @@ public class SendMailForm extends com.webobjects.appserver.WOComponent {
 					adrSet.addObject(ec.globalIDForObject(c));
 			}
 		}
-		subjStart = "RUJEL: " + dict.valueForKeyPath("eduGroup.name") + " : ";
+		subjStart = EMailBroadcast.prefix + dict.valueForKeyPath("eduGroup.name") + " : ";
 	}
 		
 	public NSArray persContacts() {

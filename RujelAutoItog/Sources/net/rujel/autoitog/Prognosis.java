@@ -620,11 +620,15 @@ cycleStudents:
 				buf.append("Failed to save itogs based on prognoses for course");
 				ec.revert();
 			}
-			EOEnterpriseObject grouping = ModuleInit.getStatsGrouping(course, itog);
-			if(grouping != null) {
+			EOEnterpriseObject grouping1 = ModuleInit.getStatsGrouping(course, itog, "mark");
+			EOEnterpriseObject grouping2 = ModuleInit.getStatsGrouping(course, itog, "stateKey");
+			if(grouping1 != null || grouping2 != null) {
 				itogs = ItogMark.getItogMarks(course.cycle(), itog, null, ec);
 				itogs = MyUtility.filterByGroup(itogs, "student", course.groupList(), true);
-				grouping.takeValueForKey(itogs, "array");
+				if(grouping1 != null)
+					grouping1.takeValueForKey(itogs, "array");
+				if(grouping2 != null)
+					grouping2.takeValueForKey(itogs, "array");
 //				NSDictionary stats = ModuleInit.statCourse(course, itog.itogContainer());
 //				grouping.takeValueForKey(stats, "dict");
 				try {
@@ -675,5 +679,11 @@ cycleStudents:
 			result.addObject(lKey);
 		}
 		return result;
+	}
+
+	public String stateKey() {
+		if(state() == null)
+			return null;
+		return ItogPreset.stateSymbols.objectAtIndex(state().intValue());
 	}
 }

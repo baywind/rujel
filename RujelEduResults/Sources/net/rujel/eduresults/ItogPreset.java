@@ -50,7 +50,10 @@ public class ItogPreset extends _ItogPreset {
 			new EOSortOrdering(VALUE_KEY, EOSortOrdering.CompareDescending));
 	
 	public static final NSArray<String> stateSymbols = new NSArray<String>(new String[] {
-			"&oslash;","-","~","+"});
+			"⊗","-","~","+"});
+	public static final NSArray<String> stateSymbolsDescending = new NSArray<String>(new String[] {
+			"+","~","-","⊗"});
+
 	
 	public static NSArray listPresetGroup(EOEditingContext ec, Integer grNum, boolean notBorders) {
 		EOQualifier qual = new EOKeyValueQualifier(PRESET_GROUP_KEY,

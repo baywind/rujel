@@ -383,15 +383,7 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 			if(!um && agregate != null && prognoses != null) {
 				agregate.setObjectForKey(prognoses, periodItem);
 			}
-			EOEnterpriseObject grouping = PrognosesAddOn.getStatsGrouping(_course,
-					periodItem.itogContainer());
-			if(grouping != null) {
-//			NSDictionary stats = PrognosesAddOn.statCourse(_course, prognoses.allValues());
-//				grouping.takeValueForKey(stats, "dict");
-				NSArray list = (prognoses == null)?null:MyUtility.filterByGroup(
-						prognoses.allValues(),"student", _course.groupList(), true);
-				grouping.takeValueForKey(list, "array");
-			}
+			feedStats(_course, periodItem.itogContainer(), prognoses.allValues());
 			ec.saveChanges();
 		} catch (RuntimeException ex) {
 			ec.revert();
@@ -404,12 +396,12 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 		}
 	}
 	
-	public static NSDictionary statCourse(EduCourse course, ItogContainer period) {
+	public static NSDictionary statCourse(EduCourse course, ItogContainer period,String key) {
 		NSArray prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period, false);
 		if(prognoses == null || prognoses.count() == 0)
 			return NSDictionary.EmptyDictionary;
 		if(prognoses.count() > 1) {
-			EOSortOrdering so = new EOSortOrdering(Prognosis.MARK_KEY,
+			EOSortOrdering so = new EOSortOrdering(key,
 					EOSortOrdering.CompareCaseInsensitiveAscending);
 			prognoses = EOSortOrdering.sortedArrayUsingKeyOrderArray(
 					prognoses, new NSArray(so));
@@ -426,13 +418,14 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 			Prognosis pr = (Prognosis) enu.nextElement();
 			if(!group.containsObject(pr.student()))
 				continue;
-			if((currKey==null)?pr.mark()==null:currKey.equalsIgnoreCase(pr.mark())) {
+			String mark = (String)pr.valueForKey(key);
+			if((currKey==null)?mark==null:currKey.equalsIgnoreCase(mark)) {
 				currCount++;
 			} else {
 				if(currCount > 0)
 					result.setObjectForKey(new Integer(currCount),
 							(currKey==null)?" ":currKey);
-				currKey = pr.mark();
+				currKey = mark;
 				keys.addObject((currKey==null)?" ":currKey);
 				currCount = 1;
 			}
@@ -447,15 +440,30 @@ public class PrognosesAddOn extends AddOnPresenter.AddOn {
 		return result;
 	}
 	
+	public static void feedStats(EduCourse course,ItogContainer period,NSArray prognoses) {
+		EOEnterpriseObject grouping1 = PrognosesAddOn.getStatsGrouping(course,period,"mark");
+		EOEnterpriseObject grouping2 = PrognosesAddOn.getStatsGrouping(course,period,"stateKey");
+		if(grouping1 != null || grouping2 != null) {
+			if(prognoses == null)
+				prognoses = Prognosis.prognosesArrayForCourseAndPeriod(course, period,false);
+			NSArray list = MyUtility.filterByGroup(prognoses, "student", 
+					course.groupList(), true);
+			if(grouping1 != null)
+				grouping1.takeValueForKey(list, "array");
+			if(grouping2 != null)
+				grouping2.takeValueForKey(list, "array");
+		}
+	}
+	
 	public static EOEnterpriseObject getStatsGrouping (EduCourse course,
-			ItogContainer period) {
+			ItogContainer period, String key) {
 		EOEnterpriseObject grouping = null;
 		try {
 			Class descClass = Class.forName("net.rujel.stats.Description");
 			Method method = descClass.getMethod("getGrouping", String.class, String.class,
 					EOEnterpriseObject.class, EOEnterpriseObject.class, Boolean.TYPE);
 			grouping = (EOEnterpriseObject)method.invoke(null, Prognosis.ENTITY_NAME, 
-					Prognosis.MARK_KEY, course, period, Boolean.TRUE);
+					key, course, period, Boolean.TRUE);
 			if(grouping.valueForKeyPath("description.description") == null) {
 				String prName = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelAutoItog_AutoItog.properties.Prognosis.this");
