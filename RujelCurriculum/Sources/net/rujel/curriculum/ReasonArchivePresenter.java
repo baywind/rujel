@@ -85,6 +85,9 @@ public class ReasonArchivePresenter extends com.webobjects.appserver.WOComponent
 		if(tmp != null)
 			return tmp;
 		tmp = (String) data().valueForKey("eduGroup");
+		if(tmp != null)
+			return tmp;
+		tmp = (String) data().valueForKey("relation");
 		return tmp;
 	}
 

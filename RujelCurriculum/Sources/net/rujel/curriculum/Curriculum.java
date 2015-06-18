@@ -34,10 +34,10 @@ import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.IndexRow;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
-import net.rujel.interfaces.Person;
 import net.rujel.reports.ReportTable;
 import net.rujel.reusables.*;
 import net.rujel.ui.TeacherSelector;
@@ -67,6 +67,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public Object highlight;
 	public NSKeyValueCodingAdditions valueOf;
 	public Object item;
+	public NSArray grades;
 	
 	public NSMutableDictionary tmpDict = new NSMutableDictionary();
 	
@@ -118,6 +119,14 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		
 		valueOf = new DisplayAny.ValueReader(this);
 		search();
+		
+		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
+		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
+		Integer[] grds = new Integer[maxGrade - minGrade + 1];
+		for (int i = 0; i < grds.length; i++) {
+			grds[i] = new Integer(minGrade + i);
+		}
+		grades = new NSArray(grds);
     }
     
     public void search() {
@@ -238,6 +247,9 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     				highlight == NSKeyValueCodingAdditions.Utility.valueForKeyPath(itemRow, coursePath))
     			return "selectionBorder";
     	}
+    	if(highlight instanceof Integer && item instanceof EduGroup && 
+    			highlight.equals(((EduGroup)item).grade()))
+    		return "selectionBorder";
     	if((itemDict.valueForKey("popup") != null))
     		return "canPop";
     	return "pad";
@@ -347,11 +359,13 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     				archive.takeValueForKey(MyUtility.dateFormat().format(currReason.end()),"@end");
     			if(currReason.verification() != null)
     				archive.takeValueForKey(currReason.verification(),"@verification");
-    			if(currReason.namedFlags().flagForKey("forTeacher"))
+    			if(!currReason.noLimits())
+    				archive.takeValueForKey(currReason.extToString(),"@relation");
+/*    			if(currReason.namedFlags().flagForKey("forTeacher"))
     				archive.takeValueForKey(Person.Utility.fullName(
     						currReason.teacher(), true, 2, 1, 1),"@teacher");
     			if(currReason.namedFlags().flagForKey("forEduGroup"))
-    				archive.takeValueForKey(currReason.eduGroup().name(),"@eduGroup");
+    				archive.takeValueForKey(currReason.eduGroup().name(),"@eduGroup");*/
     			archive.takeValueForKey(new Integer(
     					(ec.globalIDForObject(currReason).isTemporary())?1:2), "actionType");
     		}
@@ -403,6 +417,23 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return ((Reason.Props)highlight).eduGroup;
 		return null;
 	}
+	public Integer reasonGrade() {
+		if(highlight instanceof Integer)
+			return (Integer)highlight;
+		if(currReason != null){
+			if(currReason.grade() != null)
+				return currReason.grade();
+			if(currReason.eduGroup() != null)
+				return currReason.eduGroup().grade();
+		}
+		if(highlight instanceof EduGroup)
+			return ((EduGroup)highlight).grade();
+		if(highlight instanceof EduCourse)
+			return ((EduCourse)highlight).cycle().grade();
+		if(highlight instanceof Reason.Props)
+			return ((Reason.Props)highlight).grade;
+		return null;
+	}
 	
 	public Boolean cantEdit() {
 		if (tmpDict.valueForKey("reasonsToMoveIn") != null)
@@ -429,13 +460,14 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		selector.takeValueForKey(dict, "dict");
 		return selector;
 	}
-
+	
 	public void setReasonTeacher(Object newTeacher) {
 		currObject = null;
 		currReason.namedFlags().setFlagForKey((newTeacher != null), "forTeacher");
 		if(newTeacher != null) {
 			currReason.namedFlags().setFlagForKey(false, "forEduGroup");
 			currReason.setEduGroup(null);
+			currReason.setGrade(null);
 		}
 		if(newTeacher instanceof Teacher) {
 			highlight = EOUtilities.localInstanceOfObject(ec, (EOEnterpriseObject)newTeacher);
@@ -454,6 +486,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		if(newGroup != null) {
 			currReason.namedFlags().setFlagForKey(false, "forTeacher");
 			currReason.setTeacher(null);
+			currReason.setGrade(null);
 		}
 		if(newGroup instanceof EduGroup) {
 			highlight = EOUtilities.localInstanceOfObject(ec, (EOEnterpriseObject)newGroup);
@@ -465,6 +498,36 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			highlight = null;
 		}
 	}
+	
+	public void setReasonGrade(Integer newGrade) {
+		currObject = null;
+		currReason.setGrade(newGrade);
+		highlight = newGrade;
+	}
+	
+	public void setReasonSection(NSDictionary section) {
+		if(section == null)
+			currReason.setSection(null);
+		else
+			currReason.setSection((Integer)section.valueForKey(IndexRow.IDX_KEY));
+	}
+	
+	public NSDictionary reasonSection() {
+		if(currReason == null)
+			return null;
+		Integer idx = currReason.section();
+		if(idx == null)
+			return null;
+		NSArray sections = (NSArray)session().valueForKeyPath("strings.sections.list");
+		Enumeration enu = sections.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSDictionary sect = (NSDictionary) enu.nextElement();
+			if(idx.equals(sect.valueForKey(IndexRow.IDX_KEY))) {
+				return sect;
+			}
+		}
+		return null;
+	}
 
 	public int relation() {
 		if(currReason == null)
@@ -473,6 +536,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return 1;
 		if(currReason.namedFlags().flagForKey("forEduGroup"))
 			return 2;
+		if(currReason.grade() != null)
+			return 3;
 		return 0;
 	}
 
@@ -481,6 +546,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		currReason.namedFlags().setFlagForKey((relation == 1), "forTeacher");
 		currReason.setEduGroup((relation == 2)?reasonGroup():null);
 		currReason.namedFlags().setFlagForKey((relation == 2), "forEduGroup");
+		currReason.setGrade((relation == 3)?reasonGrade():null);
 	}
 	
 	public void showSubstitutes() {
@@ -601,6 +667,9 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return;
 		}
 		Reason.Props props = Reason.propsFromEvents(set);
+		if(props.section != null && !Various.boolForObject(session().valueForKeyPath(
+				"strings.sections.hasSections")))
+			props.section = null;
 		NSArray reasons = Reason.reasons(props);
 		if(reasons == null)
 			reasons = NSArray.EmptyArray;

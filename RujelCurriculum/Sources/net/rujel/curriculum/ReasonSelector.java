@@ -95,6 +95,8 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     			relation = 1;
     		else if (reason.namedFlags().flagForKey("forEduGroup"))
     			relation = 2;
+    		else if (reason.grade() != null)
+    			relation = 3;
     		else
     			relation = 0;
     		//withTeacher = (reason.teacher() != null);
@@ -129,7 +131,7 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
 					reasonText = null;
 			} catch (Exception e) {
 				Object[] args = new Object[] {session(),e};
-				logger.log(WOLogLevel.WARNING,"Error restoring Reasom for key: " + reasonID,args);
+				logger.log(WOLogLevel.WARNING,"Error restoring Reason for key: " + reasonID,args);
 				session().takeValueForKey(application().valueForKeyPath
 						("strings.Strings.messages.error")+ "<br/>\n" + e.toString(), "message");
 				return;
@@ -149,6 +151,10 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     		if(hasChanges) {
     			reason.setEduGroup((relation==2)?course().eduGroup():null);
     			reason.namedFlags().setFlagForKey((relation==2), "forEduGroup");
+    		}
+    		hasChanges = (hasChanges || ((reason.grade() != null)^(relation==3)));
+    		if(hasChanges) {
+    			reason.setGrade((relation==3)?course().cycle().grade():null);
     		}
     		NSTimestamp tmpDate = MyUtility.parseDate(begin);
     		if(tmpDate == null) {

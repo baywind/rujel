@@ -44,8 +44,10 @@ public abstract class _Reason extends EOGenericRecord {
 	public static final String BEGIN_KEY = "begin";
 	public static final String END_KEY = "end";
 	public static final String FLAGS_KEY = "flags";
+	public static final String GRADE_KEY = "grade";
 	public static final String REASON_KEY = "reason";
 	public static final String SCHOOL_KEY = "school";
+	public static final String SECTION_KEY = "section";
 	public static final String VERIFICATION_KEY = "verification";
 
 	// Relationships
@@ -76,6 +78,14 @@ public abstract class _Reason extends EOGenericRecord {
     takeStoredValueForKey(value, FLAGS_KEY);
   }
 
+  public Integer grade() {
+    return (Integer) storedValueForKey(GRADE_KEY);
+  }
+
+  public void setGrade(Integer value) {
+    takeStoredValueForKey(value, GRADE_KEY);
+  }
+
   public String reason() {
     return (String) storedValueForKey(REASON_KEY);
   }
@@ -90,6 +100,14 @@ public abstract class _Reason extends EOGenericRecord {
 
   public void setSchool(Integer value) {
     takeStoredValueForKey(value, SCHOOL_KEY);
+  }
+
+  public Integer section() {
+    return (Integer) storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(Integer value) {
+    takeStoredValueForKey(value, SECTION_KEY);
   }
 
   public String verification() {

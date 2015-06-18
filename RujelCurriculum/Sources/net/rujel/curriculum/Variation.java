@@ -181,13 +181,20 @@ public class Variation extends _Variation implements Reason.Event {
     	EduLesson lesson = relatedLesson();
     	if(course == null || lesson == null || lesson.editingContext() == null)
     		return null;
-    	NSArray args = new NSArray(new Object[] {lesson,course});
-    	NSArray found = EOUtilities.objectsWithQualifierFormat(editingContext(), ENTITY_NAME, 
+    	NSArray found;
+    	if(lesson.course() == course) {
+        	NSArray args = new NSArray(new Object[] {lesson,course});
+        	found = EOUtilities.objectsWithQualifierFormat(editingContext(), ENTITY_NAME, 
     			"relatedLesson = %@ and course != %@", args);
+    	} else {
+        	NSArray args = new NSArray(new Object[] {lesson,lesson.course()});
+        	found = EOUtilities.objectsWithQualifierFormat(editingContext(), ENTITY_NAME, 
+    			"relatedLesson = %@ and course = %@", args);
+    	}
     	//getAllPaired(true);
        	if(found == null || found.count() == 0)
        		return null;
-       	if(found.count() > 0) {
+       	if(found.count() > 1) {
        		int val = -value().intValue();
        		for (int i = 0; i < found.count(); i++) {
        			Variation var = (Variation)found.objectAtIndex(i);

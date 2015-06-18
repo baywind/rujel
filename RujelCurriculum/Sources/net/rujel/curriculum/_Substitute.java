@@ -55,11 +55,11 @@ public abstract class _Substitute extends EOGenericRecord {
     takeStoredValueForKey(value, DATE_KEY);
   }
 
-  public BigDecimal factor() {
-    return (BigDecimal) storedValueForKey(FACTOR_KEY);
+  public java.math.BigDecimal factor() {
+    return (java.math.BigDecimal) storedValueForKey(FACTOR_KEY);
   }
 
-  public void setFactor(BigDecimal value) {
+  public void setFactor(java.math.BigDecimal value) {
     takeStoredValueForKey(value, FACTOR_KEY);
   }
 

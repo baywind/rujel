@@ -38,8 +38,11 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+import net.rujel.base.IndexRow;
+import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.eduplan.Holiday;
+import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.*;
 
@@ -127,6 +130,7 @@ public class Reason extends _Reason {
     }
 
     protected void exts(StringBuilder result) {
+    	boolean added = false;
     	if(namedFlags().flagForKey("forTeacher")) {
     		if(teacher() != null) {
     			result.append(Person.Utility.fullName(teacher(), true, 2, 1, 1));
@@ -134,16 +138,61 @@ public class Reason extends _Reason {
     			result.append(WOApplication.application().valueForKeyPath(
     			"strings.RujelBase_Base.vacant"));
     		}
+    		added = true;
     	}
     	if(eduGroup() != null) {
-    		if(teacher() != null)
+    		if(added)
 				result.append(',').append(' ');
 			result.append(eduGroup().name());
-		}		
+			added = true;
+		} else if(grade() != null) {
+    		if(added)
+				result.append(',').append(' ');
+			result.append(grade());
+			added = true;
+		}
+    	if(section() != null) {
+    		if(added)
+				result.append(',').append(' ');
+    		result.append(sectionForNum(section(),editingContext()));
+    	}
+	}
+
+	public static Object sectionForNum(Integer num, EOEditingContext ec) {
+		Object section = num;
+		if(ec instanceof SessionedEditingContext) {
+			NSArray sections = (NSArray)((SessionedEditingContext)ec
+					).session().valueForKeyPath("strings.sections.list");
+			Enumeration enu = sections.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSDictionary sect = (NSDictionary) enu.nextElement();
+				if(num.equals(sect.valueForKey(IndexRow.IDX_KEY))) {
+					return sect.valueForKey(IndexRow.VALUE_KEY);
+				}
+			}
+		} else {
+			Indexer sIndex = Indexer.getIndexer(ec,"eduSections",(String)null, false);
+			if(sIndex != null) {
+//    				sIndex.valueForIndex((Integer)section,null);
+				try {
+					IndexRow idx = (IndexRow)EOUtilities.objectMatchingValues(
+							ec,IndexRow.ENTITY_NAME, new NSDictionary(new Object[] { sIndex,num },
+									new String[] {IndexRow.INDEXER_KEY,IndexRow.IDX_KEY }));
+					section = idx.valueForKey(IndexRow.VALUE_KEY);
+				} catch (Exception e) {
+				}
+			}
+		}
+		return section;
+	}
+	
+	public boolean noLimits() {
+		return (!namedFlags().flagForKey("forTeacher") && !namedFlags().flagForKey("forEduGroup")
+				&& grade() == null && section() == null);
 	}
 	
 	public String extToString() {
-		if(!namedFlags().flagForKey("forTeacher") && eduGroup() == null)
+		if(noLimits())
 			return null;
 		StringBuilder sb = new StringBuilder(12);
 		exts(sb);
@@ -172,13 +221,20 @@ public class Reason extends _Reason {
 	public static Props propsFromEvents(NSArray events) {
 		if(events == null || events.count() == 0)
 			return null;
-		Props props = null;;
+		Props props = null;
 		Enumeration enu = events.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			Event event = (Event) enu.nextElement();
 			EduCourse course = event.course();
 			boolean others = (event instanceof Variation && 
 					((Variation)event).value().intValue() > 0);
+			if(others) {
+				Variation paired = ((Variation)event).getPaired();
+				if(paired != null) {
+					course = paired.course();
+					others = false;
+				}
+			}
 			NSTimestamp date = event.date();
 			if(props == null) {
 				props = new Props(course,date);
@@ -193,7 +249,7 @@ public class Reason extends _Reason {
 				if(props.eduGroup != null && props.eduGroup != course.eduGroup())
 					props.eduGroup = null;
 				if(!others) {
-					if(props.teacher() != null && course.teacher() != props.teacher()) {
+					if(props.teacher != null && course.teacher() != props.teacher()) {
 						if(props.otherTeachers)
 							props.teacher = course.teacher();
 						else
@@ -201,6 +257,11 @@ public class Reason extends _Reason {
 					}
 					props.otherTeachers = false;
 				}
+				PlanCycle cycle = (PlanCycle)course.cycle();
+				if(props.grade != null && !props.grade.equals(cycle.grade()))
+					props.grade = null;
+				if(props.section != null && !props.section.equals(cycle.section()))
+					props.section = null;
 			}
 			if(props.begin == null || props.begin.compare(date) > 0)
 				props.begin = date;
@@ -237,6 +298,7 @@ public class Reason extends _Reason {
 		} // group is set
 		qual = new EOKeyValueQualifier(FLAGS_KEY,
 				EOQualifier.QualifierOperatorLessThan,new Integer(16));
+		
 		if (quals.count() > 0) {
 			quals.addObject(qual);
 			qual = new EOOrQualifier(quals);
@@ -244,20 +306,44 @@ public class Reason extends _Reason {
 		}
 		quals.addObject(qual);
 		
-		qual = new EOKeyValueQualifier(SCHOOL_KEY,
-				EOQualifier.QualifierOperatorEqual,props.school);
-		quals.addObject(qual);
 		qual = new EOKeyValueQualifier(BEGIN_KEY,
 				EOQualifier.QualifierOperatorLessThanOrEqualTo,props.begin);
 		quals.addObject(qual);
+		
 		EOQualifier[] ors = new EOQualifier[2];
 		ors[0] = new EOKeyValueQualifier(END_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,props.end);
-		ors[1] = new EOKeyValueQualifier(END_KEY,
-				EOQualifier.QualifierOperatorEqual,NullValue);
+		ors[1] = new EOKeyValueQualifier(END_KEY,EOQualifier.QualifierOperatorEqual,NullValue);
 		qual = new EOOrQualifier(new NSArray(ors));
 		quals.addObject(qual);
 
+		if (props.grade == null) {
+			qual = new EOKeyValueQualifier("grade",
+					EOQualifier.QualifierOperatorEqual, NullValue);
+		} else {
+			ors[0] = new EOKeyValueQualifier("grade",
+					EOQualifier.QualifierOperatorEqual, props.grade);
+			ors[1] = new EOKeyValueQualifier("grade",
+					EOQualifier.QualifierOperatorEqual, NullValue);
+			qual = new EOOrQualifier(new NSArray(ors));
+		} // grade
+		quals.addObject(qual);
+
+		if (props.section == null) {
+			qual = new EOKeyValueQualifier("section",
+					EOQualifier.QualifierOperatorEqual, NullValue);
+		} else {
+			ors[0] = new EOKeyValueQualifier("section",
+					EOQualifier.QualifierOperatorEqual, props.section);
+			ors[1] = new EOKeyValueQualifier("section",
+					EOQualifier.QualifierOperatorEqual, NullValue);
+			qual = new EOOrQualifier(new NSArray(ors));
+		} // section
+		quals.addObject(qual);
+		
+		qual = new EOKeyValueQualifier(SCHOOL_KEY,EOQualifier.QualifierOperatorEqual,props.school);
+		quals.addObject(qual);
+		
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(
 				ENTITY_NAME,qual,EOPeriod.sorter);
@@ -365,6 +451,19 @@ public class Reason extends _Reason {
 					buf.append(" (").append(course.eduGroup().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
 				}
+				if(grade() != null && !grade().equals(course.cycle().grade())) {
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetGrade"));
+					buf.append(" (").append(course.cycle().grade()).append(')');
+					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
+				}
+				if(section() != null && !section().equals(((PlanCycle)course.cycle()).section())) {
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetSection"));
+					buf.append(" (").append(sectionForNum(
+							((PlanCycle)course.cycle()).section(),editingContext())).append(')');
+					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
+				}
 				if(begin().compareTo(sub.date()) > 0 || 
 						(sub.date().getTime() > end)) {
 					buf.append(WOApplication.application().valueForKeyPath(
@@ -398,6 +497,19 @@ public class Reason extends _Reason {
 					buf.append(" (").append(course.eduGroup().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString()
 							,var,"eduGroup");
+				}
+				if(grade() != null && !grade().equals(course.cycle().grade())) {
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetGrade"));
+					buf.append(" (").append(course.cycle().grade()).append(')');
+					throw new NSValidation.ValidationException(buf.toString(), var,"eduGroup");
+				}
+				if(section() != null && !section().equals(((PlanCycle)course.cycle()).section())) {
+					buf.append(WOApplication.application().valueForKeyPath(
+						"strings.RujelCurriculum_Curriculum.messages.cantSetSection"));
+					buf.append(" (").append(sectionForNum(
+							((PlanCycle)course.cycle()).section(),editingContext())).append(')');
+					throw new NSValidation.ValidationException(buf.toString(), var,"eduGroup");
 				}
 				if(begin().compareTo(var.date()) > 0 || 
 						(var.date().getTime() > end)) {
@@ -436,6 +548,8 @@ public class Reason extends _Reason {
 		public NSTimestamp end;
 		public Object teacher;
 		public EduGroup eduGroup;
+		public Integer grade;
+		public Integer section;
 		public boolean otherTeachers = false;
 		
 		public Props() {
@@ -450,6 +564,9 @@ public class Reason extends _Reason {
 			teacher = course.teacher(onDate);
 			if(teacher == null)
 				teacher = NullValue;
+			PlanCycle cycle = (PlanCycle)course.cycle();
+			grade = cycle.grade();
+			section = cycle.section();
 		}
 		
 		public Teacher teacher() {
@@ -469,7 +586,42 @@ public class Reason extends _Reason {
 				reason.setTeacher(teacher);
 			else if(eduGroup != null)
 				reason.setEduGroup(eduGroup);
+			else if(grade != null)
+				reason.setGrade(grade);
+			if(section != null)
+				reason.setSection(section);
 			return reason;
+		}
+		
+		public String present() {
+			StringBuilder result = new StringBuilder();
+			boolean added = false;
+			if(teacher != null) {
+				if(teacher instanceof Teacher) {
+					result.append(Person.Utility.fullName(teacher(), true, 2, 1, 1));
+				} else {
+					result.append(WOApplication.application().valueForKeyPath(
+					"strings.RujelBase_Base.vacant"));
+				}
+				added = true;
+			}
+	    	if(eduGroup != null) {
+	    		if(added)
+					result.append(',').append(' ');
+				result.append(eduGroup.name());
+				added = true;
+			} else if(grade != null) {
+	    		if(added)
+					result.append(',').append(' ');
+				result.append(grade);
+				added = true;
+			}
+	    	if(section != null) {
+	    		if(added)
+					result.append(',').append(' ');
+				result.append(sectionForNum(section,ec));
+	    	}
+	    	return result.toString();
 		}
 	}
 }
