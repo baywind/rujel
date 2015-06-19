@@ -62,25 +62,25 @@
 			<array>
 				<dict>
 					<key>title</key>
-					<string>Хорошо</string>
+					<string>+ Хорошо</string>
 					<key>value</key>
 					<integer>3</integer>
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Удовлетворительно</string>
+					<string>~ Удовлетворительно</string>
 					<key>value</key>
 					<integer>2</integer>
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Плохо</string>
+					<string>- Плохо</string>
 					<key>value</key>
 					<integer>1</integer>
 				</dict>
 				<dict>
 					<key>title</key>
-					<string>Не определено</string>
+					<string>⊗ Не определено</string>
 					<key>value</key>
 					<integer>0</integer>
 				</dict>
@@ -520,6 +520,8 @@
 		</dict>
 		<dict>
 			<key>keyPath</key>
+			<string>stateKey</string>
+			<key>sortKey</key>
 			<string>state</string>
 			<key>comparison</key>
 			<string>CompareDescending</string>
@@ -536,7 +538,7 @@
 			<string>Уровень</string>
 			<key>short</key>
 			<string>~</string>
-			<key>value</key>
+			<key>itemHover</key>
 			<dict>
 				<key>cacheResult</key>
 				<true/>
@@ -544,10 +546,10 @@
 				<string>objectAtIndex</string>
 				<key>object</key>
 				<array>
-					<string>&amp;oslash;</string>
-					<string>-</string>
-					<string>~</string>
-					<string>+</string>
+					<string>Не определено</string>
+					<string>Плохо</string>
+					<string>Удовлетворительно</string>
+					<string>Хорошо</string>
 				</array>
 				<key>paramClasses</key>
 				<array>
@@ -555,7 +557,7 @@
 				</array>
 				<key>paramValues</key>
 				<array>
-					<string>.</string>
+					<string>$itemRow.state</string>
 				</array>
 			</dict>
 		</dict>

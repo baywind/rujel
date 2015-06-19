@@ -251,6 +251,7 @@ public class ModuleInit {
 		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,null,null);
 		fs.setFetchLimit(1);
 		Integer curGrNum = null;
+		NSArray presets = null;
 		int count = list.count();
 		while (enu.hasMoreElements()) {
 			ItogContainer itog = (ItogContainer) enu.nextElement();
@@ -262,27 +263,30 @@ public class ModuleInit {
 				continue;
 			Integer grNum = ItogPreset.getPresetGroup(listName, year, itog.itogType());
 			if(grNum != null && !grNum.equals(curGrNum)) {
-				NSArray presets = ItogPreset.listPresetGroup(ec, grNum, true);
+				presets = ItogPreset.listPresetGroup(ec, grNum, true);
 				if(presets != null)
 					presets = (NSArray)presets.valueForKey(ItogPreset.MARK_KEY);
-				template.takeValueForKey(presets, "keys");				
+				if(presets.count() == 0)
+					presets = null;
 			}
-			NSMutableDictionary dict = template.mutableClone();
 			String title = itog.title();
-			dict.setObjectForKey(title,"title");
+			NSMutableDictionary dict = template.mutableClone();
 			dict.setObjectForKey(itog,"param2");
-			dict.setObjectForKey(String.valueOf(sort),"sort");
-			dict.setObjectForKey(Boolean.TRUE, "addCalculations");
-			result.addObject(dict);
-//			sort++;
-			dict = dict.mutableClone();
+			if(presets != null) {
+				dict.setObjectForKey(title,"title");
+				dict.setObjectForKey(String.valueOf(sort + count),"sort");
+				dict.setObjectForKey(Boolean.valueOf(
+						"5".equals(presets.objectAtIndex(0))), "addCalculations");
+				dict.takeValueForKey(presets, "keys");				
+				result.addObject(dict);
+				//			sort++;
+				dict = dict.mutableClone();
+			}
 			dict.setObjectForKey("stateKey","statField");
 			dict.setObjectForKey(ItogPreset.stateSymbolsDescending, "keys");
 			dict.setObjectForKey(Boolean.FALSE, "addCalculations");
-			dict.setObjectForKey(String.valueOf(sort + count),"sort");
-			StringBuilder buf = new StringBuilder(title.length() +2);
-			buf.append('~').append(title).append('~');
-			dict.setObjectForKey(buf.toString(),"title");
+			dict.setObjectForKey(String.valueOf(sort),"sort");
+			dict.setObjectForKey("~ " + title + " ~","title");
 			result.addObject(dict);			
 			sort++;
 		}

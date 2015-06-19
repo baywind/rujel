@@ -414,12 +414,12 @@ public class ItogPopup extends WOComponent {
 		}
 		return buf.toString();
 	}
-/*
+
 	public String manualMarkStyle() {
 		if(dict.valueForKey("preset") == null)
 			return null;
 		else
 			return "display:none;";
-	}*/
+	}
 
 }

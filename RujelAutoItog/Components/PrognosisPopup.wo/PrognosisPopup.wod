@@ -316,7 +316,7 @@ IsGood : WORadioButton {
 ManualMarkContainer : WOGenericContainer {
   elementName = "span";
   id = "manualMark";
-  style = "display:none;";
+  style = manualMarkStyle;
   omitTags = dict.noPresets;
 }
 

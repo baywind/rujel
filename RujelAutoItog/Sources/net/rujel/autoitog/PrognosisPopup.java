@@ -473,4 +473,12 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
     	}
     	return (Boolean)session().valueForKeyPath("readAccess._create.ItogMark");
     }
+
+	public String manualMarkStyle() {
+		if(dict.valueForKey("preset") == null)
+			return null;
+		else
+			return "display:none;";
+	}
+
 }
