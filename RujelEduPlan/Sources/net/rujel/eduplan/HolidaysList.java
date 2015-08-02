@@ -257,7 +257,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		listName = (String)ln;
     		_list = null;
     		dict.removeAllObjects();
-    		dict.takeValueForKey(Boolean.TRUE, "forAll");
+    		dict.takeValueForKey(!notGlobal(), "forAll");
     		_notGlobal = null;
     		item = null;
     	}
