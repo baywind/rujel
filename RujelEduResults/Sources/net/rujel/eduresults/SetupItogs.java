@@ -63,6 +63,12 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		}
 		super.appendToResponse(aResponse, aContext);
 	}
+	
+	public NSArray extensions() {
+		if(currType == null || Various.boolForObject(currType.valueForKey("active")))
+			return extensions;
+		return null;
+	}
 
 	public void setEc(EOEditingContext newEc) {
 		extensions = (NSArray)session().valueForKeyPath("modules.itogExtensions");

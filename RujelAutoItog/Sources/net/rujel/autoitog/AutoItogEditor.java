@@ -237,6 +237,7 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     	ec.lock();
     	try {
     		ec.deleteObject(autoItog);
+    		ec.saveChanges();
        		logger.log(WOLogLevel.COREDATA_EDITING,
        				"Deleted AutoItog from itog and listName " + listName, 
     				new Object[] {session(),itog});

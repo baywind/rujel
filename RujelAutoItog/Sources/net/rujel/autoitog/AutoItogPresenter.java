@@ -66,8 +66,15 @@ public class AutoItogPresenter extends ExtDynamicElement {
 			aResponse.appendContentString(" <span onclick = \"if(tryLoad())window.location = '");
 			aResponse.appendContentString(aContext.componentActionURL());
 			aResponse.appendContentString(
-					"';\" onmouseover = \"dim(this);\" onmouseout = \"unDim(this)\">");
-			aResponse.appendContentString("#</span>");
+					"';\" onmouseover = \"dim(this);\" onmouseout = \"unDim(this)\"");
+			String title = (String)aContext.session().valueForKeyPath(
+					"strings.RujelAutoItog_AutoItog.ui.updateDates");
+			if(title != null) {
+				aResponse.appendContentString(" title = \"");
+				aResponse.appendContentString(title);
+				aResponse.appendContentString("\"");
+			}
+			aResponse.appendContentString(">#</span>");
 			return;
 		}
 		String listName = (String)valueForBinding("listName", aContext);
