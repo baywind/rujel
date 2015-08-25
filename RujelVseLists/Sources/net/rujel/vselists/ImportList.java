@@ -210,7 +210,7 @@ public class ImportList extends WOComponent {
     		if(toExclude.count() > 1) {
     	    	EOSortOrdering.sortArrayUsingKeyOrderArray(toExclude, VseList.sorter);
     		}
-    	} else if(toExclude.count() > 1) {
+    	} else if(toExclude != null && toExclude.count() > 1) {
 	    	try {
 				toExclude.sortUsingComparator(new AdaptingComparator());
 			} catch (Exception e) {}
