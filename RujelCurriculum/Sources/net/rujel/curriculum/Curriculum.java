@@ -501,7 +501,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	
 	public void setReasonGrade(Integer newGrade) {
 		currObject = null;
-		currReason.setGrade(newGrade);
+//		currReason.setGrade(newGrade);
 		highlight = newGrade;
 	}
 	
@@ -546,7 +546,20 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		currReason.namedFlags().setFlagForKey((relation == 1), "forTeacher");
 		currReason.setEduGroup((relation == 2)?reasonGroup():null);
 		currReason.namedFlags().setFlagForKey((relation == 2), "forEduGroup");
-		currReason.setGrade((relation == 3)?reasonGrade():null);
+		if(relation == 3) {
+			String gradeString = context().request().stringFormValueForKey("gradePopup");
+			try {
+				int idx = Integer.parseInt(gradeString);
+				Integer grade = (Integer)grades.objectAtIndex(idx);//new Integer(gradeString);
+				if(!grade.equals(currReason.grade()))
+					currReason.setGrade(grade);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.INFO,"Can't decode grade for reason: " + gradeString,
+						new Object[] {session(),currReason});
+			}
+		} else {
+			currReason.setGrade(null);
+		}
 	}
 	
 	public void showSubstitutes() {
