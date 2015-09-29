@@ -32,6 +32,7 @@ package net.rujel;
 import java.util.logging.Logger;
 
 import net.rujel.auth.LoginProcessor;
+import net.rujel.auth.ResetCooldown;
 import net.rujel.auth.UserPresentation;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
@@ -166,5 +167,9 @@ public class DirectAction extends WODirectAction {
 		buf.append(".zip\"");
 		response.setHeader(buf.toString(),"Content-Disposition");
 		return response;
+	}
+	
+	public WOActionResults resetAction() {
+		return ResetCooldown.action(context());
 	}
 }

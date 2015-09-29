@@ -80,4 +80,11 @@ public class Maintenance extends com.webobjects.appserver.WOComponent {
 		logger.log(WOLogLevel.INFO,"Forcing email broadcast",session());
 		return null;
 	}
+	
+	public WOActionResults counterReset() {
+		WOComponent cr = WOApplication.application().pageWithName("ResetCooldown",context());
+		cr.takeValueForKey(Boolean.TRUE, "authorized");
+		cr.takeValueForKey(Boolean.TRUE, "inFrame");
+		return cr;
+	}
 }

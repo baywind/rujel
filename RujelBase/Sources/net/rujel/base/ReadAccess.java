@@ -91,6 +91,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 			defaults = new PlistReader(toMerge);
 		else
 			defaults.mergeValueToKeyPath(toMerge, null);
+		PrefsAccessHandler._defaultSettings = defaults;
 	}
 	
 	protected UserPresentation user() {
