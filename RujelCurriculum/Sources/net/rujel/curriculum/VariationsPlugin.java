@@ -460,6 +460,11 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 		fact = fact - (plus - minus);
 		
 		result.takeValueForKey(new Integer(fact - plan), "deviation");
+		
+		if("hide".equals(SettingsBase.stringSettingForCourse(
+				"PlanFactWidget", course, course.editingContext()))) {
+			result.takeValueForKey("grey", "styleClass");
+		} else {
 		if(plan  == fact) {
 			result.takeValueForKey("green", "styleClass");
 		} else if(fact < minPlan) {
@@ -468,6 +473,7 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			result.takeValueForKey("highlight2", "styleClass");
 		} else {
 			result.takeValueForKey("gerade", "styleClass");
+		}
 		}
 //		if(result.valueForKey("weekend") == Boolean.TRUE)
 //			result.takeValueForKey(new Integer(plan + hours), "nextPlan");

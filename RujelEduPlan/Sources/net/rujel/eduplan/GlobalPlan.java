@@ -116,6 +116,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public Integer inSection;
 	public NSArray sections;
 	public NSKeyValueCoding item;
+	public int[] summary;
+	public double[] sumAdditions;
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
@@ -152,6 +154,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			}
 		}
 		index = 0;
+        summary = new int[grades.count()];
+        sumAdditions = null;
 		super.appendToResponse(aResponse, aContext);
 	}
 	
@@ -377,12 +381,15 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				}
 				StringBuilder buf = new StringBuilder(5);
 				buf.append(' ').append(count).append(' ');
+				summary[index] +=count;
 				return buf.toString();
 			} else {
-				return (total == null)?null:total.toString();
+				summary[index] += total.intValue();
+				return total.toString();
 			}
 		} else {
 			if(weekly != null && weekly.intValue() > 0) {
+				summary[index] += weekly.intValue();
 				return weekly.toString();
 			} else {
 				if(total == null || total.intValue() <= 0)
@@ -390,6 +397,9 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				double hours = total.doubleValue();
 				double weeks = (double)wd[0] + (double)wd[1]/wd[2];
 				hours = hours/weeks;
+				if(sumAdditions == null)
+					sumAdditions = new double[grades.count()];
+				sumAdditions[index] += hours;
 				return fmt.format(hours);
 			}
 		}
@@ -479,6 +489,18 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					setValueForBinding(Boolean.TRUE, "shouldReset");
 			}
 		}
+	}
+	
+	public String sumHours() {
+		if (sumAdditions == null) {
+			if(summary[index] > 0)
+				return Integer.toString(summary[index]);
+		} else {
+			double value = sumAdditions[index] + summary[index];
+			if(value > 0)
+				return fmt.format(value);
+		}
+		return null;
 	}
 	
 	public void save() {
