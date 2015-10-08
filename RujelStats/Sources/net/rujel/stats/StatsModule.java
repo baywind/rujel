@@ -141,6 +141,7 @@ public class StatsModule {
 			NSMutableArray subParams = new NSMutableArray();
 
 			NSMutableDictionary keyDict = new NSMutableDictionary(".total","value");
+			keyDict.takeValueForKey(".total","sum");
 			keyDict.takeValueForKey(WOApplication.application().valueForKeyPath(
 				"strings.RujelStats_Stats.total"),"title");
 			keyDict.takeValueForKey(new Integer(-1), "sort");
@@ -155,6 +156,7 @@ public class StatsModule {
 				while (kenu.hasMoreElements()) {
 					String key = (String) kenu.nextElement();
 					keyDict = new NSMutableDictionary(".key" + i,"value");
+					keyDict.takeValueForKey(".key" + i,"sum");
 					if(key.equals("")) {
 						keyDict.takeValueForKey("&oslash;", "short");
 						keyDict.takeValueForKey(WOApplication.application().valueForKeyPath(
@@ -170,6 +172,7 @@ public class StatsModule {
 				}
 			} // add preset keys to subParams
 			keyDict = new NSMutableDictionary(".others","value");
+			keyDict.takeValueForKey(".otherCount","sum");
 			keyDict.takeValueForKey(WOApplication.application().valueForKeyPath(
 				"strings.RujelStats_Stats.others"),"title");
 			keyDict.takeValueForKey(new Integer(i), "sort");
@@ -338,11 +341,13 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 		if(others.count() > 0) {
 			StringBuffer buf = new StringBuffer();
 			Enumeration enu = others.objectEnumerator();
+			int otherCount = 0;
 			while (enu.hasMoreElements()) {
 				String key = (String) enu.nextElement();
 				buf.append('\'').append(key).append('\'').append(':');
 				Number value = (Number)dict.objectForKey(key);
 				checkSum += value.intValue();
+				otherCount += value.intValue();
 				buf.append(value);
 				if(enu.hasMoreElements())
 					buf.append(" ; ");
@@ -350,9 +355,11 @@ EOEnterpriseObject.class, EOEnterpriseObject.class,NSArray.class,Method.class,Bo
 			if(checkTotal && total != null && total.intValue() < checkSum) {
 				buf.append(" ; 'total':").append(total);
 				checkSum += total.intValue();
+//				otherCount += total.intValue();
 				total = null;
 			}
 			result.takeValueForKey(buf.toString(), "others");
+			result.takeValueForKey(new Integer(otherCount), "otherCount");
 		} else if(checkTotal && total != null && total.intValue() < checkSum) {
 			result.takeValueForKey(" ; 'total':" + total, "others");
 			checkSum += total.intValue();

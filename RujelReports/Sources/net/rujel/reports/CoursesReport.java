@@ -64,16 +64,21 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
     }
     
     public NSMutableArray prepareDisplay() {
-    	NSMutableArray forceDisplay = new NSMutableArray(
-    			defaultDisplay.valueForKey("subject"));
+    	NSDictionary dict = (NSDictionary)defaultDisplay.valueForKey("subject");
+    	dict = dict.mutableClone();
+    	dict.takeValueForKey(new NSDictionary(Boolean.TRUE,"omit"), "summary");
+    	NSMutableArray forceDisplay = new NSMutableArray(dict);
 		int tab = 0;
 		Integer sesTab = (Integer)session().valueForKeyPath("state.courseSelector");
 		if(sesTab != null)
 			tab = sesTab.intValue();
         if(tab != CoursesSelector.CLASS_TAB)
-        	forceDisplay.addObject(defaultDisplay.valueForKey("eduGroup"));
+        	dict = (NSDictionary)defaultDisplay.valueForKey("eduGroup");
         if(tab != CoursesSelector.TEACHER_TAB)
-        	forceDisplay.addObject(defaultDisplay.valueForKey("teacher"));
+        	dict = (NSDictionary)defaultDisplay.valueForKey("teacher");
+    	dict = dict.mutableClone();
+    	dict.takeValueForKey(defaultDisplay.valueForKey("summaryRow"), "summary");
+    	forceDisplay.addObject(dict);
         return forceDisplay;
     }
     

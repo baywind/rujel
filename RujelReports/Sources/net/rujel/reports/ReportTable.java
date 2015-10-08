@@ -30,6 +30,7 @@
 package net.rujel.reports;
 
 import java.util.Enumeration;
+import java.math.BigDecimal;
 
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.Export;
@@ -54,6 +55,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 	public Integer index;
 	public NSMutableDictionary preload;
 	protected Object preValue;
+	public NSMutableDictionary summary;
 
 	public NSKeyValueCodingAdditions valueOf = new DisplayAny.ValueReader(this);
 	
@@ -124,6 +126,10 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 					continue;
 				appendRowToResponse(export,aContext);
 			} // rows
+			if(summary != null) {
+				itemRow = null;
+				appendRowToResponse(export,aContext);
+			}
 			export.generateResponse();
 /*	    	aResponse.setHeader("application/octet-stream","Content-Type");
 	    	StringBuffer buf = new StringBuffer("attachment; filename=\"");
@@ -157,10 +163,17 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 			if(subParams == null) { // no subs
 //				aResponse.appendContentCharacter('"');
 				if(itemRow == null) {
+				if(summary == null) {
 					Object value = valueOf.valueForKeyPath("item.itemDict.title");
 					if(value != null)
 						export.addValue(value);
 //						aResponse.appendContentString(value.toString());
+					} else {
+						Object value = summary.valueForKey(sumID(itemDict, null));
+						if(value == null)
+							value = itemDict.valueForKeyPath("summary.title");
+						export.addValue(value);
+					}
 				} else {
 					export.beginValue();
 					NSDictionary bindings = new NSDictionary(
@@ -184,10 +197,17 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 					if(tmp != null)
 						subDict = tmp;
 					if(itemRow == null) {
+					if(summary == null) {
 						Object value = valueOf.valueForKeyPath("item.subDict.title");
 						if(value != null)
 							export.addValue(value);
 //							aResponse.appendContentString(value.toString());
+						} else {
+							Object value = summary.valueForKey(sumID(itemDict, subDict));
+							if(value == null)
+								value = subDict.valueForKeyPath("summary.title");
+							export.addValue(value);
+						}
 					} else {
 						export.beginValue();
 						Object value = item;
@@ -257,6 +277,12 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     	setValueForBinding(itemRow, "itemRow");
 	}
 	
+	public NSKeyValueCoding currDict() {
+		if(subDict != null)
+			return subDict;
+		return itemDict;
+	}
+	
     public void setItemDict(NSKeyValueCodingAdditions newDict) {
     	itemDict = newDict;
     	item = valueFromDict(itemDict,itemRow,this);
@@ -265,7 +291,77 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     		setValueForBinding(itemDict, "itemDict");
     		setValueForBinding(item, "item");
     	}
-    }	
+    	if(itemRow == null || itemDict == null)
+    		return;
+    	Object sum = itemDict.valueForKey("sum");
+    	if(sum != null) {
+    		raiseSum(sumID(itemDict, null), sum);
+    	} // if(sum != null)
+    	NSArray subParams = (NSArray)itemDict.valueForKey("subParams");
+    	if(subParams != null && subParams.count() > 0) {
+    		for (int i = 0; i < subParams.count(); i++) {
+				NSDictionary sub = (NSDictionary)subParams.objectAtIndex(i);
+		    	sum = sub.valueForKey("sum");
+				if(sum == null)
+					continue;
+	    		raiseSum(sumID(itemDict, sub), sum);
+			}
+    	}
+    }
+
+	private void raiseSum(String id, Object sum) {
+		Object value = DisplayAny.ValueReader.evaluateValue(sum,item, this);
+		if(value == null)
+			return;
+		if(summary == null)
+			summary = new NSMutableDictionary();
+		try {
+			BigDecimal bd;
+			if(value instanceof BigDecimal)
+				bd = (BigDecimal)value;
+			else
+				bd = new BigDecimal(value.toString());
+			BigDecimal sumBD = (BigDecimal)summary.valueForKey(id);
+			if(sumBD != null)
+				bd = bd.add(sumBD);
+			summary.takeValueForKey(bd, id);
+		} catch (Exception e) {
+		}
+	}
+	
+	public Object sumValue() {
+		if(summary == null || itemDict == null)
+			return null;
+		Object result = summary.valueForKey(sumID(itemDict, subDict));
+		if(result == null) {
+			Object sum = currDict().valueForKey("summary");
+			if(sum instanceof NSKeyValueCoding) {
+				result = ((NSKeyValueCoding)sum).valueForKey("title");
+			}
+		}
+		return result;
+	}
+	
+	protected static String sumID(NSKeyValueCoding itemDict, NSKeyValueCoding subDict) {
+		String id = (String)itemDict.valueForKey("id");
+		if(id != null && subDict == null)
+			return id;
+		StringBuilder buf = new StringBuilder();
+		if(id == null) {
+			buf.append('#').append(System.identityHashCode(itemDict));
+		} else {
+			buf.append(id);
+		}
+		if(subDict == null)
+			return buf.toString();
+		id = (String)subDict.valueForKey("id");
+		if(id == null) {
+			buf.append('#').append(System.identityHashCode(subDict));
+		} else {
+			buf.append('_').append(id);
+		}
+		return buf.toString();
+	}
 	
     public static Object valueFromDict(NSKeyValueCodingAdditions itemDict, 
     		Object itemRow,WOComponent page) {
@@ -309,7 +405,9 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     public String style() {
     	String style = null;
     	if(itemRow == null) {
-    		if(subDict == null)
+    		if(summary != null)
+    			style = (String)valueForKeyPath("currDict.summary.style");
+    		else if(subDict == null)
     			style =  (String)valueForKeyPath("itemDict.titleStyle");
     		else
     			style = (String)valueForKeyPath("subDict.titleStyle");
@@ -371,6 +469,7 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		itemDict = null;
 		preload = null;
 		preValue = null;
+		summary = null;
 		super.reset();
 	}
 
