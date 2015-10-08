@@ -404,6 +404,10 @@ public class StudentMarks extends WOComponent {
 			}
 			if(title == null)
 				title = "%";
+			else if(title.equals("none"))
+				title = "&bull;";
+			else if(title.startsWith("none"))
+				title = title.substring(4);
 			result.takeValueForKey(title, "integral");
 		}
 /*		NSMutableArray critDicts = new NSMutableArray();

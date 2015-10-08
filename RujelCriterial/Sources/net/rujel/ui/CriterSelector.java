@@ -138,8 +138,13 @@ public class CriterSelector extends WOComponent {
     					"presenters.workIntegral", c, ec);
     			if(setting != null) {
     				_integral = setting.textValue();
-    				if(_integral != null)
+    				if(_integral != null) {
+    					if(_integral.equals("none"))
+    						_integral = "&bull;";
+    					else if(_integral.startsWith("none"))
+    						_integral = _integral.substring(4);
     					return _integral;
+    				}
     				Integer pKey = setting.numericValue();
     				if (pKey != null) {
     					BorderSet bSet = (BorderSet)EOUtilities.objectWithPrimaryKeyValue(
