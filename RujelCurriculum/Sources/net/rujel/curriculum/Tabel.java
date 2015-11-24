@@ -469,8 +469,13 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 		else
 			export.addValue(session().valueForKeyPath("strings.RujelBase_Base.vacant"));
 		export.addValue(null);
+		{
+		Calendar cal = Calendar.getInstance();
+		cal.setTime((NSTimestamp)currMonth.valueForKey("beginDate"));
 		for (int i = 1; i <= days; i++) {
-			export.addValue(Integer.toString(i));
+			export.addValue(Integer.toString(cal.get(Calendar.DATE)));
+			cal.add(Calendar.DATE, 1);
+		}
 		}
 		export.addValue(application().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.Tabel.total"));
@@ -484,14 +489,21 @@ vars:		while (vEnu.hasMoreElements()) { // variations
 			NSDictionary row = (NSDictionary) enu.nextElement();
 			export.beginRow();
 			export.addValue(row.valueForKey("eduGroup"));
-			export.addValue(row.valueForKey("subject"));
+			String subject = (String)row.valueForKey("subject");
+			if(subject.indexOf('<') > 0) {
+				EduCourse course = (EduCourse)row.valueForKey("course");
+				subject = course.cycle().subject();
+				if(course.comment() != null)
+					subject = subject + " (" + course.comment() + ')';
+			}
+			export.addValue(subject);
 			BigDecimal[] values = (BigDecimal[])row.valueForKey("values");
 			NSMutableArray[] info = (NSMutableArray[])row.valueForKey("info");
 			for (int i = 0; i <= days; i++) {
 				BigDecimal value = values[(i==days)?0:i + 1];
 				String val = MyUtility.formatDecimal(value);
 				if(i < days && info != null && info[i+1] != null && info[i+1].count() > 0)
-					val = val + '*';
+					val = (val==null)?"*":val + '*';
 				export.addValue(val);
 			}
 			export.endRow();
