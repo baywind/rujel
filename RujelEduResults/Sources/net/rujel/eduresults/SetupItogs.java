@@ -187,9 +187,9 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	protected void setTypeListOnDict(NSMutableDictionary dict,
 			EOEnterpriseObject tl) {
 		dict.takeValueForKey(tl, "ItogTypeList");
+		dict.removeObjectForKey("preset");
 		if(tl == null) {
 			dict.takeValueForKey(Boolean.FALSE, "active");
-			dict.removeObjectForKey("preset");
 			dict.removeObjectForKey(ItogPreset.PRESET_GROUP_KEY);
 		} else {
 			dict.takeValueForKey(Boolean.TRUE, "active");

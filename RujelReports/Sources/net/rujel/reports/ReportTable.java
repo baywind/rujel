@@ -39,6 +39,8 @@ import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOActionResults;
 
@@ -80,16 +82,17 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 		Enumeration props = properties.objectEnumerator();
 		Object param = (parent() == null)? item : valueForBinding("commonParam");
 		while (props.hasMoreElements()) {
-			NSKeyValueCoding report = (NSKeyValueCoding)props.nextElement();
-			NSDictionary toPreload = (NSDictionary)report.valueForKey("preload");
+			itemDict = (NSKeyValueCodingAdditions)props.nextElement();
+			NSDictionary toPreload = (NSDictionary)itemDict.valueForKey("preload");
 			if(toPreload != null) {
 				if(preload == null)
 					preload = new NSMutableDictionary();
-				String key = (String)report.valueForKey("id");
+				String key = (String)itemDict.valueForKey("id");
 				Object cache = DisplayAny.ValueReader.evaluateDict(toPreload, param, this);
 				preload.takeValueForKey(cache, key);
 			}
 		}
+		itemDict = null;
 	}
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
@@ -191,7 +194,8 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
 				while (subs.hasMoreElements()) { // subs
 					subDict = (NSKeyValueCodingAdditions) subs.nextElement();
 //					aResponse.appendContentCharacter('"');
-					if(Various.boolForObject(subDict.valueForKey("skipExport")))
+					if(Various.boolForObject(subDict.valueForKey("skipExport")) ||
+							Various.boolForObject(subDict.valueForKey("metaSub")))
 						continue;
 					tmp = (NSKeyValueCodingAdditions)subDict.valueForKey("exportDict");
 					if(tmp != null)
@@ -386,6 +390,15 @@ public class ReportTable extends com.webobjects.appserver.WOComponent {
     	if(valueForKeyPath("itemDict.subParams") == null)
     		return "2";
     	return null;
+    }
+    
+    public String colspan() {
+    	NSArray subParams = (NSArray)valueForKeyPath("itemDict.subParams"); 
+    	if(subParams == null)
+    		return null;
+    	subParams = EOQualifier.filteredArrayWithQualifier(subParams, new EOKeyValueQualifier(
+    			"metaSub", EOQualifier.QualifierOperatorNotEqual, Boolean.TRUE));
+    	return String.valueOf(subParams.count());
     }
     
     public String hover() {

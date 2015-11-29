@@ -33,7 +33,10 @@ import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
+import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduGroup;
+import net.rujel.interfaces.Student;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -45,6 +48,7 @@ import com.webobjects.appserver.WOSession;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 public class ModuleInit {
@@ -70,6 +74,8 @@ public class ModuleInit {
 			return studentReporter(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
+		} else if("groupReport".equals(obj)) {
+			return groupMarksReport(ctx);
 		} else if("planTabs".equals(obj)) {
 			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.SetupItogs")))
 				return WOApplication.application().valueForKeyPath(
@@ -208,6 +214,43 @@ public class ModuleInit {
 		return grouping;
 	}
 	
+	protected static Enumeration itogsEnu(final EOEditingContext ec, String listName, Integer year) {
+		NSArray list = ItogType.itogsForTypeList(ItogType.typesForList(listName, year, ec), year);
+		if(list == null || list.count() == 0)
+			return null;
+		final Enumeration enu = list.objectEnumerator();
+		return new Enumeration() {
+			private Object next = null;
+			EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,null,null);
+
+			public boolean hasMoreElements() {
+				if(next != null)
+					return true;
+				while(enu.hasMoreElements()) {
+					next = enu.nextElement();
+					EOQualifier qual = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY,
+							EOQualifier.QualifierOperatorEqual,next);
+					fs.setQualifier(qual);
+					fs.setFetchLimit(1);
+					NSArray found = ec.objectsWithFetchSpecification(fs);
+					if(found != null && found.count() > 0)
+						return true;
+				}
+				next = null;
+				return false;
+			}
+
+			public Object nextElement() {
+				if(hasMoreElements()) {
+					Object result = next;
+					next = null;
+					return result;
+				}
+				throw new NoSuchElementException("No more elements");
+			}
+		};
+	}
+	
 	public static Object statCourseReport(WOContext ctx) {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
 			return null;
@@ -291,6 +334,194 @@ public class ModuleInit {
 			sort++;
 		}
 //		ec.unlock();
+		return result;
+	}
+	
+	public static Object groupMarksReport(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
+			return null;
+		EOEditingContext ec = null;
+		try {
+			ec = (EOEditingContext)ctx.page().valueForKey("ec");
+		} catch (Exception e) {
+			ec = new SessionedEditingContext(ctx.session());
+		}
+//		ec.lock();
+		String listName = sectionListName(ctx.session(), ec);
+		Integer year = (Integer)ctx.session().valueForKey("eduYear");
+		Enumeration itogEnu = itogsEnu(ec, listName, year);
+		NSMutableArray result = new NSMutableArray();
+		NSArray subParams = (NSArray)ctx.session().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.groupReportSubs");
+		while (itogEnu.hasMoreElements()) {
+			ItogContainer itog = (ItogContainer) itogEnu.nextElement();
+			NSMutableDictionary dict = new NSMutableDictionary(itog,"eo");
+			dict.setObjectForKey(itog.title(),"title");
+			dict.setObjectForKey("itog" + MyUtility.getID(itog), "id");
+			int sort = itog.itogType().sort()*10 + itog.num();
+			dict.setObjectForKey(String.valueOf(sort), "sort");
+			dict.setObjectForKey(PlistReader.cloneArray(subParams, true), "subParams");
+			try {
+				NSMutableDictionary preload = new NSMutableDictionary("preloadMarks","methodName");
+				Method method = ModuleInit.class.getMethod("preloadMarks", 
+						EduGroup.class,ItogContainer.class,NSMutableDictionary.class);
+				preload.setObjectForKey(method, "parsedMethod");
+				preload.takeValueForKey(new NSArray(new Object[] {".",itog,"$itemDict"}),"paramValues");
+				preload.takeValueForKey(Boolean.FALSE, "cacheResult");
+				dict.takeValueForKey(preload, "preload");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			result.addObject(dict);
+		}
+		return result;
+	}
+	
+	public static NSMutableDictionary preloadMarks(EduGroup group, ItogContainer itog, 
+			NSMutableDictionary itemDict) {
+		if(group == null)
+			return null;
+		NSMutableArray subParams = (NSMutableArray)itemDict.valueForKey("subParams");
+		EOQualifier.filterArrayWithQualifier(subParams, new EOKeyValueQualifier("metaSub", 
+				EOQualifier.QualifierOperatorEqual, Boolean.TRUE));
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = Various.getEOInQualifier("student", group.list());
+		quals[1] = new EOKeyValueQualifier(ItogMark.CONTAINER_KEY, 
+				EOQualifier.QualifierOperatorEqual, itog);
+		quals[1] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,quals[1],
+				new NSArray(new EOSortOrdering("studentID", EOSortOrdering.CompareAscending)));
+		EOEditingContext ec = itog.editingContext(); 
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		NSMutableDictionary result = new NSMutableDictionary();
+		Enumeration enu = found.objectEnumerator();
+		NSMutableArray cycles = new NSMutableArray();
+		NSMutableArray allMarks = new NSMutableArray();
+		Student currStudent = null;
+		NSMutableDictionary rowDict = null;
+		String[] colors = new String[] {null,"#ff6666","#ffff33","#99ff66"};
+		String[] states = new String[] {"none","bad","acceptable","good"};
+		while (enu.hasMoreElements()) {
+			ItogMark mark = (ItogMark) enu.nextElement();
+			if(mark.student() != currStudent) {
+				rowDict = new NSMutableDictionary();
+				currStudent = mark.student();
+				result.setObjectForKey(rowDict, currStudent);
+			}
+			if(!cycles.containsObject(mark.cycle()))
+				Various.addToSortedList(mark.cycle(), cycles,null,EOSortOrdering.CompareAscending);
+			if(!allMarks.containsObject(mark.mark()))
+				Various.addToSortedList(mark.mark(), allMarks,null,EOSortOrdering.CompareDescending);
+			String key = "cycle" + MyUtility.getID(mark.cycle());
+			NSMutableDictionary dict = (NSMutableDictionary)rowDict.valueForKey(key);
+			if(dict == null) {
+				dict = new NSMutableDictionary(mark.mark(),"mark");
+				rowDict.takeValueForKey(dict, key);
+				if(mark.state() != null) {
+					int state = mark.state().intValue();
+					if(state >= 0 && state <= 3) {
+						dict.takeValueForKey("background-color:" + colors[state], "stateColor");
+						key = "stat_" + states[state];
+						Counter counter = (Counter)rowDict.valueForKey(key);
+						if(counter == null) {
+							counter = new Counter(1);
+							rowDict.takeValueForKey(counter, key);
+						} else
+							counter.raise();
+					}
+				}
+			} else {
+				String markValue = (String)dict.valueForKey("mark");
+				if(!markValue.equals(mark.mark()))
+					dict.takeValueForKey(null, "stateColor");
+				markValue = markValue + '/' + mark.mark();
+				dict.takeValueForKey(markValue, "mark");
+			}
+//			if(subParams.count() > 0) { // add to stats
+				key = "stat" + mark.mark();
+				Counter counter = (Counter)rowDict.valueForKey(key);
+				if(counter == null) {
+					counter = new Counter(1);
+					rowDict.takeValueForKey(counter, key);
+				} else
+					counter.raise();
+				
+//			}
+		} // marks enumeration
+		for (int j = 0; j < 3; j++) {
+			if(subParams.count() <= j)
+				break;
+			NSDictionary sub = (NSDictionary)subParams.objectAtIndex(j);
+			if(!Various.boolForObject(sub.valueForKey("active")))
+				continue;
+			if("allMarks".equals(sub.valueForKey("id"))) {
+				enu = cycles.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					PlanCycle cycle = (PlanCycle) enu.nextElement();
+					NSMutableDictionary dict = new NSMutableDictionary(Boolean.TRUE,"active");
+					String id = "cycle" + MyUtility.getID(cycle);
+					dict.takeValueForKey(id,"id");
+					String subject = cycle.subject();
+					dict.takeValueForKey(subject, "title");
+					if(subject.length() > 4)
+						dict.takeValueForKey(subject.substring(0,3), "short");
+					dict.takeValueForKey(cycle.subjectEO().fullName(), "hover");
+					dict.takeValueForKey("vertical_text", "titleClass");
+					dict.takeValueForKey(Boolean.TRUE, "hiddenSub");
+					dict.takeValueForKey("$preloadedValue." + id + ".mark", "value");
+					dict.takeValueForKey("$preloadedValue." + id + ".stateColor", "style");
+					subParams.addObject(dict);
+				}				
+			} // all marks
+			else if("markStats".equals(sub.valueForKey("id"))) {
+				String listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME,
+						SettingsBase.courseDict(group, itog.eduYear()),ec);
+				Integer presetGroup = ItogPreset.getPresetGroup(listName, itog.eduYear(), itog.itogType());
+				NSArray presets = ItogPreset.listPresetGroup(ec, presetGroup, true);
+				if(presets != null && presets.count() > 0) {
+					enu = presets.objectEnumerator();
+				} else { 
+					enu = allMarks.objectEnumerator();
+					presets = null;
+				}
+					while (enu.hasMoreElements()) {
+						String mark;
+						NSMutableDictionary dict = new NSMutableDictionary(Boolean.TRUE,"active");
+						if(presets == null) {
+							mark = (String) enu.nextElement();
+						} else {
+							ItogPreset pr = (ItogPreset) enu.nextElement();
+							mark = pr.mark();
+							if(pr.state() != null && pr.state() > 0)
+								dict.takeValueForKey(new NSDictionary("0","valueWhenEmpty"), "presenterBindings");
+						}
+						String id = "stat" + mark;
+						dict.takeValueForKey(id,"id");
+						dict.takeValueForKey(mark, "title");
+						dict.takeValueForKey(Boolean.TRUE, "hiddenSub");
+						dict.takeValueForKey("$preloadedValue." + id, "value");
+						subParams.addObject(dict);
+					}
+			} // mark stats
+			else if("successStats".equals(sub.valueForKey("id"))) {
+				for (int i = states.length -1; i >= 0 ; i--) {
+					String id = "stat_" + states[i];
+					NSMutableDictionary dict = new NSMutableDictionary(Boolean.TRUE,"active");
+					dict.takeValueForKey(id,"id");
+					dict.takeValueForKey(ItogPreset.stateSymbols.objectAtIndex(i), "title");
+					NSArray hovers = (NSArray)sub.valueForKey("hovers");
+					dict.takeValueForKey(hovers.objectAtIndex(i), "hover");
+					dict.takeValueForKey(Boolean.TRUE, "hiddenSub");
+					dict.takeValueForKey("$preloadedValue." + id, "value");
+					if(i > 0)
+						dict.takeValueForKey(new NSDictionary("0","valueWhenEmpty"), "presenterBindings");
+					subParams.addObject(dict);
+				}
+			} // success stats
+		} // prepare titles
 		return result;
 	}
 	

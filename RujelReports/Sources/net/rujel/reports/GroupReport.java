@@ -81,4 +81,7 @@ public class GroupReport extends WOComponent {
 		students = null;
 		return null;
 	}
+	public void sectionChanged() {
+		reports = null;
+	}
 }
