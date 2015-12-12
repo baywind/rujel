@@ -894,10 +894,7 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		} // if(workType != null)
 	}
     
-    public String presentLoad() {
-		if(load() == null)
-			return null;
-		int minutes = load().intValue();
+	public static String presentLoad(int minutes) {
 		int hours = minutes / 60;
 		minutes = minutes % 60;
 		StringBuffer result = new StringBuffer(5);
@@ -909,6 +906,30 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 		result.append(minutes);
 		return result.toString();
 	}
+	
+    public String presentLoad() {
+		if(load() == null)
+			return null;
+		int minutes = load().intValue();
+		if(minutes == 0)
+			return null;
+		return presentLoad(minutes);
+	}
+    
+    public int reductedLoad() {
+		if(load() == null)
+			return 0;
+		int minutes = load().intValue();
+		if(minutes == 0)
+			return 0;
+		int days = EOPeriod.Utility.countDays(announce(), date()) -1;
+		if(days == 0)
+			return 0;
+		int result = minutes/days;
+		if(minutes%days > 0)
+			result++;
+		return result;
+    }
 
     public String color() {
     	String result = null;

@@ -36,6 +36,7 @@ import java.util.Enumeration;
 import net.rujel.base.MyUtility;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.Counter;
+import net.rujel.reusables.Period;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
@@ -69,6 +70,8 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
     public Integer index;
     public NSMutableArray agregate;
     public Object item;
+//    public int todayLoad;
+    public int tomorrowLoad;
        
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		courses = (NSArray)valueForBinding("courses");
@@ -125,6 +128,7 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = (EOEditingContext)application().valueForKeyPath(
 				"ecForYear." + year.toString());
 		NSArray list = ec.objectsWithFetchSpecification(fs);
+		Period per = (period)?new EOPeriod.ByDates(since, to):null;
 		if(list != null && list.count() > 0) {
 			NSArray sorter = (NSArray)tab.valueForKey("order");
 			if(sorter != null && sorter.count() > 0) {
@@ -184,6 +188,28 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 					EOEnterpriseObject task = work.taskText();
 					if(task != null)
 						ec.refaultObject(task);
+					int load = work.reductedLoad();
+					if(load == 0)
+						continue;
+					if(period) {
+						NSTimestamp wdate = work.date();
+						if(EOPeriod.Utility.compareDates(wdate, since) <= 0)
+							continue;
+						wdate = wdate.timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
+						if(EOPeriod.Utility.compareDates(work.announce(), since) < 0
+								|| EOPeriod.Utility.compareDates(wdate, to) > 0) {
+							int intersect = EOPeriod.Utility.intersect(work.announce(), wdate, per);
+							if(intersect > 0)
+								tomorrowLoad += intersect*load;
+						} else {
+							tomorrowLoad += work.load().intValue();
+						}
+					} else {
+						if(EOPeriod.Utility.compareDates(work.date(), to) > 0)
+							tomorrowLoad += load;
+//						if(EOPeriod.Utility.compareDates(work.announce(), to) < 0);
+//							todayLoad += load;
+					}
 				} // agregate works into sections
 			}
 		}
@@ -196,6 +222,31 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+	
+	public String sectionSum() {
+		NSArray list = list();
+		if(list == null)
+			return null;
+		int sum = 0;
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Object work = enu.nextElement();
+			if(work instanceof Work) {
+				Integer load = ((Work)work).load();
+				if(load != null)
+					sum += load.intValue();
+			}
+		}
+		if(sum == 0)
+			return null;
+		return Work.presentLoad(sum);
+	}
+	
+	public String estimatedLoad() {
+		if(tomorrowLoad == 0)
+			return null;
+		return Work.presentLoad(tomorrowLoad);
 	}
 	
 /*	public void setItem(Object nextItem) {
@@ -294,6 +345,8 @@ public class WorksDiary extends com.webobjects.appserver.WOComponent {
 		item = null;
 		index = null;
 		subjects.removeAllObjects();
+//		todayLoad = 0;
+		tomorrowLoad = 0;
 		super.reset();
 	}
 

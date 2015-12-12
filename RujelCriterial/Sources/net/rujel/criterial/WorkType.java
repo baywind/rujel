@@ -35,9 +35,11 @@ import java.util.logging.Logger;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.Flags;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.foundation.*;
@@ -236,5 +238,21 @@ public class WorkType extends _WorkType {
 		if(weight.scale() < 0)
 			return weight.setScale(0);
 		return weight;
+	}
+	
+	public static NSArray filteredTypesForCourse(EduCourse course) {
+		int mask = SettingsBase.numericSettingForCourse("WorkTypeMask", course, null, 0);
+		EOQualifier qual = activeQualifier;
+		if(mask != 0) {
+			NSMutableArray goes = new NSMutableArray();
+			for (int i = 0; i < 32; i++) {
+				if(Flags.getFlag(i, mask))
+					goes.addObject(new Integer(i));
+			}
+			qual = Various.getEOInQualifier(SORT_KEY, goes);
+			qual = new EOAndQualifier(new NSArray(new EOQualifier[] {activeQualifier,qual}));
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,qual,ModulesInitialiser.sorter);
+		return course.editingContext().objectsWithFetchSpecification(fs);
 	}
 }

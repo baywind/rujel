@@ -83,13 +83,9 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     		aResponse.appendContentString(aContext.componentActionURL());
     		return;
     	}*/
-    	if(course == null)
+    	if(course == null) {
     		course = (EduCourse)returnPage.valueForKey("course");
-    	EOEditingContext ec = course.editingContext();
-    	if(types == null) {
-    		EOFetchSpecification fs = new EOFetchSpecification(WorkType.ENTITY_NAME,
-   				WorkType.activeQualifier, ModulesInitialiser.sorter);
-    		types = ec.objectsWithFetchSpecification(fs);
+    		types = WorkType.filteredTypesForCourse(course);
     	}
     	if(dict == null)
     		dict = new NSMutableDictionary();
@@ -134,7 +130,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     			type.namedFlags().and(24);
     	}
     	critIdx = -1;
-    	ifArchive = (work != null && !ec.globalIDForObject(work).isTemporary() &&
+    	ifArchive = (work != null && !course.editingContext().globalIDForObject(work).isTemporary() &&
     			SettingsReader.boolForKeyPath("markarchive.Work", 
     			SettingsReader.boolForKeyPath("markarchive.archiveAll", false)));
     	super.appendToResponse(aResponse, aContext);

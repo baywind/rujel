@@ -169,14 +169,14 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			return v;
 		}
 
-		public static int intersect (NSTimestamp since, NSTimestamp to, EOPeriod per) {
-			NSTimestamp begin = per.begin();
-			if(begin.compare(since) < 0)
+		public static int intersect (Date since, Date to, Period per) {
+			Date begin = per.begin();
+			if(begin.compareTo(since) < 0)
 				begin = since;
-			NSTimestamp end = per.end();
-			if(end.compare(to) > 0)
+			Date end = per.end();
+			if(end.compareTo(to) > 0)
 				end = to;
-			if(begin.compare(end) > 0)
+			if(begin.compareTo(end) > 0)
 				return 0;
 			int result = countDays(begin, end);
 //			if(result < 0)
