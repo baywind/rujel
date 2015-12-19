@@ -99,6 +99,11 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	} else {
     		critSet = CriteriaSet.critSetForCourse(course);
     	}
+    	if(!types.containsObject(type)) {
+    		NSMutableArray list = types.mutableClone();
+    		Various.addToSortedList(type, list, WorkType.SORT_KEY, EOSortOrdering.CompareAscending);
+    		types = list.immutableClone();
+    	}
     	if(critSet != null) {
     		NamedFlags critFlags = critSet.namedFlags();
     		disableMax = (critFlags.flagForKey("fixList"))?"disabled":null;
