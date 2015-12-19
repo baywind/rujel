@@ -30,6 +30,8 @@
 package net.rujel.eduresults;
 
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
+import net.rujel.interfaces.Student;
 import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
@@ -40,6 +42,14 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
 public class ItogContainer extends _ItogContainer {
+	
+	public static interface MarkContainer {
+		public String mark();
+		public Integer state();
+		public Student student();
+		public EduCycle cycle();
+		public ItogContainer container();
+	}
 	
 	@Deprecated
 	public static NSArray sorter = new NSArray(new EOSortOrdering[] {

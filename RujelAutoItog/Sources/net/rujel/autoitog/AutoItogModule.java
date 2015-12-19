@@ -45,10 +45,10 @@ import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
-import net.rujel.reusables.WOLogLevel;
 
 public class AutoItogModule {
 	public static final Logger logger = Logger.getLogger("rujel.autoitog");
@@ -96,6 +96,8 @@ public class AutoItogModule {
 //			return extItog(ctx);
 		} else if("statCourseReport".equals(obj)) {
 			return statCourseReport(ctx);
+		} else if("groupReport".equals(obj)) {
+			return groupMarksReport(ctx);
 		} else if("accessModifier".equals(obj)) {
 			if(SettingsBase.baseForKey(ItogMark.ENTITY_NAME, 
 					ctx.session().defaultEditingContext(), false) == null)
@@ -917,6 +919,53 @@ cycleCourses:
 		}
 	} */
 	
+	protected static Enumeration aiEnu(EOEditingContext ec, String listName, NSTimestamp date) {
+    	EOQualifier[] quals = new EOQualifier[3];
+    	quals[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
+    			EOQualifier.QualifierOperatorEqual,listName);
+    	quals[1] = new EOKeyValueQualifier(AutoItog.FIRE_DATE_KEY,
+    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
+    	quals[2] = new EOKeyValueQualifier(AutoItog.FLAGS_KEY,
+    			EOQualifier.QualifierOperatorLessThan, new Integer(32));
+    	quals[0] = new EOAndQualifier(new NSArray(quals));
+    	EOFetchSpecification fs = new EOFetchSpecification(
+    			AutoItog.ENTITY_NAME,quals[0],null);
+    	NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0)
+			return null;
+		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list,
+				AutoItog.typeSorter);
+		final Enumeration enu = list.objectEnumerator();
+		return new Enumeration() {
+			private AutoItog next = null;
+			private NSMutableSet types = new NSMutableSet();
+
+			public boolean hasMoreElements() {
+				if(next != null)
+					return true;
+				while (enu.hasMoreElements()) {
+					next = (AutoItog) enu.nextElement();
+					ItogType type =next.itogContainer().itogType(); 
+					if(!types.containsObject(type)) {
+						types.addObject(type);
+						return true;
+					}
+				}
+				next = null;
+				return false;
+			}
+
+			public Object nextElement() {
+				if(hasMoreElements()) {
+					Object result = next;
+					next = null;
+					return result;
+				}
+				throw new NoSuchElementException("No more elements");
+			}
+		};
+	}
+	
 	public static Object statCourseReport(WOContext ctx) {
 		EOEditingContext ec = null;
 		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
@@ -927,44 +976,21 @@ cycleCourses:
 		} catch (Exception e) {
 			ec = new SessionedEditingContext(ctx.session());
 		}
-		NSArray list = null;
 		String listName;
+		Enumeration enu;
 		try {
 			EduCourse course = (EduCourse)ctx.page().valueForKey("course");
 			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
-			list = AutoItog.currentAutoItogsForCourse(course, date);
+			NSArray list = AutoItog.currentAutoItogsForCourse(course, date);
+			if(list == null || list.count() == 0)
+				return null;
+			enu = list.objectEnumerator();
 		} catch (Exception e) {
 			listName = ModuleInit.sectionListName(ctx.session(), ec);
-	    	EOQualifier[] quals = new EOQualifier[3];
-	    	quals[0] = new EOKeyValueQualifier(AutoItog.LIST_NAME_KEY,
-	    			EOQualifier.QualifierOperatorEqual,listName);
-	    	quals[1] = new EOKeyValueQualifier(AutoItog.FIRE_DATE_KEY,
-	    			EOQualifier.QualifierOperatorGreaterThanOrEqualTo, date);
-	    	quals[2] = new EOKeyValueQualifier(AutoItog.FLAGS_KEY,
-	    			EOQualifier.QualifierOperatorLessThan, new Integer(32));
-	    	quals[0] = new EOAndQualifier(new NSArray(quals));
-	    	EOFetchSpecification fs = new EOFetchSpecification(
-	    			AutoItog.ENTITY_NAME,quals[0],null);
-	    	list = ec.objectsWithFetchSpecification(fs);
-	    	if(list != null && list.count() > 1) {
-	    		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list,
-	    				AutoItog.typeSorter);
-	    		NSMutableSet types = new NSMutableSet();
-	    		NSMutableArray result = new NSMutableArray();
-	    		Enumeration enu = list.objectEnumerator();
-	    		while (enu.hasMoreElements()) {
-					AutoItog ai = (AutoItog) enu.nextElement();
-					if(!types.containsObject(ai.itogContainer().itogType())) {
-						types.addObject(ai.itogContainer().itogType());
-						result.addObject(ai);
-					}
-				}
-	    		list = result;
-	    	}
+			enu = aiEnu(ec, listName, date);
+			if(enu == null)
+				return null;
 		}
-		if(list == null || list.count() == 0)
-			return null;
-		Enumeration enu = list.objectEnumerator();
 		NSMutableDictionary template = new NSMutableDictionary(Prognosis.ENTITY_NAME,"entName");
 		template.setObjectForKey(Prognosis.MARK_KEY, "statField");
 		try {
@@ -999,7 +1025,7 @@ cycleCourses:
 			String name = period.title();
 			dict.setObjectForKey(period,"param2");
 			if(presets != null) {
-				dict.setObjectForKey(String.valueOf(sort + list.count()),"sort");
+				dict.setObjectForKey(String.valueOf(sort + 10),"sort");
 				dict.setObjectForKey(name,"title");
 				dict.setObjectForKey(Boolean.valueOf(addCalculations
 						&& "5".equals(presets.objectAtIndex(0))),"addCalculations");
@@ -1044,4 +1070,65 @@ cycleCourses:
 		NSDictionary options = (NSDictionary)ctx.session().objectForKey("xmlGeneration");
 		return new PrognosesXML(options);
 	}
+	
+	public static Object groupMarksReport(WOContext ctx) {
+		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
+			return null;
+		EOEditingContext ec = null;
+		try {
+			ec = (EOEditingContext)ctx.page().valueForKey("ec");
+		} catch (Exception e) {
+			ec = new SessionedEditingContext(ctx.session());
+		}
+//		ec.lock();
+		String listName = ModuleInit.sectionListName(ctx.session(), ec);
+		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
+		Enumeration aiEnu = aiEnu(ec, listName, date);
+		NSMutableArray result = new NSMutableArray();
+		NSArray subParams = (NSArray)ctx.session().valueForKeyPath(
+				"strings.RujelEduResults_EduResults.groupReportSubs");
+		String name = (String)ctx.session().valueForKeyPath(
+				"strings.RujelAutoItog_AutoItog.prognoses");
+		while (aiEnu.hasMoreElements()) {
+			AutoItog ai = (AutoItog) aiEnu.nextElement();
+			ItogContainer itog = ai.itogContainer();
+			NSMutableDictionary dict = new NSMutableDictionary(ai,"eo");
+			dict.setObjectForKey(name + " - " + itog.title(),"title");
+			dict.setObjectForKey("AutoItog" + MyUtility.getID(ai), "id");
+			int sort = 50 + itog.itogType().sort()*10 + itog.num();
+			dict.setObjectForKey(String.valueOf(sort), "sort");
+			dict.setObjectForKey(PlistReader.cloneArray(subParams, true), "subParams");
+			try {
+				NSMutableDictionary preload = new NSMutableDictionary("preloadMarks","methodName");
+				Method method = AutoItogModule.class.getMethod("preloadMarks", 
+						EduGroup.class,ItogContainer.class,NSMutableDictionary.class);
+				preload.setObjectForKey(method, "parsedMethod");
+				preload.takeValueForKey(new NSArray(new Object[] {".",itog,"$itemDict"}),"paramValues");
+				preload.takeValueForKey(Boolean.FALSE, "cacheResult");
+				dict.takeValueForKey(preload, "preload");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			result.addObject(dict);
+		}
+		return result;
+	}
+
+	public static NSMutableDictionary preloadMarks(EduGroup group, ItogContainer itog, 
+			NSMutableDictionary itemDict) {
+		if(group == null)
+			return null;
+		EOQualifier[] quals = new EOQualifier[2];
+		quals[0] = Various.getEOInQualifier("student", group.list());
+		quals[1] = new EOKeyValueQualifier(Prognosis.ITOG_CONTAINER_KEY, 
+				EOQualifier.QualifierOperatorEqual, itog);
+		quals[1] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(Prognosis.ENTITY_NAME,quals[1],
+				new NSArray(new EOSortOrdering("studentID", EOSortOrdering.CompareAscending)));
+		EOEditingContext ec = group.editingContext();
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		return ModuleInit.preloadMarks(found, group, itog, itemDict);
+	}
+
 }

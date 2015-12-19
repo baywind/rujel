@@ -39,7 +39,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
-public class ItogMark extends _ItogMark
+public class ItogMark extends _ItogMark implements ItogContainer.MarkContainer
 {
 	public static NSArray flagKeys = new NSArray(new Object[] 
 	          {"changed","forced","incomplete","manual","constituents","flagged"});

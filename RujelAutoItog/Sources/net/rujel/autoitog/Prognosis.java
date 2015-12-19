@@ -46,7 +46,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-public class Prognosis extends _Prognosis {
+public class Prognosis extends _Prognosis implements ItogContainer.MarkContainer{
     public static final NSArray flagNames = new NSArray(new String[]
                    {"-1-","keep","keepBonus","-8-","-16-","-32-","disable"});
 	protected static Logger logger = Logger.getLogger("rujel.autoitog");
@@ -685,5 +685,13 @@ cycleStudents:
 		if(state() == null)
 			return null;
 		return ItogPreset.stateSymbols.objectAtIndex(state().intValue());
+	}
+
+	public EduCycle cycle() {
+		return course().cycle();
+	}
+
+	public ItogContainer container() {
+		return itogContainer();
 	}
 }
