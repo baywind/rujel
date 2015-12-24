@@ -293,9 +293,9 @@ public class PrognosisPopup extends com.webobjects.appserver.WOComponent {
     					}
     					archive.takeValueForKey(changeReason, "reason");
     					archive.takeValueForKey(new Integer(actionType), "actionType");	
-        				ec.saveChanges();
     				}
 					PrognosesAddOn.feedStats(course, eduPeriod.itogContainer(), null);
+    				ec.saveChanges();
     			}
     			addOn.setPrognosis(prognosis);
     		} catch (Exception e) {

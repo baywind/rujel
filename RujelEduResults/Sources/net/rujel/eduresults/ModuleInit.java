@@ -295,10 +295,12 @@ public class ModuleInit {
 			Integer grNum = ItogPreset.getPresetGroup(listName, year, itog.itogType());
 			if(grNum != null && !grNum.equals(curGrNum)) {
 				presets = ItogPreset.listPresetGroup(ec, grNum, true);
-				if(presets != null)
-					presets = (NSArray)presets.valueForKey(ItogPreset.MARK_KEY);
-				if(presets.count() == 0)
-					presets = null;
+				if(presets != null) {
+					if(presets.count() == 0)
+						presets = null;
+					else
+						presets = (NSArray)presets.valueForKey(ItogPreset.MARK_KEY);
+				}
 			}
 			String title = itog.title();
 			NSMutableDictionary dict = template.mutableClone();

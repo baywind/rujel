@@ -93,11 +93,6 @@ public class LessonNoteEditor extends WOComponent {
 				"todayChanged", context.session());
 	}
 
-	public boolean showTabs() {
-		return ((allTabs != null && allTabs.count() > 0) || 
-				(baseTabs != null && baseTabs.count() > 0));
-	}
-
 	public EOEditingContext ec() {
 		return ec;
 	}

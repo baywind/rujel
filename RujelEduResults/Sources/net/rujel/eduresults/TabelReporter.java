@@ -32,6 +32,7 @@ package net.rujel.eduresults;
 import net.rujel.reusables.*;
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
@@ -63,6 +64,7 @@ public class TabelReporter extends WOComponent {
 		eduYear = null;
 		comments = null;
 		years = null;
+		reportCourses = null;
 	}
 	public Student student;
 	public Number eduYear;
@@ -78,6 +80,35 @@ public class TabelReporter extends WOComponent {
 	protected NSMutableDictionary marksAgregate;
 	public NSMutableArray comments;
 	public NSMutableArray years;
+	protected Object reportCourses;
+	
+	public boolean courseIsActive(NSKeyValueCodingAdditions course) {
+		if(reportCourses == null) {
+			EOEditingContext ec = null;
+			if(course instanceof EOEnterpriseObject)  {
+				ec = ((EOEnterpriseObject)course).editingContext();
+			} else if(course instanceof NSDictionary) {
+				Enumeration enu = ((NSDictionary)course).objectEnumerator();
+				while (enu.hasMoreElements()) {
+					Object obj = enu.nextElement();
+					if(obj instanceof EOEnterpriseObject) {
+						ec = ((EOEnterpriseObject)obj).editingContext();
+						break;
+					}
+				}
+			}
+			if(ec == null)
+				throw new IllegalArgumentException(
+						"Course should be a EO itself or dictionary containig at leasr one EO");
+			reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
+			if(reportCourses == null)
+				reportCourses = NullValue;
+		}
+		if(reportCourses == NullValue)
+			return true;
+		Integer number = ((SettingsBase)reportCourses).forCourse(course).numericValue();
+		return Various.boolForObject(number);
+	}
 	
 	public void setCourses(NSArray list) {
 		cycles = new NSMutableArray();
@@ -91,16 +122,18 @@ public class TabelReporter extends WOComponent {
 			EduCourse course = (EduCourse)list.objectAtIndex(0);
 			eduYear = course.eduYear();
 			list = BaseCourse.coursesForStudent(list, student);
-			if(list.count() > 0) {
+//			if(list.count() > 0) {
 				NSMutableSet itogs = new NSMutableSet();
 				Enumeration enu = list.objectEnumerator();
 				while (enu.hasMoreElements()) {
 					course = (EduCourse) enu.nextElement();
+					if(!courseIsActive(course))
+						continue;
 					itogs.addObjectsFromArray(ItogContainer.itogsForCourse(course));
 					cycles.addObject(course.cycle());
 				}
 				perlist = itogs.allObjects().mutableClone();
-			}
+//			}
 	}
 	
 	public void appendToResponse(WOResponse aResponse,WOContext aContext) {
@@ -137,6 +170,11 @@ public class TabelReporter extends WOComponent {
 			perItem = currMark.container();
 			if(perItem.eduYear() == null)
 				continue;
+			if(reportCourses != NullValue) {
+				NSDictionary course = SettingsBase.courseDict(cycle, perItem.eduYear());
+				if(!courseIsActive(course))
+					continue;
+			}
 			forCycle = (NSMutableDictionary)marksAgregate.objectForKey(cycle.subject());
 			if(forCycle == null) {
 				forCycle = new NSMutableDictionary();
@@ -167,13 +205,18 @@ public class TabelReporter extends WOComponent {
 				perItem = (ItogContainer)comment.valueForKey(ItogMark.CONTAINER_KEY);
 				if(perItem.eduYear() == null)
 					continue;
+				EduCycle cycle = (EduCycle)comment.valueForKey(ItogMark.CYCLE_KEY);
+				if(reportCourses != NullValue) {
+					NSDictionary course = SettingsBase.courseDict(cycle, perItem.eduYear());
+					if(!courseIsActive(course))
+						continue;
+				}
 				item = ItogMark.commentsDict(comment);
 				if(eduYear == null && item.valueForKey(ItogMark.MANUAL)==null)
 					continue;
 				String alias = '*' + Integer.toString(i);
 				i++;
 				item.takeValueForKey(alias, "alias");
-				EduCycle cycle = (EduCycle)comment.valueForKey(ItogMark.CYCLE_KEY);
 				item.takeValueForKey(cycle.subject(), "subject");
 				item.takeValueForKey(perItem, ItogMark.CONTAINER_KEY);
 				comments.addObject(item);
