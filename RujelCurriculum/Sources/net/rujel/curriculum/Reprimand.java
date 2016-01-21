@@ -243,9 +243,11 @@ public class Reprimand extends _Reprimand {
 							testDay = weekStart.numericValue().intValue();
 					}
 					cal.setTime(onDate);
-					if(weekNum > cal.get(Calendar.WEEK_OF_YEAR))
+					if(weekNum > cal.get(Calendar.WEEK_OF_YEAR) 
+							&& cal.get(Calendar.DAY_OF_YEAR) < 360)
 						cal.add(Calendar.YEAR, -1);
-					cal.set(Calendar.WEEK_OF_YEAR, weekNum -1);
+					cal.set(Calendar.WEEK_OF_YEAR, weekNum);
+					cal.add(Calendar.DATE, -7);
 					cal.set(Calendar.DAY_OF_WEEK, testDay);
 					now = new NSTimestamp(cal.getTimeInMillis());
 					WeekFootprint weekFootprint = new WeekFootprint(course);
