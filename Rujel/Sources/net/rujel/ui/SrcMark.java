@@ -289,6 +289,7 @@ public class SrcMark extends WOComponent {
 							} else if (cur instanceof EduCycle) {
 								if(cur == cycle) {
 									tmp.replaceObjectAtIndex(aCourse, i);
+									found = true;
 									currIndex = i;
 									break;
 								} else if(found) {
@@ -297,6 +298,9 @@ public class SrcMark extends WOComponent {
 									break;
 								}
 							}
+						}
+						if(!found) {
+							tmp.addObject(aCourse);
 						}
 					} else {
 						Object cycle = tmp.replaceObjectAtIndex(aCourse, currIndex);

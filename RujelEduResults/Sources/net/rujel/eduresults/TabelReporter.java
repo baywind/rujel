@@ -67,7 +67,7 @@ public class TabelReporter extends WOComponent {
 		reportCourses = null;
 	}
 	public Student student;
-	public Number eduYear;
+	public Integer eduYear;
 	
 	public NSMutableArray perlist;
     public ItogContainer perItem;
@@ -81,28 +81,47 @@ public class TabelReporter extends WOComponent {
 	public NSMutableArray comments;
 	public NSMutableArray years;
 	protected Object reportCourses;
+	protected Object itogSettings;
+	protected NSMutableDictionary<String, Boolean> listNames;
 	
 	public boolean courseIsActive(NSKeyValueCodingAdditions course) {
-		if(reportCourses == null) {
-			EOEditingContext ec = null;
-			if(course instanceof EOEnterpriseObject)  {
-				ec = ((EOEnterpriseObject)course).editingContext();
-			} else if(course instanceof NSDictionary) {
-				Enumeration enu = ((NSDictionary)course).objectEnumerator();
-				while (enu.hasMoreElements()) {
-					Object obj = enu.nextElement();
-					if(obj instanceof EOEnterpriseObject) {
-						ec = ((EOEnterpriseObject)obj).editingContext();
-						break;
-					}
+		EOEditingContext ec = null;
+		if(course instanceof EOEnterpriseObject)  {
+			ec = ((EOEnterpriseObject)course).editingContext();
+		} else if(course instanceof NSDictionary) {
+			Enumeration enu = ((NSDictionary)course).objectEnumerator();
+			while (enu.hasMoreElements()) {
+				Object obj = enu.nextElement();
+				if(obj instanceof EOEnterpriseObject) {
+					ec = ((EOEnterpriseObject)obj).editingContext();
+					break;
 				}
 			}
-			if(ec == null)
-				throw new IllegalArgumentException(
-						"Course should be a EO itself or dictionary containig at leasr one EO");
+		}
+		if(ec == null)
+			throw new IllegalArgumentException(
+					"Course should be a EO itself or dictionary containig at leasr one EO");
+		if(reportCourses == null) {
 			reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
 			if(reportCourses == null)
 				reportCourses = NullValue;
+		}
+		if(itogSettings == null) {
+			itogSettings = SettingsBase.baseForKey(ItogMark.ENTITY_NAME, ec, false);
+			if(itogSettings == null)
+				itogSettings = NullValue;
+			listNames = new NSMutableDictionary<String, Boolean>();
+		}
+		if(itogSettings != NullValue) {
+			String listName = ((SettingsBase)itogSettings).forCourse(course).textValue();
+			Boolean active = listNames.objectForKey(listName);
+			if(active == null) {
+				NSArray types = ItogType.getTypeList(listName, eduYear, ec);
+				active = Boolean.valueOf(types != null && types.count() > 0);
+				listNames.setObjectForKey(active, listName);
+			}
+			if(!active.booleanValue())
+				return false;
 		}
 		if(reportCourses == NullValue)
 			return true;

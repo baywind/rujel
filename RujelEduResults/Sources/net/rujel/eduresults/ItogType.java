@@ -117,10 +117,11 @@ public class ItogType extends _ItogType {
 	}
 	public static NSArray typesForList(String listName, Integer eduYear, EOEditingContext ec) {
 		NSArray list = getTypeList(listName, eduYear, ec);
+		/*
 		if(list == null || list.count() == 0) {
 			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, null, ec);
 			list = getTypeList(listName, eduYear, ec);
-		}
+		} */
 		if(list == null || list.count() == 0)
 			return list;
 		if(list.count() > 1) {
