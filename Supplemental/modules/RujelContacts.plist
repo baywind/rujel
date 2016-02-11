@@ -23,7 +23,7 @@
 		<key>messageFilePath</key>
 		<string>/Users/Shared/RujelDeploy/rpms/rujel/RUJEL/Configuration/message.txt</string>
 		<key>dontSend</key>
-		<string>true</string>
+		<string>false</string>
 		<key>writeToFile</key>
 		<string>true</string>
 		<key>writeFileDir</key>
@@ -34,6 +34,10 @@
 		<string>5:30</string>
 		<key>denyRequesting</key>
 		<string>false</string>
+		<key>outboxDir</key>
+		<string>/Users/Shared/test/mail/outbox</string>
+		<key>retryAfterSeconds</key>
+		<integer>20</integer>
 	</dict>
 	<key>dbConnection.Contacts</key>
 	<dict>

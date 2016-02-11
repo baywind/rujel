@@ -65,6 +65,8 @@ public class TabelReporter extends WOComponent {
 		comments = null;
 		years = null;
 		reportCourses = null;
+		itogSettings = null;
+		listNames = null;
 	}
 	public Student student;
 	public Integer eduYear;

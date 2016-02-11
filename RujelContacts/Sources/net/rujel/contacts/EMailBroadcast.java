@@ -45,6 +45,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.appserver.*;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.text.FieldPosition;
 import java.text.Format;
@@ -53,6 +54,7 @@ import java.util.logging.Logger;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.mail.internet.InternetAddress;
@@ -70,6 +72,12 @@ public class EMailBroadcast implements Runnable{
 				WOApplication.application().takeValueForKey(access, "defaultAccess");
 			} catch (NSKeyValueCoding.UnknownKeyException e) {
 				// default access not supported
+			}
+			if(Mailer.hasDelayed()) {
+				logger.log(WOLogLevel.INFO,"Trying to send delayed mail");
+				Thread t = new Thread(new EMailBroadcast(),"EMailBroadcast");
+				t.setPriority(Thread.MIN_PRIORITY + 1);
+				t.start();
 			}
 		} else if(obj.equals("scheduleTask")) {
 			RequestMail.forgetSent();
@@ -334,20 +342,68 @@ gr:		while (eduGroups.hasMoreElements()) {
 			}
 		}
 	}
-
+	protected File[] delayedList;
+	protected static TimerTask delayedTask;
+	
 	public void run() {
 		try {
+			if(delayedTask != null) {
+				delayedTask.cancel();
+				delayedTask = null;
+			}
 			//int tasksLeft = queue.count() - idx;
 			NSDictionary params = nextTask();
 			/*if(params != null) {
 				ses = (WOSession)params.valueForKey("tmpsession");
 				ses.awake();
 			}*/
-			while(params != null) {
-				//NSDictionary params = (NSDictionary)queue.objectAtIndex(idx);
-				doBroadcast(params);
+			long timeout = 0;
+			try {
+				String lag = SettingsReader.stringForKeyPath("mail.messageLag",null);
+				if(lag != null)
+					timeout = Long.parseLong(lag);
+			} catch (Exception ex) {
+				logger.log(WOLogLevel.INFO,"Failed to define message lag",new Object[] {ses,ex});
+				timeout = 0;
+			}
+			Mailer mailer = new Mailer();
+			logger.log(WOLogLevel.FINEST,"Mailer instantiated",ses);
+			if(mailer.outbox != null) {
+				delayedList = mailer.outbox.listFiles(Mailer.filenameFilter);
+			}
+			while(params != null || delayedList != null) {
+				if(params != null)
+					doBroadcast(params, mailer, timeout);
+				long startTime = System.currentTimeMillis();
+				int delayedIdx = mailer.sendMinDelayed(delayedList);
+				if(delayedIdx < 0) {
+					delayedList = null;
+				} else	{
+					delayedList[delayedIdx] = null;
+					wait(timeout, mailer, startTime);
+				}
 				params = nextTask();
 			}
+			if(mailer.outbox != null) {
+				int delay = SettingsReader.intForKeyPath("mail.retryAfterSeconds", 0);
+				if(delay > 0) {
+					delayedList = mailer.outbox.listFiles(Mailer.filenameFilter);
+					Timer timer = (Timer)WOApplication.application().valueForKey("timer");
+					if(delayedList != null && delayedList.length > 0 && timer != null) {
+						delayedTask = new TimerTask() {
+							public void run() {
+								if(queue == null || queue.count() == 0) {
+									Thread t = new Thread(new EMailBroadcast(),"EMailBroadcast");
+									t.setPriority(Thread.MIN_PRIORITY + 1);
+									t.start();
+								}
+							}
+						};
+						timer.schedule(delayedTask, delay*1000);
+					}
+				}
+			}
+
 			/*synchronized (running) {
 				idx++;
 				tasksLeft = queue.count() - idx;
@@ -379,7 +435,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 	protected WOSession ses;
 //	protected WOContext context;
 	protected EOEditingContext ec;
-	protected void doBroadcast(NSDictionary params) {
+	protected void doBroadcast(NSDictionary params, Mailer mailer, long timeout) {
 		NSArray students = (NSArray)params.valueForKey("students");
 		if(students == null || students.count() == 0)
 			return;
@@ -456,18 +512,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			reporter = (NSDictionary)reports.defaultReporter();
 		}
 		String groupName = (String)params.valueForKey("groupName");
-		
-		long timeout = 0;
-		try {
-			String lag = SettingsReader.stringForKeyPath("mail.messageLag",null);
-			if(lag != null)
-				timeout = Long.parseLong(lag);
-		} catch (Exception ex) {
-			logger.log(WOLogLevel.INFO,"Failed to define message lag",new Object[] {ses,ex});
-			timeout = 0;
-		}
-		
-		Mailer mailer = (Mailer)params.valueForKey("mailer");
+				
 		if(mailer == null) {
 			mailer = new Mailer();
 			logger.log(WOLogLevel.FINEST,"Mailer instantiated",ses);
@@ -739,33 +784,36 @@ st:		while (stEnu.hasMoreElements()) {
 						callerSession.takeValueForKey(message.toString(), "message");
 					}
 				}
-
-				if(timeout > 0) {
-					long fin = startTime + timeout;
-					long towait = fin - System.currentTimeMillis();
-					try {
-						Thread t = Thread.currentThread();
-						int pr = t.getPriority();
-						t.setPriority(Thread.MIN_PRIORITY);
-						while(towait > 0) {
-							logger.log(WOLogLevel.FINEST,"Waiting timeout " + towait,ses);
-							mailer.wait(towait);
-							towait = fin - System.currentTimeMillis();
-						}
-						t.setPriority(pr);
-					} catch (Exception ex) {
-						logger.log(WOLogLevel.FINER,"Interrupted timeout between mails",
-								new Object[] {ses,ex});
-					}
-				}
-			}
-		} // Student
+				wait(timeout, mailer, startTime);
+			} // synchronized (mailer)
+		} // Student enu
 		String logMessage = (String)params.valueForKey("logMessage");
 		Object logParam = params.valueForKey("logParam");
 		if(logMessage != null)
 			logger.log(WOLogLevel.FINE,logMessage,new Object[] {ses,logParam});
 //		ec.unlock();
 //		ses.sleep();
+	}
+
+	public void wait(long timeout, Mailer mailer, long startTime) {
+		if(timeout > 0) {
+			long fin = startTime + timeout;
+			long towait = fin - System.currentTimeMillis();
+			try {
+				Thread t = Thread.currentThread();
+				int pr = t.getPriority();
+				t.setPriority(Thread.MIN_PRIORITY);
+				while(towait > 0) {
+					logger.log(WOLogLevel.FINEST,"Waiting timeout " + towait,ses);
+					mailer.wait(towait);
+					towait = fin - System.currentTimeMillis();
+				}
+				t.setPriority(pr);
+			} catch (Exception ex) {
+				logger.log(WOLogLevel.FINER,"Interrupted timeout between mails",
+						new Object[] {ses,ex});
+			}
+		}
 	}
 
 	protected NSArray contactsInSet(NSArray contacts, NSSet set) {
