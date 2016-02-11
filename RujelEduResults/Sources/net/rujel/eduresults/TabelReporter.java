@@ -102,7 +102,7 @@ public class TabelReporter extends WOComponent {
 		}
 		if(ec == null)
 			throw new IllegalArgumentException(
-					"Course should be a EO itself or dictionary containig at leasr one EO");
+					"Course should be a EO itself or dictionary containig at least one EO");
 		if(reportCourses == null) {
 			reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
 			if(reportCourses == null)
@@ -118,8 +118,15 @@ public class TabelReporter extends WOComponent {
 			String listName = ((SettingsBase)itogSettings).forCourse(course).textValue();
 			Boolean active = listNames.objectForKey(listName);
 			if(active == null) {
-				NSArray types = ItogType.getTypeList(listName, eduYear, ec);
-				active = Boolean.valueOf(types != null && types.count() > 0);
+				Integer year = (Integer)course.valueForKey("eduYear");
+				if(year == null)
+					year = eduYear;
+				if(year == null) {
+					active = Boolean.TRUE;
+				} else {
+					NSArray types = ItogType.getTypeList(listName, eduYear, ec);
+					active = Boolean.valueOf(types != null && types.count() > 0);
+				}
 				listNames.setObjectForKey(active, listName);
 			}
 			if(!active.booleanValue())
@@ -191,7 +198,7 @@ public class TabelReporter extends WOComponent {
 			perItem = currMark.container();
 			if(perItem.eduYear() == null)
 				continue;
-			if(reportCourses != NullValue) {
+			if(eduYear != null && reportCourses != NullValue) {
 				NSDictionary course = SettingsBase.courseDict(cycle, perItem.eduYear());
 				if(!courseIsActive(course))
 					continue;
@@ -227,7 +234,7 @@ public class TabelReporter extends WOComponent {
 				if(perItem.eduYear() == null)
 					continue;
 				EduCycle cycle = (EduCycle)comment.valueForKey(ItogMark.CYCLE_KEY);
-				if(reportCourses != NullValue) {
+				if(eduYear != null && reportCourses != NullValue) {
 					NSDictionary course = SettingsBase.courseDict(cycle, perItem.eduYear());
 					if(!courseIsActive(course))
 						continue;
