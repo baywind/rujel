@@ -203,9 +203,16 @@ public class ItogPopup extends WOComponent {
 			return returnPage;
 		}
 		boolean same = (!newItog && mark.equals(itog.mark()));
+		EOEnterpriseObject prognosis = (EOEnterpriseObject)addOn.valueForKey("firedPrognosis");
+		if(prognosis.valueForKey(ItogMark.STUDENT_KEY) != student ||
+				prognosis.valueForKey("course") != eduCourse || 
+				prognosis.valueForKey("itogContainer") != itogContainer) {
+			prognosis = null;
+			addOn.takeValueForKey(null, "firedPrognosis");
+		}
 		if(newItog || !same || itog.readFlags().flagForKey("constituents")) {
 			ec.lock();
-			EOEnterpriseObject prognosis = null;
+			if(prognosis == null)
 			try {
 				Class prClass = Class.forName("net.rujel.autoitog.Prognosis");
 				Method meth = prClass.getMethod("getPrognosis", Student.class,EduCourse.class, ItogContainer.class, Boolean.TYPE);
@@ -293,7 +300,12 @@ public class ItogPopup extends WOComponent {
 			} finally {
 				ec.unlock();
 			}
-		} else if(ec.hasChanges()) {
+		} else { 
+			if(prognosis != null) {
+				ModuleInit.prepareStats(eduCourse, itogContainer,ItogMark.MARK_KEY,true);
+				ModuleInit.prepareStats(eduCourse, itogContainer,"stateKey",true);
+			}
+			if(ec.hasChanges()) {
 			ec.lock();
 			try {
 				ec.saveChanges();
@@ -304,6 +316,7 @@ public class ItogPopup extends WOComponent {
 			} finally {
 				ec.unlock();
 			}
+		}
 		}
 		return returnPage;
 	}

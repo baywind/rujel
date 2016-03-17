@@ -2,8 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>_schoolNumber</key>
-	<string>3</string>
+	<key>schoolNumber</key>
+	<string>45</string>
 	<key>diaryLogging</key>
 	<string>CONFIGDIR/diaryLog.properties</string>
 	<key>loggingProperties</key>
@@ -24,7 +24,7 @@
 	<key>ui</key>
 	<dict>
 		<key>defaultDate</key>
-		<string>15.04.2014</string>
+		<string>03.03.2016</string>
 		<key>diaryURL</key>
 		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
 		<key>_serverURL</key>

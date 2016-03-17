@@ -445,6 +445,7 @@ return "hideObj('performPrognos');showObj('prognosChangeReason');form.changeReas
 				AddOn itogAddOn = (AddOn) enu.nextElement();
 				if("itogs".equals(itogAddOn.valueForKey("id"))) {
 					nextPage.takeValueForKey(itogAddOn,"addOn");
+					itogAddOn.takeValueForKey(prognosis, "firedPrognosis");
 					itogAddOn.agregate = null;
 					break;
 				}

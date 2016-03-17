@@ -135,6 +135,7 @@ public class StatsModule {
 //			}
 			reportDict.takeValueForKey(title, "title");
 			reportDict.takeValueForKey(cfg.valueForKey("hover"), "hover");
+			reportDict.takeValueForKey(cfg.valueForKey("SettingsBase"), "SettingsBase");
 			reportDict.takeValueForKey(Integer.toString(50 +rNum),"sort");
 //			reportDict.takeValueForKey(new NSArray(entName),"checkAccess");
 

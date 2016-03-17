@@ -977,7 +977,31 @@ cycleCourses:
 			ec = new SessionedEditingContext(ctx.session());
 		}
 		String listName;
-		Enumeration enu;
+		Enumeration enu = null;
+		NSKeyValueCodingAdditions course = (NSKeyValueCodingAdditions)
+				ctx.session().objectForKey("statCourseReport");
+		if(!(course instanceof EduCourse)) {
+			try {
+				course = (EduCourse)ctx.page().valueForKey("course");
+			} catch (Exception e) {
+				
+			}
+		}
+		if(course == null) {
+			listName = ModuleInit.sectionListName(ctx.session(), ec);			
+		} else {
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
+		}
+		if(course instanceof EduCourse) {
+			NSArray list = AutoItog.currentAutoItogsForCourse((EduCourse)course, date);
+			if(list != null && list.count() > 0)
+				enu = list.objectEnumerator();
+		} else {
+			enu = aiEnu(ec, listName, date);
+		}
+		if(enu == null)
+			return null;
+		/*
 		try {
 			EduCourse course = (EduCourse)ctx.page().valueForKey("course");
 			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
@@ -990,9 +1014,11 @@ cycleCourses:
 			enu = aiEnu(ec, listName, date);
 			if(enu == null)
 				return null;
-		}
+		}*/
 		NSMutableDictionary template = new NSMutableDictionary(Prognosis.ENTITY_NAME,"entName");
 		template.setObjectForKey(Prognosis.MARK_KEY, "statField");
+		template.takeValueForKey(new NSDictionary(listName,ItogMark.ENTITY_NAME),
+				SettingsBase.ENTITY_NAME);
 		try {
 			Method method = PrognosesAddOn.class.getMethod("statCourse",
 					EduCourse.class, ItogContainer.class, String.class);

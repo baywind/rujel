@@ -44,6 +44,7 @@ import net.rujel.criterial.BorderSet;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.eduresults.ItogPreset;
+import net.rujel.eduresults.ModuleInit;
 import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
@@ -370,7 +371,18 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 							}
 						}
 					}
+    				if(delItog) {
+    					EOEnterpriseObject itogStats = ModuleInit.getStatsGrouping(
+    							course, itog, ItogMark.MARK_KEY);
+    					itogStats.takeValueForKey(null, "dict");
+    					itogStats = ModuleInit.getStatsGrouping(course, itog, "stateKey");
+    					itogStats.takeValueForKey(null, "dict");
+    				}
     				ec.saveChanges();
+    				if(recalc) {
+    					PrognosesAddOn.feedStats(course, itog, prognoses);
+    					ec.saveChanges();
+    				}
     			} // courses.objectEnumerator()
     			WOSession ses = (sesRef == null)?null:(WOSession)sesRef.get();
 				if(ses != null) {

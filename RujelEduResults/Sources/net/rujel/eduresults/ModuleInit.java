@@ -255,18 +255,23 @@ public class ModuleInit {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
 			return null;
 		EOEditingContext ec = null;
-		EduCourse course = (EduCourse)ctx.session().objectForKey("statCourseReport");
+		NSKeyValueCodingAdditions course = (NSKeyValueCodingAdditions)
+				ctx.session().objectForKey("statCourseReport");
 		String listName;
 		if(course != null) {
-			ec = course.editingContext();
-			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
-		} else {
+			ec = (EOEditingContext)course.valueForKey("editingContext");
+		}		
+		if(ec == null) {
 			try {
 				ec = (EOEditingContext)ctx.page().valueForKey("ec");
 			} catch (Exception e) {
 				ec = new SessionedEditingContext(ctx.session());
 			}
+		}
+		if(course == null) {
 			listName = sectionListName(ctx.session(), ec);
+		} else {
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
 		}
 		Integer year = (Integer)ctx.session().valueForKey("eduYear");
 		Enumeration enu = itogsEnu(ec, listName, year);
@@ -287,6 +292,8 @@ public class ModuleInit {
 		}
 		template.takeValueForKey(ctx.session().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.itogAddOn.title"), "description");
+		template.takeValueForKey(new NSDictionary(listName,ItogMark.ENTITY_NAME),
+				SettingsBase.ENTITY_NAME);
 		int sort = 30;
 		Integer curGrNum = null;
 		NSArray presets = null;
@@ -337,6 +344,7 @@ public class ModuleInit {
 		}
 //		ec.lock();
 		String listName = sectionListName(ctx.session(), ec);
+		NSDictionary settings = new NSDictionary(listName,ItogMark.ENTITY_NAME);
 		Integer year = (Integer)ctx.session().valueForKey("eduYear");
 		Enumeration itogEnu = itogsEnu(ec, listName, year);
 		NSMutableArray result = new NSMutableArray();
@@ -347,6 +355,7 @@ public class ModuleInit {
 		while (itogEnu.hasMoreElements()) {
 			ItogContainer itog = (ItogContainer) itogEnu.nextElement();
 			NSMutableDictionary dict = new NSMutableDictionary(itog,"eo");
+			dict.takeValueForKey(settings, SettingsBase.ENTITY_NAME);
 			dict.setObjectForKey(name + " - " + itog.title(),"title");
 			dict.setObjectForKey("itog" + MyUtility.getID(itog), "id");
 			int sort = itog.itogType().sort()*10 + itog.num();
