@@ -199,14 +199,17 @@ public class ItogPopup extends WOComponent {
 
 		boolean newItog = (itog == null);
 		if(!access().flagForKey((newItog)?"create":"edit")) {
-			session().takeValueForKey(valueForKeyPath("application.strings.Strings.messages.noAccess"),"message");
+			session().takeValueForKey(valueForKeyPath(
+					"application.strings.Strings.messages.noAccess"),"message");
 			return returnPage;
 		}
 		boolean same = (!newItog && mark.equals(itog.mark()));
-		EOEnterpriseObject prognosis = (EOEnterpriseObject)addOn.valueForKey("firedPrognosis");
-		if(prognosis.valueForKey(ItogMark.STUDENT_KEY) != student ||
+		EOEnterpriseObject prognosis = (addOn == null)?null:
+			(EOEnterpriseObject)addOn.valueForKey("firedPrognosis");
+		if(prognosis != null && (
+				prognosis.valueForKey(ItogMark.STUDENT_KEY) != student ||
 				prognosis.valueForKey("course") != eduCourse || 
-				prognosis.valueForKey("itogContainer") != itogContainer) {
+				prognosis.valueForKey("itogContainer") != itogContainer)) {
 			prognosis = null;
 			addOn.takeValueForKey(null, "firedPrognosis");
 		}
