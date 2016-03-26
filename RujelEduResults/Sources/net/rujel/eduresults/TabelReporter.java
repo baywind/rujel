@@ -228,6 +228,7 @@ public class TabelReporter extends WOComponent {
 			comments = new NSMutableArray();
 			Enumeration enu = allMarks.objectEnumerator();
 			int i = 1;
+			NSMutableDictionary commAgr = new NSMutableDictionary();
 			while (enu.hasMoreElements()) {
 				EOEnterpriseObject comment = (EOEnterpriseObject) enu.nextElement();
 				perItem = (ItogContainer)comment.valueForKey(ItogMark.CONTAINER_KEY);
@@ -239,15 +240,34 @@ public class TabelReporter extends WOComponent {
 					if(!courseIsActive(course))
 						continue;
 				}
-				item = ItogMark.commentsDict(comment);
-				if(eduYear == null && item.valueForKey(ItogMark.MANUAL)==null)
-					continue;
-				String alias = '*' + Integer.toString(i);
-				i++;
-				item.takeValueForKey(alias, "alias");
-				item.takeValueForKey(cycle.subject(), "subject");
-				item.takeValueForKey(perItem, ItogMark.CONTAINER_KEY);
-				comments.addObject(item);
+				String alias;
+				{
+					String commentString = (String)comment.valueForKey("comment");
+					if(commAgr.valueForKey(ItogMark.CONTAINER_KEY) != perItem) {
+						commAgr.removeAllObjects();
+						commAgr.takeValueForKey(perItem, ItogMark.CONTAINER_KEY);
+					}
+					item = (NSMutableDictionary)commAgr.valueForKey(commentString);
+					if(item == null) {
+						item = ItogMark.commentsDict(comment);
+						commAgr.takeValueForKey(item, commentString);
+						if(eduYear == null && item.valueForKey(ItogMark.MANUAL)==null)
+							continue;
+						alias = '*' + Integer.toString(i);
+						i++;
+						item.takeValueForKey(alias, "alias");
+						item.takeValueForKey(cycle.subject(), "subject");
+						item.takeValueForKey(perItem, ItogMark.CONTAINER_KEY);
+						comments.addObject(item);
+					} else {
+						alias = (String)item.valueForKey("alias");
+						if(alias == null)
+							continue;
+						String subject  = (String)item.valueForKey("subject");
+						if(subject != null && !subject.equals(cycle.subject()))
+							item.takeValueForKey(null,"subject");
+					}
+				}
 				forCycle = (NSMutableDictionary)marksAgregate.objectForKey(cycle.subject());
 				if(forCycle == null) {
 					forCycle = new NSMutableDictionary();
