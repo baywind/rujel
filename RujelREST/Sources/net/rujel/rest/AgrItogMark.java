@@ -46,23 +46,29 @@ public class AgrItogMark extends AgrEntity {
 		NSArray[] itrValues = new NSArray[2];
 		itrValues[1] = found;
 		
-		String txt = (String)params.valueForKey("eduYear");
+		Object txt = params.valueForKey("eduYear");
 		if(txt == null) {
 			Integer year = (Integer)WOApplication.application().valueForKey("year");
 			if(year == null)
 				year = MyUtility.eduYearForDate(null);
 			quals.addObject(new EOKeyValueQualifier(ItogContainer.EDU_YEAR_KEY, 
 					EOQualifier.QualifierOperatorEqual, year));
-			params.takeValueForKey(year.toString(), "eduYear");
+			params.takeValueForKey(year, "eduYear");
 		} else {
 			addIntToQuals(quals, ItogContainer.EDU_YEAR_KEY, txt);
 		}
-		txt = (String)params.valueForKey("perCount");
+		txt = params.valueForKey("perCount");
 		if(txt != null) {
-			if(txt.equals("0")) {
+			int cnt = -1;
+			if (txt instanceof Number)
+				cnt = ((Number)txt).intValue();
+			else try {
+				cnt = Integer.parseInt(txt.toString());
+			} catch (Exception e) {}
+			if(cnt == 0) {
 				quals.addObject(new EOKeyValueQualifier("itogType.inYearCount", 
 					EOQualifier.QualifierOperatorEqual, new Integer(1)));
-			} else if(txt.equals("1")) {
+			} else if(cnt == 1) {
 				quals.addObject(new EOKeyValueQualifier("itogType.inYearCount", 
 						EOQualifier.QualifierOperatorEqual, new Integer(1)));
 				quals.addObject(new EOKeyValueQualifier("itogType.title", 
@@ -71,7 +77,7 @@ public class AgrItogMark extends AgrEntity {
 				addIntToQuals(quals, "itogType.inYearCount", txt);
 			}
 		}		
-		txt = (String)params.valueForKey("perNum");
+		txt = params.valueForKey("perNum");
 		addIntToQuals(quals, ItogContainer.NUM_KEY, txt);
 		EOQualifier qual = new EOAndQualifier(quals);
 		quals.removeAllObjects();
@@ -141,20 +147,22 @@ public class AgrItogMark extends AgrEntity {
 			}
 		} // iterator for grade
 		*/
-		txt = (String)params.valueForKey("state");
+		txt = params.valueForKey("state");
 		addIntToQuals(quals, ItogMark.STATE_KEY, txt);
 
-		txt = (String)params.valueForKey("mark");
+		txt = params.valueForKey("mark");
 		if(txt != null) {
-			qual = getStringQual(ItogMark.MARK_KEY, txt);
+			qual = getStringQual(ItogMark.MARK_KEY, txt.toString());
 			if(qual != null)
 			quals.addObject(qual);
 		}
-		txt = (String)params.valueForKey("value");
+		txt = params.valueForKey("value");
 		addDecToQuals(quals, ItogMark.VALUE_KEY, txt);
 		
-		txt = (String)params.valueForKey("form");
-		final NSArray groups = AgrEduCourse.groupsForForm(txt, ec);
+		txt = params.valueForKey("form");
+		if(txt instanceof Number)
+			txt = txt.toString();
+		final NSArray groups = AgrEduCourse.groupsForForm((String)txt, ec);
 		if(groups != null) {
 			NSArray list;
 			if(groups.count() == 1) {

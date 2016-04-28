@@ -133,9 +133,14 @@ public abstract class AgrEntity {
 		return result;
 	}
 	
-	public static void addIntToQuals(NSMutableArray quals, String attrib, String value)
+	public static void addIntToQuals(NSMutableArray quals, String attrib, Object value)
 															throws ParseError {
-		Object[] snv = selectorAndValue(value);
+		if(value instanceof Number) {
+			quals.addObject(new EOKeyValueQualifier(attrib, 
+					EOQualifier.QualifierOperatorEqual, value));
+			return;
+		}
+		Object[] snv = selectorAndValue((String)value);
 		if(snv != null && snv.length > 0) {
 			if(snv[0] == EOQualifier.QualifierOperatorEqual) {
 				if(snv.length > 2) {
@@ -186,9 +191,14 @@ public abstract class AgrEntity {
 		return new BigDecimal(txt);
 	}
 	
-	public static void addDecToQuals(NSMutableArray quals, String attrib, String value) 
+	public static void addDecToQuals(NSMutableArray quals, String attrib, Object value) 
 															throws ParseError {
-		Object[] snv = selectorAndValue(value);
+		if(value instanceof Number) {
+			quals.addObject(new EOKeyValueQualifier(attrib, 
+					EOQualifier.QualifierOperatorEqual, value));
+			return;
+		}
+		Object[] snv = selectorAndValue((String)value);
 		if(snv != null) {
 			quals.addObject(new EOKeyValueQualifier(attrib, 
 					(NSSelector)snv[0], decimal(snv[1])));
