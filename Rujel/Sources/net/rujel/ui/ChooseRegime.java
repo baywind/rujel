@@ -29,6 +29,7 @@
 
 package net.rujel.ui;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.reusables.*;
 
 import com.webobjects.eocontrol.EOSortOrdering;
@@ -168,9 +169,9 @@ public class ChooseRegime extends WOComponent {
     }
     
     protected NSArray _regimeGroups;
-    protected Number _section;
+    protected SchoolSection _section;
     public NSArray regimeGroups() {
-    	if(_regimeGroups != null && _section == session().valueForKeyPath("state.section.idx"))
+    	if(_regimeGroups != null && _section == session().valueForKeyPath("state.section"))
     		return _regimeGroups;
     	_regimeGroups = (NSArray)application().valueForKeyPath(
     			"strings.Strings.ChooseRegime.regimeGroups");
@@ -219,7 +220,7 @@ public class ChooseRegime extends WOComponent {
     	if(result.count() > 0)
     		EOSortOrdering.sortArrayUsingKeyOrderArray(result, ModulesInitialiser.sorter);
     	_regimeGroups = result;
-    	_section = (Number)session().valueForKeyPath("state.section.idx");
+    	_section = (SchoolSection)session().valueForKeyPath("state.section");
     	return _regimeGroups;
     }
 }

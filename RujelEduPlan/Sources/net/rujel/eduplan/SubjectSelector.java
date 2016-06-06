@@ -32,6 +32,7 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.reusables.Various;
 
@@ -126,9 +127,12 @@ public class SubjectSelector extends WOComponent {
     public NSArray areas() {
     	item = null;
     	_selection = null;
-    	if(agregate != null) {
+		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
+		if(ec == null)
+			ec = (EOEditingContext)valueForBinding("editingContext");
+   	if(agregate != null) {
     		Object check = agregate.valueForKey("section");
-    		if(check != null && !check.equals(session().valueForKeyPath("state.section.idx"))) {
+    		if(check != null && !check.equals(SchoolSection.stateSection(session(), ec))) {
     			_areas = null;
     		} else {
     			check = agregate.valueForKey("school");
@@ -147,14 +151,10 @@ public class SubjectSelector extends WOComponent {
     		}
     	}
     	if(_areas == null) {
-    		EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
-    		if(ec == null)
-    			ec = (EOEditingContext)valueForBinding("editingContext");
     		if(Various.boolForObject(valueForBinding("existingOnly"))) {
     			agregate = new NSMutableDictionary();
 				NSMutableDictionary values = new NSMutableDictionary();
-				values.takeValueForKey(session().valueForKeyPath("state.section.idx"), 
-						"section");
+				values.takeValueForKey(SchoolSection.stateSection(session(), ec),"section");
 				values.takeValueForKey(session().valueForKey("school"), "school");
 				NSArray cycles = EOUtilities.objectsMatchingValues(ec,EduCycle.entityName, values);
 				if(cycles == null || cycles.count() == 0)

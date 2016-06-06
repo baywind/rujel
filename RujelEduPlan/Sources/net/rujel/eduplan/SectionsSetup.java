@@ -1,18 +1,21 @@
 package net.rujel.eduplan;
 
 import java.util.Enumeration;
-import java.util.logging.Logger;
 
 import net.rujel.base.IndexRow;
 import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
@@ -23,14 +26,22 @@ import com.webobjects.foundation.NSNotificationCenter;
 import com.webobjects.foundation.NSPropertyListSerialization;
 
 public class SectionsSetup extends WOComponent {
-    public Indexer sIndex;
-    public IndexRow item;
+//    public Indexer sIndex;
+    public Object item;
     public WOComponent returnPage;
+	public NSArray sections;
+	public Object currSection;
+	public NSMutableDictionary newDict = new NSMutableDictionary(
+			new NamedFlags(SchoolSection.flagNames),"namedFlags");
     
     public SectionsSetup(WOContext context) {
         super(context);
+    	EOEditingContext ec = context.session().defaultEditingContext();
+    	sections = SchoolSection.listSections(ec, true);
     }
-
+    
+    
+/*
     public void setEc(EOEditingContext ec) {
     	sIndex = Indexer.getIndexer(ec, "eduSections",(String)null, true);
 		if(ec.globalIDForObject(sIndex).isTemporary()) {
@@ -44,7 +55,7 @@ public class SectionsSetup extends WOComponent {
 				ec.revert();
 			}
 		}
-    }
+    } */
     
     public WOActionResults close() {
     	returnPage.ensureAwakeInContext(context());
@@ -105,9 +116,9 @@ public class SectionsSetup extends WOComponent {
     }
     
     public WOActionResults update() {
-    	NSArray sections = updateSession(session());
+    	NSArray list = updateSession(session());
     	NSNotificationCenter.defaultCenter().postNotification("sectionsChanged",
-    			session().valueForKey("eduYear"),new NSDictionary(sections,"list"));
+    			session().valueForKey("eduYear"),new NSDictionary(list,"list"));
     	return null;
     }
     
@@ -145,4 +156,33 @@ public class SectionsSetup extends WOComponent {
     		}
     	}
     }
+
+	public WOActionResults save() {
+		EOEditingContext ec = session().defaultEditingContext();
+		if(currSection == null && newDict.containsKey("name")) {
+			EOEnterpriseObject eo = EOUtilities.createAndInsertInstance(
+					ec, SchoolSection.ENTITY_NAME);
+			eo.takeValuesFromDictionary(newDict);
+		}
+		try {
+			ec.saveChanges();
+			currSection = null;
+			if(newDict.containsKey("name"))
+				newDict = new NSMutableDictionary(
+						new NamedFlags(SchoolSection.flagNames),"namedFlags");
+		} catch (Exception e) {
+			ec.revert();
+			session().takeValueForKey(e.toString(), "message");
+		}
+		return null;
+	}
+
+	public WOActionResults selectSection() {
+		currSection = item;
+		return null;
+	}
+
+	public boolean isSelected() {
+		return item == currSection;
+	}
 }

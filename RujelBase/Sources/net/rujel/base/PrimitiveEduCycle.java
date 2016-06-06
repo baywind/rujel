@@ -30,7 +30,6 @@
 package net.rujel.base;
 
 import net.rujel.interfaces.*;
-import net.rujel.reusables.*;
 import com.webobjects.foundation.*;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -46,13 +45,13 @@ public class PrimitiveEduCycle extends _PrimitiveEduCycle implements EduCycle
 				new PrimitiveEduCycle.ComparisonSupport(), PrimitiveEduCycle.class);
 	}
 
-	
+	/*
 	protected static Integer school;
 	public Integer school() {
 		if(school == null)
 			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
 		return school;
-	}
+	}*/
 
 /*
     // If you add instance variables to store property values you

@@ -34,13 +34,13 @@ import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
 import net.rujel.base.MyUtility;
 import net.rujel.base.ReadAccess;
+import net.rujel.base.SchoolSection;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 
-import java.util.Enumeration;
 import java.util.logging.Logger;
 
 public class Session extends WOSession implements MultiECLockManager.Session {
@@ -50,6 +50,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	protected NSDictionary clientIdentity;
 	protected MultiECLockManager ecLockManager;
 	public NSMutableDictionary state = new NSMutableDictionary();
+	public NSMutableDictionary sections;
 
 	protected NSTimestamp today;// = new NSTimestamp();
 	public Session() {
@@ -59,7 +60,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		_strings = (StringStorage)WOApplication.application().valueForKey("strings");
 		ecLockManager = new MultiECLockManager();
    }
-	
+
 	protected SessionedEditingContext _defaultEC;
 	public SessionedEditingContext defaultEditingContext() {
 		EOObjectStore os = EOObjectStoreCoordinator.defaultCoordinator();
@@ -72,15 +73,15 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 				setObjectForKey(os,"objectStore");
 			}
 			if(_defaultEC == null || _defaultEC.rootObjectStore() != os) {
-//				if(_defaultEC != null)
-//					_defaultEC.unlock();
 				_defaultEC = new SessionedEditingContext(os,this);
-//				_defaultEC.lock();
+				sections = SchoolSection.forSession(this);
+				state.takeValueForKey(sections.valueForKey("defaultSection"), "section");
 			}
 			ecLockManager.registerEditingContext(_defaultEC);
 		} else if (_defaultEC == null) {
 			_defaultEC = new SessionedEditingContext(os,this);
-//			_defaultEC.lock();
+			sections = SchoolSection.forSession(this);
+			state.takeValueForKey(sections.valueForKey("defaultSection"), "section");
 			ecLockManager.registerEditingContext(_defaultEC);
 		}
 		return _defaultEC;
@@ -140,18 +141,9 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 			buf.append("Session created for user: ");
 			buf.append(aUser);
 			if(Various.boolForObject(valueForKeyPath("strings.sections.hasSections"))) {
-				Object defaultSection = aUser.propertyNamed("defaultSection");
-				NSArray sections = (NSArray)valueForKeyPath("strings.sections.list");
-				if(defaultSection != null && sections != null && sections.count() > 0) {
-					Enumeration enu = sections.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						NSDictionary dict = (NSDictionary) enu.nextElement();
-						if(defaultSection.equals(dict.valueForKey("idx"))) {
-							state.takeValueForKey(dict, "section");
-							break;
-						}
-					}
-				}
+				user = aUser;
+				sections = SchoolSection.forSession(this);
+				state.takeValueForKey(sections.valueForKey("defaultSection"), "section");
 			}
 		} else if (user != aUser) {
 			buf.append("Session user changed from ").append(user);
@@ -182,7 +174,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 	public boolean allowedToViewStatistics() {
 		return true;
 	}
-	
+/*	
 	protected Integer _school;
 	public Integer school() {
 		if(_school == null) {
@@ -190,7 +182,7 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		}
 		return _school;
 	}
-	
+*/	
 //	public boolean isStudent = false;
 	private EOGlobalID personGID;
     protected StringBuffer message = new StringBuffer();

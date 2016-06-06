@@ -91,12 +91,14 @@ public class VseStudent extends _VseStudent implements Student {
 				return vl2;
 		}
 		// choose equivalent
+		/*
 		Integer s1 = vl1.eduGroup().section();
 		Integer s2 = vl2.eduGroup().section();
 		if(s1.intValue() < s2.intValue())
 			return vl1;
 		if (s1.intValue() > s2.intValue())
 			return vl2;
+		*/
 		Integer eduYear = MyUtility.eduYearForDate(date);
 		if(!actual) {
 			// choose not actual

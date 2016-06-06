@@ -1,4 +1,4 @@
-// _PlanCycle.java
+// _SchoolSection.java
 
 /*
  * Copyright (c) 2008, Gennady & Michael Kushnir
@@ -28,64 +28,74 @@
  */
 
 // Created by eogenerator
-// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to PlanCycle.java instead.
+// $LastChangedRevision: 4733 $ DO NOT EDIT.  Make changes to SchoolSection.java instead.
 
-package net.rujel.eduplan;
+package net.rujel.base;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 import java.math.BigDecimal;
 
 @SuppressWarnings("all")
-public abstract class _PlanCycle extends EOGenericRecord {
-	public static final String ENTITY_NAME = "PlanCycle";
+public abstract class _SchoolSection extends EOGenericRecord {
+	public static final String ENTITY_NAME = "SchoolSection";
 
 	// Attributes
-	public static final String GRADE_KEY = "grade";
+	public static final String FLAGS_KEY = "flags";
+	public static final String ID_STRING_KEY = "idString";
+	public static final String MAX_GRADE_KEY = "maxGrade";
+	public static final String MIN_GRADE_KEY = "minGrade";
+	public static final String NAME_KEY = "name";
+	public static final String SORT_KEY = "sort";
 
 	// Relationships
-	public static final String PLAN_HOURS_KEY = "planHours";
-	public static final String SECTION_KEY = "section";
-	public static final String SUBJECT_EO_KEY = "subjectEO";
 
-  public Integer grade() {
-    return (Integer) storedValueForKey(GRADE_KEY);
+  public Integer flags() {
+    return (Integer) storedValueForKey(FLAGS_KEY);
   }
 
-  public void setGrade(Integer value) {
-    takeStoredValueForKey(value, GRADE_KEY);
+  public void setFlags(Integer value) {
+    takeStoredValueForKey(value, FLAGS_KEY);
   }
 
-  public net.rujel.base.SchoolSection section() {
-    return (net.rujel.base.SchoolSection)storedValueForKey(SECTION_KEY);
+  public String idString() {
+    return (String) storedValueForKey(ID_STRING_KEY);
   }
 
-  public void setSection(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, SECTION_KEY);
-  }
-  
-  public net.rujel.eduplan.Subject subjectEO() {
-    return (net.rujel.eduplan.Subject)storedValueForKey(SUBJECT_EO_KEY);
+  public void setIdString(String value) {
+    takeStoredValueForKey(value, ID_STRING_KEY);
   }
 
-  public void setSubjectEO(EOEnterpriseObject value) {
-    	takeStoredValueForKey(value, SUBJECT_EO_KEY);
-  }
-  
-  public NSArray planHours() {
-    return (NSArray)storedValueForKey(PLAN_HOURS_KEY);
-  }
- 
-  public void setPlanHours(NSArray value) {
-    takeStoredValueForKey(value, PLAN_HOURS_KEY);
-  }
-  
-  public void addToPlanHours(EOEnterpriseObject object) {
-    includeObjectIntoPropertyWithKey(object, PLAN_HOURS_KEY);
+  public Integer maxGrade() {
+    return (Integer) storedValueForKey(MAX_GRADE_KEY);
   }
 
-  public void removeFromPlanHours(EOEnterpriseObject object) {
-    excludeObjectFromPropertyWithKey(object, PLAN_HOURS_KEY);
+  public void setMaxGrade(Integer value) {
+    takeStoredValueForKey(value, MAX_GRADE_KEY);
+  }
+
+  public Integer minGrade() {
+    return (Integer) storedValueForKey(MIN_GRADE_KEY);
+  }
+
+  public void setMinGrade(Integer value) {
+    takeStoredValueForKey(value, MIN_GRADE_KEY);
+  }
+
+  public String name() {
+    return (String) storedValueForKey(NAME_KEY);
+  }
+
+  public void setName(String value) {
+    takeStoredValueForKey(value, NAME_KEY);
+  }
+
+  public Integer sort() {
+    return (Integer) storedValueForKey(SORT_KEY);
+  }
+
+  public void setSort(Integer value) {
+    takeStoredValueForKey(value, SORT_KEY);
   }
 
 }

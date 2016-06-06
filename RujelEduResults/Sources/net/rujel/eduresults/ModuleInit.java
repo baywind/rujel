@@ -32,6 +32,7 @@ package net.rujel.eduresults;
 import net.rujel.reusables.*;
 import net.rujel.ui.AddOnPresenter;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.EduCourse;
@@ -534,7 +535,7 @@ public class ModuleInit {
 	
 	public static String sectionListName(WOSession session, EOEditingContext ec) {
 		NSMutableDictionary courseDict = null;
-		Integer section = (Integer)session.valueForKeyPath("state.section.idx");
+		SchoolSection section = SchoolSection.stateSection(session, ec);
 		if(section != null) {
 			NSDictionary sectDict = new NSDictionary(section,"section");
 			courseDict = new NSMutableDictionary(3);

@@ -79,6 +79,9 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     
     public WOElement template() {
     	isBase = (bc() instanceof SettingsBase);
+//    	if(bc() instanceof QualifiedSetting) {
+//    		isBase = ((QualifiedSetting)bc()).qualifierString() == null;
+//    	}
     	if(isBase)
     		rowspan = null;
     	else
@@ -101,7 +104,11 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     		return;
     	}
     	EOQualifier qual = qs.getQualifier();
-    	
+    	if(qual == null) {
+			advanced = Boolean.TRUE;
+			islist = true;
+   		return;
+    	}
     	NSMutableArray editors = (NSMutableArray)valueForBinding("editors");
     	if(editors == null) {
     		editors = QualifiedSetting.editors(session());
@@ -343,5 +350,18 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
 		} finally {
 			ec.unlock();
 		}
+	}
+
+	public Object sectionID() {
+		if(hide() || !Various.boolForObject(session().valueForKeyPath("sections.hasSections")))
+			return null;
+		return valueForKeyPath("bc.section.sectionID");
+	}
+	
+	public String spanClass() {
+		if(Various.boolForObject(session().valueForKeyPath("sections.hasSections")) &&
+				valueForKeyPath("bc.section") != null)
+				return "ungerade dimtext";
+		return "backfield2";
 	}
 }

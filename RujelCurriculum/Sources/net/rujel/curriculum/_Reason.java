@@ -46,11 +46,10 @@ public abstract class _Reason extends EOGenericRecord {
 	public static final String FLAGS_KEY = "flags";
 	public static final String GRADE_KEY = "grade";
 	public static final String REASON_KEY = "reason";
-	public static final String SCHOOL_KEY = "school";
-	public static final String SECTION_KEY = "section";
 	public static final String VERIFICATION_KEY = "verification";
 
 	// Relationships
+	public static final String SECTION_KEY = "section";
 	public static final String SUBSTITUTES_KEY = "substitutes";
 	public static final String VARIATIONS_KEY = "variations";
 
@@ -94,22 +93,6 @@ public abstract class _Reason extends EOGenericRecord {
     takeStoredValueForKey(value, REASON_KEY);
   }
 
-  public Integer school() {
-    return (Integer) storedValueForKey(SCHOOL_KEY);
-  }
-
-  public void setSchool(Integer value) {
-    takeStoredValueForKey(value, SCHOOL_KEY);
-  }
-
-  public Integer section() {
-    return (Integer) storedValueForKey(SECTION_KEY);
-  }
-
-  public void setSection(Integer value) {
-    takeStoredValueForKey(value, SECTION_KEY);
-  }
-
   public String verification() {
     return (String) storedValueForKey(VERIFICATION_KEY);
   }
@@ -118,6 +101,14 @@ public abstract class _Reason extends EOGenericRecord {
     takeStoredValueForKey(value, VERIFICATION_KEY);
   }
 
+  public net.rujel.base.SchoolSection section() {
+    return (net.rujel.base.SchoolSection)storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, SECTION_KEY);
+  }
+  
   public NSArray substitutes() {
     return (NSArray)storedValueForKey(SUBSTITUTES_KEY);
   }

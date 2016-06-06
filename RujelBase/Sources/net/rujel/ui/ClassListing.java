@@ -29,8 +29,6 @@
 
 package net.rujel.ui;
 
-import java.util.Enumeration;
-
 import net.rujel.interfaces.*;
 //import net.rujel.vseobuch.*;
 
@@ -114,28 +112,13 @@ public class ClassListing extends WOComponent {
 			if(selection != null) {
 				try {
 					sect = selection.valueForKey("section");
-					if(sect == null)
-						return session().valueForKeyPath("state.section");
-					NSArray sects = (NSArray)session().valueForKeyPath("strings.sections.list");
-					if(sects == null)
-						return null;
-					Enumeration enu = sects.objectEnumerator();
-					while (enu.hasMoreElements()) {
-						NSDictionary dict = (NSDictionary) enu.nextElement();
-						if(sect.equals(dict.valueForKey("idx"))) {
-							sect = dict;
-							break;
-						}
-					}
-					if(!(sect instanceof NSDictionary))
-						return session().valueForKeyPath("state.section");
 					session().setObjectForKey(sect, "tmpSection");
 				} catch (NSKeyValueCoding.UnknownKeyException e) {
 				}
 			}
 		}
 		if(sect == null)
-			sect = session().valueForKeyPath("state.section");
+			return session().valueForKeyPath("state.section");
 		return sect;
 	}
 

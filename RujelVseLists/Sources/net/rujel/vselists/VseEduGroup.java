@@ -348,7 +348,7 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 						Integer sYear = (Integer)ses.valueForKey("eduYear");
 						if(sYear != null) year = sYear;
 					}
-					section = ses.valueForKeyPath("state.section.idx");
+					section = ses.valueForKeyPath("state.section");
 				}
 			}
 		} catch (Exception e) {
@@ -360,6 +360,8 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		quals[1] = new EOKeyValueQualifier(LAST_YEAR_KEY,
 				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,year);
 		if(section != null) {
+			if(section instanceof EOEnterpriseObject)
+				section = EOUtilities.localInstanceOfObject(ec, (EOEnterpriseObject)section);
 			quals[2] = new EOKeyValueQualifier(SECTION_KEY,
 					EOQualifier.QualifierOperatorEqual,section);
 		}

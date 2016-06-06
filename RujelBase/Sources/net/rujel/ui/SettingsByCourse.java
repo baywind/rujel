@@ -32,6 +32,7 @@ package net.rujel.ui;
 import java.util.Enumeration;
 
 import net.rujel.base.QualifiedSetting;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.NamedFlags;
@@ -55,6 +56,7 @@ public class SettingsByCourse extends WOComponent {
 	protected SettingsBase base;
 	public Integer rowspan;
 	public NSMutableArray editors;
+	public Boolean nextSection;
 	
     public SettingsByCourse(WOContext context) {
         super(context);
@@ -200,10 +202,26 @@ public class SettingsByCourse extends WOComponent {
     		editor.takeValueForKey(this, "resultGetter");
     		editor.takeValueForKey("^pushByCourse", "pushToKeyPath");
     	}
+		editor.takeValueForKey(null, "byCourse");
     	return editor;
     }
     
     public void setItem(EOEnterpriseObject obj) {
+    	if(obj instanceof QualifiedSetting) {
+    		SchoolSection nSect = ((QualifiedSetting)obj).section();
+    		if(nSect == null) {
+    			nextSection = Boolean.FALSE;
+    		} else {
+    			if(item instanceof QualifiedSetting) {
+    	    		SchoolSection pSect = ((QualifiedSetting)item).section();
+    	    		nextSection = Boolean.valueOf(pSect == null || pSect != nSect);
+    			} else {
+    				nextSection = Boolean.TRUE;
+    			}
+    		}
+    	} else {
+    		nextSection = null;
+    	}
     	item = obj;
     	setValueForBinding(item, "item");
     }
@@ -387,6 +405,36 @@ public class SettingsByCourse extends WOComponent {
 		item = null;
 		rowspan = null;
 		editors = null;
+		nextSection = null;
 		setValueForBinding(null, "item");
+	}
+
+	public Integer sectionColspan() {
+		int count = 4;
+    	Object title = valueForBinding("title");
+    	if(title instanceof CharSequence) {
+    		String text = title.toString();
+    		if(text.charAt(0) == '<'){
+    			String[] split = text.split("<t[dh][\\s>]");
+    			count += split.length;
+    		} else {
+    			count++;
+    		}
+    	}
+    	if(canSort())
+    		count++;
+    	if(title instanceof NSArray) {
+    		count+= ((NSArray)title).count();
+    	}
+    	if(!Various.boolForObject(valueForBinding("readOnly"))) {
+    		NamedFlags access = (NamedFlags)valueForBinding("access");
+    		if(access == null)
+    			access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
+    		if(access.flagForKey("edit"))
+    			count++;
+    		if(access.flagForKey("delete"))
+    			count++;
+    	}
+		return Integer.valueOf(count);
 	}
 }

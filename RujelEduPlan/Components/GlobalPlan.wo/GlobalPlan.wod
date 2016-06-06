@@ -212,12 +212,12 @@ SectionContainer : OnClickContainer {
 }
 
 SectionNum : WOString {
-  value = item.idx;
+  value = item.sectionID;
   numberformat = "0";
 }
 
 SectionTitle : WOString {
-  value = item.value;
+  value = item.name;
 }
 
 ShowAll : WOConditional {

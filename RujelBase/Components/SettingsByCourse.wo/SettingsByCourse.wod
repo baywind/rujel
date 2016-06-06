@@ -209,3 +209,21 @@ AddByCourseTitle : WOString {
   value = session.strings.RujelBase_Base.SettingsBase.addByCourseShort;
   valueWhenEmpty = "уточнить";
 }
+
+NextSection : WOConditional {
+  condition = nextSection;
+}
+
+SectionRow : WOGenericContainer {
+  elementName = "tr";
+  class = "ungerade";
+}
+
+SectionCell : WOGenericContainer {
+  elementName = "td";
+  colspan = sectionColspan;
+}
+
+SectionName : WOString {
+  value = item.section.name;
+}

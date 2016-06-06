@@ -34,6 +34,7 @@ import java.util.Enumeration;
 
 import net.rujel.base.CourseInspector;
 import net.rujel.base.ReadAccess;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
@@ -68,7 +69,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
  	public EOEnterpriseObject pdItem;
  	public Integer courseIndex;
 	public int showTotal;
-	public Integer inSection = new Integer(0);
+	public SchoolSection inSection;
 	public ReadAccess access;
  	
 	public PlanDetails(WOContext context) {
@@ -792,7 +793,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 				showTotal = 0;
 			} else {
 				showTotal = ((Integer)dict.valueForKey("showTotal")).intValue();
-				inSection = (Integer)dict.valueForKey("inSection");
+				inSection = (SchoolSection)dict.valueForKey("inSection");
 				access = (ReadAccess)dict.valueForKey("access");
 				setSelection(dict.valueForKey("selection"));
 			}

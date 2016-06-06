@@ -5,6 +5,7 @@ SetsTabs : Tabs {
   titleAttribute = "setName";
   hoverAttribute = "comment";
   onClick = session.tryLoad;
+  tabgroups = tabgroups;
 }
 
 Title : WOString {

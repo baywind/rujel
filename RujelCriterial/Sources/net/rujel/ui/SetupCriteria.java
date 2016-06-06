@@ -1,10 +1,14 @@
 package net.rujel.ui;
 
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.Indexer;
+import net.rujel.base.QualifiedSetting;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.CriteriaSet;
+import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -22,6 +26,7 @@ import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSMutableSet;
 
 public class SetupCriteria extends WOComponent {
 	
@@ -29,6 +34,23 @@ public class SetupCriteria extends WOComponent {
 			EOSortOrdering.CompareCaseInsensitiveAscending));
 	public static final Logger logger = Logger.getLogger("rujel.criterial");
 	
+    
+    public NSArray indices;
+    public EOEditingContext ec;
+    public SettingsBase base;
+    public NSMutableArray sets;
+    public NSKeyValueCoding currSet;
+    public NSKeyValueCoding noCriter;
+    public Integer currID;
+    public Object item;
+    public Object item2;
+    public NSMutableArray criteria;
+    public EOEnterpriseObject criterion;
+    public NSMutableDictionary critDict = new NSMutableDictionary();
+    public String nameOfCritSet;
+    public int tab = 0;
+    public Boolean tabgroups;
+    
     public SetupCriteria(WOContext context) {
         super(context);
         ec = new SessionedEditingContext(context.session());
@@ -64,22 +86,70 @@ public class SetupCriteria extends WOComponent {
 				CriteriaSet.ENTITY_NAME, currID);
 		setCurrSet(currSet);
 		indices = Indexer.indexersOfType(ec, "criteria*");
+		
+		NSArray byCourse = base.qualifiedSettings();
+		if(byCourse != null && byCourse.count() > 1) {
+//			NSMutableSet nosect = new NSMutableSet();
+			NSMutableDictionary bySect = new NSMutableDictionary();
+			Enumeration enu = byCourse.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				QualifiedSetting bc = (QualifiedSetting) enu.nextElement();
+				Object sect = bc.section();
+				if(sect == null) {
+//					nosect.addObject(bc.numericValue());
+					continue;
+				}
+				NSMutableSet slist = (NSMutableSet)bySect.objectForKey(sect);
+				if(slist == null) {
+					bySect.setObjectForKey(new NSMutableSet(bc.numericValue()), sect);
+				} else {
+					slist.addObject(bc.numericValue());
+				}
+			}
+    		if(bySect.count() > 0) {
+    			NSMutableArray grouped = new NSMutableArray();
+    			NSArray list = bySect.allKeys();
+    			if(list.count() > 1) {
+    				list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list,
+    						ModulesInitialiser.sorter);
+    			}
+    			int max = 0;
+    			enu = list.objectEnumerator();
+    			while (enu.hasMoreElements()) {
+					SchoolSection sect = (SchoolSection) enu.nextElement();
+					NSMutableDictionary dict = new NSMutableDictionary(sect.name(),"title");
+					NSMutableSet set = (NSMutableSet)bySect.objectForKey(sect);
+					NSMutableArray sectSets = new NSMutableArray();
+					Enumeration senu = set.objectEnumerator();
+					while (senu.hasMoreElements()) {
+						Integer csID = (Integer) senu.nextElement();
+						try {
+							CriteriaSet cs = (CriteriaSet)EOUtilities.objectWithPrimaryKeyValue(ec,
+									CriteriaSet.ENTITY_NAME, csID);
+							Various.addToSortedList(cs, sectSets, CriteriaSet.SET_NAME_KEY,
+									EOSortOrdering.CompareCaseInsensitiveAscending);
+							sets.removeObject(cs);
+						} catch (Exception e) {
+							logger.log(WOLogLevel.WARNING, "Undefined CriteriaSet in settings", 
+									new Object[] {context.session(),csID,e});
+						}
+					}
+					dict.setObjectForKey(sectSets, "list");
+					if(sectSets.count() > max)
+						max = sectSets.count();
+					grouped.addObject(dict);
+    			}
+    			if(max > 1) {    					
+    				NSMutableDictionary dict = new NSMutableDictionary(Boolean.TRUE,"noTitle");
+    				dict.setObjectForKey(sets, "list");
+    				grouped.insertObjectAtIndex(dict, 0);
+    				sets = grouped;
+    				tabgroups = Boolean.TRUE;
+    			}
+    		}
+		}
     }
-    
-    public NSArray indices;
-    public EOEditingContext ec;
-    public SettingsBase base;
-    public NSMutableArray sets;
-    public NSKeyValueCoding currSet;
-    public NSKeyValueCoding noCriter;
-    public Integer currID;
-    public Object item;
-    public Object item2;
-    public NSMutableArray criteria;
-    public EOEnterpriseObject criterion;
-    public NSMutableDictionary critDict = new NSMutableDictionary();
-    public String nameOfCritSet;
-    public int tab = 0;
+
     
 	public void setNameOfCritSet(String nameOfCritSet) {
 		if(nameOfCritSet != null)
@@ -263,7 +333,13 @@ public class SetupCriteria extends WOComponent {
 			ec.saveChanges();
 			if(create) {
 				setCurrSet(currSet);
-				sets.addObject(currSet);
+				if(Various.boolForObject(tabgroups)) {
+					NSMutableDictionary dict = (NSMutableDictionary)sets.objectAtIndex(0);
+					NSMutableArray list = (NSMutableArray)dict.valueForKey("list");
+					list.addObject(currSet);
+				} else {
+					sets.addObject(currSet);
+				}
 			}
 			if(idx) {
 				logger.log(WOLogLevel.EDITING,"Indexer created",
@@ -308,8 +384,21 @@ public class SetupCriteria extends WOComponent {
 				ec.saveChanges();
 				logger.log(WOLogLevel.COREDATA_EDITING,"Deleted CriteriaSet " 
 						+ nameOfCritSet,session());
-				sets.removeObject(currSet);
-				setCurrSet((NSKeyValueCoding)sets.objectAtIndex(0));
+				if(sets.removeObject(currSet)) {
+					setCurrSet((NSKeyValueCoding)sets.objectAtIndex(0));
+				} else if(Various.boolForObject(tabgroups)) {
+					Enumeration enu = sets.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+						NSMutableArray list = (NSMutableArray)dict.valueForKey("list");
+						if(list.removeObject(currSet)) {
+							if(list.count() > 0)
+								setCurrSet((NSKeyValueCoding)list.objectAtIndex(0));
+							else
+								dict.takeValueForKey(Boolean.TRUE, "noTitle");
+						}
+					}
+				}
 			} catch (Exception e) {
 				ec.revert();
 				logger.log(WOLogLevel.COREDATA_EDITING,"Error deleting CriteriaSet " 

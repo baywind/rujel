@@ -41,6 +41,7 @@ import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
@@ -73,9 +74,9 @@ public class EduPlanXML extends GeneratorModule {
 		if(gr == null) {
 			NSArray courses = (NSArray)settings.valueForKey("courses");
 			if(courses == null) {
-				Integer section = (Integer)settings.valueForKeyPath("section.idx");
+				SchoolSection section = (SchoolSection)settings.valueForKeyPath("section.idx");
 				EOEditingContext ec = (EOEditingContext)settings.valueForKey("ec");
-				cycles = PlanCycle.allCyclesFor(null, null, section, null, ec);
+				cycles = PlanCycle.allCyclesFor(null, null, section, ec);
 			} else {
 				NSArray extra = (NSArray)settings.valueForKey("extraCourses");
 				if(extra != null)

@@ -32,11 +32,9 @@ package net.rujel.eduplan;
 
 import java.text.DecimalFormat;
 import java.util.Enumeration;
-import java.util.logging.Logger;
 
-import net.rujel.base.IndexRow;
-import net.rujel.base.Indexer;
 import net.rujel.base.ReadAccess;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.*;
@@ -71,7 +69,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
         return false;
 	}
     
-    public static NSArray prepareGrades(EOEditingContext ec) {
+    protected NSArray prepareGrades() {
 		NSArray specGroups = EOUtilities.objectsWithQualifierFormat(ec,
 				"PlanHours", "specClass != nil", null);
 		if(specGroups != null && specGroups.count() > 0) {
@@ -82,8 +80,11 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		}
 		int grIdx = 0;
 		NSMutableArray prepareGrades = new NSMutableArray();
-		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
-		for (int i = SettingsReader.intForKeyPath("edu.minGrade", 1); i <= maxGrade; i++) {
+		int maxGrade = (inSection == null)?SettingsReader.intForKeyPath("edu.maxGrade", 11):
+			inSection.maxGrade();
+		int minGrade = (inSection == null)?SettingsReader.intForKeyPath("edu.minGrade", 1):
+			inSection.minGrade();
+		for (int i = minGrade; i <= maxGrade; i++) {
 			Integer grade = new Integer(i);
 			if(specGroups != null) {
 				while (grIdx < specGroups.count()) {
@@ -113,7 +114,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public NSArray subjects;
 	public int index;
 	public Boolean noDetails;
-	public Integer inSection;
+	public SchoolSection inSection;
 	public NSArray sections;
 	public NSKeyValueCoding item;
 	public int[] summary;
@@ -122,20 +123,16 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
-			Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, false);
-			if(sidx != null)
-				sections = sidx.sortedIndex();
-			if(inSection == null)
-				inSection = (Integer)session().valueForKeyPath("state.section.idx");
+	        sections = SchoolSection.listSections(ec, true);
 			if(inSection == null) {
-				if(sections != null && sections.count() > 0) {
-					IndexRow sect = (IndexRow)sections.objectAtIndex(0);
-					inSection = sect.idx();
-				} else {
-					inSection = new Integer(0);
-				}
+				inSection = (SchoolSection)session().valueForKeyPath("state.section");
+				if(inSection != null)
+					inSection = (SchoolSection)EOUtilities.localInstanceOfObject(ec, inSection);
 			}
-	        grades = prepareGrades(ec);
+			if(inSection == null) {
+				inSection = (SchoolSection)sections.objectAtIndex(0);
+			}
+	        grades = prepareGrades();
 		  	subjects = prepareAgregate();
 		  	subjectItem = null;
 		  	forcedSubjects = null;
@@ -194,8 +191,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			dict.takeValueForKey(new Counter(), "counter");
 			agregate.addObject(dict);
 		}
-		NSArray allCycles = PlanCycle.allCyclesFor(null, null, inSection,
-				(Integer)session().valueForKey("school"), ec);
+		NSArray allCycles = PlanCycle.allCyclesFor(null, null, inSection, ec);
 		if(allCycles != null && allCycles.count() > 0) {
 			enu = allCycles.objectEnumerator();
 			while (enu.hasMoreElements()) { // put cycles and hours 
@@ -210,8 +206,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 						(EOEnterpriseObject[][])dict.valueForKey("byGrade");
 					int lvl = 0;
 					while(lvl < sections.count()) {
-						IndexRow section = (IndexRow)sections.objectAtIndex(lvl);
-						if(section.idx().equals(cycle.section()))
+						SchoolSection section = (SchoolSection)sections.objectAtIndex(lvl);
+						if(section == cycle.section())
 							break;
 						lvl++;
 					}
@@ -290,17 +286,14 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String sectionClass() {
-		if((inSection == null)? item == null : item != null &&
-				inSection.equals(item.valueForKey(IndexRow.IDX_KEY)))
+		if(inSection == item)
 			return "selection";
 		return "gerade";
 	}
 	
 	public WOActionResults selectSection() {
-		if(item == null)
-			inSection = null;
-		else
-			inSection = (Integer)item.valueForKey(IndexRow.IDX_KEY);
+		inSection = (SchoolSection)item;
+		grades = prepareGrades();
 	  	subjects = prepareAgregate();
 	  	subjectItem = null;
 	  	forcedSubjects = null;
@@ -337,7 +330,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public Integer cycleLevel() {
-		return (Integer)item.valueForKey(IndexRow.IDX_KEY);
+		return (Integer)item.valueForKey("sectionID");
 	}
 	
 	public void setCycleLevel(Integer value) {
@@ -428,7 +421,6 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				cycle.setGrade(grade);
 				cycle.addObjectToBothSidesOfRelationshipWithKey((Subject)
 						subjectItem.valueForKey("subjectEO"), PlanCycle.SUBJECT_EO_KEY);
-				cycle.setSchool((Integer)session().valueForKey("school"));
 				cycle.setSection(inSection);
 				for (int i = 0; i < planCycles.length; i++) {
 					Integer grd = null;
@@ -699,6 +691,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 
 	public WOActionResults setupSections() {
 		WOComponent result = pageWithName("SectionsSetup");
+		/*
 		if(sections == null || sections.count() == 0) {
 			Indexer sIndex = Indexer.getIndexer(ec, "eduSections",(String)null, true);
 			sIndex.setValueForIndex((String)session().valueForKeyPath(
@@ -716,9 +709,9 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				}
 			}
 			sections = sIndex.sortedIndex();
-		}
+		} */
 		result.takeValueForKey(context().page(), "returnPage");
-		result.takeValueForKey(ec, "ec");
+//		result.takeValueForKey(ec, "ec");
 		return result;
 	}
 	
@@ -726,7 +719,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		if (sections == null || sections.count() < 2)
 			return Boolean.TRUE;
 		if(item == null) {
-			Integer section = inSection;
+			SchoolSection section = inSection;
 			inSection = null;
 			Boolean result = (Boolean)access().valueForKey("_edit");
 			inSection = section;

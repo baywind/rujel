@@ -32,6 +32,7 @@ package net.rujel.ui;
 import net.rujel.interfaces.*;
 import net.rujel.base.BaseTab;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.curriculum.WeekFootprint;
 
 import net.rujel.reusables.*;
@@ -214,19 +215,12 @@ public class LessonNoteEditor extends WOComponent {
 		//refresh();
 		logger.log(WOLogLevel.READING,"Open course",new Object[] {session(),course});
 
-		Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+		SchoolSection section = SchoolSection.stateSection(session(), ec);
 		if(section != null && !section.equals(course.valueForKeyPath("cycle.section"))) {
-			section = (Integer)course.valueForKeyPath("cycle.section");
+			section = (SchoolSection)course.valueForKeyPath("cycle.section");
 			if(section != null) { // switch to correct eduSection
-				NSArray sects = (NSArray)session().valueForKeyPath("strings.sections.list");
-				Enumeration enu = sects.objectEnumerator();
-				while (enu.hasMoreElements()) {
-					NSDictionary sect = (NSDictionary) enu.nextElement();
-					if(section.equals(sect.valueForKey("idx"))) {
-						session().takeValueForKeyPath(sect, "state.section");
-						break;
-					}
-				}
+				session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
+						session().defaultEditingContext(), section), "state.section");
 			}
 		}
 		weekFootprint = new WeekFootprint(course);

@@ -63,6 +63,11 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 	}
 	
 	public void setQualifier(EOQualifier qual) {
+		if(qual == null) {
+			setQualifierString(null);
+			setArgumentsString(null);
+			return;
+		}
 		StringBuilder buf = new StringBuilder();
 		NSMutableArray args = new NSMutableArray();
 		Various.formatQualifier(qual, buf, args);
@@ -109,7 +114,10 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 	
 	protected void read() {
 		String qualifierString = qualifierString();
-		if(qualifierString.equals("IS")) {
+		if(qualifierString == null) {
+			courses = null;
+			qualifier = null;
+		} else if(qualifierString.equals("IS")) {
 			courses = new NSArray(Various.parseEO(argumentsString(), editingContext()));
 			qualifier = null;
 		} else {
@@ -123,26 +131,31 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 		}
 	}
 	
+	
 	public boolean evaluateWithObject(NSKeyValueCodingAdditions object) {
-		if(courses == null && qualifier == null) {
-			read();
-		}
-		if(eduYear() != null && object instanceof EduCourse) {
+		if(object instanceof EduCourse) {
 			object = EOUtilities.localInstanceOfObject(editingContext(),
 					(EOEnterpriseObject)object);
-			if(!eduYear().equals(((EduCourse)object).eduYear()))
-				return false;
+			if(eduYear() != null && !eduYear().equals(((EduCourse)object).eduYear()))
+					return false;
+		}
+		if(section() != null && section() != settingsBase().sectionForCourse(object))
+			return false;
+		if(courses == null && qualifier == null) {
+			read();
 		}
 		if(courses != null)
 			return courses.containsObject(object);
 		else if (qualifier != null)
 			return qualifier.evaluateWithObject(object);
 		else
-			return false;
+			return true;
 	}
 	
 	public String printQualifier() {
 		String qualifierString = qualifierString();
+		if(qualifierString == null)
+			return null;
 		if(qualifierString.equals("IS"))
 			return "= " + argumentsString();
 		if(qualifierString.equals("IN"))
@@ -306,5 +319,56 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 			}
 		}
 		throw new AdvancedQualifierException(qual);
+	}
+	
+	public static void extractSections(EOEditingContext ec) {
+		NSArray found = EOUtilities.objectsWithQualifierFormat(ec, ENTITY_NAME, 
+				"qualifierString like '*section*'", null);
+		if(found == null || found.count() == 0)
+			return;
+		Enumeration enu = found.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			QualifiedSetting q = (QualifiedSetting) enu.nextElement();
+			q.extractSection();
+		}
+		ec.saveChanges();
+	}
+	
+	/* to run once after update to version 1.1 */
+	protected SchoolSection extractSection() {
+		read();
+		Object val = null;
+		if(qualifier instanceof EOKeyValueQualifier) {
+			EOKeyValueQualifier q = (EOKeyValueQualifier)qualifier;
+			if (q.key().endsWith("section")) {
+				val = q.value();
+				setQualifierString(null);
+				setArgumentsString(null);
+				qualifier = null;
+			}
+		} else if(qualifier instanceof EOAndQualifier) {
+			NSArray quals = ((EOAndQualifier)qualifier).qualifiers();
+			NSMutableArray newQuals = quals.mutableClone();
+			for (int i = 0; i < quals.count(); i++) {
+				if(quals.objectAtIndex(i) instanceof EOKeyValueQualifier) {
+					EOKeyValueQualifier q = (EOKeyValueQualifier)quals.objectAtIndex(i);
+					if (q.key().endsWith("section")) {
+						val = q.value();
+						newQuals.removeObjectAtIndex(i);
+						if(newQuals.count() == 1)
+							setQualifier((EOQualifier)newQuals.objectAtIndex(0));
+						else
+							setQualifier(new EOAndQualifier(newQuals));
+						break;
+					}
+				}
+			}
+		}
+		if(val == null)
+			return null;
+		SchoolSection sect = (SchoolSection)EOUtilities.objectWithPrimaryKeyValue(editingContext(),
+				SchoolSection.ENTITY_NAME, val);
+		setSection(sect);
+		return sect;
 	}
 }

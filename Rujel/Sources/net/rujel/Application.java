@@ -30,6 +30,7 @@
 package net.rujel;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.QualifiedSetting;
 import net.rujel.base.ReadAccess;
 import net.rujel.reusables.*;
 
@@ -128,6 +129,19 @@ public class Application extends UTF8Application {
 					return;
 				}
 			}
+		
+		try {
+			EOEditingContext ec = new EOEditingContext();
+			QualifiedSetting.extractSections(ec);
+		} catch (Exception e) {
+			_errorMessage = handler.toString();
+			logger.log(WOLogLevel.SEVERE,
+					"Failed to update QualifiedSettings with new sections concept",e);
+			_errorMessage = handler.toString();
+			Logger.getLogger("").removeHandler(handler);
+			handler.close();
+			return;
+		}
 			
 		NSDictionary access = (NSDictionary)PlistReader.readPlist("access.plist", null, null);
 		ReadAccess.mergeDefaultAccess(access);

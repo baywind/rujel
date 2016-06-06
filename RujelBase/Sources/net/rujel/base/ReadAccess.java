@@ -46,6 +46,8 @@ import net.rujel.reusables.Various;
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOGlobalID;
+import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.foundation.*;
 
 public class ReadAccess implements NSKeyValueCodingAdditions {
@@ -66,7 +68,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 	protected Modifier[] modifiers;
 	protected String message;
 	public Object relObject;
-	public String sectionPath = "state.section.idx";
+	public String sectionPath = "state.section.sID";
 	public String initKey;
 	
 	public ReadAccess(WOSession session) {
@@ -110,6 +112,9 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 	}
 	
 	public NamedFlags accessForObject(String obj) {
+		return accessForObject(obj,null);
+	}
+	public NamedFlags accessForObject(String obj, Integer section) {
 		if(user() == null) {
 			throw new IllegalStateException ("Can't get user to determine access");
 		} else {
@@ -127,9 +132,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 			if(node == null)
 				node = defaults.subreaderForPath(nodeName, false);
 			if(node != null && relObject != null) {
-				Integer section = (Integer)NSKeyValueCodingAdditions.Utility.valueForKeyPath(
-						relObject, sectionPath);
-				if(modifier != null) {
+				if(section == null && modifier != null) {
 					try{
 						section = new Integer(modifier);
 						if(section.intValue() < 0)
@@ -138,6 +141,26 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 						;
 					}
 				}
+				if(section == null) {
+					Object s = NSKeyValueCodingAdditions.Utility.valueForKeyPath(
+							relObject, sectionPath);
+					if(s instanceof Integer) {
+						section = (Integer)s;
+					} else if(s instanceof EOEnterpriseObject) {
+						EOEnterpriseObject eo = (EOEnterpriseObject)s;
+						EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
+						if(!gid.isTemporary())
+							section = (Integer)((EOKeyGlobalID)gid).keyValues()[0];
+					} else if (s instanceof String) {
+						try{
+							section = new Integer((String)s);
+						} catch (NumberFormatException e) {
+							;
+						}
+					}
+				}
+				if(section != null && section.intValue() < 0)
+					section = null;
 				level = PrefsAccessHandler.accessLevel(node, modifier, user(), section);
 			} else {
 				Object [] args = new Object[] {ses,obj,
@@ -154,12 +177,24 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 	protected NSMutableDictionary accessCache = new NSMutableDictionary();
 	
 	public NamedFlags cachedAccessForObject(String obj) {
+		return cachedAccessForObject(obj, (Integer)null);
+	}
+	public NamedFlags cachedAccessForObject(String obj, Integer section) {
 		if(obj == null || accessCache == null)
 			return defaultAccess;
 		NamedFlags result = defaultAccess;
 		NSMutableDictionary cache = accessCache;
-		Integer section = (relObject == null)? null :
-			(Integer)NSKeyValueCodingAdditions.Utility.valueForKeyPath(relObject, sectionPath);
+		if(section == null && relObject != null) {
+			Object sect = NSKeyValueCodingAdditions.Utility.valueForKeyPath(relObject,sectionPath);
+			if(sect instanceof Integer) {
+				section = (Integer)sect;
+			} else if(sect instanceof EOEnterpriseObject) {
+				EOEnterpriseObject eo = (EOEnterpriseObject)sect;
+				EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
+				if(!gid.isTemporary())
+					section = (Integer)((EOKeyGlobalID)gid).keyValues()[0];
+			}
+		}
 		if(section != null) {
 			cache = (NSMutableDictionary)accessCache.objectForKey(section);
 			if(cache == null) {
@@ -169,7 +204,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 		}
 		result = (NamedFlags)cache.objectForKey(obj);
 		if(result == null) {
-			result = accessForObject(obj);
+			result = accessForObject(obj,section);
 			if(accessCache == null)
 				return defaultAccess;
 			cache.setObjectForKey(result, obj);

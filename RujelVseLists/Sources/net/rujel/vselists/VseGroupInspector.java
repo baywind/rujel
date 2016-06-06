@@ -30,6 +30,7 @@
 package net.rujel.vselists;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
@@ -57,6 +58,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 	public String groupTitle;
 	public EOEditingContext ec;
 	public WOComponent returnPage;
+	public NSArray sections;
 	
     public VseGroupInspector(WOContext context) {
         super(context);
@@ -98,6 +100,8 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 			tmp.insertObjectAtIndex(yearDict(currYear -1), 0);
 			endYears = tmp.immutableClone();
 		}
+		sections = (NSArray)session().valueForKeyPath("sections.list");
+		sections = EOUtilities.localInstancesOfObjects(ec, sections);
     }
     
     public String title() {
@@ -123,7 +127,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
     	ec.lock();
     	try {
     		boolean create = (currGroup == null);
-			Integer section = (Integer)session().valueForKeyPath("state.section.idx");
+			SchoolSection section = (SchoolSection)session().valueForKeyPath("state.section");
 			if(create) {
 				currGroup = (VseEduGroup)EOUtilities.createAndInsertInstance(ec,
 						VseEduGroup.ENTITY_NAME);
@@ -147,15 +151,15 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 				currGroup.setLastYear(year);
 				int currYear = ((Integer)session().valueForKey("eduYear")).intValue();
 				if(year.intValue() < currYear)
-					section = Integer.MIN_VALUE;
+					section = null;
 			}
 			if(ec.hasChanges()) {
 				ec.saveChanges();
 				ListsEditor.logger.log(WOLogLevel.EDITING,"VseEduGroup changes saved",
 						new Object[] {session(),currGroup});
-				if(create || !section.equals(currGroup.section())) {
+				if(create || section != currGroup.section()) {
 					returnPage.valueForKey("switchMode");
-					if(section.equals(currGroup.section()))
+					if(section == currGroup.section())
 						returnPage.takeValueForKey(currGroup, "group");
 				}
 			}

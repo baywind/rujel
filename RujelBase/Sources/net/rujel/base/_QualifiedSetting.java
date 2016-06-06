@@ -49,6 +49,7 @@ public abstract class _QualifiedSetting extends EOGenericRecord {
 	public static final String TEXT_VALUE_KEY = "textValue";
 
 	// Relationships
+	public static final String SECTION_KEY = "section";
 	public static final String SETTINGS_BASE_KEY = "settingsBase";
 
   public String argumentsString() {
@@ -99,6 +100,14 @@ public abstract class _QualifiedSetting extends EOGenericRecord {
     takeStoredValueForKey(value, TEXT_VALUE_KEY);
   }
 
+  public net.rujel.base.SchoolSection section() {
+    return (net.rujel.base.SchoolSection)storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, SECTION_KEY);
+  }
+  
   public net.rujel.base.SettingsBase settingsBase() {
     return (net.rujel.base.SettingsBase)storedValueForKey(SETTINGS_BASE_KEY);
   }

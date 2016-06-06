@@ -45,11 +45,11 @@ public abstract class _VseEduGroup extends EOGenericRecord {
 	public static final String FIRST_YEAR_KEY = "firstYear";
 	public static final String FLAGS_KEY = "flags";
 	public static final String LAST_YEAR_KEY = "lastYear";
-	public static final String SECTION_KEY = "section";
 	public static final String TITLE_KEY = "title";
 
 	// Relationships
 	public static final String LISTS_KEY = "lists";
+	public static final String SECTION_KEY = "section";
 	public static final String VSE_TUTORS_KEY = "vseTutors";
 
   public Integer absGrade() {
@@ -84,14 +84,6 @@ public abstract class _VseEduGroup extends EOGenericRecord {
     takeStoredValueForKey(value, LAST_YEAR_KEY);
   }
 
-  public Integer section() {
-    return (Integer) storedValueForKey(SECTION_KEY);
-  }
-
-  public void setSection(Integer value) {
-    takeStoredValueForKey(value, SECTION_KEY);
-  }
-
   public String title() {
     return (String) storedValueForKey(TITLE_KEY);
   }
@@ -100,6 +92,14 @@ public abstract class _VseEduGroup extends EOGenericRecord {
     takeStoredValueForKey(value, TITLE_KEY);
   }
 
+  public net.rujel.base.SchoolSection section() {
+    return (net.rujel.base.SchoolSection)storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, SECTION_KEY);
+  }
+  
   public NSArray lists() {
     return (NSArray)storedValueForKey(LISTS_KEY);
   }

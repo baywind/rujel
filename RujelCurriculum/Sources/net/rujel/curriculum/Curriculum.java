@@ -34,8 +34,8 @@ import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.base.IndexRow;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reports.ReportTable;
@@ -505,28 +505,21 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		highlight = newGrade;
 	}
 	
-	public void setReasonSection(NSDictionary section) {
+	public void setReasonSection(SchoolSection section) {
 		if(section == null)
 			currReason.setSection(null);
 		else
-			currReason.setSection((Integer)section.valueForKey(IndexRow.IDX_KEY));
+			currReason.setSection((SchoolSection)EOUtilities.localInstanceOfObject(ec, section));
 	}
 	
-	public NSDictionary reasonSection() {
+	public SchoolSection reasonSection() {
 		if(currReason == null)
 			return null;
-		Integer idx = currReason.section();
-		if(idx == null)
+		SchoolSection sect = currReason.section();
+		if(sect == null)
 			return null;
-		NSArray sections = (NSArray)session().valueForKeyPath("strings.sections.list");
-		Enumeration enu = sections.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			NSDictionary sect = (NSDictionary) enu.nextElement();
-			if(idx.equals(sect.valueForKey(IndexRow.IDX_KEY))) {
-				return sect;
-			}
-		}
-		return null;
+		return (SchoolSection)EOUtilities.localInstanceOfObject(
+				session().defaultEditingContext(), sect);
 	}
 
 	public int relation() {
@@ -681,7 +674,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		}
 		Reason.Props props = Reason.propsFromEvents(set);
 		if(props.section != null && !Various.boolForObject(session().valueForKeyPath(
-				"strings.sections.hasSections")))
+				"sections.hasSections")))
 			props.section = null;
 		NSArray reasons = Reason.reasons(props);
 		if(reasons == null)

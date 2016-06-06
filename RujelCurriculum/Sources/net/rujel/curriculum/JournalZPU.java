@@ -3,6 +3,7 @@ package net.rujel.curriculum;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
 import net.rujel.interfaces.Person;
@@ -35,7 +36,7 @@ public class JournalZPU extends WOComponent {
     }
 
 	protected static NSArray prepareJournalZPU(Enumeration substitutes, Enumeration variations,
-			Integer section) {
+			SchoolSection section) {
 		NSMutableArray result = new NSMutableArray();
 		NSMutableSet lessons = new NSMutableSet();
 		if(variations != null) {

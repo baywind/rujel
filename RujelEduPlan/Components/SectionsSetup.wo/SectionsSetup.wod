@@ -22,3 +22,97 @@ ClosePopup : OnClickContainer {
   onclick = session.checkRun;
   style = "position:absolute;right:2pt;top:2pt;";
 }
+
+SectionsList : WORepetition {
+  list = sections;
+  item = item;
+}
+
+SectionName : WOString {
+  value = item.name;
+}
+
+MinGrade : WOString {
+  value = item.minGrade;
+}
+
+MaxGrade : WOString {
+  value = item.maxGrade;
+}
+
+SectionDiv : OnClickContainer {
+  elementName = "div";
+  onclick = session.ajaxPopupNoPos;
+  invokeAction = selectSection;
+  class = "gerade";
+  hide = isSelected;
+}
+
+IsSelected : WOConditional {
+  condition = isSelected;
+}
+
+NameField : WOTextField {
+  value = currSection.name;
+  length = 28;
+  maxlength = "20";
+  class = "required";
+}
+
+MinField : WOTextField {
+  value = currSection.minGrade;
+  length = 3;
+  maxlength = "3";
+  numberformat = "0";
+  class = "required numeric";
+}
+
+MaxField : WOTextField {
+  value = currSection.maxGrade;
+  length = 3;
+  maxlength = "3";
+  numberformat = "0";
+  class = "required numeric";
+}
+
+Form : WOForm {
+}
+
+Save : WOSubmitButton {
+  value = session.strings.Reusables_Strings.uiElements.Save;
+  action = save;
+  onclick = "return ajaxPost(this);";
+}
+
+NewNameField : WOTextField {
+  value = currSection.name;
+  length = 28;
+  maxlength = "20";
+  class = "required";
+}
+
+NewMinField : WOTextField {
+  value = newDict.minGrade;
+  length = 3;
+  maxlength = "3";
+  numberformat = "0";
+  class = "required numeric";
+}
+
+NewMaxField : WOTextField {
+  value = newDict.maxGrade;
+  length = 3;
+  maxlength = "3";
+  numberformat = "0";
+  class = "required numeric";
+}
+
+
+HasMessage : WOConditional {
+  condition = session.message;
+}
+
+SesMessage: WOString {
+  value = session.message;
+  escapeHTML = false;
+}

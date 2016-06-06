@@ -58,7 +58,7 @@ public interface EduCycle extends com.webobjects.eocontrol.EOEnterpriseObject {
 	public Integer subgroups();
 	//public void setSubgroups(Integer newCount);
 	
-	public Integer school();
+//	public Integer school();
 	
 	public static class Lister {
 		protected static Method cyclesForGrade;

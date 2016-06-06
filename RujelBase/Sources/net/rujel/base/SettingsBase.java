@@ -224,8 +224,8 @@ public class SettingsBase extends _SettingsBase implements Setting {
 	public static NSDictionary courseDict(EduGroup eduGroup,Integer eduYear) {
 		NSDictionary dict;
 		try {
-			Integer section = (Integer)eduGroup.valueForKey("section");
-			dict = new NSDictionary(new Integer[] {eduGroup.grade(), section},
+			Object section = eduGroup.valueForKey("section");
+			dict = new NSDictionary(new Object[] {eduGroup.grade(), section},
 					new String[] {"grade","section"});
 		} catch (Exception e) {
 			dict = new NSDictionary(eduGroup.grade(),"grade");
@@ -331,6 +331,20 @@ public class SettingsBase extends _SettingsBase implements Setting {
 			EOEditingContext ec) {
 		Setting eo = settingForCourse(key, course, ec);
 		return (eo==null)?null:(String)eo.textValue();
+	}
+	
+	public SchoolSection sectionForCourse(NSKeyValueCodingAdditions course) {
+		Object val = NSKeyValueCodingAdditions.Utility.valueForKeyPath(course, "cycle.section");
+		if(val == null)
+			val = NSKeyValueCodingAdditions.Utility.valueForKeyPath(course, "eduGroup.section");
+		if(val instanceof SchoolSection) {
+			if(((SchoolSection)val).editingContext() != editingContext())
+				val = EOUtilities.localInstanceOfObject(editingContext(), (SchoolSection)val);
+		} else if (val instanceof Integer) {
+			val = EOUtilities.objectWithPrimaryKeyValue(editingContext(), 
+					SchoolSection.ENTITY_NAME, val);
+		}
+		return (SchoolSection)val;
 	}
 	
 	public NSArray settingUsage(String selector, Object value, Object eduYear) {

@@ -38,9 +38,8 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-import net.rujel.base.IndexRow;
-import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.eduplan.Holiday;
 import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.*;
@@ -57,12 +56,6 @@ public class Reason extends _Reason {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
-		Integer school = null;
-		if(editingContext() instanceof SessionedEditingContext)
-			school = (Integer)valueForKeyPath("editingContext.session.school");
-		if(school == null)
-			school = new Integer(SettingsReader.intForKeyPath("schoolNumber", 0));
-		setSchool(school);
 		setFlags(new Integer(0));
 	}
 
@@ -154,10 +147,10 @@ public class Reason extends _Reason {
     	if(section() != null) {
     		if(added)
 				result.append(',').append(' ');
-    		result.append(sectionForNum(section(),editingContext()));
+    		result.append(section().name());
     	}
 	}
-
+/*
 	public static Object sectionForNum(Integer num, EOEditingContext ec) {
 		Object section = num;
 		if(ec instanceof SessionedEditingContext) {
@@ -184,7 +177,7 @@ public class Reason extends _Reason {
 			}
 		}
 		return section;
-	}
+	} */
 	
 	public boolean noLimits() {
 		return (!namedFlags().flagForKey("forTeacher") && !namedFlags().flagForKey("forEduGroup")
@@ -243,9 +236,6 @@ public class Reason extends _Reason {
 				if(props.ec != event.editingContext())
 					throw new IllegalArgumentException(
 							"Given events belong to different editing contexts");
-				if(!props.school.equals(event.reason().school()))
-					throw new IllegalArgumentException(
-							"Given events belong to different schools");
 				if(props.eduGroup != null && props.eduGroup != course.eduGroup())
 					props.eduGroup = null;
 				if(!others) {
@@ -340,10 +330,7 @@ public class Reason extends _Reason {
 			qual = new EOOrQualifier(new NSArray(ors));
 		} // section
 		quals.addObject(qual);
-		
-		qual = new EOKeyValueQualifier(SCHOOL_KEY,EOQualifier.QualifierOperatorEqual,props.school);
-		quals.addObject(qual);
-		
+				
 		qual = new EOAndQualifier(quals);
 		EOFetchSpecification fs = new EOFetchSpecification(
 				ENTITY_NAME,qual,EOPeriod.sorter);
@@ -457,11 +444,11 @@ public class Reason extends _Reason {
 					buf.append(" (").append(course.cycle().grade()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
 				}
-				if(section() != null && !section().equals(((PlanCycle)course.cycle()).section())) {
+				if(section() != null && section() != ((PlanCycle)course.cycle()).section()) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetSection"));
-					buf.append(" (").append(sectionForNum(
-							((PlanCycle)course.cycle()).section(),editingContext())).append(')');
+					buf.append(" (").append(
+							((PlanCycle)course.cycle()).section().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
 				}
 				if(begin().compareTo(sub.date()) > 0 || 
@@ -504,11 +491,11 @@ public class Reason extends _Reason {
 					buf.append(" (").append(course.cycle().grade()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), var,"eduGroup");
 				}
-				if(section() != null && !section().equals(((PlanCycle)course.cycle()).section())) {
+				if(section() != null && section() != ((PlanCycle)course.cycle()).section()) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetSection"));
-					buf.append(" (").append(sectionForNum(
-							((PlanCycle)course.cycle()).section(),editingContext())).append(')');
+					buf.append(" (").append(
+							((PlanCycle)course.cycle()).section().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), var,"eduGroup");
 				}
 				if(begin().compareTo(var.date()) > 0 || 
@@ -542,14 +529,13 @@ public class Reason extends _Reason {
 	
 	public static class Props {
 		public EOEditingContext ec;
-		public Integer school;
 		
 		public NSTimestamp begin;
 		public NSTimestamp end;
 		public Object teacher;
 		public EduGroup eduGroup;
 		public Integer grade;
-		public Integer section;
+		public SchoolSection section;
 		public boolean otherTeachers = false;
 		
 		public Props() {
@@ -559,7 +545,6 @@ public class Reason extends _Reason {
 		public Props(EduCourse course, NSTimestamp onDate) {
 			super();
 			ec = course.editingContext();
-			school = course.cycle().school();
 			eduGroup = course.eduGroup();
 			teacher = course.teacher(onDate);
 			if(teacher == null)
@@ -577,8 +562,6 @@ public class Reason extends _Reason {
 		
 		public Reason newReason() {
 			Reason reason = (Reason)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
-			if(school != null)
-				reason.setSchool(school);
 			if(begin != null)
 				reason.setBegin(begin);
 			reason.setEnd(end);
@@ -619,7 +602,7 @@ public class Reason extends _Reason {
 	    	if(section != null) {
 	    		if(added)
 					result.append(',').append(' ');
-				result.append(sectionForNum(section,ec));
+				result.append(section.name());
 	    	}
 	    	return result.toString();
 		}

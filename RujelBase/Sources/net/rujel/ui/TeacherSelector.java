@@ -32,6 +32,7 @@ package net.rujel.ui;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.*;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
@@ -70,9 +71,9 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 			setValueForBinding(null,"selection");
 			search();
 		}*/
-		Integer section = (Integer)valueForBinding("section");
+		SchoolSection section = (SchoolSection)valueForBinding("section");
 		if(section == null)
-			 section = (Integer)session().valueForKeyPath("state.section.idx");
+			 section = SchoolSection.stateSection(session(), editingContext);
 		if(editingContext == null || dict == null || 
 				(section != null && !section.equals(dict.valueForKey("section")))) {
 			editingContext = (EOEditingContext)valueForBinding("editingContext");
@@ -92,9 +93,9 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 	public void awake() {
 		super.awake();
 		selection = valueForBinding("selection");
-		Integer section = (Integer)valueForBinding("section");
+		SchoolSection section = (SchoolSection)valueForBinding("section");
 		if(section == null)
-			 section = (Integer)session().valueForKeyPath("state.section.idx");
+			 section = SchoolSection.stateSection(session(), editingContext);
 		if(editingContext == null || dict == null || 
 				(section != null && !section.equals(dict.valueForKey("section")))) {
 			editingContext = (EOEditingContext)valueForBinding("editingContext");
@@ -114,7 +115,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		return populate(ec, ses, null);
 	}
 	public static NSMutableDictionary populate(EOEditingContext ec, WOSession ses, 
-			Integer section) {
+			SchoolSection section) {
 		NSMutableDictionary dict = new NSMutableDictionary();
 		Integer eduYear = (Integer)ses.valueForKey("eduYear");
 		NSArray allCourses = EOUtilities.objectsMatchingKeyAndValue
@@ -127,7 +128,7 @@ public class TeacherSelector extends com.webobjects.appserver.WOComponent {
 		Enumeration enu = allCourses.objectEnumerator();
 		boolean smartEduPlan = (EduCycle.className.equals("net.rujel.eduplan.PlanCycle"));
 		if(section == null)
-			section = (Integer)ses.valueForKeyPath("state.section.idx");
+			section = SchoolSection.stateSection(ses, ec);
 		while (enu.hasMoreElements()) {
 			EduCourse course = (EduCourse) enu.nextElement();
 			if(section != null && !section.equals(course.valueForKeyPath("cycle.section")))

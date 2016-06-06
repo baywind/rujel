@@ -71,6 +71,7 @@ import com.webobjects.foundation.NSTimestamp;
 
 import net.rujel.base.BaseCourse;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
 import net.rujel.reports.ReportsModule;
@@ -464,11 +465,15 @@ public class XMLGenerator extends AbstractObjectReader {
 			handler.prepareAttribute("name", gr.name());
 			handler.prepareAttribute("grade", gr.grade().toString());
 			handler.prepareAttribute("title", gr.title());
-			if(Various.boolForObject(in.ses.valueForKeyPath("strings.sections.hasSections"))) {
+			if(Various.boolForObject(in.ses.valueForKeyPath("sections.hasSections"))) {
 				try {
-					Integer sect = (Integer)gr.valueForKey("section");
-					if(sect != null)
-						handler.prepareAttribute("section", sect.toString());
+					SchoolSection sect = (SchoolSection)gr.valueForKey("section");
+					if(sect != null) {
+						String id = sect.idString();
+						if(id == null)
+							id = sect.sectionID().toString();
+						handler.prepareAttribute("section", id);
+					}
 				} catch (Exception e) {}
 			}
 			handler.startElement("eduGroup");

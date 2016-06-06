@@ -77,17 +77,17 @@ public class RingsSetup extends LessonList {
     	if(!noEdit && useGlobal) {
     		list = NSArray.EmptyArray;
     		useGlobal = Boolean.FALSE;
-    		if((Integer)session().valueForKeyPath("state.section.idx") > 0) {
+    		if((Integer)session().valueForKeyPath("state.section.sID") > 0) {
     			title = (String)session().valueForKeyPath(
 				"strings.RujelSchedule_Schedule.makeLocal") 
-				+ " \"" + session().valueForKeyPath("state.section.value") + '"';
+				+ " \"" + session().valueForKeyPath("state.section.name") + '"';
     		}
     	}
     	return null;
     }
     
 	public void updateSection() {
-		Integer currSection = (Integer)session().valueForKeyPath("state.section.idx");
+		Integer currSection = (Integer)session().valueForKeyPath("state.section.sID");
     	EOQualifier qual = new EOKeyValueQualifier("timeScheme", 
     			EOQualifier.QualifierOperatorEqual, currSection);
     	EOFetchSpecification fs = new EOFetchSpecification("ScheduleRing",qual,MyUtility.numSorter);
@@ -113,7 +113,7 @@ public class RingsSetup extends LessonList {
         	else
         		title = (String)session().valueForKeyPath(
 					"strings.RujelSchedule_Schedule.isLocal") 
-					+ " \"" + session().valueForKeyPath("state.section.value") + '"';
+					+ " \"" + session().valueForKeyPath("state.section.name") + '"';
     	}
 	}
 	
@@ -146,7 +146,7 @@ public class RingsSetup extends LessonList {
     				break;
     			Date newEnd = (Date)format.parseObject(newVal);
     			EOEnterpriseObject ring = EOUtilities.createAndInsertInstance(ec, "ScheduleRing");
-    			ring.takeValueForKey((Integer)session().valueForKeyPath("state.section.idx"),
+    			ring.takeValueForKey((Integer)session().valueForKeyPath("state.section.sID"),
     					"timeScheme");
     			ring.takeValueForKey(new NSTimestamp(newStart), "startTime");
     			ring.takeValueForKey(new NSTimestamp(newEnd), "endTime");
@@ -205,7 +205,7 @@ public class RingsSetup extends LessonList {
 			} else {
 				list = newList;
 				useGlobal = Boolean.FALSE;
-				Integer currSection = (Integer)session().valueForKeyPath("state.section.idx");
+				Integer currSection = (Integer)session().valueForKeyPath("state.section.sID");
 	        	if(currSection.intValue() > 0)
 	        		title = (String)session().valueForKeyPath(
 						"strings.RujelSchedule_Schedule.isLocal");

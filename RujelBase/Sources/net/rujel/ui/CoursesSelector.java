@@ -2,6 +2,7 @@ package net.rujel.ui;
 
 import java.util.Enumeration;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
@@ -159,7 +160,7 @@ public class CoursesSelector extends WOComponent {
 			case SUBJECT_TAB:
 				if(smartEduPlan && selection instanceof EOEnterpriseObject) {
 					NSMutableDictionary values = new NSMutableDictionary();
-					values.takeValueForKey(session().valueForKeyPath("state.section.idx"), 
+					values.takeValueForKey(SchoolSection.stateSection(session(), ec), 
 							"section");
 					values.takeValueForKey(session().valueForKey("school"), "school");
 					if(((EOEnterpriseObject)selection).entityName().equals("SubjectArea"))
@@ -186,8 +187,8 @@ public class CoursesSelector extends WOComponent {
 						EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
 				if(currTab != TEACHER_TAB) {
 					quals[1] = new EOKeyValueQualifier("cycle.section",
-							EOQualifier.QualifierOperatorEqual, session().valueForKeyPath(
-							"state.section.idx"));
+							EOQualifier.QualifierOperatorEqual, 
+							SchoolSection.stateSection(session(), ec));
 					quals[0] = new EOAndQualifier(new NSArray(quals));
 				}
 				if(currTab == CLASS_TAB) {

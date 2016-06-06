@@ -32,6 +32,7 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EOInitialiser;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
@@ -99,8 +100,8 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 	public static Object init(Object obj, WOContext ctx) {
 		if(obj == null || obj.equals("init")) {
 			return init();
-		} else if(obj.equals("yearChanged")) {
-			return yearChanged(ctx);
+//		} else if(obj.equals("yearChanged")) {
+//			return yearChanged(ctx);
 		} else if(obj.equals("regimes")) {
 //			if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.EduPlan")))
 //				return null;
@@ -169,6 +170,7 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 				new SubjectComparator.ComparisonSupport(), Subject.class);
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new PlanCycle.ComparisonSupport(), PlanCycle.class);
+		SchoolSection.listSections(new EOEditingContext(), true);
 		return null;
 	}
 	

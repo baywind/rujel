@@ -31,6 +31,7 @@ package net.rujel.eduplan;
 
 import java.util.Enumeration;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
@@ -39,7 +40,6 @@ import net.rujel.reusables.*;
 import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
 import com.webobjects.appserver.WOContext;
-import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -75,10 +75,10 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		super.awakeFromInsertion(ec);
 		Integer zero = new Integer(0);
 		setGrade(zero);
-		setSection(zero);
-		setSchool(school(ec));
+//		setSection(zero);
+//		setSchool(school(ec));
 	}
-	
+/*	
 	protected static Integer school(EOEditingContext ec) {
 		Integer school = null;
 		if(ec instanceof SessionedEditingContext) {
@@ -90,23 +90,11 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		return school;
 	}
-
-/*
-    // If you add instance variables to store property values you
-    // should add empty implementions of the Serialization methods
-    // to avoid unnecessary overhead (the properties will be
-    // serialized for you in the superclass).
-    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
-    }
-
-    private void readObject(java.io.ObjectInputStream in) 
-    		throws java.io.IOException, java.lang.ClassNotFoundException {
-    }
 */
 
-	public static NSArray cyclesForSubject(Subject subject, Integer section) {
+	public static NSArray cyclesForSubject(Subject subject, SchoolSection section) {
 		EOEditingContext ec = subject.editingContext();
-		NSArray found = allCyclesFor(null, subject, section,school(ec), ec);
+		NSArray found = allCyclesFor(null, subject, section, ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		NSMutableArray result = new NSMutableArray();
@@ -126,8 +114,8 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	}
 	
 	public static NSArray allSubjects(EOEditingContext ec) {
-		NSArray cycles = EOUtilities.objectsMatchingKeyAndValue(ec,
-				ENTITY_NAME, SCHOOL_KEY, school(ec));
+		//TODO optimize this
+		NSArray cycles = EOUtilities.objectsForEntityNamed(ec,ENTITY_NAME);
 		if(cycles == null || cycles.count() == 0)
 			return null;
 		NSMutableArray result = new NSMutableArray();
@@ -149,12 +137,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return result;
 	}
 
-	public static NSArray allCyclesFor(Integer grade, Subject subject, Integer section,
-				Integer school, EOEditingContext ec) {
+	public static NSArray allCyclesFor(Integer grade, Subject subject, SchoolSection section,
+				 EOEditingContext ec) {
 		NSMutableArray  quals = new NSMutableArray();
-		if(school != null)
-			quals.addObject(new EOKeyValueQualifier(SCHOOL_KEY,
-					EOQualifier.QualifierOperatorEqual,school));
 		if(grade != null)
 			quals.addObject(new EOKeyValueQualifier(GRADE_KEY,
 					EOQualifier.QualifierOperatorEqual,grade));
@@ -171,7 +156,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	}
 	
 	public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec) {
-		NSArray found = allCyclesFor(grade,null, null,school(ec), ec);
+		NSArray found = allCyclesFor(grade,null, null, ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		Enumeration enu = found.objectEnumerator();
@@ -186,14 +171,14 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	}
 	
 	public static NSArray cyclesForEduGroup(EduGroup group) {
-		Integer section = null;
+		SchoolSection section = null;
 		try {
-			section = (Integer)group.valueForKey(SECTION_KEY);
+			section = (SchoolSection)group.valueForKey(SECTION_KEY);
 		} catch (UnknownKeyException e) {
 			;
 		}
 		EOEditingContext ec = group.editingContext();
-		NSArray found = allCyclesFor(group.grade(),null, section,school(ec), ec);
+		NSArray found = allCyclesFor(group.grade(),null, section, ec);
 		if(found == null || found.count() == 0)
 			return NSArray.EmptyArray;
 		Enumeration enu = found.objectEnumerator();

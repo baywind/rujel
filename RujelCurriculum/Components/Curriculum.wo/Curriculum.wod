@@ -519,18 +519,18 @@ ReturnTitle : WOString {
 }
 
 NoSections : WOConditional {
-  condition = session.strings.sections.hasSections;
+  condition = session.sections.hasSections;
   negate = true;
 }
 
 HasSections : WOConditional {
-  condition = session.strings.sections.hasSections;
+  condition = session.sections.hasSections;
 }
 
 SectionsPopup : WOPopUpButton {
-  list = session.strings.sections.list;
+  list = session.sections.list;
   item = item;
-  displayString = item.value;
+  displayString = item.name;
   noSelectionString = session.strings.RujelCurriculum_Curriculum.Reason.withWholeSchool;
   selection = reasonSection;
 }
