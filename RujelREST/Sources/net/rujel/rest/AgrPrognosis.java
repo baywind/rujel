@@ -197,6 +197,8 @@ public class AgrPrognosis extends AgrEntity {
 			return pr.state();
 		if(attribute.equals("value")) {
 			BigDecimal val = pr.value();
+			if(val == null)
+				return null;
 			if(val.compareTo(BigDecimal.ONE) == 0)
 				return new Integer(1);
 			if(val.compareTo(BigDecimal.ZERO) == 0)

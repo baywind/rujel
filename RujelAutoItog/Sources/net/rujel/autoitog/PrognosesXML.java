@@ -168,10 +168,12 @@ public class PrognosesXML extends GeneratorModule {
 			handler.prepareAttribute("value", progn.mark());
 			raiseCounterForObject(progn.student());
 			handler.startElement("mark");
+			if(progn.value() != null) {
 			handler.prepareEnumAttribute("type", "inner");
 			handler.element("present", progn.value().toString());
 			handler.prepareAttribute("key", "complete");
 			handler.element("param", progn.complete().toString());
+			}
 			Number flags = progn.flags();
 			if(flags.intValue() != 0) {
 				handler.prepareAttribute("key", "flags");

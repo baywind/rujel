@@ -84,7 +84,7 @@ public class ItogPreset extends _ItogPreset {
 		Enumeration enu = presets.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			ItogPreset test = (ItogPreset) enu.nextElement();
-			if(value.compareTo(test.value()) >= 0)
+			if((value == null)? test.value() == null : value.compareTo(test.value()) >= 0)
 				return test;
 		}
 		return null;

@@ -162,7 +162,7 @@ public class CoursesSelector extends WOComponent {
 					NSMutableDictionary values = new NSMutableDictionary();
 					values.takeValueForKey(SchoolSection.stateSection(session(), ec), 
 							"section");
-					values.takeValueForKey(session().valueForKey("school"), "school");
+//					values.takeValueForKey(session().valueForKey("school"), "school");
 					if(((EOEnterpriseObject)selection).entityName().equals("SubjectArea"))
 						values.takeValueForKey(selection, "subjectEO.area");
 					else
@@ -183,13 +183,12 @@ public class CoursesSelector extends WOComponent {
 			EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,quals[0],null);
 			courses = ec.objectsWithFetchSpecification(fs);
 			if(smartEduPlan && courses != null && courses.count() > 0) {
-				quals[0] = new EOKeyValueQualifier("cycle.school",
-						EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
+				quals[0] = null;
 				if(currTab != TEACHER_TAB) {
-					quals[1] = new EOKeyValueQualifier("cycle.section",
+					quals[0] = new EOKeyValueQualifier("cycle.section",
 							EOQualifier.QualifierOperatorEqual, 
 							SchoolSection.stateSection(session(), ec));
-					quals[0] = new EOAndQualifier(new NSArray(quals));
+//					quals[0] = new EOAndQualifier(new NSArray(quals));
 				}
 				if(currTab == CLASS_TAB) {
 					NSMutableArray collect = new NSMutableArray();
