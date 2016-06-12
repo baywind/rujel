@@ -32,8 +32,8 @@ package net.rujel.user;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
-import net.rujel.base.IndexRow;
-import net.rujel.base.Indexer;
+import net.rujel.base.ReadAccess;
+import net.rujel.base.SchoolSection;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
@@ -64,7 +64,9 @@ public class ManageUsers extends WOComponent {
 	public void populateGroups(WOSession ses) {
 		NSDictionary locale = (NSDictionary)ses.valueForKeyPath(
 				"strings.RujelUsers_UserStrings.accessGroups");
-		NSArray array = (NSArray)locale.valueForKey("array");
+		NSMutableArray array = ((NSArray)locale.valueForKey("array")).mutableClone();
+		if(mask)
+			array.insertObjectAtIndex("@", 0);
 		Enumeration enu = array.objectEnumerator();
 		accGroups = new NSMutableArray();
 		while (enu.hasMoreElements()) {
@@ -88,15 +90,15 @@ public class ManageUsers extends WOComponent {
 				dict = new NSMutableDictionary(name,"groupName");
 				dict.takeValueForKey(locale.valueForKey(name), "title");
 				accGroups.addObject(dict);
-				array = array.arrayByAddingObject(name);
+				array.addObject(name);
 			} else {
 				dict = (NSMutableDictionary)accGroups.objectAtIndex(idx);
 			}
-			Integer section = (Integer)gr.valueForKey("section");
+			SchoolSection section = (SchoolSection)gr.valueForKey("section");
 			if(section == null)
 				dict.takeValueForKey(gr, "global");
 			else
-				dict.setObjectForKey(gr, section);
+				dict.setObjectForKey(gr, section.sectionID());
 		}
 	}
 	
@@ -113,6 +115,7 @@ public class ManageUsers extends WOComponent {
 	public String passw2;
 	protected boolean readFromParent = parentHandler != null && 
 		SettingsReader.boolForKeyPath("auth.readFromParent", false);
+	public boolean mask = SettingsReader.boolForKeyPath("auth.maskGlobalAccess", false);
 	
 	public EOEditingContext _ec() {
 		if(ec == null)
@@ -308,27 +311,14 @@ public class ManageUsers extends WOComponent {
 	public NSArray sections() {
 		if(sections != null)
 			return sections;
-		Indexer sidx = Indexer.getIndexer(ec, "eduSections",(String)null, true);
-		if(ec.globalIDForObject(sidx).isTemporary()) {
-			try {
-				ec.saveChanges();
-				logger.log(WOLogLevel.COREDATA_EDITING,"autocreating eduSections indexer",sidx);
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Error autocreating eduSections indexer",
-						new Object[] {session(),e});
-				ec.revert();
-				sections = NSArray.EmptyArray;
-				return null;
-			}
-		}
-		sections = sidx.sortedIndex();
+		sections = SchoolSection.listSections(ec, true);
 		return sections;
 	}
 	
 	protected EOEnterpriseObject group() {
 		if(item2 == null)
 			return null;
-		Object section = (item == null)?"global":item.valueForKey(IndexRow.IDX_KEY);
+		Object section = (item == null)?"global":item.valueForKey("sectionID");
 		return (EOEnterpriseObject)((NSMutableDictionary)item2).objectForKey(section);
 	}
 	
@@ -340,8 +330,26 @@ public class ManageUsers extends WOComponent {
 		NSArray groups = (NSArray)valueForKeyPath("usersList.selectedObject.groups");
 		if(groups == null || groups.count() == 0)
 			return false;
-		return (group != null && groups.containsObject(group)) ||
-				(global != null && groups.containsObject(global));
+		if (group != null && groups.containsObject(group))
+			return true;
+		if(global != null && groups.containsObject(global)) {
+			if(mask) {
+				NSMutableDictionary maskRow = (NSMutableDictionary)accGroups.objectAtIndex(0);
+				if(item2 == maskRow && item != null)
+					return true;
+				Object key = maskRow.valueForKey("global");
+				if(key != null && groups.containsObject(key))
+					return true;
+				if(item != null) {
+					key = item.valueForKey("sectionID");
+					key = maskRow.objectForKey(key);
+					return (key != null && groups.containsObject(key));
+				}
+			} else {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public Boolean cantEditGroup() {
@@ -356,13 +364,29 @@ public class ManageUsers extends WOComponent {
 		if(readFromParent && au.hasParent() &&
 				(group != null && group.valueForKey("externalEquivalent") != null))
 			return Boolean.TRUE;
+		ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+		Integer section = (Integer)valueForKeyPath("item.sectionID");
+		if(!readAccess.cachedAccessForObject("ManageUsers@" + 
+				item2.valueForKey("groupName"), section).flagForKey("edit"))
+			return Boolean.TRUE;
 		if(item != null) {
 			EOEnterpriseObject global = (EOEnterpriseObject)item2.valueForKey("global");
-			if(au.isInGroup(global))
+			if(au.isInGroup(global)) {
+				if(mask && !"@".equals(global.valueForKey("groupName"))) {
+					NSMutableDictionary maskRow = (NSMutableDictionary)accGroups.objectAtIndex(0);
+					Object key = maskRow.objectForKey("global");
+					if(key != null && au.isInGroup((EOEnterpriseObject)key))
+						return Boolean.TRUE;
+					key = maskRow.objectForKey(section);
+					if(key == null || !au.isInGroup((EOEnterpriseObject)key))
+						return Boolean.FALSE;
+				}
 				return Boolean.TRUE;
+			}
 		}
-		return (Boolean)session().valueForKeyPath("readAccess._edit.ManageUsers.@" + 
-						item2.valueForKey("groupName"));
+		return Boolean.FALSE;
+				//(Boolean)session().valueForKeyPath("readAccess._edit.ManageUsers.@" + 
+				//		item2.valueForKey("groupName"));
 	}
 	
 	public void setIsInGroup(boolean is) {
@@ -375,9 +399,9 @@ public class ManageUsers extends WOComponent {
 			group = EOUtilities.createAndInsertInstance(ec, "UserGroup");
 			group.takeValueForKey(item2.valueForKey("groupName"), "groupName");
 			if(item != null) {
-				Object section = item.valueForKey(IndexRow.IDX_KEY);
-				group.takeValueForKey(section, "section");
-				((NSMutableDictionary)item2).setObjectForKey(group, section);
+//				Object section = item.valueForKey(IndexRow.IDX_KEY);
+				group.takeValueForKey(item, "section");
+				((NSMutableDictionary)item2).setObjectForKey(group, item.valueForKey("sectionID"));
 			} else {
 				item2.takeValueForKey(group, "global");
 			}
@@ -403,9 +427,9 @@ public class ManageUsers extends WOComponent {
 		currGroup.takeValueForKey(item2.valueForKey("title"), "title");
 		currGroup.takeValueForKey(item2, "row");
 		if(item != null) {
-			Object section = item.valueForKey(IndexRow.IDX_KEY);
+			Object section = item.valueForKey("sectionID");
 			currGroup.takeValueForKey(section, "section");
-			currGroup.takeValueForKey(item.valueForKey(IndexRow.VALUE_KEY), "sectionName");
+			currGroup.takeValueForKey(item.valueForKey(SchoolSection.NAME_KEY), "sectionName");
 			if(currGroup.valueForKey("sectionName") == null && section != null)
 				currGroup.takeValueForKey(section.toString(), "sectionName");
 		} else {
@@ -425,9 +449,14 @@ public class ManageUsers extends WOComponent {
 	
 	public String groupClass() {
 		if(currGroup != null && currGroup.valueForKey("row") == item2 && 
-				currGroup.valueForKey("section") == valueForKeyPath("item.idx"))
+				currGroup.valueForKey("section") == item)
 			return "selection";
 		EOEnterpriseObject group = group();
+		if(mask && "@".equals(item2.valueForKey("groupName"))) {
+			if(group!= null && group.valueForKey("externalEquivalent") != null)
+				return "highlight2";
+			return "highlight";
+		}
 		if(group == null)
 			return "grey";
 		if(!readFromParent)

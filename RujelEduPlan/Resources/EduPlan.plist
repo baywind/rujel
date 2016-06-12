@@ -197,6 +197,8 @@
 		<string>настроить</string>
 		<key>showAll</key>
 		<string>показать все</string>
+		<key>addSection</key>
+		<string>Добавить отделение</string>
 	</dict>
 	<key>settingEditors</key>
 	<array>

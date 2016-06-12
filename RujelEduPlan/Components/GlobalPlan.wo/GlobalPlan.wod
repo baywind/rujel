@@ -249,7 +249,7 @@ SetupSections : OnClickContainer {
   style = "font-size:120%;text-align:center;";
   invokeAction = setupSections;
   onclick = session.ajaxPopupNoPos;
-  disabled = access._edit.PlanCycle;
+  disabled = cantSetupSections;
 }
 
 AllTitle : WOString {

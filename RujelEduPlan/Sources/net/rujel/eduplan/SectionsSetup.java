@@ -7,6 +7,7 @@ import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SchoolSection;
 import net.rujel.reusables.NamedFlags;
+import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
@@ -38,8 +39,9 @@ public class SectionsSetup extends WOComponent {
         super(context);
     	EOEditingContext ec = context.session().defaultEditingContext();
     	sections = SchoolSection.listSections(ec, true);
+    	newDict.takeValueForKey(SettingsReader.intForKeyPath("edu.minGrade",1), "minGrade");
+    	newDict.takeValueForKey(SettingsReader.intForKeyPath("edu.maxGrade", 11), "maxGrade");
     }
-    
     
 /*
     public void setEc(EOEditingContext ec) {

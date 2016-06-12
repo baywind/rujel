@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.base.QualifiedSetting;
 import net.rujel.base.SettingsBase;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -60,6 +61,7 @@ public class CompleteSetup extends com.webobjects.appserver.WOComponent {
 	public EOEnterpriseObject item;
 	public File studentsFolder;
 	public File coursesFolder;
+	public NamedFlags itemAccess;
 	
     public CompleteSetup(WOContext context) {
         super(context);

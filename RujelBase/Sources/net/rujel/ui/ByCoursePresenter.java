@@ -32,6 +32,7 @@ package net.rujel.ui;
 import java.util.Enumeration;
 
 import net.rujel.base.QualifiedSetting;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.Flags;
 import net.rujel.reusables.MutableFlags;
@@ -259,7 +260,12 @@ public class ByCoursePresenter extends com.webobjects.appserver.WOComponent {
     	_access = (NamedFlags)valueForBinding("access");
     	if(_access != null)
     		return _access;
-    	_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
+    	ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+    	Integer section = null;
+    	if(bc() instanceof QualifiedSetting)
+    		section = (Integer)valueForKeyPath("bc.section.sectionID");
+    	_access = readAccess.cachedAccessForObject("QualifiedSetting", section);
+//    	_access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
     	return _access;
     }
     

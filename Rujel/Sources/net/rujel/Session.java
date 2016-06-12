@@ -140,19 +140,31 @@ public class Session extends WOSession implements MultiECLockManager.Session {
 		if(user == null) {
 			buf.append("Session created for user: ");
 			buf.append(aUser);
-			if(Various.boolForObject(valueForKeyPath("strings.sections.hasSections"))) {
-				user = aUser;
-				sections = SchoolSection.forSession(this);
-				state.takeValueForKey(sections.valueForKey("defaultSection"), "section");
+			user = aUser;
+			sections = SchoolSection.forSession(this);
+			if(Various.boolForObject(valueForKeyPath("sections.hasSections"))) {
+				Object defaultSection = sections.valueForKey("defaultSection");
+				if(defaultSection == null) {
+					defaultSection = aUser.propertyNamed("defaultSection");
+					if(defaultSection instanceof Integer)
+						defaultSection = EOUtilities.objectWithPrimaryKeyValue(
+								defaultEditingContext(),SchoolSection.ENTITY_NAME, defaultSection);
+					if(defaultSection == null) {
+						NSArray list = (NSArray)sections.valueForKey("list");
+						if(list != null && list.count() > 0)
+							defaultSection = list.objectAtIndex(0);
+					}
+				}
+				state.takeValueForKey(defaultSection, "section");
 			}
 		} else if (user != aUser) {
 			buf.append("Session user changed from ").append(user);
 			buf.append(" to ").append(aUser);		
+			user = aUser;
 		}
 		if(!aUser.toString().equals(aUser.present()))
 			buf.append(" (").append(aUser.present()).append(')');
 		logger.log(WOLogLevel.SESSION, buf.toString(), this);
-		user = aUser;
 		_readAccess = new ReadAccess(this);
 	}
 	

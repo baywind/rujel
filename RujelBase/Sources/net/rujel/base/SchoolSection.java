@@ -150,7 +150,8 @@ public class SchoolSection extends _SchoolSection {
 				NSMutableArray others = new NSMutableArray(list.count());
 				while (enu.hasMoreElements()) {
 					SchoolSection sect = (SchoolSection) enu.nextElement();
-					if(user.isInGroup(null, sect.sectionID()))
+					String[] groups = user.listGroups(sect.sectionID());
+					if(groups != null && groups.length > 0)
 						filtered.addObject(sect);
 					else
 						others.addObject(sect);

@@ -201,7 +201,7 @@ DeleteSet : OnClickContainer {
   class = "female";
   style = "padding:0px 4px;font-weight:bold;border:double 3px #cc6666;color:#cc3333;";
   title = ^dict.delete;
-  hide = session.readAccess._delete.CriteriaSet;
+  hide = access._delete;
 }
 
 AddSet : OnClickContainer {
@@ -219,7 +219,7 @@ RenameSet : OnClickContainer {
   class = "grey";
   style = "padding:0px 4px;font-weight:bold;border:double 3px #666666;color:#333333;";
   title = ^dict.renamePrompt;
-  hide = session.readAccess._edit.CriteriaSet;
+  hide = access._edit;
 }
 
 CriteriaAvailable : WOConditional {
@@ -271,6 +271,7 @@ SetComment : WOText {
 
 FixMax : WOCheckBox {
   checked = currSet.namedFlags.fixMax;
+  disabled = access._edit;
 }
 
 FixMaxTitle : WOString {

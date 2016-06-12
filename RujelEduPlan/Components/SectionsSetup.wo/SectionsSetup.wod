@@ -6,16 +6,6 @@ Cross : WOImage {
   onclick = "closePopup();";
 }
 
-EditIndex : EditIndex {
-  indexer = sIndex;
-  access = session.readAccess.FLAGS.EduPlan;
-  showHeader = false;
-  forcetype = "eduSection";
-  onclick = session.ajaxPopupNoPos;
-  onsubmit = "refreshRequired = true;return ajaxPost(this);";
-  updateAction = update;
-}
-
 ClosePopup : OnClickContainer {
   elementName = "span";
   invokeAction = close;
@@ -46,6 +36,7 @@ SectionDiv : OnClickContainer {
   invokeAction = selectSection;
   class = "gerade";
   hide = isSelected;
+  style = "margin:2pt;border:1px solid #cccccc;";
 }
 
 IsSelected : WOConditional {
@@ -61,7 +52,7 @@ NameField : WOTextField {
 
 MinField : WOTextField {
   value = currSection.minGrade;
-  length = 3;
+  size = 3;
   maxlength = "3";
   numberformat = "0";
   class = "required numeric";
@@ -70,7 +61,7 @@ MinField : WOTextField {
 MaxField : WOTextField {
   value = currSection.maxGrade;
   length = 3;
-  maxlength = "3";
+  size = "3";
   numberformat = "0";
   class = "required numeric";
 }
@@ -89,11 +80,12 @@ NewNameField : WOTextField {
   length = 28;
   maxlength = "20";
   class = "required";
+  name = "sectionName";
 }
 
 NewMinField : WOTextField {
   value = newDict.minGrade;
-  length = 3;
+  size = 3;
   maxlength = "3";
   numberformat = "0";
   class = "required numeric";
@@ -101,7 +93,7 @@ NewMinField : WOTextField {
 
 NewMaxField : WOTextField {
   value = newDict.maxGrade;
-  length = 3;
+  size = 3;
   maxlength = "3";
   numberformat = "0";
   class = "required numeric";
@@ -115,4 +107,14 @@ HasMessage : WOConditional {
 SesMessage: WOString {
   value = session.message;
   escapeHTML = false;
+}
+AddSectionContainer : OnClickContainer {
+  elementName = "div";
+  onclick = "hideObj(this);showObj('newSection');parentNode.sectionName.focus();";
+  class = "ungerade";
+  style = "margin:2pt;border:1px solid #cccccc;";
+}
+
+AddSection : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.sections.addSection;
 }

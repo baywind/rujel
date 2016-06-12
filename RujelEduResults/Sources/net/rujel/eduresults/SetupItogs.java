@@ -4,9 +4,12 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SettingsBase;
+import net.rujel.eduplan.ListSettings;
 import net.rujel.reusables.AdaptingComparator;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -43,6 +46,8 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 	public NSArray extensions;
 	public Object extItem;
 	public NSMutableArray allPresets;
+	public NamedFlags access;
+	public NamedFlags typeAccess;
 //	public NSMutableDictionary currPreset;
 	protected static NSArray sorter = new NSArray(
 			EOSortOrdering.sortOrderingWithKey("type.sort",EOSortOrdering.CompareAscending));
@@ -62,6 +67,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 		}
 		super.appendToResponse(aResponse, aContext);
+		extraLists = null;
 	}
 	
 	public NSArray extensions() {
@@ -108,6 +114,9 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 				fs = new EOFetchSpecification("ItogTypeList",quals[0],null);
 				extraLists = ec.objectsWithFetchSpecification(fs);
 			}
+			access = ListSettings.listAccess(base, listName, "ItogTypeList", session());
+			ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+			typeAccess = readAccess.cachedAccessForObject(ItogType.ENTITY_NAME, (Integer)null);
 			updatePresets();
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,

@@ -2,6 +2,7 @@ package net.rujel.eduresults;
 
 import java.util.Enumeration;
 
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -27,12 +28,16 @@ public class ItogTypeEditor extends com.webobjects.appserver.WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		ItogType type = (ItogType)valueForBinding("currType");
 		currType = type;
+		NamedFlags access = (NamedFlags)valueForBinding("access");
+		if(access == null)
+			access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.ItogType");
 		if(type == null) {
 			itogName = null;
 			itogTitle = null;
 			itogCount = null;
 			canDelete = false;
-			cantEdit = (Boolean)session().valueForKeyPath("readAccess._create.ItogType");
+			cantEdit = (Boolean)access.valueForKey("_create");
+					//session().valueForKeyPath("readAccess._create.ItogType");
 		} else {
 			itogName = currType.name();
 			itogTitle = currType.title();
@@ -43,7 +48,8 @@ public class ItogTypeEditor extends com.webobjects.appserver.WOComponent {
 			NSArray itogs = EOUtilities.objectsMatchingKeyAndValue(ec,
 					ItogContainer.ENTITY_NAME, ItogContainer.ITOG_TYPE_KEY, type);
 			canDelete = (itogs == null || itogs.count() == 0);
-			cantEdit = (Boolean)session().valueForKeyPath("readAccess._edit.currType");
+			cantEdit = (Boolean)access.valueForKey("_edit");
+					//session().valueForKeyPath("readAccess._edit.currType");
 		}
 		super.appendToResponse(aResponse, aContext);
 	}

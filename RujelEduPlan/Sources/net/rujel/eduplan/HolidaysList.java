@@ -32,6 +32,7 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
@@ -52,6 +53,7 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
 //	public Holiday curr;
 	public int totalDays = 0;
 	public NSMutableDictionary dict = new NSMutableDictionary();
+	public NamedFlags access;
 	
     public HolidaysList(WOContext context) {
         super(context);
@@ -63,10 +65,10 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		_list = Holiday.holidaysForList(listName, ec);
     		if(listName == null)
     			return _list;
-    		Object canCreate = session().valueForKeyPath("readAccess._create.Holiday");
-    		if(!Various.boolForObject(canCreate)) {
-    			// TODO: suggestions
-    		}
+//    		Object canCreate = session().valueForKeyPath("readAccess._create.Holiday");
+//    		if(!Various.boolForObject(canCreate)) {
+//    			// TODO: suggestions
+//    		}
     	}
     	return _list;
     }
@@ -235,7 +237,8 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     public Boolean canCreate() {
     	if(dict.valueForKey("selection") != null)
     		return Boolean.FALSE;
-    	return (Boolean)session().valueForKeyPath("readAccess.create.Holiday");
+    	return  access.flagForKey("create");
+    			//(Boolean)session().valueForKeyPath("readAccess.create.Holiday");
     }
     
     public void select() {
@@ -260,6 +263,14 @@ public class HolidaysList extends com.webobjects.appserver.WOComponent {
     		dict.takeValueForKey(!notGlobal(), "forAll");
     		_notGlobal = null;
     		item = null;
+    		SettingsBase base = null;
+    		try {
+				base = (SettingsBase)parent().valueForKey("base");
+			} catch (Exception e) {
+		    	EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
+				base = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+			}
+    		access = ListSettings.listAccess(base, listName, "Holiday", aContext.session());
     	}
     	super.appendToResponse(aResponse, aContext);
     }

@@ -39,7 +39,7 @@ ListsOverviewTitle : WOString {
 }
 
 CanCreate : WOConditional {
-  condition = ^access._create;
+  condition = cantCreate;
   negate = true;
 }
 

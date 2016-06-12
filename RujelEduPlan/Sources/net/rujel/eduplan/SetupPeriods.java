@@ -32,6 +32,7 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -60,6 +61,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 	public Object item;
 	public int weekDays = 7;
 	public NSArray extraLists;
+	public NamedFlags access;
     
 	public SetupPeriods(WOContext context) {
         super(context);
@@ -106,6 +108,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 							extraLists = extraLists.arrayByAddingObjectsFromArray(holidays);
 					}
 				}
+				access = ListSettings.listAccess(base, listName, "PeriodList", session());
 			}
 //			weekDays = SettingsBase.numericSettingForCourse("weekDays", null, ec, 7);
 		} catch (Exception e) {
@@ -201,6 +204,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		dict = PlistReader.cloneDictionary(dict, true);
 		dict.takeValueForKeyPath(ec, "presenterBindings.ec");
 		selector.takeValueForKey(dict, "dict");
+		
 		return selector;
 	}
 
@@ -316,6 +320,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 	        setEc((EOEditingContext)context().page().valueForKey("ec"));
 		}
 		super.appendToResponse(aResponse, aContext);
+		extraLists = null;
 		if(reset)
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 	}

@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.BorderSet;
+import net.rujel.eduplan.ListSettings;
 import net.rujel.eduresults.ItogContainer;
 import net.rujel.eduresults.ItogMark;
 import net.rujel.eduresults.ItogPreset;
@@ -86,6 +87,7 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 	
 	public Boolean cantChange;
 	public Boolean canDeleteItogs;
+	public NamedFlags access;
 	
     public AutoItogEditor(WOContext context) {
         super(context);
@@ -95,7 +97,8 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     
     public void setItog(ItogContainer itogContainer) {
     	itog = itogContainer;
-    	bsets = EOUtilities.objectsForEntityNamed(itog.editingContext(), BorderSet.ENTITY_NAME);
+    	EOEditingContext ec = itog.editingContext();
+    	bsets = EOUtilities.objectsForEntityNamed(ec, BorderSet.ENTITY_NAME);
     	Integer presetGroup = ItogPreset.getPresetGroup(listName, itog.eduYear(), itog.itogType());
     	if(presetGroup == null || presetGroup.intValue() <= 0)
     		return;
@@ -117,7 +120,9 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
 			result.addObject(set);
 		}
     	bsets = result;
-    }
+    	SettingsBase base = SettingsBase.baseForKey(ItogMark.ENTITY_NAME,ec, false);
+    	access = ListSettings.listAccess(base, listName, AutoItog.ENTITY_NAME, session());
+   }
 
     public void setAutoItog(AutoItog ai) {
     	autoItog = ai;
@@ -151,12 +156,13 @@ public class AutoItogEditor extends com.webobjects.appserver.WOComponent {
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	recalculate = (autoItog == null);
     	if(recalculate) {
-    		cantChange = (Boolean)session().valueForKeyPath("readAccess._create.AutoItog");
+    		cantChange = (Boolean)access.valueForKey("_create");
+    				//session().valueForKeyPath("readAccess._create.AutoItog");
     		canDeleteItogs = Boolean.FALSE;
     	} else {
-    		NamedFlags flags = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.autoItog");
-    		cantChange = (Boolean)flags.valueForKey("_edit");
-    		canDeleteItogs = Boolean.valueOf(flags.getFlag(4));
+//    		NamedFlags flags = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.autoItog");
+    		cantChange = (Boolean)access.valueForKey("_edit");
+    		canDeleteItogs = Boolean.valueOf(access.getFlag(4));
     	}
     	super.appendToResponse(aResponse, aContext);
     }

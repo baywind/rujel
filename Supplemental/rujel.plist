@@ -32,6 +32,8 @@
 	</dict>
 	<key>auth</key>
 	<dict>
+		<key>maskGlobalAccess</key>
+		<true/>
 		<key>_secureForm</key>
 		<true/>
 	</dict>

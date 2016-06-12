@@ -688,6 +688,10 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 //		session().takeValueForKey(context().page(), "pushComponent");
 		return performParentAction("revertEc");
 	}
+	
+	public Boolean cantSetupSections() {
+		return !access().cachedAccessForObject("EduPlan", (Integer)null).flagForKey("edit");
+	}
 
 	public WOActionResults setupSections() {
 		WOComponent result = pageWithName("SectionsSetup");

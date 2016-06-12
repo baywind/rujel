@@ -32,13 +32,16 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 
 import net.rujel.base.QualifiedSetting;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
@@ -178,6 +181,41 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     		return;
     	currList = list;
     	setValueForBinding(currList, "currList");
+    	if(canSetValueForBinding("listAccess")) {
+    		String checkAccess = (String)valueForBinding("checkAccess");
+    		if(checkAccess == null)
+    			checkAccess = QualifiedSetting.ENTITY_NAME;
+    		setValueForBinding(listAccess(base, currList, checkAccess, session()), "listAccess");
+    	}
+    }
+    
+    public static NamedFlags listAccess(SettingsBase base, String listName,
+    		String checkAccess, WOSession ses) {
+		NSArray byCourse = base.settingUsage("textValue", listName,
+				ses.valueForKey("eduYear"));
+		ReadAccess readAccess = (ReadAccess)ses.valueForKey("readAccess");
+		if(byCourse != null && byCourse.count() > 0) {
+			NamedFlags access = readAccess.cachedAccessForObject(checkAccess, (Integer)null);
+			Enumeration enu = byCourse.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				EOEnterpriseObject bc = (EOEnterpriseObject) enu.nextElement();
+				if(bc instanceof SettingsBase)
+					continue;
+				Integer section = (Integer)bc.valueForKeyPath("section.sectionID");
+				if(section != null)
+					access = access.or(readAccess.cachedAccessForObject(checkAccess, section));
+			}
+			return access;
+		} else {
+			return readAccess.cachedAccessForObject(checkAccess, (String)null);
+		}
+    }
+    
+    public Boolean cantCreate() {
+		String checkAccess = (String)valueForBinding("checkAccess");
+		if(checkAccess == null)
+			checkAccess = QualifiedSetting.ENTITY_NAME;
+    	return (Boolean)session().valueForKeyPath("readAccess._create." + checkAccess);
     }
     
     public void createList() {
@@ -198,12 +236,14 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
     	if(currList == null || !currList.equals(cl)) {
     		currList = cl.toString();
     		if(currList == null) {
-    			currList = base().textValue();
+    			setCurrList(base().textValue());
     		} else {
     			base();
     		}
     	}
 //    	updateUsage();
+    	if(valueForBinding("extraLists") != null)
+    		_lists = null;
     	lists();
     	super.appendToResponse(aResponse, aContext);
     }

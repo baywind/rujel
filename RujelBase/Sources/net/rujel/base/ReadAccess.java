@@ -68,7 +68,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 	protected Modifier[] modifiers;
 	protected String message;
 	public Object relObject;
-	public String sectionPath = "state.section.sID";
+	public String sectionPath = "state.section.sectionID";
 	public String initKey;
 	
 	public ReadAccess(WOSession session) {
@@ -111,8 +111,30 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 		return _user;
 	}
 	
+	protected Integer sectionFromRelObject() {
+		if(relObject == null)
+			return null;
+		Object s = NSKeyValueCodingAdditions.Utility.valueForKeyPath(
+				relObject, sectionPath);
+		if(s instanceof Integer) {
+			return (Integer)s;
+		} else if(s instanceof EOEnterpriseObject) {
+			EOEnterpriseObject eo = (EOEnterpriseObject)s;
+			EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
+			if(!gid.isTemporary())
+				return (Integer)((EOKeyGlobalID)gid).keyValues()[0];
+		} else if (s instanceof String) {
+			try{
+				return new Integer((String)s);
+			} catch (NumberFormatException e) {
+				;
+			}
+		}
+		return null;
+	}
+	
 	public NamedFlags accessForObject(String obj) {
-		return accessForObject(obj,null);
+		return accessForObject(obj,sectionFromRelObject());
 	}
 	public NamedFlags accessForObject(String obj, Integer section) {
 		if(user() == null) {
@@ -126,6 +148,8 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 			int idx = nodeName.indexOf('@');
 			if(idx > 0) {
 				modifier = nodeName.substring(idx + 1);
+//				if(nodeName.charAt(idx -1) == '.')
+//					idx--;
 				nodeName = nodeName.substring(0,idx);
 			}
 			SettingsReader node = prefs.subreaderForPath(nodeName, false);
@@ -141,24 +165,8 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 						;
 					}
 				}
-				if(section == null) {
-					Object s = NSKeyValueCodingAdditions.Utility.valueForKeyPath(
-							relObject, sectionPath);
-					if(s instanceof Integer) {
-						section = (Integer)s;
-					} else if(s instanceof EOEnterpriseObject) {
-						EOEnterpriseObject eo = (EOEnterpriseObject)s;
-						EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
-						if(!gid.isTemporary())
-							section = (Integer)((EOKeyGlobalID)gid).keyValues()[0];
-					} else if (s instanceof String) {
-						try{
-							section = new Integer((String)s);
-						} catch (NumberFormatException e) {
-							;
-						}
-					}
-				}
+//				if(section == null)
+//					section = sectionFromRelObject();
 				if(section != null && section.intValue() < 0)
 					section = null;
 				level = PrefsAccessHandler.accessLevel(node, modifier, user(), section);
@@ -176,25 +184,13 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 	
 	protected NSMutableDictionary accessCache = new NSMutableDictionary();
 	
-	public NamedFlags cachedAccessForObject(String obj) {
-		return cachedAccessForObject(obj, (Integer)null);
-	}
 	public NamedFlags cachedAccessForObject(String obj, Integer section) {
 		if(obj == null || accessCache == null)
 			return defaultAccess;
 		NamedFlags result = defaultAccess;
 		NSMutableDictionary cache = accessCache;
-		if(section == null && relObject != null) {
-			Object sect = NSKeyValueCodingAdditions.Utility.valueForKeyPath(relObject,sectionPath);
-			if(sect instanceof Integer) {
-				section = (Integer)sect;
-			} else if(sect instanceof EOEnterpriseObject) {
-				EOEnterpriseObject eo = (EOEnterpriseObject)sect;
-				EOGlobalID gid = eo.editingContext().globalIDForObject(eo);
-				if(!gid.isTemporary())
-					section = (Integer)((EOKeyGlobalID)gid).keyValues()[0];
-			}
-		}
+//		if(section == null)
+//			section = sectionFromRelObject();
 		if(section != null) {
 			cache = (NSMutableDictionary)accessCache.objectForKey(section);
 			if(cache == null) {
@@ -229,13 +225,27 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 				}
 			}
 		}
+		Integer section = null;
+		if(obj instanceof NSKeyValueCoding) {
+			try {
+				Object sect = ((NSKeyValueCoding)obj).valueForKey("section");
+				if(sect instanceof Integer) {
+					section = (Integer)sect;
+				} else if(sect instanceof SchoolSection) {
+					section = ((SchoolSection)sect).sectionID();
+				}
+			} catch (Exception e) {
+			}
+		}
+		if(section == null)
+			section = sectionFromRelObject();
 		if (acc == null) {
 			if (obj instanceof EOEnterpriseObject) {
 				EOEnterpriseObject eo = (EOEnterpriseObject) obj;
 				acc = eo.entityName();
 				if(subPath != null)
 					acc = acc + '@' + subPath;
-				NamedFlags result = cachedAccessForObject(acc);
+				NamedFlags result = cachedAccessForObject(acc,section);
 				if(result.flagForKey("create")) {
 					EOEditingContext ec = eo.editingContext();
 					if(ec == null || ec.globalIDForObject(eo).isTemporary())
@@ -255,7 +265,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 			if(subPath != null)
 				acc = acc + '@' + subPath;
 		}
-		return cachedAccessForObject(acc);
+		return cachedAccessForObject(acc,section);
 	}
 
 /*	public Boolean validate(Object obj, String subPath) {
@@ -303,8 +313,14 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 			int atIdx = keyPath.indexOf('@');
 			if (atIdx > 0)
 				subPath = keyPath.substring(atIdx +1);
-			String path = (atIdx <0)?keyPath.substring(dotIdx +1)
-					:keyPath.substring(dotIdx +1, atIdx -1);
+			String path;
+			if(atIdx > 0) {
+				if(keyPath.charAt(atIdx -1) == '.')
+					atIdx--;
+				path = keyPath.substring(dotIdx +1, atIdx);
+			} else {
+				path = keyPath.substring(dotIdx +1);
+			}
 			WOComponent component = (path.equals("session"))?null:ses.context().component(); 
 			while(component != null) {
 				try {

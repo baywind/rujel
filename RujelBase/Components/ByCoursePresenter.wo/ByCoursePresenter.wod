@@ -45,6 +45,11 @@ EditCell : OnClickContainer {
   onclick = session.ajaxPopup;
   rowspan = rowspan;
 }
+NoEditCell : WOGenericContainer {
+  elementName = "td";
+  omitTags = access.edit;
+  rowspan = rowspan;
+}
 
 CanEdit : WOConditional {
   condition = ^readOnly;
@@ -63,7 +68,11 @@ DeleteCell : OnClickContainer {
   onclick = session.tryLoad;
   rowspan = rowspan;
 }
-
+NoDeleteCell : WOGenericContainer {
+  elementName = "td";
+  omitTags = access.delete;
+  rowspan = rowspan;
+}
 Cross : WOImage {
   framework = "RujelBase";
   filename = "cross.png";

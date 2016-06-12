@@ -5,10 +5,12 @@ import java.util.logging.Logger;
 
 import net.rujel.base.Indexer;
 import net.rujel.base.QualifiedSetting;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.CriteriaSet;
 import net.rujel.reusables.ModulesInitialiser;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -50,6 +52,7 @@ public class SetupCriteria extends WOComponent {
     public String nameOfCritSet;
     public int tab = 0;
     public Boolean tabgroups;
+    public NamedFlags access;
     
     public SetupCriteria(WOContext context) {
         super(context);
@@ -164,6 +167,8 @@ public class SetupCriteria extends WOComponent {
     public void setCurrSet(NSKeyValueCoding set) {
     	currSet = set;
 		nameOfCritSet = (set == null)?null:(String)set.valueForKey(CriteriaSet.SET_NAME_KEY);
+    	ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+		access = readAccess.cachedAccessForObject(CriteriaSet.ENTITY_NAME, (Integer)null);
     	if(set instanceof CriteriaSet) {
     		EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject((CriteriaSet)currSet);
     		currID = (Integer)gid.keyValues()[0];
@@ -181,6 +186,20 @@ public class SetupCriteria extends WOComponent {
 						Various.addToSortedList(cr, criteria, "criterion", null);
 				}
 			}
+        	NSArray byCourse = base.settingUsage("numericValue", currID,
+        			session().valueForKey("eduYear"));
+        	if(byCourse != null && byCourse.count() > 0) {
+        		Enumeration enu = byCourse.objectEnumerator();
+        		while (enu.hasMoreElements()) {
+					EOEnterpriseObject setting = (EOEnterpriseObject) enu.nextElement();
+					if(setting == base)
+						continue;
+					Integer section = (Integer)setting.valueForKeyPath("section.sectionID");
+					if(section != null)
+						access = access.or(readAccess.cachedAccessForObject(
+								CriteriaSet.ENTITY_NAME, section));
+				}
+        	}
     		if(criteria.count() == 0) {
     			critDict.takeValueForKey("A", "title");
     			return;

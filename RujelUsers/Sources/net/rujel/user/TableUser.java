@@ -35,16 +35,20 @@ import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOGlobalID;
 import com.webobjects.eocontrol.EOKeyGlobalID;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSMutableSet;
 
 import net.rujel.auth.UserPresentation;
 import net.rujel.auth.UserPresentation.DefaultImplementation;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.Person;
 import net.rujel.interfaces.PersonLink;
 import net.rujel.interfaces.Student;
 import net.rujel.interfaces.Teacher;
+import net.rujel.reusables.SettingsReader;
 
 public class TableUser extends DefaultImplementation implements
 		UserPresentation {
@@ -79,18 +83,26 @@ public class TableUser extends DefaultImplementation implements
 		}
 		list = au.groups();
 		if(list != null && list.count() > 0) {
+			NSArray mask = null;
+			if(SettingsReader.boolForKeyPath("auth.maskGlobalAccess", false))
+				mask = EOQualifier.filteredArrayWithQualifier(list, new EOKeyValueQualifier(
+						"groupName", EOQualifier.QualifierOperatorEqual, "@"));
 			groups = new NSMutableDictionary();
 			for (int i = 0; i < list.count(); i++) {
 				EOEnterpriseObject gr = (EOEnterpriseObject)list.objectAtIndex(i);
+				String groupName = (String)gr.valueForKey("groupName");
+				if(groupName.equals("@"))
+					continue;
 				Object section = gr.valueForKey("section");
-				if(section == null)
-					section = "global";
-				NSMutableSet set = (NSMutableSet)groups.objectForKey(section);
-				if(set == null) {
-					set = new NSMutableSet(gr.valueForKey("groupName"));
-					groups.setObjectForKey(set, section);
+				if(section == null && mask != null) {
+					Enumeration enu = mask.objectEnumerator();
+					while (enu.hasMoreElements()) {
+						EOEnterpriseObject mgr = (EOEnterpriseObject) enu.nextElement();
+						section = mgr.valueForKey("section");
+						prepareGroupsSet(groupName, section);
+					}
 				} else {
-					set.addObject(gr.valueForKey("groupName"));
+					prepareGroupsSet(groupName, section);
 				}
 			}
 			Enumeration enu = groups.keyEnumerator();
@@ -112,6 +124,20 @@ public class TableUser extends DefaultImplementation implements
 			}
 		}
 		this.parent = parent;
+	}
+
+	private void prepareGroupsSet(String groupName, Object section) {
+		if(section == null)
+			section = "global";
+		else if (section instanceof SchoolSection)
+			section = ((SchoolSection)section).sectionID();
+		NSMutableSet set = (NSMutableSet)groups.objectForKey(section);
+		if(set == null) {
+			set = new NSMutableSet(groupName);
+			groups.setObjectForKey(set, section);
+		} else {
+			set.addObject(groupName);
+		}
 	}
 
 	public AutUser userEO(EOEditingContext ec) {

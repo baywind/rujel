@@ -32,6 +32,8 @@ package net.rujel.ui;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 
+import net.rujel.base.ReadAccess;
+import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
@@ -54,6 +56,8 @@ public class AdminPage extends com.webobjects.appserver.WOComponent {
 	public EOEditingContext ec;
     public Object item;
     public Object grItem;
+    protected ReadAccess readAccess;
+    public NamedFlags access;
 	
     public AdminPage(WOContext context) {
         super(context);
@@ -102,7 +106,21 @@ public class AdminPage extends com.webobjects.appserver.WOComponent {
         	currModule = (NSKeyValueCodingAdditions)modules.objectAtIndex(0);
         }
         ec = new SessionedEditingContext(context.session());
+        readAccess = (ReadAccess)context.session().valueForKey("readAccess");
     }
+    /*
+    public NamedFlags access() {
+    	if(item instanceof SettingsBase) {
+    		return readAccess.cachedAccessForObject(SettingsBase.ENTITY_NAME, (Integer)null);
+    	} else if(item instanceof QualifiedSetting) {
+    		return readAccess.cachedAccessForObject(QualifiedSetting.ENTITY_NAME, 
+    				(Integer)valueForKeyPath("item.section.sectionID"));
+    	}
+		String checkAccess = (String)currModule.valueForKey("checkAccess");
+		if(checkAccess == null)
+			checkAccess = "AdminPage";
+		return readAccess.cachedAccessForObject(checkAccess, (Integer)null);
+    }*/
     
     public void setCurrModule(NSKeyValueCodingAdditions currModule) {
 		this.currModule = currModule;

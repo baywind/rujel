@@ -3,6 +3,8 @@ package net.rujel.ui;
 import java.math.BigDecimal;
 import java.util.logging.Logger;
 
+import net.rujel.base.QualifiedSetting;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.criterial.CriteriaSet;
@@ -233,8 +235,9 @@ public class WorkTypeSetup extends WOComponent {
     public boolean cantEdit() {
     	if(typeItem != null)
     		return (typeItem != currType);
-    	if(item instanceof Setting)
+    	if(item instanceof Setting) {
     		return (item != currMask);
+    	}
     	return true;
     }
 
@@ -242,6 +245,13 @@ public class WorkTypeSetup extends WOComponent {
     	return (typeItem != currType || currType.namedFlags().flagForKey("system"));
     }
 
+    public boolean cantSelect() {
+    	ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+    	Integer section = null;
+    	if (currMask instanceof QualifiedSetting)
+    		section = (Integer)valueForKeyPath("currMask.section.sectionID");
+    	return !readAccess.accessForObject("WorkType", section).flagForKey("edit");
+    }
     
     public Boolean cantClick() {
     	if(typeItem == currType || currMask != null)

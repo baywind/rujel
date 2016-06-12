@@ -32,6 +32,7 @@ package net.rujel.ui;
 import java.util.Enumeration;
 
 import net.rujel.base.QualifiedSetting;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
@@ -223,7 +224,10 @@ public class SettingsByCourse extends WOComponent {
     		nextSection = null;
     	}
     	item = obj;
-    	setValueForBinding(item, "item");
+    	if(canSetValueForBinding("item"))
+    		setValueForBinding(item, "item");
+    	if(canSetValueForBinding("itemAccess"))
+    		setValueForBinding(access(), "itemAccess");
     }
     
     public Boolean canEdit() {
@@ -251,7 +255,10 @@ public class SettingsByCourse extends WOComponent {
 		Object bs = base().valueForKey(sel);
 		if((val==null)?bs==null:val.equals(bs))
 			return Boolean.TRUE;
-		return (Boolean)session().valueForKeyPath("readAccess._edit.SettingsBase");
+		ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+		return (Boolean)readAccess.cachedAccessForObject(
+				"SettingsBase", (Integer)null).valueForKey("_edit");
+//		return (Boolean)session().valueForKeyPath("readAccess._edit.SettingsBase");
 	}
 	
 	public WOActionResults makeBase() {
@@ -282,11 +289,7 @@ public class SettingsByCourse extends WOComponent {
 			return Boolean.FALSE;
 		if(byCourse() == null || byCourse().count() < 2)
 			return Boolean.FALSE;
-    	NamedFlags access = (NamedFlags)valueForBinding("access");
-    	if(access != null)
-    		return Boolean.valueOf(access.flagForKey("edit"));
-    	else
-    		return (Boolean)session().valueForKeyPath("readAccess.edit.QualifiedSetting");
+		return (Boolean)session().valueForKeyPath("readAccess.edit.QualifiedSetting");
  	}
 	
 	public WOActionResults saveSetting() {
@@ -427,14 +430,31 @@ public class SettingsByCourse extends WOComponent {
     		count+= ((NSArray)title).count();
     	}
     	if(!Various.boolForObject(valueForBinding("readOnly"))) {
-    		NamedFlags access = (NamedFlags)valueForBinding("access");
+    		/*NamedFlags access = (NamedFlags)valueForBinding("access");
     		if(access == null)
     			access = (NamedFlags)session().valueForKeyPath("readAccess.FLAGS.QualifiedSetting");
     		if(access.flagForKey("edit"))
     			count++;
     		if(access.flagForKey("delete"))
-    			count++;
+    			count++;*/
+    		count += 2;
     	}
 		return Integer.valueOf(count);
+	}
+	
+	public NamedFlags access() {
+		NamedFlags access = (NamedFlags)valueForBinding("access");
+		if(access != null)
+			return access;
+		ReadAccess readAccess = (ReadAccess)session().valueForKey("readAccess");
+		String checkAccess = (String)valueForBinding("checkAccess");
+		Integer section = null;
+		if(item instanceof QualifiedSetting) {
+			section = (Integer)item.valueForKeyPath("section.sectionID");
+			if(checkAccess == null)
+				checkAccess = QualifiedSetting.ENTITY_NAME;		}
+		if(checkAccess == null)
+			checkAccess = SettingsBase.ENTITY_NAME;
+		return readAccess.cachedAccessForObject(checkAccess, section);
 	}
 }

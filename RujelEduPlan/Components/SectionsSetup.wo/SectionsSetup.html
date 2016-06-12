@@ -4,7 +4,7 @@
 <webobject name = "SectionsList">
 <webobject name = "SectionDiv">
 	<webobject name = "SectionName"/> 
-		<webobject name = "MinGrade"/> - <webobject name = "MaxGrade"/>
+		<em>(<webobject name = "MinGrade"/> - <webobject name = "MaxGrade"/>)</em>
 </webobject><webobject name = "IsSelected">
 <div class = "selection">
 	<div><webobject name = "NameField"/></div>
@@ -12,10 +12,11 @@
 </div>
 </webobject></webobject>
 <webobject name = "IsSelected">
-<div class = "ungerade">
+<div class = "ungerade" id = "newSection" style = "display:none;">
 	<div><webobject name = "NewNameField"/></div>
 	<div><webobject name = "NewMinField"/> - <webobject name = "NewMaxField"/></div>
 </div>
+<webobject name = "AddSectionContainer"><webobject name = "AddSection"/></webobject>
 </webobject>
 <div><webobject name = "Save"/></div>
 </webobject>
