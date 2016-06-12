@@ -35,6 +35,7 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
@@ -68,6 +69,9 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public NSKeyValueCodingAdditions valueOf;
 	public Object item;
 	public NSArray grades;
+	public NSArray sections;
+	public SchoolSection activeSection;
+	public ReadAccess readAccess;
 	
 	public NSMutableDictionary tmpDict = new NSMutableDictionary();
 	
@@ -116,17 +120,38 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			if(key != null)
 				tmpDict.takeValueForKey(tab, key);
 		}
-		
+		readAccess = new ReadAccess(context.session());
+		readAccess.relObject = this;
+		readAccess.sectionPath = "activeSection";
+		if(Various.boolForObject(session().valueForKeyPath("sections.hasSections"))) {
+			activeSection = (SchoolSection)context.session().valueForKeyPath("state.section");
+			activeSection = (SchoolSection)EOUtilities.localInstanceOfObject(ec, activeSection);
+			sections = SchoolSection.sectionsForUser(context.session(), "Curriculum", ec, true);
+//			if(sections.count() < 2)
+//				sections = null;
+		}
 		valueOf = new DisplayAny.ValueReader(this);
-		search();
-		
-		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
-		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
+		setActiveSection(activeSection);
+    }
+    
+    public void setActiveSection(Object section) {
+    	if(section instanceof SchoolSection)
+    		activeSection = (SchoolSection)section;
+    	else
+    		activeSection = null;
+    	ec.setUserInfoForKey(activeSection, "activeSection");
+    	
+		int maxGrade = (activeSection == null)?SettingsReader.intForKeyPath("edu.maxGrade", 11):
+			activeSection.maxGrade().intValue();
+		int minGrade = (activeSection == null)?SettingsReader.intForKeyPath("edu.minGrade", 1):
+			activeSection.minGrade().intValue();
 		Integer[] grds = new Integer[maxGrade - minGrade + 1];
 		for (int i = 0; i < grds.length; i++) {
 			grds[i] = new Integer(minGrade + i);
 		}
 		grades = new NSArray(grds);
+		if(tmpDict.valueForKey("inReason") == null)
+			search();
     }
     
     public void search() {
@@ -145,14 +170,59 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     	String qualifierFormat = (String)currTab.valueForKeyPath("qualifier.formatString");
     	EOQualifier qual = EOQualifier.qualifierWithQualifierFormat(qualifierFormat, args);
     	String entityName = (String)currTab.valueForKey("entity");
+    	if(activeSection != null) { // add section qualifier
+    		EOQualifier[] quals = new EOQualifier[2];
+    		String key = (entityName.equals(Reason.ENTITY_NAME))?
+    				Reason.SECTION_KEY:"reason.section";
+    		quals[0] = new EOKeyValueQualifier(key,EOQualifier.QualifierOperatorEqual, activeSection);
+    		quals[1] = new EOKeyValueQualifier(key,EOQualifier.QualifierOperatorEqual, NullValue);
+			quals[0] = new EOOrQualifier(new NSArray(quals));
+    		quals[1] = qual;
+    		qual = new EOAndQualifier(new NSArray(quals));
+    	}
     	EOFetchSpecification fs = new EOFetchSpecification(entityName,qual,null);
     	fs.setRefreshesRefetchedObjects(true);
     	args = (NSArray)currTab.valueForKey("prefetch");
     	if(args != null && args.count() > 0)
     		fs.setPrefetchingRelationshipKeyPaths(args);
     	list = ec.objectsWithFetchSpecification(fs);
+    	if(activeSection != null && list.count() > 0) { // filter by section
+			NSMutableArray newList = new NSMutableArray(list.count());
+			Enumeration enu = list.objectEnumerator();
+    		if(entityName.equals(Reason.ENTITY_NAME)) {
+    			while (enu.hasMoreElements()) {
+					Reason reas = (Reason) enu.nextElement();
+					if(reas.section() == activeSection) {
+						newList.addObject(reas);
+						continue;
+					}
+					if(filterEvents(reas.substitutes()) || filterEvents(reas.variations()))
+						newList.addObject(reas);
+				}
+    		} else {
+    			while (enu.hasMoreElements()) {
+					Reason.Event event = (Reason.Event) enu.nextElement();
+					if(event.reason().section() == activeSection ||
+							event.course().valueForKey("section") == activeSection)
+						newList.addObject(event);
+				}
+    		}
+			list = newList;
+    	}
     	if(list != null && list.count() > 1)
     		sort();
+    }
+    
+    private boolean filterEvents(NSArray events) {
+    	if(events == null || events.count() == 0)
+    		return false;
+		Enumeration enu = events.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			Reason.Event event = (Reason.Event) enu.nextElement();
+			if(event.course().valueForKey("section") == activeSection)
+				return true;
+		}
+		return false;
     }
     
     public void sort() {
@@ -195,8 +265,8 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     		currObject = currReason;
     		tmpDict.takeValueForKey(Boolean.FALSE,"allowSelection");
     	} else {
-    		tmpDict.takeValueForKey(session().valueForKeyPath(
-    				"readAccess.create.Curriculum"),"allowSelection");
+    		tmpDict.takeValueForKey(readAccess.valueForKeyPath(
+    				"create.Curriculum"),"allowSelection");
     	}
     	if(tmpDict.valueForKey("inReason") != null) {
 			String reasonKey = (String)tab.valueForKey("reasonKey");
@@ -438,7 +508,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public Boolean cantEdit() {
 		if (tmpDict.valueForKey("reasonsToMoveIn") != null)
 			return Boolean.TRUE;
-		return (Boolean)session().valueForKeyPath("readAccess._edit.currReason");
+		return (Boolean)readAccess.valueForKeyPath("_edit.currReason");
 	}
 	public Boolean noEduGroup() {
 		if (reasonGroup() == null)
@@ -564,7 +634,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		tmpDict.takeValueForKey(Boolean.TRUE, "inReason");
 		list = currReason.substitutes();
 		sort();
-		if(Various.boolForObject(session().valueForKeyPath("readAccess.create.Curriculum"))) {
+		if(Various.boolForObject(readAccess.valueForKeyPath("create.Curriculum"))) {
 			tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
 			tmpDict.removeObjectForKey("selectedObjects");
 			tmpDict.removeObjectForKey("reasonsToMoveIn");
@@ -580,7 +650,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		tmpDict.takeValueForKey(Boolean.TRUE, "inReason");
 		list = currReason.variations();
 		sort();
-		if(Various.boolForObject(session().valueForKeyPath("readAccess.create.Curriculum"))) {
+		if(Various.boolForObject(readAccess.valueForKeyPath("create.Curriculum"))) {
 			tmpDict.takeValueForKey(Boolean.TRUE,"allowSelection");
 			tmpDict.removeObjectForKey("selectedObjects");
 			tmpDict.removeObjectForKey("reasonsToMoveIn");
@@ -599,6 +669,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 		} else {
 			currReason.setReason((String)plist.valueForKey("newReason"));
 		}
+		currReason.setSection(activeSection);
 		currObject = currReason;
 		tmpDict.takeValueForKey(null, "archivesCount");
 	}
@@ -606,7 +677,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 	public boolean canDelete() {
 		if(currReason == null)
 			return false;
-		if(Various.boolForObject(session().valueForKeyPath("readAccess._delete.currReason")))
+		if(Various.boolForObject(readAccess.valueForKeyPath("_delete.currReason")))
 			return false;
 		return (currReason.substitutes().count() + currReason.variations().count() == 0);
 	}
@@ -738,7 +809,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 			return Boolean.FALSE;
 		if(tmpDict.valueForKey("reasonsToMoveIn") != null)
 			return Boolean.FALSE;
-		return session().valueForKeyPath("readAccess.create.Reason");
+		return readAccess.valueForKeyPath("create.Reason");
 	}
 	
 	public WOActionResults export() {

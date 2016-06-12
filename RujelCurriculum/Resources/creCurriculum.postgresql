@@ -8,7 +8,6 @@ CREATE TABLE CU_REASON (
   DATE_END date,
   REASON_TEXT varchar(255) NOT NULL,
   VERIFY_TEXT varchar(255),
-  SCHOOL_NUM smallint NOT NULL,
   REASON_FLAGS smallint NOT NULL,
   PRIMARY KEY (R_ID)
 );

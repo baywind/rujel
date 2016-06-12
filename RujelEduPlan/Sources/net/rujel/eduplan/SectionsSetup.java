@@ -34,13 +34,21 @@ public class SectionsSetup extends WOComponent {
 	public Object currSection;
 	public NSMutableDictionary newDict = new NSMutableDictionary(
 			new NamedFlags(SchoolSection.flagNames),"namedFlags");
+	public NSArray grades;
     
     public SectionsSetup(WOContext context) {
         super(context);
     	EOEditingContext ec = context.session().defaultEditingContext();
     	sections = SchoolSection.listSections(ec, true);
-    	newDict.takeValueForKey(SettingsReader.intForKeyPath("edu.minGrade",1), "minGrade");
-    	newDict.takeValueForKey(SettingsReader.intForKeyPath("edu.maxGrade", 11), "maxGrade");
+		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
+		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
+		Integer[] grds = new Integer[maxGrade - minGrade + 1];
+		for (int i = 0; i < grds.length; i++) {
+			grds[i] = new Integer(minGrade + i);
+		}
+		grades = new NSArray(grds);
+    	newDict.takeValueForKey(minGrade, "minGrade");
+    	newDict.takeValueForKey(maxGrade, "maxGrade");
     }
     
 /*
@@ -161,21 +169,39 @@ public class SectionsSetup extends WOComponent {
 
 	public WOActionResults save() {
 		EOEditingContext ec = session().defaultEditingContext();
+		SchoolSection created = null;
 		if(currSection == null && newDict.containsKey("name")) {
-			EOEnterpriseObject eo = EOUtilities.createAndInsertInstance(
+			created = (SchoolSection)EOUtilities.createAndInsertInstance(
 					ec, SchoolSection.ENTITY_NAME);
-			eo.takeValuesFromDictionary(newDict);
+			created.takeValuesFromDictionary(newDict);
+			Integer sort = (Integer)sections.valueForKeyPath("@max.sort");
+			if(sort == null)
+				sort = new Integer(1);
+			else
+				sort = new Integer(sort.intValue() +1);
+			created.setSort(sort);
 		}
 		try {
 			ec.saveChanges();
-			currSection = null;
+			if(created != null) {
+				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Created section",
+						new Object[] {created});
+				session().takeValueForKey(SchoolSection.forSession(session()), "sections");
+				sections = sections.arrayByAddingObject(currSection);
+			} else {
+				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Modified section",
+						new Object[] {currSection});
+			}
 			if(newDict.containsKey("name"))
 				newDict = new NSMutableDictionary(
 						new NamedFlags(SchoolSection.flagNames),"namedFlags");
 		} catch (Exception e) {
 			ec.revert();
+			EduPlan.logger.log(WOLogLevel.WARNING,"Error savong changes to section",
+					new Object[] {currSection,e});
 			session().takeValueForKey(e.toString(), "message");
 		}
+		currSection = null;
 		return null;
 	}
 

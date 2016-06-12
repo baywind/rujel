@@ -36,6 +36,7 @@ import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
@@ -174,6 +175,29 @@ public class SchoolSection extends _SchoolSection {
 		if(section == null || ec == null)
 			return section;
 		return (SchoolSection)EOUtilities.localInstanceOfObject(ec, section);
+	}
+
+	public static NSArray sectionsForUser(WOSession ses, String checkAccess, 
+			EOEditingContext ec, boolean addNone) {
+		ReadAccess acc = (ReadAccess)ses.valueForKey("readAccess");
+		NSArray allSections = (NSArray)ses.valueForKeyPath("sections.list");
+		if(allSections == null || allSections.count() < 2)
+			return allSections;
+		NSMutableArray result = new NSMutableArray();
+		Enumeration enu = allSections.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			SchoolSection sect = (SchoolSection) enu.nextElement();
+			if(acc.cachedAccessForObject(checkAccess, sect.sectionID()).flagForKey("edit")) {
+				if(ec != null)
+					sect = (SchoolSection)EOUtilities.localInstanceOfObject(ec, sect);
+				result.addObject(sect);
+			}
+		}
+		if(addNone && acc.cachedAccessForObject(checkAccess, (Integer)null).flagForKey("edit")) {
+			result.addObject(new NSDictionary (ses.valueForKeyPath(
+					"strings.RujelBase_Base.noLimit"), "name"));
+		}
+		return result;
 	}
 
 }

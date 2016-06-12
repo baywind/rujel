@@ -62,8 +62,13 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
 	
     public VseGroupInspector(WOContext context) {
         super(context);
-		int maxGrade = SettingsReader.intForKeyPath("edu.maxGrade", 11);
-		int minGrade = SettingsReader.intForKeyPath("edu.minGrade", 1);
+        SchoolSection section = null;
+        if(Various.boolForObject(context.session().valueForKeyPath("sections.hasSections")))
+        	section = (SchoolSection)session().valueForKeyPath("state.section");
+		int maxGrade = (section == null)?SettingsReader.intForKeyPath("edu.maxGrade", 11):
+			section.maxGrade().intValue();
+		int minGrade = (section == null)?SettingsReader.intForKeyPath("edu.minGrade", 1):
+			section.minGrade().intValue();
 		Integer[] grds = new Integer[maxGrade - minGrade + 1];
 		NSDictionary[] bYears = new NSDictionary[grds.length];
 		NSDictionary[] eYears = new NSDictionary[grds.length];
@@ -91,9 +96,15 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
     	currGroup = gr;
     	ec = gr.editingContext();
     	grade = gr.grade();
+    	if(!grades.contains(grade))
+    		grades = grades.arrayByAddingObject(grade);
     	groupTitle = gr.title();
     	firstYear = yearDict(gr.firstYear().intValue());
+    	if(!beginYears.contains(firstYear))
+    		beginYears = beginYears.arrayByAddingObject(firstYear);
     	lastYear = yearDict(gr.lastYear().intValue());
+    	if(!endYears.contains(lastYear))
+    		endYears = endYears.arrayByAddingObject(lastYear);
 		int currYear = ((Integer)session().valueForKey("eduYear")).intValue();
 		if(gr.firstYear().intValue() < currYear) {
 			NSMutableArray tmp = endYears.mutableClone();
@@ -128,6 +139,7 @@ public class VseGroupInspector extends com.webobjects.appserver.WOComponent {
     	try {
     		boolean create = (currGroup == null);
 			SchoolSection section = (SchoolSection)session().valueForKeyPath("state.section");
+			section = (SchoolSection)EOUtilities.localInstanceOfObject(ec, section);
 			if(create) {
 				currGroup = (VseEduGroup)EOUtilities.createAndInsertInstance(ec,
 						VseEduGroup.ENTITY_NAME);

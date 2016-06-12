@@ -145,8 +145,13 @@ public class Reason extends _Reason {
 			added = true;
 		}
     	if(section() != null) {
-    		if(added)
+    		if(added) {
+    			if(editingContext().userInfoForKey("activeSection") == section()) {
+    				result.append('*');
+    				return;
+    			}
 				result.append(',').append(' ');
+    		}
     		result.append(section().name());
     	}
 	}
@@ -451,13 +456,13 @@ public class Reason extends _Reason {
 							((PlanCycle)course.cycle()).section().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), sub,"eduGroup");
 				}
-				if(begin().compareTo(sub.date()) > 0 || 
+				if(EOPeriod.Utility.compareDates(begin(),sub.date()) > 0 || 
 						(sub.date().getTime() > end)) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetDates"));
 					buf.append(" (").append(
 							MyUtility.dateFormat().format(sub.date())).append(')');
-					if(begin().compareTo(sub.date()) > 0)
+					if(EOPeriod.Utility.compareDates(begin(),sub.date()) > 0)
 						throw new NSValidation.ValidationException(buf.toString(),sub,BEGIN_KEY);
 					else
 						throw new NSValidation.ValidationException(buf.toString(),sub,END_KEY);
@@ -498,13 +503,13 @@ public class Reason extends _Reason {
 							((PlanCycle)course.cycle()).section().name()).append(')');
 					throw new NSValidation.ValidationException(buf.toString(), var,"eduGroup");
 				}
-				if(begin().compareTo(var.date()) > 0 || 
+				if(EOPeriod.Utility.compareDates(begin(), var.date())  > 0 || 
 						(var.date().getTime() > end)) {
 					buf.append(WOApplication.application().valueForKeyPath(
 						"strings.RujelCurriculum_Curriculum.messages.cantSetDates"));
 					buf.append(" (").append(
 							MyUtility.dateFormat().format(var.date())).append(')');
-					if(begin().compareTo(var.date()) > 0)
+					if(EOPeriod.Utility.compareDates(begin(),var.date()) > 0)
 						throw new NSValidation.ValidationException(
 								buf.toString(),var,BEGIN_KEY);
 					else
@@ -605,6 +610,17 @@ public class Reason extends _Reason {
 				result.append(section.name());
 	    	}
 	    	return result.toString();
+		}
+	}
+	
+	public void setSection(Object section) {
+		if(section instanceof SchoolSection) {
+			if(((SchoolSection)section).editingContext() != this.editingContext())
+				section = EOUtilities.localInstanceOfObject(
+						editingContext(), (SchoolSection)section);
+			super.setSection((SchoolSection)section);
+		} else {
+			super.setSection(null);
 		}
 	}
 }

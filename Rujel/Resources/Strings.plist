@@ -140,6 +140,8 @@
 				<string>.editingContext</string>
 				<key>onClick</key>
 				<string>$session.tryLoad</string>
+				<key>showSection</key>
+				<true/>
 			</dict>
 		</dict>
 	</dict>

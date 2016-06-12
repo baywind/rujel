@@ -215,12 +215,11 @@ public class LessonNoteEditor extends WOComponent {
 		//refresh();
 		logger.log(WOLogLevel.READING,"Open course",new Object[] {session(),course});
 
-		SchoolSection section = SchoolSection.stateSection(session(), ec);
-		if(section != null && !section.equals(course.valueForKeyPath("cycle.section"))) {
-			section = (SchoolSection)course.valueForKeyPath("cycle.section");
-			if(section != null) { // switch to correct eduSection
+		SchoolSection courseSection = (SchoolSection)course.valueForKey("section");
+		if(courseSection != SchoolSection.stateSection(session(), ec)) {
+			if(courseSection != null) { // switch to correct eduSection
 				session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
-						session().defaultEditingContext(), section), "state.section");
+						session().defaultEditingContext(), courseSection), "state.section");
 			}
 		}
 		weekFootprint = new WeekFootprint(course);

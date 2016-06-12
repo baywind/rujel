@@ -418,6 +418,19 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		result.append(WOMessage.stringByEscapingHTMLString(comment())).append(")</span>");
 		return result.toString();
 	}
+	
+	public SchoolSection section() {
+		SchoolSection section = null;
+		try {
+			section = (SchoolSection)valueForKeyPath("cycle.section");
+		} catch (Exception e) {}
+		if(section == null) {
+			try {
+				section = (SchoolSection)valueForKeyPath("eduGroup.section");
+			} catch (Exception e) {}
+		}
+		return section;
+	}
 
 	public static final NSArray flagNames = new NSArray (new String[] 
 	      {"teacherChanged","-2-","-4-","-8-","mixedGroup"});

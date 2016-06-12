@@ -50,20 +50,14 @@ NameField : WOTextField {
   class = "required";
 }
 
-MinField : WOTextField {
-  value = currSection.minGrade;
-  size = 3;
-  maxlength = "3";
-  numberformat = "0";
-  class = "required numeric";
+MinField : WOPopUpButton {
+  selection = currSection.minGrade;
+  list = grades;
 }
 
-MaxField : WOTextField {
-  value = currSection.maxGrade;
-  length = 3;
-  size = "3";
-  numberformat = "0";
-  class = "required numeric";
+MaxField : WOPopUpButton {
+  selection = currSection.maxGrade;
+  list = grades;
 }
 
 Form : WOForm {
@@ -76,27 +70,21 @@ Save : WOSubmitButton {
 }
 
 NewNameField : WOTextField {
-  value = currSection.name;
+  value = newDict.name;
   length = 28;
   maxlength = "20";
   class = "required";
   name = "sectionName";
 }
 
-NewMinField : WOTextField {
-  value = newDict.minGrade;
-  size = 3;
-  maxlength = "3";
-  numberformat = "0";
-  class = "required numeric";
+NewMinField : WOPopUpButton {
+  selection = newDict.minGrade;
+  list = grades;
 }
 
-NewMaxField : WOTextField {
-  value = newDict.maxGrade;
-  size = 3;
-  maxlength = "3";
-  numberformat = "0";
-  class = "required numeric";
+NewMaxField : WOPopUpButton {
+  selection = newDict.maxGrade;
+  list = grades;
 }
 
 

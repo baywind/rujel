@@ -33,7 +33,6 @@ import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.QualifiedSetting;
-import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
@@ -208,7 +207,7 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     		tmpValues.takeValueForKey(set.eduYear(), QualifiedSetting.EDU_YEAR_KEY);
     		activeSection = byCourse.section();
     	}
-    	sections = sectionsForUser();
+    	sections = SchoolSection.sectionsForUser(session(),QualifiedSetting.ENTITY_NAME,ec(),true);
     	if(sections == null || sections.count() == 0) {
     		sections = null;
     	} else if(sections.count() == 1) {
@@ -475,26 +474,6 @@ public class ByCourseEditor extends com.webobjects.appserver.WOComponent {
     	return doneEditing();
 	}
 	
-	public NSArray sectionsForUser() {
-		ReadAccess acc = (ReadAccess)session().valueForKey("readAccess");
-		NSArray allSections = (NSArray)session().valueForKeyPath("sections.list");
-		if(allSections == null || allSections.count() < 2)
-			return allSections;
-		NSMutableArray result = new NSMutableArray();
-		Enumeration enu = allSections.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			SchoolSection sect = (SchoolSection) enu.nextElement();
-			if(acc.cachedAccessForObject("QualifiedSetting", sect.sectionID()).flagForKey("edit")) {
-				result.addObject(EOUtilities.localInstanceOfObject(ec(), sect));
-			}
-		}
-		if(acc.cachedAccessForObject("QualifiedSetting", new Integer(-1)).flagForKey("edit")) {
-			result.addObject(new NSDictionary (session().valueForKeyPath(
-					"strings.RujelBase_Base.noLimit"), "name"));
-		}
-		return result;
-	}
-
 	public String sectionRequired() {
 		if(currEditor == null || activeSection instanceof SchoolSection)
 			return null;

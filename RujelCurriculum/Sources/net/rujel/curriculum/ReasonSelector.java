@@ -121,6 +121,9 @@ public class ReasonSelector extends com.webobjects.appserver.WOComponent {
     			return;
     		reason = (Reason)EOUtilities.createAndInsertInstance(ec, Reason.ENTITY_NAME);
 //    		logger.log(WOLogLevel.OWNED_EDITING,"Creating Reason",session());
+    		if(Various.boolForObject(session().valueForKeyPath("sections.hasSections"))) {
+    			reason.setSection(session().valueForKeyPath("state.section"));
+    		}
     		aDate = null;
 //        	setValueForBinding(reason, "reason");
     	} else if(reasonID.intValue() != -1) {
