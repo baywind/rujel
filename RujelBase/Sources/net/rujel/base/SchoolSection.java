@@ -129,6 +129,9 @@ public class SchoolSection extends _SchoolSection {
 				}
 	    	}
 			ec.saveChanges();
+			Logger.getLogger("rujel.base").log(WOLogLevel.INFO, 
+					"Automatically created sections for new concept from the old one");
+			QualifiedSetting.extractSections(ec);
 		}
 		return list;
 	}

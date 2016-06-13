@@ -30,7 +30,6 @@
 package net.rujel;
 
 import net.rujel.base.MyUtility;
-import net.rujel.base.QualifiedSetting;
 import net.rujel.base.ReadAccess;
 import net.rujel.reusables.*;
 
@@ -129,10 +128,10 @@ public class Application extends UTF8Application {
 					return;
 				}
 			}
-		
+		/*
 		try {
 			EOEditingContext ec = new EOEditingContext();
-			QualifiedSetting.extractSections(ec);
+			net.rujel.base.QualifiedSetting.extractSections(ec);
 		} catch (Exception e) {
 			_errorMessage = handler.toString();
 			logger.log(WOLogLevel.SEVERE,
@@ -141,7 +140,7 @@ public class Application extends UTF8Application {
 			Logger.getLogger("").removeHandler(handler);
 			handler.close();
 			return;
-		}
+		}*/
 			
 		NSDictionary access = (NSDictionary)PlistReader.readPlist("access.plist", null, null);
 		ReadAccess.mergeDefaultAccess(access);

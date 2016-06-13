@@ -134,10 +134,10 @@ public class SubjectSelector extends WOComponent {
     		Object check = agregate.valueForKey("section");
     		if(check != null && !check.equals(SchoolSection.stateSection(session(), ec))) {
     			_areas = null;
-    		} else {
-    			check = agregate.valueForKey("school");
-        		if(check != null && !check.equals(session().valueForKey("school")))
-        			_areas = null;
+//    		} else {
+//    			check = agregate.valueForKey("school");
+//        		if(check != null && !check.equals(session().valueForKey("school")))
+//        			_areas = null;
     		}
     		if(_areas == null) {
     			_subjects = null;
@@ -155,7 +155,7 @@ public class SubjectSelector extends WOComponent {
     			agregate = new NSMutableDictionary();
 				NSMutableDictionary values = new NSMutableDictionary();
 				values.takeValueForKey(SchoolSection.stateSection(session(), ec),"section");
-				values.takeValueForKey(session().valueForKey("school"), "school");
+//				values.takeValueForKey(session().valueForKey("school"), "school");
 				NSArray cycles = EOUtilities.objectsMatchingValues(ec,EduCycle.entityName, values);
 				if(cycles == null || cycles.count() == 0)
 					return null;

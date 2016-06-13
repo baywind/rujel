@@ -1,6 +1,6 @@
 -- Schema updates for BaseStatic model --
 
--- v2 (1.0.3) --
+-- v2 (1.1) --
 
 CREATE TABLE SCHOOL_SECTION (
   S_ID smallint NOT NULL,

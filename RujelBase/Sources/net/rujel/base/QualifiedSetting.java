@@ -30,12 +30,14 @@
 package net.rujel.base;
 
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogFormatter;
+import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.Parameter;
 
 import com.webobjects.appserver.WOSession;
@@ -332,6 +334,8 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 			q.extractSection();
 		}
 		ec.saveChanges();
+		Logger.getLogger("rujel.base").log(WOLogLevel.INFO, 
+				"Automatically updated settings for new sections concept");
 	}
 	
 	/* to run once after update to version 1.1 */
