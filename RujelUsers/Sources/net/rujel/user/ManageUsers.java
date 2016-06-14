@@ -128,10 +128,10 @@ public class ManageUsers extends WOComponent {
 			return null;
 		EOEnterpriseObject group = (EOEnterpriseObject)currGroup.valueForKey("group");
 		NSMutableDictionary row = null;
+		SchoolSection section = (SchoolSection)currGroup.valueForKey("section");
 		if(group == null) {
 			group = EOUtilities.createAndInsertInstance(ec, "UserGroup");
 			group.takeValueForKey(currGroup.valueForKey("groupName"), "groupName");
-			Object section = currGroup.valueForKey("section");
 			group.takeValueForKey(section, "section");
 			row = (NSMutableDictionary)currGroup.valueForKey("row");
 		}
@@ -140,10 +140,10 @@ public class ManageUsers extends WOComponent {
 			ec.saveChanges();
 			logger.log(WOLogLevel.CONFIG,"Saved group changes",group);
 			if(row != null) {
-				Object section = currGroup.valueForKey("section");
 				if(section == null)
-					section = "global";
-				row.setObjectForKey(group, section);
+					row.setObjectForKey(group, "global");
+				else
+					row.setObjectForKey(group, section.sectionID());
 			}
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error saving group changes",
@@ -427,11 +427,11 @@ public class ManageUsers extends WOComponent {
 		currGroup.takeValueForKey(item2.valueForKey("title"), "title");
 		currGroup.takeValueForKey(item2, "row");
 		if(item != null) {
-			Object section = item.valueForKey("sectionID");
-			currGroup.takeValueForKey(section, "section");
+			Object sectionID = item.valueForKey("sectionID");
+			currGroup.takeValueForKey(item, "section");
 			currGroup.takeValueForKey(item.valueForKey(SchoolSection.NAME_KEY), "sectionName");
-			if(currGroup.valueForKey("sectionName") == null && section != null)
-				currGroup.takeValueForKey(section.toString(), "sectionName");
+			if(currGroup.valueForKey("sectionName") == null && sectionID != null)
+				currGroup.takeValueForKey(sectionID.toString(), "sectionName");
 		} else {
 			currGroup.takeValueForKey("...", "sectionName");
 		}
@@ -454,8 +454,8 @@ public class ManageUsers extends WOComponent {
 		EOEnterpriseObject group = group();
 		if(mask && "@".equals(item2.valueForKey("groupName"))) {
 			if(group!= null && group.valueForKey("externalEquivalent") != null)
-				return "highlight2";
-			return "highlight";
+				return "highlight";
+			return "highlight2";
 		}
 		if(group == null)
 			return "grey";
