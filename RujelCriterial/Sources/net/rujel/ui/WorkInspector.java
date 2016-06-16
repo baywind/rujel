@@ -92,6 +92,8 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	WorkType type = (WorkType)dict.valueForKey(Work.WORK_TYPE_KEY);
     	if(type == null) {
     		type = WorkType.defaultType(course);
+    		if(!types.containsObject(type))
+    			type = (WorkType)types.objectAtIndex(0);
 			dict.takeValueForKey(type, Work.WORK_TYPE_KEY);
     	}
     	if(type != null && type.namedFlags().flagForKey("specCriter")) {
@@ -326,6 +328,7 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
 //    		ec.saveChanges();
     	} catch (NSValidation.ValidationException ve) {
     		session().takeValueForKey(ve.getMessage(), "message");
+    		setWork(work);
     	} catch (NSKeyValueCoding.UnknownKeyException e) {
     		session().takeValueForKey(application().valueForKeyPath
     				("strings.RujelCriterial_Strings.messages.notSaved"), "message");

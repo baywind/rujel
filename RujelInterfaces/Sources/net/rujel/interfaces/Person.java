@@ -95,10 +95,10 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 				return (String)byDelegate;
 			}
 			StringBuffer sb = new StringBuffer(5);
-			if(pers.firstName() != null)
+			if(pers.firstName() != null && pers.firstName().length() > 0)
 				sb.append(pers.firstName().charAt(0)).append('.');
 			
-			if(pers.secondName() == null) return sb.toString();
+			if(pers.secondName() == null || pers.secondName().length() == 0) return sb.toString();
 			
 			if(sb.length() > 0) sb.append(' ');
 			sb.append(pers.secondName().charAt(0)).append('.');
@@ -125,6 +125,8 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			StringBuffer buf = new StringBuffer(57);
 			
 			String first = pers.firstName();
+			if(first.length() == 0)
+				first = null;
 			
 			switch (firstNameDisplay) {
 			case 0:
@@ -137,6 +139,8 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 				break;
 			}
 			String second = pers.secondName();
+			if(second.length() == 0)
+				second = null;
 			if(secondNameDisplay < 1 || second == null) return buf.toString();
 			
 			if(buf.length() > 0) buf.append(' ');
@@ -152,17 +156,18 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			return buf.toString();//first + " " + second;
 		}
 		
-		protected static final NSSelector fullName = new NSSelector(
-				"fullName",new Class[] {PersonLink.class,Boolean.TYPE,Integer.TYPE,Integer.TYPE,Integer.TYPE});
+		protected static final NSSelector fullName = new NSSelector("fullName",new Class[] {
+						PersonLink.class,Boolean.TYPE,Integer.TYPE,Integer.TYPE,Integer.TYPE});
 
-		public static String fullName(PersonLink person, boolean startWithLastName,int lastNameDisplay,int firstNameDisplay,int secondNameDisplay) {
+		public static String fullName(PersonLink person, boolean startWithLastName, 
+				int lastNameDisplay, int firstNameDisplay, int secondNameDisplay) {
 			if(person == null)
 				return "???";
 			Person pers = (person instanceof Person)?(Person)person:person.person();
 			if(pers == null)
 				return "???";
-			Object byDelegate = delegateManager.useDelegates(fullName, 
-					new Object[] {person,startWithLastName,lastNameDisplay,firstNameDisplay,secondNameDisplay});
+			Object byDelegate = delegateManager.useDelegates(fullName, new Object[] {
+					person,startWithLastName,lastNameDisplay,firstNameDisplay,secondNameDisplay});
 			if(byDelegate != null) {
 				if(byDelegate == NullValue)
 					return null;
@@ -170,7 +175,7 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			}
 			if(lastNameDisplay < 1) return composeName(pers,firstNameDisplay,secondNameDisplay);
 			String last = pers.lastName();
-			if(last == null) last = "???";
+			if(last == null || last.length() == 0) last = "???";
 			if(lastNameDisplay == 1)
 				last = new String(new char[]{last.charAt(0),'.'});
 			
@@ -196,14 +201,14 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			}*/
 			NSMutableArray quals = new NSMutableArray();
 			if(last != null)
-				quals.addObject(new EOKeyValueQualifier("lastName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
- last + "*"));
+				quals.addObject(new EOKeyValueQualifier("lastName",
+						EOQualifier.QualifierOperatorCaseInsensitiveLike, last + "*"));
 			if(first != null)
-				quals.addObject(new EOKeyValueQualifier("firstName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
- first + "*"));
+				quals.addObject(new EOKeyValueQualifier("firstName",
+						EOQualifier.QualifierOperatorCaseInsensitiveLike, first + "*"));
 			if(second != null)
-				quals.addObject(new EOKeyValueQualifier("secondName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
- second + "*"));
+				quals.addObject(new EOKeyValueQualifier("secondName",
+						EOQualifier.QualifierOperatorCaseInsensitiveLike, second + "*"));
 			return new com.webobjects.eocontrol.EOAndQualifier(quals);
 		}
 		
@@ -235,10 +240,10 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 //			EOQualifier qual;
 			switch (names.length) {
 			case 1:
-				quals.addObject(new EOKeyValueQualifier("lastName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
-														names[0] + "*"));
-				quals.addObject(new EOKeyValueQualifier("firstName", EOQualifier.QualifierOperatorCaseInsensitiveLike,
-														names[0] + "*"));
+				quals.addObject(new EOKeyValueQualifier("lastName",
+						EOQualifier.QualifierOperatorCaseInsensitiveLike, names[0] + "*"));
+				quals.addObject(new EOKeyValueQualifier("firstName",
+						EOQualifier.QualifierOperatorCaseInsensitiveLike, names[0] + "*"));
 				return new EOOrQualifier(quals);
 				
 			case 2:
@@ -257,10 +262,6 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			}
 		}
 		
-//		public static NSArray search(EOEditingContext ec,String entity, String personEntity, String last,String first,String second) {
-//			EOFetchSpecification fspec = new EOFetchSpecification(entity,personQualifier(last,first,second),sorter);
-//			return ec.objectsWithFetchSpecification(fspec);
-//		}
 
 		protected static final NSSelector search = new NSSelector(
 				"search",new Class[] {EOEditingContext.class,String.class,String.class});
