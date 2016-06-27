@@ -125,7 +125,7 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 			StringBuffer buf = new StringBuffer(57);
 			
 			String first = pers.firstName();
-			if(first.length() == 0)
+			if(first != null && first.length() == 0)
 				first = null;
 			
 			switch (firstNameDisplay) {
@@ -139,7 +139,7 @@ public interface Person extends EOEnterpriseObject,PersonLink {
 				break;
 			}
 			String second = pers.secondName();
-			if(second.length() == 0)
+			if(second != null && second.length() == 0)
 				second = null;
 			if(secondNameDisplay < 1 || second == null) return buf.toString();
 			
