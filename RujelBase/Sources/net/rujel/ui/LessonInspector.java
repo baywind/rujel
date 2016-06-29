@@ -126,7 +126,7 @@ public class LessonInspector extends com.webobjects.appserver.WOComponent {
 			} catch (NSValidation.ValidationException ve) {
 	    		session().takeValueForKey(ve.getMessage(), "message");
 	    	} catch (NSKeyValueCoding.UnknownKeyException e) {
-	    		session().takeValueForKey(application().valueForKeyPath
+	    		session().takeValueForKey(session().valueForKeyPath
 	    				("strings.RujelCriterial_Strings.messages.notSaved"), "message");
 	    	} catch (Exception e) {
 	    		session().takeValueForKey(e.getMessage(), "message");

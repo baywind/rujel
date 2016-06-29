@@ -107,9 +107,11 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 
 	public void setSelection(Object sel) {
-		Integer sesSection = (Integer)session().valueForKeyPath("state.section.idx");
-		if(inSection != null && !inSection.equals(sesSection))
-			session().takeValueForKeyPath(inSection, "state.section.idx");
+		SchoolSection sesSection = (SchoolSection)session().valueForKeyPath("state.section");
+		if(inSection != null && (sesSection == null
+				|| !inSection.sectionID().equals(sesSection.sectionID())))
+			session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
+					session().defaultEditingContext(), inSection), "state.section");
 		else
 			sesSection = null;
 		if(listNames == null)
@@ -180,7 +182,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		} finally {
 			ec.unlock();
 			if(sesSection != null)
-				session().takeValueForKeyPath(sesSection, "state.section.idx");
+				session().takeValueForKeyPath(sesSection, "state.section");
 		}
 	}
 
@@ -775,9 +777,11 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		Integer sesSection = (Integer)session().valueForKeyPath("state.section.idx");
-		if(inSection != null && !inSection.equals(sesSection))
-			session().takeValueForKeyPath(inSection, "state.section.idx");
+		SchoolSection sesSection = (SchoolSection)session().valueForKeyPath("state.section");
+		if(inSection != null && (sesSection == null
+				|| !inSection.sectionID().equals(sesSection.sectionID())))
+			session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
+					session().defaultEditingContext(), inSection), "state.section");
 		else
 			sesSection = null;
 		if(Various.boolForObject(valueForBinding("shouldReset"))) {
@@ -801,7 +805,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		}
 		super.appendToResponse(aResponse, aContext);
 		if(sesSection != null)
-			session().takeValueForKeyPath(sesSection, "state.section.idx");
+			session().takeValueForKeyPath(sesSection, "state.section");
 	}
 
 	public boolean synchronizesVariablesWithBindings() {

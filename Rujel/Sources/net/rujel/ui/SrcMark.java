@@ -392,7 +392,10 @@ public class SrcMark extends WOComponent {
     }
 	
 	public String title() {
-		return (String)valueForKeyPath("session.strings.Strings.SrcMark.title");
+		if(context() != null && context().hasSession())
+			return (String)context().session().valueForKeyPath("strings.Strings.SrcMark.title");
+		else
+			return (String)valueForKeyPath("application.strings.Strings.SrcMark.title");
     }
 
 	public WOActionResults chooseTeacherForDict() {
