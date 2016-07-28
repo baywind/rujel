@@ -100,9 +100,9 @@ public class EditVarSub extends WOComponent {
     	EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName
     			, quals[0], null);
     	courses = toCourse.editingContext().objectsWithFetchSpecification(fs);
-    	quals[1] = new EOKeyValueQualifier("cycle.school",
-    			EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
-    	courses = EOQualifier.filteredArrayWithQualifier(courses, quals[1]);
+//    	quals[1] = new EOKeyValueQualifier("cycle.school",
+//    			EOQualifier.QualifierOperatorEqual, session().valueForKey("school"));
+//    	courses = EOQualifier.filteredArrayWithQualifier(courses, quals[1]);
     	courses = EOSortOrdering.sortedArrayUsingKeyOrderArray(courses, EduCourse.sorter);
     	if(fromCourse != null && cantSave != null && !cantSave.booleanValue()) {
     		cantSave = null;

@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
@@ -70,7 +71,7 @@ public class Executor implements Runnable {
 		public EOGlobalID courseID;
 		public EOGlobalID[] studentIDs;
 		public Object date;
-		public Object section;
+		public SchoolSection section;
 		public Integer year;
 
 		public void setCourse(EduCourse course) {
@@ -130,7 +131,8 @@ public class Executor implements Runnable {
 				progress().takeValueForKey(task, "task");
 				ctx.setUserInfoForKey(task, "Executor$Task");
 				ses.takeValueForKey(task.date, "today");
-				ses.takeValueForKeyPath(task.section, "state.section");
+				ses.takeValueForKeyPath(EOUtilities.localInstanceOfObject(
+						ses.defaultEditingContext(), task.section), "state.section");
 //				MultiECLockManager lm = ((MultiECLockManager.Session)ses).ecLockManager();
 //				lm.lock();
 				if(task.courseID != null) { // Completion closing
@@ -200,6 +202,7 @@ public class Executor implements Runnable {
 			} catch (RuntimeException e) {
 				logger.log(WOLogLevel.WARNING,"Error in Completion process"
 						,new Object[] {ses,e});
+				progress().takeValueForKey(e.toString(), "running");
 			}
 		} // queue loop
 		ses.terminate();
@@ -426,10 +429,10 @@ public class Executor implements Runnable {
 		}
 		if(updateList) {
 //			File file = new File(folder.getBase(),"index.html");
-			Integer section = getDefaultSection();
+			SchoolSection section = getDefaultSection();
 //			if(!file.exists()) {
 				prepareFolder(folder,(section == null)? "list.html" :
-						"list" + section  + ".html");
+						"list" + section.sectionID()  + ".html");
 //			}
 			NSArray groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
 			WOComponent page = WOApplication.application().pageWithName("StudentCatalog", ctx);
@@ -438,8 +441,9 @@ public class Executor implements Runnable {
 			page.takeValueForKey(groups, "eduGroups");
 	    	page.takeValueForKey(Boolean.valueOf(grReports != null), "grReports");
 			if(section != null)
-				section = (Integer)ses.valueForKeyPath("state.section.idx");
-			String filename = (section == null)? "list.html" : "list" + section  + ".html";
+				section = (SchoolSection)ses.valueForKeyPath("state.section");
+			String filename = (section == null)? "list.html" :
+				"list" + section.sectionID()  + ".html";
 			folder.writeFile(filename, page);
 			catalog.writeCatalog();
 		}
@@ -447,21 +451,19 @@ public class Executor implements Runnable {
 		if(found == null || found.count() == 0)
 			studentIDs = null;*/
 	}
-	
+	/*
 	public static Integer getActiveSection(WOSession ses) {
 		if(!Various.boolForObject(ses.valueForKeyPath("strings.sections.hasSections")))
 			return null;
 		return (Integer)ses.valueForKeyPath("state.section.idx");
-	}
-	public Integer getDefaultSection() {
+	}*/
+	public SchoolSection getDefaultSection() {
 		// TODO: repair 
-		NSDictionary sections = (NSDictionary)ctx.session().valueForKeyPath(
-			"strings.sections");
+		NSDictionary sections = (NSDictionary)ctx.session().valueForKey("sections");
 		if(!Various.boolForObject(sections.valueForKey("hasSections")))
 			return null;
 		NSArray list = (NSArray)sections.valueForKey("list");
-		sections = (NSDictionary)list.objectAtIndex(0);
-		return (Integer)sections.valueForKey("idx");
+		return (SchoolSection)list.objectAtIndex(0);
 	}
 	
 	protected void writeCourse(EduCourse course) {
@@ -473,9 +475,9 @@ public class Executor implements Runnable {
 		folder.ctx = ctx;
 //		File file = new File(folder.getBase(),"index.html");
 //		if(!file.exists()) {
-			Integer section = getDefaultSection();
+			SchoolSection section = getDefaultSection();
 			String filename = (section == null)?"eduGroup.html":
-				"eduGroup" + section + ".html";
+				"eduGroup" + section.sectionID() + ".html";
 			prepareFolder(folder, filename);
 //		}
 		FolderCatalog catalog = new FolderCatalog(folder.getBase(), ctx.session());

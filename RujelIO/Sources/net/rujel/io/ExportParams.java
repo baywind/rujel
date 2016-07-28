@@ -47,6 +47,7 @@ import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.reusables.DisplayAny;
 import net.rujel.reusables.SessionedEditingContext;
 import net.rujel.reusables.Various;
@@ -64,7 +65,7 @@ public class ExportParams extends WOComponent {
 	public NSDictionary indexItem;
 	public Object item1;
 	public Object item2;
-	public NSDictionary section;
+	public SchoolSection section;
 	public boolean showSections;
 	public NSKeyValueCoding access;
 	
@@ -110,9 +111,9 @@ public class ExportParams extends WOComponent {
         		indexes = new NSMutableDictionary();
     	}
     	showSections = Various.boolForObject(plist.valueForKey("section")) &&
-    			Various.boolForObject(session().valueForKeyPath("strings.sections.hasSections"));
+    			Various.boolForObject(session().valueForKeyPath("sections.hasSections"));
     	if(showSections)
-    		section = (NSDictionary)session().valueForKeyPath("state.section");
+    		section = (SchoolSection)session().valueForKeyPath("state.section");
     	String checkAccess = (String) plist.valueForKey("checkAccess");
     		access = (NSKeyValueCoding)session().valueForKeyPath(
     			(checkAccess == null)?"readAccess.FLAGS.Export":"readAccess.FLAGS." + checkAccess);

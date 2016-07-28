@@ -1110,6 +1110,8 @@ cycleCourses:
 		String listName = ModuleInit.sectionListName(ctx.session(), ec);
 		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
 		Enumeration aiEnu = aiEnu(ec, listName, date);
+		if(aiEnu == null)
+			return null;
 		NSMutableArray result = new NSMutableArray();
 		NSArray subParams = (NSArray)ctx.session().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.groupReportSubs");

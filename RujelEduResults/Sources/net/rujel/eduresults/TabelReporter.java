@@ -250,6 +250,7 @@ public class TabelReporter extends WOComponent {
 					item = (NSMutableDictionary)commAgr.valueForKey(commentString);
 					if(item == null) {
 						item = ItogMark.commentsDict(comment);
+						if(item == null) continue;
 						commAgr.takeValueForKey(item, commentString);
 						if(eduYear == null && item.valueForKey(ItogMark.MANUAL)==null)
 							continue;

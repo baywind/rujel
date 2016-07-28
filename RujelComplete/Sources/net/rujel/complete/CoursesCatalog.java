@@ -2,6 +2,7 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduCourse;
@@ -13,9 +14,7 @@ import net.rujel.reusables.FileWriterUtil;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
-import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.eocontrol.EOKeyGlobalID;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
@@ -52,7 +51,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     public CoursesCatalog(WOContext context) {
         super(context);
     	sections = Various.boolForObject(context.session().valueForKeyPath(
-			"strings.sections.hasSections")) && EduCycle.entityName.equals("PlanCycle");
+			"sections.hasSections")) && EduCycle.entityName.equals("PlanCycle");
     }
     
     public NSArray types() { 
@@ -63,27 +62,14 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     	EOQualifier qual = null;
     	if(sections && !grouping.equals("teacher")) {
     		qual = new EOKeyValueQualifier("cycle.section", EOQualifier.QualifierOperatorEqual, 
-    					 session().valueForKeyPath("state.section.idx"));
+    					 session().valueForKeyPath("state.section"));
     	}
-    	if(allCourses != null)
-    		return (qual == null)? allCourses : 
-    			EOQualifier.filteredArrayWithQualifier(allCourses, qual);
-    	if(EduCycle.entityName.equals("PlanCycle")) {
-    		allCourses = EOUtilities.objectsMatchingKeyAndValue(ec,EduCycle.entityName,
-    				"school",session().valueForKey("school"));
-    		EOQualifier[] quals = new EOQualifier[2];
-    		quals[0] = Various.getEOInQualifier("cycle", allCourses);
-    		quals[1] = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,
-    				session().valueForKey("eduYear"));
-    		quals[0] = new EOAndQualifier(new NSArray(quals));
-    		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,quals[0],null);
-    		allCourses = ec.objectsWithFetchSpecification(fs);
-    	} else {
+    	if(allCourses == null) {
     		allCourses = EOUtilities.objectsMatchingKeyAndValue(ec,
     				EduCourse.entityName, "eduYear", session().valueForKey("eduYear"));
+    		if(allCourses != null && allCourses.count() > 1)
+    			sort();
     	}
-    	if(allCourses != null && allCourses.count() > 1)
-    		sort();
 		return (qual == null)? allCourses : 
 			EOQualifier.filteredArrayWithQualifier(allCourses, qual);
     }
@@ -104,8 +90,8 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public String groupLink() {
-    	if(courseID instanceof NSDictionary) {
-    		Object idx = ((NSDictionary)courseID).valueForKey("idx");
+    	if(courseID instanceof SchoolSection) {
+    		Object idx = ((SchoolSection)courseID).sectionID();
     		return grHead + idx + ".html";
     	} else {
     		return grHead + ".html";
@@ -113,26 +99,23 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     }
     
     public String style() {
-    	if(courseID instanceof NSDictionary) {
+    	if(courseID instanceof SchoolSection) {
     		if(!grHead.equals(grouping))
     			return null;
-    		Object idx = ((NSDictionary)courseID).valueForKey("idx");
-    		if (idx.equals(session().valueForKeyPath("state.section.idx")))
+    		if (courseID == session().valueForKeyPath("state.section"))
     			return "font-weight:bold;";
     	} else if (grHead.equals(grouping)) {
     		return "font-weight:bold;";
     	} else if (grHead.equals("teacher")) {
     		return null;
-    	} else if (Various.boolForObject(session().valueForKeyPath(
-    				"strings.sections.hasSections"))) {
+    	} else if (Various.boolForObject(session().valueForKeyPath("sections.hasSections"))) {
     		return "font-style:italic;";
     	}
     	return null;
     }
     
     public boolean showSections() {
-    	return (!grHead.equals("teacher") &&  Various.boolForObject(session().valueForKeyPath(
-    				"strings.sections.hasSections")));
+    	return (sections && !grHead.equals("teacher"));
     }
     
     public String groupTitle() {
@@ -195,7 +178,7 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     	if(state > 0) {
     		buf.append("<a href = \"");
     		if(sections)
-    			buf.append('S').append(item.valueForKeyPath("cycle.section")).append('/');
+    			buf.append('S').append(item.valueForKeyPath("cycle.section.sectionID")).append('/');
     		buf.append(courseID).append("/index.html\"");
     		if(state < 10)
     			buf.append(" class = \"partial\"");
@@ -227,18 +210,17 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
     
     public static void prepareCourses(FileWriterUtil exec,
     		NSKeyValueCoding catalog, boolean write) {
-		NSDictionary sect = (NSDictionary)exec.ctx.session().valueForKeyPath(
-				"strings.sections");
+		NSKeyValueCoding sect = (NSDictionary)exec.ctx.session().valueForKey("sections");
 		NSArray list = null;
 		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
 				list = (NSArray)sect.valueForKey("list");
-				sect = (NSDictionary)list.objectAtIndex(0);
+				sect = (SchoolSection)list.objectAtIndex(0);
 		} else {
 			sect = null;
 		}
     	if(catalog == null) {
     		String filename = (sect == null)?"eduGroup.html":
-    			"eduGroup" + sect.valueForKey("idx") + ".html";
+    			"eduGroup" + sect.valueForKey("sectionID") + ".html";
     		Executor.prepareFolder(exec, filename);
     	}
     	EOEditingContext ec = exec.ctx.session().defaultEditingContext();
@@ -255,10 +237,10 @@ public class CoursesCatalog extends com.webobjects.appserver.WOComponent {
 		} else {
 			Enumeration enu = list.objectEnumerator();
 			WOSession ses = exec.ctx.session();
-			sect = (NSDictionary)ses.valueForKeyPath("state.section");
+			sect = (NSKeyValueCoding)ses.valueForKeyPath("state.section");
 			while (enu.hasMoreElements()) {
-				NSDictionary s = (NSDictionary)enu.nextElement();
-				Integer idx = (Integer)s.valueForKey("idx");
+				SchoolSection s = (SchoolSection)enu.nextElement();
+				Integer idx = s.sectionID();
 				ses.takeValueForKeyPath(s, "state.section");
 				page.takeValueForKey("cycle", "grouping");
 				exec.writeFile("cycle" + idx + ".html", page);

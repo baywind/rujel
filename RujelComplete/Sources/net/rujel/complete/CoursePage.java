@@ -31,6 +31,7 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.reusables.Various;
@@ -188,11 +189,11 @@ public class CoursePage extends com.webobjects.appserver.WOComponent {
 			cDir = key + '/';
     	}
     	boolean sections = EduCycle.entityName.equals("PlanCycle") && Various.boolForObject(
-    			exec.ctx.session().valueForKeyPath("strings.sections.hasSections"));
+    			exec.ctx.session().valueForKeyPath("sections.hasSections"));
     	if(sections) {
-    		Integer section = (Integer)course.valueForKeyPath("cycle.section");
+    		SchoolSection section = (SchoolSection)course.valueForKeyPath("cycle.section");
     		StringBuilder buf = new StringBuilder(4);
-    		buf.append('S').append(section);
+    		buf.append('S').append(section.sectionID());
     		exec.enterDir(buf.toString(), false);
     	}
     	exec.enterDir(cDir,false);

@@ -32,6 +32,7 @@ package net.rujel.complete;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.*;
@@ -65,7 +66,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	public Student student;
 	public EOEditingContext ec;
 	public NSKeyValueCoding catalog;
-	public NSDictionary grDict;
+	public NSKeyValueCoding grDict;
 	protected String grFolder;
 	public boolean grReports;
 	public int total;
@@ -109,7 +110,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     		buf.append("&oslash;");
     	} else {
     		int count = 0;
-    		Enumeration enu = grDict.objectEnumerator();
+    		Enumeration enu = ((NSDictionary)grDict).objectEnumerator();
     		while (enu.hasMoreElements()) {
 				if(Various.boolForObject(enu.nextElement()))
 						count++;
@@ -144,7 +145,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
     public static void prepareStudents(FileWriterUtil folder) {
     	WOSession ses = folder.ctx.session();
     	EOEditingContext ec = ses.defaultEditingContext();
-		NSDictionary sect = (NSDictionary)ses.valueForKeyPath("strings.sections");
+		NSKeyValueCoding sect = (NSDictionary)ses.valueForKeyPath("sections");
 		NSArray grReports = (NSArray)ses.valueForKeyPath("modules.groupComplete");
 		if(grReports != null && grReports.count() == 0)
 			grReports = null;
@@ -152,16 +153,16 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		StudentReports studentReports = new StudentReports(ses);
 		if(Various.boolForObject(sect.valueForKey("hasSections"))) {
 			NSArray list = (NSArray)sect.valueForKey("list");
-			sect = (NSDictionary)list.objectAtIndex(0);
-			Executor.prepareFolder(folder, "list" + sect.valueForKey("idx") + ".html");
+			sect = (SchoolSection)list.objectAtIndex(0);
+			Executor.prepareFolder(folder, "list" + sect.valueForKey("sectionID") + ".html");
 			Enumeration enu = list.objectEnumerator();
-			sect = (NSDictionary)ses.valueForKeyPath("state.section");
+			sect = (SchoolSection)ses.valueForKeyPath("state.section");
 			NSMutableArray allGroups = new NSMutableArray();
 			while (enu.hasMoreElements()) {
-				NSDictionary item = (NSDictionary) enu.nextElement();
+				SchoolSection item = (SchoolSection) enu.nextElement();
 				ses.takeValueForKeyPath(item, "state.section");
 		    	groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
-		    	allGroups.addObject(item);
+		    	allGroups.addObject(item);//EOUtilities.localInstanceOfObject(ec, item));
 		    	allGroups.addObjectsFromArray(groups);
 		    	WOComponent page = WOApplication.application().pageWithName("StudentCatalog",
 		    			folder.ctx);
@@ -169,13 +170,13 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		    	page.takeValueForKey(groups, "eduGroups");
 		    	page.takeValueForKey(studentReports.defaultID(), "defaultReport");
 		    	page.takeValueForKey(Boolean.valueOf(grReports != null), "grReports");
-		    	folder.writeFile("list" + item.valueForKey("idx") + ".html", page);
+		    	folder.writeFile("list" + item.sectionID() + ".html", page);
 			}
 			groups = allGroups;
 			ses.takeValueForKeyPath(sect, "state.section");
 		} else {
 	    	Executor.prepareFolder(folder, "list.html");
-			sect = (NSDictionary)ses.valueForKeyPath("state.section");
+			sect = (SchoolSection)ses.valueForKeyPath("state.section");
 	    	groups = EduGroup.Lister.listGroups((NSTimestamp)ses.valueForKey("today"), ec);
 	    	WOComponent page = WOApplication.application().pageWithName("StudentCatalog",
 	    			folder.ctx);
@@ -189,7 +190,7 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 		int[] idx = new int [] {0,0};
 		while (grenu.hasMoreElements()) {
 			Object next = grenu.nextElement();
-			if(next instanceof NSDictionary) {
+			if(next instanceof SchoolSection) {
 				ses.takeValueForKeyPath(next, "state.section");
 				idx[0]++;
 				continue;
@@ -440,14 +441,14 @@ public class StudentCatalog extends com.webobjects.appserver.WOComponent {
 	
 	public String sectionHref() {
 		StringBuilder buf = new StringBuilder("list");
-		buf.append(grDict.valueForKey("idx"));
+		buf.append(grDict.valueForKey("sectionID"));
 		buf.append(".html");
 		return buf.toString();
 	}
 	
 	public String style() {
-		Integer cur = (Integer)session().valueForKeyPath("state.section.idx");
-		if (cur != null && cur.equals(grDict.valueForKey("idx")))
+		Object curSect = session().valueForKeyPath("state.section");
+		if (curSect == grDict)
 			return "font-weight:bold;";
 		return null;
 	}

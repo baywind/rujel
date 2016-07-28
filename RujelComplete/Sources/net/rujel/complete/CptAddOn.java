@@ -2,6 +2,7 @@ package net.rujel.complete;
 
 import java.util.Enumeration;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.Student;
@@ -326,7 +327,7 @@ public class CptAddOn extends AddOnPresenter.AddOn {
 			closingLock.setCourse(null);
 		Executor.Task executor = new Executor.Task();
 		executor.date = session.valueForKey("eduYear");
-		executor.section = session.valueForKeyPath("state.section");
+		executor.section = (SchoolSection)session.valueForKeyPath("state.section");
 		executor.setCourse(_course);
 		if(cd.valueForKey("toClose") == null) {
 			Object releaseStudent = cd.valueForKey("releaseStudent");

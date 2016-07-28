@@ -335,8 +335,14 @@ public class ItogMark extends _ItogMark implements ItogContainer.MarkContainer
 	
 	public static NSMutableDictionary commentsDict(EOEnterpriseObject commentEO) {
 		String string = (String)commentEO.valueForKey("comment");
-		return NSPropertyListSerialization.
+		try {
+			return NSPropertyListSerialization.
 					dictionaryForString(string).mutableClone();
+		} catch (Exception e) {
+			ItogPopup.logger.log(WOLogLevel.INFO, "Badly formatted ItogComment", new Object[] 
+					{commentEO,e});
+			return null;
+		}
 	}
 	
 	public static NSMutableDictionary setCommentForKey(EOEnterpriseObject commentEO,
