@@ -8,7 +8,6 @@
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
 	<classpathentry kind="con" path="WOFramework/RujelSchedule"/>
 	<classpathentry kind="con" path="WOFramework/RujelVseLists"/>
-	<classpathentry kind="con" path="WOFramework/RujelVseobuch"/>
 	<classpathentry kind="con" path="WOFramework/JavaWOExtensions"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>

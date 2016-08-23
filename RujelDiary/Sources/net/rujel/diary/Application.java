@@ -29,6 +29,7 @@
 
 package net.rujel.diary;
 
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import net.rujel.base.MyUtility;
@@ -40,7 +41,7 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WORequestHandler;
 import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOObjectStore;
-import com.webobjects.eocontrol.EOSharedEditingContext;
+import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -50,6 +51,8 @@ public class Application extends UTF8Application {
 	protected static Logger logger = Logger.getLogger("rujel");
 	protected StringStorage _strings;
 
+	
+	public NSArray sections;
 	public NSMutableDictionary<Number, NSArray> groupsForYear 
 			= new NSMutableDictionary<Number, NSArray>();
 	public NSMutableDictionary<Number, NSArray> coursesForGroup 
@@ -90,8 +93,8 @@ public class Application extends UTF8Application {
 		NSArray usedModels = ModulesInitialiser.useModules(null, "usedModels");
 		DataBaseConnector.makeConnections(_year.toString(), usedModels,false);
 		
-		ecForYear.takeValueForKey(EOSharedEditingContext.defaultSharedEditingContext(),
-				_year.toString());
+		EOEditingContext ec = new EOEditingContext();
+		ecForYear.takeValueForKey(ec,_year.toString());
 
 		net.rujel.interfaces.EOInitialiser.initAll();
 //		SettingsReader node = SettingsReader.settingsForPath("modules",true);
@@ -101,7 +104,6 @@ public class Application extends UTF8Application {
 		if(cacheSize > 0) {
 			keyValueCache = new KeyValueCache(cacheSize);
 		}*/
-		
 		logger.logp(WOLogLevel.INFO,"Application","<init>","RujelDiary started " + webserverConnectURL());
 	}
 	
@@ -174,7 +176,7 @@ public class Application extends UTF8Application {
 		} else if(what.equals("strings")) {
 			_strings.flush();
 		} else if(what.equals("ec")) {
-			EOSharedEditingContext.defaultSharedEditingContext().invalidateAllObjects();
+			ecForYear.takeValueForKey(null,"flush");
 		}
 	}
 
@@ -182,17 +184,25 @@ public class Application extends UTF8Application {
 		private NSMutableDictionary ecDict = new NSMutableDictionary();
 
 		public void takeValueForKey(Object value, String key) {
+			if("flush".equals(key)) {
+				Enumeration enu = ecDict.objectEnumerator();
+				while (enu.hasMoreElements()) {
+					EOEditingContext ec = (EOEditingContext) enu.nextElement();
+					ec.invalidateAllObjects();
+				}
+				return;
+			}
 			ecDict.takeValueForKey(value, key);
 		}
 
 		public Object valueForKey(String key) {
-			EOSharedEditingContext ec = (EOSharedEditingContext)ecDict.valueForKey(key);
+			EOEditingContext ec = (EOEditingContext)ecDict.valueForKey(key);
 			if(ec != null)
 				return ec;
 			EOObjectStore os = DataBaseConnector.objectStoreForTag(key);
 			if(os == null)
 				return null;
-			ec = new EOSharedEditingContext(os);
+			ec = new EOEditingContext(os);
 			ecDict.takeValueForKey(ec, key);
 			return ec;
 		}

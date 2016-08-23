@@ -34,8 +34,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.rujel.base.BaseCourse;
-import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
@@ -215,20 +215,16 @@ public class Main extends WOComponent {
 			return groupListForDate((NSTimestamp)application().valueForKey("today"));
 //		} else {
 			NSArray groups = EduGroup.Lister.listGroups(aDate,ec);
-			int maxIndex = 0;
-	    	Indexer sIndex = Indexer.getIndexer(ec,"eduSections",(String)null, false);
-	    	NSArray sections = (sIndex == null)?null:sIndex.sortedIndex();
-	    	if(sections != null && sections.count() > 1) {
-	    		Number max = (Number)sections.valueForKeyPath("@max.idx");
-	    		maxIndex = max.intValue();
-	    	} else {
+//			int maxIndex = 0;
+			NSArray sections = SchoolSection.listSections(ec, false);
+	    	if(sections != null && sections.count() <= 1) {
 	    		sections = null;
 	    	}
 			if(groups == null || groups.count() == 0) {
 				return NSArray.EmptyArray;
 			} else {
-				NSMutableArray[] rows = new NSMutableArray[maxIndex + 1];
-				NSMutableArray[] grps = new NSMutableArray[maxIndex + 1];
+				NSMutableArray[] rows = new NSMutableArray[(sections==null)?1:sections.count()];
+				NSMutableArray[] grps = new NSMutableArray[rows.length];
 				result = new NSMutableArray();
 				Enumeration enu = groups.objectEnumerator();
 				int maxCnt = 0;
@@ -238,12 +234,10 @@ public class Main extends WOComponent {
 					Integer grYear = gr.eduYear();
 					Integer grade = gr.grade();
 					int s = 0;
-					if(maxIndex > 0) {
+					if(sections != null) {
 						try {
-							Integer sect = (Integer)gr.valueForKey("section");
-							s = sect.intValue();
-							if(s > maxIndex)
-								s = 0;
+							SchoolSection sect = (SchoolSection)gr.valueForKey("section");
+							s = sections.indexOf(sect);
 						} catch(Exception e) {}
 					}
 					if(rows[s] == null)
@@ -302,15 +296,14 @@ public class Main extends WOComponent {
 					grDict.takeValueForKey(Boolean.valueOf(gerade),"gerade");
 //					((NSMutableArray)result).addObject(grDict);
 				} // groups enumeration
-				if(maxIndex > 0) {
-					enu = sections.objectEnumerator();
+				if(sections != null) {
 					result = new NSMutableArray();
-					while (enu.hasMoreElements()) {
-						NSKeyValueCoding sect = (NSKeyValueCoding) enu.nextElement();
-						Number idx = (Number)sect.valueForKey("idx");
-						NSMutableDictionary dict = new NSMutableDictionary(idx,"section");
-						dict.takeValueForKey(sect.valueForKey("value"), "title");
-						int i = idx.intValue();
+					for (int i = 0; i < sections.count(); i++) {
+						SchoolSection sect = (SchoolSection) sections.objectAtIndex(i);
+//						Number idx = (Number)sect.sectionID();
+						NSMutableDictionary dict = new NSMutableDictionary(
+								sect.sectionID(),"section");
+						dict.takeValueForKey(sect.name(), "title");
 						if(grps[i] == null)
 							continue;
 						if(grps[i].count() > rows[i].count() && (maxCnt > 3 || grps[i].count() > 
