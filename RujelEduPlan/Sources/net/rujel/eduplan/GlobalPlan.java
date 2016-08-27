@@ -123,7 +123,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
-	        sections = SchoolSection.listSections(ec, true);
+	        sections = SchoolSection.listSections(ec, false);
 			if(inSection == null) {
 				inSection = (SchoolSection)session().valueForKeyPath("state.section");
 				if(inSection != null)

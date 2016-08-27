@@ -274,6 +274,7 @@ public class ListsEditor extends com.webobjects.appserver.WOComponent {
     	WOComponent result = pageWithName("VseGroupInspector");
     	result.takeValueForKey(this, "returnPage");
     	result.takeValueForKey(ec, "ec");
+    	result.takeValueForKey(valueForKeyPath("selection.grade"), "grade");
     	return result;
     }
     

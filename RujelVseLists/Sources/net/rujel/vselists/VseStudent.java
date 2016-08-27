@@ -254,7 +254,8 @@ public class VseStudent extends _VseStudent implements Student {
 				grp = (grenu.hasMoreElements())?(VseEduGroup)grenu.nextElement():null;
 			}
 			NSMutableDictionary dict = dict(Integer.toString(i), 
-					new Integer(eduYear - i), quals);
+					Integer.valueOf(eduYear - i), quals);
+			dict.takeValueForKey(Integer.valueOf(i), "grade");
 			result.addObject(dict);
 			fs.setQualifier(quals[1]);
 			NSArray list = ec.objectsWithFetchSpecification(fs);

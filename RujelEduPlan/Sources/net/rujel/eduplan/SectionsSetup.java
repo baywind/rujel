@@ -6,8 +6,10 @@ import net.rujel.base.IndexRow;
 import net.rujel.base.Indexer;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SchoolSection;
+import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.SettingsReader;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOActionResults;
@@ -16,6 +18,7 @@ import com.webobjects.appserver.WOComponent;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCoding;
@@ -190,6 +193,8 @@ public class SectionsSetup extends WOComponent {
 			} else {
 				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Modified section",
 						new Object[] {currSection});
+				sections = EOSortOrdering.sortedArrayUsingKeyOrderArray(
+						sections, ModulesInitialiser.sorter);
 			}
 			if(newDict.containsKey("name"))
 				newDict = new NSMutableDictionary(
@@ -202,6 +207,13 @@ public class SectionsSetup extends WOComponent {
 		}
 		currSection = null;
 		return null;
+	}
+	
+	public String sectionClass() {
+		if(Various.boolForObject(valueForKeyPath("item.namedFlags.disabled")))
+			return "grey";
+		else
+			return "ungerade";
 	}
 
 	public WOActionResults selectSection() {
