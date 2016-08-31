@@ -42,6 +42,7 @@ import net.rujel.interfaces.Student;
 import net.rujel.reusables.ModulesInitialiser;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -238,6 +239,11 @@ public class Main extends WOComponent {
 						try {
 							SchoolSection sect = (SchoolSection)gr.valueForKey("section");
 							s = sections.indexOf(sect);
+							if(s < 0) {
+								logger.log(WOLogLevel.INFO, "Group not in existong section: " 
+										+ gr.name(), gr);
+								continue;
+							}
 						} catch(Exception e) {}
 					}
 					if(rows[s] == null)

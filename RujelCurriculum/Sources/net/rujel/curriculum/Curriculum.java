@@ -186,10 +186,11 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
     	if(args != null && args.count() > 0)
     		fs.setPrefetchingRelationshipKeyPaths(args);
     	list = ec.objectsWithFetchSpecification(fs);
-    	if(activeSection != null && list.count() > 0) { // filter by section
+    	if(activeSection != null && list.count() > 0 && !entityName.equals(Reason.ENTITY_NAME)) {
+    		// filter by section
 			NSMutableArray newList = new NSMutableArray(list.count());
 			Enumeration enu = list.objectEnumerator();
-    		if(entityName.equals(Reason.ENTITY_NAME)) {
+/*    		if(entityName.equals(Reason.ENTITY_NAME)) {
     			while (enu.hasMoreElements()) {
 					Reason reas = (Reason) enu.nextElement();
 					if(reas.section() == activeSection) {
@@ -199,20 +200,20 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 					if(filterEvents(reas.substitutes()) || filterEvents(reas.variations()))
 						newList.addObject(reas);
 				}
-    		} else {
+    		} else {*/
     			while (enu.hasMoreElements()) {
 					Reason.Event event = (Reason.Event) enu.nextElement();
 					if(event.reason().section() == activeSection ||
 							event.course().valueForKey("section") == activeSection)
 						newList.addObject(event);
 				}
-    		}
+//    		}
 			list = newList;
     	}
     	if(list != null && list.count() > 1)
     		sort();
     }
-    
+    /*
     private boolean filterEvents(NSArray events) {
     	if(events == null || events.count() == 0)
     		return false;
@@ -223,7 +224,7 @@ public class Curriculum extends com.webobjects.appserver.WOComponent {
 				return true;
 		}
 		return false;
-    }
+    }*/
     
     public void sort() {
     	if(list == null || list.count() == 0)
