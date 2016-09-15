@@ -272,8 +272,7 @@ public class CurriculumModule {
 	}
 	
 	public static Object objectSaved(WOContext ctx) {
-		boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
-				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+		boolean disable = SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 		if(disable) {
 			return null;
 		}

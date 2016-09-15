@@ -67,7 +67,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	public Integer subgroups() {
 		Integer value = (Integer)valueForKeyPath("subjectEO.subgroups");
 		if(value == null)
-			return value = new Integer(0);
+			return value = new Integer(1);
 		return value;
 	}
 

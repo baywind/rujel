@@ -74,12 +74,15 @@ public class EditJoin extends com.webobjects.appserver.WOComponent {
 		lesson = l;
 		EOQualifier[] quals = new EOQualifier[3];
 		EduCourse course = lesson.course();
+		quals[1] = new EOKeyValueQualifier("teacher",EOQualifier.QualifierOperatorEqual,
+				NullValue);
+		quals[2] = new EOKeyValueQualifier("teacher",EOQualifier.QualifierOperatorNotEqual,
+				course.teacher());
+		quals[2] = new EOOrQualifier(new NSArray(quals));
 		quals[0] = new EOKeyValueQualifier("cycle",EOQualifier.QualifierOperatorEqual,
 				course.cycle());
 		quals[1] = new EOKeyValueQualifier("eduYear",EOQualifier.QualifierOperatorEqual,
 				course.eduYear());
-		quals[2] = new EOKeyValueQualifier("teacher",EOQualifier.QualifierOperatorNotEqual,
-				course.teacher());
 		quals[0] = new EOAndQualifier(new NSArray(quals));
 		EOFetchSpecification fs = new EOFetchSpecification(EduCourse.entityName,
 				quals[0],null);

@@ -39,6 +39,7 @@ import net.rujel.base.SettingsBase;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.eduplan.*;
 import net.rujel.email.Mailer;
+import net.rujel.email.Mailer.HeadersDelegate;
 
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.*;
@@ -641,6 +642,22 @@ gr:		while (eduGroups.hasMoreElements()) {
 		}
 		settings.takeValueForKey(reporter,"reporter");
 		NSSet adrSet = (NSSet)params.valueForKey("adrSet");
+		
+		BroadcastDelegate delegate = null;
+		{
+			String delegateClass = SettingsReader.stringForKeyPath("mail.headersDelegate",null);
+			if(delegateClass != null) {
+				try {
+					delegate = (BroadcastDelegate) Class.forName(delegateClass).newInstance();
+					delegate.params = params;
+					mailer.setHeadersDelegate(delegate);
+				} catch (Exception e) {
+					logger.log(WOLogLevel.WARNING, "Failed to instantiate HeadersDelegate", 
+							new Object[] {ses,e});
+				}
+			}
+		}
+		
 		Enumeration stEnu = students.objectEnumerator();
 st:		while (stEnu.hasMoreElements()) {
 			long startTime = System.currentTimeMillis();
@@ -757,6 +774,8 @@ st:		while (stEnu.hasMoreElements()) {
 					String message = String.format(textBuf.toString(), stID.keyValues()[0],
 							Person.Utility.fullName(student, false, 2, 2, 0));
 
+					if(delegate != null)
+						delegate.student = student;
 					if(attach != null) {
 						if(zip) {
 							try {
@@ -831,4 +850,34 @@ st:		while (stEnu.hasMoreElements()) {
 		return result;
 	}
 
+	public static abstract class BroadcastDelegate implements HeadersDelegate {
+		
+		protected NSDictionary params;
+		protected Student student;
+		
+		public void setParams(NSDictionary newParams) {
+			params = newParams;
+		}
+		
+		public void setStudent(Student newStudent) {
+			student = newStudent;
+		}
+
+		public String[] headers() {
+			return null;
+		}
+
+		public boolean forceHeader(String name) {
+			return false;
+		}
+
+		public String getHeader(String name, String ifNone) {
+			String result = getHeader(name);
+			if(result == null)
+				return ifNone;
+			else
+				return result;
+		}
+		
+	}
 }
