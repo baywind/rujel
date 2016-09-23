@@ -637,8 +637,13 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public Boolean cantEditArea() {
 		if(area() == null)
 			return Boolean.TRUE;
-		return (Boolean)access().valueForKeyPath("_edit.area");
+		return !access().cachedAccessForObject("SubjectArea", (Integer)null).flagForKey("edit");
 	}
+
+	public Boolean cantEditSubject() {
+		return !access().cachedAccessForObject(Subject.ENTITY_NAME, (Integer)null).flagForKey("edit");
+	}
+
 	
 	public String areaClass() {
 		if(area() != null)
