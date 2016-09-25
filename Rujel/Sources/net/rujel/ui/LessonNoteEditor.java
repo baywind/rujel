@@ -508,6 +508,7 @@ public class LessonNoteEditor extends WOComponent {
 				EOEnterpriseObject obj = (EOEnterpriseObject) enu.nextElement();
 				if(obj instanceof EduLesson) {
 					currPerPersonLink = (EduLesson)obj;
+					session().takeValueForKey(Boolean.TRUE,"prolong");
 					break;
 				}
 			}
@@ -737,10 +738,12 @@ public class LessonNoteEditor extends WOComponent {
 				}
 			}
 		}// ec.hasChanges
-		if(reset)
+		if(reset) {
 			currPerPersonLink = null;
-		else if(student != null)
+			session().takeValueForKey(Boolean.FALSE,"prolong");
+		} else if(student != null) {
 			selector = student;
+		}
 	}
 
 	public void delete() {
@@ -825,6 +828,7 @@ public class LessonNoteEditor extends WOComponent {
 				
 				updateBaseTabs(false);
 				updateLessonList(false);
+				session().takeValueForKey(Boolean.FALSE,"prolong");
 			}
 		} catch (NSValidation.ValidationException vex) {
 			logger.log(level,"Deletion failed: ",new Object[] {session(),currLesson(),vex});
