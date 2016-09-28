@@ -108,7 +108,14 @@ public class EMailBroadcast implements Runnable{
 			if(Various.boolForObject(ctx.session().valueForKeyPath(
 					"readAccess._read.SendMailForm")))
 				return null;
+			EduCourse course = (EduCourse)ctx.session().objectForKey("editorCourse");
+			int state = (course == null) ? 0 : SettingsBase.numericSettingForCourse(
+					"SendMailWidget", course, course.editingContext(),0);
+			if(state == 0)
+				return null;
 			return ctx.session().valueForKeyPath("strings.RujelContacts_Contacts.dashboard");
+		} else if("adminModules".equals(obj)) {
+			return ctx.session().valueForKeyPath("strings.RujelContacts_Contacts.adminModules");
 		} else if(obj.equals("usedModels")) {
 			return "Contacts";
 		}

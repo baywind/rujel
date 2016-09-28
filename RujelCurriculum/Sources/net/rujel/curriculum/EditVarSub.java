@@ -184,8 +184,7 @@ public class EditVarSub extends WOComponent {
 		variation.addObjectToBothSidesOfRelationshipWithKey(reason, Variation.REASON_KEY);
 //		variation.setDate(date);
 		variation.setValue(new Integer(1));
-		boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
-				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+		boolean noRelieve = SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 		WeekFootprint weekFootprint = weekFootprint();
 		boolean changed = ec.hasChanges();
 		if(changed) {
@@ -396,8 +395,7 @@ public class EditVarSub extends WOComponent {
 	       			new Object[] {session(),lesson});
 			WeekFootprint weekFootprint = weekFootprint();
 			if(weekFootprint != null) weekFootprint.reset();
-			boolean noRelieve = Boolean.getBoolean("PlanFactCheck.disable")
-				|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+			boolean noRelieve = SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!noRelieve) {
 				String usr = (String)session().valueForKeyPath("user.present");
 				if(usr == null)

@@ -186,7 +186,7 @@ public class CurriculumModule {
 			EduCourse course = (EduCourse)ctx.session().objectForKey("editorCourse");
 			String state = (course == null) ? null : SettingsBase.stringSettingForCourse(
 					"PlanFactWidget", course, course.editingContext());
-			result = ("hide".equals(state))?null:WOApplication.application().valueForKeyPath(
+			result = ("hide".equals(state))?null:ctx.session().valueForKeyPath(
 				"strings.RujelCurriculum_Curriculum.varsPlugin");
 		}
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess.read.Reprimand"))) {

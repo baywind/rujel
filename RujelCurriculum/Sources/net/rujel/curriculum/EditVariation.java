@@ -198,8 +198,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 					new Object[] {session(),variation});
 			WeekFootprint weekFootprint = weekFootprint();
 			if(weekFootprint != null) weekFootprint.reset();
-			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
-			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+			boolean disable = SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!disable) {
 				String usr = (String)session().valueForKeyPath("user.present");
 				if(usr == null)
@@ -234,8 +233,7 @@ public class EditVariation extends com.webobjects.appserver.WOComponent {
 					new Object[] {session(),course});
 			WeekFootprint weekFootprint = weekFootprint();
 			if(weekFootprint != null) weekFootprint.reset();
-			boolean disable = Boolean.getBoolean("PlanFactCheck.disable")
-			|| SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
+			boolean disable = SettingsReader.boolForKeyPath("edu.disablePlanFactCheck", false);
 			if(!disable) {
 				String usr = (String)session().valueForKeyPath("user.present");
 				if(usr == null)
