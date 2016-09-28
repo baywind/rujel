@@ -34,6 +34,7 @@ import net.rujel.reusables.*;
 
 import com.webobjects.foundation.*;
 import com.webobjects.appserver.WOMessage;
+import com.webobjects.appserver.WOSession;
 import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.EOUtilities;
 import java.util.Enumeration;
@@ -522,5 +523,30 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		EOSortOrdering.sortArrayUsingKeyOrderArray(result,new NSArray(
 				new EOSortOrdering("cycle",EOSortOrdering.CompareCaseInsensitiveAscending)));
 		return result;
+	}
+	
+	public EduLesson lastLesson() {
+		EOQualifier qual = new EOKeyValueQualifier(BaseLesson.COURSE_KEY, 
+				EOQualifier.QualifierOperatorEqual, this);
+		EOEditingContext ec = editingContext();
+		if (ec instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)ec).session();
+			NSTimestamp date = (NSTimestamp)ses.valueForKey("today");
+			if(date != null) {
+				EOQualifier[] quals = new EOQualifier[] {qual, new EOKeyValueQualifier("date", 
+								EOQualifier.QualifierOperatorLessThanOrEqualTo, date)};
+				qual = new EOAndQualifier(new NSArray(quals));
+			}
+		}
+		NSArray sort = new NSArray(new EOSortOrdering[] {
+				EOSortOrdering.sortOrderingWithKey("date", EOSortOrdering.CompareDescending),
+				EOSortOrdering.sortOrderingWithKey("number", EOSortOrdering.CompareDescending),
+		});
+		EOFetchSpecification fs = new EOFetchSpecification(EduLesson.entityName, qual, sort);
+		fs.setFetchLimit(1);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		return (EduLesson)found.objectAtIndex(0);
 	}
 }

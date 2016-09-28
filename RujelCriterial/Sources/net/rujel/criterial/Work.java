@@ -43,6 +43,7 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.eoaccess.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOMessage;
+import com.webobjects.appserver.WOSession;
 
 import java.math.*;
 import java.util.Enumeration;
@@ -1178,5 +1179,31 @@ set:
 	
 	public NSDictionary archiveIdentifier() {
 		return BaseLesson.lessonArchiveIdentifier(this);
+	}
+
+	public static Work lastWork(EduCourse course) {
+		EOQualifier qual = new EOKeyValueQualifier("course", 
+				EOQualifier.QualifierOperatorEqual, course);
+		EOEditingContext ec = course.editingContext();
+		if (ec instanceof SessionedEditingContext) {
+			WOSession ses = ((SessionedEditingContext)ec).session();
+			NSTimestamp date = (NSTimestamp)ses.valueForKey("today");
+			if(date != null) {
+				EOQualifier[] quals = new EOQualifier[] {qual, new EOKeyValueQualifier(ANNOUNCE_KEY, 
+								EOQualifier.QualifierOperatorLessThanOrEqualTo, date)};
+				qual = new EOAndQualifier(new NSArray(quals));
+			}
+		}
+		NSArray sort = new NSArray(new EOSortOrdering[] {
+				EOSortOrdering.sortOrderingWithKey(ANNOUNCE_KEY, EOSortOrdering.CompareDescending),
+				EOSortOrdering.sortOrderingWithKey(DATE_KEY, EOSortOrdering.CompareDescending),
+				EOSortOrdering.sortOrderingWithKey(NUMBER_KEY, EOSortOrdering.CompareDescending),
+		});
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, qual, sort);
+		fs.setFetchLimit(1);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		if(found == null || found.count() == 0)
+			return null;
+		return (Work)found.objectAtIndex(0);
 	}
 }
