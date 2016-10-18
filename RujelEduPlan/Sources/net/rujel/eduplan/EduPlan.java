@@ -163,7 +163,7 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 			EOInitialiser.initialiseRelationship("EduPeriod","relatedItog",false,
 					"itogID","ItogContainer");
 		} catch (Exception e) {
-			logger.log(WOLogLevel.INFO,"Failed to link EduPeriod to ItogContainer",e);
+			logger.log(WOLogLevel.INFO,"Could not link EduPeriod to ItogContainer",e);
 		}
 
 		EOSortOrdering.ComparisonSupport.setSupportForClass(

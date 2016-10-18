@@ -44,16 +44,14 @@ import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
+@Deprecated
 public class PlanCycle extends _PlanCycle implements EduCycle
 {
-	@Deprecated
 	public static Object init(Object obj, WOContext ctx) {
 		return EduPlan.init(obj, ctx);
 	}
 	
 	public static void init() {
-		EOInitialiser.initialiseRelationship("PlanHours","specClass",false,"classID","EduGroup")
-				.anyInverseRelationship().setPropagatesPrimaryKey(true);
 		EORelationship back = EOInitialiser.initialiseRelationship(
 				"PlanDetail","course",false,"courseID","EduCourse").anyInverseRelationship();
 		back.setPropagatesPrimaryKey(true);
@@ -91,6 +89,11 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return school;
 	}
 */
+	
+	@Deprecated
+	public static int planHoursForCourseAndDate(EduCourse course, NSTimestamp date) {
+		return PlanHours.planHoursForCourseAndDate(course, date);
+	}
 
 	public static NSArray cyclesForSubject(Subject subject, SchoolSection section) {
 		EOEditingContext ec = subject.editingContext();
@@ -237,61 +240,6 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 
 	}
 
-	public static int planHoursForCourseAndDate(EduCourse course, NSTimestamp date) {
-		EOEditingContext ec = course.editingContext();
-		NSArray planDetails = (date == null)?null:EOUtilities.objectsMatchingKeyAndValue(
-				ec,"PlanDetail","course", course);
-		if(planDetails != null && planDetails.count() > 0) {
-			Enumeration enu = planDetails.objectEnumerator();
-			while (enu.hasMoreElements()) {
-				EOEnterpriseObject pd = (EOEnterpriseObject) enu.nextElement();
-				EduPeriod per = (EduPeriod)pd.valueForKey("eduPeriod");
-				if(per.contains(date)) {
-					Number hours = (Number)pd.valueForKey("weekly");
-					return Math.abs(hours.intValue());
-				}
-			}
-			return 0;
-		}
-		if (course.cycle() instanceof PlanCycle) {
-			PlanCycle cycle = (PlanCycle) course.cycle();
-			EOEnterpriseObject planHours = cycle.planHours(course.eduGroup());
-			if(planHours == null)
-				return 0;
-			Integer w = (Integer)planHours.valueForKey("weeklyHours");
-			if(w == null)
-				w = cycle.weeklyHours(course)[0];
-			return w;
-		}
-		return 0;
-	}
-
-	public static int planHoursForCourseAndPeriod(EduCourse course, EduPeriod period) {
-		EOEditingContext ec = course.editingContext();
-		NSArray planDetails = (period == null)?null:EOUtilities.objectsMatchingKeyAndValue(
-				ec,"PlanDetail","course", course);
-		if(planDetails != null && planDetails.count() > 0) {
-			EOQualifier qual = new EOKeyValueQualifier("eduPeriod",
-					EOQualifier.QualifierOperatorEqual,period);
-			planDetails = EOQualifier.filteredArrayWithQualifier(planDetails, qual);
-			if(planDetails == null || planDetails.count() == 0)
-				return 0;
-			EOEnterpriseObject result = (EOEnterpriseObject)planDetails.objectAtIndex(0);
-			Number hours = (Number)result.valueForKey("weekly");
-			return hours.intValue();
-		}
-		if (course.cycle() instanceof PlanCycle) {
-			PlanCycle cycle = (PlanCycle) course.cycle();
-			EOEnterpriseObject planHours = cycle.planHours(course.eduGroup());
-			if(planHours == null)
-				return 0;
-			Integer w = (Integer)planHours.valueForKey("weeklyHours");
-			if(w == null)
-				w = cycle.weeklyHours(course)[0];
-			return w;
-		}
-		return 0;
-	}
 	
 	public EOEnterpriseObject planHours(EduGroup grp, boolean strict) {
 		NSArray hrs = planHours();

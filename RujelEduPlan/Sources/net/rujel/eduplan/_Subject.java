@@ -41,6 +41,7 @@ public abstract class _Subject extends EOGenericRecord {
 	public static final String ENTITY_NAME = "Subject";
 
 	// Attributes
+	public static final String EXT_NAME_KEY = "extName";
 	public static final String FLAGS_KEY = "flags";
 	public static final String FULL_NAME_KEY = "fullName";
 	public static final String NORMAL_GROUP_KEY = "normalGroup";
@@ -50,6 +51,17 @@ public abstract class _Subject extends EOGenericRecord {
 
 	// Relationships
 	public static final String AREA_KEY = "area";
+	public static final String PLAN_HOURS_KEY = "planHours";
+	public static final String SECTION_KEY = "section";
+	public static final String SUBJECT_GROUP_KEY = "subjectGroup";
+
+  public String extName() {
+    return (String) storedValueForKey(EXT_NAME_KEY);
+  }
+
+  public void setExtName(String value) {
+    takeStoredValueForKey(value, EXT_NAME_KEY);
+  }
 
   public Integer flags() {
     return (Integer) storedValueForKey(FLAGS_KEY);
@@ -107,4 +119,36 @@ public abstract class _Subject extends EOGenericRecord {
     	takeStoredValueForKey(value, AREA_KEY);
   }
   
+  public net.rujel.base.SchoolSection section() {
+    return (net.rujel.base.SchoolSection)storedValueForKey(SECTION_KEY);
+  }
+
+  public void setSection(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, SECTION_KEY);
+  }
+  
+  public net.rujel.eduplan.SubjectGroup subjectGroup() {
+    return (net.rujel.eduplan.SubjectGroup)storedValueForKey(SUBJECT_GROUP_KEY);
+  }
+
+  public void setSubjectGroup(EOEnterpriseObject value) {
+    	takeStoredValueForKey(value, SUBJECT_GROUP_KEY);
+  }
+  
+  public NSArray planHours() {
+    return (NSArray)storedValueForKey(PLAN_HOURS_KEY);
+  }
+ 
+  public void setPlanHours(NSArray value) {
+    takeStoredValueForKey(value, PLAN_HOURS_KEY);
+  }
+  
+  public void addToPlanHours(EOEnterpriseObject object) {
+    includeObjectIntoPropertyWithKey(object, PLAN_HOURS_KEY);
+  }
+
+  public void removeFromPlanHours(EOEnterpriseObject object) {
+    excludeObjectFromPropertyWithKey(object, PLAN_HOURS_KEY);
+  }
+
 }

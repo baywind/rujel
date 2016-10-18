@@ -40,6 +40,7 @@ import com.webobjects.foundation.NSForwardException;
  * Could implement static method 
  * <tt>public static NSArray cyclesForEduGroup(EduGroup group)</tt>  */
 
+@Deprecated
 public interface EduCycle extends com.webobjects.eocontrol.EOEnterpriseObject {
 	public static final String className = net.rujel.reusables.SettingsReader.
 				stringForKeyPath("interfaces.EduCycle","net.rujel.base.PrimitiveEduCycle");
