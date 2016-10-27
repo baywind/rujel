@@ -80,16 +80,6 @@ public class ItogPopup extends WOComponent {
 		String mark = itog.mark();
 		dict.takeValueForKey(mark, ItogMark.MARK_KEY);
 		dict.takeValueForKey(itog.state(), ItogMark.STATE_KEY);
-		if(presets == null && !readOnly()) {
-			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, course());
-			if(presetGroup != null && presetGroup.intValue() > 0) {
-				presets = ItogPreset.listPresetGroup(itog.editingContext(), presetGroup,true);
-			}
-		}
-		if(presets != null && presets.count() > 0)
-			dict.takeValueForKey(ItogPreset.presetForMark(mark, presets), "preset");
-		else
-			dict.takeValueForKey(Boolean.TRUE, "noPresets");
 	}
 	
 	public void setItogContainer(ItogContainer value) {
@@ -98,16 +88,21 @@ public class ItogPopup extends WOComponent {
 			dict.takeValueForKey(null, ItogMark.MARK_KEY);
 			dict.takeValueForKey(Integer.valueOf(0), ItogMark.STATE_KEY);
 		}
-		if(presets == null && addOn != null && !readOnly()) {
-			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, addOn.course());
+	}
+	
+	public NSArray getPresets() {
+		if(presets == null) {
+			Integer presetGroup = ItogPreset.getPresetGroup(itogContainer, course());
 			if(presetGroup != null && presetGroup.intValue() > 0) {
 				presets = ItogPreset.listPresetGroup(itogContainer.editingContext(), presetGroup, true);
-				if(presets != null && presets.count() > 0)
-					dict.takeValueForKey(presets.objectAtIndex(0), "preset");
-				else
-					dict.takeValueForKey(Boolean.TRUE, "noPresets");
 			}
+			if(presets != null && presets.count() > 0)
+				dict.takeValueForKey((itog == null)?presets.objectAtIndex(0):
+					ItogPreset.presetForMark(itog.mark(), presets), "preset");
+			else
+				dict.takeValueForKey(Boolean.TRUE, "noPresets");
 		}
+		return presets;
 	}
 
 	public EduCourse course() {

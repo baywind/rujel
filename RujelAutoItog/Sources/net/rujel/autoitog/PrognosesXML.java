@@ -194,8 +194,10 @@ public class PrognosesXML extends GeneratorModule {
 			}
 			handler.endElement("mark");
 		} // prognosws enumeration
-		handler.endElement("marks");
-		handler.endElement("container");
+		if(ai != null) {
+			handler.endElement("marks");
+			handler.endElement("container");
+		}
 		handler.endElement("containers");
 	}
 
