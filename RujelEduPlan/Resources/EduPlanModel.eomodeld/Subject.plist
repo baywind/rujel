@@ -83,6 +83,7 @@
             name = area; 
         }, 
         {
+            deleteRule = EODeleteRuleCascade; 
             destination = PlanHours; 
             isToMany = Y; 
             joinSemantic = EOInnerJoin; 

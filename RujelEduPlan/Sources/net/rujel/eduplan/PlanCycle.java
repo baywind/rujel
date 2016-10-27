@@ -249,10 +249,10 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		EOEnterpriseObject result = null;
 		while (enu.hasMoreElements()) {
 			EOEnterpriseObject hr = (EOEnterpriseObject) enu.nextElement();
-			EduGroup gr = (EduGroup)hr.valueForKey("specClass");
-			if(gr == grp)
-				return hr;
-			if(!strict && gr == null)
+//			EduGroup gr = (EduGroup)hr.valueForKey("specClass");
+//			if(gr == grp)
+//				return hr;
+			if(!strict)// && gr == null)
 				result = hr;
 		}
 		return result;
@@ -271,7 +271,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		Integer zero = new Integer(0);
 		hr.takeValueForKey(zero, "weeklyHours");
 		hr.takeValueForKey(zero, "totalHours");
-		hr.addObjectToBothSidesOfRelationshipWithKey(grp, "specClass");
+//		hr.addObjectToBothSidesOfRelationshipWithKey(grp, "specClass");
 		addObjectToBothSidesOfRelationshipWithKey(hr, PLAN_HOURS_KEY);
 		return hr;
 	}

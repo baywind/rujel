@@ -25,6 +25,7 @@
     primaryKeyAttributes = (sID); 
     relationships = (
         {
+            deleteRule = EODeleteRuleCascade; 
             destination = SubjectGroup; 
             isToMany = Y; 
             joinSemantic = EOInnerJoin; 

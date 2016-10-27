@@ -34,8 +34,11 @@ import java.util.Enumeration;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
+import net.rujel.base.Setting;
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
 
 public class PlanHours extends _PlanHours {
@@ -135,4 +138,32 @@ public class PlanHours extends _PlanHours {
 		super.turnIntoFault(handler);
 	}
 	
+	public int[] weeksAndDays(Integer eduYear) {
+		EOEditingContext ec = editingContext();
+		int days = 0;
+		int weekDays = 7;
+		NSDictionary crs = (eduYear == null)? SettingsBase.courseDict(planCycle()):
+			SettingsBase.courseDict(planCycle(),eduYear);
+		Setting setting = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,crs, ec);
+		if(setting != null) {
+			String listName = setting.textValue();
+			days = EduPeriod.daysForList(listName, null, ec);
+			Integer h = setting.numericValue();
+			if(h != null && h.intValue() > 0)
+				weekDays = h.intValue();
+		}
+		if(days <= 0) {
+			setting = SettingsBase.settingForCourse("defaultWeeks", crs, ec);
+			if(setting == null) {
+				days = 34;
+			} else {
+				Integer h = setting.numericValue();
+				days = (h==null)?34:h.intValue();
+			}
+			return new int[] {days,0,7};
+		} else {
+			return new int[] {days/weekDays,days%weekDays,weekDays};
+		}
+	}
+
 }

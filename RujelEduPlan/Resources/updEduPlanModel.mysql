@@ -108,6 +108,9 @@ INSERT INTO PL_SUBJECT_GROUP
  (43,38,'Естественно-научное','Естественно-научная направленность',5),
  (44,38,'Туристко-краеведческое','Туристко-краеведческая направленность',6);
 
+ALTER TABLE PL_SUBJ_AREA
+  ADD COLUMN SUBJECT_GROUP smallint;
+
 update PL_SUBJECT 
   set SUBJECT_GROUP = (select COALESCE(min(S_ID),0) from PL_SUBJECT_GROUP
   where PL_SUBJECT_GROUP.SHORT_NAME like concat('%',PL_SUBJECT.SHORT_NAME,'%'));

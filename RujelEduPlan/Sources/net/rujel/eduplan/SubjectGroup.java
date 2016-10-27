@@ -31,6 +31,9 @@ package net.rujel.eduplan;
 
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableArray;
+
+import net.rujel.reusables.ModulesInitialiser;
 
 public class SubjectGroup extends _SubjectGroup {
 
@@ -52,6 +55,21 @@ public class SubjectGroup extends _SubjectGroup {
 		NSArray children = children();
 		if(children != null && children.count() > 0)
 			children.valueForKey("updatePath");
+	}
+	
+	public void addToList(NSMutableArray list) {
+		list.addObject(this);
+		NSArray<SubjectGroup> children = children();
+		if(children == null || children.count() == 0)
+			return;
+		if(children.count() > 1) {
+			children = EOSortOrdering.sortedArrayUsingKeyOrderArray(children, 
+					ModulesInitialiser.sorter);
+		}
+		for (int i = 0; i < children.count(); i++) {
+			SubjectGroup c = children.objectAtIndex(i);
+			c.addToList(list);
+		}
 	}
 	
 	public NSArray<SubjectGroup> path() {
@@ -79,4 +97,38 @@ public class SubjectGroup extends _SubjectGroup {
 		_path = null;
 		super.turnIntoFault(handler);
 	}
+
+	public void addToSortedList(NSMutableArray<SubjectGroup> list) {
+		int level = 0;
+		int maxLevel = path().count();
+		int sort = path().objectAtIndex(0).sort().intValue();
+		for (int i = 0; i < list.count(); i++) {
+			NSArray<SubjectGroup> itemPath = list.objectAtIndex(i).path();
+			if(itemPath == path())
+				return;
+			int itemSort = (itemPath.count() <= level)? sort+1 :
+					itemPath.objectAtIndex(level).sort().intValue();
+			if(sort > itemSort)
+				continue;
+			while (sort == itemSort && level < maxLevel) {
+				level++;
+				sort = path().objectAtIndex(level).sort().intValue();
+				itemSort = (itemPath.count() <= level)? sort+1 :
+					itemPath.objectAtIndex(level).sort().intValue();
+			}
+			if(sort < itemSort) {
+				while (level < maxLevel) {
+					list.insertObjectAtIndex(path().objectAtIndex(level), i);
+					i++;
+					level++;
+				}
+				return;
+			}
+		} // check existing array members
+		while (level < maxLevel) {
+			list.addObject(path().objectAtIndex(level));
+			level++;
+		}
+	}
+	
 }

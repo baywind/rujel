@@ -25,6 +25,7 @@ CREATE TABLE PL_SUBJ_AREA (
   A_ID smallint NOT NULL,
   AREA_NAME varchar(28) NOT NULL,
   SORT_NUM smallint NOT NULL,
+  SUBJECT_GROUP smallint,
   PRIMARY KEY (A_ID)
 ) ENGINE=InnoDB;
 

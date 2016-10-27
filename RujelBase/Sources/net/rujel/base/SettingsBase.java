@@ -234,10 +234,12 @@ public class SettingsBase extends _SettingsBase implements Setting {
 				new Object[] {"cycle","eduGroup","eduYear"});
 	}
 	
+	@Deprecated
 	public static NSDictionary courseDict(EduCycle cycle) {
 		Integer eduYear = MyUtility.eduYear(cycle.editingContext());
 		return courseDict(cycle,eduYear);
 	}
+	@Deprecated
 	public static NSDictionary courseDict(EduCycle cycle,Integer eduYear) {
 		NSDictionary dict = new NSDictionary(cycle.grade(),"grade");
 		return new NSDictionary(new Object[] {cycle,dict,eduYear},
