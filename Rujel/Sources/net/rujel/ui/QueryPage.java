@@ -381,7 +381,20 @@ public class QueryPage extends WOComponent {
 	}
 	
 	public WOActionResults saveQuery() {
-		String data = NSPropertyListSerialization.xmlStringFromPropertyList(rootQuery);
+		NSMutableDictionary toSave = rootQuery;
+		NSArray parameters = (NSArray)rootQuery.valueForKey("parameters");
+		if(parameters != null && parameters.count() > 0) {
+			NSMutableDictionary defaults = new NSMutableDictionary(parameters.count());
+			Enumeration enu = parameters.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSDictionary param = (NSDictionary) enu.nextElement();
+				String attribute = (String)param.valueForKey("attribute");
+				defaults.takeValueForKey(params.valueForKey(attribute), attribute);
+			}
+			toSave = rootQuery.mutableClone();
+			toSave.takeValueForKey(defaults, "defaults");
+		}
+		String data = NSPropertyListSerialization.xmlStringFromPropertyList(toSave);
 		WOResponse response = application().createResponseInContext(context()); 
 		response.setHeader("application/xml","Content-Type");
 		response.setContent(data);

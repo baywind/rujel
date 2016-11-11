@@ -87,7 +87,7 @@ public class RingsSetup extends LessonList {
     }
     
 	public void updateSection() {
-		Integer currSection = (Integer)session().valueForKeyPath("state.section.sID");
+		Integer currSection = (Integer)session().valueForKeyPath("state.section.sectionID");
     	EOQualifier qual = new EOKeyValueQualifier("timeScheme", 
     			EOQualifier.QualifierOperatorEqual, currSection);
     	EOFetchSpecification fs = new EOFetchSpecification("ScheduleRing",qual,MyUtility.numSorter);

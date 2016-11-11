@@ -148,12 +148,12 @@ public class Timetable extends LessonList {
     	Integer timeScheme = null;
 //    	SettingsBase.numericSettingForCourse("timeScheme", forCourse, ec);
     	try {
-    		timeScheme = (Integer)forCourse.valueForKeyPath("eduGroup.section");
+    		timeScheme = (Integer)forCourse.valueForKeyPath("eduGroup.section.sectionID");
     	} catch (Exception e) {
     	}
     	if(timeScheme == null) {
     		try {
-    			timeScheme = (Integer)(Integer)forCourse.valueForKeyPath("cycle.section");
+    			timeScheme = (Integer)(Integer)forCourse.valueForKeyPath("cycle.section.sectionID");
     		} catch (Exception e2) {
 			}
 		}
