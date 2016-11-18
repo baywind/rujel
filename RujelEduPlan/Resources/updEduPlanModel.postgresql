@@ -29,7 +29,7 @@ delete from PL_SUBJECT where EDU_SECTION = -99;
 update PL_SUBJECT
   set EXT_NAME = SUBSTRING(SHORT_NAME from position('(' in SHORT_NAME) +1 
     for (position(')' in SHORT_NAME) - position('(' in SHORT_NAME) -1)),
-  set SHORT_NAME = TRIM(both from SUBSTRING(SHORT_NAME FROM 1 for position('(' in SHORT_NAME) -1))
+  SHORT_NAME = TRIM(both from SUBSTRING(SHORT_NAME FROM 1 for position('(' in SHORT_NAME) -1))
   where SHORT_NAME like '%(%)%';
 
 CREATE TABLE PL_SUBJECT_GROUP (
