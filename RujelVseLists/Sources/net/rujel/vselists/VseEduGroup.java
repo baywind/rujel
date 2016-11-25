@@ -130,7 +130,9 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	public NSArray vseList(NSTimestamp date) {
 		long now = date.getTime();
 		if(_list == null || now < since || now > to)
-			prepareLists(now);
+			since = 0;
+			to = Long.MAX_VALUE;
+			_list = processList(lists(), now, VseList.sorter);
 		return _list;
 	}
 	
@@ -139,8 +141,11 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	}
 	public NSArray tutors(NSTimestamp date) {
 		long now = date.getTime();
-		if(_tutors == null || now < since || now > to)
-			prepareLists(now);
+		if(_tutors == null || now < since || now > to) {
+			since = 0;
+			to = Long.MAX_VALUE;
+			_tutors = processList(vseTutors(), now, VseTutor.sorter);
+		}
 		return _tutors;
 	}
 	
@@ -162,14 +167,14 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 		}
 		return buf.toString();
 	}
-	
+	/*
 	protected void prepareLists(long now) {
 		since = 0;
 		to = Long.MAX_VALUE;
 		_list = processList(lists(), now, VseList.sorter);
 		_tutors = processList(vseTutors(), now, VseTutor.sorter);
 	}
-	
+	*/
 	protected NSArray processList(NSArray source, long now, NSArray lSorter) {
 		if(source == null || source.count() == 0)
 			return NSArray.EmptyArray;
@@ -275,6 +280,18 @@ public class VseEduGroup extends _VseEduGroup implements EduGroup {
 	public void removeFromVseTutors(EOEnterpriseObject object) {
 		nullify();
 		super.removeFromVseTutors(object);
+	}
+	
+	public NSArray lists() {
+		NSArray lists = super.lists();
+		if(EOFaultHandler.isFault(lists)) {
+			EOQualifier qual = new EOKeyValueQualifier(VseList.EDU_GROUP_KEY,
+					EOQualifier.QualifierOperatorEqual, this);
+			EOFetchSpecification fs = new EOFetchSpecification(VseList.ENTITY_NAME,qual,null);
+			fs.setPrefetchingRelationshipKeyPaths(new NSArray("student.person"));
+			editingContext().objectsWithFetchSpecification(fs);
+		}
+		return lists;
 	}
 	
 	public int count() {
