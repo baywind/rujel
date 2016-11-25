@@ -30,6 +30,7 @@
 package net.rujel.eduplan;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.SchoolSection;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -48,7 +49,10 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
 
     public EOEditingContext ec;
     public NSArray areas;   
-    public EOEnterpriseObject areaItem;
+	public NSArray sections;
+	public NSArray sGroups;
+
+    public EOEnterpriseObject item;
     public Boolean cantChange = Boolean.FALSE;
 
     public Subject subject;
@@ -60,6 +64,8 @@ public class SubjectEditor extends com.webobjects.appserver.WOComponent {
     	ec = subj.editingContext();
     	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
     	areas = ec.objectsWithFetchSpecification(fs);
+        sections = SchoolSection.listSections(ec, false);
+    	sGroups = SubjectGroup.listSubjectGroups(ec);
     }
      
     public WOComponent save() {

@@ -34,6 +34,7 @@ import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSForwardException;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSComparator.ComparisonException;
 
 public class SubjectGroupComparator extends NSComparator {
 	
@@ -48,11 +49,15 @@ public class SubjectGroupComparator extends NSComparator {
 			throw new ComparisonException("Can only compare SubjectGroups");
 		SubjectGroup left = (SubjectGroup)arg0;
 		SubjectGroup right = (SubjectGroup)arg1;
+		return compare(left, right);
+	}
+	
+	public static int compare(SubjectGroup left, SubjectGroup right) throws ComparisonException {
 		if(left.parent() == right.parent())
 			return AscendingNumberComparator.compare(left.sort(),right.sort());
 		NSArray<SubjectGroup> lPath = left.path();
 		NSArray<SubjectGroup> rPath = right.path();
-		int len = Math.max(lPath.count(), rPath.count());
+		int len = Math.min(lPath.count(), rPath.count());
 		try {
 			for (int i = 0; i < len; i++) {
 				SubjectGroup l = lPath.objectAtIndex(i);
@@ -67,7 +72,9 @@ public class SubjectGroupComparator extends NSComparator {
 			else
 				return OrderedSame;
 		} catch (Exception e) {
-			throw new ComparisonException("Error comparing given objects: " + e);
+			ComparisonException ce = new ComparisonException("Error comparing given objects: " + e);
+			ce.initCause(e);
+			throw ce;
 		}
 	}
 

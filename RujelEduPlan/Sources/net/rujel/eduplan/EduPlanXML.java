@@ -98,7 +98,7 @@ public class EduPlanXML extends GeneratorModule {
 			handler.endElement("eduPlan");
 			return;
 		}
-		cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, SubjectComparator.sorter);
+		cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, PlanCycle.sorter);
 		Enumeration enu = cycles.objectEnumerator();
 		Subject subj = null;
 		while (enu.hasMoreElements()) {

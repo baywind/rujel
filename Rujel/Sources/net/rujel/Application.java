@@ -34,6 +34,7 @@ import net.rujel.base.ReadAccess;
 import net.rujel.reusables.*;
 
 import com.apress.practicalwo.practicalutilities.WORequestAdditions;
+import com.webobjects.eoaccess.EOAdaptorContext;
 import com.webobjects.eoaccess.EODatabaseContext;
 import com.webobjects.eoaccess.EOModel;
 import com.webobjects.eocontrol.EOEditingContext;
@@ -73,11 +74,11 @@ public class Application extends UTF8Application {
 		WORequestHandler directActionRequestHandler = requestHandlerForKey("wa");
 		setDefaultRequestHandler(directActionRequestHandler);
 
-		String propertiesPath = SettingsReader.stringForKeyPath("loggingProperties", null);
+		String setting = SettingsReader.stringForKeyPath("loggingProperties", null);
 //		InputStream propsIn = (propertiesPath!=null)?null:
 //			resourceManager().inputStreamForResourceNamed("logging.properties", "app", null);
-		if(propertiesPath != null) {
-			LogInitialiser.initLogging(null, propertiesPath, logger);
+		if(setting != null) {
+			LogInitialiser.initLogging(null, setting, logger);
 		}
 		BufferHandler handler = new BufferHandler(
 				"Sorry!\nRUJEL failed to start.\nPlease review log for details.\r-----\r\r");
@@ -85,18 +86,31 @@ public class Application extends UTF8Application {
 		Logger.getLogger("").addHandler(handler);
 		
 		ModulesInitialiser.readModules(SettingsReader.rootSettings(), "modules");
-		propertiesPath = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
-		if(propertiesPath != null) {
-			_strings = new StringStorage(propertiesPath,null);
+		setting = SettingsReader.stringForKeyPath("ui.localisationFolder", null);
+		if(setting != null) {
+			_strings = new StringStorage(setting,null);
 		} else {
-			propertiesPath = SettingsReader.stringForKeyPath("ui.defaultLocalisation", null);
-			if(propertiesPath != null)
-				propertiesPath = SettingsReader.stringForKeyPath(
-						"ui.localisations." + propertiesPath, null);
-			if(propertiesPath == null)
+			setting = SettingsReader.stringForKeyPath("ui.defaultLocalisation", null);
+			if(setting != null)
+				setting = SettingsReader.stringForKeyPath(
+						"ui.localisations." + setting, null);
+			if(setting == null)
 				_strings = StringStorage.appStringStorage;
 			else
-				_strings = new StringStorage(propertiesPath,null);
+				_strings = new StringStorage(setting,null);
+		}
+		
+		setting = SettingsReader.stringForKeyPath("dbConnection.adaptorContextDelegate", null);
+		if(setting != null) {
+			try {
+				Class delegateClass = Class.forName(setting);
+				Object delegate = delegateClass.newInstance();
+				EOAdaptorContext.setDefaultDelegate(delegate);
+				logger.log(WOLogLevel.INFO,"EOAdapterContext delegate is set to " + setting);
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,
+						"Failed to set EOAdapterContext delegate to " + setting,e);
+			}
 		}
 		
 		EODatabaseContext.setDefaultDelegate(new CompoundPKeyGenerator());

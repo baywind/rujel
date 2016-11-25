@@ -47,10 +47,10 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     /* Area */
     public EOEnterpriseObject currArea;
     
-    public NSArray areaList;
+    public NSArray<EOEnterpriseObject> areaList;
     public EOEnterpriseObject areaItem;
-    public NSArray subjectsList;
-    public Subject subjItem;
+    public NSArray<SubjectGroup> subjectsList;
+    public SubjectGroup subjectGroup;
     
     public String areaName;
     public Integer newNum;
@@ -60,17 +60,18 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     	ec = ctx;
     	EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
     	areaList = ec.objectsWithFetchSpecification(fs);
+    	subjectsList = SubjectGroup.listSubjectGroups(ec);
     }
     
     public void setArea(EOEnterpriseObject area) {
     	currArea = area;
     	areaName = (String)area.valueForKey("areaName");
     	setEditingContext(area.editingContext());
+    	subjectGroup = (SubjectGroup)area.valueForKey("subjectGroup");
     	/*
     	EOQualifier qual = new EOKeyValueQualifier("area",EOQualifier.QualifierOperatorEqual,area);
     	EOFetchSpecification fs = new EOFetchSpecification("Subject",qual,Subject.numSorter);
     	subjectsList = ec.objectsWithFetchSpecification(fs);*/
-    	subjectsList = Subject.subjectsForArea(area);
     }
     
     public WOComponent save() {
@@ -91,11 +92,13 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     			}
     		} else {
     			currArea.takeValueForKey(areaName, "areaName");
+    			currArea.takeValueForKey(subjectGroup, "subjectGroup");
     		}
     	} else {
     		if(areaName != null) {
     			currArea = EOUtilities.createAndInsertInstance(ec, "SubjectArea");
     			currArea.takeValueForKey(areaName, "areaName");
+    			currArea.takeValueForKey(subjectGroup, "subjectGroup");
     			/*Number maxNum = (areaList == null)?new Integer(0):
     				(Number)((EOEnterpriseObject)areaList.lastObject()).valueForKey("num");
     			Integer newNum = new Integer(maxNum.intValue() +1);*/

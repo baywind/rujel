@@ -155,7 +155,7 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 			SettingsReader node = prefs.subreaderForPath(nodeName, false);
 			if(node == null)
 				node = defaults.subreaderForPath(nodeName, false);
-			if(node != null && relObject != null) {
+			if(node != null) {
 				if(section == null && modifier != null) {
 					try{
 						section = new Integer(modifier);
@@ -165,8 +165,6 @@ public class ReadAccess implements NSKeyValueCodingAdditions {
 						;
 					}
 				}
-//				if(section == null)
-//					section = sectionFromRelObject();
 				if(section != null && section.intValue() < 0)
 					section = null;
 				level = PrefsAccessHandler.accessLevel(node, modifier, user(), section);

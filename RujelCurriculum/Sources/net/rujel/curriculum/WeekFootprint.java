@@ -41,6 +41,7 @@ import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.EduPeriod;
 import net.rujel.eduplan.Holiday;
 import net.rujel.eduplan.PlanCycle;
+import net.rujel.eduplan.PlanHours;
 import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduLesson;
@@ -111,7 +112,7 @@ public class WeekFootprint {
 		cal.add(Calendar.DATE, week -1);
 		end = new NSTimestamp(cal.getTimeInMillis());
 		cal.add(Calendar.DATE, 1 - week);
-		plan = PlanCycle.planHoursForCourseAndDate(course, date);
+		plan = PlanHours.planHoursForCourseAndDate(course, date);
 
 		assumed = new NSMutableArray[week];
 		real = new NSMutableArray[week];

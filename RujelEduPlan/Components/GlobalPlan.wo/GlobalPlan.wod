@@ -13,8 +13,8 @@ TotalToggle : Tabs {
   onClick = session.checkRun;
 }
 
-AreaTitle : WOString {
-  value = application.strings.RujelEduPlan_EduPlan.properties.area;
+GroupTitle : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.properties.subjectGroup;
   valueWhenEmpty = "Area";
 }
 
@@ -45,12 +45,15 @@ GroupsCell2 : WOGenericContainer {
   align = "center";
 }
 
-Area : WOString {
-  value = area.areaName;
+SubjPrefix : WOString {
+  value = subjectItem.subjectGroup.padding;
+  escapeHTML = false;
 }
-
+Area : WOString {
+  value = subjectItem.subjectGroup.name;
+}
 Subject : WOString {
-  value = subjectItem.subject;
+  value = subjectItem.Subject.subject;
 }
 
 Form : WOForm {
@@ -121,23 +124,23 @@ SubjectCell : OnClickContainer {
   elementName = "td";
   onclick = session.ajaxPopup;
   invokeAction = editSubject;
-  disabled = cantEditSubject;
   style = cellStyle;
-  title = subjectItem.subjectEO.fullName;
+  title = subjectItem.Subject.fullName;
 }
-AreaCell : OnClickContainer {
+AreaCell : WOGenericContainer {
   elementName = "td";
-  class = areaClass;
-  onclick = session.ajaxPopup;
-  invokeAction = editArea;
-  disabled = cantEditArea;
+  class = "highlight dimtext";
+  omitTags = subjectItem.noGroup;
+  rowspan = subjectItem.rowspan;
+  style = "font-size:small;text-align:left;";
+  title = subjectItem.subjectGroup.fullName;
 }
 CanAddArea : WOConditional {
-  condition = canAddArea;
+  condition = globalAccess.create.SubjectArea;
 }
 
 CanAddSubject : WOConditional {
-  condition = canAddSubject;
+  condition = access.create.Subject;
 }
 
 ShowRow : WOConditional {
@@ -170,7 +173,7 @@ GroupsCell : WOGenericContainer {
 GroupsField : WOTextField {
   value = subjectItem.subjectEO.subgroupsPresent;
   numberformat = "0";
-  disabled = cantSetupSections;
+  disabled = globalAccess.edit.subjectItem.subjectEO;
   style = "width:2em;";
   onchange = "checkChanges(this);";
   onkeypress = "return isNumberInput(event,false);";
@@ -249,7 +252,7 @@ SetupSections : OnClickContainer {
   style = "font-size:120%;text-align:center;";
   invokeAction = setupSections;
   onclick = session.ajaxPopupNoPos;
-  disabled = cantSetupSections;
+  disabled = globalAccess._edit;
 }
 
 AllTitle : WOString {
@@ -266,4 +269,33 @@ SummaryTitle : WOString {
   value = application.strings.RujelEduPlan_EduPlan.properties.summary;
   escapeHTML = false;
   valueWhenEmpty = "Total hours";
+}
+
+HasExt : WOConditional {
+  condition = subjectItem.Subject.extName;
+}
+
+SubjectExt : WOString {
+  value = subjectItem.Subject.extName;
+}
+
+IsSubjectRow : WOConditional {
+  condition = subjectItem.noData;
+  negate = true;
+}
+
+IsHeaderRow : WOConditional {
+  condition = subjectItem.noData;
+}
+
+SubjectArea : WOString {
+  value = subjectItem.area.areaName;
+  align = "left";
+}
+
+EditArea : OnClickContainer {
+  elementName = "strong";
+  invokeAction = editArea;
+  onclick = session.ajaxPopupNoPos;
+  disabled = globalAccess._edit.SubjectArea;
 }

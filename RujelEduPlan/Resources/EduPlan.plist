@@ -134,9 +134,11 @@
 	<key>properties</key>
 	<dict>
 		<key>area</key>
-		<string>Предметная область</string>
+		<string>Методическое объединение</string>
+		<key>subjectGroup</key>
+		<string>Предметная группа</string>
 		<key>fullName</key>
-		<string>Полное название</string>
+		<string>Полное название учебной программы</string>
 		<key>holidays</key>
 		<string>Каникулы и праздники</string>
 		<key>hours</key>
@@ -159,6 +161,8 @@
 		<string>групп</string>
 		<key>subject</key>
 		<string>Предмет</string>
+		<key>extName</key>
+		<string>Уточнение</string>
 		<key>subjects</key>
 		<string>Предметы</string>
 		<key>total</key>
@@ -197,6 +201,8 @@
 		<string>настроить</string>
 		<key>showAll</key>
 		<string>показать все</string>
+		<key>forAll</key>
+		<string>-= Для всех =-</string>
 		<key>addSection</key>
 		<string>Добавить отделение</string>
 	</dict>

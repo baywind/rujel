@@ -31,7 +31,6 @@ package net.rujel.eduplan;
 
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
-import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSForwardException;
 import com.webobjects.foundation.NSKeyValueCoding;
@@ -41,10 +40,7 @@ public class SubjectComparator extends NSComparator {
 	private static final String AREA = "SubjectArea";
 	private static final String num = "num";
 	private static final String areaNum = "area.num";
-	
-	public static final NSArray sorter = new NSArray(new EOSortOrdering(
-			PlanCycle.SUBJECT_EO_KEY,EOSortOrdering.CompareAscending));
-	
+		
 	public int compare(Object arg0, Object arg1) throws ComparisonException {
 		if(arg1 == arg0)
 			return OrderedSame;
@@ -56,14 +52,42 @@ public class SubjectComparator extends NSComparator {
 			throw new ComparisonException("Can only compare EOEnterpriseObjects");
 		EOEnterpriseObject left = (EOEnterpriseObject)arg0;
 		EOEnterpriseObject right = (EOEnterpriseObject)arg1;
+		return compare(left, right);
+	}
+	
+	public static int compare(EOEnterpriseObject left, EOEnterpriseObject right) throws ComparisonException {
 		int result = 0;
 		try {
 			Number num1 = null;
 			Number num2 = null;
 			if(left.entityName().equals(SUBJECT)) {
 				if(right.entityName().equals(SUBJECT)) {
-					num1 = (Number)left.valueForKeyPath(areaNum);
-					num2 = (Number)right.valueForKeyPath(areaNum);
+					if(((Subject)left).area() != ((Subject)right).area()) {
+						num1 = (Number)left.valueForKeyPath(areaNum);
+						num2 = (Number)right.valueForKeyPath(areaNum);
+					} else {
+						SubjectGroup lg = ((Subject)left).subjectGroup();
+						SubjectGroup rg = ((Subject)right).subjectGroup();
+						if(lg == rg) {
+							num1 = (Number)left.valueForKey(num);
+							num2 = (Number)right.valueForKey(num);
+						} else {
+							SubjectGroup ag = (SubjectGroup)left.valueForKeyPath("area.subjectGroup");
+							if(ag == null)
+								return SubjectGroupComparator.compare(lg,rg);
+							if(lg.path().containsObject(ag)) {
+								if(rg.path().containsObject(ag))
+									return SubjectGroupComparator.compare(lg,rg);
+								else
+									return OrderedAscending;
+							} else {
+								if(rg.path().containsObject(ag))
+									return OrderedDescending;
+								else
+									return SubjectGroupComparator.compare(lg,rg);
+							}
+						}
+					}
 				} else if(right.entityName().equals(AREA)) {
 					num1 = (Number)left.valueForKeyPath(areaNum);
 					num2 = (Number)right.valueForKey(num);
@@ -84,7 +108,9 @@ public class SubjectComparator extends NSComparator {
 			}
 			result = AscendingNumberComparator.compare(num1,num2);
 		} catch (Exception e) {
-			throw new ComparisonException("Error comparing given objects: " + e);
+			ComparisonException ce = new ComparisonException("Error comparing given objects: " + e);
+			ce.initCause(e);
+			throw ce;
 		}
 		return result;
 	}

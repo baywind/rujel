@@ -29,6 +29,7 @@
 
 package net.rujel.eduplan;
 
+import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
@@ -50,11 +51,17 @@ public class SubjectGroup extends _SubjectGroup {
 			_padding = "";
 		} else {
 			_path = parent.path().arrayByAddingObject(this);
-			_padding = parent.padding() + "-&nbsp;";
+			_padding = parent.padding() + "- ";
 		}
 		NSArray children = children();
 		if(children != null && children.count() > 0)
 			children.valueForKey("updatePath");
+	}
+	
+	public NSArray listWithChildren() {
+		NSMutableArray result = new NSMutableArray();
+		addToList(result);
+		return result;
 	}
 	
 	public void addToList(NSMutableArray list) {
@@ -87,6 +94,10 @@ public class SubjectGroup extends _SubjectGroup {
 			_updatePath();
 		return _padding;
 	}
+	
+	public String paddedName() {
+		return padding() + name();
+	}
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
@@ -110,10 +121,10 @@ public class SubjectGroup extends _SubjectGroup {
 					itemPath.objectAtIndex(level).sort().intValue();
 			if(sort > itemSort)
 				continue;
-			while (sort == itemSort && level < maxLevel) {
+			while (sort == itemSort && level < maxLevel-1) {
 				level++;
 				sort = path().objectAtIndex(level).sort().intValue();
-				itemSort = (itemPath.count() <= level)? sort+1 :
+				itemSort = (itemPath.count() <= level)? sort-1 :
 					itemPath.objectAtIndex(level).sort().intValue();
 			}
 			if(sort < itemSort) {
@@ -129,6 +140,18 @@ public class SubjectGroup extends _SubjectGroup {
 			list.addObject(path().objectAtIndex(level));
 			level++;
 		}
+	}
+	
+	public static NSArray listSubjectGroups(EOEditingContext ec) {
+		NSArray<SubjectGroup> found = EOUtilities.objectsForEntityNamed(ec, ENTITY_NAME);
+		if(found == null || found.count() == 0)
+			return null;
+		NSMutableArray result = new NSMutableArray(found.count());
+		for (int i = 0; i < found.count(); i++) {
+			SubjectGroup sg = found.objectAtIndex(i);
+			sg.addToSortedList(result);
+		}
+		return result;
 	}
 	
 }

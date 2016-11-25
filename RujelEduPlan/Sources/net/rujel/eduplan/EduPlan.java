@@ -170,7 +170,9 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 				new SubjectComparator.ComparisonSupport(), Subject.class);
 		EOSortOrdering.ComparisonSupport.setSupportForClass(
 				new PlanCycle.ComparisonSupport(), PlanCycle.class);
-		SchoolSection.listSections(new EOEditingContext(), true);
+		EOEditingContext ec = new EOEditingContext();
+		SchoolSection.listSections(ec, true);
+		PlanHours.updatePlanHours(ec);
 		return null;
 	}
 	

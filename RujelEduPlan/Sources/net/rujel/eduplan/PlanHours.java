@@ -30,6 +30,7 @@
 package net.rujel.eduplan;
 
 import java.util.Enumeration;
+import java.util.logging.Logger;
 
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
@@ -40,9 +41,30 @@ import com.webobjects.foundation.NSTimestamp;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.WOLogLevel;
 
 public class PlanHours extends _PlanHours {
 
+	public static void updatePlanHours(EOEditingContext ec) {
+		NSArray<PlanHours> toUpdate = EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME, GRADE_KEY, -1);
+		if(toUpdate == null || toUpdate.count() == 0)
+			return;
+		Enumeration<PlanHours> enu = toUpdate.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			PlanHours ph = (PlanHours) enu.nextElement();
+			@SuppressWarnings("deprecation")
+			PlanCycle cycle = ph.planCycle();
+			if(cycle == null)
+				continue;
+			ph.setSection(cycle.section());
+			ph.setEduSubject(cycle.subjectEO());
+			ph.setGrade(cycle.grade());
+			ec.saveChanges();
+		}
+		Logger.getLogger("rujel.base").log(WOLogLevel.INFO, 
+				"Automatically updated PlanHours for new databse structure",toUpdate.count());
+	}
+	
 	public static int planHoursForCourseAndDate(EduCourse course, NSTimestamp date) {
 		EOEditingContext ec = course.editingContext();
 		NSArray planDetails = (date == null)?null:EOUtilities.objectsMatchingKeyAndValue(

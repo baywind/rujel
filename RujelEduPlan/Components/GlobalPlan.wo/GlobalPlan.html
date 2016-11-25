@@ -73,7 +73,6 @@ function cUnDim(cell) {
 <webobject name = "Sections"><webobject name = "SectionContainer">
 <webobject name = "SectionNum"/>: <webobject name = "SectionTitle"/>
 </webobject></webobject>
-<webobject name = "SectionContainer"><webobject name = "AllTitle"/></webobject>
 </div>
 </div>
 <webobject name = "Form">
@@ -83,7 +82,7 @@ function cUnDim(cell) {
 			<th style="padding: 2px 1ex;">
 			<webobject name = "CanAddArea"><webobject name = "AddArea">
 			<webobject name = "PlusImage"/></webobject></webobject>
-			<webobject name = "AreaTitle"/>
+			<webobject name = "GroupTitle"/>
 			</th>
 			<th style="padding: 2px 1em;">
 			<webobject name = "CanAddSubject"><webobject name = "AddSuject">
@@ -110,30 +109,33 @@ function cUnDim(cell) {
 	</webobject></tr></webobject></tfoot>
 		<tbody>
 	<webobject name = "SubjectsRepetition">
-		<webobject name = "ShowRow">
 			<webobject name = "SubjectRow">
-				<webobject name = "AreaCell"><webobject name = "Area"/></webobject>
-				<webobject name = "SubjectCell"><webobject name = "Subject"/></webobject>
-				<webobject name = "HasSection">
-					<webobject name = "GroupsCell2"><webobject name = "GroupsField"/>
+				<webobject name = "AreaCell"><webobject name = "SubjPrefix"/><webobject name = "Area"/></webobject>
+				<webobject name = "IsSubjectRow">
+					<webobject name = "SubjectCell"><webobject name = "Subject"/><webobject name = "HasExt">
+					<em>/<webobject name = "SubjectExt"/>/</em></webobject></webobject>
+					<webobject name = "HasSection">
+						<webobject name = "GroupsCell2"><webobject name = "GroupsField"/>
+						</webobject></webobject>
+					<webobject name = "CyclesRepetition">
+						<webobject name = "CycleCell">
+						<webobject name = "CanEdit">
+						<webobject name = "CycleHours"/>
+						</webobject>
+						<webobject name = "CntEdit">
+						<webobject name = "ReadHours"/>
+						</webobject><webobject name = "ShowAll">
+						<table cellpadding = "2" cellspacing = "0" width = "100%"><tr> 
+						<webobject name = "Sections">
+		<td onmouseover = "cDim(this);" onmouseout = "cUnDim(this);" onclick = "selectCell(this);">
+						<webobject name = "ReadHours"/><webobject name = "CycleLevel"/></td>
+						</webobject></tr></table></webobject>
 					</webobject></webobject>
-				<webobject name = "CyclesRepetition">
-					<webobject name = "CycleCell">
-					<webobject name = "CanEdit">
-					<webobject name = "CycleHours"/>
+					<webobject name = "OpenDetails">&gt;</webobject>
+					</webobject><webobject name = "IsHeaderRow">
+						<td colspan = "20" align = "left">
+						<webobject name = "EditArea"><webobject name = "SubjectArea"/></webobject></td>
 					</webobject>
-					<webobject name = "CntEdit">
-					<webobject name = "ReadHours"/>
-					</webobject><webobject name = "ShowAll">
-					<table cellpadding = "2" cellspacing = "0" width = "100%"><tr> 
-					<webobject name = "Sections">
-	<td onmouseover = "cDim(this);" onmouseout = "cUnDim(this);" onclick = "selectCell(this);">
-					<webobject name = "ReadHours"/><webobject name = "CycleLevel"/></td>
-					</webobject></tr></table></webobject>
-				</webobject>
-				</webobject>
-			<webobject name = "OpenDetails">&gt;</webobject>
-			</webobject>
 			</webobject>
 		
 	</webobject>

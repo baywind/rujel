@@ -18,7 +18,7 @@
         }, 
         {allowsNull = N; columnName = "SORT_NUM"; name = num; prototypeName = short; }, 
         {
-            allowsNull = N; 
+            allowsNull = Y; 
             columnName = "EDU_SECTION"; 
             name = sectionID; 
             prototypeName = short; 
@@ -92,7 +92,6 @@
         }, 
         {
             destination = SchoolSection; 
-            isMandatory = Y; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
             joins = ({destinationAttribute = sID; sourceAttribute = sectionID; }); 

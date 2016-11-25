@@ -158,6 +158,9 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		return ec.objectsWithFetchSpecification(fs);		
 	}
 	
+	public static final NSArray sorter = new NSArray(new EOSortOrdering(
+			SUBJECT_EO_KEY,EOSortOrdering.CompareAscending));
+
 	public static NSArray cyclesForGrade(Integer grade, EOEditingContext ec) {
 		NSArray found = allCyclesFor(grade,null, null, ec);
 		if(found == null || found.count() == 0)
@@ -169,7 +172,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			if(cycle.planHours(null) != null)
 				result.addObject(cycle);
 		}
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result,SubjectComparator.sorter);
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result,sorter);
 		return result;
 	}
 	
@@ -191,7 +194,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			if(cycle.planHours(group) != null)
 				result.addObject(cycle);
 		}
-		EOSortOrdering.sortArrayUsingKeyOrderArray(result,SubjectComparator.sorter);
+		EOSortOrdering.sortArrayUsingKeyOrderArray(result,sorter);
 		return result;
 	}
 	
