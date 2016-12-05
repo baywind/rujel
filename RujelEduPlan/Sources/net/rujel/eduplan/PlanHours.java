@@ -36,8 +36,10 @@ import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
+import com.webobjects.foundation.NSMutableDictionary;
 import com.webobjects.foundation.NSTimestamp;
 
+import net.rujel.base.SchoolSection;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
@@ -63,6 +65,47 @@ public class PlanHours extends _PlanHours {
 		}
 		Logger.getLogger("rujel.base").log(WOLogLevel.INFO, 
 				"Automatically updated PlanHours for new databse structure",toUpdate.count());
+	}
+	
+	public static NSArray getPlanHours(SchoolSection section, Subject subject, Integer grade) {
+		NSMutableDictionary values = new NSMutableDictionary(section,SECTION_KEY);
+		values.takeValueForKey(subject, EDU_SUBJECT_KEY);
+		values.takeValueForKey(grade, GRADE_KEY);
+		NSArray found = EOUtilities.objectsMatchingValues(section.editingContext(), 
+				ENTITY_NAME, values);
+		return found;
+	}
+	
+	public static PlanHours getPlanHours(SchoolSection section, Subject subject, Integer grade,
+			boolean create) {
+		if(section == null || subject == null || grade == null)
+			throw new IllegalArgumentException("All parameters required");
+		NSArray found = getPlanHours(section, subject, grade);
+		if(found == null || found.count() == 0) {
+			if(create) {
+				EOEditingContext ec = section.editingContext();
+				NSArray cycles = PlanCycle.allCyclesFor(grade, subject, section, ec);
+				PlanCycle cycle;
+				if(cycles == null || cycles.count() == 0) {
+					cycle = (PlanCycle)EOUtilities.
+							createAndInsertInstance(ec, PlanCycle.ENTITY_NAME);
+					cycle.setGrade(grade);
+					cycle.setSection(section);
+					cycle.setSubjectEO(subject);
+				} else {
+					cycle = (PlanCycle)cycles.objectAtIndex(0);
+				}
+				PlanHours ph = (PlanHours)EOUtilities.createAndInsertInstance(ec, ENTITY_NAME);
+				ph.addObjectToBothSidesOfRelationshipWithKey(cycle,PLAN_CYCLE_KEY);
+				ph.addObjectToBothSidesOfRelationshipWithKey(subject,EDU_SUBJECT_KEY);
+				ph.setSection(section);
+				ph.setGrade(grade);				
+				return ph;
+			}
+		} else {
+			return (PlanHours)found.objectAtIndex(0);
+		}
+		return null;
 	}
 	
 	public static int planHoursForCourseAndDate(EduCourse course, NSTimestamp date) {
@@ -154,6 +197,9 @@ public class PlanHours extends _PlanHours {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+		Integer zero = Integer.valueOf(0);
+		setWeeklyHours(zero);
+		setTotalHours(zero);
 	}
 
 	public void turnIntoFault(EOFaultHandler handler) {

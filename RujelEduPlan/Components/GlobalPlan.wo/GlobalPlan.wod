@@ -116,8 +116,8 @@ AddArea : WOGenericContainer {
 }
 AddSuject : WOGenericContainer {
   elementName = "span";
-  invokeAction = addSubject;
-  onclick = session.ajaxPopup;
+  invokeAction = showUnusedSubjects;
+  onclick = session.checkRun;
 }
 
 SubjectCell : OnClickContainer {
@@ -143,9 +143,6 @@ CanAddSubject : WOConditional {
   condition = access.create.Subject;
 }
 
-ShowRow : WOConditional {
-  condition = showRow;
-}
 
 TogleAllButton : OnClickContainer {
   elementName = "td";
@@ -171,9 +168,9 @@ GroupsCell : WOGenericContainer {
 }
 
 GroupsField : WOTextField {
-  value = subjectItem.subjectEO.subgroupsPresent;
+  value = subjectItem.Subject.subgroupsPresent;
   numberformat = "0";
-  disabled = globalAccess.edit.subjectItem.subjectEO;
+  disabled = access.edit.subjectItem.Subject;
   style = "width:2em;";
   onchange = "checkChanges(this);";
   onkeypress = "return isNumberInput(event,false);";
@@ -223,19 +220,8 @@ SectionTitle : WOString {
   value = item.name;
 }
 
-ShowAll : WOConditional {
-  condition = hasSection;
-  negate = true;
-}
-
 HasSection : WOConditional {
   condition = hasSection;
-}
-
-CycleLevel : WOTextField {
-  value = cycleLevel;
-  numberformat = "0";
-  style = "display:none;";
 }
 
 CanSave : WOConditional {
@@ -253,11 +239,6 @@ SetupSections : OnClickContainer {
   invokeAction = setupSections;
   onclick = session.ajaxPopupNoPos;
   disabled = globalAccess._edit;
-}
-
-AllTitle : WOString {
-  value = session.strings.RujelEduPlan_EduPlan.sections.showAll;
-  escapeHTML = false;
 }
 
 SumValue : WOString {
@@ -298,4 +279,8 @@ EditArea : OnClickContainer {
   invokeAction = editArea;
   onclick = session.ajaxPopupNoPos;
   disabled = globalAccess._edit.SubjectArea;
+}
+
+IsArea : WOConditional {
+  condition = subjectItem.area;
 }
