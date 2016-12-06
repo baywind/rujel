@@ -338,13 +338,24 @@ public class ModuleInit {
 		if(Various.boolForObject(ctx.session().valueForKeyPath("readAccess._read.ItogMark")))
 			return null;
 		EOEditingContext ec = null;
-		try {
-			ec = (EOEditingContext)ctx.page().valueForKey("ec");
-		} catch (Exception e) {
-			ec = new SessionedEditingContext(ctx.session());
+		NSKeyValueCodingAdditions course = (NSKeyValueCodingAdditions)
+				ctx.session().objectForKey("statCourseReport");
+		String listName;
+		if(course != null) {
+			ec = (EOEditingContext)course.valueForKey("editingContext");
+		}		
+		if(ec == null) {
+			try {
+				ec = (EOEditingContext)ctx.page().valueForKey("ec");
+			} catch (Exception e) {
+				ec = new SessionedEditingContext(ctx.session());
+			}
 		}
-//		ec.lock();
-		String listName = sectionListName(ctx.session(), ec);
+		if(course == null) {
+			listName = sectionListName(ctx.session(), ec);
+		} else {
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
+		}
 		NSDictionary settings = new NSDictionary(listName,ItogMark.ENTITY_NAME);
 		Integer year = (Integer)ctx.session().valueForKey("eduYear");
 		Enumeration itogEnu = itogsEnu(ec, listName, year);

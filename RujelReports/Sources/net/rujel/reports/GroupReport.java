@@ -7,8 +7,10 @@ import com.webobjects.appserver.WOResponse;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSKeyValueCoding;
+import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.SessionedEditingContext;
@@ -31,6 +33,11 @@ public class GroupReport extends WOComponent {
 		currClass = group;
 		if(currClass != null)
 		students = currClass.list();
+		NSKeyValueCodingAdditions courseDict = SettingsBase.courseDict(group);
+		if(!CoursesReport.checkReports(reports,courseDict,ec)) {
+			session().setObjectForKey(courseDict,"groupReport");
+			reports = null;
+		}
 	}
 	
     public NSMutableArray prepareDisplay() {
@@ -59,7 +66,8 @@ public class GroupReport extends WOComponent {
     			reports.addObjectsFromArray(dirReports);
     	}
     	super.appendToResponse(aResponse, aContext);
-    }
+		session().removeObjectForKey("groupReport");
+   }
     
 	public String reportStyle() {
 		if(display != null && display.count() > 1)

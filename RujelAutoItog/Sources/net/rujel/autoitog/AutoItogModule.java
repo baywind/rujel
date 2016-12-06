@@ -210,6 +210,17 @@ public class AutoItogModule {
 				if(ai == pr.autoItog())
 					continue;
 				ai = pr.autoItog();
+				if(ai == null) {
+					try {
+						pr.setFireDate(null);
+						ec.saveChanges();
+					} catch (Exception e) {
+						logger.log(WOLogLevel.WARNING, "Failed to disable unowned prognosis",
+								new Object[] {pr,e});
+					} finally {
+						continue;
+					}
+				}
 				if(alreadyScheduled.containsObject(ai))
 					continue;
 				alreadyScheduled.addObject(ai);
@@ -572,12 +583,18 @@ public class AutoItogModule {
 		int inCourse = 0;
 		for (int i = 0; i < prognoses.count(); i++) {
 			Prognosis prognos = (Prognosis)prognoses.objectAtIndex(i);
-			if(prognos.course() != course) {
+			EduCourse crs = prognos.course();
+			if(crs == null || crs.eduYear() == null) {
+				ec.deleteObject(prognos);
+				ec.saveChanges();
+				continue;
+			}
+			if(crs != course) {
 				if(inCourse > 0) {
 					savePrognoses(ec, course, itog.itogContainer(), buf);
 					buf.append("-- ").append(inCourse).append(" --\n");
 				}
-				course = prognos.course();
+				course = crs;
 				if(!listName.equals(sb.forCourse(course).textValue())) {
 					inCourse = -1;
 					continue;
@@ -1107,7 +1124,21 @@ cycleCourses:
 			ec = new SessionedEditingContext(ctx.session());
 		}
 //		ec.lock();
-		String listName = ModuleInit.sectionListName(ctx.session(), ec);
+		String listName;
+		NSKeyValueCodingAdditions course = (NSKeyValueCodingAdditions)
+				ctx.session().objectForKey("groupReport");
+		if(!(course instanceof EduCourse)) {
+			try {
+				course = (EduCourse)ctx.page().valueForKey("course");
+			} catch (Exception e) {
+				
+			}
+		}
+		if(course == null) {
+			listName = ModuleInit.sectionListName(ctx.session(), ec);			
+		} else {
+			listName = SettingsBase.stringSettingForCourse(ItogMark.ENTITY_NAME, course, ec);
+		}
 		NSTimestamp date = (NSTimestamp)ctx.session().valueForKey("today");
 		Enumeration aiEnu = aiEnu(ec, listName, date);
 		if(aiEnu == null)
@@ -1117,6 +1148,7 @@ cycleCourses:
 				"strings.RujelEduResults_EduResults.groupReportSubs");
 		String name = (String)ctx.session().valueForKeyPath(
 				"strings.RujelAutoItog_AutoItog.prognoses");
+		NSDictionary setting = new NSDictionary(listName,ItogMark.ENTITY_NAME);
 		while (aiEnu.hasMoreElements()) {
 			AutoItog ai = (AutoItog) aiEnu.nextElement();
 			ItogContainer itog = ai.itogContainer();
@@ -1126,6 +1158,7 @@ cycleCourses:
 			int sort = 50 + itog.itogType().sort()*10 + itog.num();
 			dict.setObjectForKey(String.valueOf(sort), "sort");
 			dict.setObjectForKey(PlistReader.cloneArray(subParams, true), "subParams");
+			dict.takeValueForKey(setting,SettingsBase.ENTITY_NAME);
 			try {
 				NSMutableDictionary preload = new NSMutableDictionary("preloadMarks","methodName");
 				Method method = AutoItogModule.class.getMethod("preloadMarks", 

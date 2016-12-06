@@ -44,6 +44,7 @@ import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSKeyValueCodingAdditions;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
@@ -141,16 +142,33 @@ public class QualifiedSetting extends _QualifiedSetting implements Setting {
 			if(eduYear() != null && !eduYear().equals(((EduCourse)object).eduYear()))
 					return false;
 		}
-		if(section() != null && section() != settingsBase().sectionForCourse(object))
+		SchoolSection courseSection = settingsBase().sectionForCourse(object);
+		if(section() != null && section() != courseSection)
 			return false;
 		if(courses == null && qualifier == null) {
 			read();
 		}
 		if(courses != null)
 			return courses.containsObject(object);
-		else if (qualifier != null)
-			return qualifier.evaluateWithObject(object);
-		else
+		else if (qualifier != null) {
+			boolean res = qualifier.evaluateWithObject(object);
+			if(!res && courseSection != null && 
+					qualifierString().contains("grade") && object instanceof NSDictionary && 
+					 ((NSDictionary)object).valueForKeyPath("cycle.grade") == null) {
+				NSMutableDictionary tmp = PlistReader.cloneDictionary((NSDictionary)object, true);
+				NSMutableDictionary cDict = (NSMutableDictionary)tmp.valueForKey("cycle");
+				if(cDict == null) {
+					cDict = new NSMutableDictionary(courseSection,"section");
+					tmp.takeValueForKey(cDict, "cycle");
+				}
+				cDict.takeValueForKey(courseSection.minGrade(), "grade");
+				if(qualifier.evaluateWithObject(tmp)) {
+					cDict.takeValueForKey(courseSection.maxGrade(), "grade");
+					res = qualifier.evaluateWithObject(tmp);
+				}
+ 			}
+			return res;
+		} else
 			return true;
 	}
 	
