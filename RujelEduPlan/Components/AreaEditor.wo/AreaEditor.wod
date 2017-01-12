@@ -75,7 +75,7 @@ AreaNameField : WOTextField {
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.Reusables_Strings.uiElements.Save;
+	value = session.strings.Reusables_Strings.uiElements.Save;
 	onclick = "try{enumerate(form,'areaNum',1);}catch(e){alert(e);}";
 }
 ResetButton1: WOResetButton {
@@ -112,4 +112,16 @@ SubjGroupPopUp : WOPopUpButton {
   displayString = areaItem.paddedName;
   selection = subjectGroup;
   noSelectionString = "-=-";
+}
+
+DeleteLink : OnClickContainer {
+	elementName = "span";
+	invokeAction = delete;
+	onclick = session.tryLoad;
+	hide = cantDelete;
+	style = "text-decoration:underline;";
+}
+
+DeleteString : WOString {
+  value = session.strings.Reusables_Strings.uiElements.Delete;
 }

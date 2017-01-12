@@ -33,11 +33,13 @@ package net.rujel.eduplan;
 import java.text.DecimalFormat;
 import java.util.Enumeration;
 
+import net.rujel.base.MyUtility;
 import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.*;
+import net.rujel.ui.RedirectPopup;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eoaccess.EOUtilities;
@@ -103,6 +105,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
+	        if(ec.hasChanges())
+	        	ec.revert();
 	        sections = SchoolSection.listSections(ec, false);
 			if(inSection == null) {
 				inSection = (SchoolSection)session().valueForKeyPath("state.section");
@@ -115,7 +119,6 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	        grades = prepareGrades();
 		  	subjects = prepareAgregate();
 		  	subjectItem = null;
-		  	forcedSubjects = null;
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 			noDetails = (Boolean)access().valueForKeyPath("_read.PlanDetail");
 			if(!noDetails.booleanValue())
@@ -129,6 +132,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				NSArray found = ec.objectsWithFetchSpecification(fs);
 				noDetails = Boolean.valueOf(found == null || found.count() == 0);
 			}
+		} else if(ec.hasChanges()) {
+        	ec.revert();
 		}
 		if(globalAccess == null) {
 			globalAccess = new ReadAccess(session());
@@ -163,6 +168,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			planHours = ec.objectsWithFetchSpecification(fs);
 		}
 		NSMutableArray agregate = new NSMutableArray();
+		Enumeration areas = null;
 	  	if(planHours == null || planHours.count() == 0) {
 	  		EOQualifier[] quals = new EOQualifier[2];
 	  		quals[0] = new EOKeyValueQualifier(Subject.SECTION_KEY,
@@ -183,6 +189,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 //				dict.takeValueForKey(new Counter(0), "counter");
 				agregate.addObject(dict);
 			}
+			fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
+			areas = ec.objectsWithFetchSpecification(fs).objectEnumerator();
 	  	} else { // if(planHours == null || planHours.count() == 0)
 		  	Enumeration enu = planHours.objectEnumerator();
 			Subject subj = null;
@@ -191,10 +199,13 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		  		PlanHours ph = (PlanHours) enu.nextElement();
 		  		if(ph.eduSubject() != subj) {
 		  			subj = ph.eduSubject();
+		  			if(forcedSubjects != null)
+		  				forcedSubjects.removeObject(subj);
 					NSMutableDictionary dict = new NSMutableDictionary(subj, Subject.ENTITY_NAME);
 		  			hours = new PlanHours[grades.count()];
 					dict.takeValueForKey(hours, "planHours");
 //					dict.takeValueForKey(new Counter(0), "counter");
+					dict.takeValueForKey(Boolean.TRUE, PlanHours.ENTITY_NAME);
 					agregate.addObject(dict);
 		  		}
 		  		int idx = grades.indexOf(ph.grade());
@@ -203,12 +214,32 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		  		} else {
 		  			hours[idx] = ph;
 		  		}
-			}
+		  	}
+		  	if(forcedSubjects != null && forcedSubjects.count() > 0) {
+		  		enu = forcedSubjects.objectEnumerator();
+		  		while (enu.hasMoreElements()) {
+					EOEnterpriseObject s = (EOEnterpriseObject) enu.nextElement();
+					if(s.editingContext() == null)
+						continue;
+					NSMutableDictionary dict = new NSMutableDictionary(s, Subject.ENTITY_NAME);
+					dict.takeValueForKey(new PlanHours[grades.count()], "planHours");
+					agregate.addObject(dict);
+//					Various.addToSortedList(dict, agregate,
+//							Subject.ENTITY_NAME, EOSortOrdering.CompareAscending);
+				}
+		  	}
+		  	if(Various.boolForObject(context().userInfoForKey("SubjectArea"))) {
+				EOFetchSpecification fs = new EOFetchSpecification(
+						"SubjectArea",null,MyUtility.numSorter);
+				areas = ec.objectsWithFetchSpecification(fs).objectEnumerator();
+		  	}
 	  	} // if (planHours.count() > 0)
 	  	NSArray sorter = new NSArray(new EOSortOrdering(Subject.ENTITY_NAME, 
 	  			EOSortOrdering.CompareAscending));
 	  	EOSortOrdering.sortArrayUsingKeyOrderArray(agregate, sorter);
-	  	
+	  	processAgregate(agregate, areas);
+	  	return agregate;
+	}
 	  	/*
 	  	EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME
 	  			,null,Subject.sorter);
@@ -291,22 +322,27 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					dict.takeValueForKeyPath(new Integer(hrs.count()), "counter.add");
 			}
 		}*/
+
+	protected void processAgregate(NSMutableArray agregate, Enumeration areas) {
 		EOEnterpriseObject currarea = null;
 		SubjectGroup currGroup = null;
 		Counter groupCounter = null;
 		for (int i = 0; i < agregate.count(); i++) {
 			NSMutableDictionary dict = (NSMutableDictionary) agregate.objectAtIndex(i);
 			Subject subjectEO = (Subject)dict.valueForKey(Subject.ENTITY_NAME);
-			{
-				PlanHours[] hours = (PlanHours[])dict.valueForKey("planHours");
-				Counter cnt = new Counter();
+			PlanHours[] hours = (PlanHours[])dict.valueForKey("planHours");
+			Counter cnt = new Counter();
+			if(hours != null) {
 				for (int j = 0; j < hours.length; j++) {
 					if(hours[j] != null)
 						cnt.raise();
 				}
 			}
-			if(subjectEO.area() != currarea) {
-				currarea = subjectEO.area();
+			while(subjectEO.area() != currarea) {
+				if(areas != null && areas.hasMoreElements())
+					currarea = (EOEnterpriseObject) areas.nextElement();
+				else
+					currarea = subjectEO.area();
 				NSMutableDictionary areaDict = new NSMutableDictionary(currarea,Subject.AREA_KEY);
 				areaDict.takeValueForKey("orange", "styleClass");
 				areaDict.takeValueForKey(Boolean.TRUE, "noData");
@@ -314,7 +350,10 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				areaDict.takeValueForKey(currGroup, Subject.SUBJECT_GROUP_KEY);
 				groupCounter = new Counter(1);
 				areaDict.takeValueForKey(groupCounter, "rowspan");
+				areaDict.takeValueForKey(MyUtility.getID(currarea), "anchor");
 				agregate.insertObjectAtIndex(areaDict, i);
+//				if(cnt.intValue() == 0 && currarea == subjectEO.area())
+//					areaDict.takeValueForKey(Boolean.TRUE, "showUnused");
 				i++;
 			}
 			if(subjectEO.subjectGroup() != currGroup) {
@@ -333,6 +372,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				currGroup = group;
 				groupCounter = new Counter(1);
 				dict.takeValueForKey(groupCounter, "rowspan");
+				dict.takeValueForKey(null, "noGroup");
 			} else {
 				groupCounter.raise();
 				dict.takeValueForKey(Boolean.TRUE, "noGroup");
@@ -346,7 +386,18 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 //				styleClass = "female";
 			dict.takeValueForKey(styleClass, "styleClass");
 		}
-		return agregate;
+		if(areas != null) {
+			while (areas.hasMoreElements()) {
+				EOEnterpriseObject area = (EOEnterpriseObject) areas.nextElement();
+				NSMutableDictionary areaDict = new NSMutableDictionary(area,Subject.AREA_KEY);
+				areaDict.takeValueForKey("orange", "styleClass");
+				areaDict.takeValueForKey(Boolean.TRUE, "noData");
+				areaDict.takeValueForKey(area.valueForKey("subjectGroup"), Subject.SUBJECT_GROUP_KEY);
+				areaDict.takeValueForKey(new Counter(1), "rowspan");
+				areaDict.takeValueForKey(MyUtility.getID(area), "anchor");
+				agregate.addObject(areaDict);
+			}
+		}
 	}
 	
 	public boolean hasSection() {
@@ -364,11 +415,11 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		grades = prepareGrades();
 	  	subjects = prepareAgregate();
 	  	subjectItem = null;
-	  	forcedSubjects = null;
+	  	forcedSubjects.removeAllObjects();;
 		return null;
 	}
 	
-	protected NSMutableSet forcedSubjects;
+	protected NSMutableSet forcedSubjects = new NSMutableSet();
 //	public boolean showAll = false;
 	public boolean showRow() {
 		if(Various.boolForObject(subjectItem.valueForKey("counter")))
@@ -377,8 +428,6 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void setForced(Object forced) {
-		if(forcedSubjects == null)
-			forcedSubjects = new NSMutableSet();
 		forcedSubjects.addObject(forced);
 	}
 
@@ -463,12 +512,13 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			String keyNot = (showTotal != 0)? "weeklyHours" : "totalHours";
 			planHours[index].takeValueForKey(hours, key);
 			planHours[index].takeValueForKey(new Integer(0), keyNot);
+			subjectItem.takeValueForKey(Boolean.TRUE, PlanHours.ENTITY_NAME);
 		} else { // hours == null
 			if(planHours[index] != null) { // delete planHours
 				ec.deleteObject(planHours[index]);
 				subjectItem.valueForKeyPath("counter.lower");
 //				if(count == null || count.intValue() <= 0)
-//					setValueForBinding(Boolean.TRUE, "shouldReset");
+					setValueForBinding(Boolean.TRUE, "shouldReset");
 			}
 		}
 	}
@@ -486,8 +536,6 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void save() {
-		if(!ec.hasChanges())
-			return;
 		try {			
 			/*NSMutableArray changes = new NSMutableArray();
 			NSArray tmp = ec.insertedObjects();
@@ -506,11 +554,14 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				changes.addObjectsFromArray(ec.insertedObjects());
 			}
 			Object[] args = new Object[] {session(),changes};*/
-			ec.saveChanges();
-			EduPlan.logger.log(WOLogLevel.EDITING,"Saved changes in EduPlan",session());
-			EOQualifier qual = new EOKeyValueQualifier("counter.value",
-					EOQualifier.QualifierOperatorGreaterThan, 0);
+			if(ec.hasChanges()) {
+				ec.saveChanges();
+				EduPlan.logger.log(WOLogLevel.EDITING,"Saved changes in EduPlan",session());
+			}
+			EOQualifier qual = new EOKeyValueQualifier(PlanHours.ENTITY_NAME,
+					EOQualifier.QualifierOperatorEqual, Boolean.TRUE);
 			EOQualifier.filterArrayWithQualifier(subjects, qual);
+			processAgregate(subjects, null);
 		} catch (Exception ex) {
 			Object[] args = new Object[] {session(),ex};
 			EduPlan.logger.log(WOLogLevel.WARNING,"Failed to save changes",args);
@@ -610,7 +661,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		SubjectGroup currGroup = (SubjectGroup)area.valueForKey("subjectGroup");
 		Counter groupCounter = (Counter)subjectItem.valueForKey("rowspan");
 		NSMutableArray passed = new NSMutableArray();
-	  	
+	  	final int oldCount = subjects.count();
 	  	while (enu.hasMoreElements()) {
 			Subject subj = (Subject) enu.nextElement();
 			NSMutableDictionary dict = new NSMutableDictionary(
@@ -691,8 +742,12 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				subjects.insertObjectAtIndex(dict, idx);
 			idx++;
 		}
-	  	
-		return null;
+//	  	subjectItem.takeValueForKey(Boolean.TRUE, "showUnused");
+	  	if(subjects.count() > oldCount) {
+	  		return RedirectPopup.getRedirect(context(), context().page());
+	  	} else {
+	  		return addSubject();
+	  	}
 	}
 	
 	private boolean isPrevRowForSubject(NSDictionary row,Subject subj,NSMutableArray passed)
@@ -722,15 +777,34 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	
 	public WOComponent editSubject() {
 		WOComponent popup = pageWithName("SubjectEditor");
-		popup.takeValueForKey(subjectItem.valueForKey(Subject.ENTITY_NAME), "subject");
+		Object subj = subjectItem.valueForKey(Subject.ENTITY_NAME);
+		setForced(subj);
+		popup.takeValueForKey(subj, "subject");
 		popup.takeValueForKey(context().page(), "returnPage");
 		popup.takeValueForKey(access().valueForKey("_edit.Subject"), "cantChange");
 		subjectItem = null;
 		return popup;
 	}
+	/*
+	public String addSubjectOnclick() {
+		String href = context().componentActionURL();
+		if(Various.boolForObject(valueForKeyPath("subjectItem.showUnused")))
+			return "ajaxPopupAction('" + href + "');";
+		else
+			return "return checkRun('" + href + '#' + 
+					valueForKeyPath("subjectItem.anchor") + "');";
+	}*/
 	
-	public WOComponent addSubject() {
+	public WOActionResults addSubject() {
 		Subject subject = (Subject)EOUtilities.createAndInsertInstance(ec, "Subject");
+		subject.setSection(inSection);
+		subject.setArea((EOEnterpriseObject)subjectItem.valueForKey(Subject.AREA_KEY));
+		SubjectGroup sg = (SubjectGroup)subjectItem.valueForKey(Subject.SUBJECT_GROUP_KEY);
+		if(sg != null) {
+			subject.setSubjectGroup(sg);
+			subject.setSubject(sg.name());
+		}
+		setForced(subject);
 		WOComponent popup = pageWithName("SubjectEditor");
 		popup.takeValueForKey(subject, "subject");
 		popup.takeValueForKey(context().page(), "returnPage");
@@ -745,11 +819,29 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		return popup;
 	}
 	public WOComponent addArea() {
-		WOComponent popup = pageWithName("AreaEditor");
-		popup.takeValueForKey(context().page(), "returnPage");
-		popup.takeValueForKey(ec, "editingContext");
-		subjectItem = null;
-		return popup;
+		EOFetchSpecification fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
+		NSArray areas = ec.objectsWithFetchSpecification(fs);
+		int count = areas.count();
+		Enumeration enu = subjects.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSDictionary dict = (NSDictionary) enu.nextElement();
+			if(dict.valueForKey(Subject.AREA_KEY) != null)
+				count--;
+		}
+		if(count > 0) {
+			EOQualifier qual = new EOKeyValueQualifier(Subject.ENTITY_NAME,
+					EOQualifier.QualifierOperatorNotEqual, NullValue);
+			EOQualifier.filterArrayWithQualifier(subjects, qual);
+			processAgregate(subjects,areas.objectEnumerator());
+			return RedirectPopup.getRedirect(context(), context().page());
+		} else {
+			WOComponent popup = pageWithName("AreaEditor");
+			popup.takeValueForKey(context().page(), "returnPage");
+			popup.takeValueForKey(ec, "editingContext");
+			popup.takeValueForKey(context().page(),"returnPage");
+			subjectItem = null;
+			return popup;
+		}
 	}
 
 	public int colspan() {

@@ -188,6 +188,10 @@ public class PlanHours extends _PlanHours {
 
 	@SuppressWarnings("deprecation")
 	public void setPlanCycle(EOEnterpriseObject value) {
+		if(value == null)  {
+			super.setPlanCycle(value);
+			return;
+		}
 		PlanCycle cycle = (PlanCycle)value;
 		setSection(cycle.section());
 		setGrade(cycle.grade());

@@ -30,6 +30,7 @@
 package net.rujel.eduplan;
 
 import net.rujel.base.MyUtility;
+import net.rujel.base.ReadAccess;
 import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
@@ -79,7 +80,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     	if(currArea != null) {
     		if(areaName == null) {
     			Object[] args = new Object[] {session(),currArea};
-    			if(subjectsList == null || subjectsList.count() == 0) {
+    			if(!cantDelete()) {
     				ec.deleteObject(currArea);
 //    				GlobalPlan.logger.log(WOLogLevel.COREDATA_EDITING,
 //    						"Deleting SubjetArea: " + oldName,session());    	    				
@@ -103,6 +104,7 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     				(Number)((EOEnterpriseObject)areaList.lastObject()).valueForKey("num");
     			Integer newNum = new Integer(maxNum.intValue() +1);*/
     			currArea.takeValueForKey(newNum, "num");
+    			context().setUserInfoForKey(Boolean.TRUE, "SubjectArea");
     		}
     	}
     	if(ec.hasChanges()) {
@@ -141,7 +143,37 @@ public class AreaEditor extends com.webobjects.appserver.WOComponent {
     	return returnPage;
     }
     
+    public WOComponent delete() {
+		try {
+			String name = (String)currArea.valueForKey("areaName");
+			ec.deleteObject(currArea);
+			ec.saveChanges();
+			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,
+					"Deleted SubjectArea: " + name,session());
+			returnPage.takeValueForKey(Boolean.TRUE, "shouldReset");
+		} catch (Exception ex) {
+			Object[] args = new Object[] {session(),currArea,ex};
+			EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Failed to delete SubjectArea",args);
+			String message = (String)application().
+			valueForKeyPath("strings.Strings.messages.error") + "<br/>" + ex.toString();
+			session().takeValueForKey(message, "message");
+		}
+    	returnPage.ensureAwakeInContext(context());
+    	return returnPage;
+    }
+    
     public boolean isCurr() {
     	return (currArea == areaItem);
+    }
+    
+    public boolean cantDelete() {
+    	if(currArea == null || currArea.editingContext() != ec)
+    		return true;
+    	ReadAccess access = (ReadAccess)session().valueForKey("readAccess");
+    	if(!access.cachedAccessForObject("SubjectArea", (Integer)null).flagForKey("delete"))
+    		return true;
+    	NSArray subjects = EOUtilities.objectsMatchingKeyAndValue(ec, 
+    			Subject.ENTITY_NAME, Subject.AREA_KEY, currArea);
+    	return (subjects != null && subjects.count() > 0);
     }
 }

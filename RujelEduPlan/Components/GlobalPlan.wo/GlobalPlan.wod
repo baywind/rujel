@@ -81,11 +81,11 @@ CycleHours : WOTextField {
 
 Save: WOSubmitButton {
 	action = save;
-	value = application.strings.Reusables_Strings.uiElements.Save;
+	value = session.strings.Reusables_Strings.uiElements.Save;
 }
 
 Cancel: WOResetButton {
-	value = application.strings.Reusables_Strings.uiElements.Cancel;
+	value = session.strings.Reusables_Strings.uiElements.Cancel;
 }
 CanEdit : WOConditional {
   condition = editable;
@@ -108,16 +108,19 @@ PlusImage : WOImage {
 	style = "cursor:pointer;";
 }
 
-AddArea : WOGenericContainer {
-  elementName = "span";
+AddArea : OnClickContainer {
+  elementName = "th";
+  align = "left";
+  colspan = "20";
   invokeAction = addArea;
-  onclick = session.ajaxPopup;
-  height = "20";
+  onclick = session.ajaxPopupNoPos;
+  class = "orange";
+  style = "font-style:italic;";
 }
 AddSuject : WOGenericContainer {
   elementName = "span";
   invokeAction = showUnusedSubjects;
-  onclick = session.checkRun;
+  onclick = session.ajaxPopupNoPos;
 }
 
 SubjectCell : OnClickContainer {
@@ -143,19 +146,6 @@ CanAddSubject : WOConditional {
   condition = access.create.Subject;
 }
 
-
-TogleAllButton : OnClickContainer {
-  elementName = "td";
-  invokeAction = toggleAll;
-  class = "orange";
-  colspan = colspan;
-  onclick = session.checkRun;
-}
-
-ToggleAll : WOString {
-  value = toggleAllTitle;
-}
-
 GroupsTitle : WOString {
   value = application.strings.RujelEduPlan_EduPlan.properties.subgroups;
   valueWhenEmpty = "groups";
@@ -170,7 +160,7 @@ GroupsCell : WOGenericContainer {
 GroupsField : WOTextField {
   value = subjectItem.Subject.subgroupsPresent;
   numberformat = "0";
-  disabled = access.edit.subjectItem.Subject;
+  disabled = globalAccess._edit.subjectItem.Subject;
   style = "width:2em;";
   onchange = "checkChanges(this);";
   onkeypress = "return isNumberInput(event,false);";
@@ -275,7 +265,8 @@ SubjectArea : WOString {
 }
 
 EditArea : OnClickContainer {
-  elementName = "strong";
+  elementName = "a";
+  name = subjectItem.anchor;
   invokeAction = editArea;
   onclick = session.ajaxPopupNoPos;
   disabled = globalAccess._edit.SubjectArea;
@@ -283,4 +274,12 @@ EditArea : OnClickContainer {
 
 IsArea : WOConditional {
   condition = subjectItem.area;
+}
+
+AddTitle : WOString {
+  value = session.strings.Reusables_Strings.uiElements.Add;
+}
+
+AreaTitle : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.properties.area;
 }
