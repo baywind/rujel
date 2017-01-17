@@ -60,12 +60,14 @@ public class InitialDataGenerator {
 				InputStream data = WOApplication.application().resourceManager().
 				inputStreamForResourceNamed("dataEduPlanModel.sql", "RujelEduPlan", null);
 				DataBaseUtility.executeScript(os, "EduPlanModel", data);
+				/*
 				int num = SettingsReader.intForKeyPath("schoolNumber", 0);
 				if(num != 0) {
 					StringBuilder sql = new StringBuilder("update PL_CYCLE set SCHOOL_NUM = ");
 					sql.append(num).append(';');
 					EOUtilities.rawRowsForSQL(ec, "EduPlanModel", sql.toString(), null);
 				}
+				*/
 				data = WOApplication.application().resourceManager().
 				inputStreamForResourceNamed("dataEduPlanYearly.sql", "RujelEduPlan", null);
 				DataBaseUtility.executeScript(os, "EduPlanYearly", data);

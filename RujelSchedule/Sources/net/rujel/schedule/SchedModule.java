@@ -81,6 +81,8 @@ public class SchedModule {
 					"strings.RujelSchedule_Schedule.planTab");
 			return null;
 		} else if ("diary".equals(obj)) {
+			if(SettingsReader.boolForKeyPath("edu.hideFromDiary", false))
+				return null;
 			NSDictionary diaryTab = (NSDictionary)WOApplication.application().
 					valueForKeyPath("strings.RujelSchedule_Schedule.diaryTab");
 			return PlistReader.cloneDictionary(diaryTab, true);
