@@ -542,31 +542,12 @@ cycleStudents:
 					continue cycleStudents;
 				}
 				if(idx < 0) {
-					NSArray args = new NSArray(new Object[] {itog,prognos.student()});
-					NSArray found = EOUtilities.objectsWithQualifierFormat(
-							course.editingContext(),ENTITY_NAME,
-							"itogContainer = %@ AND student = %@",args);
-					EOQualifier qual = new EOKeyValueQualifier("course.cycle",
-							EOQualifier.QualifierOperatorEqual,course.cycle());
-					found = EOQualifier.filteredArrayWithQualifier(found, qual);
-					if(found.count() > 1) {
-						Enumeration enu = found.objectEnumerator();
-						while (enu.hasMoreElements()) {
-							Prognosis crp = (Prognosis) enu.nextElement();
-							if(crp == prognos)
-								continue;
-							if(crp.course().groupList().contains(crp.student())) {
-								report(
-"Skipping prognosis for student not in group - found another prognosis", prognos, buf);
-								if(prognos.complete().compareTo(BigDecimal.ZERO) == 0)
-									ec.deleteObject(prognos);
-								else
-									prognos.setFireDate(null);
-								continue cycleStudents;
-							}
-						}
-					}
-					report("Setting mark to student not in group", prognos, buf);
+					report("Skipping prognosis for student not in group", prognos, buf);
+					if(prognos.complete().compareTo(BigDecimal.ZERO) == 0)
+						ec.deleteObject(prognos);
+					else
+						prognos.setFireDate(null);
+					continue cycleStudents;
 				}
 				ItogMark itogMark = prognos.convertToItogMark(itogs,overwrite, buf);
 				if(itogMark != null) {

@@ -230,7 +230,7 @@ public class BaseCourse extends _BaseCourse implements EduCourse
 		if(audience == null || audience.count() == 0)
 			return (studentsList != null);
 		EOQualifier qual = new EOKeyValueQualifier("student", 
-				EOQualifier.QualifierOperatorEqual, student);	
+				EOQualifier.QualifierOperatorEqual, student);
 		studentsList = EOQualifier.filteredArrayWithQualifier(audience, qual);
 		return (studentsList != null && studentsList.count() > 0);
 	}

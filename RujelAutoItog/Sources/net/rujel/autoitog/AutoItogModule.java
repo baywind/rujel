@@ -44,6 +44,7 @@ import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Timer;
@@ -580,6 +581,7 @@ public class AutoItogModule {
 		SettingsBase sb = SettingsBase.baseForKey(ItogMark.ENTITY_NAME,ec, false);
 		String listName = itog.listName();
 		CourseTimeout cto = null;
+		NSArray groupList = null;
 		int inCourse = 0;
 		for (int i = 0; i < prognoses.count(); i++) {
 			Prognosis prognos = (Prognosis)prognoses.objectAtIndex(i);
@@ -607,7 +609,17 @@ public class AutoItogModule {
 				buf.append('\n');
 				cto = CourseTimeout.getTimeoutForCourseAndPeriod(course,
 						itog.itogContainer());
+				groupList = course.groupList();
 			} else if(inCourse < 0) {
+				continue;
+			}
+			if(!groupList.containsObject(prognos.student())) {
+				if(prognos.complete().compareTo(BigDecimal.ZERO) == 0)
+					ec.deleteObject(prognos);
+				else
+					prognos.setFireDate(null);
+				buf.append("Student ").append(Person.Utility.fullName(
+						prognos.student(), true, 2, 1, 0)).append(" not in group for course\n");
 				continue;
 			}
 			prognos.setAutoItog(itog);
