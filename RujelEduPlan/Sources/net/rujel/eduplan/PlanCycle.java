@@ -115,7 +115,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 		}
 		return result;
 	}
-	
+	/*
 	public static NSArray allSubjects(EOEditingContext ec) {
 		//TODO optimize this
 		NSArray cycles = EOUtilities.objectsForEntityNamed(ec,ENTITY_NAME);
@@ -138,7 +138,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			e.printStackTrace();
 		}
 		return result;
-	}
+	}*/
 
 	public static NSArray allCyclesFor(Integer grade, Subject subject, SchoolSection section,
 				 EOEditingContext ec) {

@@ -866,7 +866,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		NSMutableDictionary dict = new NSMutableDictionary("PlanDetails","component");
 		dict.takeValueForKey(session().valueForKeyPath(
 				"strings.RujelEduPlan_EduPlan.PlanDetails"),"title");
-		dict.takeValueForKey(valueForKeyPath("subjectItem.subjectEO"), "selection");
+		dict.takeValueForKey(valueForKeyPath("subjectItem.Subject"), "selection");
 		dict.takeValueForKey(new Integer(showTotal), "showTotal");
 		dict.takeValueForKey(inSection, "inSection");
 //		parent().takeValueForKey(dict, "currTab");

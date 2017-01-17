@@ -93,7 +93,17 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	
 	public NSArray subjects() {
 		if(subjects == null) {
-	        subjects = PlanCycle.allSubjects(ec);
+			NSArray hours = EOUtilities.objectsMatchingKeyAndValue(ec, 
+					PlanHours.ENTITY_NAME, PlanHours.SECTION_KEY, inSection);
+			NSMutableArray res = new NSMutableArray();
+			Enumeration enu = hours.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				PlanHours ph = (PlanHours) enu.nextElement();
+				Subject subj = ph.eduSubject();
+				if(!res.containsObject(subj))
+					Various.addToSortedList(subj, res, null, EOSortOrdering.CompareAscending);
+			}
+			subjects = res.immutableClone();
 		}
 		return subjects;
 	}
@@ -806,6 +816,20 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		super.appendToResponse(aResponse, aContext);
 		if(sesSection != null)
 			session().takeValueForKeyPath(sesSection, "state.section");
+	}
+	
+	public WOActionResults invokeAction(WORequest aRequest, WOContext aContext) {
+		SchoolSection sesSection = (SchoolSection)session().valueForKeyPath("state.section");
+		if(inSection != null && (sesSection == null
+				|| !inSection.sectionID().equals(sesSection.sectionID())))
+			session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
+					session().defaultEditingContext(), inSection), "state.section");
+		else
+			sesSection = null;
+		WOActionResults result = super.invokeAction(aRequest, aContext);
+		if(sesSection != null)
+			session().takeValueForKeyPath(sesSection, "state.section");
+		return result;
 	}
 
 	public boolean synchronizesVariablesWithBindings() {
