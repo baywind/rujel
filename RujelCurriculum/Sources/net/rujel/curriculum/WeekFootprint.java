@@ -40,7 +40,6 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.EduPeriod;
 import net.rujel.eduplan.Holiday;
-import net.rujel.eduplan.PlanCycle;
 import net.rujel.eduplan.PlanHours;
 import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;

@@ -44,7 +44,6 @@ import com.webobjects.eoaccess.EORelationship;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.*;
 
-@Deprecated
 public class PlanCycle extends _PlanCycle implements EduCycle
 {
 	public static Object init(Object obj, WOContext ctx) {
@@ -209,7 +208,7 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 			try {
 				PlanCycle l = (PlanCycle)left;
 				PlanCycle r = (PlanCycle)right;
-				int result = comparator.compare(l.subjectEO(), r.subjectEO());
+				int result = SubjectComparator.compare(l.subjectEO(), r.subjectEO());
 				if(result == NSComparator.OrderedSame) {
 					left = l.grade();
 					right = r.grade();

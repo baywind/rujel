@@ -34,7 +34,6 @@ import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSComparator;
 import com.webobjects.foundation.NSForwardException;
 import com.webobjects.foundation.NSKeyValueCoding;
-import com.webobjects.foundation.NSComparator.ComparisonException;
 
 public class SubjectGroupComparator extends NSComparator {
 	

@@ -55,7 +55,6 @@ public class PlanHours extends _PlanHours {
 		Enumeration<PlanHours> enu = toUpdate.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			PlanHours ph = (PlanHours) enu.nextElement();
-			@SuppressWarnings("deprecation")
 			PlanCycle cycle = ph.planCycle();
 			if(cycle == null)
 				continue;
@@ -190,7 +189,6 @@ public class PlanHours extends _PlanHours {
 //		.anyInverseRelationship().setPropagatesPrimaryKey(true);
 	}
 	
-	@SuppressWarnings("deprecation")
 	public static void _update_1_2(EOEditingContext ec) {
 		NSArray toUpdate = EOUtilities.objectsMatchingKeyAndValue(ec, ENTITY_NAME, 
 				GRADE_KEY, Integer.valueOf(-1));
@@ -207,7 +205,6 @@ public class PlanHours extends _PlanHours {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	public void setPlanCycle(EOEnterpriseObject value) {
 		if(value == null)  {
 			super.setPlanCycle(value);
