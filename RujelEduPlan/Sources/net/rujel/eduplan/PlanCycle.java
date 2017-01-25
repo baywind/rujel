@@ -383,7 +383,14 @@ public class PlanCycle extends _PlanCycle implements EduCycle
 	}
 	
 	public String subject() {
-		return (String)valueForKeyPath("subjectEO.subject");
+		Subject subj = subjectEO();
+		if(subj == null)
+			return null;
+		if(subj.extName() == null)
+			return subj.subject();
+		StringBuilder buf = new StringBuilder(subj.subject());
+		buf.append(' ').append('[').append(subj.extName()).append(']');
+		return buf.toString();
 	}
 
 	public void setSubject(String newSubject) {

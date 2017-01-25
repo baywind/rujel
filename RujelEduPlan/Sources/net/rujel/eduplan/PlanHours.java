@@ -43,6 +43,7 @@ import net.rujel.base.SchoolSection;
 import net.rujel.base.Setting;
 import net.rujel.base.SettingsBase;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.reusables.Various;
 import net.rujel.reusables.WOLogLevel;
 
 public class PlanHours extends _PlanHours {
@@ -135,6 +136,26 @@ public class PlanHours extends _PlanHours {
 			return w;
 		}
 		return 0;
+	}
+	
+	public static NSArray altCyclesForCourse(EduCourse course) {
+		EOEditingContext ec = course.editingContext();
+		PlanCycle cycle = (PlanCycle)course.cycle();
+		NSArray inGroup = EOUtilities.objectsMatchingKeyAndValue(ec, Subject.ENTITY_NAME,
+				Subject.SUBJECT_GROUP_KEY, cycle.subjectEO().subjectGroup());
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier(SECTION_KEY, EOQualifier.QualifierOperatorEqual, 
+				course.eduGroup().valueForKey(SECTION_KEY));
+		quals[1] = new EOKeyValueQualifier(GRADE_KEY, EOQualifier.QualifierOperatorEqual, 
+				course.eduGroup().grade());
+		quals[2] = Various.getEOInQualifier(EDU_SUBJECT_KEY, inGroup);
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME,quals[0],null);
+		NSArray found = ec.objectsWithFetchSpecification(fs);
+		found = (NSArray)found.valueForKey(PLAN_CYCLE_KEY);
+//		if(!found.containsObject(cycle))
+//			found = found.arrayByAddingObject(cycle);
+		return found;
 	}
 
 	public static int planHoursForCourseAndPeriod(EduCourse course, EduPeriod period) {

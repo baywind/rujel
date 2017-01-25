@@ -3,9 +3,11 @@ package net.rujel.base;
 
 import java.util.logging.Logger;
 
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.Teacher;
 import net.rujel.reusables.Various;
+import net.rujel.reusables.WOLogFormatter;
 import net.rujel.reusables.WOLogLevel;
 import net.rujel.ui.TeacherSelector;
 
@@ -25,10 +27,13 @@ public class CourseInspector extends WOComponent {
 	public WOComponent returnPage;
 	public BaseCourse course;
 	public NSArray changes;
-	public EOEnterpriseObject changeItem;
+	public EOEnterpriseObject item;
 	public NSTimestamp nextDate;
 	public String nextComment;
 	public Updater updater;
+	public NSArray cycles;
+	public EduCycle aCycle;
+	protected boolean bad = false;
 	
     public CourseInspector(WOContext context) {
         super(context);
@@ -44,6 +49,35 @@ public class CourseInspector extends WOComponent {
     	changes = course.teacherChanges();
     	if(changes != null && changes.count() > 1)
     		changes = EOSortOrdering.sortedArrayUsingKeyOrderArray(changes, MyUtility.dateSorter);
+    	
+    	aCycle = course.cycle();
+    	try {
+			Class c = Class.forName("net.rujel.eduplan.PlanHours");
+			java.lang.reflect.Method m = c.getMethod("altCyclesForCourse", EduCourse.class);
+			cycles = (NSArray)m.invoke(null, course);
+			bad = !cycles.containsObject(aCycle);
+			if (bad)
+				cycles = cycles.arrayByAddingObject(aCycle);
+			if(cycles.count() <= 1)
+				cycles = null;
+		} catch (Exception e) {
+			cycles = null;
+			logger.log(WOLogLevel.WARNING,"Failed to get altCyclesForCourse",
+					new Object[] {session(),course,e});
+		}
+    }
+    
+    public String cycleTitle() {
+    	EduCycle cycle;
+    	if (item instanceof EduCycle)
+    		cycle = (EduCycle)item;
+    	else
+    		cycle = course.cycle();
+    	if(bad && cycle == course.cycle()) {
+    		return '*' + cycle.subject() + '*';
+    	} else {
+    		return cycle.subject();
+    	}
     }
 
 	public String title() {
@@ -102,7 +136,7 @@ public class CourseInspector extends WOComponent {
 		WOComponent result = TeacherSelector.selectorPopup(this, "teacher",
 				course.editingContext());
 //		result.takeValueForKey(changeItem.valueForKey("teacher"), "value");
-		result.takeValueForKey(new Getter(changeItem), "resultGetter");
+		result.takeValueForKey(new Getter(item), "resultGetter");
 		result.takeValueForKeyPath("ajaxPopup", "dict.onCancel");
 		result.takeValueForKeyPath(Boolean.TRUE, "dict.presenterBindings.ajaxReturn");
 		result.takeValueForKeyPath(session().valueForKeyPath("readAccess.delete.TeacherChange")
@@ -111,7 +145,7 @@ public class CourseInspector extends WOComponent {
 	}
 	
 	public String changeTeacherClass() {
-		EOEnterpriseObject obj = (changeItem==null)?course:changeItem;
+		EOEnterpriseObject obj = (item==null || item instanceof EduCycle)?course:item;
 		Boolean sex = (Boolean)obj.valueForKeyPath("teacher.person.sex");
 		if(sex == null)
 			return "grey";
@@ -122,6 +156,16 @@ public class CourseInspector extends WOComponent {
 	}
 
 	public WOActionResults save() {
+		if(aCycle != course.cycle()) {
+			context().setUserInfoForKey(course, "course");
+			context().setUserInfoForKey(aCycle, "cycle");
+			session().valueForKeyPath("modules.updateCourseCycle");
+			StringBuffer buf = new StringBuffer("Changing cycle for course from <");
+			WOLogFormatter.formatEO(course.cycle(), buf).append("> to <");
+			WOLogFormatter.formatEO(aCycle, buf).append('>');
+			logger.log(WOLogLevel.COREDATA_EDITING,buf.toString(),new Object[] {session(),course});
+			course.setCycle(aCycle);
+		}
 		course.namedFlags().setFlagForKey((changes.count() > 0), "teacherChanged");
 		if(course.editingContext().hasChanges()) {
 			try {
@@ -196,7 +240,7 @@ public class CourseInspector extends WOComponent {
 	}
 	
 	public Object teacher() {
-		EOEnterpriseObject obj = (changeItem==null)?course:changeItem;
+		EOEnterpriseObject obj = (item==null)?course:item;
 		obj = (EOEnterpriseObject)obj.valueForKey("teacher");
 		if(obj == null)
 			return NullValue;

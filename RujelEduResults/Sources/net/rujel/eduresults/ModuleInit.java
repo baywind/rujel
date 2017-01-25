@@ -36,6 +36,7 @@ import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
 import net.rujel.eduplan.PlanCycle;
 import net.rujel.interfaces.EduCourse;
+import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
 
@@ -100,6 +101,8 @@ public class ModuleInit {
 			else return null;
 		} else if("usedModels".equals(obj)) {
 			return "EduResults";
+		} else if("updateCourseCycle".equals(obj)) {
+			return updateCourseCycle(ctx);
 		} else if("initialData".equals(obj)) {
 			return initialData(ctx);
 		}
@@ -630,6 +633,25 @@ public class ModuleInit {
 			} //lists.objectEnumerator();
 		}
 		logger.log(WOLogLevel.INFO, "Copied ItogTypeList from previous year");
+		return null;
+	}
+	
+	public static Object updateCourseCycle(WOContext ctx) {
+		EduCourse course = (EduCourse)ctx.userInfoForKey("course");
+		EduCycle cycle = (EduCycle)ctx.userInfoForKey("cycle");
+		if (course.cycle() == cycle)
+			return null;
+		EOQualifier[] quals = new EOQualifier[3];
+		quals[0] = new EOKeyValueQualifier(ItogMark.CYCLE_KEY, 
+				EOQualifier.QualifierOperatorEqual, course.cycle());
+		quals[1] = new EOKeyValueQualifier("container.eduYear",
+				EOQualifier.QualifierOperatorEqual, course.eduYear());
+		quals[2] = Various.getEOInQualifier(ItogMark.STUDENT_KEY, course.groupList());
+		quals[0] = new EOAndQualifier(new NSArray(quals));
+		EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME,quals[0],null);
+		NSArray found = cycle.editingContext().objectsWithFetchSpecification(fs);
+		if(found != null && found.count() > 0)
+			found.takeValueForKey(cycle, ItogMark.CYCLE_KEY);
 		return null;
 	}
 }
