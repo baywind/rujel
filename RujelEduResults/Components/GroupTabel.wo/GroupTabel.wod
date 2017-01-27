@@ -19,12 +19,12 @@ Student : PersonDisplay {
 
 YearCell : WOGenericContainer {
   elementName = "th";
-  colspan = item.colspan;
+  colspan = item.itogs.count;
   style = "border-left:double 3px;";
 }
 
 YearTitle : WOString {
-  value = item.text;
+  value = item.title;
   escapeHTML = false;
 }
 
@@ -39,12 +39,12 @@ TitleCell : WOGenericContainer {
 }
 
 PeriodList: WORepetition {
-	item = itog;
+	item = item;
 	list = containers;
 }
 
 PeriodTitle: WOString {
-	value = itog.titleHTML;
+	value = item.itog.titleHTML;
 	escapeHTML = false;
 }
 

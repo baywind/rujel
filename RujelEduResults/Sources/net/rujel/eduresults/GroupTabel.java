@@ -3,10 +3,11 @@ package net.rujel.eduresults;
 import java.util.Enumeration;
 
 import net.rujel.base.MyUtility;
+import net.rujel.eduplan.PlanCycle;
+import net.rujel.eduplan.Subject;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduCycle;
 import net.rujel.interfaces.Student;
-import net.rujel.reusables.Counter;
 import net.rujel.reusables.Various;
 
 import com.webobjects.appserver.WOContext;
@@ -14,12 +15,10 @@ import com.webobjects.appserver.WOComponent;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
+import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSDictionary;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSMutableDictionary;
 
@@ -28,15 +27,17 @@ public class GroupTabel extends WOComponent {
         super(context);
     }
     
+	public static final NSArray cycleSorter = new NSArray(new EOSortOrdering[]{
+			new EOSortOrdering(PlanCycle.GRADE_KEY, EOSortOrdering.CompareAscending),
+			new EOSortOrdering(PlanCycle.SUBJECT_EO_KEY, EOSortOrdering.CompareAscending)});
     public EduCourse course;
     public NSMutableArray containers;
     public NSArray students;
     protected NSArray found;
-    protected NSMutableDictionary forStudent = new NSMutableDictionary();
     public Object item;
-    public ItogContainer itog;
+    public Student student;
 	public NSMutableArray years;
-	public Number eduYear;
+	public Object eduYear;
     
     public void setCourse(EduCourse crs) {
     	course = crs;
@@ -49,79 +50,105 @@ public class GroupTabel extends WOComponent {
     	EOQualifier[] quals = new EOQualifier[2];
     	quals[0] = Various.getEOInQualifier(ItogMark.STUDENT_KEY, students);
     	EduCycle cycle = crs.cycle();
+    	NSArray cycles;
     	try {
-        	EOEnterpriseObject subjEO = (EOEnterpriseObject)cycle.valueForKey("subjectEO");
-        	NSArray cycles = EOUtilities.objectsMatchingKeyAndValue(
-        			ec, EduCycle.entityName, "subjectEO", subjEO);
-        	quals[1] = Various.getEOInQualifier(ItogMark.CYCLE_KEY, cycles);
+        	Subject subjEO = (Subject)cycle.valueForKey("subjectEO");
+        	cycles = EOUtilities.objectsMatchingKeyAndValue(
+        			ec, EduCycle.entityName, "subjectEO.subjectGroup", subjEO.subjectGroup());
     	} catch (Exception e) {
-			quals[1] = new EOKeyValueQualifier("cycle.subject",
-					EOQualifier.QualifierOperatorEqual, cycle.subject());
+    		cycles = EOUtilities.objectsMatchingKeyAndValue(
+        			ec, EduCycle.entityName, "subject",cycle.subject());
 		}
+    	if(cycles.count() > 1)
+    		cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, cycleSorter);
+    	quals[1] = Various.getEOInQualifier(ItogMark.CYCLE_KEY, cycles);
     	quals[0] = new EOAndQualifier(new NSArray(quals));
     	EOFetchSpecification fs = new EOFetchSpecification(ItogMark.ENTITY_NAME, quals[0], null);
     	found = ec.objectsWithFetchSpecification(fs);
     	if(found == null || found.count() == 0)
     		return;
     	containers = new NSMutableArray();
-    	NSMutableDictionary yCounter = new NSMutableDictionary();
+    	NSMutableDictionary<String, NSMutableDictionary> yCounter = new NSMutableDictionary();
+//    	String subj = course.cycle().subject();
     	for (int i = 0; i < found.count(); i++) {
 			ItogMark mark = (ItogMark)found.objectAtIndex(i);
-			itog = mark.container();
-			if(!containers.containsObject(itog)) {
-				Various.addToSortedList(itog, containers, null, null);
-				Counter yCnt = (Counter)yCounter.objectForKey(itog.eduYear());
-				if(yCnt == null) {
-					yCounter.setObjectForKey(new Counter(1), itog.eduYear());
-				} else {
-					yCnt.raise();
-				}
+			ItogContainer itog = mark.container();
+			StringBuilder buf = new StringBuilder();
+			buf.append(MyUtility.presentEduYear(itog.eduYear().intValue()));
+			EduCycle c = mark.cycle();
+			buf.append('\n').append('(').append(c.grade()).append(')');
+			buf.append(' ').append(c.subject());
+			String key=buf.toString();
+			NSMutableDictionary yDict = yCounter.objectForKey(key);
+			if(yDict == null) {
+				yDict = new NSMutableDictionary(key,"title");
+				yDict.setObjectForKey(new NSMutableDictionary(), "itogs");
+				yDict.setObjectForKey(itog.eduYear(), "eduYear");
+				yDict.setObjectForKey(MyUtility.presentEduYear(itog.eduYear().intValue()),
+						"presentYear");
+				yDict.setObjectForKey(c.grade(),"grade");
+				yDict.setObjectForKey(c.subject(),"subject");
+				yCounter.setObjectForKey(yDict, key);
+			}
+			NSMutableDictionary itogs = (NSMutableDictionary)yDict.valueForKey("itogs");
+			NSMutableDictionary container = (NSMutableDictionary)itogs.objectForKey(itog);
+			if(container == null) {
+				container = new NSMutableDictionary(itog,"itog");
+				container.setObjectForKey(key, "eduYear");
+				itogs.setObjectForKey(container, itog);
+			}
+			Student st = mark.student();
+			Object obj = container.objectForKey(st);
+			if(obj instanceof NSMutableArray) {
+				((NSMutableArray)obj).addObject(mark);
+			} else if(obj instanceof ItogMark) {
+				container.setObjectForKey(new NSMutableArray(new Object[]{obj,mark}),st);
+			} else {
+				container.setObjectForKey(mark,st);
 			}
 		}
-    	itog = null;
+//    	itog = null;
     	years = new NSMutableArray(yCounter.count());
-    	Enumeration enu = yCounter.keyEnumerator();
+    	Enumeration enu = yCounter.objectEnumerator();
     	while (enu.hasMoreElements()) {
-			Number year = (Number) enu.nextElement();
-			Counter cnt = (Counter)yCounter.objectForKey(year);
-			Integer count = new Integer(cnt.intValue());
-			String present = MyUtility.presentEduYear(year.intValue());
-			NSDictionary dict = new NSDictionary(new Object[] {year,present, count},
-					new String[] {"year","text","colspan"});
-			Various.addToSortedList(dict, years, "year", null);	
+ 			Various.addToSortedList(enu.nextElement(), years, "title", null);	
 		}
-    	forStudent = new NSMutableDictionary(containers.count());
-    }
-    
-    public void setStudent(Student student) {
-    	item = student;
-    	forStudent.removeAllObjects();
-    	if(student == null)
-    		return;
-    	EOKeyValueQualifier qual = new EOKeyValueQualifier(ItogMark.STUDENT_KEY, 
-    			EOQualifier.QualifierOperatorEqual, student);
-    	NSArray filtered = EOQualifier.filteredArrayWithQualifier(found, qual);
-    	for (int i = 0; i < filtered.count(); i++) {
-			ItogMark mark = (ItogMark)filtered.objectAtIndex(i);
-			forStudent.setObjectForKey(mark.mark(), mark.container());
+    	enu = years.objectEnumerator();
+    	containers = new NSMutableArray();
+    	NSArray sort = new NSArray(new EOSortOrdering("itog", EOSortOrdering.CompareAscending));
+    	while (enu.hasMoreElements()) {
+    		NSMutableDictionary yDict = (NSMutableDictionary) enu.nextElement();
+			NSMutableDictionary itogs = (NSMutableDictionary)yDict.valueForKey("itogs");
+			NSArray sorted = EOSortOrdering.sortedArrayUsingKeyOrderArray(itogs.allValues(), sort);
+			containers.addObjectsFromArray(sorted);
 		}
     }
-    
-    public Student student() {
-    	return (Student)item;
-    }
-    
+        
     public Object mark() {
-    	if(itog == null || forStudent.count() == 0)
-    		return null;
-    	return forStudent.objectForKey(itog);
+    	if(item instanceof NSMutableDictionary && student != null) {
+    		Object m = ((NSMutableDictionary)item).objectForKey(student);
+    		if(m instanceof ItogMark) {
+    			return ((ItogMark)m).mark();
+    		} else if(m instanceof NSMutableArray) {
+    			StringBuilder buf = new StringBuilder();
+    			Enumeration enu = ((NSMutableArray)m).objectEnumerator();
+    			while (enu.hasMoreElements()) {
+					ItogMark mark = (ItogMark) enu.nextElement();
+					buf.append(mark.mark()).append(' ');
+				}
+    		}
+    	}
+    	return null;
     }
     
 	public String cellStyle() {
-		if(itog == null || itog.eduYear().equals(eduYear))
-			return (forStudent.count() == 0)?"width:2em;":null;
-		eduYear = itog.eduYear();
-		if(forStudent.count() == 0)
+		if(item == null && student == null)
+			return "width:2em;";
+		NSMutableDictionary cnt = (NSMutableDictionary)item;
+		if(eduYear != null && eduYear.equals(cnt.objectForKey("eduYear")))
+			return (student == null)?"width:2em;":null;
+		eduYear = cnt.objectForKey("eduYear");
+		if(student == null)
 			return "width:2em;border-left:double 3px;";
 		return "border-left:double 3px;";
 	}
