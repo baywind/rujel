@@ -18,13 +18,13 @@ Student : PersonDisplay {
 }
 
 YearCell : WOGenericContainer {
-  elementName = "th";
+  elementName = "td";
   colspan = item.itogs.count;
   style = "border-left:double 3px;";
 }
 
 YearTitle : WOString {
-  value = item.title;
+  value = item.presentYear;
   escapeHTML = false;
 }
 
@@ -72,4 +72,17 @@ SubjectName : WOString {
 GroupName : WOString {
   value = course.eduGroup.name;
   escapeHTML = false;
+}
+
+YearGrade : WOString {
+  value = item.grade;
+  escapeHTML = false;
+}
+YearSubject : WOString {
+  value = item.subject;
+  escapeHTML = false;
+}
+SubjectVaries : WOConditional {
+  condition = subject;
+  negate = true;
 }

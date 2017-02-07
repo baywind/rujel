@@ -38,6 +38,7 @@ public class GroupTabel extends WOComponent {
     public Student student;
 	public NSMutableArray years;
 	public Object eduYear;
+	public String subject;
     
     public void setCourse(EduCourse crs) {
     	course = crs;
@@ -50,6 +51,7 @@ public class GroupTabel extends WOComponent {
     	EOQualifier[] quals = new EOQualifier[2];
     	quals[0] = Various.getEOInQualifier(ItogMark.STUDENT_KEY, students);
     	EduCycle cycle = crs.cycle();
+    	subject = cycle.subject();
     	NSArray cycles;
     	try {
         	Subject subjEO = (Subject)cycle.valueForKey("subjectEO");
@@ -57,7 +59,7 @@ public class GroupTabel extends WOComponent {
         			ec, EduCycle.entityName, "subjectEO.subjectGroup", subjEO.subjectGroup());
     	} catch (Exception e) {
     		cycles = EOUtilities.objectsMatchingKeyAndValue(
-        			ec, EduCycle.entityName, "subject",cycle.subject());
+        			ec, EduCycle.entityName, "subject",subject);
 		}
     	if(cycles.count() > 1)
     		cycles = EOSortOrdering.sortedArrayUsingKeyOrderArray(cycles, cycleSorter);
@@ -89,6 +91,8 @@ public class GroupTabel extends WOComponent {
 				yDict.setObjectForKey(c.grade(),"grade");
 				yDict.setObjectForKey(c.subject(),"subject");
 				yCounter.setObjectForKey(yDict, key);
+				if(subject != null && !subject.equals(c.subject()))
+					subject = null;
 			}
 			NSMutableDictionary itogs = (NSMutableDictionary)yDict.valueForKey("itogs");
 			NSMutableDictionary container = (NSMutableDictionary)itogs.objectForKey(itog);
