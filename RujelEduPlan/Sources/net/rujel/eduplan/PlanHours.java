@@ -64,7 +64,7 @@ public class PlanHours extends _PlanHours {
 			ec.saveChanges();
 		}
 		Logger.getLogger("rujel.base").log(WOLogLevel.INFO, 
-				"Automatically updated PlanHours for new databse structure",toUpdate.count());
+				"Automatically updated PlanHours for new database structure",toUpdate.count());
 	}
 	
 	public static NSArray getPlanHours(SchoolSection section, Subject subject, Integer grade) {

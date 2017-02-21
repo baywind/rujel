@@ -378,10 +378,12 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				dict.takeValueForKey(Boolean.TRUE, "noGroup");
 			}
 			String styleClass = "female";
-			if(subjectEO.section() == inSection)
-				styleClass = "gerade";
+			if(subjectEO.namedFlags().flagForKey("hidden"))
+				styleClass = "grey";
 			else if(subjectEO.section() == null)
 				styleClass = "ungerade";
+			else if(inSection == null || subjectEO.section() == inSection)
+				styleClass = "gerade";
 //			else
 //				styleClass = "female";
 			dict.takeValueForKey(styleClass, "styleClass");
@@ -682,7 +684,9 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 						row = (NSMutableDictionary)subjects.objectAtIndex(idx);
 					}
 					Subject rowSubj = (Subject)row.valueForKey(Subject.ENTITY_NAME);
-					if(subj == rowSubj || passed.containsObject(subj)) {
+					if(subj == rowSubj || passed.containsObject(subj)
+							||(subj.namedFlags().flagForKey("hidden") && 
+							  !globalAccess.cachedAccessForObject(subj,null).flagForKey("edit"))) {
 						continue;
 					} else if (rowSubj == null) {
 						if(row.valueForKey(Subject.AREA_KEY) != null)
@@ -708,10 +712,12 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			dict.takeValueForKey(new PlanHours[grades.count()], "planHours");
 //			dict.takeValueForKey(new Counter(0), "counter");
 			String styleClass = "female";
-			if(subj.section() == inSection)
-				styleClass = "gerade";
+			if(subj.namedFlags().flagForKey("hidden"))
+				styleClass = "grey";
 			else if(subj.section() == null)
 				styleClass = "ungerade";
+			else if(inSection == null || subj.section() == inSection)
+				styleClass = "gerade";
 			dict.takeValueForKey(styleClass, "styleClass");
 			if(dict == row)
 				continue;
@@ -781,7 +787,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		setForced(subj);
 		popup.takeValueForKey(subj, "subject");
 		popup.takeValueForKey(context().page(), "returnPage");
-		popup.takeValueForKey(access().valueForKey("_edit.Subject"), "cantChange");
+//		popup.takeValueForKey(globalAccess.valueForKey("_edit.subjectItem.Subject"), "cantChange");
 		subjectItem = null;
 		return popup;
 	}

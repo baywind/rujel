@@ -91,5 +91,14 @@ SectionPopUp : WOPopUpButton {
   displayString = item.name;
   selection = subject.section;
   disabled = cantChange;
-  noSelectionString = session.strings.RujelEduPlan_EduPlan.sections.forAll;
+  noSelectionString = noSectionTitle;
+}
+
+DontUseTitle : WOString {
+  value = application.strings.RujelEduPlan_EduPlan.properties.hidden;
+  escapeHTML = false;
+}
+DontUse : WOCheckBox {
+  checked = subject.namedFlags.hidden;
+  disabled = cantChange;
 }

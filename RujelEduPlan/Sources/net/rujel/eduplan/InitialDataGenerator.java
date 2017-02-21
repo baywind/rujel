@@ -171,24 +171,22 @@ public class InitialDataGenerator {
 
 	protected static boolean copyPlanHours(EOEditingContext prevEc,
 			EOEditingContext ec) {
-		NSArray rows = EOUtilities.objectsForEntityNamed(prevEc, "PlanHours");
+		NSArray rows = EOUtilities.objectsForEntityNamed(prevEc, PlanHours.ENTITY_NAME);
 		if(rows == null || rows.count() == 0)
 			return false;
 		Enumeration enu = rows.objectEnumerator();
 		while (enu.hasMoreElements()) {
-			EOEnterpriseObject ph = (EOEnterpriseObject) enu.nextElement();
-			EOEnterpriseObject newPh = EOUtilities.createAndInsertInstance
+			PlanHours ph = (PlanHours) enu.nextElement();
+			PlanHours newPh = (PlanHours)EOUtilities.createAndInsertInstance
 			(ec, "PlanHours");
-			newPh.takeValueForKey(ph.valueForKey("totalHours"), "totalHours");
-			newPh.takeValueForKey(ph.valueForKey("weeklyHours"), "weeklyHours");
-			EOEnterpriseObject rel = (PlanCycle)ph.valueForKey("planCycle");
-			rel = EOUtilities.localInstanceOfObject(ec, rel);
+			newPh.takeValueForKey(ph.totalHours(), "totalHours");
+			newPh.takeValueForKey(ph.weeklyHours(), "weeklyHours");
+			EOEnterpriseObject rel = EOUtilities.localInstanceOfObject(ec, ph.planCycle());
 			newPh.addObjectToBothSidesOfRelationshipWithKey(rel, "planCycle");
-//			rel = (PlanCycle)ph.valueForKey("specClass");
-//			if(rel != null) {
-//				rel = EOUtilities.localInstanceOfObject(ec, rel);
-//				newPh.addObjectToBothSidesOfRelationshipWithKey(rel, "specClass");
-//			}
+			rel = EOUtilities.localInstanceOfObject(ec, ph.section());
+			newPh.setSection(rel);
+			newPh.setEduSubject(ph.eduSubject());
+			newPh.setGrade(ph.grade());
 		}
 		return true;
 	}

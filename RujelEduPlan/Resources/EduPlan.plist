@@ -171,6 +171,8 @@
 		<string>Для всех графиков</string>
 		<key>summary</key>
 		<string>Полное количество часов</string>
+		<key>hidden</key>
+		<string>Не использовать</string>
 	</dict>
 	<key>regimeTabs</key>
 	<array>

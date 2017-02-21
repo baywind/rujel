@@ -111,7 +111,7 @@ public class SubjectSelector extends WOComponent {
     public NSArray subjects() {
     	if(_subjects == null) {
         	if(agregate == null) {
-        		_subjects = Subject.subjectsForArea(_currArea);
+        		_subjects = Subject.subjectsForArea(_currArea,true);
         	} else {
         		NSMutableSet sSet = (NSMutableSet)agregate.objectForKey(_currArea);
         		if(sSet == null)

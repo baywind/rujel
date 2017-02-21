@@ -30,9 +30,12 @@
 package net.rujel.eduplan;
 
 import net.rujel.base.MyUtility;
+import net.rujel.reusables.Flags;
+import net.rujel.reusables.NamedFlags;
 
 import com.webobjects.foundation.*;
 import com.webobjects.foundation.NSComparator.ComparisonException;
+import com.webobjects.eocontrol.EOAndQualifier;
 //import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
@@ -58,10 +61,36 @@ public class Subject extends _Subject implements EOSortOrdering.Comparison {
 		setSubgroups(new Integer(1));
 	}
 	
-	public static NSArray subjectsForArea(EOEnterpriseObject area) {
+	public static final NSArray<String> flagNames = new NSArray<String>(
+			new String[]{"-1-","-2-","-4-","-8-","-16-","hidden"});
+	private transient NamedFlags _namedFlags;
+	public NamedFlags namedFlags() {
+		if(_namedFlags == null) {
+			try {
+				_namedFlags = new NamedFlags(flags().intValue(),flagNames);
+				java.lang.reflect.Method sync = this.getClass().getMethod
+					("_syncFlags",new Class[] {Flags.class});
+				_namedFlags.setSyncParams(this,sync);
+			} catch (Exception ex) {
+				throw new NSForwardException(ex,"Error readingflags");
+			}
+		}
+		return _namedFlags;
+	}
+	public void _syncFlags(Flags toSync) {
+		setFlags(new Integer(toSync.intValue()));
+	}
+
+	
+	public static NSArray subjectsForArea(EOEnterpriseObject area,boolean omitHidden) {
 		if(area == null)
 			return null;
     	EOQualifier qual = new EOKeyValueQualifier("area",EOQualifier.QualifierOperatorEqual,area);
+    	if(omitHidden) {
+    		EOQualifier[] quals = new EOQualifier[] {qual,
+    			new EOKeyValueQualifier(FLAGS_KEY, EOQualifier.QualifierOperatorLessThan, 32)};
+    		qual = new EOAndQualifier(new NSArray(quals));
+    	}
     	EOFetchSpecification fs = new EOFetchSpecification("Subject",qual,MyUtility.numSorter);
     	return area.editingContext().objectsWithFetchSpecification(fs);
 	}
@@ -70,7 +99,7 @@ public class Subject extends _Subject implements EOSortOrdering.Comparison {
 		if(area == area())
 			return;
 		super.setArea(area);
-		NSArray subjs = subjectsForArea(area);
+		NSArray subjs = subjectsForArea(area,false);
 		if(subjs != null && subjs.count() > 0) {
 			Subject last = (Subject)subjs.lastObject();
 			int num = last.num().intValue() +1;
