@@ -93,7 +93,7 @@ CanEdit : WOConditional {
 
 CntEdit : WOConditional {
   condition = editable;
-  negate = hasSection;
+  negate = true;
 }
 
 ReadHours : WOString {
@@ -111,7 +111,7 @@ PlusImage : WOImage {
 AddArea : OnClickContainer {
   elementName = "th";
   align = "left";
-  colspan = "20";
+  colspan = headerColspan;
   invokeAction = addArea;
   onclick = session.ajaxPopupNoPos;
   class = "orange";
@@ -282,4 +282,28 @@ AddTitle : WOString {
 
 AreaTitle : WOString {
   value = session.strings.RujelEduPlan_EduPlan.properties.area;
+}
+
+EmptyDetails : WOGenericContainer {
+  elementName = "td";
+  style = "border-left:3px double #666666;";
+  omitTags = noDetails;
+}
+
+HeaderRow : WOGenericContainer {
+  elementName = "th";
+  colspan = headerColspan;
+  align = "left";
+  valign = "middle";
+}
+
+GradeCell : WOGenericContainer {
+  elementName = "th";
+  style="width:2em;";
+  title=gradeHover;
+}
+
+ShowAll : WOString {
+  value = session.strings.RujelEduPlan_EduPlan.sections.showAll;
+  escapeHTML = false;
 }

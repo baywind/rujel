@@ -24,6 +24,7 @@ function cancel() {
 <webobject name = "Sections"><webobject name = "SectionContainer">
 <webobject name = "SectionNum"/>: <webobject name = "SectionTitle"/>
 </webobject></webobject>
+<webobject name = "SectionContainer"><webobject name = "ShowAll"/></webobject>
 </div>
 </div>
 <webobject name = "Form">
@@ -38,7 +39,7 @@ function cancel() {
 			</th><webobject name = "HasSection">
 			<webobject name = "GroupsCell"><webobject name = "GroupsTitle"/></webobject>
 			</webobject><webobject name = "CyclesRepetition">
-				<th style="width:2em;"><webobject name = "GradeTitle"/></th>
+				<webobject name = "GradeCell"><webobject name = "GradeTitle"/></webobject>
 			</webobject>
 			<webobject name = "OpenDetails"><webobject name = "InspectorImage"/></webobject>
 		</tr>
@@ -68,27 +69,27 @@ function cancel() {
 					</webobject></webobject>
 					<webobject name = "OpenDetails">&gt;</webobject>
 					</webobject><webobject name = "IsHeaderRow">
-						<th colspan = "20" align = "left" valign = "middle">
-						<webobject name = "IsArea">
-							<webobject name = "EditArea"><webobject name = "SubjectArea"/></webobject> 
-				<webobject name = "CanAddSubject"><webobject name = "AddSuject">
-				<webobject name = "PlusImage"/></webobject></webobject>
+						<webobject name = "HeaderRow">
+							<webobject name = "IsArea">
+								<webobject name = "EditArea"><webobject name = "SubjectArea"/></webobject> 
+					<webobject name = "CanAddSubject"><webobject name = "AddSuject">
+					<webobject name = "PlusImage"/></webobject></webobject>
+								</webobject>
 							</webobject>
 						
-						</th>
 					</webobject>
 			</webobject>
 		
 	</webobject>
 	<webobject name = "CanAddArea"><tr><td class = "highlight"></td>
 		<webobject name = "AddArea"><webobject name = "AddTitle"/> <webobject name = "AreaTitle"/></webobject></tr></webobject>
-	<tr class = "grey">
+	<webobject name = "HasSection"><tr class = "grey">
 		<th colspan = "3" style = "border-right: #666666 double 3px;" align = "left">
 			<webobject name = "SummaryTitle"/>:</th>
 		<webobject name = "CyclesRepetition">
 		<td><webobject name = "SumValue"/></td></webobject>
-		<td style = "border-left:3px double #666666;"></td>
-	</tr>
+		<webobject name = "EmptyDetails"></webobject>
+	</tr></webobject>
 	</tbody>
 	</table>
 </webobject>

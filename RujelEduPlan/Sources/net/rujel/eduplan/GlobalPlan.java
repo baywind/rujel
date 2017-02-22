@@ -74,11 +74,11 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
     
     protected NSArray prepareGrades() {
+    	if(inSection == null)
+    		return sections;
 		NSMutableArray prepareGrades = new NSMutableArray();
-		int maxGrade = (inSection == null)?SettingsReader.intForKeyPath("edu.maxGrade", 11):
-			inSection.maxGrade();
-		int minGrade = (inSection == null)?SettingsReader.intForKeyPath("edu.minGrade", 1):
-			inSection.minGrade();
+		int maxGrade = inSection.maxGrade();
+		int minGrade = inSection.minGrade();
 		for (int i = minGrade; i <= maxGrade; i++) {
 			Integer grade = new Integer(i);
 			prepareGrades.addObject(grade);
@@ -103,42 +103,34 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public double[] sumAdditions;
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
+		if(globalAccess == null) {
+			globalAccess = new ReadAccess(session());
+			globalAccess.relObject = null;
+			globalAccess.initKey = "EduPlan";
+		}
 		if(ec == null || Various.boolForObject(valueForBinding("shouldReset"))) {
 	        ec = (EOEditingContext)aContext.page().valueForKey("ec");
 	        if(ec.hasChanges())
 	        	ec.revert();
 	        sections = SchoolSection.listSections(ec, false);
-			if(inSection == null) {
-				inSection = (SchoolSection)session().valueForKeyPath("state.section");
-				if(inSection != null)
-					inSection = (SchoolSection)EOUtilities.localInstanceOfObject(ec, inSection);
-			}
-			if(inSection == null) {
-				inSection = (SchoolSection)sections.objectAtIndex(0);
-			}
-	        grades = prepareGrades();
+	        if(grades != null && grades.objectAtIndex(0) instanceof SchoolSection) {
+	        	grades = sections;
+	        } else {
+	        	if(inSection == null) {
+	        		inSection = (SchoolSection)session().valueForKeyPath("state.section");
+	        		if(inSection != null)
+	        			inSection = (SchoolSection)EOUtilities.localInstanceOfObject(ec, inSection);
+	        	}
+	        	if(inSection == null) {
+	        		inSection = (SchoolSection)sections.objectAtIndex(0);
+	        	}
+	        	grades = prepareGrades();
+	        }
 		  	subjects = prepareAgregate();
 		  	subjectItem = null;
 			setValueForBinding(Boolean.FALSE, "shouldReset");
-			noDetails = (Boolean)access().valueForKeyPath("_read.PlanDetail");
-			if(!noDetails.booleanValue())
-				noDetails = Boolean.valueOf(
-						SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false) == null);
-			if(!noDetails.booleanValue()) {
-				EOQualifier qual = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
-						EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
-				EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,qual,null);
-				fs.setFetchLimit(1);
-				NSArray found = ec.objectsWithFetchSpecification(fs);
-				noDetails = Boolean.valueOf(found == null || found.count() == 0);
-			}
 		} else if(ec.hasChanges()) {
         	ec.revert();
-		}
-		if(globalAccess == null) {
-			globalAccess = new ReadAccess(session());
-			globalAccess.relObject = null;
-			globalAccess.initKey = "EduPlan";
 		}
 		index = 0;
         summary = new int[grades.count()];
@@ -158,9 +150,21 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}*/
 	
 	protected NSMutableArray prepareAgregate() {
+		noDetails = Boolean.TRUE;
+		if(inSection != null && globalAccess.cachedAccessForObject("PlanDetail", 
+				inSection.sectionID()).flagForKey("read") &&
+				SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false) != null) {
+			EOQualifier qual = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
+					EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
+			EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,qual,null);
+			fs.setFetchLimit(1);
+			NSArray found = ec.objectsWithFetchSpecification(fs);
+			noDetails = Boolean.valueOf(found == null || found.count() == 0);
+		}
 		NSArray planHours;
 		{
-			EOQualifier qual = new EOKeyValueQualifier(PlanHours.SECTION_KEY,
+			EOQualifier qual = (inSection == null)? null: 
+				new EOKeyValueQualifier(PlanHours.SECTION_KEY,
 					EOQualifier.QualifierOperatorEqual, inSection);
 			NSArray sorter = new NSArray(new EOSortOrdering("subjectID",
 					EOSortOrdering.CompareAscending));
@@ -170,14 +174,20 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		NSMutableArray agregate = new NSMutableArray();
 		Enumeration areas = null;
 	  	if(planHours == null || planHours.count() == 0) {
-	  		EOQualifier[] quals = new EOQualifier[2];
-	  		quals[0] = new EOKeyValueQualifier(Subject.SECTION_KEY,
-	  				EOQualifier.QualifierOperatorEqual, inSection);
-	  		quals[1] = new EOKeyValueQualifier(Subject.SECTION_KEY,
-	  				EOQualifier.QualifierOperatorEqual, NullValue);
-	  		quals[0] = new EOOrQualifier(new NSArray(quals));
+	  		EOQualifier qual = new EOKeyValueQualifier(Subject.FLAGS_KEY,
+	  				EOQualifier.QualifierOperatorLessThan,Integer.valueOf(32));
+	  		if(inSection != null) {
+	  			EOQualifier[] quals = new EOQualifier[2];
+	  			quals[0] = new EOKeyValueQualifier(Subject.SECTION_KEY,
+	  					EOQualifier.QualifierOperatorEqual, inSection);
+	  			quals[1] = new EOKeyValueQualifier(Subject.SECTION_KEY,
+	  					EOQualifier.QualifierOperatorEqual, NullValue);
+	  			quals[0] = new EOOrQualifier(new NSArray(quals));
+	  			quals[1] = qual;
+	  			qual = new EOAndQualifier(new NSArray(quals));
+	  		}
 			EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME,
-					quals[0],Subject.sorter);
+					qual,Subject.sorter);
 			NSArray found = ec.objectsWithFetchSpecification(fs);
 		  	Enumeration enu = found.objectEnumerator();
 		  	while (enu.hasMoreElements()) {
@@ -185,7 +195,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				NSMutableDictionary dict = new NSMutableDictionary(
 						subj, Subject.ENTITY_NAME);
 //				dict.takeValueForKey(subj.subject(), Subject.SUBJECT_KEY);
-				dict.takeValueForKey(new PlanHours[grades.count()], "planHours");
+				dict.takeValueForKey(new Object[grades.count()], "planHours");
 //				dict.takeValueForKey(new Counter(0), "counter");
 				agregate.addObject(dict);
 			}
@@ -194,7 +204,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	  	} else { // if(planHours == null || planHours.count() == 0)
 		  	Enumeration enu = planHours.objectEnumerator();
 			Subject subj = null;
-		  	PlanHours[] hours = null;
+		  	Object[] hours = null;
 		  	while (enu.hasMoreElements()) {
 		  		PlanHours ph = (PlanHours) enu.nextElement();
 		  		if(ph.eduSubject() != subj) {
@@ -202,16 +212,21 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		  			if(forcedSubjects != null)
 		  				forcedSubjects.removeObject(subj);
 					NSMutableDictionary dict = new NSMutableDictionary(subj, Subject.ENTITY_NAME);
-		  			hours = new PlanHours[grades.count()];
+		  			hours = new Object[grades.count()];
 					dict.takeValueForKey(hours, "planHours");
 //					dict.takeValueForKey(new Counter(0), "counter");
 					dict.takeValueForKey(Boolean.TRUE, PlanHours.ENTITY_NAME);
 					agregate.addObject(dict);
 		  		}
-		  		int idx = grades.indexOf(ph.grade());
+		  		int idx = grades.indexOf((inSection==null)?ph.section():ph.grade());
 		  		if(idx < 0) {
 		  			// oops!
-		  		} else {
+		  		} else if(inSection==null) {
+		  			if(hours[idx] instanceof Counter)
+		  				((Counter)hours[idx]).raise();
+			  		else
+		  				hours[idx]=new Counter(1);
+		  		} else { 
 		  			hours[idx] = ph;
 		  		}
 		  	}
@@ -240,88 +255,6 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	  	processAgregate(agregate, areas);
 	  	return agregate;
 	}
-	  	/*
-	  	EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME
-	  			,null,Subject.sorter);
-	  	NSArray allSubjects = ec.objectsWithFetchSpecification(fs);
-	  	if(allSubjects == null || allSubjects.count() == 0)
-	  		return agregate;
-	  	// prepare list of subjects
-	  	Enumeration enu = allSubjects.objectEnumerator();
-	  	while (enu.hasMoreElements()) {
-			Subject subj = (Subject) enu.nextElement();
-			NSMutableDictionary dict = new NSMutableDictionary(
-					subj, PlanCycle.SUBJECT_EO_KEY);
-			dict.takeValueForKey(subj.subject(), Subject.SUBJECT_KEY);
-			if(inSection == null) {
-				dict.takeValueForKey(
-						new EOEnterpriseObject[grades.count()][sections.count()], "byGrade");
-			} else {
-				dict.takeValueForKey(new PlanCycle[grades.count()], "planCycles");
-				dict.takeValueForKey(new EOEnterpriseObject[grades.count()], "planHours");
-			}
-			dict.takeValueForKey(new Counter(), "counter");
-			agregate.addObject(dict);
-		}
-		NSArray allCycles = PlanCycle.allCyclesFor(null, null, inSection, ec);
-		if(allCycles != null && allCycles.count() > 0) {
-			enu = allCycles.objectEnumerator();
-			while (enu.hasMoreElements()) { // put cycles and hours 
-				PlanCycle cycle = (PlanCycle) enu.nextElement();
-				int idx = allSubjects.indexOf(cycle.subjectEO());
-				NSMutableDictionary dict = (NSMutableDictionary)agregate.objectAtIndex(idx);
-				idx = grades.indexOf(cycle.grade());
-				if(idx < 0)
-					continue;
-				if(inSection == null) {
-					EOEnterpriseObject[][] byGrade = 
-						(EOEnterpriseObject[][])dict.valueForKey("byGrade");
-					int lvl = 0;
-					while(lvl < sections.count()) {
-						SchoolSection section = (SchoolSection)sections.objectAtIndex(lvl);
-						if(section == cycle.section())
-							break;
-						lvl++;
-					}
-					if(lvl >= sections.count())
-						continue;
-					byGrade[idx][lvl] = cycle.planHours(null);
-					if(byGrade[idx][lvl] == null)
-						byGrade[idx][lvl] = cycle;
-					idx++;
-					while(idx < grades.count()) {
-						Object next = grades.objectAtIndex(idx);
-						if(!(next instanceof EduGroup))
-							break;
-						EduGroup grp = (EduGroup)next;
-						if(!grp.grade().equals(cycle.grade()))
-							break;
-						byGrade[idx][lvl] = cycle.planHours(grp,false);
-						if(byGrade[idx][lvl] == null)
-							byGrade[idx][lvl] = cycle;
-					}
-				} else {
-					PlanCycle[] cycles = (PlanCycle[])dict.valueForKey("planCycles");
-					EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
-					dict.valueForKey("planHours");
-					cycles[idx] = cycle;
-					planHours[idx] = cycle.planHours(null);
-					idx++;
-					while(idx < grades.count()) {
-						Object next = grades.objectAtIndex(idx);
-						if(!(next instanceof EduGroup))
-							break;
-						EduGroup grp = (EduGroup)next;
-						if(!grp.grade().equals(cycle.grade()))
-							break;
-						planHours[idx] = cycle.planHours(grp);
-					}
-				}
-				NSArray hrs = cycle.planHours();
-				if(hrs != null && hrs.count() > 0)
-					dict.takeValueForKeyPath(new Integer(hrs.count()), "counter.add");
-			}
-		}*/
 
 	protected void processAgregate(NSMutableArray agregate, Enumeration areas) {
 		EOEnterpriseObject currarea = null;
@@ -330,7 +263,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		for (int i = 0; i < agregate.count(); i++) {
 			NSMutableDictionary dict = (NSMutableDictionary) agregate.objectAtIndex(i);
 			Subject subjectEO = (Subject)dict.valueForKey(Subject.ENTITY_NAME);
-			PlanHours[] hours = (PlanHours[])dict.valueForKey("planHours");
+			Object[] hours = (Object[])dict.valueForKey("planHours");
 			Counter cnt = new Counter();
 			if(hours != null) {
 				for (int j = 0; j < hours.length; j++) {
@@ -409,6 +342,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public String sectionClass() {
 		if(inSection == item)
 			return "selection";
+		else if(item == null)
+			return "grey";
 		return "gerade";
 	}
 	
@@ -445,12 +380,13 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	
 	protected static DecimalFormat fmt = new DecimalFormat("0.0#");
 	public String planHours() {
+		if(inSection == null) {
+			Counter cnt = (Counter)planHoursObject();
+			return (cnt==null)?null:Integer.toString(cnt.intValue());
+		}
 		PlanHours ph = planHoursEO();
 		if(ph == null)
-			return (inSection == null)? "<span style = \"color:#cccccc;\">&oslash;</span>":null;
-//		else if(ph instanceof PlanCycle)
-//			return "<span style = \"color:#999999;\">0</span>";
-//		PlanCycle cycle = (PlanCycle)ph.valueForKey("planCycle");
+			return null;
 		Integer year = (Integer)session().valueForKey("eduYear"); 
 		int[] wd = ph.weeksAndDays(year);
 		Integer total = (Integer)ph.valueForKey("totalHours");
@@ -576,35 +512,39 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public String gradeTitle() {
 		if(gradeItem == null)
 			return null;
-		if(gradeItem instanceof EduGroup)
-			return ((EduGroup)gradeItem).name();
+		if(gradeItem instanceof SchoolSection)
+			return ((SchoolSection)gradeItem).sectionID().toString();
 		else
 			return gradeItem.toString();
 	}
 	
 	public String cellClass() {
-		if(gradeItem instanceof EduGroup)
-			return "special";
+		if(inSection == null) {
+			Object ph = planHoursObject();
+			if(ph == null)
+				return "grey";
+			Subject subj = (Subject)subjectItem.valueForKey(Subject.ENTITY_NAME);
+			SchoolSection sect = subj.section();
+			if(sect != null && sect != gradeItem)
+				return "female";
+		}
+		return null;
+	}
+	
+	
+	protected PlanHours planHoursEO() {
+		Object ph = planHoursObject();
+		if(ph instanceof PlanHours)
+			return (PlanHours)ph;
 		else
 			return null;
 	}
 	
-	protected PlanHours planHoursEO() {
-		if(subjectItem == null)
+	protected Object planHoursObject() {
+		if(subjectItem == null || index < 0 || index >= grades.count())
 			return null;
-		if(index < 0 || index >= grades.count())
-			return null;
-		if(inSection == null) {
-			if(item == null) return null;
-			int lvl = sections.indexOfIdenticalObject(item);
-			if(lvl < 0) return null;
-			EOEnterpriseObject[][] byGrade = 
-				(EOEnterpriseObject[][])subjectItem.valueForKey("byGrade");
-			return (PlanHours)byGrade[index][lvl];
-		}
-		EOEnterpriseObject[] planHours = (EOEnterpriseObject[])
-			subjectItem.valueForKey("planHours");
-		return (PlanHours)planHours[index];
+		Object[] planHours = (Object[])subjectItem.valueForKey("planHours");
+		return planHours[index];
 	}
 	
 	public String cellStyle() {
@@ -636,17 +576,19 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	
 	public WOActionResults showUnusedSubjects() {
 		EOEnterpriseObject area = (EOEnterpriseObject)valueForKeyPath("subjectItem.area");
-  		EOQualifier[] quals = new EOQualifier[2];
-  		quals[0] = new EOKeyValueQualifier(Subject.SECTION_KEY,
-  				EOQualifier.QualifierOperatorEqual, inSection);
-  		quals[1] = new EOKeyValueQualifier(Subject.SECTION_KEY,
-  				EOQualifier.QualifierOperatorEqual, NullValue);
-  		quals[0] = new EOOrQualifier(new NSArray(quals));
-  		quals[1] = new EOKeyValueQualifier(Subject.AREA_KEY, 
-  				EOQualifier.QualifierOperatorEqual, area);
-  		quals[0] = new EOAndQualifier(new NSArray(quals));
-		EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME,
-				quals[0],Subject.sorter);
+		EOQualifier qual =  new EOKeyValueQualifier(Subject.AREA_KEY, 
+				EOQualifier.QualifierOperatorEqual, area);
+		if(inSection != null) {
+			EOQualifier[] quals = new EOQualifier[2];
+			quals[0] = new EOKeyValueQualifier(Subject.SECTION_KEY,
+					EOQualifier.QualifierOperatorEqual, inSection);
+			quals[1] = new EOKeyValueQualifier(Subject.SECTION_KEY,
+					EOQualifier.QualifierOperatorEqual, NullValue);
+			quals[0] = new EOOrQualifier(new NSArray(quals));
+			quals[1] = qual;
+			qual = new EOAndQualifier(new NSArray(quals));
+		}
+		EOFetchSpecification fs = new EOFetchSpecification(Subject.ENTITY_NAME,qual,Subject.sorter);
 		NSArray found = ec.objectsWithFetchSpecification(fs);
 		if(found.count() > 1) {
 			try {
@@ -709,7 +651,13 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 							new Object[] {session(),e});
 				}
 			}
-			dict.takeValueForKey(new PlanHours[grades.count()], "planHours");
+			Object[] planHours = new Object[grades.count()];
+			dict.takeValueForKey(planHours, "planHours");
+			if(inSection == null && subj.section() != null) {
+				int i = grades.indexOfIdenticalObject(subj.section());
+				if(i >= 0)
+					planHours[i] = new Counter(0);
+			}
 //			dict.takeValueForKey(new Counter(0), "counter");
 			String styleClass = "female";
 			if(subj.namedFlags().flagForKey("hidden"))
@@ -891,13 +839,25 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	public Boolean noSections() {
 		if (sections == null || sections.count() < 2)
 			return Boolean.TRUE;
-		if(item == null) {
-			SchoolSection section = inSection;
-			inSection = null;
-			Boolean result = (Boolean)access().valueForKey("_edit");
-			inSection = section;
-			return result;
-		}
-		return Boolean.FALSE;
+		Integer sect = null;
+		if(item instanceof SchoolSection)
+			sect = ((SchoolSection)item).sectionID();
+		return !globalAccess.cachedAccessForObject("EduPlan", sect).flagForKey("read");
+	}
+
+	public Integer headerColspan() {
+		int colspan = 1;
+		if(hasSection())
+			colspan++;
+		colspan+=grades.count();
+		if(!noDetails)
+			colspan++;
+		return Integer.valueOf(colspan);
+	}
+	
+	public String gradeHover() {
+		if(gradeItem instanceof SchoolSection)
+			return ((SchoolSection)gradeItem).name();
+		return null;
 	}
 }

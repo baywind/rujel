@@ -35,7 +35,6 @@ import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.*;
 import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
