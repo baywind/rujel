@@ -101,6 +101,7 @@ public class SubjectGroup extends _SubjectGroup {
 
 	public void awakeFromInsertion(EOEditingContext ec) {
 		super.awakeFromInsertion(ec);
+		setSort(Integer.valueOf(0));
 	}
 
 	public void turnIntoFault(EOFaultHandler handler) {
@@ -152,6 +153,15 @@ public class SubjectGroup extends _SubjectGroup {
 			sg.addToSortedList(result);
 		}
 		return result;
+	}
+	
+	public NSArray sortedChildren() {
+		NSArray children = children();
+		if(children == null || children.count() == 0)
+			return NSArray.EmptyArray;
+		if(children.count() == 1)
+			return children;
+		return EOSortOrdering.sortedArrayUsingKeyOrderArray(children, ModulesInitialiser.sorter);
 	}
 	
 }

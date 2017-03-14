@@ -137,8 +137,16 @@
 		<string>Методическое объединение</string>
 		<key>subjectGroup</key>
 		<string>Предметная группа</string>
+		<key>subjectGroupsTitle</key>
+		<string>Полный перечень предметных групп</string>
+		<key>rootGroup</key>
+		<string>-=Основная группа=-</string>
 		<key>fullName</key>
-		<string>Полное название учебной программы</string>
+		<string>Полное наименование</string>
+		<key>moveToGroup</key>
+		<string>Поместить в группу</string>
+		<key>addSubjectGroup</key>
+		<string>Добавить предметную группу</string>
 		<key>holidays</key>
 		<string>Каникулы и праздники</string>
 		<key>hours</key>

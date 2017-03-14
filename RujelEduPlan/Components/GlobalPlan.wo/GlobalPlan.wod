@@ -15,7 +15,7 @@ TotalToggle : Tabs {
 
 GroupTitle : WOString {
   value = session.strings.RujelEduPlan_EduPlan.properties.subjectGroup;
-  valueWhenEmpty = "Area";
+  valueWhenEmpty = "Subject Group";
 }
 
 SubjectName : WOString {
@@ -306,4 +306,11 @@ GradeCell : WOGenericContainer {
 ShowAll : WOString {
   value = session.strings.RujelEduPlan_EduPlan.sections.showAll;
   escapeHTML = false;
+}
+
+ReviewSubjectGroups : OnClickContainer {
+  elementName = "th";
+  style="padding: 2px 1ex;";
+  invokeAction = subjectGroups;
+  onclick = session.checkRun;
 }

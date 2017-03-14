@@ -830,6 +830,17 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		return performParentAction("revertEc");
 	}
 	
+	public WOActionResults subjectGroups() {
+		NSMutableDictionary dict = new NSMutableDictionary("SubjectGroupEditor","component");
+		dict.takeValueForKey(session().valueForKeyPath(
+				"strings.RujelEduPlan_EduPlan.properties.subjectGroup"),"title");
+		setValueForBinding(dict, "dict");
+		dict.takeValueForKey(globalAccess, "access");
+		dict.takeValueForKey("RujelBase", "resourcesFramework");
+		dict.takeValueForKey("sorting.js", "scriptResource");
+		return performParentAction("revertEc");
+	}
+	
 	public WOActionResults setupSections() {
 		WOComponent result = pageWithName("SectionsSetup");
 		result.takeValueForKey(context().page(), "returnPage");
