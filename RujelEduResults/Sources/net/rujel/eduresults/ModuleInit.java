@@ -339,7 +339,7 @@ public class ModuleInit {
 			return null;
 		EOEditingContext ec = null;
 		NSKeyValueCodingAdditions course = (NSKeyValueCodingAdditions)
-				ctx.session().objectForKey("statCourseReport");
+				ctx.session().objectForKey("groupReport");
 		String listName;
 		if(course != null) {
 			ec = (EOEditingContext)course.valueForKey("editingContext");
