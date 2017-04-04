@@ -21,22 +21,12 @@
 	</dict>
 	<key>ui</key>
 	<dict>
-		<key>_defaultDate</key>
+		<key>defaultDate</key>
 		<string>03.03.2016</string>
 		<key>diaryURL</key>
 		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
 		<key>_serverURL</key>
 		<string>ms45.edu.ru</string>
-	</dict>
-	<key>dbConnection</key>
-	<dict>
-		<key>dbMapping</key>
-		<dict>
-			<key>RujelStatic</key>
-			<string>stableRujelStatic</string>
-			<key>RujelYear%s</key>
-			<string>stableRujelYear%s</string>
-		</dict>
 	</dict>
 	<key>auth</key>
 	<dict>
