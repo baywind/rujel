@@ -42,6 +42,7 @@ import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOSession;
 import com.webobjects.eoaccess.EOModelGroup;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOSortOrdering;
 import com.webobjects.foundation.NSArray;
@@ -163,7 +164,16 @@ public class ReportsModule {
     						"Error reading CoursesReport plist",args);
     			}
     		}
+   		if (reports.count() > 1) {
+   			NSArray nosort = EOQualifier.filteredArrayWithQualifier(reports,
+   					new EOKeyValueQualifier("sort", EOQualifier.QualifierOperatorEqual, null));
+   			if(nosort != null && nosort.count() > 0)
+   				EOQualifier.filterArrayWithQualifier(reports,new EOKeyValueQualifier(
+   	   					"sort", EOQualifier.QualifierOperatorNotEqual, null));
     		EOSortOrdering.sortArrayUsingKeyOrderArray(reports, ModulesInitialiser.sorter);
+   			if(nosort != null && nosort.count() > 0)
+   				reports.addObjectsFromArray(nosort);
+   		}
     	return reports;
     }
 

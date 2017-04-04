@@ -164,6 +164,15 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 //		if(selection == null || selection == NullValue)
 		if(!(selection instanceof EduGroup))
 			return;
+		NSKeyValueCodingAdditions courseDict = SettingsBase.courseDict((EduGroup)selection);
+		if(!checkReports(reports,courseDict,ec)) {
+			session().setObjectForKey(courseDict,"statCourseReport");
+			reports = null;
+		}
+	}
+
+	public static boolean checkReports(NSArray reports, NSKeyValueCodingAdditions courseDict,
+			EOEditingContext ec) {
 		Enumeration enu = reports.objectEnumerator();
 		NSMutableDictionary settings = new NSMutableDictionary();
 		while (enu.hasMoreElements()) {
@@ -173,8 +182,7 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 				settings.addEntriesFromDictionary(setting);
 		}
 		if(settings.count() == 0)
-			return;
-		NSKeyValueCodingAdditions courseDict = SettingsBase.courseDict((EduGroup)selection);
+			return true;
 		enu = settings.keyEnumerator();
 		boolean ok = true;
 		while (ok && enu.hasMoreElements()) {
@@ -186,9 +194,6 @@ public class CoursesReport extends com.webobjects.appserver.WOComponent {
 				ok = value.equals(SettingsBase.numericSettingForCourse(key, courseDict, ec));
 			}
 		}
-		if(!ok) {
-			session().setObjectForKey(courseDict,"statCourseReport");
-			reports = null;
-		}
+		return ok;
 	}
 }
