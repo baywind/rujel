@@ -31,6 +31,7 @@ package net.rujel.interfaces;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
 
 import com.webobjects.eocontrol.EOEnterpriseObject;
 import com.webobjects.eocontrol.EOSortOrdering;
@@ -184,6 +185,21 @@ public interface EOPeriod extends Period,EOEnterpriseObject {
 			return result;
 		}
 
+		public static int verifyList(NSArray list) {
+			if(list == null || list.count() < 2)
+				return 0;
+			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, EOPeriod.sorter);
+			Enumeration enu = list.objectEnumerator();
+			NSTimestamp lastEnd = null;
+			int result = 0;
+			while (enu.hasMoreElements()) {
+				EOPeriod per = (EOPeriod) enu.nextElement();
+				if(lastEnd != null && lastEnd.compare(per.begin()) >= 0)
+					result += EOPeriod.Utility.countDays(per.begin(), lastEnd);
+				lastEnd = per.end();
+			}
+			return result;
+		}
 	}
 
 	public static class ByDates implements Period {

@@ -42,10 +42,7 @@ public abstract class _EduPeriod extends EOGenericRecord {
 
 	// Attributes
 	public static final String BEGIN_KEY = "begin";
-	public static final String EDU_YEAR_KEY = "eduYear";
-	public static final String END_KEY = "end";
-	public static final String FULL_NAME_KEY = "fullName";
-	public static final String TITLE_KEY = "title";
+	public static final String LIST_NAME_KEY = "listName";
 
 	// Relationships
 
@@ -57,36 +54,12 @@ public abstract class _EduPeriod extends EOGenericRecord {
     takeStoredValueForKey(value, BEGIN_KEY);
   }
 
-  public Integer eduYear() {
-    return (Integer) storedValueForKey(EDU_YEAR_KEY);
+  public String listName() {
+    return (String) storedValueForKey(LIST_NAME_KEY);
   }
 
-  public void setEduYear(Integer value) {
-    takeStoredValueForKey(value, EDU_YEAR_KEY);
-  }
-
-  public NSTimestamp end() {
-    return (NSTimestamp) storedValueForKey(END_KEY);
-  }
-
-  public void setEnd(NSTimestamp value) {
-    takeStoredValueForKey(value, END_KEY);
-  }
-
-  public String fullName() {
-    return (String) storedValueForKey(FULL_NAME_KEY);
-  }
-
-  public void setFullName(String value) {
-    takeStoredValueForKey(value, FULL_NAME_KEY);
-  }
-
-  public String title() {
-    return (String) storedValueForKey(TITLE_KEY);
-  }
-
-  public void setTitle(String value) {
-    takeStoredValueForKey(value, TITLE_KEY);
+  public void setListName(String value) {
+    takeStoredValueForKey(value, LIST_NAME_KEY);
   }
 
 }

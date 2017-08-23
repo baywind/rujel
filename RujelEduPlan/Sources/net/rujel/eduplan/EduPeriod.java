@@ -31,7 +31,6 @@ package net.rujel.eduplan;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
-import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
@@ -73,30 +72,16 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 					"strings.RujelEduPlan_EduPlan.messages.emptyDate");
 			throw new NSValidation.ValidationException(message);
 		}
-		if(!eduYear().equals(MyUtility.eduYearForDate(begin())) ||
+/*		if(!eduYear().equals(MyUtility.eduYearForDate(begin())) ||
 				!eduYear().equals(MyUtility.eduYearForDate(end()))) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 				"strings.RujelEduPlan_EduPlan.messages.datesNotInYear");
 			throw new NSValidation.ValidationException(message);
-		}
+		}*/
 		if(begin().compare(end()) >= 0) {
 			String message = (String)WOApplication.application().valueForKeyPath(
 					"strings.RujelEduPlan_EduPlan.messages.beginEndPeriod");
 			throw new NSValidation.ValidationException(message);
-		}
-		String title = title();
-		if(title == null) {
-			String message = (String)WOApplication.application().valueForKeyPath(
-					"strings.RujelEduPlan_EduPlan.messages.titleRequired");
-			throw new NSValidation.ValidationException(message);
-		}
-		if(title.length() > 4) {
-			int idx = title.indexOf(' ');
-			if(idx < 0 || idx > 4 || (title.length() - idx) > 5) {
-				String message = (String)WOApplication.application().valueForKeyPath(
-					"strings.RujelEduPlan_EduPlan.messages.titleTooLong");
-				throw new NSValidation.ValidationException(message);
-			}
 		}
 		super.validateForSave();
 	}
@@ -128,16 +113,23 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		}
 		return true;
 	}
-	
 	public static NSArray periodsInList(String listName,EOEditingContext ec) {
+		return periodsInList(listName, ec, true);
+	}
+	public static NSArray periodsInList(String listName,EOEditingContext ec, boolean noEnd) {
 		if(listName == null)
 			return null;
-		NSArray list = EOUtilities.objectsMatchingKeyAndValue(ec, 
-				"PeriodList", "listName", listName);
-		if(list != null && list.count() > 0) {
-			list = (NSArray)list.valueForKey("period");
-			list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, sorter);
+		EOQualifier qual = new EOKeyValueQualifier(LIST_NAME_KEY,
+				EOQualifier.QualifierOperatorEqual, listName);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, qual, sorter);
+		NSArray list = ec.objectsWithFetchSpecification(fs);
+		Enumeration enu = list.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduPeriod lp = (EduPeriod) enu.nextElement();
+			lp._perlist=list;
 		}
+		if(noEnd)
+			list = list.subarrayWithRange(new NSRange(0,list.count()-1));
 		return list;
 	}
 		
@@ -155,8 +147,11 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		return list;
 	}
 	
+	public static final NSArray<EOSortOrdering> grouper = new NSArray(new EOSortOrdering[]{
+			new EOSortOrdering(LIST_NAME_KEY, EOSortOrdering.CompareAscending),
+			new EOSortOrdering(BEGIN_KEY, EOSortOrdering.CompareAscending)});
 	public static NSArray periods(WOContext ctx) {
-		Integer eduYear = (Integer)ctx.session().valueForKey("eduYear");
+//		Integer eduYear = (Integer)ctx.session().valueForKey("eduYear");
 		EOEditingContext ec = null;
 		try {
 			ec = (EOEditingContext)ctx.page().valueForKey("ec");
@@ -166,16 +161,17 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		if(ec == null) {
 			ec = (EOEditingContext)ctx.session().defaultEditingContext();
 		}
-		return periodsInYear(eduYear, ec);
+		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, null, grouper);
+		return ec.objectsWithFetchSpecification(fs);
 	}
-	
+	/*
 	public static NSArray periodsInYear(Number eduYear, EOEditingContext ec) {
 		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ec, 
 				ENTITY_NAME, EDU_YEAR_KEY, eduYear);
 		if(result == null || result.count() < 2)
 			return result;
 		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
-	}
+	}*/
 	
 	public static EduPeriod getCurrentPeriod(NSTimestamp date, String listName,
 			EOEditingContext ec) {
@@ -196,11 +192,13 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		EOEnterpriseObject pl = (EOEnterpriseObject)list.objectAtIndex(0);
 		return (EduPeriod)pl.valueForKey("period");
 	}
-		
+	
+	public EOEnterpriseObject relatedItog() {
+		return (net.rujel.eduplan.Subject)storedValueForKey("relatedItog");
+	}
+	
 	public String name() {
-		if(fullName() == null)
-			return title();
-		return fullName();
+		return (String)valueForKeyPath("relatedItog.name");
 	}
 		
 	public Number sort() {
@@ -219,13 +217,13 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		result -= EOPeriod.Utility.countDays(begin(), end());
 		return result;
 	}
-	
+	/*
 	public String presentEduYear() {
 		if(eduYear() == null)
 			return null;
 		int year = eduYear().intValue();
 		return MyUtility.presentEduYear(year);
-	}
+	}*/
 	
 	public int daysInPeriod(NSTimestamp toDate) {
 		return daysInPeriod(toDate,null);
@@ -253,45 +251,23 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	}
 	
 	public static int activeDaysInDates(NSTimestamp begin, NSTimestamp end, String listName, EOEditingContext ec) {
-		NSArray periods = periodsInList(listName, ec);
+		NSArray periods = periodsInList(listName, ec, false);
 		NSArray holidays = Holiday.holidaysInDates(begin, end, ec, listName);
-		if(periods == null || periods.count() == 0)
-			periods = defaultPeriods(ec); 
+		if(periods == null || periods.count() == 0) {
+			String tmpListName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
+			periods = periodsInList(tmpListName, ec, false);
+		}
 		if(periods == null || periods.count() == 0)
 			return 0;
-		Enumeration enu = periods.objectEnumerator();
-		int sumDays = 0;
-		while (enu.hasMoreElements()) {
-			EduPeriod per = (EduPeriod) enu.nextElement();
-			NSTimestamp from = per.begin();
-			NSTimestamp to = per.end();
-			if((begin != null && begin.after(to)) || 
-					(end != null && end.before(from)))
-				continue;
-			if(begin != null && begin.after(from))
-				from = begin;
-			if(end != null && end.before(to))
-				to = end;
-			sumDays += EOPeriod.Utility.countDays(from, to);
-			sumDays -= Holiday.freeDaysInDates(from, to, holidays);
-		}
-		return sumDays;
-	}
-		
-	public static int verifyList(NSArray list) {
-		if(list == null || list.count() < 2)
-			return 0;
-		list = EOSortOrdering.sortedArrayUsingKeyOrderArray(list, EOPeriod.sorter);
-		Enumeration enu = list.objectEnumerator();
-		NSTimestamp lastEnd = null;
-		int result = 0;
-		while (enu.hasMoreElements()) {
-			EOPeriod per = (EOPeriod) enu.nextElement();
-			if(lastEnd != null && lastEnd.compare(per.begin()) >= 0)
-				result += EOPeriod.Utility.countDays(per.begin(), lastEnd);
-			lastEnd = per.end();
-		}
-		return result;
+		EduPeriod first = (EduPeriod)periods.objectAtIndex(0);
+		EduPeriod last = (EduPeriod)periods.lastObject();
+		NSTimestamp perlast = last.begin().timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
+		if(begin == null || begin.before(first.begin()))
+			begin = first.begin();
+		if(end == null || end.after(perlast))
+			end = perlast;
+		return EOPeriod.Utility.countDays(begin, end) 
+				- Holiday.freeDaysInDates(begin, end, holidays);
 	}
 	
 /*	public int[] weeksAndDays(NSTimestamp toDate, EduCourse course) {
@@ -342,7 +318,7 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		protected Period per;
 		
 		public PeriodTab(EduPeriod period, boolean isCurrent) {
-			title = period.title();
+			title = (String)period.valueForKeyPath("relatedItog.title");
 			code = period.code();
 /*			try {
 				EOKeyGlobalID gid = (EOKeyGlobalID)period.editingContext().
@@ -411,5 +387,22 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 			result.addObject(new PeriodTab(per,isCurrent));
 		}
 		return new NSArray((Object)result);
+	}
+
+	protected NSArray _perlist;
+	public NSArray allInList() {
+		if(_perlist == null) {
+			_perlist = periodsInList(listName(), editingContext());
+		}
+		return _perlist;
+	}
+	
+	public NSTimestamp end() {
+		NSArray perlist = allInList();
+		int idx = perlist.indexOf(this);
+		if (idx < 0 || idx == perlist.count()-1)
+			return begin();
+		EduPeriod next = (EduPeriod)perlist.objectAtIndex(idx+1);
+		return next.begin().timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
 	}
 }

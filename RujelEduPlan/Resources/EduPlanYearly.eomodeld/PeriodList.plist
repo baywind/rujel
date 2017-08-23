@@ -9,7 +9,7 @@
         }, 
         {
             allowsNull = N; 
-            columnName = EDU_PERIOD; 
+            columnName = "EDU_PERIOD"; 
             name = periodID; 
             prototypeName = short; 
             userInfo = {"_EntityModeler" = {generateSource = NO; }; }; 
@@ -31,7 +31,7 @@
     primaryKeyAttributes = (plID); 
     relationships = (
         {
-            destination = EduPeriod; 
+            destination = OldEduPeriod; 
             isMandatory = Y; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
