@@ -154,11 +154,8 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		if(inSection != null && globalAccess.cachedAccessForObject("PlanDetail", 
 				inSection.sectionID()).flagForKey("read") &&
 				SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false) != null) {
-			EOQualifier qual = new EOKeyValueQualifier(EduPeriod.EDU_YEAR_KEY,
-					EOQualifier.QualifierOperatorEqual,session().valueForKey("eduYear"));
-			EOFetchSpecification fs = new EOFetchSpecification(EduPeriod.ENTITY_NAME,qual,null);
-			fs.setFetchLimit(1);
-			NSArray found = ec.objectsWithFetchSpecification(fs);
+			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, null, ec);
+			NSArray found = EduPeriod.periodsInList(listName, ec);
 			noDetails = Boolean.valueOf(found == null || found.count() == 0);
 		}
 		NSArray planHours;

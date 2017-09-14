@@ -123,6 +123,8 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 				EOQualifier.QualifierOperatorEqual, listName);
 		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, qual, sorter);
 		NSArray list = ec.objectsWithFetchSpecification(fs);
+		if(list == null || list.count() == 0)
+			return list;
 		Enumeration enu = list.objectEnumerator();
 		while (enu.hasMoreElements()) {
 			EduPeriod lp = (EduPeriod) enu.nextElement();

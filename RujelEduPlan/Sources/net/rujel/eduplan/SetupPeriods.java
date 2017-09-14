@@ -32,6 +32,7 @@ package net.rujel.eduplan;
 import java.util.Enumeration;
 
 import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EOPeriod;
 import net.rujel.reusables.NamedFlags;
 import net.rujel.reusables.PlistReader;
 import net.rujel.reusables.Various;
@@ -225,7 +226,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 				}
 				testList.addObject(lp);
 			}
-			if(per != null && EduPeriod.verifyList(testList) > 0) {
+			if(per != null && EOPeriod.Utility.verifyList(testList) > 0) {
         		session().takeValueForKey(application().valueForKeyPath(
     				"strings.RujelEduPlan_EduPlan.messages.periodsIntersect"), "message");
         		per = null;

@@ -4,17 +4,15 @@
 	<classpathentry kind="con" path="WOFramework/RujelInterfaces"/>
 	<classpathentry kind="con" path="WOFramework/Reusables"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RujelEmail"/>
-	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
-	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>
-	<classpathentry kind="con" path="WOFramework/JavaFoundation"/>
-	<classpathentry kind="con" path="WOFramework/JavaJDBCAdaptor"/>
-	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
-	<classpathentry kind="con" path="WOFramework/JavaXML"/>
 	<classpathentry kind="con" path="WOFramework/RujelEduPlan"/>
 	<classpathentry kind="con" path="WOFramework/RujelBase"/>
 	<classpathentry kind="con" path="WOFramework/RujelEmail"/>
 	<classpathentry kind="con" path="WOFramework/RujelReports"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="WOFramework/RujelIO"/>
+	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
+	<classpathentry kind="con" path="WOFramework/JavaEOControl"/>
+	<classpathentry kind="con" path="WOFramework/JavaFoundation"/>
+	<classpathentry kind="con" path="WOFramework/JavaEOAccess"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
