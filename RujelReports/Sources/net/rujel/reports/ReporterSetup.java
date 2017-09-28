@@ -87,10 +87,11 @@ public class ReporterSetup extends WOComponent {
 	
 	public void setReporter(NSDictionary dict) {
 		reporter = dict;
+		String id = (String)reporter.valueForKey("id");
+		if(id == null) id = "default";
         EOQualifier[] quals = new EOQualifier[2];
-        quals[0] = new EOKeyValueQualifier("reporterID", EOQualifier.QualifierOperatorEqual, 
-        		reporter.valueForKey("id"));
-        if("default".equals(reporter.valueForKey("id"))) {
+        quals[0] = new EOKeyValueQualifier("reporterID", EOQualifier.QualifierOperatorEqual,id);
+        if("default".equals(id)) {
         	quals[1] = new EOKeyValueQualifier("reporterID",
         			EOQualifier.QualifierOperatorEqual, null);
         	quals[0] = new EOOrQualifier(new NSArray(quals));
@@ -112,8 +113,6 @@ public class ReporterSetup extends WOComponent {
     			NSDictionary preset = (NSDictionary)plist;
     			if(preset.valueForKey("id") != null)
     				continue;
-    			String id = (String)reporter.valueForKey("id");
-    			if(id == null) id = "default";
     			if(!id.equals(preset.valueForKey("reporterID")) && 
     					(preset.valueForKey("reporterID") != null || !id.equals("default")))
     				continue;

@@ -135,7 +135,7 @@ public class EMailBroadcast implements Runnable{
 		return null;
 	}
 	
-	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter) {
+	public static void broadcastMarksForPeriod(Period period, NSKeyValueCoding reporter) {
 //		WOContext ctx = MyUtility.dummyContext(null);
 //		WOSession ses = ctx.session();
 		NSTimestamp moment = null;
@@ -204,16 +204,17 @@ public class EMailBroadcast implements Runnable{
 		
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
+		StudentReports reports=null;
 		if(reporter == null) {
 			WOSession ses = null;
 			if(ec instanceof SessionedEditingContext) 
 				ses = ((SessionedEditingContext)ec).session();
-			StudentReports reports = new StudentReports(ses);
-			reporter = (NSDictionary)reports.defaultReporter();
+			reports = new StudentReports(ses);
 		} // get default reporter
 //		ec.unlock();
 		idx = -1;
 		SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
+		SettingsBase reportTitle = SettingsBase.baseForKey("reportTitle", ec, false);
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
 			if(reportCourses != null) {
@@ -221,6 +222,16 @@ gr:		while (eduGroups.hasMoreElements()) {
 				Integer num = reportCourses.forCourse(crs).numericValue();
 				if(num != null && num.intValue() == 0)
 					continue gr;
+				if(reports != null) {
+					String report = reportTitle.forCourse(crs).textValue();
+					if (report != null) {
+						try {
+							reporter = reports.getReportForFilename(report);
+						} catch (IllegalStateException e) {/*falied to get reporter*/}
+					}
+					if(reporter == null)
+						reporter = reports.defaultReporter();
+				}
 			}
 //			ec.lock();
 			NSArray students = eduGroup.list();

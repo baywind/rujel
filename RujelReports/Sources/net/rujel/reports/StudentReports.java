@@ -50,6 +50,9 @@ public class StudentReports {
 	protected NSMutableArray reporters;
 	protected WOSession ses;
 	protected String defaultID;
+	protected NSMutableDictionary<String, NSKeyValueCoding> dict=
+			new NSMutableDictionary<String, NSKeyValueCoding>();
+	protected NSMutableDictionary<String, NSDictionary> settings;
 	
 	public StudentReports(WOSession session) {
 		super();
@@ -65,24 +68,37 @@ public class StudentReports {
 	public void reset() {
 		reporters = null;
 		defaultID = null;
+		dict.removeAllObjects();
 	}
 
+	public static NSMutableArray reporterList(WOSession ses) {
+		NSMutableArray reporters = new NSMutableArray();
+		EOQualifier qual = new EOKeyValueQualifier("id",
+				EOQualifier.QualifierOperatorNotEqual, null);
+		NSArray list = ReportsModule.reportsFromDir("StudentReport", ses, qual);
+		if(list != null && list.count() > 0)
+			reporters.addObjectsFromArray(list);
+		if(ses == null)
+			list = ModulesInitialiser.useModules(null, "studentReporter");
+		else
+			list = (NSArray)ses.valueForKeyPath("modules.studentReporter");
+		if(list != null && list.count() > 0)
+			reporters.addObjectsFromArray(list);
+		if(reporters.count() > 1) {
+    		EOSortOrdering.sortArrayUsingKeyOrderArray(reporters, ModulesInitialiser.sorter);
+		}
+		return reporters;
+	}
+	
 	public NSArray reporterList() {
 		if(reporters == null) {
-			reporters = new NSMutableArray();
-			EOQualifier qual = new EOKeyValueQualifier("id",
-					EOQualifier.QualifierOperatorNotEqual, null);
-			NSArray list = ReportsModule.reportsFromDir("StudentReport", ses, qual);
-			if(list != null && list.count() > 0)
-				reporters.addObjectsFromArray(list);
-			if(ses == null)
-				list = ModulesInitialiser.useModules(null, "studentReporter");
-			else
-				list = (NSArray)ses.valueForKeyPath("modules.studentReporter");
-			if(list != null && list.count() > 0)
-				reporters.addObjectsFromArray(list);
-			if(reporters.count() > 1) {
-	    		EOSortOrdering.sortArrayUsingKeyOrderArray(reporters, ModulesInitialiser.sorter);
+			reporters = reporterList(ses);
+			Enumeration enu = reporters.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSKeyValueCoding rep = (NSKeyValueCoding) enu.nextElement();
+				String key = (String)rep.valueForKey("id");
+				if(key != null)
+					dict.takeValueForKey(rep, key);
 			}
 		}
 		return reporters;
@@ -112,19 +128,133 @@ public class StudentReports {
 			defaultID = "default";
 		return settings;
 	}
+
+	public void initSettingsDict() {
+		settings = new NSMutableDictionary<String, NSDictionary>();
+		reporterList();
+		NSArray presets = getPresets(false,ses);
+		Enumeration enu = presets.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			NSMutableDictionary preset = (NSMutableDictionary) enu.nextElement();
+			String reporterID =  (String)preset.valueForKey("reporterID");
+			if (dict.containsKey(reporterID))
+				settings.setObjectForKey(preset, preset.valueForKey("title"));
+		}
+	}	
+	public static NSArray getPresets(boolean excludeDefault, WOSession ses) {	
+		File reportsDir = new File(ReportsModule.reportsFolder(),"StudentReport");
+    	File[] files = reportsDir.listFiles(PlistReader.Filter);
+    	NSMutableArray result = new NSMutableArray();
+    	for (int i = 0; i < files.length; i++) {
+    		try {
+    			if(excludeDefault && files[i].getName().equals("defaultSettings.plist"))
+    				continue;
+    			FileInputStream fis = new FileInputStream(files[i]);
+    			NSData data = new NSData(fis, fis.available());
+    			fis.close();
+    			String encoding = System.getProperty("PlistReader.encoding", "utf8");
+    			Object plist = NSPropertyListSerialization.propertyListFromData(data, encoding);
+    			if(!(plist instanceof NSDictionary))
+    				continue;
+    			NSDictionary preset = (NSDictionary)plist;
+    			String reporterID =  (String)preset.valueForKey("reporterID");
+    			if(reporterID == null)
+    				continue;
+    			//TODO: filter by section access
+    			if(!(preset instanceof NSMutableDictionary))
+    				preset = preset.mutableClone();
+    			preset.takeValueForKey(files[i], "file");
+    			preset.takeValueForKey(files[i].getName(), "filename");
+    			result.addObject(preset);
+    		} catch (Exception e) {
+    			Object [] args = new Object[] {ses,e,files[i]};
+    			Logger.getLogger("rujel.reports").log(WOLogLevel.WARNING,
+    					"Error reading report settings plist",args);
+    		}
+    	}
+    	return result;
+	}
+	
+	public NSDictionary settingsNamed(String title) {
+		if(settings == null) {
+			initSettingsDict();
+		}
+		return (NSDictionary) settings.valueForKey(title);
+	}
+	
+	public NSArray settingsAvailable() {
+		if(settings == null) {
+			initSettingsDict();
+		}
+		return settings.allKeys();
+	}
+	
+	public static NSArray settingsAvailable(WOSession ses) {
+		StudentReports reports = new StudentReports(ses);
+		return reports.settingsAvailable();
+	}
 	
 	public NSKeyValueCoding getReporter (String title) {
-		Enumeration enu = reporterList().objectEnumerator();
+//		Enumeration enu = reporterList().objectEnumerator();
 		if(title == null)
 			title = defaultID;
-		while (enu.hasMoreElements()) {
+		if(dict.count() == 0)
+			reporterList();
+		return (NSKeyValueCoding)dict.valueForKey(title);
+/*		while (enu.hasMoreElements()) {
 			NSKeyValueCoding reporter = (NSKeyValueCoding)enu.nextElement();
 			if(title.equals(reporter.valueForKey("id")))
 				return reporter;
 		}
-		return null;
+		return null;*/
 	}
 	
+	public NSKeyValueCoding getReportForFilename(String filename) {
+		if(filename == null)
+			return null;
+		File reportsDir = new File(ReportsModule.reportsFolder(),"StudentReport");
+		File reportFile = new File(reportsDir,filename);
+		if(!reportFile.exists())
+			return null;
+		try {
+			FileInputStream fis = new FileInputStream(reportFile);
+			NSData data = new NSData(fis, fis.available());
+			fis.close();
+			NSDictionary settings = (NSDictionary)NSPropertyListSerialization.
+					propertyListFromData(data, "utf8");
+			settings = settings.mutableClone();
+			settings.takeValueForKey(reportFile, "file");
+			settings.takeValueForKey(filename, "filename");
+			return getReport((NSMutableDictionary)settings);
+		} catch (IOException e) {
+			Logger.getLogger("rujel.reports").log(WOLogLevel.INFO,
+					"Error reading settings for StudentReport from file",
+					new Object[] {ses,reportFile,e});
+			return null;
+		}
+	}
+	
+	public NSKeyValueCoding getReportByName(String settingsTitle) {
+		NSDictionary settings = settingsNamed(settingsTitle);
+		if(settings == null)
+			return null;
+		return getReport(settings.mutableClone());
+	}
+	public NSMutableDictionary getReport(NSMutableDictionary settings) {
+		String reporterID = (String)settings.valueForKey("reporterID");
+		if(reporterID == null)
+			throw new IllegalStateException("Named report settings '"+ settings.valueForKey("title") + 
+					"' does not have required 'reporterID' key.");
+		NSKeyValueCoding reporter = getReporter(reporterID);
+		if(reporter == null)
+			throw new IllegalStateException("Failed to find reporter with id '" +reporterID+ 
+					"' for named report settings '"+ settings.valueForKey("title") + '\'');
+		NSMutableDictionary result = ((NSDictionary)reporter).mutableClone();
+		settings = ReporterSetup.synchronizeReportSettings(
+				(NSMutableDictionary)settings, result, false, true);
+		result.takeValueForKey(settings, "settings");
+		return result;
+	}	
 	public NSKeyValueCoding defaultReporter() {
 		NSDictionary settings = defaultSettings();
 		NSKeyValueCoding result = null;
@@ -160,6 +290,7 @@ public class StudentReports {
 					"StudentReport/DefaultReporter.plist");
 			try {
 				result = (NSDictionary)PlistReader.readPlist(new FileInputStream(file), null);
+				dict.takeValueForKey(result, defaultID);
 			} catch (Exception e) {}
 		}
 		if(result == null)

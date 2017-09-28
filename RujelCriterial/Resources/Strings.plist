@@ -478,8 +478,6 @@
 						<string>с оценками</string>
 						<string>значимые</string>
 					</array>
-					<key>displayString</key>
-					<string>.typeName</string>
 					<key>defaultValue</key>
 					<string>кроме домашних</string>
 				</dict>

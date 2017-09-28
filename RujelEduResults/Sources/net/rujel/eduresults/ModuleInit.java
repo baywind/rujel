@@ -121,10 +121,12 @@ public class ModuleInit {
 	}
 	
 	public static Object studentReporter(WOContext ctx) {
+		if(ctx != null) {
 		NamedFlags access = (NamedFlags)ctx.session().valueForKeyPath("readAccess.FLAGS.ItogMark");
 		//NamedFlags access = moduleAccess(ctx,"ItogMark");
 		if(!access.getFlag(0))
 				return null;
+		}
 		Object result = WOApplication.application().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.studentReporter");
 //		result = result.mutableClone();
