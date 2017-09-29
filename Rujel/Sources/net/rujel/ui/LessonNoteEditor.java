@@ -257,6 +257,14 @@ public class LessonNoteEditor extends WOComponent {
 		}
 		session().removeObjectForKey("editorCourse");
 		refresh();
+		if(fullList == null || fullList.count() == 0) {
+			for (int i = 1; i < presentTabs.count(); i++) {
+				setPresent((NSKeyValueCoding)presentTabs.objectAtIndex(i));
+				if(fullList != null && fullList.count() > 0)
+					return;
+			}
+			setPresent((NSKeyValueCoding)presentTabs.objectAtIndex(0));
+		}
 	}
 	
 	public void notify(NSNotification ntf) {
