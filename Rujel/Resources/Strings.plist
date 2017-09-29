@@ -328,8 +328,6 @@
 			<dict>
 				<key>attribute</key>
 				<string>numericValue</string>
-				<key>defaultValue</key>
-				<true/>
 				<key>boolean</key>
 				<string>number</string>
 			</dict>

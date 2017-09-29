@@ -173,6 +173,11 @@ public class CriteriaSet extends _CriteriaSet
 		return max;
 	}
 	
+	public static CriteriaSet getNone(EOEditingContext ec) {
+		EOKeyGlobalID gid = EOKeyGlobalID.globalIDWithEntityName(ENTITY_NAME, new Integer[] {-1});
+		return (CriteriaSet)ec.faultForGlobalID(gid, ec);
+	}
+	
 	public static CriteriaSet critSetForCourse(EduCourse course) {
 		EOEditingContext ec = course.editingContext();
 		Integer set = SettingsBase.numericSettingForCourse(ENTITY_NAME, course,ec);

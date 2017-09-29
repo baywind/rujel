@@ -140,13 +140,15 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	private transient NSArray _allCriteria;
 	public NSArray allCriteria() {
 		if(_allCriteria == null) {
-			if(workType()!= null && workType().namedFlags().flagForKey("specCriter") 
-					&& workType().criteriaSet() != null) {
-				NSArray criteria = workType().criteriaSet().sortedCriteria();
-				_allCriteria = (NSArray)criteria.valueForKey("criterion");
-			} else {
-				_allCriteria = allCriteria(CriteriaSet.maxCriterionForCourse(course()));
+			if(workType()!= null) {
+				CriteriaSet cs = workType().criteriaSet();
+				if(cs.flags() != null) {
+					NSArray criteria = workType().criteriaSet().sortedCriteria();
+					_allCriteria = (NSArray)criteria.valueForKey("criterion");
+				}
 			}
+			if(_allCriteria == null)
+				_allCriteria = allCriteria(CriteriaSet.maxCriterionForCourse(course()));
 		}
 		return _allCriteria;
 	}
@@ -164,10 +166,12 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	public transient Object _critSet;
 	public CriteriaSet critSet() {
 		if(_critSet == null) {
-			if(workType() == null || !workType().namedFlags().flagForKey("specCriter"))
-				_critSet = CriteriaSet.critSetForCourse(course());
-			else
+			if(workType() != null)
 				_critSet = workType().criteriaSet();
+			if(_critSet == null)
+				_critSet = CriteriaSet.critSetForCourse(course());
+			else if(((CriteriaSet)_critSet).flags()==null)
+				_critSet=NullValue;
 			if(_critSet == null)
 				_critSet = NullValue;
 		}

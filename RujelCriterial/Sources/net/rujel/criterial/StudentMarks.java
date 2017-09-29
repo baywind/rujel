@@ -302,11 +302,10 @@ public class StudentMarks extends WOComponent {
 					CriteriaSet courseCS = CriteriaSet.critSetForCourse(c);
 					while (enu.hasMoreElements()) {
 						Work work = (Work) enu.nextElement();
-						if(!Various.boolForObject(work.valueForKeyPath(
-								"workType.namedFlags.specCriter")) || work.critSet() == courseCS)
-							continue;
 						Object cs = work.critSet();
-						if(cs == null)
+						if(cs == null || cs == courseCS)
+							continue;
+						if(((CriteriaSet)cs).flags() == null)
 							cs = NullValue;
 						NSMutableDictionary dict = (NSMutableDictionary)byCritSet.objectForKey(cs);
 						if(dict == null) {

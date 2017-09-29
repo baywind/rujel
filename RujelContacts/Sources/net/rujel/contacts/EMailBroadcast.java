@@ -138,6 +138,7 @@ public class EMailBroadcast implements Runnable{
 	public static void broadcastMarksForPeriod(Period period, NSKeyValueCoding reporter) {
 //		WOContext ctx = MyUtility.dummyContext(null);
 //		WOSession ses = ctx.session();
+		
 		NSTimestamp moment = null;
 		Integer eduYear = (Integer)WOApplication.application().valueForKey("year");
 		String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
@@ -176,8 +177,17 @@ public class EMailBroadcast implements Runnable{
 		}*/
 		ec.lock();
 		try {
-			SettingsBase listBase = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
-			NSMutableDictionary periodsByList = null;
+			
+		SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
+		if(reportCourses != null && reportCourses.isSingle()) {
+			Integer num = reportCourses.numericValue();
+			if(num != null && num.intValue()==0)
+				return;
+			else
+				reportCourses = null;
+		}
+		SettingsBase listBase = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+		NSMutableDictionary periodsByList = null;
 		if(period == null) {
 			String listName = listBase.textValue();
 			period = EduPeriod.getCurrentPeriod(moment, listName, ec);
@@ -204,33 +214,45 @@ public class EMailBroadcast implements Runnable{
 		
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
+		SettingsBase reportTitle = SettingsBase.baseForKey("reportTitle", ec, false);
 		StudentReports reports=null;
 		if(reporter == null) {
 			WOSession ses = null;
 			if(ec instanceof SessionedEditingContext) 
 				ses = ((SessionedEditingContext)ec).session();
 			reports = new StudentReports(ses);
+			if(reportTitle == null) {
+				reporter = reports.defaultReporter();
+				reports = null;
+			} else if (reportTitle.isSingle()) {
+				try {
+					reporter = reports.getReportForFilename(reportTitle.textValue());
+				} catch (IllegalStateException e) {
+					reporter = reports.defaultReporter();
+				}
+				reports = null;
+			}				
 		} // get default reporter
 //		ec.unlock();
 		idx = -1;
-		SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
-		SettingsBase reportTitle = SettingsBase.baseForKey("reportTitle", ec, false);
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
-			if(reportCourses != null) {
+			NSKeyValueCoding report = reporter;
+			if(reportCourses != null || reportTitle != null) {
 				NSDictionary crs = SettingsBase.courseDict(eduGroup, eduYear);
-				Integer num = reportCourses.forCourse(crs).numericValue();
+				Integer num = (reportCourses == null)?null:
+					reportCourses.forCourse(crs).numericValue();
 				if(num != null && num.intValue() == 0)
 					continue gr;
 				if(reports != null) {
-					String report = reportTitle.forCourse(crs).textValue();
-					if (report != null) {
+					String reportSetting = reportTitle.forCourse(crs).textValue();
+					if (reportSetting != null) {
 						try {
-							reporter = reports.getReportForFilename(report);
+							report = reports.getReportForFilename(reportSetting);
 						} catch (IllegalStateException e) {/*falied to get reporter*/}
 					}
-					if(reporter == null)
-						reporter = reports.defaultReporter();
+					if(report == null)
+						report = reports.defaultReporter();
 				}
 			}
 //			ec.lock();
@@ -267,7 +289,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			} else {
 				params.takeValueForKey(period,"period");
 			}
-			params.takeValueForKey(reporter,"reporter");
+			params.takeValueForKey(report,"reporter");
 			params.takeValueForKey(eduGroup.name(),"groupName");
 			params.takeValueForKey("Finished mailing for eduGroup","logMessage");
 			params.takeValueForKey(eduGroup,"logParam");
@@ -596,7 +618,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 				" broadcastAdditions",ses);
 		if(extensions == null || extensions.count() == 0)
 			textBuf.append("\n.\n");
-		NSMutableDictionary settings = new NSMutableDictionary();
+		NSMutableDictionary settings = new NSMutableDictionary(ec,"ec");
 		settings.takeValueForKey(eduGroup, "eduGroup");
 		settings.takeValueForKey(existingCourses,"courses");
 		settings.takeValueForKey(period,"period");
