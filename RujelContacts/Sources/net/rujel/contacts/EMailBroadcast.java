@@ -699,6 +699,10 @@ gr:		while (eduGroups.hasMoreElements()) {
 		}
 		
 		Enumeration stEnu = students.objectEnumerator();
+		int sent = 0;
+//		NSMutableDictionary skip=new NSMutableDictionary();
+		int noContacts=0;
+		int noData=0;
 st:		while (stEnu.hasMoreElements()) {
 			long startTime = System.currentTimeMillis();
 			Student student = (Student)stEnu.nextElement();
@@ -707,6 +711,7 @@ st:		while (stEnu.hasMoreElements()) {
 			if(stContacts == null || stContacts.count() == 0) {
 				logger.log(WOLogLevel.FINER,
 						"Skipping mail to student as no contacts found",new Object[] {ses,student});
+				noContacts++;
 				continue st;
 			}
 			Enumeration cenu = stContacts.objectEnumerator();
@@ -731,6 +736,7 @@ st:		while (stEnu.hasMoreElements()) {
 				logger.log(WOLogLevel.FINER,
 						"Skipping mail to student as no active adresses found",
 						new Object[] {ses,student});
+				noContacts++;
 				continue st;
 			}
 			synchronized (mailer) {
@@ -780,9 +786,10 @@ st:		while (stEnu.hasMoreElements()) {
 								attach = null;
 								if(!Various.boolForObject(params.valueForKey("sendEmpty"))) {
 									logger.log(WOLogLevel.FINER,
-											"Skipping mail to student as no data fond",
+											"Skipping mail to student as no data found",
 											new Object[] {ses,student});
-									continue;
+									noData++;
+									continue st;
 								}
 							}
 							attName = attName + ".html";
@@ -831,6 +838,7 @@ st:		while (stEnu.hasMoreElements()) {
 						mailer.sendTextMessage(subject.toString(), message, toAddr);
 					}
 					logger.log(WOLogLevel.FINEST,"Mail sent \"" + subject + '"',ses);
+					sent++;
 				} catch (Exception ex) {
 					logger.log(WOLogLevel.WARNING,"Failed to send email for student",
 							new Object[] {ses,student,ex});
@@ -849,7 +857,20 @@ st:		while (stEnu.hasMoreElements()) {
 		String logMessage = (String)params.valueForKey("logMessage");
 		Object logParam = params.valueForKey("logParam");
 		if(logMessage != null)
-			logger.log(WOLogLevel.FINE,logMessage,new Object[] {ses,logParam});
+			logger.log(WOLogLevel.FINE,logMessage + ". Sent: " + sent,
+					new Object[] {ses,logParam});
+		if(noContacts>0)
+			logger.log(WOLogLevel.INFO, "Skipped sending to studens with no active contacts: " + noContacts,
+					new Object[] {ses,logParam});
+		if(noData>0) {
+			String per=null;
+			if(period != null) {
+				SimpleDateFormat df = new SimpleDateFormat("dd.MM");
+				per = df.format(period.begin()) + "-" + df.format(period.end());
+			}
+			logger.log(WOLogLevel.INFO, "Skipped sending empty messages for period (" + per + "):" + noData,
+					new Object[] {ses,logParam,period});
+		}
 //		ec.unlock();
 //		ses.sleep();
 	}
