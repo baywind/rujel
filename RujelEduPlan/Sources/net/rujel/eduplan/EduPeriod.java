@@ -38,6 +38,8 @@ import com.webobjects.eocontrol.*;
 import com.webobjects.appserver.WOApplication;
 import com.webobjects.appserver.WOContext;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
@@ -46,7 +48,10 @@ import com.webobjects.eoaccess.EOUtilities;
 public class EduPeriod extends _EduPeriod implements EOPeriod
 {
 
-	public EduPeriod() {
+ 	public static final NSArray sorter = new NSArray(
+ 			EOSortOrdering.sortOrderingWithKey("begin",EOSortOrdering.CompareAscending));
+
+ 	public EduPeriod() {
         super();
     }
 	
@@ -407,4 +412,46 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 		EduPeriod next = (EduPeriod)perlist.objectAtIndex(idx+1);
 		return next.begin().timestampByAddingGregorianUnits(0, 0, -1, 0, 0, 0);
 	}
+	
+	public static NSTimestamp[] defaultYearDates(int eduYear) {
+		String start = SettingsReader.stringForKeyPath("edu.yearStart", null);
+		String end = SettingsReader.stringForKeyPath("edu.yearEnd", null);
+		Calendar cal = Calendar.getInstance();
+		NSTimestamp[] result = new NSTimestamp[2];
+		if(start == null) {
+			cal.set(Calendar.MONTH, Calendar.SEPTEMBER);
+			cal.set(Calendar.DAY_OF_MONTH, 1);
+			cal.set(Calendar.YEAR, eduYear);
+			result[0] = new NSTimestamp(cal.getTimeInMillis());
+			if(end == null) {
+				cal.set(Calendar.MONTH, Calendar.MAY);
+				cal.set(Calendar.DAY_OF_MONTH, 31);
+				cal.add(Calendar.YEAR, 1);
+				result[1] = new NSTimestamp(cal.getTimeInMillis());
+				return result;
+			}
+		}
+		Format df = new SimpleDateFormat(
+				SettingsReader.stringForKeyPath("ui.shortDateFormat","MM/dd"));
+		if(start != null) {
+			Date aDate = (Date)df.parseObject(start, new java.text.ParsePosition(0));
+			cal.setTime(aDate);
+			cal.set(Calendar.YEAR, eduYear);
+			result[0] = new NSTimestamp(cal.getTimeInMillis());			
+		}
+		int startDay = cal.get(Calendar.DAY_OF_YEAR);
+		if(end == null) {
+			cal.set(Calendar.MONTH, Calendar.MAY);
+			cal.set(Calendar.DAY_OF_MONTH, 31);
+		} else {
+			Date aDate = (Date)df.parseObject(start, new java.text.ParsePosition(0));
+			cal.setTime(aDate);
+			cal.set(Calendar.YEAR, eduYear);			
+		}
+		if(cal.get(Calendar.DAY_OF_YEAR) < startDay)
+			cal.add(Calendar.YEAR, 1);
+		result[1] = new NSTimestamp(cal.getTimeInMillis());
+		return result;
+	}
+
 }

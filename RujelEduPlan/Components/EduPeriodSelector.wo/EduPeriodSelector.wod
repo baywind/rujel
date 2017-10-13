@@ -116,6 +116,7 @@ CanCreate: WOConditional {
 }
 
 Form : WOForm {
+  multipleSubmit = true;
 }
 
 CanDelete : WOConditional {

@@ -30,10 +30,12 @@
 package net.rujel.eduplan;
 
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.TimeZone;
 
+import net.rujel.base.SettingsBase;
 import net.rujel.reusables.DataBaseUtility;
 import net.rujel.reusables.SettingsReader;
 import net.rujel.reusables.WOLogLevel;
@@ -43,10 +45,12 @@ import com.webobjects.appserver.WOContext;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOEditingContext;
 import com.webobjects.eocontrol.EOEnterpriseObject;
+import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.eocontrol.EOObjectStoreCoordinator;
+import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSDictionary;
-import com.webobjects.foundation.NSMutableDictionary;
+import com.webobjects.foundation.NSForwardException;
 import com.webobjects.foundation.NSTimestamp;
 
 public class InitialDataGenerator {
@@ -140,8 +144,75 @@ public class InitialDataGenerator {
 		return true;
 	}
 
-	protected static boolean copyPeriods(EOEditingContext ec, Integer eduYear, 
-													EOEditingContext prevEc) {
+	protected static boolean copyPeriods(EOEditingContext ec, Integer eduYear, EOEditingContext prevEc) {
+		NSArray nContainers = EOUtilities.objectsMatchingKeyAndValue(ec, "ItogContainer", "eduYear", eduYear);
+
+		SettingsBase setting = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, prevEc, false);
+		if(setting == null || setting.textValue()==null)
+			return false;
+		NSArray lists=setting.availableValues(eduYear, SettingsBase.TEXT_VALUE_KEY);
+		if(lists.count() ==0)
+			return false;
+		Enumeration enu = lists.objectEnumerator();
+		Method gen = null;
+
+		while (enu.hasMoreElements()) {
+			String listName = (String) enu.nextElement();
+			NSArray periods = EOUtilities.objectsMatchingKeyAndValue(prevEc, 
+					EduPeriod.ENTITY_NAME, EduPeriod.LIST_NAME_KEY, listName);
+			if(periods == null || periods.count() == 0)
+				continue;
+			Enumeration penu = periods.objectEnumerator();
+			NSArray forType = null;
+			while (penu.hasMoreElements()) {
+				EduPeriod per = (EduPeriod) penu.nextElement();
+				EOEnterpriseObject type = (EOEnterpriseObject)per.valueForKeyPath("relatedItog.itogType");
+				if(type == null) {
+					EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(prevEc, EduPeriod.ENTITY_NAME);
+					nPer.setListName(listName);
+					nPer.setBegin(per.begin().timestampByAddingGregorianUnits(1, 0, 0, 0, 0, 0));
+					continue;
+				}
+				type = EOUtilities.localInstanceOfObject(ec, type);
+				if(forType == null || ((EOEnterpriseObject)forType.objectAtIndex(0))
+						.valueForKey("itogType") != type) {
+					EOQualifier qual = new EOKeyValueQualifier("itogType", 
+							EOQualifier.QualifierOperatorEqual, type);
+					forType = EOQualifier.filteredArrayWithQualifier(nContainers, qual);
+				} //if(forType == null
+				if(forType.count() == 0) {
+					if(gen == null) {
+						try {
+							Class cl = Class.forName("ItogType");
+							gen = cl.getMethod("generateItogsInYear", Integer.class);
+						} catch (Exception e) {
+							throw new NSForwardException(e, 
+									"Failed to get itogs generation method");
+						}
+					}
+					try {
+						forType=(NSArray)gen.invoke(type, eduYear);
+					} catch (Exception e) {
+						throw new NSForwardException(e, 
+								"Failed to generate itogs for next year");
+					}
+				} //(forType.count() == 0)
+				EOQualifier qual = new EOKeyValueQualifier("num", EOQualifier.QualifierOperatorEqual, 
+						per.valueForKey("num"));
+				NSArray found = EOQualifier.filteredArrayWithQualifier(forType, qual);
+				if(found.count() == 0)
+					continue;
+				EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(prevEc, EduPeriod.ENTITY_NAME);
+				nPer.setListName(listName);
+				nPer.addObjectToBothSidesOfRelationshipWithKey(
+						(EOEnterpriseObject)found.objectAtIndex(0), "relatedItog");
+				nPer.setBegin(per.begin().timestampByAddingGregorianUnits(1, 0, 0, 0, 0, 0));
+			} //periods.objectEnumerator();
+//			ec.saveChanges();
+		} //lists.objectEnumerator();
+		return true;
+	}
+		/*
 		NSArray rows = EOUtilities.objectsForEntityNamed(prevEc, "PeriodList");
 		if(rows == null || rows.count() == 0)
 			return false;
@@ -169,7 +240,7 @@ public class InitialDataGenerator {
 			newO.addObjectToBothSidesOfRelationshipWithKey(newPer, "period");
 		}
 		return true;
-	}
+	}*/
 
 	protected static boolean copyPlanHours(EOEditingContext prevEc,
 			EOEditingContext ec) {
