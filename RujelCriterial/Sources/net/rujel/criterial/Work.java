@@ -140,12 +140,10 @@ public class Work extends _Work implements EduLesson {	// EOObserving
 	private transient NSArray _allCriteria;
 	public NSArray allCriteria() {
 		if(_allCriteria == null) {
-			if(workType()!= null) {
-				CriteriaSet cs = workType().criteriaSet();
-				if(cs.flags() != null) {
-					NSArray criteria = workType().criteriaSet().sortedCriteria();
-					_allCriteria = (NSArray)criteria.valueForKey("criterion");
-				}
+			CriteriaSet cs = (CriteriaSet)valueForKeyPath("workType.criteriaSet");
+			if(cs != null && cs.flags() != null) {
+				NSArray criteria = cs.sortedCriteria();
+				_allCriteria = (NSArray)criteria.valueForKey("criterion");
 			}
 			if(_allCriteria == null)
 				_allCriteria = allCriteria(CriteriaSet.maxCriterionForCourse(course()));
