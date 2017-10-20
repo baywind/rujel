@@ -19,7 +19,7 @@
     attributesUsedForLocking = (begin, itogID, listName); 
     className = "net.rujel.eduplan.EduPeriod"; 
     classProperties = (begin, listName); 
-    externalName = EduPeriod; 
+    externalName = "PL_PERIOD"; 
     fetchSpecificationDictionary = {}; 
     name = EduPeriod; 
     primaryKeyAttributes = (pID); 

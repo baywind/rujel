@@ -61,7 +61,12 @@ public class PlanHours extends _PlanHours {
 			ph.setSection(cycle.section());
 			ph.setEduSubject(cycle.subjectEO());
 			ph.setGrade(cycle.grade());
-			ec.saveChanges();
+			try {
+				ec.saveChanges();
+			} catch (Exception e) {
+				EduPlan.logger.log(WOLogLevel.WARNING, 
+						"Falied to update PlanHours record",new Object[]{e,ph});
+			}
 		}
 		Logger.getLogger("rujel.base").log(WOLogLevel.INFO, 
 				"Automatically updated PlanHours for new database structure",toUpdate.count());

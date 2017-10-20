@@ -173,6 +173,7 @@ public class EduPlan extends com.webobjects.appserver.WOComponent {
 		EOEditingContext ec = new EOEditingContext();
 		SchoolSection.listSections(ec, true);
 		PlanHours.updatePlanHours(ec);
+		EduPeriodSelector.updatePeriodStructure(ec);
 		return null;
 	}
 	

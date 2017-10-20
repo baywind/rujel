@@ -5,7 +5,6 @@ BasicTitle : WOString {
 
 PeriodSelector : EduPeriodSelector {
   ec = ec;
-  currPeriod = currPeriod;
   listName = listName;
 }
 

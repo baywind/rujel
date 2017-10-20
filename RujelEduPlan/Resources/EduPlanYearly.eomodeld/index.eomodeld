@@ -13,6 +13,5 @@
         {className = EOGenericRecord; name = PlanDetail; }, 
         {className = "net.rujel.eduplan.PlanHours"; name = PlanHours; }
     ); 
-    internalInfo = {"_deletedEntityNamesInObjectStore" = (EduPeriod); }; 
-    userInfo = {framework = RujelEduPlan; schemaVersion = {number = 4; title = "1.2"; }; }; 
+    userInfo = {framework = RujelEduPlan; schemaVersion = {number = 5; title = "1.2"; }; }; 
 }

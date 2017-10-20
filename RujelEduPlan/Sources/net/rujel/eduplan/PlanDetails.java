@@ -314,7 +314,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			Enumeration enu = periods.objectEnumerator();
 			while (enu.hasMoreElements()) {
 				EduPeriod per = (EduPeriod) enu.nextElement();
-				int pDays = per.daysInPeriod(null, listName);
+				int pDays = per.daysInPeriod(null);
 				dict.setObjectForKey(new Integer(pDays), per);
 				days += pDays; 
 			}

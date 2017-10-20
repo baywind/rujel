@@ -94,7 +94,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 					EOFetchSpecification fs = new EOFetchSpecification("PeriodList",qual,null);
 					extraLists = ec.objectsWithFetchSpecification(fs);
 					if(extraLists != null && extraLists.count() > 0)
-						details = Boolean.TRUE;
+						details = Boolean.FALSE;//TRUE; //TODO
 					else
 						details = Boolean.FALSE;
 					qual = new EOKeyValueQualifier(Holiday.LIST_NAME_KEY,
@@ -174,7 +174,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 		}
 		item = null;
 	}
-
+/*
     public String weeksDays() {
     	int days = 0;
     	if(item instanceof EOEnterpriseObject) {
@@ -193,7 +193,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
     		result.append('(').append(days).append(')');
     	}
     	return result.toString();
-    }
+    }*/
     
 	public WOActionResults addPeriodToList() {
 		WOComponent selector = pageWithName("SelectorPopup");
