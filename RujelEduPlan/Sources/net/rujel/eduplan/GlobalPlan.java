@@ -428,7 +428,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public void setPlanHours(String aHours) {
-		PlanHours[] planHours = (PlanHours[])subjectItem.valueForKey("planHours");
+		Object[] planHours = (Object[])subjectItem.valueForKey("planHours");
 		Integer hours = null;
 		if(aHours != null) {
 			try {
@@ -439,21 +439,22 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				return;
 			}
 		}
+		PlanHours ph = (PlanHours)planHours[index];
 		if(hours != null) {
-			if(planHours[index] == null) { // create cycle
-
-				planHours[index] = PlanHours.getPlanHours(inSection, (Subject)
+			if(ph == null) { // create cycle
+				ph = PlanHours.getPlanHours(inSection, (Subject)
 						subjectItem.valueForKey(Subject.ENTITY_NAME), (Integer)gradeItem, true);
 				subjectItem.valueForKeyPath("counter.raise");
+				planHours[index]=ph;
 			}
 			String key = (showTotal == 0)? "weeklyHours" : "totalHours";
 			String keyNot = (showTotal != 0)? "weeklyHours" : "totalHours";
-			planHours[index].takeValueForKey(hours, key);
-			planHours[index].takeValueForKey(new Integer(0), keyNot);
+			ph.takeValueForKey(hours, key);
+			ph.takeValueForKey(new Integer(0), keyNot);
 			subjectItem.takeValueForKey(Boolean.TRUE, PlanHours.ENTITY_NAME);
 		} else { // hours == null
-			if(planHours[index] != null) { // delete planHours
-				ec.deleteObject(planHours[index]);
+			if(ph != null) { // delete planHours
+				ec.deleteObject(ph);
 				subjectItem.valueForKeyPath("counter.lower");
 //				if(count == null || count.intValue() <= 0)
 					setValueForBinding(Boolean.TRUE, "shouldReset");
@@ -695,7 +696,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			else
 				subjects.insertObjectAtIndex(dict, idx);
 			idx++;
-		}
+		} //found subjects in Area enumeration
 //	  	subjectItem.takeValueForKey(Boolean.TRUE, "showUnused");
 	  	if(subjects.count() > oldCount) {
 	  		return RedirectPopup.getRedirect(context(), context().page());
