@@ -6,27 +6,24 @@
 </tr>
 </thead><webobject name = "HasType">
 <tbody><tr>
-	<th colspan = "2" a;align = "left"><webobject name = "BeginTitle"/></th>
-	<th style = "width:5em;"><webobject name = "WeeksTitle"/></th>
+	<th colspan = "2" align = "left"><webobject name = "BeginTitle"/></th>
+	<th><webobject name = "WeeksTitle"/></th>
 </tr><webobject name = "Periods">
-<tr><td style = "width:8em;"><webobject name = "BeginField"/></td>
+<tr><td><webobject name = "BeginField"/></td>
 	<td><webobject name = "Name"/></td>
 	<td style = "color:#666666;"><webobject name = "Weeks"/></td>
 </tr></webobject>
-<script type="text/javascript" charset="utf-8">
-	new Kalendae.Input('currPeriodBegin', {
-		side:'bottom',
-		offsetLeft:-90,
-		offsetTop:4
-	});
-</script>
 </tbody>
 <tfoot>
-<tr><th align = "right" colspan = "2"><webobject name = "EndOfYear"/>:
+<tr><th align = "left" colspan = "2"><webobject name = "EndOfYear"/>:
 	<webobject name = "EndField"/></th>
 	<th style = "color:#666666;"><webobject name = "Weeks"/></td>
 </tr>
 <tr>
 	<td colspan = "3" align = "center"><webobject name = "Save"/></td>
 </tr></tfoot></webobject>
-</table></webobject>
+</table></webobject><webobject name = "HasChanges">
+<script type = "text/javascript">
+	hasChanges=true;
+</script>
+</webobject>

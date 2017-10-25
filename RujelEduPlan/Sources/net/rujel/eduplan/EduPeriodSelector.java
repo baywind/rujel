@@ -566,6 +566,28 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     	super.appendToResponse(aResponse, aContext);
     }
 
+    public boolean hasChanges() {
+    	if(type == null || _list == null)
+    		return false;
+    	if(periods==null)
+    		return true;
+    	int cnt = _list.count();
+    	if(cnt >= periods.length)
+    		return true;
+    	if (periods[0]==null)
+    			return true;
+    	for (int i = 0; i < cnt; i++) {
+			NSMutableDictionary dict = _list.objectAtIndex(i);
+			EduPeriod per = periods[i+1];
+			if (per == null || 
+					per.relatedItog() != dict.valueForKey("relatedItog"))
+				return true;
+			if (0 != EOPeriod.Utility.compareDates(per.begin(), 
+					(NSTimestamp)dict.valueForKey(EduPeriod.BEGIN_KEY)))
+				return true;
+		}
+		return (0 != EOPeriod.Utility.compareDates(periods[0].begin(),end));
+    }
     
     public static void updatePeriodStructure(EOEditingContext ec) {
     	NSArray perlist=EOUtilities.objectsForEntityNamed(ec, EduPeriod.ENTITY_NAME);

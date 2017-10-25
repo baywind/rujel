@@ -33,7 +33,8 @@ BeginField : WOTextField {
 	size = 10;
 	maxlength = 10;
 	style = "text-align:center;";
-	class = "date";
+	class = "date required checkChanges auto-kal";
+	data-kal= "side:'left'";
 }
 
 EndField : WOTextField {
@@ -42,9 +43,10 @@ EndField : WOTextField {
 	size = 10;
 	maxlength = 10;
 	style = "text-align:center;";
-	class = "date required";
+	class = "date required checkChanges auto-kal";
 	name = "end";
 	id = "yearEnd";
+	data-kal= "side:'left'";
 }
 
 Save: WOSubmitButton {
@@ -81,4 +83,8 @@ EndOfYear : WOString {
 
 HasType : WOConditional {
   condition = type;
+}
+
+HasChanges : WOConditional {
+  condition = hasChanges;
 }

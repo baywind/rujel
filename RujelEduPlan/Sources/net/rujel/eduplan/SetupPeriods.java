@@ -94,7 +94,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 					EOFetchSpecification fs = new EOFetchSpecification("PeriodList",qual,null);
 					extraLists = ec.objectsWithFetchSpecification(fs);
 					if(extraLists != null && extraLists.count() > 0)
-						details = Boolean.FALSE;//TRUE; //TODO
+						details = Boolean.TRUE; 
 					else
 						details = Boolean.FALSE;
 					qual = new EOKeyValueQualifier(Holiday.LIST_NAME_KEY,
