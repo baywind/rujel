@@ -602,15 +602,15 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	  	Enumeration enu = found.objectEnumerator();
 
 	  	int idx = subjects.indexOfIdenticalObject(subjectItem) +1;
-	  	NSMutableDictionary row = (NSMutableDictionary)subjects.objectAtIndex(idx);
+	  	NSMutableDictionary row = (subjects.count() <= idx)?null: 
+	  			(NSMutableDictionary)subjects.objectAtIndex(idx);
 		SubjectGroup currGroup = (SubjectGroup)area.valueForKey("subjectGroup");
 		Counter groupCounter = (Counter)subjectItem.valueForKey("rowspan");
 		NSMutableArray passed = new NSMutableArray();
 	  	final int oldCount = subjects.count();
 	  	while (enu.hasMoreElements()) {
 			Subject subj = (Subject) enu.nextElement();
-			NSMutableDictionary dict = new NSMutableDictionary(
-					subj, Subject.ENTITY_NAME);
+			NSMutableDictionary dict = new NSMutableDictionary(subj, Subject.ENTITY_NAME);
 			if(row != null) {
 				try {
 					while (isPrevRowForSubject(row, subj,passed)) {
@@ -620,10 +620,10 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 							currGroup = gr;
 						}
 						idx++;
-						if(idx >= subjects.count()) {
-							row = null;
-							break;
-						}
+//						if(idx >= subjects.count()) {
+//							row = null;
+//							break;
+//						}
 						row = (NSMutableDictionary)subjects.objectAtIndex(idx);
 					}
 					Subject rowSubj = (Subject)row.valueForKey(Subject.ENTITY_NAME);
@@ -650,6 +650,11 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 				} catch (ComparisonException e) {
 					EduPlan.logger.log(WOLogLevel.WARNING, "Error comparing subjects",
 							new Object[] {session(),e});
+				} catch (IllegalArgumentException e) {
+					// came to the end of list. ok
+					if(idx >= subjects.count())
+						row = null;
+					else throw e;
 				}
 			}
 			Object[] planHours = new Object[grades.count()];
