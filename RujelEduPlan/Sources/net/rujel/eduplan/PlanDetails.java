@@ -787,13 +787,6 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 
 	
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
-		SchoolSection sesSection = (SchoolSection)session().valueForKeyPath("state.section");
-		if(inSection != null && (sesSection == null
-				|| !inSection.sectionID().equals(sesSection.sectionID())))
-			session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
-					session().defaultEditingContext(), inSection), "state.section");
-		else
-			sesSection = null;
 		if(Various.boolForObject(valueForBinding("shouldReset"))) {
 			ec = (EOEditingContext)context().page().valueForKey("ec");
 			periodsForList = new NSMutableDictionary(new Counter(),"periodsCounter");
@@ -813,6 +806,13 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			}
 			setValueForBinding(Boolean.FALSE, "shouldReset");
 		}
+		SchoolSection sesSection = (SchoolSection)session().valueForKeyPath("state.section");
+		if(inSection != null && (sesSection == null
+				|| !inSection.sectionID().equals(sesSection.sectionID())))
+			session().takeValueForKeyPath(EOUtilities.localInstanceOfObject(
+					session().defaultEditingContext(), inSection), "state.section");
+		else
+			sesSection = null;
 		super.appendToResponse(aResponse, aContext);
 		if(sesSection != null)
 			session().takeValueForKeyPath(sesSection, "state.section");

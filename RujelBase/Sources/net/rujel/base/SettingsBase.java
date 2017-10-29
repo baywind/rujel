@@ -217,6 +217,12 @@ public class SettingsBase extends _SettingsBase implements Setting {
 		return base.forCourse(course);
 	}
 	
+	public static NSDictionary courseDict(SchoolSection section,Integer eduYear) {
+		NSDictionary dict = new NSDictionary(section,"section");
+		return new NSDictionary(new Object[] {dict,dict,eduYear},
+				new Object[] {"cycle","eduGroup","eduYear"});
+	}
+	
 	public static NSDictionary courseDict(EduGroup eduGroup) {
 		Integer eduYear = MyUtility.eduYear(eduGroup.editingContext());
 		return courseDict(eduGroup,eduYear);
@@ -268,8 +274,10 @@ public class SettingsBase extends _SettingsBase implements Setting {
 			return courseDict((EduGroup)obj,eduYear);
 		if(obj instanceof Integer)
 			return courseDict((Integer)obj,eduYear);
+		if(obj instanceof SchoolSection)
+			return courseDict((SchoolSection)obj,eduYear);
 		throw new IllegalArgumentException(
-				"EduCourse, EduCycle, EduGroup or Integer are only accepted. Receiver "
+				"EduCourse, EduCycle, EduGroup, SchoolSection or Integer are only accepted. Receiver "
 				+ obj.getClass().getName());
 	}
 		

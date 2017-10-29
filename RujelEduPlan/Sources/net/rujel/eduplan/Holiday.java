@@ -112,7 +112,8 @@ public class Holiday extends _Holiday implements EOPeriod {
 			days += EOPeriod.Utility.intersect(since, to, hd);
 			if(hd.end().compare(to) > 0)
 				break;
-			since = hd.end().timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
+			if(since == null || since.before(hd.end()))
+				since = hd.end().timestampByAddingGregorianUnits(0, 0, 1, 0, 0, 0);
 		}
 		return days;
 	}

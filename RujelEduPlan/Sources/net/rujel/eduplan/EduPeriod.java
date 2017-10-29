@@ -31,6 +31,7 @@ package net.rujel.eduplan;
 
 import net.rujel.reusables.*;
 import net.rujel.interfaces.*;
+import net.rujel.base.MyUtility;
 import net.rujel.base.SettingsBase;
 
 import com.webobjects.foundation.*;
@@ -196,16 +197,39 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	public static NSArray periods(WOContext ctx) {
 //		Integer eduYear = (Integer)ctx.session().valueForKey("eduYear");
 		EOEditingContext ec = null;
+		Object showFor = null;
+		if(ctx.component().canGetValueForBinding("showFor"))
+			showFor = ctx.component().valueForBinding("showFor");
+		if(showFor == null && ctx.hasSession())
+			showFor = ctx.session().valueForKeyPath("state.section");
 		try {
-			ec = (EOEditingContext)ctx.page().valueForKey("ec");
+			if(ctx.component().canGetValueForBinding("ec"))
+				ec = (EOEditingContext)ctx.component().valueForBinding("ec");
+			if(ec==null)
+				ec = (EOEditingContext)ctx.page().valueForKey("ec");
+			if(showFor instanceof EOEnterpriseObject) {
+				if(ec==null)
+					ec = ((EOEnterpriseObject)showFor).editingContext();
+				else
+					showFor=EOUtilities.localInstanceOfObject(ec, (EOEnterpriseObject)showFor);
+			}
 		} catch (Exception e) {
 			;
 		}
 		if(ec == null) {
 			ec = (EOEditingContext)ctx.session().defaultEditingContext();
 		}
-		EOFetchSpecification fs = new EOFetchSpecification(ENTITY_NAME, null, grouper);
-		return ec.objectsWithFetchSpecification(fs);
+		Integer eduYear;
+		if(ctx.hasSession())
+			eduYear = (Integer)ctx.session().valueForKey("eduYear");
+		else
+			eduYear = MyUtility.eduYear(ec);
+		NSKeyValueCodingAdditions course = SettingsBase.courseDict(showFor, eduYear);
+		String listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, course, ec);
+		NSArray result = periodsInList(listName, ec, true);
+		if(result == null || result.count() == 0)
+			result = defaultPeriods(ec);
+		return result;
 	}
 	/*
 	public static NSArray periodsInYear(Number eduYear, EOEditingContext ec) {
@@ -442,26 +466,19 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	}
 	
 	public EduPeriod next() {
+		if(_next!=null)
+			return _next;
+		if(_perlist != null) {
+			for (int i = 1; i < _perlist.length-1; i++) {
+				if(_perlist[i]==this)
+					_next=_perlist[i+1];
+			}
+			if(_next==null)
+				_next=_perlist[0];
+		}
 		if(_next==null)
 			fetchPeriods(editingContext(), listName());
 		return _next;
-		/*
-		Integer num = (Integer)valueForKeyPath("relatedItog.num");
-		if(num == null)
-			return this;
-		if(_perlist==null)
-			_perlist = fetchPeriods(editingContext(), listName());
-		int idx=num+1;
-		EduPeriod next = null;
-		while (next == null && _perlist.length > idx) {
-			next = _perlist[idx];
-			idx++;
-		}
-		if(next == null)
-			next = _perlist[0];
-		if(next == null)
-			next = this;
-		return next;*/
 	}
 	
 	public NSTimestamp end() {

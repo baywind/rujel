@@ -3,10 +3,6 @@ BeginTitle : WOString {
   escapeHTML = false;
 }
 
-EndTitle : WOString {
-  value = session.strings.RujelEduPlan_EduPlan.EduPeriod.end;
-  escapeHTML = false;
-}
 
 WeeksTitle : WOString {
   value = session.strings.RujelEduPlan_EduPlan.EduPeriod.weeksDays;
@@ -19,7 +15,7 @@ Periods : WORepetition {
 }
 
 Name : WOString {
-  value = item.relatedItog.title;
+  value = item.relatedItog.name;
 }
 
 Weeks : WOString {
@@ -33,7 +29,8 @@ BeginField : WOTextField {
 	size = 10;
 	maxlength = 10;
 	style = "text-align:center;";
-	class = "date required checkChanges auto-kal";
+	class = "date required auto-kal";
+	onchange="checkChanges(this);";
 	data-kal= "side:'left'";
 }
 
@@ -43,10 +40,11 @@ EndField : WOTextField {
 	size = 10;
 	maxlength = 10;
 	style = "text-align:center;";
-	class = "date required checkChanges auto-kal";
+	class = "date required auto-kal";
 	name = "end";
 	id = "yearEnd";
 	data-kal= "side:'left'";
+	onchange="checkChanges(this);";	
 }
 
 Save: WOSubmitButton {
@@ -57,11 +55,6 @@ Save: WOSubmitButton {
 Form : WOForm {
   multipleSubmit = true;
   action = generateList;
-}
-
-TotalTitle : WOString {
-  value = session.strings.RujelEduPlan_EduPlan.SetupPeriods.total;
-  escapeHTML = false;
 }
 
 TypeTitle : WOString {

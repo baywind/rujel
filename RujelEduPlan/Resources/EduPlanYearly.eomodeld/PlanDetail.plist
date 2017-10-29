@@ -35,7 +35,7 @@
     primaryKeyAttributes = (courseID, periodID); 
     relationships = (
         {
-            destination = OldEduPeriod; 
+            destination = EduPeriod; 
             isMandatory = Y; 
             isToMany = N; 
             joinSemantic = EOInnerJoin; 
