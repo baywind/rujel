@@ -135,9 +135,10 @@ public class EMailBroadcast implements Runnable{
 		return null;
 	}
 	
-	public static void broadcastMarksForPeriod(Period period, NSDictionary reporter) {
+	public static void broadcastMarksForPeriod(Period period, NSKeyValueCoding reporter) {
 //		WOContext ctx = MyUtility.dummyContext(null);
 //		WOSession ses = ctx.session();
+		
 		NSTimestamp moment = null;
 		Integer eduYear = (Integer)WOApplication.application().valueForKey("year");
 		String defaultDate = SettingsReader.stringForKeyPath("ui.defaultDate", null);
@@ -176,8 +177,17 @@ public class EMailBroadcast implements Runnable{
 		}*/
 		ec.lock();
 		try {
-			SettingsBase listBase = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
-			NSMutableDictionary periodsByList = null;
+			
+		SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
+		if(reportCourses != null && reportCourses.isSingle()) {
+			Integer num = reportCourses.numericValue();
+			if(num != null && num.intValue()==0)
+				return;
+			else
+				reportCourses = null;
+		}
+		SettingsBase listBase = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+		NSMutableDictionary periodsByList = null;
 		if(period == null) {
 			String listName = listBase.textValue();
 			period = EduPeriod.getCurrentPeriod(moment, listName, ec);
@@ -204,23 +214,46 @@ public class EMailBroadcast implements Runnable{
 		
 		NSMutableDictionary dict = new NSMutableDictionary(eduYear,"eduYear");
 		
+		SettingsBase reportTitle = SettingsBase.baseForKey("reportTitle", ec, false);
+		StudentReports reports=null;
 		if(reporter == null) {
 			WOSession ses = null;
 			if(ec instanceof SessionedEditingContext) 
 				ses = ((SessionedEditingContext)ec).session();
-			StudentReports reports = new StudentReports(ses);
-			reporter = (NSDictionary)reports.defaultReporter();
+			reports = new StudentReports(ses);
+			if(reportTitle == null) {
+				reporter = reports.defaultReporter();
+				reports = null;
+			} else if (reportTitle.isSingle()) {
+				try {
+					reporter = reports.getReportForFilename(reportTitle.textValue());
+				} catch (IllegalStateException e) {
+					reporter = reports.defaultReporter();
+				}
+				reports = null;
+			}				
 		} // get default reporter
 //		ec.unlock();
 		idx = -1;
-		SettingsBase reportCourses = SettingsBase.baseForKey("reportCourses", ec, false);
 gr:		while (eduGroups.hasMoreElements()) {
 			EduGroup eduGroup = (EduGroup)eduGroups.nextElement();
-			if(reportCourses != null) {
+			NSKeyValueCoding report = reporter;
+			if(reportCourses != null || reportTitle != null) {
 				NSDictionary crs = SettingsBase.courseDict(eduGroup, eduYear);
-				Integer num = reportCourses.forCourse(crs).numericValue();
+				Integer num = (reportCourses == null)?null:
+					reportCourses.forCourse(crs).numericValue();
 				if(num != null && num.intValue() == 0)
 					continue gr;
+				if(reports != null) {
+					String reportSetting = reportTitle.forCourse(crs).textValue();
+					if (reportSetting != null) {
+						try {
+							report = reports.getReportForFilename(reportSetting);
+						} catch (IllegalStateException e) {/*falied to get reporter*/}
+					}
+					if(report == null)
+						report = reports.defaultReporter();
+				}
 			}
 //			ec.lock();
 			NSArray students = eduGroup.list();
@@ -256,7 +289,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 			} else {
 				params.takeValueForKey(period,"period");
 			}
-			params.takeValueForKey(reporter,"reporter");
+			params.takeValueForKey(report,"reporter");
 			params.takeValueForKey(eduGroup.name(),"groupName");
 			params.takeValueForKey("Finished mailing for eduGroup","logMessage");
 			params.takeValueForKey(eduGroup,"logParam");
@@ -585,7 +618,7 @@ gr:		while (eduGroups.hasMoreElements()) {
 				" broadcastAdditions",ses);
 		if(extensions == null || extensions.count() == 0)
 			textBuf.append("\n.\n");
-		NSMutableDictionary settings = new NSMutableDictionary();
+		NSMutableDictionary settings = new NSMutableDictionary(ec,"ec");
 		settings.takeValueForKey(eduGroup, "eduGroup");
 		settings.takeValueForKey(existingCourses,"courses");
 		settings.takeValueForKey(period,"period");
@@ -666,6 +699,10 @@ gr:		while (eduGroups.hasMoreElements()) {
 		}
 		
 		Enumeration stEnu = students.objectEnumerator();
+		int sent = 0;
+//		NSMutableDictionary skip=new NSMutableDictionary();
+		int noContacts=0;
+		int noData=0;
 st:		while (stEnu.hasMoreElements()) {
 			long startTime = System.currentTimeMillis();
 			Student student = (Student)stEnu.nextElement();
@@ -674,6 +711,7 @@ st:		while (stEnu.hasMoreElements()) {
 			if(stContacts == null || stContacts.count() == 0) {
 				logger.log(WOLogLevel.FINER,
 						"Skipping mail to student as no contacts found",new Object[] {ses,student});
+				noContacts++;
 				continue st;
 			}
 			Enumeration cenu = stContacts.objectEnumerator();
@@ -698,6 +736,7 @@ st:		while (stEnu.hasMoreElements()) {
 				logger.log(WOLogLevel.FINER,
 						"Skipping mail to student as no active adresses found",
 						new Object[] {ses,student});
+				noContacts++;
 				continue st;
 			}
 			synchronized (mailer) {
@@ -747,9 +786,10 @@ st:		while (stEnu.hasMoreElements()) {
 								attach = null;
 								if(!Various.boolForObject(params.valueForKey("sendEmpty"))) {
 									logger.log(WOLogLevel.FINER,
-											"Skipping mail to student as no data fond",
+											"Skipping mail to student as no data found",
 											new Object[] {ses,student});
-									continue;
+									noData++;
+									continue st;
 								}
 							}
 							attName = attName + ".html";
@@ -798,6 +838,7 @@ st:		while (stEnu.hasMoreElements()) {
 						mailer.sendTextMessage(subject.toString(), message, toAddr);
 					}
 					logger.log(WOLogLevel.FINEST,"Mail sent \"" + subject + '"',ses);
+					sent++;
 				} catch (Exception ex) {
 					logger.log(WOLogLevel.WARNING,"Failed to send email for student",
 							new Object[] {ses,student,ex});
@@ -816,7 +857,20 @@ st:		while (stEnu.hasMoreElements()) {
 		String logMessage = (String)params.valueForKey("logMessage");
 		Object logParam = params.valueForKey("logParam");
 		if(logMessage != null)
-			logger.log(WOLogLevel.FINE,logMessage,new Object[] {ses,logParam});
+			logger.log(WOLogLevel.FINE,logMessage + ". Sent: " + sent,
+					new Object[] {ses,logParam});
+		if(noContacts>0)
+			logger.log(WOLogLevel.INFO, "Skipped sending to studens with no active contacts: " + noContacts,
+					new Object[] {ses,logParam});
+		if(noData>0) {
+			String per=null;
+			if(period != null) {
+				SimpleDateFormat df = new SimpleDateFormat("dd.MM");
+				per = df.format(period.begin()) + "-" + df.format(period.end());
+			}
+			logger.log(WOLogLevel.INFO, "Skipped sending empty messages for period (" + per + "):" + noData,
+					new Object[] {ses,logParam,period});
+		}
 //		ec.unlock();
 //		ses.sleep();
 	}

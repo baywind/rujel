@@ -7,7 +7,6 @@ import net.rujel.eduplan.EduPeriod;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.interfaces.Student;
 import net.rujel.reusables.SettingsReader;
-import net.rujel.reusables.WOLogLevel;
 
 import com.webobjects.appserver.WOContext;
 import com.webobjects.appserver.WOComponent;
@@ -63,9 +62,9 @@ public class MailRequest extends WOComponent {
 				}
 			}
 			periods = dicts;
-		} catch (Exception e) {
-			EMailBroadcast.logger.log(WOLogLevel.WARNING,
-					"Error preparing periods for MailRequest",e);
+//		} catch (Exception e) {
+//			EMailBroadcast.logger.log(WOLogLevel.WARNING,
+//					"Error preparing periods for MailRequest",e);
 		} finally {
 			ec.unlock();
 		}

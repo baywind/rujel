@@ -287,6 +287,8 @@ public class BaseModule {
 					EOKeyGlobalID gid = (EOKeyGlobalID)newEC.globalIDForObject(newCS);
 					newQ.setNumericValue((Integer)gid.keyValues()[0]);
 				}
+				if(qs.section() != null)
+					newQ.setSection(EOUtilities.localInstanceOfObject(newEC, qs.section()));
 			}
 		}
 	}

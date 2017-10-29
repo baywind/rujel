@@ -33,6 +33,7 @@ import net.rujel.interfaces.*;
 import net.rujel.base.BaseTab;
 import net.rujel.base.MyUtility;
 import net.rujel.base.SchoolSection;
+import net.rujel.base.SettingsBase;
 import net.rujel.curriculum.WeekFootprint;
 
 import net.rujel.reusables.*;
@@ -256,6 +257,14 @@ public class LessonNoteEditor extends WOComponent {
 		}
 		session().removeObjectForKey("editorCourse");
 		refresh();
+		if(fullList == null || fullList.count() == 0) {
+			for (int i = 1; i < presentTabs.count(); i++) {
+				setPresent((NSKeyValueCoding)presentTabs.objectAtIndex(i));
+				if(fullList != null && fullList.count() > 0)
+					return;
+			}
+			setPresent((NSKeyValueCoding)presentTabs.objectAtIndex(0));
+		}
 	}
 	
 	public void notify(NSNotification ntf) {
@@ -309,6 +318,31 @@ public class LessonNoteEditor extends WOComponent {
 	}
 	
 	public void refresh() {
+		NSArray filters = (NSArray)present.valueForKey("filter");
+		if(filters != null && filters.count() > 0) {
+			Enumeration enu = filters.objectEnumerator();
+			while (enu.hasMoreElements()) {
+				NSKeyValueCoding dict = (NSKeyValueCoding) enu.nextElement();
+				String attrib = (String)dict.valueForKey("attributeParam");
+				if(attrib == null)
+					attrib = (String)dict.valueForKey("attribute");
+				if(attrib == null)
+					continue;
+				NSKeyValueCoding state = (NSKeyValueCoding)session().valueForKey("state");
+				Object value = state.valueForKey(attrib);
+				String dattr = "default_"+attrib;
+				Object dvalue = state.valueForKey(dattr);
+				if(value != dvalue) {
+					state.takeValueForKey(null, dattr);
+					continue;
+				}
+				dvalue = SettingsBase.stringSettingForCourse(attrib, course, ec);
+				if(dvalue == null)
+					dvalue = dict.valueForKey("defaultValue");
+				state.takeValueForKey(dvalue, dattr);
+				state.takeValueForKey(dvalue, attrib);
+			}
+		}
 		fullList = lessonListForCourseAndPresent(course, present, null);
 		updateBaseTabs(true);
 		session().setObjectForKey(course, "courseForlessons");

@@ -332,11 +332,11 @@ public class WorkTypeSetup extends WOComponent {
 	}
 
 	public Object selectedCritSet() {
-		if(typeItem == null || !typeItem.namedFlags().flagForKey("specCriter"))
+		if(typeItem == null)
 			return null;
-		Object result = typeItem.criteriaSet();
-		if(result == null)
-			result = critSets.objectAtIndex(0);
+		CriteriaSet result = typeItem.criteriaSet();
+		if(result!= null && result.flags() == null)
+			return critSets.objectAtIndex(0);
 		return result;
 	}
 
@@ -347,11 +347,11 @@ public class WorkTypeSetup extends WOComponent {
 			typeItem.setCriteriaSet(null);
 			typeItem.namedFlags().setFlagForKey(false, "specCriter");
 		} else {
-			typeItem.namedFlags().setFlagForKey(true, "specCriter");
+//			typeItem.namedFlags().setFlagForKey(true, "specCriter");
 			if (selectedCritSet instanceof CriteriaSet)
 				typeItem.setCriteriaSet((CriteriaSet)selectedCritSet);
 			else
-				typeItem.setCriteriaSet(null);
+				typeItem.setCriteriaSet(CriteriaSet.getNone(typeItem.editingContext()));
 		}
 		// TODO
 	}

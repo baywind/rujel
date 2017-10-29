@@ -96,11 +96,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     			type = (WorkType)types.objectAtIndex(0);
 			dict.takeValueForKey(type, Work.WORK_TYPE_KEY);
     	}
-    	if(type != null && type.namedFlags().flagForKey("specCriter")) {
+    	if(type != null)
     		critSet = type.criteriaSet();
-    	} else {
+    	if (critSet==null)
     		critSet = CriteriaSet.critSetForCourse(course);
-    	}
+    	else if (critSet.flags()==null)
+    		critSet = null;
     	if(!types.containsObject(type)) {
     		NSMutableArray list = types.mutableClone();
     		Various.addToSortedList(type, list, WorkType.SORT_KEY, EOSortOrdering.CompareAscending);
@@ -173,11 +174,12 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	WorkType type = (WorkType)dict.objectForKey(Work.WORK_TYPE_KEY);
     	WORequest req = context().request();
     	if(!Various.boolForObject(req.formValueForKey("doSave"))) {
-        	if(type != null && type.namedFlags().flagForKey("specCriter")) {
+        	if(type != null)
         		critSet = type.criteriaSet();
-        	} else {
+        	if (critSet==null)
         		critSet = CriteriaSet.critSetForCourse(course);
-        	}
+        	else if (critSet.flags()==null)
+        		critSet = null;
         	if(critSet != null) {
         		NamedFlags critFlags = critSet.namedFlags();
         		disableMax = (critFlags.flagForKey("fixList"))?"disabled":null;
@@ -558,7 +560,10 @@ public class WorkInspector extends com.webobjects.appserver.WOComponent {
     	for (int i = 0; i < types.count(); i++) {
 			WorkType type = (WorkType) types.objectAtIndex(i);
 			buf.append("case '").append(i).append("': ");
-			if(critSet==(type.namedFlags().flagForKey("specCriter")?type.criteriaSet():forCourse)){
+			CriteriaSet typeSet = type.criteriaSet();
+			if(typeSet == null) typeSet = forCourse;
+			else if (typeSet.flags()==null) typeSet = null;
+			if(critSet==typeSet) {
 				buf.append("setDefaults(").append(type.dfltFlags()).append(',');
 				buf.append(type.trimmedWeight()).append(");break;");
 			} else {

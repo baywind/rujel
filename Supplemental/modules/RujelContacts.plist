@@ -38,7 +38,7 @@
 		<string>/Users/Shared/test/mail/outbox</string>
 		<key>retryAfterSeconds</key>
 		<integer>20</integer>
-		<key>headersDelegate</key>
+		<key>_headersDelegate</key>
 		<string>net.rujel.ms45.ModifyFrom</string>
 	</dict>
 	<key>dbConnection.Contacts</key>

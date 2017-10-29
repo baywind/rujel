@@ -48,10 +48,16 @@ public class RequestMail extends WODirectAction {
 		}
 		String mail = request().stringFormValueForKey("addr");
 		if(mail == null) {
+			try {
 			WOComponent page = pageWithName("MailRequest");
 			page.takeValueForKey(anActionName, "code");
 			page.takeValueForKey(studentID, "studentID");
 			return page;
+			} catch (Exception e) {
+				EMailBroadcast.logger.log(WOLogLevel.WARNING,
+						"Error preparing periods for MailRequest for " + studentID,e);
+				return error("badStudent");
+			}
 		}
 		String id = mail.toLowerCase() + studentID;
 		if(sent.containsObject(id)) {
