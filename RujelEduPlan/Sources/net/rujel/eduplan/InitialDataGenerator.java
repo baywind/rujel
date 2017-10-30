@@ -36,7 +36,6 @@ import java.util.Enumeration;
 import java.util.TimeZone;
 
 import net.rujel.base.SettingsBase;
-import net.rujel.interfaces.EOPeriod;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.DataBaseUtility;
 import net.rujel.reusables.SettingsReader;
@@ -352,54 +351,106 @@ public class InitialDataGenerator {
 				EduCourse course = (EduCourse)det.valueForKey("course");
 				String ln = (sb==null)?listName:
 					sb.forCourse(course).textValue();
-				NSMutableDictionary forLN = (NSMutableDictionary)details.objectForKey(ln);
-				if(forLN == null) {
-					forLN = new NSMutableDictionary();
-					details.setObjectForKey(forLN, ln);
-				}
 				EOEnterpriseObject per = (EOEnterpriseObject)det.valueForKey("eduPeriod");
 				if(ln.equals(per.valueForKey(EduPeriod.LIST_NAME_KEY)))
 					continue;
 				EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(per);
 				Object id = gid.keyValues()[0];
+				ec.refaultObject(per);
+				
+				NSMutableDictionary forLN = (NSMutableDictionary)details.objectForKey(ln);
+				if(forLN == null) {
+					forLN = new NSMutableDictionary(
+							new NSMutableDictionary(new NSMutableArray(det),course),"forCourse");
+					details.setObjectForKey(forLN, ln);
+				} else {
+					NSMutableDictionary fc = (NSMutableDictionary)forLN.valueForKey("forCourse");
+					NSMutableArray cl = (NSMutableArray)fc.objectForKey(course);
+					if(cl == null)
+						fc.setObjectForKey(new NSMutableArray(det), course);
+					else
+						cl.addObject(det);
+				}
 				NSMutableArray toUpdate = (NSMutableArray)forLN.objectForKey(id);
 				if(toUpdate == null) {
 					toUpdate = new NSMutableArray(det);
 					forLN.setObjectForKey(toUpdate, id);
 				} else {
 					toUpdate.addObject(det);
-				}
+				}				
 			} // details.objectEnumerator();
     	} // prepare PlanDetail agregate
     	
     	NSMutableArray list = new NSMutableArray();
+    	NSMutableDictionary results = new NSMutableDictionary();
     	while (enu.hasMoreElements()) {
 			EOEnterpriseObject pl = (EOEnterpriseObject) enu.nextElement();
 			if(!pl.valueForKey("listName").equals(listName)) {
-				generatePeriodList(list, listName, ec,details);
+				EduPeriod[] pers = generatePeriodList(list, listName, ec,details);
+				if(pers != null)
+					results.setObjectForKey(pers, Integer.valueOf(list.count()));
 				listName = (String)pl.valueForKey("listName");
 				list.removeAllObjects();
 			}
 			list.addObject(pl);
 		}
-    	generatePeriodList(list, listName, ec,details);
+    	EduPeriod[] pers = generatePeriodList(list, listName, ec,details);
+		if(pers != null)
+			results.setObjectForKey(pers, Integer.valueOf(list.count()));
+		if(details.count() > 0) { // Not updated PlanDetails left
+			EduPlan.logger.log(WOLogLevel.INFO,
+					"Integrity problems found updating PlanDetails. Please review your EduPlan.");
+			enu = details.objectEnumerator();
+			NSMutableDictionary forCourse = new NSMutableDictionary();
+			while (enu.hasMoreElements()) {
+				NSMutableDictionary dict = (NSMutableDictionary) enu.nextElement();
+				forCourse.addEntriesFromDictionary((NSMutableDictionary)
+						dict.removeObjectForKey("forCourse"));
+				Enumeration enu2 = dict.keyEnumerator();
+				while (enu2.hasMoreElements()) {
+					Object id = enu2.nextElement();
+					NSArray dets = (NSArray)dict.objectForKey(id);
+					try {
+						EOEnterpriseObject eo = EOUtilities.objectWithPrimaryKeyValue(
+								ec,"OldEduPeriod", id);
+						NSArray pl = EOUtilities.objectsMatchingKeyAndValue(ec, 
+								"PeriodList", "oldPeriod", eo);
+						eo = (EOEnterpriseObject)pl.objectAtIndex(0);
+						eo = (EOEnterpriseObject)eo.valueForKey("newPeriod");
+						dets.takeValueForKey(eo, "eduPeriod");
+						ec.saveChanges();
+					} catch (Exception e) {
+						EduPlan.logger.log(WOLogLevel.WARNING,
+								"Could not update PlanDetails for OldEduPeriod:"+id,e);
+						ec.revert();
+						for (int i = 0; i < dets.count(); i++) {
+							ec.deleteObject((EOEnterpriseObject)dets.objectAtIndex(i));
+						}
+						ec.saveChanges();
+					}
+				}
+			}
+		}    
     }
     
-    private static void generatePeriodList(NSMutableArray list,String listName,EOEditingContext ec,
-    		NSMutableDictionary details) {
+    private static EduPeriod[] generatePeriodList(NSMutableArray list,String listName,EOEditingContext ec,
+    		NSMutableDictionary allDetails) {
     	int count = list.count();
     	if(listName == null || count == 0)
-    		return;
+    		return null;
     	NSArray types = EOUtilities.objectsMatchingKeyAndValue(ec,
     			"ItogType", "inYearCount", Integer.valueOf(count));
     	if(types == null) {
 			EduPlan.logger.log(WOLogLevel.WARNING,"Failed to get ItogType with count="+
 					count + " for listName " + listName);
-			return;
+			allDetails.removeObjectForKey(listName);
+			return null;
     	}
-    	NSArray sorter = new NSArray(new EOSortOrdering("oldPeriod",EOSortOrdering.CompareAscending));
+    	NSArray sorter = new NSArray(new EOSortOrdering(
+    			"oldPeriod.begin",EOSortOrdering.CompareAscending));
     	EOSortOrdering.sortArrayUsingKeyOrderArray(list, sorter);
-    	Integer eduYear = (Integer)((EOEnterpriseObject)list.objectAtIndex(0)).valueForKeyPath("oldPeriod.eduYear");
+    	Integer eduYear = (Integer)((EOEnterpriseObject)
+    			list.objectAtIndex(0)).valueForKeyPath("oldPeriod.eduYear");
     	EOEnterpriseObject type = (EOEnterpriseObject)types.objectAtIndex(0);
     	NSArray itogs = itogsForType(type, eduYear, types.count() == 1);
     	if(itogs.count() != count) {
@@ -414,8 +465,8 @@ public class InitialDataGenerator {
     		if(itogs.count() != count)
     			itogs = itogsForType(type, eduYear, true);
     	}
-    	if(details != null)
-    		details = (NSMutableDictionary)details.valueForKey(listName);
+    	NSMutableDictionary details = (allDetails == null) ? null:
+    		(NSMutableDictionary)allDetails.valueForKey(listName);
     	EOEnterpriseObject oldPer=null;
     	EduPeriod[] perlist = new EduPeriod[count+1];
     	for (int i = 0; i < count; i++) {
@@ -434,14 +485,8 @@ public class InitialDataGenerator {
 				continue;
 			EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(oldPer);
 			NSArray toUpdate = (NSArray)details.removeObjectForKey(gid.keyValues()[0]);
-			if(toUpdate != null) {
+			if(toUpdate != null)
 				toUpdate.takeValueForKey(per, "eduPeriod");
-//				Enumeration enu = toUpdate.objectEnumerator();
-//				while (enu.hasMoreElements()) {
-//					EOEnterpriseObject pd = (EOEnterpriseObject) enu.nextElement();
-//					pd.addObjectToBothSidesOfRelationshipWithKey(per, "eduPeriod");
-//				}
-			}
 		}
 		EduPeriod per = (EduPeriod)EOUtilities.createAndInsertInstance(ec, EduPeriod.ENTITY_NAME);
 		per.setListName(listName);
@@ -450,27 +495,54 @@ public class InitialDataGenerator {
 		per.takeValueForKey(lastDay,EduPeriod.BEGIN_KEY);
 		perlist[0]=per;
 		per._perlist=perlist;
-    	if(details != null && details.count() > 0) { // has unbound PlanDetails
-    		Enumeration enu = details.keyEnumerator();
-    		while (enu.hasMoreElements()) {
-				Object pk = (Object) enu.nextElement();
-				NSArray toUpdate = (NSArray)details.objectForKey(pk);
-				oldPer = EOUtilities.objectWithPrimaryKeyValue(ec, "OldEduPeriod", pk);
-				NSTimestamp end = (NSTimestamp)oldPer.valueForKey("end");
-				if(EOPeriod.Utility.countDays(end, perlist[0].begin()) < 10) {
-					toUpdate.takeValueForKey(perlist[count], "eduPeriod");
+    	if(details != null && details.count() > 1) { // has unbound PlanDetails
+    		NSMutableDictionary forCourse = (NSMutableDictionary)details.objectForKey("forCourse");
+    		Enumeration enu = forCourse.keyEnumerator();
+    		NSArray inserted = ec.insertedObjects();
+    		while (enu.hasMoreElements()) { // forCourse.keyEnumerator();
+				EduCourse course = (EduCourse) enu.nextElement();
+				NSMutableArray fc = (NSMutableArray)forCourse.objectForKey(course);
+				if(fc.count() != count) {
+					EduPlan.logger.log(WOLogLevel.WARNING, 
+							"Found unresolvable inconsistent PlanDetails for course.",course);
 					continue;
 				}
-				NSTimestamp begin = (NSTimestamp)oldPer.valueForKey("begin");
-				for (int i = 1; i < perlist.length; i++) {
-					if(EOPeriod.Utility.countDays(perlist[i].begin(),begin) < 10) {
-						toUpdate.takeValueForKey(perlist[i], "eduPeriod");
-						break;
-					}
+				EduPlan.logger.log(WOLogLevel.INFO, 
+						"Resolving inconsistent PlanDetails for course.",course);
+				Enumeration dEnu = fc.objectEnumerator();
+				NSMutableArray toSort = new NSMutableArray(count);
+				boolean ok = true;
+				while (dEnu.hasMoreElements()) { // details for course enumeration
+					EOEnterpriseObject det = (EOEnterpriseObject) dEnu.nextElement();
+					NSMutableDictionary dict = new NSMutableDictionary(det,"PlanDetail");
+					EOEnterpriseObject dper = (EOEnterpriseObject)det.valueForKey("eduPeriod");
+					if (!inserted.containsObject(dper)) {
+						ok = false;
+						EOKeyGlobalID gid = (EOKeyGlobalID)ec.globalIDForObject(dper);
+						Object id = gid.keyValues()[0];
+						dict.takeValueForKey(id, "id");
+						dper = EOUtilities.objectWithPrimaryKeyValue(ec,"OldEduPeriod", id);
+						dict.takeValueForKey(dper, "OldEduPeriod");
+					} //if (!inserted.containsObject(dper))
+					dict.takeValueForKey(dper.valueForKey(EduPeriod.BEGIN_KEY), EduPeriod.BEGIN_KEY);
+					toSort.addObject(dict);
+				} // details for course enumeration
+				if(ok)
+					continue;
+				EOSortOrdering.sortArrayUsingKeyOrderArray(toSort, EduPeriod.sorter);
+				for (int j = 0; j < count; j++) { 
+					NSMutableDictionary dict = (NSMutableDictionary)toSort.objectAtIndex(j);
+					Object id = dict.valueForKey("id");
+					if (id == null)
+						continue;
+					NSArray toUpdate = (NSArray)details.removeObjectForKey(id);
+					if(toUpdate != null)
+						toUpdate.takeValueForKey(perlist[j+1], "eduPeriod");
 				}
-			} // details.keyEnumerator();
+			} // forCourse.keyEnumerator();
     	} // has unbound PlanDetails
-
+    	if(allDetails != null && (details == null || details.count() == 1))
+    		allDetails.removeObjectForKey(listName);
 		try {
 			ec.saveChanges();
 			EduPlan.logger.log(WOLogLevel.INFO, "Autogenerated periods for listName: " + listName,type);
@@ -478,6 +550,10 @@ public class InitialDataGenerator {
 			ec.revert();
 			EduPlan.logger.log(WOLogLevel.WARNING, 
 					"Falied to generate periods for listName: " + listName,new Object[]{e,type});
+			if(allDetails != null)
+				allDetails.removeObjectForKey(listName);
+			return null;
 		}
+		return perlist;
     }
 }

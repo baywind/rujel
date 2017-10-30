@@ -162,7 +162,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 			while (enu.hasMoreElements()) {
 				PlanCycle cycle = (PlanCycle) enu.nextElement();
 				values.takeValueForKey(cycle, "cycle");
-				NSMutableDictionary dict = observeValue(SettingsBase.courseDict(cycle, eduYear));
+				NSMutableDictionary dict = getListNameDict(SettingsBase.courseDict(cycle, eduYear));
 				dict = new NSMutableDictionary(dict, "listName");
 				dict.takeValueForKey(cycle,"cycle");
 //				dict.takeValueForKey(new Integer(cycle.weekly()), "weekly");
@@ -220,7 +220,7 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	protected NSMutableDictionary courseRow(NSKeyValueCodingAdditions course) {
-		NSMutableDictionary listSetting = observeValue(course);
+		NSMutableDictionary listSetting = getListNameDict(course);
 		NSMutableDictionary result = new NSMutableDictionary(listSetting, "listSetting");
 		EduGroup group = (EduGroup)course.valueForKey("eduGroup");
 		result.takeValueForKey(group, "eduGroup");
@@ -269,6 +269,8 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 				while (enu.hasMoreElements()) {
 					EOEnterpriseObject detail = (EOEnterpriseObject) enu.nextElement();
 					EduPeriod per = (EduPeriod)detail.valueForKey("eduPeriod");
+					if(!per.listName().equals(listSetting.valueForKey("listName")))
+						getListNameDict(per.listName(),null);
 					detailsDict.setObjectForKey(detail,per);
 					int dHours = ((Integer)detail.valueForKey("hours")).intValue();
 					if(dHours > 0) {
@@ -295,30 +297,36 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		return result;
 	}
 	
-	protected NSMutableDictionary observeValue(NSKeyValueCodingAdditions course) {
+	protected NSMutableDictionary getListNameDict(NSKeyValueCodingAdditions course) {
 		Setting sb = SettingsBase.settingForCourse(EduPeriod.ENTITY_NAME,course, ec);
 		if(sb == null)
 			return null;
-		String listName = sb.textValue();
-		Integer week = sb.numericValue();
-		if(week == null)
-			week = new Integer(7);
+		return getListNameDict(sb.textValue(), sb.numericValue());
+	}
+	
+	protected NSMutableDictionary getListNameDict(String listName, Integer week) {
 		NSMutableDictionary dict = (NSMutableDictionary)periodsForList.valueForKey(listName);
 		if(dict == null) {
 			dict = new NSMutableDictionary(listName,"listName");
-			dict.takeValueForKey(week, "week");
 			NSArray periods = EduPeriod.periodsInList(listName, ec);
 			dict.takeValueForKey(periods, "periods");
 //			int days = EduPeriod.daysForList(listName, null, periods);
 			int days = 0;
 			Enumeration enu = periods.objectEnumerator();
+			NSArray holidays = Holiday.holidaysInDates(null, null, ec, listName);
 			while (enu.hasMoreElements()) {
 				EduPeriod per = (EduPeriod) enu.nextElement();
-				int pDays = per.daysInPeriod(null);
+				NSTimestamp begin = per.begin();
+				NSTimestamp end = per.end();
+				int pDays = EOPeriod.Utility.countDays(begin, end);
+				pDays -= Holiday.freeDaysInDates(begin, end, holidays);
 				dict.setObjectForKey(new Integer(pDays), per);
 				days += pDays; 
 			}
 			dict.takeValueForKey(new Integer(days), "days");
+			if(week == null)
+				week = new Integer(7);
+			dict.takeValueForKey(week, "week");
 			dict.takeValueForKey(new Integer(days/week), "weeks");
 			dict.takeValueForKey(new Integer(days%week), "extraDays");
 			periodsForList.takeValueForKey(dict, listName);
@@ -427,11 +435,12 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 	}
 	
 	public String weeklyHours() {
-		if(listItem == null || 
-				!listItem.equals(rowItem.valueForKeyPath("listSetting.listName")))
+		if(listItem == null)
 			return null;
 		if(pdItem != null)
 			return pdItem.valueForKey("weekly").toString();
+		if(!listItem.equals(rowItem.valueForKeyPath("listSetting.listName")))
+			return null;
 //		if(Various.boolForObject(valueForKeyPath("rowItem.details.count")))
 		if(rowItem.valueForKey("details") != null)
 			return null;
@@ -465,6 +474,17 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 		} else if(details != null) {
 			if(weeklyHours == null)
 				return;
+			if(listItem != null) {
+				Enumeration enu = details.keyEnumerator();
+				while (enu.hasMoreElements()) {
+					EduPeriod per = (EduPeriod) enu.nextElement();
+					if(!listItem.equals(per.listName())) {
+						EOEnterpriseObject pd = (EOEnterpriseObject)
+								details.removeObjectForKey(per);
+						ec.deleteObject(pd);
+					}
+				}
+			}
 		} else if(rowItem.valueForKey("weekly").toString().equals(weeklyHours)) {
 			return;
 		}
@@ -602,8 +622,12 @@ public class PlanDetails extends com.webobjects.appserver.WOComponent {
 				min += dHours;
 			} else {
 				dHours = ((Integer)detail.valueForKey("weekly")).intValue();
-				int days = ((Integer)listSetting.objectForKey(
-						detail.valueForKey("eduPeriod"))).intValue();
+				EduPeriod per = (EduPeriod)detail.valueForKey("eduPeriod");
+				int days;
+				if(listSetting.containsKey(per))
+					days = ((Integer)listSetting.objectForKey(per)).intValue();
+				else
+					days = per.daysInPeriod(null);
 				total += dHours * days / week;
 				min += (days / week) * dHours;
 				if(days % week > 0)

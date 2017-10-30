@@ -37,6 +37,7 @@ import net.rujel.base.MyUtility;
 import net.rujel.base.ReadAccess;
 import net.rujel.base.SchoolSection;
 import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EduCourse;
 import net.rujel.interfaces.EduGroup;
 import net.rujel.reusables.*;
 import net.rujel.ui.RedirectPopup;
@@ -154,7 +155,9 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		if(inSection != null && globalAccess.cachedAccessForObject("PlanDetail", 
 				inSection.sectionID()).flagForKey("read") &&
 				SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false) != null) {
-			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, null, ec);
+			NSKeyValueCodingAdditions crs = SettingsBase.courseDict(
+					inSection, (Integer)session().valueForKey("eduYear"));
+			String listName = SettingsBase.stringSettingForCourse(EduPeriod.ENTITY_NAME, crs, ec);
 			NSArray found = EduPeriod.periodsInList(listName, ec);
 			noDetails = Boolean.valueOf(found == null || found.count() == 0);
 		}
@@ -199,6 +202,15 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 			fs = new EOFetchSpecification("SubjectArea",null,MyUtility.numSorter);
 			areas = ec.objectsWithFetchSpecification(fs).objectEnumerator();
 	  	} else { // if(planHours == null || planHours.count() == 0)
+	  		NSArray details=null;
+	  		if(!noDetails) {
+	  			details = (NSArray)planHours.valueForKey(PlanHours.PLAN_CYCLE_KEY);
+	  			EOQualifier qual = Various.getEOInQualifier("course.cycle", details);
+	  			EOFetchSpecification fs = new EOFetchSpecification("PlanDetail",qual,null);
+	  			details = ec.objectsWithFetchSpecification(fs);
+	  			if(details != null && details.count() == 0)
+	  				details = null;
+	  		}
 		  	Enumeration enu = planHours.objectEnumerator();
 			Subject subj = null;
 		  	Object[] hours = null;
@@ -213,6 +225,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					dict.takeValueForKey(hours, "planHours");
 //					dict.takeValueForKey(new Counter(0), "counter");
 					dict.takeValueForKey(Boolean.TRUE, PlanHours.ENTITY_NAME);
+					dict.takeValueForKey(detailsStyle(details,subj), "detailsStyle");
 					agregate.addObject(dict);
 		  		}
 		  		int idx = grades.indexOf((inSection==null)?ph.section():ph.grade());
@@ -251,6 +264,26 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 	  	EOSortOrdering.sortArrayUsingKeyOrderArray(agregate, sorter);
 	  	processAgregate(agregate, areas);
 	  	return agregate;
+	}
+	
+	private String detailsStyle(NSArray details, Subject subj) {
+		EOQualifier qual = new EOKeyValueQualifier("course.cycle.subjectEO", 
+				EOQualifier.QualifierOperatorEqual, subj);
+		NSArray found = EOQualifier.filteredArrayWithQualifier(details, qual);
+		if(found==null || found.count() == 0)
+			return null;
+		SettingsBase sb = SettingsBase.baseForKey(EduPeriod.ENTITY_NAME, ec, false);
+		if(sb == null)
+			return "green";
+		Enumeration enu = found.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject det = (EOEnterpriseObject) enu.nextElement();
+			String listName = (String)det.valueForKeyPath("eduPeriod.listName");
+			if(!listName.equals(sb.forCourse(
+					(EduCourse)det.valueForKey("course")).textValue()))
+				return "female";
+		}
+		return "green";
 	}
 
 	protected void processAgregate(NSMutableArray agregate, Enumeration areas) {
