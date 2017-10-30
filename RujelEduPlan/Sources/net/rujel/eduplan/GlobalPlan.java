@@ -279,7 +279,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 		while (enu.hasMoreElements()) {
 			EOEnterpriseObject det = (EOEnterpriseObject) enu.nextElement();
 			String listName = (String)det.valueForKeyPath("eduPeriod.listName");
-			if(!listName.equals(sb.forCourse(
+			if(listName == null || !listName.equals(sb.forCourse(
 					(EduCourse)det.valueForKey("course")).textValue()))
 				return "female";
 		}
