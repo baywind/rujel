@@ -62,7 +62,7 @@ public class SchoolSection extends _SchoolSection {
     			_flags.setSyncParams(this, getClass().getMethod("setNamedFlags",
     					NamedFlags.class));
     		} catch (Exception e) {
-    			Logger.getLogger("rujel.curriculum").log(WOLogLevel.WARNING,
+    			Logger.getLogger("rujel.base").log(WOLogLevel.WARNING,
 						"Could not get syncMethod for SchoolSection flags",e);
 			}
     	}
@@ -185,7 +185,7 @@ public class SchoolSection extends _SchoolSection {
 		ReadAccess acc = (ReadAccess)ses.valueForKey("readAccess");
 		NSArray allSections = (NSArray)ses.valueForKeyPath("sections.list");
 		if(allSections == null || allSections.count() < 2)
-			return allSections;
+			return EOUtilities.localInstancesOfObjects(ec,allSections);
 		NSMutableArray result = new NSMutableArray();
 		Enumeration enu = allSections.objectEnumerator();
 		while (enu.hasMoreElements()) {

@@ -142,7 +142,7 @@ CurrDown : WOImage {
 
 SortField : WOTextField {
   value = item.sort;
-  style = "display:none;";
+  _style = "display:none;";
   numberformat = "0";
   class = "numerate";
 }

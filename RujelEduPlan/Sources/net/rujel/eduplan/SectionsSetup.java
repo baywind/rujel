@@ -176,9 +176,14 @@ public class SectionsSetup extends WOComponent {
 			created = (SchoolSection)EOUtilities.createAndInsertInstance(
 					ec, SchoolSection.ENTITY_NAME);
 			created.takeValuesFromDictionary(newDict);
+			if(sections.count() < 2) {
+				SchoolSection first = (SchoolSection)sections.lastObject();
+				if(first == null || first.sectionID() <= 0)
+					created.takeStoredValueForKey(Integer.valueOf(1), "sID");				
+			}
 			Integer sort = (Integer)sections.valueForKeyPath("@max.sort");
 			if(sort == null)
-				sort = new Integer(1);
+				sort = Integer.valueOf(sections.count());
 			else
 				sort = new Integer(sort.intValue() +1);
 			created.setSort(sort);
@@ -189,7 +194,7 @@ public class SectionsSetup extends WOComponent {
 				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Created section",
 						new Object[] {created});
 				session().takeValueForKey(SchoolSection.forSession(session()), "sections");
-				sections = sections.arrayByAddingObject(currSection);
+				sections = sections.arrayByAddingObject(created);
 			} else {
 				EduPlan.logger.log(WOLogLevel.COREDATA_EDITING,"Modified section",
 						new Object[] {currSection});
@@ -201,7 +206,7 @@ public class SectionsSetup extends WOComponent {
 						new NamedFlags(SchoolSection.flagNames),"namedFlags");
 		} catch (Exception e) {
 			ec.revert();
-			EduPlan.logger.log(WOLogLevel.WARNING,"Error savong changes to section",
+			EduPlan.logger.log(WOLogLevel.WARNING,"Error saving changes to section",
 					new Object[] {currSection,e});
 			session().takeValueForKey(e.toString(), "message");
 		}

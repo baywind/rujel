@@ -112,6 +112,8 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
     	return arrangePeriods(found);
 	}
     private static EduPeriod[] arrangePeriods(NSArray found) {
+    	if (found == null || found.count() == 0)
+    		return null;
     	EduPeriod[] periods = new EduPeriod[found.count() +1];
 		Enumeration enu = found.objectEnumerator();
 		while (enu.hasMoreElements()) {

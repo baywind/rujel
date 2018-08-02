@@ -108,19 +108,20 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
         return false;
 	}
     
-    public void showDetails() {
+    public WOActionResults showDetails() {
 		if(ec.hasChanges()) {
 			ec.lock();
 			ec.revert();
 			ec.unlock();
 		}
 		details = Boolean.TRUE;
+		return null;
 	}
 
 	public void appendToResponse(WOResponse aResponse, WOContext aContext) {
 		boolean reset = Various.boolForObject(valueForBinding("shouldReset")); 
 		if(reset) {
-			extraLists = null;
+			extraLists = NSArray.EmptyArray;
 			details = null;
 			listName = null;
 	        setEc((EOEditingContext)context().page().valueForKey("ec"));

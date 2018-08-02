@@ -174,7 +174,7 @@ public class InitialDataGenerator {
 				EduPeriod per = (EduPeriod) penu.nextElement();
 				EOEnterpriseObject type = (EOEnterpriseObject)per.valueForKeyPath("relatedItog.itogType");
 				if(type == null) {
-					EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(prevEc, EduPeriod.ENTITY_NAME);
+					EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(ec, EduPeriod.ENTITY_NAME);
 					nPer.setListName(listName);
 					nPer.setBegin(per.begin().timestampByAddingGregorianUnits(1, 0, 0, 0, 0, 0));
 					continue;
@@ -208,7 +208,7 @@ public class InitialDataGenerator {
 				NSArray found = EOQualifier.filteredArrayWithQualifier(forType, qual);
 				if(found.count() == 0)
 					continue;
-				EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(prevEc, EduPeriod.ENTITY_NAME);
+				EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(ec, EduPeriod.ENTITY_NAME);
 				nPer.setListName(listName);
 				nPer.addObjectToBothSidesOfRelationshipWithKey(
 						(EOEnterpriseObject)found.objectAtIndex(0), "relatedItog");
@@ -313,7 +313,7 @@ public class InitialDataGenerator {
 		NSArray itogs=ec.objectsWithFetchSpecification(fs);
 		if(itogs.count() < count) {
 			try {
-				Class cl = Class.forName("ItogType");
+				Class cl = Class.forName("net.rujel.eduresults.ItogType");
 				Method gen = cl.getMethod("generateItogsInYear", Integer.class);
 				itogs=(NSArray)gen.invoke(type, eduYear);
 				ec.saveChanges();

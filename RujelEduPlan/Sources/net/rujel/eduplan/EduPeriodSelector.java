@@ -234,9 +234,9 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     	if(_list== null || _list.count() ==0)
     		return null;
     	calculateDays();
-//    	if(periods == null)
-//    		fetchPeriods();
-    	if(periods.length < _list.count()+1) {
+    	if(periods == null) {
+    		periods = new EduPeriod[_list.count()+1];
+    	} else if(periods.length < _list.count()+1) {
     		EduPeriod[] prev = periods;
     		periods = new EduPeriod[_list.count()+1];
     		for (int i = 0; i < prev.length; i++) {
@@ -256,6 +256,7 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     		periods[0] = (EduPeriod)EOUtilities.createAndInsertInstance(
     				ec, EduPeriod.ENTITY_NAME);
     		periods[0].setListName(listName);
+    		periods[0].setBegin(end);
     	}
     	EduPeriod next = periods[0];
     	next._next=next;
@@ -519,6 +520,31 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
 		end = null;
 	}*/
     
+    protected EOEnterpriseObject typeForListName(String listName) {
+    	if(listName == null)
+    		return null;
+		Integer eduYear = (Integer)session().valueForKey("eduYear");
+		NSArray ltypes = EOUtilities.objectsMatchingKeyAndValue(ec(), "ItogTypeList", "listName", listName);
+		if (ltypes == null || ltypes.count() == 0)
+			return null;
+		EOEnterpriseObject best = null;
+		int cnt = 0;
+		Enumeration enu = ltypes.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EOEnterpriseObject tl = (EOEnterpriseObject) enu.nextElement();
+			Integer val = (Integer)tl.valueForKey("eduYear");
+			if(val != null && val.intValue() > 0 && !val.equals(eduYear))
+				continue;
+			EOEnterpriseObject t = (EOEnterpriseObject)tl.valueForKey("itogType");
+			val = (Integer)t.valueForKey("inYearCount");
+			if(val.intValue() > cnt) {
+				cnt = val.intValue();
+				best = t;
+			}
+		}
+		return best;
+    }
+    
     public void appendToResponse(WOResponse aResponse, WOContext aContext) {
     	Object ln = valueForBinding("listName");
     	if((ln==null)?listName!=null:!ln.equals(listName) ||
@@ -529,10 +555,20 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     		weekDays = 7;
     		fetchTypes();
     		periods=EduPeriod.fetchPeriods(ec(),listName);
+    		if(periods == null) {
+    			type = typeForListName(listName);
+    			if (type == null) {
+    				String itogList = SettingsBase.stringSettingForCourse("ItogMark", null, ec());
+    				type = typeForListName(itogList);
+    			}
+    			if (type == null)
+    				type = (EOEnterpriseObject)types.objectAtIndex(0);
+    		} else {
     		if(periods.length > 1 && periods[1] != null)
     			type=(EOEnterpriseObject)periods[1].valueForKeyPath("relatedItog.itogType");
     		if(periods[0] != null)
     			end=periods[0].begin();
+    		}
     		if(type != null)
     			generateList();
 //    		perItem = null;
