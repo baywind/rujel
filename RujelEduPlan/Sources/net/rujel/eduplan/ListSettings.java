@@ -155,7 +155,7 @@ public class ListSettings extends com.webobjects.appserver.WOComponent {
 				}
     			if(max < 2)
     				return _lists;
-    			if(nosect.count() > 0) { 
+    			if(true) { 
     				NSMutableDictionary dict = new NSMutableDictionary(Boolean.TRUE,"noTitle");
 					list = nosect.allObjects();
 					if(!(list instanceof NSMutableArray))
