@@ -258,8 +258,8 @@ public class InitialDataGenerator {
 			PlanHours ph = (PlanHours) enu.nextElement();
 			PlanHours newPh = (PlanHours)EOUtilities.createAndInsertInstance
 			(ec, "PlanHours");
-			newPh.takeValueForKey(ph.totalHours(), "totalHours");
-			newPh.takeValueForKey(ph.weeklyHours(), "weeklyHours");
+			newPh.takeValueForKey(ph.totalHours(), PlanHours.TOTAL_HOURS_KEY);
+			newPh.takeValueForKey(ph.weeklyHours(), PlanHours.WEEKLY_HOURS_KEY);
 			EOEnterpriseObject rel = EOUtilities.localInstanceOfObject(ec, ph.planCycle());
 			newPh.addObjectToBothSidesOfRelationshipWithKey(rel, "planCycle");
 			rel = EOUtilities.localInstanceOfObject(ec, ph.section());
@@ -397,7 +397,7 @@ public class InitialDataGenerator {
     	EduPeriod[] pers = generatePeriodList(list, listName, ec,details);
 		if(pers != null)
 			results.setObjectForKey(pers, Integer.valueOf(list.count()));
-		if(details.count() > 0) { // Not updated PlanDetails left
+		if(details != null && details.count() > 0) { // Not updated PlanDetails left
 			EduPlan.logger.log(WOLogLevel.INFO,
 					"Integrity problems found updating PlanDetails. Please review your EduPlan.");
 			enu = details.objectEnumerator();
