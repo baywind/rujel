@@ -51,6 +51,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 import com.webobjects.appserver.WOSession;
+import com.webobjects.eoaccess.EOEntity;
+import com.webobjects.eoaccess.EOModelGroup;
 import com.webobjects.eoaccess.EOUtilities;
 import com.webobjects.eocontrol.EOAndQualifier;
 import com.webobjects.eocontrol.EOEditingContext;
@@ -288,11 +290,12 @@ public class XMLGenerator extends AbstractObjectReader {
 				ec = new SessionedEditingContext(os, in.ses);
 				in.options.takeValueForKey(ec,"ec");
 			}
-        	if(in.options.valueForKeyPath("reporter.sync") != null &&
+        	if(in.options.valueForKeyPath("reporter.sync") != null && // TODO
         			in.options.valueForKey("sync") == null) {
         		in.options.takeValueForKey(new SyncGenerator(in.options), "sync");
         	}
-        	if (ExtBase.localBaseID() == null)
+        	EOEntity ent = EOModelGroup.defaultGroup().entityNamed("ExtBase");
+        	if (ExtBase.localBaseID() == null && ent != null)
         		ExtBase.localBase(ec);
         	handler.prepareAttribute("base", ExtBase.localBaseID());
         	tmp = eduYear.toString();
