@@ -375,26 +375,6 @@ public class VariationsPlugin extends com.webobjects.appserver.WOComponent {
 			PlanCycle cl = (PlanCycle)course.cycle();
 			maxDev = cl.weekly(course);
 			minPlan = maxDev * weeks;
-			/*
-			if(active == 2) {
-				EOQualifier[] quals = new EOQualifier[2];
-				quals[0] = new EOKeyValueQualifier("period.end",
-						EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
-				quals[1] = new EOKeyValueQualifier("listName",
-						EOQualifier.QualifierOperatorEqual,listName);
-				quals[0] = new EOAndQualifier(new NSArray(quals));
-				EOFetchSpecification fs = new EOFetchSpecification("PeriodList",quals[0],null);
-				fs.setFetchLimit(1);
-				list = ec.objectsWithFetchSpecification(fs);
-				if(list == null || list.count() == 0)
-					active = 3;
-			}
-			if(active < 3) {
-				if(active == 0 && !exclude)
-					extraDays++;
-			} else {
-				plan = cl.hours().intValue();
-			} */
 		}
 
 		NSMutableDictionary result = new NSMutableDictionary();

@@ -218,35 +218,6 @@ public class InitialDataGenerator {
 		} //lists.objectEnumerator();
 		return true;
 	}
-		/*
-		NSArray rows = EOUtilities.objectsForEntityNamed(prevEc, "PeriodList");
-		if(rows == null || rows.count() == 0)
-			return false;
-		Enumeration enu = rows.objectEnumerator();
-		NSMutableDictionary pers = new NSMutableDictionary();
-		while (enu.hasMoreElements()) {
-			EOEnterpriseObject o = (EOEnterpriseObject) enu.nextElement();
-			EOEnterpriseObject newO = EOUtilities.createAndInsertInstance
-				(ec, o.entityName());
-			newO.takeValueForKey(o.valueForKey("listName"), "listName");
-			EduPeriod per = (EduPeriod)o.valueForKey("period");
-			EduPeriod newPer = (EduPeriod)pers.objectForKey(per);
-			if(newPer == null) {
-				newPer = (EduPeriod)EOUtilities.createAndInsertInstance(
-						ec, EduPeriod.ENTITY_NAME);
-				newPer.setTitle(per.title());
-				newPer.setFullName(per.fullName());
-				newPer.setEduYear(eduYear);
-				newPer.setBegin(
-						per.begin().timestampByAddingGregorianUnits(1, 0, 0, 0, 0, 0));
-				newPer.setEnd(
-						per.end().timestampByAddingGregorianUnits(1, 0, 0, 0, 0, 0));
-				pers.setObjectForKey(newPer, per);
-			}
-			newO.addObjectToBothSidesOfRelationshipWithKey(newPer, "period");
-		}
-		return true;
-	}*/
 
 	protected static boolean copyPlanHours(EOEditingContext prevEc,
 			EOEditingContext ec) {

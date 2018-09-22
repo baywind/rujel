@@ -70,34 +70,6 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 	public boolean contains(Date date) {
 		return EOPeriod.Utility.contains(this, date);
 	}
-	
-	public EOEnterpriseObject addToList(String listName) {
-		NSDictionary dict = new NSDictionary(new Object[] {this,listName},
-				new String[] {"period","listName"});
-		EOEditingContext ec = editingContext();
-		NSArray list = EOUtilities.objectsMatchingValues(ec, "PeriodList", dict);
-		if(list != null && list.count() > 0)
-			return (EOEnterpriseObject)list.objectAtIndex(0);
-		EOEnterpriseObject pl = EOUtilities.createAndInsertInstance(ec, "PeriodList");
-		pl.takeValuesFromDictionary(dict);
-		return pl;
-	}
-	
-	public boolean removeFromList(String listName) {
-		NSDictionary dict = new NSDictionary(new Object[] {this,listName},
-				new String[] {"period","listName"});
-		EOEditingContext ec = editingContext();
-		NSArray list = EOUtilities.objectsMatchingValues(ec, "PeriodList", dict);
-		if(list == null || list.count() == 0)
-			return false;
-		Enumeration enu = list.objectEnumerator();
-		while (enu.hasMoreElements()) {
-			EOEnterpriseObject pl = (EOEnterpriseObject) enu.nextElement();
-			pl.removeObjectFromBothSidesOfRelationshipWithKey(this, "period");
-			ec.deleteObject(pl);
-		}
-		return true;
-	}
 
 	public static NSArray sortedPeriods(EOEditingContext ec, String listName) {
 		EOQualifier qual = new EOKeyValueQualifier(LIST_NAME_KEY,
@@ -233,33 +205,17 @@ public class EduPeriod extends _EduPeriod implements EOPeriod
 			result = defaultPeriods(ec);
 		return result;
 	}
-	/*
-	public static NSArray periodsInYear(Number eduYear, EOEditingContext ec) {
-		NSArray result = EOUtilities.objectsMatchingKeyAndValue(ec, 
-				ENTITY_NAME, EDU_YEAR_KEY, eduYear);
-		if(result == null || result.count() < 2)
-			return result;
-		return EOSortOrdering.sortedArrayUsingKeyOrderArray(result,sorter);
-	}*/
 	
 	public static EduPeriod getCurrentPeriod(NSTimestamp date, String listName,
 			EOEditingContext ec) {
-		if(listName == null)
-			listName = SettingsBase.stringSettingForCourse(ENTITY_NAME, null, ec);
-		EOQualifier[] quals = new EOQualifier[3];
-		quals[0] = new EOKeyValueQualifier("period.begin",
-				EOQualifier.QualifierOperatorLessThanOrEqualTo,date);
-		quals[1] = new EOKeyValueQualifier("period.end",
-				EOQualifier.QualifierOperatorGreaterThanOrEqualTo,date);
-		quals[2] = new EOKeyValueQualifier("listName",
-				EOQualifier.QualifierOperatorEqual,listName);
-		quals[0] = new EOAndQualifier(new NSArray(quals));
-		EOFetchSpecification fs = new EOFetchSpecification("PeriodList",quals[0],null);
-		NSArray list = ec.objectsWithFetchSpecification(fs);
-		if(list == null || list.count() == 0)
-			return null;
-		EOEnterpriseObject pl = (EOEnterpriseObject)list.objectAtIndex(0);
-		return (EduPeriod)pl.valueForKey("period");
+		NSArray periods = periodsInList(listName, ec);
+		Enumeration enu = periods.objectEnumerator();
+		while (enu.hasMoreElements()) {
+			EduPeriod per = (EduPeriod) enu.nextElement();
+			if (per.contains(date))
+				return per;
+		}
+		return null;
 	}
 	
 	public EOEnterpriseObject relatedItog() {

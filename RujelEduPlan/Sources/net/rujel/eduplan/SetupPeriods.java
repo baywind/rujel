@@ -93,7 +93,7 @@ public class SetupPeriods extends com.webobjects.appserver.WOComponent {
 							extraLists = extraLists.arrayByAddingObjectsFromArray(holidays);
 					}
 				}
-				access = ListSettings.listAccess(base, listName, "PeriodList", session());
+				access = ListSettings.listAccess(base, listName, "EduPeriod", session());
 			}
 		} catch (Exception e) {
 			EduPlan.logger.log(WOLogLevel.WARNING,

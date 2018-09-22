@@ -124,14 +124,14 @@ public class WorkTypeSetup extends WOComponent {
 	    	types.addObject(currType);
 		} else {
 			if(reSort.count() > 0) {
-				if(maskSettings == null)
-					return null;
-				updateSetting(maskSettings);
-				NSArray byCourse = maskSettings.qualifiedSettings();
-				if(byCourse != null && byCourse.count() > 0) {
-					for (int i = 0; i < byCourse.count(); i++) {
-						Setting s = (Setting)byCourse.objectAtIndex(i);
-						updateSetting(s);
+				if(maskSettings != null) {
+					updateSetting(maskSettings);
+					NSArray byCourse = maskSettings.qualifiedSettings();
+					if(byCourse != null && byCourse.count() > 0) {
+						for (int i = 0; i < byCourse.count(); i++) {
+							Setting s = (Setting)byCourse.objectAtIndex(i);
+							updateSetting(s);
+						}
 					}
 				}
 				for (int i = 0; i < types.count(); i++) {
@@ -147,8 +147,12 @@ public class WorkTypeSetup extends WOComponent {
 						maskFlags.intValue() != currMask.numericValue().intValue())
 					currMask.takeValueForKey(maskFlags.toInteger(), SettingsBase.NUMERIC_VALUE_KEY);
 			}
-			if(!ec.hasChanges())
+			if(!ec.hasChanges()) {
+				currType = null;
+				currMask = null;
+				maskFlags.setFlags(0);
 				return null;
+			}
 			try {
 				ec.saveChanges();
 				if(currType != null)
@@ -383,14 +387,30 @@ public class WorkTypeSetup extends WOComponent {
 		return null;
 	}
 	
-    public WOActionResults addMaskSettings() {
-    	if(maskSettings == null) {
+	public WOActionResults addMaskSettings() {
+		if(maskSettings == null) {
 			EOEditingContext ec = (EOEditingContext)valueForBinding("ec");
 			maskSettings = SettingsBase.baseForKey("WorkTypeMask", ec, true);
 			maskSettings.setNumericValue(Integer.valueOf(-1));
 			maskSettings.setTextValue((String)session().valueForKeyPath(
 					"strings.RujelBase_Base.noLimit"));
-    	}
+			try {
+				ec.saveChanges();
+				logger.log(WOLogLevel.SETTINGS_EDITING,"Initiated workType mask settings",
+						new Object[] {session(),currMask});
+				currType = null;
+				currMask = maskSettings;
+				maskFlags.setFlags(currMask.numericValue());
+			} catch (Exception e) {
+				ec.revert();
+				session().takeValueForKey(e.getMessage(), "message");
+				logger.log(WOLogLevel.WARNING,"Error initiating workType mask",
+						new Object[] {session(),currType,e});
+				maskSettings = null;
+			}
+		}
+		return null;
+    	/*
     	WOComponent editor = pageWithName("ByCourseEditor");
     	editor.takeValueForKey(context().page(), "returnPage");
     	editor.takeValueForKey(maskSettings, "base");
@@ -399,7 +419,7 @@ public class WorkTypeSetup extends WOComponent {
 		editor.takeValueForKeyPath(Integer.valueOf(0), "tmpValues.numericValue");
 		editor.takeValueForKeyPath("???", "tmpValues.textValue");
     	maskFlags.setFlags(0);
-    	return editor;
+    	return editor;*/
     }
 
     public String maskStyle() {

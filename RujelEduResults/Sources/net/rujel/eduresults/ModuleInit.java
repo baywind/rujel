@@ -364,6 +364,8 @@ public class ModuleInit {
 		NSDictionary settings = new NSDictionary(listName,ItogMark.ENTITY_NAME);
 		Integer year = (Integer)ctx.session().valueForKey("eduYear");
 		Enumeration itogEnu = itogsEnu(ec, listName, year);
+		if(itogEnu == null)
+			return null;
 		NSMutableArray result = new NSMutableArray();
 		NSArray subParams = (NSArray)ctx.session().valueForKeyPath(
 				"strings.RujelEduResults_EduResults.groupReportSubs");
