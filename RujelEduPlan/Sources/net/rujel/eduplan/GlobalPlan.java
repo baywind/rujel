@@ -328,6 +328,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					NSMutableDictionary groupDict = new NSMutableDictionary(
 							parent,Subject.SUBJECT_GROUP_KEY);
 					groupDict.takeValueForKey(Boolean.TRUE, "noData");
+//					groupDict.takeValueForKey(new Counter(1), "rowspan");
 					agregate.insertObjectAtIndex(groupDict, j);
 					i++;
 					parent = parent.parent();
@@ -668,6 +669,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 							dict = row;
 							dict.takeValueForKey(subj, Subject.ENTITY_NAME);
 							dict.takeValueForKey(Boolean.FALSE, "noData");
+							dict.takeValueForKey(new Counter(1), "rowspan");
 						}
 				  	} else if(subj.subjectGroup() == row.valueForKey(Subject.SUBJECT_GROUP_KEY)) {
 						row.takeValueForKey(Boolean.TRUE, "noGroup");
@@ -714,6 +716,7 @@ public class GlobalPlan extends com.webobjects.appserver.WOComponent {
 					NSMutableDictionary groupDict = new NSMutableDictionary(
 							parent,Subject.SUBJECT_GROUP_KEY);
 					groupDict.takeValueForKey(Boolean.TRUE, "noData");
+//					groupDict.takeValueForKey(new Counter(1), "rowspan");
 					subjects.insertObjectAtIndex(groupDict, j);
 					idx++;
 					parent = parent.parent();
