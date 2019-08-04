@@ -273,6 +273,8 @@ public class BaseModule {
 				createAndInsertInstance(newEC, QualifiedSetting.ENTITY_NAME);
 				newQ.addObjectToBothSidesOfRelationshipWithKey(newBase,
 						QualifiedSetting.SETTINGS_BASE_KEY);
+				if(qs.section() != null)
+					newQ.setSection(EOUtilities.localInstanceOfObject(newEC, qs.section()));
 				newQ.setSort(qs.sort());
 				newQ.setQualifierString(qs.qualifierString());
 				newQ.setArgumentsString(qs.argumentsString());
@@ -287,8 +289,6 @@ public class BaseModule {
 					EOKeyGlobalID gid = (EOKeyGlobalID)newEC.globalIDForObject(newCS);
 					newQ.setNumericValue((Integer)gid.keyValues()[0]);
 				}
-				if(qs.section() != null)
-					newQ.setSection(EOUtilities.localInstanceOfObject(newEC, qs.section()));
 			}
 		}
 	}

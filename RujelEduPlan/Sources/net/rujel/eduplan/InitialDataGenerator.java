@@ -189,7 +189,7 @@ public class InitialDataGenerator {
 				if(forType.count() == 0) {
 					if(gen == null) {
 						try {
-							Class cl = Class.forName("ItogType");
+							Class cl = Class.forName("net.rujel.eduresults.ItogType");
 							gen = cl.getMethod("generateItogsInYear", Integer.class);
 						} catch (Exception e) {
 							throw new NSForwardException(e, 
@@ -204,7 +204,7 @@ public class InitialDataGenerator {
 					}
 				} //(forType.count() == 0)
 				EOQualifier qual = new EOKeyValueQualifier("num", EOQualifier.QualifierOperatorEqual, 
-						per.valueForKey("num"));
+						per.valueForKeyPath("relatedItog.num"));
 				NSArray found = EOQualifier.filteredArrayWithQualifier(forType, qual);
 				if(found.count() == 0)
 					continue;
@@ -235,7 +235,8 @@ public class InitialDataGenerator {
 			newPh.addObjectToBothSidesOfRelationshipWithKey(rel, "planCycle");
 			rel = EOUtilities.localInstanceOfObject(ec, ph.section());
 			newPh.setSection(rel);
-			newPh.setEduSubject(ph.eduSubject());
+			rel = EOUtilities.localInstanceOfObject(ec, ph.eduSubject());
+			newPh.setEduSubject(rel);
 			newPh.setGrade(ph.grade());
 		}
 		return true;
