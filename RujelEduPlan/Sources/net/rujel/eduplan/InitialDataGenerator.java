@@ -34,8 +34,10 @@ import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 
 import net.rujel.base.SettingsBase;
+import net.rujel.interfaces.EOInitialiser;
 import net.rujel.interfaces.EduCourse;
 import net.rujel.reusables.DataBaseUtility;
 import net.rujel.reusables.SettingsReader;
@@ -69,7 +71,13 @@ public class InitialDataGenerator {
 				EOObjectStoreCoordinator os = EOObjectStoreCoordinator.defaultCoordinator();
 				InputStream data = WOApplication.application().resourceManager().
 				inputStreamForResourceNamed("dataEduPlanModel.sql", "RujelEduPlan", null);
-				DataBaseUtility.executeScript(os, "EduPlanModel", data);
+				try {
+					DataBaseUtility.executeScript(os, "EduPlanModel", data);
+				} catch (Exception e) {
+					ec.revert();
+					EduPlan.logger.log(WOLogLevel.WARNING,
+							"Failed to load inital data for static EduPlan model",e);
+				}
 				/*
 				int num = SettingsReader.intForKeyPath("schoolNumber", 0);
 				if(num != 0) {
@@ -80,7 +88,13 @@ public class InitialDataGenerator {
 				*/
 				data = WOApplication.application().resourceManager().
 				inputStreamForResourceNamed("dataEduPlanYearly.sql", "RujelEduPlan", null);
-				DataBaseUtility.executeScript(os, "EduPlanYearly", data);
+				try {
+					DataBaseUtility.executeScript(os, "EduPlanYearly", data);
+				} catch (Exception e) {
+					ec.revert();
+					EduPlan.logger.log(WOLogLevel.WARNING,
+							"Failed to load inital data for EduPlanYearly model",e);
+				}
 				EduPlan.logger.log(WOLogLevel.INFO, "Loaded inital EduPlan");
 				Integer eduYear = (Integer)ctx.userInfoForKey("eduYear");
 				NSArray holidays = EOUtilities.objectsForEntityNamed(ec, Holiday.ENTITY_NAME);
@@ -164,6 +178,11 @@ public class InitialDataGenerator {
 
 		while (enu.hasMoreElements()) {
 			String listName = (String) enu.nextElement();
+			try {
+				EOInitialiser.initialiseRelationship("EduPeriod","relatedItog",false,"itogID","ItogContainer");
+			} catch (Exception e) {
+				Logger.getLogger("rujel.eduplan").log(WOLogLevel.INFO,"Could not link EduPeriod to ItogContainer",e);
+			}
 			NSArray periods = EOUtilities.objectsMatchingKeyAndValue(prevEc, 
 					EduPeriod.ENTITY_NAME, EduPeriod.LIST_NAME_KEY, listName);
 			if(periods == null || periods.count() == 0)
@@ -172,7 +191,8 @@ public class InitialDataGenerator {
 			NSArray forType = null;
 			while (penu.hasMoreElements()) {
 				EduPeriod per = (EduPeriod) penu.nextElement();
-				EOEnterpriseObject type = (EOEnterpriseObject)per.valueForKeyPath("relatedItog.itogType");
+				EOEnterpriseObject type = null;
+				type = (EOEnterpriseObject)per.valueForKeyPath("relatedItog.itogType");					
 				if(type == null) {
 					EduPeriod nPer = (EduPeriod)EOUtilities.createAndInsertInstance(ec, EduPeriod.ENTITY_NAME);
 					nPer.setListName(listName);
