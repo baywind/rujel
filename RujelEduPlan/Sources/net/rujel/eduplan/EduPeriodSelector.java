@@ -256,8 +256,8 @@ public class EduPeriodSelector extends com.webobjects.appserver.WOComponent {
     		periods[0] = (EduPeriod)EOUtilities.createAndInsertInstance(
     				ec, EduPeriod.ENTITY_NAME);
     		periods[0].setListName(listName);
-    		periods[0].setBegin(end);
     	}
+		periods[0].setBegin(end);
     	EduPeriod next = periods[0];
     	next._next=next;
     	next._perlist=periods;

@@ -35,5 +35,17 @@
 		<key>_secureForm</key>
 		<true/>
 	</dict>
+	<key>__dbConnection</key>
+	<dict>
+		<key>dbMapping</key>
+		<dict>
+			<key>VseLists</key>
+			<string>VseLists19</string>
+			<key>RujelStatic</key>
+			<string>RujelStatic19</string>
+			<key>RujelYear%s</key>
+			<string>RujelYear%s</string>
+		</dict>
+	</dict>
 </dict>
 </plist>
