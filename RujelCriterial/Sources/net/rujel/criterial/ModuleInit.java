@@ -286,7 +286,88 @@ public class ModuleInit {
 			}
 		} else { // copy from previous year
 			EOEditingContext ec = (EOEditingContext)ctx.userInfoForKey("ec");
-			NSArray found = EOUtilities.objectsForEntityNamed(prevEc, WorkType.ENTITY_NAME);
+			
+			// Copy CriteriaSets with their Criteria
+			
+			NSMutableDictionary csIdMatch = new NSMutableDictionary();
+			
+			NSArray found = EOUtilities.objectsForEntityNamed(prevEc, CriteriaSet.ENTITY_NAME);
+			if(found != null && found.count() > 0) try { // CriteriaSet
+				Enumeration enu = found.objectEnumerator();
+				NSMutableDictionary indexes = (NSMutableDictionary)
+						ctx.userInfoForKey("doneIndexers");
+				NSArray keys = new NSArray( new String[] {"criterion","title",
+						"dfltMax","dfltWeight","comment","flags"});
+				while (enu.hasMoreElements()) {
+					CriteriaSet cs = (CriteriaSet) enu.nextElement();
+					CriteriaSet newCS = (CriteriaSet)EOUtilities.createAndInsertInstance(
+							ec, CriteriaSet.ENTITY_NAME);
+					newCS.setSetName(cs.setName());
+					newCS.setComment(cs.comment());
+					newCS.setFlags(cs.flags());
+					{
+						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(cs);
+						csIdMatch.setObjectForKey(newCS, gid.keyValues()[0]);
+					}
+					NSArray crits = cs.criteria();
+					if(crits != null && crits.count() > 0) {
+						Enumeration cenu = crits.objectEnumerator();
+						while (cenu.hasMoreElements()) {
+							EOEnterpriseObject cr = (EOEnterpriseObject) cenu.nextElement();
+							EOEnterpriseObject newCr = EOUtilities.createAndInsertInstance(
+									ec, cr.entityName());
+							newCS.addObjectToBothSidesOfRelationshipWithKey(
+									newCr, CriteriaSet.CRITERIA_KEY);
+							newCr.takeValuesFromDictionary(cr.valuesForKeys(keys));
+							Indexer idx = (Indexer)cr.valueForKey("indexer");
+							if(idx != null) {
+								EOGlobalID gid = prevEc.globalIDForObject(idx);
+								if(indexes == null) {
+									indexes = new NSMutableDictionary();
+									ctx.setUserInfoForKey(indexes, "doneIndexers");
+								}
+								Object val = indexes.objectForKey(gid);
+								if(val instanceof Indexer) {
+									idx = (Indexer)val;
+									if(idx.editingContext() != ec)
+										idx = (Indexer)EOUtilities.localInstanceOfObject(ec, idx);
+								} else if(val instanceof EOGlobalID) {
+									idx = (Indexer)ec.faultForGlobalID((EOGlobalID)val, ec);
+								} else {
+									idx = BaseModule.copyIndexer(ec, idx);
+									indexes.setObjectForKey(idx, gid);
+								}
+								newCr.addObjectToBothSidesOfRelationshipWithKey(idx, "indexer");
+							}
+						}
+					}
+				}
+				ec.saveChanges();
+				logger.log(WOLogLevel.INFO,"Copied CriteriaSets from previous year");
+				enu = indexes.keyEnumerator();
+				while (enu.hasMoreElements()) {
+					EOGlobalID gid = (EOGlobalID) enu.nextElement();
+					Object value = indexes.objectForKey(gid);
+					if(value instanceof EOEnterpriseObject) {
+						EOGlobalID newGid = ec.globalIDForObject((EOEnterpriseObject)value);
+						indexes.setObjectForKey(newGid, gid);
+					}
+				}
+				SettingsBase oldBase = SettingsBase.baseForKey(
+						CriteriaSet.ENTITY_NAME, prevEc, false);
+				if(oldBase != null) {
+					BaseModule.copySetting(oldBase, ec, csIdMatch);
+					ec.saveChanges();
+					logger.log(WOLogLevel.INFO,"Copied CriteriaSet settings from previous year");
+				}
+			} catch (Exception e) {
+				logger.log(WOLogLevel.WARNING,"Failed to copy CriteriaSets from previous year", e);
+				ec.revert();
+			}			
+			
+			// Copy WorkTypes
+			
+			found = EOUtilities.objectsForEntityNamed(prevEc, WorkType.ENTITY_NAME);
 			if(found != null && found.count() > 0) try {
 				Enumeration enu = found.objectEnumerator();
 				NSMutableDictionary idMatch = new NSMutableDictionary();
@@ -295,6 +376,12 @@ public class ModuleInit {
 					EOEnterpriseObject newT = EOUtilities.createAndInsertInstance(
 							ec, WorkType.ENTITY_NAME);
 					newT.updateFromSnapshot(wt.snapshot());
+					EOEnterpriseObject cs = (EOEnterpriseObject) wt.valueForKey(WorkType.CRITERIA_SET_KEY);
+					if (cs != null) {
+						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(cs);
+						EOEnterpriseObject newCS = (EOEnterpriseObject) csIdMatch.objectForKey(gid.keyValues()[0]);
+						newT.takeStoredValueForKey(newCS, WorkType.CRITERIA_SET_KEY);
+					}
 					{
 						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(wt);
 						idMatch.setObjectForKey(newT, gid.keyValues()[0]);
@@ -313,6 +400,8 @@ public class ModuleInit {
 				ec.revert();
 			}
 
+			// Copy BorderSets with their Borders
+			
 			found = EOUtilities.objectsForEntityNamed(prevEc, BorderSet.ENTITY_NAME);
 			if(found != null && found.count() > 0) try { // Borders
 				Enumeration enu = found.objectEnumerator();
@@ -359,80 +448,6 @@ public class ModuleInit {
 				ec.revert();
 			}
 			
-			found = EOUtilities.objectsForEntityNamed(prevEc, CriteriaSet.ENTITY_NAME);
-			if(found != null && found.count() > 0) try { // CriteriaSet
-				Enumeration enu = found.objectEnumerator();
-				NSMutableDictionary indexes = (NSMutableDictionary)
-						ctx.userInfoForKey("doneIndexers");
-				NSArray keys = new NSArray( new String[] {"criterion","title",
-						"dfltMax","dfltWeight","comment","flags"});
-				NSMutableDictionary idMatch = new NSMutableDictionary();
-				while (enu.hasMoreElements()) {
-					CriteriaSet bs = (CriteriaSet) enu.nextElement();
-					CriteriaSet newT = (CriteriaSet)EOUtilities.createAndInsertInstance(
-							ec, CriteriaSet.ENTITY_NAME);
-					newT.setSetName(bs.setName());
-					newT.setComment(bs.comment());
-					newT.setFlags(bs.flags());
-					{
-						EOKeyGlobalID gid = (EOKeyGlobalID)prevEc.globalIDForObject(bs);
-						idMatch.setObjectForKey(newT, gid.keyValues()[0]);
-					}
-					NSArray crits = bs.criteria();
-					if(crits != null && crits.count() > 0) {
-						Enumeration cenu = crits.objectEnumerator();
-						while (cenu.hasMoreElements()) {
-							EOEnterpriseObject b = (EOEnterpriseObject) cenu.nextElement();
-							EOEnterpriseObject newB = EOUtilities.createAndInsertInstance(
-									ec, b.entityName());
-							newT.addObjectToBothSidesOfRelationshipWithKey(
-									newB, CriteriaSet.CRITERIA_KEY);
-							newB.takeValuesFromDictionary(b.valuesForKeys(keys));
-							Indexer idx = (Indexer)b.valueForKey("indexer");
-							if(idx != null) {
-								EOGlobalID gid = prevEc.globalIDForObject(idx);
-								if(indexes == null) {
-									indexes = new NSMutableDictionary();
-									ctx.setUserInfoForKey(indexes, "doneIndexers");
-								}
-								Object val = indexes.objectForKey(gid);
-								if(val instanceof Indexer) {
-									idx = (Indexer)val;
-									if(idx.editingContext() != ec)
-										idx = (Indexer)EOUtilities.localInstanceOfObject(ec, idx);
-								} else if(val instanceof EOGlobalID) {
-									idx = (Indexer)ec.faultForGlobalID((EOGlobalID)val, ec);
-								} else {
-									idx = BaseModule.copyIndexer(ec, idx);
-									indexes.setObjectForKey(idx, gid);
-								}
-								newB.addObjectToBothSidesOfRelationshipWithKey(idx, "indexer");
-							}
-						}
-					}
-				}
-				ec.saveChanges();
-				logger.log(WOLogLevel.INFO,"Copied CriteriaSets from previous year");
-				enu = indexes.keyEnumerator();
-				while (enu.hasMoreElements()) {
-					EOGlobalID gid = (EOGlobalID) enu.nextElement();
-					Object value = indexes.objectForKey(gid);
-					if(value instanceof EOEnterpriseObject) {
-						EOGlobalID newGid = ec.globalIDForObject((EOEnterpriseObject)value);
-						indexes.setObjectForKey(newGid, gid);
-					}
-				}
-				SettingsBase oldBase = SettingsBase.baseForKey(
-						CriteriaSet.ENTITY_NAME, prevEc, false);
-				if(oldBase != null) {
-					BaseModule.copySetting(oldBase, ec, idMatch);
-					ec.saveChanges();
-					logger.log(WOLogLevel.INFO,"Copied CriteriaSet settings from previous year");
-				}
-			} catch (Exception e) {
-				logger.log(WOLogLevel.WARNING,"Failed to copy CriteriaSets from previous year", e);
-				ec.revert();
-			}
 		}
 		return null;
 	}

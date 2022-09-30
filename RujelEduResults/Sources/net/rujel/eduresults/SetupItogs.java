@@ -540,6 +540,7 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 		StringBuilder desc = new StringBuilder();
 		desc.append(itog.name()).append(' ').append('(');
 		desc.append(MyUtility.presentEduYear(itog.eduYear())).append(')');
+		ItogType type = itog.itogType();
 		try {
 			ec.deleteObject(itog);
 			ec.saveChanges();
@@ -548,10 +549,10 @@ public class SetupItogs extends com.webobjects.appserver.WOComponent {
 			}
 			((NSMutableArray)itogsList).removeIdenticalObject(itog);
 			logger.log(WOLogLevel.COREDATA_EDITING, "Deleted itog container "
-					+ desc, new Object[] {session(),currType.valueForKey("type")});
+					+ desc, new Object[] {session(),type});
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Error deleting itog container "
-					+ desc, new Object[] {session(),currType.valueForKey("type"),e});
+					+ desc, new Object[] {session(),type,e});
 			session().takeValueForKey(e.getMessage(), "message");
 			ec.revert();
 		}
