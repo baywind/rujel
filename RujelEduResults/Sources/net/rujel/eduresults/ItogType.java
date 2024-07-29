@@ -75,15 +75,19 @@ public class ItogType extends _ItogType {
 				{ItogContainer.EDU_YEAR_KEY, ItogContainer.ITOG_TYPE_KEY});
 		NSArray ready = EOUtilities.objectsMatchingValues(editingContext(),
 				ItogContainer.ENTITY_NAME, qual);
+		int genCount = 0;
 		if(inYearCount().intValue() <= 1) {
 			if(ready != null && ready.count() > 0)
 				return ready;
 			ItogContainer result = (ItogContainer)EOUtilities.createAndInsertInstance(
 					editingContext(),ItogContainer.ENTITY_NAME);
+			genCount+=1;
 			result.addObjectToBothSidesOfRelationshipWithKey(this,
 					ItogContainer.ITOG_TYPE_KEY);
 			result.setNum(new Integer(1));
 			result.setEduYear(eduYear);
+			Logger.getLogger("rujel.itog").log(WOLogLevel.INFO,"Generated " + 
+					Integer.toString(genCount) + " itogs for year " + eduYear.toString(), this);
 			return new NSArray(result);
 		}
 		ItogContainer[] result = new ItogContainer[inYearCount().intValue()];
@@ -101,12 +105,15 @@ public class ItogType extends _ItogType {
 			if(result[i] == null) {
 				result[i] = (ItogContainer)EOUtilities.createAndInsertInstance(ec,
 						ItogContainer.ENTITY_NAME);
+				genCount+=1;
 				result[i].addObjectToBothSidesOfRelationshipWithKey(this,
 						ItogContainer.ITOG_TYPE_KEY);
 				result[i].setNum(new Integer(i + 1));
 				result[i].setEduYear(eduYear);
 			}
 		}
+		Logger.getLogger("rujel.itog").log(WOLogLevel.INFO,"Generated " + 
+				Integer.toString(genCount) + " itogs for year " + eduYear.toString(), this);		
 		return new NSArray(result);
 	}
 	

@@ -646,8 +646,8 @@ public class ModuleInit {
 							+ listName,e);
 				}
 			} //lists.objectEnumerator();
+			logger.log(WOLogLevel.INFO, "Copied ItogTypeList from previous year");
 		}
-		logger.log(WOLogLevel.INFO, "Copied ItogTypeList from previous year");
 		return null;
 	}
 	

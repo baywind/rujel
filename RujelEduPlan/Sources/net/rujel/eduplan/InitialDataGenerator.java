@@ -218,6 +218,7 @@ public class InitialDataGenerator {
 					}
 					try {
 						forType=(NSArray)gen.invoke(type, eduYear);
+						nContainers = nContainers.arrayByAddingObjectsFromArray(forType);
 					} catch (Exception e) {
 						throw new NSForwardException(e, 
 								"Failed to generate itogs for next year");
@@ -234,7 +235,7 @@ public class InitialDataGenerator {
 						(EOEnterpriseObject)found.objectAtIndex(0), "relatedItog");
 				nPer.setBegin(per.begin().timestampByAddingGregorianUnits(1, 0, 0, 0, 0, 0));
 			} //periods.objectEnumerator();
-//			ec.saveChanges();
+			ec.saveChanges();
 		} //lists.objectEnumerator();
 		return true;
 	}

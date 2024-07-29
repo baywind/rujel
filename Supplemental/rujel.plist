@@ -22,7 +22,7 @@
 	<key>ui</key>
 	<dict>
 		<key>defaultDate</key>
-		<string>03.03.2016</string>
+		<string>03.09.2020</string>
 		<key>diaryURL</key>
 		<string>http://localhost:55021/cgi-bin/WebObjects/RujelDiary.woa</string>
 		<key>_serverURL</key>
@@ -35,7 +35,7 @@
 		<key>_secureForm</key>
 		<true/>
 	</dict>
-	<key>__dbConnection</key>
+	<key>dbConnection</key>
 	<dict>
 		<key>dbMapping</key>
 		<dict>

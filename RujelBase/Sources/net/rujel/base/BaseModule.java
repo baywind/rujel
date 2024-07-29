@@ -183,33 +183,9 @@ public class BaseModule {
 			while (enu.hasMoreElements()) {
 				SettingsBase sb = (SettingsBase) enu.nextElement();
 				copySetting(sb, ec, null);
-				/*
-				SettingsBase newO = (SettingsBase)EOUtilities.createAndInsertInstance(
-						ec, SettingsBase.ENTITY_NAME);
-				newO.setKey(sb.key());
-				newO.setNumericValue(sb.numericValue());
-				newO.setTextValue(sb.textValue());
-				NSArray qualifiedSettings = sb.qualifiedSettings();
-				if(qualifiedSettings != null && qualifiedSettings.count() > 0) {
-					Enumeration qenu = qualifiedSettings.objectEnumerator();
-					while (qenu.hasMoreElements()) {
-						QualifiedSetting qs = (QualifiedSetting) qenu.nextElement();
-						if(qs.eduYear() != null && !qs.eduYear().equals(ctx.valueForKey("eduYear")))
-							continue;
-						QualifiedSetting newQ = (QualifiedSetting)EOUtilities.
-								createAndInsertInstance(ec, QualifiedSetting.ENTITY_NAME);
-						newQ.addObjectToBothSidesOfRelationshipWithKey(newO,
-								QualifiedSetting.SETTINGS_BASE_KEY);
-						newQ.setNumericValue(qs.numericValue());
-						newQ.setTextValue(qs.textValue());
-						newQ.setSort(qs.sort());
-						newQ.setQualifierString(qs.qualifierString());
-						newQ.setArgumentsString(qs.argumentsString());
-					}
-				}*/
 			}
 			ec.saveChanges();
-			logger.log(WOLogLevel.INFO,"Copied SettingsBase from previous year");
+			logger.log(WOLogLevel.INFO,"Copied SettingsBase from previous year", found.valueForKey(SettingsBase.KEY_KEY));
 		} catch (Exception e) {
 			logger.log(WOLogLevel.WARNING,"Failed to copy SettingsBase from previous year", e);
 			ec.revert();
